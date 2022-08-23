@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-from typing import List
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import Certificate, load_pem_x509_certificate
@@ -27,9 +26,9 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 
-def _load_cert_chain(c: bytes) -> list[Certificate]:
+def _load_cert_chain(chain: bytes) -> list[Certificate]:
     start_line = b"-----BEGIN CERTIFICATE-----"
-    cert_slots = c.split(start_line)
+    cert_slots = chain.split(start_line)
     certificates: list[Certificate] = []
     for single_pem_cert in cert_slots[1:]:
         loaded = load_pem_x509_certificate(start_line + single_pem_cert)
@@ -50,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_TRUST_CHAIN].encode("ascii"),
     )
 
-    c = hassmpris_client.AsyncMPRISClient(
+    clnt = hassmpris_client.AsyncMPRISClient(
         entry.data[CONF_HOST],
         40051,
         client_cert,
@@ -59,18 +58,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         _LOGGER.debug("Pinging the server")
-        await c.ping()
+        await clnt.ping()
         _LOGGER.debug("Successfully pinged the server")
 
-    except hassmpris_client.Unauthenticated as e:
-        raise ConfigEntryAuthFailed(e)
-    except Exception as e:
+    except hassmpris_client.Unauthenticated as exc:
+        raise ConfigEntryAuthFailed(exc) from exc
+    except Exception as exc:
         _LOGGER.exception("Cannot ping the server")
-        raise ConfigEntryNotReady(str(e))
+        raise ConfigEntryNotReady(str(exc)) from exc
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
-        ENTRY_CLIENT: c,
+        ENTRY_CLIENT: clnt,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -83,11 +82,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data = hass.data[DOMAIN].pop(entry.entry_id)
         if ENTRY_MANAGER in data:
-            _LOGGER.debug("Stopping entity manager.")
+            _LOGGER.debug("Stopping entity manager")
             waitable = data[ENTRY_MANAGER].stop()
         await data[ENTRY_CLIENT].close()
         if ENTRY_MANAGER in data:
-            _LOGGER.debug("Waiting for entity manager to fully stop.")
+            _LOGGER.debug("Waiting for entity manager to fully stop")
             await waitable
 
     return unload_ok

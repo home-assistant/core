@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any, cast, final
+from typing import Any, cast
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -31,12 +31,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ATTR_PLAYBACK_RATE,
     DOMAIN,
     ENTRY_CLIENT,
     ENTRY_MANAGER,
     ENTRY_PLAYERS,
     LOGGER as _LOGGER,
-    ATTR_PLAYBACK_RATE,
 )
 
 PLATFORM = "media_player"
@@ -58,12 +58,12 @@ SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
 
 def _feat2bitfield(bitfield: int, obj: object) -> str:
     fields = []
-    for f in dir(obj):
-        v = getattr(obj, f)
-        if not isinstance(v, int):
+    for feat in dir(obj):
+        val = getattr(obj, feat)
+        if not isinstance(val, int):
             continue
-        if bitfield & v:
-            fields.append(f)
+        if bitfield & val:
+            fields.append(feat)
     return ",".join(fields)
 
 
@@ -79,7 +79,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         client: hassmpris_client.AsyncMPRISClient,
         integration_id: str,
         player_id: str,
-    ):
+    ) -> None:
         """
         Initialize the entity.
 
@@ -100,7 +100,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     async def set_unavailable(self):
         """Mark player as unavailable."""
-        _LOGGER.debug("Marking %s as unavailable" % self)
+        _LOGGER.debug("Marking %s as unavailable", self.name)
         self.client = None
         self._attr_available = False
         await self.update_state(STATE_UNKNOWN)
@@ -119,7 +119,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         Parameters:
           client: the new client to use to talk to the agent
         """
-        _LOGGER.debug("Marking %s as available" % self)
+        _LOGGER.debug("Marking %s as available", self.name)
         self.client = client
         self._client_host = self.client.host
         self._attr_available = True
@@ -154,14 +154,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
     def state(self):
         """Return the current playback state of the entity."""
         return self._attr_state
-
-    @property
-    def metadata(self) -> dict[str, Any]:
-        """Return the metadata of the media playing right now."""
-        # FIXME this is probably incorrect data type, we want
-        # other information such as player playback length
-        # and current position.
-        return self._metadata
 
     @staticmethod
     def config_schema():
@@ -255,14 +247,14 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     async def update_mpris_properties(
         self,
-        p: mpris_pb2.MPRISPlayerProperties,
+        props: mpris_pb2.MPRISPlayerProperties,
     ):
         """Update player properties based on incoming MPRISPlayerProperties."""
-        _LOGGER.debug("%s: new properties: %s", self.name, p)
+        _LOGGER.debug("%s: new properties: %s", self.name, props)
 
         feats = self._attr_supported_features
-        if p.HasField("CanControl"):
-            if not p.CanControl:
+        if props.HasField("CanControl"):
+            if not props.CanControl:
                 feats = 0
             else:
                 feats = SUPPORTED_MINIMAL
@@ -276,8 +268,8 @@ class HASSMPRISEntity(MediaPlayerEntity):
             "CanGoNext": MediaPlayerEntityFeature.NEXT_TRACK,
             "CanGoPrevious": MediaPlayerEntityFeature.PREVIOUS_TRACK,
         }.items():
-            if p.HasField(name):
-                val = getattr(p, name)
+            if props.HasField(name):
+                val = getattr(props, name)
                 if val:
                     feats = feats | bitwisefield
                 else:
@@ -293,25 +285,20 @@ class HASSMPRISEntity(MediaPlayerEntity):
             self._attr_supported_features = feats
             update_state = True
 
-        if p.HasField("Rate") and p.Rate != self._attr_playback_rate:
-            _LOGGER.debug("%s: new rate: %s", self.name, p.Rate)
-            self._attr_playback_rate = p.Rate
+        if props.HasField("Rate") and props.Rate != self._attr_playback_rate:
+            _LOGGER.debug("%s: new rate: %s", self.name, props.Rate)
+            self._attr_playback_rate = props.Rate
             update_state = True
 
         if update_state and self.hass:
             await self.async_update_ha_state(True)
 
-    @final
     @property
-    def state_attributes(self):
-        """
-        Return the state attributes.
-
-        We override the parent because we must add the playback rate.
-        """
-        attrs = super().state_attributes
-        attrs[ATTR_PLAYBACK_RATE] = self._attr_playback_rate
-        return attrs
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        if self.state == STATE_OFF:
+            return {}
+        return {ATTR_PLAYBACK_RATE: self._attr_playback_rate}
 
 
 class EntityManager:
@@ -328,7 +315,7 @@ class EntityManager:
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
-    ):
+    ) -> None:
         """
         Initialize the entity manager.
 
@@ -345,7 +332,7 @@ class EntityManager:
         self.component_data = hass.data[DOMAIN][self.config_entry_id]
         self._shutdown: asyncio.Future[bool] = asyncio.Future()
         self._started = False
-        _LOGGER.debug("Registering entity manager in integration data.")
+        _LOGGER.debug("Registering entity manager in integration data")
         self.component_data[ENTRY_MANAGER] = self
 
     @property
@@ -370,40 +357,40 @@ class EntityManager:
             _LOGGER.debug("Thread already started")
             return
         self._started = True
-        _LOGGER.debug("Streaming updates started.")
-        # FIXME upon disconnect or unauth update all known entities to off.
+        _LOGGER.debug("Streaming updates started")
         while not self._shutdown.done():
             try:
                 try:
                     await self._monitor_updates()
-                except Exception as e:
+                except Exception as exc:
                     if self._shutdown.done():
-                        _LOGGER.debug("Ignoring %s since we are shut down.", e)
+                        _LOGGER.debug("Ignoring %s since we are shut down", exc)
                         await self._shutdown
                         continue
                     raise
             except hassmpris_client.Unauthenticated:
-                _LOGGER.warning(
-                    "We have been deauthorized.  No further updates "
-                    "will occur until reauthentication."
+                _LOGGER.error(
+                    "We have been deauthorized -- no further updates "
+                    "will occur until reauthentication"
                 )
                 await self._mark_all_entities_unavailable()
                 self.config_entry.async_start_reauth(self.hass)
                 await self.stop()
-            except hassmpris_client.ClientException as e:
-                _LOGGER.warning("We lost connectivity (%s).  Reconnecting.", e)
+            except hassmpris_client.ClientException as exc:
+                _LOGGER.error("We lost connectivity (%s) -- reconnecting", exc)
                 await self._mark_all_entities_unavailable()
                 await asyncio.sleep(5)
-            except Exception as e:
-                await self.stop(exception=e)
+            except Exception as exc:
+                await self.stop(exception=exc)
+                raise
         await self._shutdown
-        _LOGGER.debug("Streaming updates ended.")
+        _LOGGER.debug("Streaming updates ended")
 
     async def stop(
         self,
         *unused_args: Any,
         exception: Exception | None = None,
-    ):
+    ) -> None:
         """Stop the loop."""
         try:
             if exception:
@@ -452,11 +439,11 @@ class EntityManager:
                         # Player is not off.  Not removing.
                         remove = False
                 if remove:
-                    _LOGGER.debug("Removing copy %s" % player_id)
+                    _LOGGER.debug("Removing copy %s", player_id)
                     reg.async_remove(entity.entity_id)
             else:
                 if not known(player_id):
-                    _LOGGER.debug("Resuscitating known player %s" % player_id)
+                    _LOGGER.debug("Resuscitating known player %s", player_id)
                     entity = HASSMPRISEntity(
                         self.client, self.config_entry_id, player_id
                     )
@@ -489,14 +476,8 @@ class EntityManager:
             mpris_pb2.PlayerStatus.STOPPED: STATE_IDLE,
         }
         if discovery_data.status != mpris_pb2.PlayerStatus.UNKNOWN:
-            try:
-                state = table[discovery_data.status]
-                fire_status_update_observed = True
-            except Exception:
-                _LOGGER.exception(
-                    "Invalid state %s",
-                    discovery_data.status,
-                )
+            state = table[discovery_data.status]
+            fire_status_update_observed = True
 
         fire_metadata_update_observed = False
         if discovery_data.json_metadata:

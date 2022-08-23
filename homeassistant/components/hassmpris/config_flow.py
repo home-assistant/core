@@ -20,7 +20,6 @@ from .const import (
     CONF_CLIENT_KEY,
     CONF_TRUST_CHAIN,
     DOMAIN,
-    LOGGER as _LOGGER,
     STEP_CONFIRM,
 )
 
@@ -161,9 +160,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="timeout_connect")
         except hassmpris_client.ClientException:
             return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Failed to connect to CAKES service.")
-            return self.async_abort(reason="unknown")
         emojis = emoji(ecdh.derived_key, 6)
 
         return self.async_show_form(
