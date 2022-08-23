@@ -8,15 +8,11 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Do you want to setup {name}?",
-                "data": {
-                    "scan_interval": "Scan interval (seconds)"
-                }
+                "description": "Do you want to setup {name}?"
             },
             "user": {
                 "data": {
-                    "address": "Device",
-                    "scan_interval": "Scan interval (seconds)"
+                    "address": "Device"
                 },
                 "description": "Choose a device to setup"
             }

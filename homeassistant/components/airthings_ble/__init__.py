@@ -8,12 +8,12 @@ from airthings_ble import AirthingsBluetoothDeviceData
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ...exceptions import ConfigEntryNotReady
-from ...helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -28,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     elevation = hass.config.elevation
     is_metric = hass.config.units.is_metric
-    scan_interval = entry.data[CONF_SCAN_INTERVAL]
     assert address is not None
 
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
@@ -38,15 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Airthings device with address {address}"
         )
 
-    airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
-
     # airthings_ble = AirthingsBluetoothDeviceData(_LOGGER)
     async def _update_method():
         """Get data from Airthings BLE."""
-        if ble_device.name is not entry.title:
-            hass.config_entries.async_update_entry(
-                entry, title=ble_device.name
-            )
+        ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
+
+        airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
 
         try:
             data = await airthings.update_device(ble_device)
@@ -60,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=_update_method,
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -74,9 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        entry, PLATFORMS
-    ):
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

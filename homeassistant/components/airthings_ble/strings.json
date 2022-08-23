@@ -5,15 +5,11 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]",
-          "scan_interval": "Scan interval (seconds)"
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
         }
       },
       "bluetooth_confirm": {
-        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]",
-        "data": {
-          "scan_interval": "Scan interval (seconds)"
-        }
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       }
     },
     "abort": {

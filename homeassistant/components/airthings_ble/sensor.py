@@ -25,10 +25,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ...helpers.typing import StateType
-from ...helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from ...helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,9 +131,7 @@ async def async_setup_entry(
             )
             continue
         entities.append(
-            AirthingsSensor(
-                coordinator, coordinator.data, SENSORS[sensor_type]
-            )
+            AirthingsSensor(coordinator, coordinator.data, SENSORS[sensor_type])
         )
 
     async_add_entities(entities)
@@ -148,6 +143,7 @@ class AirthingsSensor(
     """Repping that Airthings BLE sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -159,13 +155,19 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        self._attr_unique_id = (
-            f"{airthings_device.name}_{entity_description.key}"
-        )
-        self._id = airthings_device.name
+        name = f"{airthings_device.name} {airthings_device.identifier}"
+
+        self._attr_unique_id = f"{name}_{entity_description.key}"
+
+        self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, airthings_device.name)},
-            name=airthings_device.name,
+            identifiers={
+                (
+                    DOMAIN,
+                    airthings_device.address,
+                )
+            },
+            name=name,
             manufacturer="Airthings",
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
