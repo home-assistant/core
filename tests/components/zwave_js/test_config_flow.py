@@ -1,9 +1,12 @@
 """Test the Z-Wave JS config flow."""
 import asyncio
-from unittest.mock import DEFAULT, call, patch
+from collections.abc import Generator
+from copy import copy
+from unittest.mock import DEFAULT, MagicMock, call, patch
 
 import aiohttp
 import pytest
+from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
@@ -132,6 +135,45 @@ def mock_addon_setup_time():
         "homeassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ) as addon_setup_time:
         yield addon_setup_time
+
+
+@pytest.fixture(name="serial_port")
+def serial_port_fixture() -> ListPortInfo:
+    """Return a mock serial port."""
+    port = ListPortInfo("/test", skip_link_detection=True)
+    port.serial_number = "1234"
+    port.manufacturer = "Virtual serial port"
+    port.device = "/test"
+    port.description = "Some serial port"
+    port.pid = 9876
+    port.vid = 5678
+
+    return port
+
+
+@pytest.fixture(name="mock_list_ports", autouse=True)
+def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
+    """Mock list ports."""
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
+    ) as mock_list_ports:
+        another_port = copy(serial_port)
+        another_port.device = "/new"
+        another_port.description = "New serial port"
+        another_port.serial_number = "5678"
+        another_port.pid = 8765
+        mock_list_ports.return_value = [serial_port, another_port]
+        yield mock_list_ports
+
+
+@pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
+def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
+    """Mock usb serial by id."""
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
+    ) as mock_usb_serial_by_id:
+        mock_usb_serial_by_id.side_effect = lambda x: x
+        yield mock_usb_serial_by_id
 
 
 async def test_manual(hass):
@@ -1397,7 +1439,7 @@ async def test_addon_installed_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": "/test_new",
+            "usb_path": "/new",
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -1410,7 +1452,7 @@ async def test_addon_installed_already_configured(
         "core_zwave_js",
         {
             "options": {
-                "device": "/test_new",
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -1430,7 +1472,7 @@ async def test_addon_installed_already_configured(
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test_new"
+    assert entry.data["usb_path"] == "/new"
     assert entry.data["s0_legacy_key"] == "new123"
     assert entry.data["s2_access_control_key"] == "new456"
     assert entry.data["s2_authenticated_key"] == "new789"
@@ -2380,8 +2422,10 @@ async def test_import_addon_installed(
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
+    serial_port,
 ):
     """Test import step while add-on already installed on Supervisor."""
+    serial_port.device = "/test/imported"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},

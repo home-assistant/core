@@ -4,7 +4,7 @@ from unittest.mock import patch
 from aioskybell import exceptions
 
 from homeassistant.components.skybell.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -99,35 +99,3 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}
-
-
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test import step."""
-    with _patch_skybell(), _patch_skybell_devices(), _patch_setup_entry(), _patch_setup():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_CONFIG_FLOW,
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "user"
-        assert result["data"] == CONF_CONFIG_FLOW
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant) -> None:
-    """Test import step already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="123456789012345678901234", data=CONF_CONFIG_FLOW
-    )
-
-    entry.add_to_hass(hass)
-
-    with _patch_skybell():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-        )
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"

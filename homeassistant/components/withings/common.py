@@ -503,6 +503,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             f"{self.URL}/{path}",
             params=params,
             headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
         )
         return response.json()
 

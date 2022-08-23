@@ -101,7 +101,7 @@ class ComedHourlyPricingSensor(SensorEntity):
             self._attr_name = name
         self.offset = offset
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
             sensor_type = self.entity_description.key

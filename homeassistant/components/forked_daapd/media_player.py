@@ -2,6 +2,7 @@
 import asyncio
 from collections import defaultdict
 import logging
+from typing import Any
 
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
@@ -138,7 +139,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
         self._available = True
         self._entry_id = entry_id
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Use lifecycle hooks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -168,7 +169,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
         """Entity pushes its state to HA."""
         return False
 
-    async def async_toggle(self):
+    async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
         if self.state == STATE_OFF:
             await self.async_turn_on()
@@ -180,21 +181,21 @@ class ForkedDaapdZone(MediaPlayerEntity):
         """Return whether the zone is available."""
         return self._available
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Enable the output."""
         await self._api.change_output(self._output_id, selected=True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Disable the output."""
         await self._api.change_output(self._output_id, selected=False)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the zone."""
         return f"{FD_NAME} output ({self._output['name']})"
 
     @property
-    def state(self):
+    def state(self) -> str:
         """State of the zone."""
         if self._output["selected"]:
             return STATE_ON
@@ -206,11 +207,11 @@ class ForkedDaapdZone(MediaPlayerEntity):
         return self._output["volume"] / 100
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self._output["volume"] == 0
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
             if self.volume_level == 0:
@@ -221,7 +222,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
             target_volume = self._last_volume  # restore volume level
         await self.async_set_volume_level(volume=target_volume)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume - input range [0,1]."""
         await self._api.set_volume(volume=volume * 100, output_id=self._output_id)
 
@@ -270,7 +271,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._source = SOURCE_NAME_DEFAULT
         self._max_playlists = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Use lifecycle hooks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -421,7 +422,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         """Return whether the master is available."""
         return self._available
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Restore the last on outputs state."""
         # restore state
         await self._api.set_volume(volume=self._last_volume * 100)
@@ -441,14 +442,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 [output["id"] for output in self._outputs]
             )
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Pause player and store outputs state."""
         await self.async_media_pause()
         self._last_outputs = self._outputs
         if any(output["selected"] for output in self._outputs):
             await self._api.set_enabled_outputs([])
 
-    async def async_toggle(self):
+    async def async_toggle(self) -> None:
         """Toggle the power on the device.
 
         Default media player component method counts idle as off.
@@ -460,7 +461,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             await self.async_turn_off()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{FD_NAME} server"
 
@@ -564,7 +565,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         """List of available input sources."""
         return [*self._sources_uris]
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
             if self.volume_level == 0:
@@ -575,32 +576,32 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             target_volume = self._last_volume  # restore volume level
         await self._api.set_volume(volume=target_volume * 100)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume - input range [0,1]."""
         await self._api.set_volume(volume=volume * 100)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Start playback."""
         if self._use_pipe_control():
             await self._pipe_call(self._use_pipe_control(), "async_media_play")
         else:
             await self._api.start_playback()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Pause playback."""
         if self._use_pipe_control():
             await self._pipe_call(self._use_pipe_control(), "async_media_pause")
         else:
             await self._api.pause_playback()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Stop playback."""
         if self._use_pipe_control():
             await self._pipe_call(self._use_pipe_control(), "async_media_stop")
         else:
             await self._api.stop_playback()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         if self._use_pipe_control():
             await self._pipe_call(
@@ -609,22 +610,22 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             await self._api.previous_track()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Skip to next track."""
         if self._use_pipe_control():
             await self._pipe_call(self._use_pipe_control(), "async_media_next_track")
         else:
             await self._api.next_track()
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Seek to position."""
         await self._api.seek(position_ms=position * 1000)
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear playlist."""
         await self._api.clear_queue()
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._api.shuffle(shuffle)
 
@@ -662,7 +663,9 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._pause_requested = False
         self._paused_event.clear()
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a URI."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
@@ -738,7 +741,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Change source.
 
         Source name reflects whether in default mode or pipe mode.

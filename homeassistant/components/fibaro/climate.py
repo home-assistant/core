@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -199,7 +200,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                 if mode in OPMODES_PRESET:
                     self._preset_support.append(OPMODES_PRESET[mode])
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug(
             "Climate %s\n"
@@ -241,7 +242,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         mode = int(self._fan_mode_device.fibaro_device.properties.mode)
         return FANMODES[mode]
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not self._fan_mode_device:
             return
@@ -270,7 +271,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             return [HVACMode.AUTO]  # Default to this
         return self._hvac_support
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if not self._op_mode_device:
             return
@@ -346,7 +347,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             return float(device.properties.targetLevel)
         return None
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         target = self._target_temp_device

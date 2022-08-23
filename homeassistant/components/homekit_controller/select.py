@@ -8,8 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, CharacteristicEntity
+from . import KNOWN_DEVICES
 from .const import DEVICE_CLASS_ECOBEE_MODE
+from .entity import CharacteristicEntity
 
 _ECOBEE_MODE_TO_TEXT = {
     0: "home",

@@ -4,10 +4,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import cast
+from typing import Any, cast
 
 from aiolifx.aiolifx import Light
-from aiolifx_connection import LIFXConnection
+from aiolifx.connection import LIFXConnection
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     _LOGGER,
+    IDENTIFY_WAVEFORM,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
     TARGET_ANY,
@@ -75,6 +76,24 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             self.device.host_firmware_version,
         )
 
+    @property
+    def label(self) -> str:
+        """Return the label of the bulb."""
+        return cast(str, self.device.label)
+
+    async def async_identify_bulb(self) -> None:
+        """Identify the device by flashing it three times."""
+        bulb: Light = self.device
+        if bulb.power_level:
+            # just flash the bulb for three seconds
+            await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+            return
+        # Turn the bulb on first, flash for 3 seconds, then turn off
+        await self.async_set_power(state=True, duration=1)
+        await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+        await asyncio.sleep(3)
+        await self.async_set_power(state=False, duration=1)
+
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         async with self.lock:
@@ -118,6 +137,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # We only await multizone responses so don't ask for just one
             if zone == top - 1:
                 zone -= 1
+
+    async def async_set_waveform_optional(
+        self, value: dict[str, Any], rapid: bool = False
+    ) -> None:
+        """Send a set_waveform_optional message to the device."""
+        await async_execute_lifx(
+            partial(self.device.set_waveform_optional, value=value, rapid=rapid)
+        )
 
     async def async_get_color(self) -> None:
         """Send a get color message to the device."""

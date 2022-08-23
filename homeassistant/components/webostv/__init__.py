@@ -1,7 +1,7 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
@@ -10,7 +10,6 @@ from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
-from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -30,6 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.trigger import TriggerActionType
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -170,7 +170,10 @@ class PluggableAction:
 
     def __init__(self) -> None:
         """Initialize."""
-        self._actions: dict[Callable[[], None], tuple[HassJob, dict[str, Any]]] = {}
+        self._actions: dict[
+            Callable[[], None],
+            tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]],
+        ] = {}
 
     def __bool__(self) -> bool:
         """Return if we have something attached."""
@@ -178,7 +181,7 @@ class PluggableAction:
 
     @callback
     def async_attach(
-        self, action: AutomationActionType, variables: dict[str, Any]
+        self, action: TriggerActionType, variables: dict[str, Any]
     ) -> Callable[[], None]:
         """Attach a device trigger for turn on."""
 

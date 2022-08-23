@@ -59,7 +59,9 @@ homeassistant.components.ampio.*
 homeassistant.components.anthemav.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
+homeassistant.components.auth.*
 homeassistant.components.automation.*
+homeassistant.components.awair.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
@@ -96,6 +98,8 @@ homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
+homeassistant.components.feedreader.*
+homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*
@@ -106,6 +110,7 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
+homeassistant.components.fully_kiosk.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
@@ -166,6 +171,7 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
+homeassistant.components.mikrotik.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
@@ -213,6 +219,7 @@ homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
+homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensor.*

@@ -164,6 +164,7 @@ class AmcrestCommandFailed(Exception):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
@@ -280,14 +281,6 @@ class AmcrestCam(Camera):
             await stream.close()
 
     # Entity property overrides
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
 
     @property
     def name(self) -> str:

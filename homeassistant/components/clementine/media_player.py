@@ -78,7 +78,7 @@ class ClementineDevice(MediaPlayerEntity):
         self._client = client
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest data from the Clementine Player."""
         try:
             client = self._client
@@ -115,14 +115,14 @@ class ClementineDevice(MediaPlayerEntity):
             self._attr_state = STATE_OFF
             raise
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         client = self._client
         sources = [s for s in client.playlists.values() if s["name"] == source]
         if len(sources) == 1:
             client.change_song(sources[0]["id"], 0)
 
-    async def async_get_media_image(self):
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing image."""
         if self._client.current_track:
             image = bytes(self._client.current_track["art"])
@@ -130,45 +130,45 @@ class ClementineDevice(MediaPlayerEntity):
 
         return None, None
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         newvolume = min(self._client.volume + 4, 100)
         self._client.set_volume(newvolume)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         newvolume = max(self._client.volume - 4, 0)
         self._client.set_volume(newvolume)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._client.set_volume(0)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         self._client.set_volume(int(100 * volume))
 
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         if self.state == STATE_PLAYING:
             self.media_pause()
         else:
             self.media_play()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._attr_state = STATE_PLAYING
         self._client.play()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._attr_state = STATE_PAUSED
         self._client.pause()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._client.next()
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._client.previous()

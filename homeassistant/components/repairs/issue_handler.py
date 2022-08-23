@@ -27,7 +27,6 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-
         return await (self.async_step_confirm())
 
     async def async_step_confirm(
@@ -37,7 +36,16 @@ class ConfirmRepairFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        issue_registry = async_get_issue_registry(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=description_placeholders,
+        )
 
 
 class RepairsFlowManager(data_entry_flow.FlowManager):
@@ -111,11 +119,11 @@ def async_create_issue(
     domain: str,
     issue_id: str,
     *,
-    issue_domain: str | None = None,
     breaks_in_ha_version: str | None = None,
     data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
+    issue_domain: str | None = None,
     learn_more_url: str | None = None,
     severity: IssueSeverity,
     translation_key: str,
@@ -134,11 +142,11 @@ def async_create_issue(
     issue_registry.async_get_or_create(
         domain,
         issue_id,
-        issue_domain=issue_domain,
         breaks_in_ha_version=breaks_in_ha_version,
         data=data,
         is_fixable=is_fixable,
         is_persistent=is_persistent,
+        issue_domain=issue_domain,
         learn_more_url=learn_more_url,
         severity=severity,
         translation_key=translation_key,
@@ -155,6 +163,7 @@ def create_issue(
     data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
+    issue_domain: str | None = None,
     learn_more_url: str | None = None,
     severity: IssueSeverity,
     translation_key: str,
@@ -172,6 +181,7 @@ def create_issue(
             data=data,
             is_fixable=is_fixable,
             is_persistent=is_persistent,
+            issue_domain=issue_domain,
             learn_more_url=learn_more_url,
             severity=severity,
             translation_key=translation_key,
