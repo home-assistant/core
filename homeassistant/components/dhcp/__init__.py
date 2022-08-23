@@ -12,7 +12,6 @@ from functools import lru_cache
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
-from os.path import normcase
 import re
 import threading
 from typing import TYPE_CHECKING, Any, Final, cast
@@ -529,7 +528,7 @@ def _verify_working_pcap(cap_filter: str) -> None:
 @lru_cache(maxsize=4096, typed=True)
 def _compile_fnmatch(pattern: str) -> re.Pattern:
     """Compile a fnmatch pattern."""
-    return re.compile(translate(normcase(pattern)))
+    return re.compile(translate(pattern))
 
 
 @lru_cache(maxsize=1024, typed=True)
@@ -540,4 +539,4 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     With many devices we quickly reach that limit and end up compiling
     the same pattern over and over again.
     """
-    return bool(_compile_fnmatch(pattern).match(normcase(name)))
+    return bool(_compile_fnmatch(pattern).match(name))
