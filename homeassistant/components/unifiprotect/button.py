@@ -14,7 +14,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -93,11 +93,12 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 
-async def _remove_adopt_button(
+@callback
+def _async_remove_adopt_button(
     hass: HomeAssistant, device: ProtectAdoptableDeviceModel
 ) -> None:
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     if device.is_adopted_by_us and (
         entity_id := entity_registry.async_get_entity_id(
             Platform.BUTTON, DOMAIN, f"{device.mac}_adopt"
@@ -125,7 +126,7 @@ async def async_setup_entry(
             ufp_device=device,
         )
         async_add_entities(entities)
-        await _remove_adopt_button(hass, device)
+        _async_remove_adopt_button(hass, device)
 
     async def _add_unadopted_device(device: ProtectAdoptableDeviceModel) -> None:
         if not device.can_adopt or not device.can_create(data.api.bootstrap.auth_user):
@@ -160,7 +161,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     for device in data.get_by_types(DEVICES_THAT_ADOPT):
-        await _remove_adopt_button(hass, device)
+        _async_remove_adopt_button(hass, device)
 
 
 class ProtectButton(ProtectDeviceEntity, ButtonEntity):
