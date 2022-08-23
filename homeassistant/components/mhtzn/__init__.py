@@ -14,9 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """This method is triggered when the entry configuration changes, and the gateway link information is updated"""
+    """This method is triggered when the entry configuration changes, and the gateway connection is updated"""
 
-    """Get gateway instance"""
     hub = hass.data[DOMAIN][entry.unique_id]
     """reconnect gateway"""
     await hub.reconnect(entry)
@@ -27,7 +26,6 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
-    """Create a gateway instance"""
     hub = Gateway(hass, entry)
 
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = hub
