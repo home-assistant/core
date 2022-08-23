@@ -113,4 +113,4 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         ):
             self._use_websocket()
 
-        return device
+        return device  # type: ignore[no-any-return]
