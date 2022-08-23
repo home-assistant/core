@@ -12,8 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UpdateCoordinator
 from .const import DOMAIN, SENSORS
+from .coordinator import ForecastSolarUpdateCoordinator
 from .models import ForecastSolarSensorEntityDescription
 
 
@@ -21,7 +21,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: UpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ForecastSolarUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         ForecastSolarSensorEntity(
@@ -33,7 +33,9 @@ async def async_setup_entry(
     )
 
 
-class ForecastSolarSensorEntity(CoordinatorEntity[UpdateCoordinator], SensorEntity):
+class ForecastSolarSensorEntity(
+    CoordinatorEntity[ForecastSolarUpdateCoordinator], SensorEntity
+):
     """Defines a Forecast.Solar sensor."""
 
     entity_description: ForecastSolarSensorEntityDescription
@@ -43,7 +45,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity[UpdateCoordinator], SensorEnti
         self,
         *,
         entry_id: str,
-        coordinator: UpdateCoordinator,
+        coordinator: ForecastSolarUpdateCoordinator,
         entity_description: ForecastSolarSensorEntityDescription,
     ) -> None:
         """Initialize Forecast.Solar sensor."""

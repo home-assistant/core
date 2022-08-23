@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 from .models import ForecastSolarSensorEntityDescription
+
+LOGGER: logging.Logger = logging.getLogger(__package__)
 
 DOMAIN = "forecast_solar"
 
