@@ -17,6 +17,13 @@ if TYPE_CHECKING:
     from . import MicroBotDataUpdateCoordinator
 
 CALIBRATE = "calibrate"
+CALIBRATE_SCHEMA = vol.Schema(
+    {
+        vol.Required("depth"): cv.positive_int,
+        vol.Required("duration"): cv.positive_int,
+        vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
+    }
+)
 
 
 async def async_setup_entry(
@@ -30,11 +37,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         CALIBRATE,
-        {
-            vol.Required("depth"): cv.positive_int,
-            vol.Required("duration"): cv.positive_int,
-            vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
-        },
+        CALIBRATE_SCHEMA,
         "async_calibrate",
     )
 
