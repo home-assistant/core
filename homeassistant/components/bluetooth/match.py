@@ -176,7 +176,7 @@ def ble_device_matches(
 
 # The matcher has its own memorized fnmatch with its own lru_cache
 # since the data is going to be relatively the same
-# since the devices will not changed
+# since the devices will not change frequently.
 
 
 @lru_cache(maxsize=4096, typed=True)

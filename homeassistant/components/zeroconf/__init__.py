@@ -583,7 +583,7 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
 
 # The integrations has its own memorized fnmatch with its own lru_cache
 # since the data is going to be relatively the same
-# since the devices will not changed
+# since the devices will not change frequently
 
 
 @lru_cache(maxsize=4096, typed=True)
