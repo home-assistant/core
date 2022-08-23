@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
 import functools
 from json import JSONDecoder, loads
@@ -13,7 +13,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import client
-from aiohttp.test_utils import TestClient, make_mocked_request
+from aiohttp.pytest_plugin import AiohttpClient
+from aiohttp.test_utils import (
+    BaseTestServer,
+    TestClient,
+    TestServer,
+    make_mocked_request,
+)
+from aiohttp.web import Application
 import freezegun
 import multidict
 import pytest
@@ -244,6 +251,55 @@ class CoalescingClient(TestClient):
 def aiohttp_client_cls():
     """Override the test class for aiohttp."""
     return CoalescingClient
+
+
+@pytest.fixture
+def aiohttp_client(
+    loop: asyncio.AbstractEventLoop,
+) -> Generator[AiohttpClient, None, None]:
+    """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
+
+    aiohttp_client(app, **kwargs)
+    aiohttp_client(server, **kwargs)
+    aiohttp_client(raw_server, **kwargs)
+    """
+    clients = []
+
+    async def go(
+        __param: Application | BaseTestServer,
+        *args: Any,
+        server_kwargs: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> TestClient:
+
+        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
+            __param, (Application, BaseTestServer)
+        ):
+            __param = __param(loop, *args, **kwargs)
+            kwargs = {}
+        else:
+            assert not args, "args should be empty"
+
+        if isinstance(__param, Application):
+            server_kwargs = server_kwargs or {}
+            server = TestServer(__param, loop=loop, **server_kwargs)
+            client = CoalescingClient(server, loop=loop, **kwargs)
+        elif isinstance(__param, BaseTestServer):
+            client = TestClient(__param, loop=loop, **kwargs)
+        else:
+            raise ValueError("Unknown argument type: %r" % type(__param))
+
+        await client.start_server()
+        clients.append(client)
+        return client
+
+    yield go
+
+    async def finalize() -> None:
+        while clients:
+            await clients.pop().close()
+
+    loop.run_until_complete(finalize())
 
 
 @pytest.fixture
