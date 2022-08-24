@@ -17,7 +17,7 @@
                     "ssl": "Utiliza un certificado SSL",
                     "username": "Nombre de usuario",
                     "verify_ssl": "Verificar el certificado SSL",
-                    "version": "Versi\u00f3n API Glances (2 o 3)"
+                    "version": "Versi\u00f3n API de Glances (2 o 3)"
                 },
                 "title": "Configurar Glances"
             }

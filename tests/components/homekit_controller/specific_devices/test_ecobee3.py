@@ -6,7 +6,7 @@ https://github.com/home-assistant/core/issues/15336
 
 from unittest import mock
 
-from aiohomekit import AccessoryDisconnectedError
+from aiohomekit import AccessoryNotFoundError
 from aiohomekit.testing import FakePairing
 
 from homeassistant.components.climate.const import (
@@ -184,9 +184,8 @@ async def test_ecobee3_setup_connection_failure(hass):
 
     # Test that the connection fails during initial setup.
     # No entities should be created.
-    list_accessories = "list_accessories_and_characteristics"
-    with mock.patch.object(FakePairing, list_accessories) as laac:
-        laac.side_effect = AccessoryDisconnectedError("Connection failed")
+    with mock.patch.object(FakePairing, "async_populate_accessories_state") as laac:
+        laac.side_effect = AccessoryNotFoundError("Connection failed")
 
         # If there is no cached entity map and the accessory connection is
         # failing then we have to fail the config entry setup.

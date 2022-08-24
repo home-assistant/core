@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Check the documentation at {docs_url} for how to find the offline key.",
+        "description": "Check the documentation for how to find the offline key.",
         "data": {
           "address": "Bluetooth address",
           "key": "Offline Key (32-byte hex string)",
@@ -22,6 +22,7 @@
       "invalid_key_index": "The offline key slot must be an integer between 0 and 255."
     },
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_unconfigured_devices": "No unconfigured devices found.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"

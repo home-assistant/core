@@ -269,7 +269,7 @@ class AtomeSensor(SensorEntity):
             self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         update_function = getattr(self._data, f"update_{self._sensor_type}_usage")
         update_function()

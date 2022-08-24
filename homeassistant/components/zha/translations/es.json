@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "\u00bfQuieres configurar {name} ?"
             },
+            "confirm_hardware": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Tipo de Radio"
@@ -87,12 +90,12 @@
         },
         "trigger_type": {
             "device_dropped": "Dispositivo ca\u00eddo",
-            "device_flipped": "Dispositivo volteado \" {subtype} \"",
-            "device_knocked": "Dispositivo eliminado \" {subtype} \"",
-            "device_offline": "Dispositivo desconectado",
-            "device_rotated": "Dispositivo girado \" {subtype} \"",
+            "device_flipped": "Dispositivo volteado \"{subtype}\"",
+            "device_knocked": "Dispositivo golpeado \"{subtype}\"",
+            "device_offline": "Dispositivo sin conexi\u00f3n",
+            "device_rotated": "Dispositivo girado \"{subtype}\"",
             "device_shaken": "Dispositivo agitado",
-            "device_slid": "Dispositivo deslizado \" {subtype} \"",
+            "device_slid": "Dispositivo deslizado \"{subtype}\"",
             "device_tilted": "Dispositivo inclinado",
             "remote_button_alt_double_press": "Bot\u00f3n \"{subtype}\" doble pulsaci\u00f3n (modo Alternativo)",
             "remote_button_alt_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente (modo Alternativo)",
@@ -102,14 +105,14 @@
             "remote_button_alt_short_press": "Bot\u00f3n \"{subtype}\" pulsado (modo Alternativo)",
             "remote_button_alt_short_release": "Bot\u00f3n \"{subtype}\" soltado (modo Alternativo)",
             "remote_button_alt_triple_press": "Bot\u00f3n \"{subtype}\" triple pulsaci\u00f3n (modo Alternativo)",
-            "remote_button_double_press": "Bot\u00f3n \"{subtype}\" doble pulsaci\u00f3n",
+            "remote_button_double_press": "Bot\u00f3n \"{subtype}\" pulsado dos veces",
             "remote_button_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente",
             "remote_button_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
-            "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" cu\u00e1druple pulsaci\u00f3n",
-            "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" qu\u00edntuple pulsaci\u00f3n",
+            "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces",
+            "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" pulsado cinco veces",
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
-            "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" triple pulsaci\u00f3n"
+            "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado tres veces"
         }
     }
 }

@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Kas soovid seadistada teenust {name} ?"
             },
+            "confirm_hardware": {
+                "description": "Kas seadistada {name} ?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Seadme raadio t\u00fc\u00fcp"

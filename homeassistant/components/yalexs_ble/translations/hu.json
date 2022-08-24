@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
             "no_unconfigured_devices": "Nem tal\u00e1lhat\u00f3 konfigur\u00e1latlan eszk\u00f6z."
         },
@@ -12,6 +13,7 @@
             "invalid_key_index": "Az offline kulcshelynek 0 \u00e9s 255 k\u00f6z\u00f6tti eg\u00e9sz sz\u00e1mnak kell lennie.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "{name}",
         "step": {
             "integration_discovery_confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {nane}, Bluetooth-on kereszt\u00fcl, {address} c\u00edmmel?"

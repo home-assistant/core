@@ -9,18 +9,18 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "iRobot {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Mant\u00e9n pulsado el bot\u00f3n Inicio en {name} hasta que el dispositivo genere un sonido (aproximadamente dos segundos).",
-                "title": "Recuperar la contrase\u00f1a"
+                "description": "Mant\u00e9n pulsado el bot\u00f3n Inicio en {name} hasta que el dispositivo genere un sonido (alrededor de dos segundos), luego haz clic en enviar en los siguientes 30 segundos.",
+                "title": "Recuperar Contrase\u00f1a"
             },
             "link_manual": {
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "No se pudo recuperar la contrase\u00f1a desde el dispositivo de forma autom\u00e1tica. Por favor, sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
-                "title": "Escribe la contrase\u00f1a"
+                "description": "La contrase\u00f1a no se pudo recuperar del dispositivo autom\u00e1ticamente. Por favor, sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
+                "title": "Introduce la contrase\u00f1a"
             },
             "manual": {
                 "data": {
@@ -33,8 +33,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Actualmente recuperar el BLID y la contrase\u00f1a es un proceso manual. Sigue los pasos descritos en la documentaci\u00f3n en: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Conexi\u00f3n autom\u00e1tica con el dispositivo"
+                "description": "Selecciona una Roomba o Braava.",
+                "title": "Conectar autom\u00e1ticamente al dispositivo"
             }
         }
     },

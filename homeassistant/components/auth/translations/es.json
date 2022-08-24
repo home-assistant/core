@@ -5,15 +5,15 @@
                 "no_available_service": "No hay servicios de notificaci\u00f3n disponibles."
             },
             "error": {
-                "invalid_code": "C\u00f3digo inv\u00e1lido, por favor int\u00e9ntelo de nuevo."
+                "invalid_code": "C\u00f3digo no v\u00e1lido, por favor, int\u00e9ntalo de nuevo."
             },
             "step": {
                 "init": {
-                    "description": "Selecciona uno de los servicios de notificaci\u00f3n:",
+                    "description": "Por favor, selecciona uno de los servicios de notificaci\u00f3n:",
                     "title": "Configurar una contrase\u00f1a de un solo uso entregada por el componente de notificaci\u00f3n"
                 },
                 "setup": {
-                    "description": "Se ha enviado una contrase\u00f1a de un solo uso a trav\u00e9s de ** notify.{notify_service} **. Por favor introd\u00facela a continuaci\u00f3n:",
+                    "description": "Se ha enviado una contrase\u00f1a de un solo uso a trav\u00e9s de **notify.{notify_service}**. Por favor, introd\u00facela a continuaci\u00f3n:",
                     "title": "Verificar la configuraci\u00f3n"
                 }
             },
@@ -21,7 +21,7 @@
         },
         "totp": {
             "error": {
-                "invalid_code": "C\u00f3digo inv\u00e1lido, int\u00e9ntalo de nuevo. Si recibes este error de forma consistente, aseg\u00farate de que el reloj de tu sistema Home Assistant es correcto."
+                "invalid_code": "C\u00f3digo no v\u00e1lido, por favor, int\u00e9ntalo de nuevo. Si recibes este error constantemente, aseg\u00farate de que el reloj de tu sistema Home Assistant sea exacto."
             },
             "step": {
                 "init": {
