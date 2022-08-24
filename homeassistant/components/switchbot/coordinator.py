@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
+import async_timeout
 import switchbot
 
 from homeassistant.components import bluetooth
@@ -37,25 +39,35 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
+        base_unique_id: str,
+        device_name: str,
+        connectable: bool,
     ) -> None:
         """Initialize global switchbot data updater."""
-        super().__init__(hass, logger, ble_device.address)
+        super().__init__(
+            hass,
+            logger,
+            ble_device.address,
+            bluetooth.BluetoothScanningMode.ACTIVE,
+            connectable,
+        )
         self.ble_device = ble_device
         self.device = device
         self.data: dict[str, Any] = {}
+        self.device_name = device_name
+        self.base_unique_id = base_unique_id
         self._ready_event = asyncio.Event()
 
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: bluetooth.BluetoothServiceInfo,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
         super()._async_handle_bluetooth_event(service_info, change)
-        discovery_info_bleak = cast(bluetooth.BluetoothServiceInfoBleak, service_info)
         if adv := switchbot.parse_advertisement_data(
-            discovery_info_bleak.device, discovery_info_bleak.advertisement
+            service_info.device, service_info.advertisement
         ):
             self.data = flatten_sensors_data(adv.data)
             if "modelName" in self.data:
@@ -66,8 +78,8 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
-        try:
-            await asyncio.wait_for(self._ready_event.wait(), timeout=55)
-        except asyncio.TimeoutError:
-            return False
-        return True
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(55):
+                await self._ready_event.wait()
+                return True
+        return False

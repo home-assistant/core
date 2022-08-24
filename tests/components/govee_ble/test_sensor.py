@@ -22,7 +22,7 @@ async def test_sensors(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -41,7 +41,7 @@ async def test_sensors(hass):
 
     temp_sensor = hass.states.get("sensor.h5075_2762_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
-    assert temp_sensor.state == "21.3442"
+    assert temp_sensor.state == "21.34"
     assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "H5075_2762 Temperature"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"

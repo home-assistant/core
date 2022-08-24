@@ -68,8 +68,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.46.1
-grpcio-status==1.46.1
+grpcio==1.48.0
+grpcio-status==1.48.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -105,7 +105,7 @@ httpcore==0.15.0
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.1
+numpy==1.23.2
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0

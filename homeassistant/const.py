@@ -262,7 +262,6 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
-CONF_WHITE_VALUE: Final = "white_value"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 

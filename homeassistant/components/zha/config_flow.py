@@ -128,7 +128,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
 
         self._device_path = dev_path
-        self._title = usb.human_readable_device_name(
+        self._title = description or usb.human_readable_device_name(
             dev_path,
             serial_number,
             manufacturer,
@@ -141,8 +141,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
-        """Confirm a discovery."""
-        if user_input is not None:
+        """Confirm a USB discovery."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             auto_detected_data = await detect_radios(self._device_path)
             if auto_detected_data is None:
                 # This path probably will not happen now that we have

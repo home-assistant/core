@@ -14,7 +14,7 @@ import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import async_timeout
 import attr
 import voluptuous as vol
@@ -39,7 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -374,7 +374,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
@@ -715,8 +715,11 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            if request[KEY_AUTHENTICATED]:
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
                 raise web.HTTPUnauthorized()
+            # Invalid sigAuth or camera access token
             raise web.HTTPForbidden()
 
         if not camera.is_on:
