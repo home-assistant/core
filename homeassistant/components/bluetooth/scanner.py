@@ -42,6 +42,9 @@ from .util import adapter_human_name, async_reset_adapter
 OriginalBleakScanner = bleak.BleakScanner
 MONOTONIC_TIME = time.monotonic
 
+# or_patterns is a workaround for the fact that passive scanning
+# needs at least one matcher to be set. The below matcher
+# will match all devices.
 PASSIVE_SCANNER_ARGS = BlueZScannerArgs(
     or_patterns=[
         OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
@@ -93,13 +96,11 @@ def create_bleak_scanner(
     scanner_kwargs: dict[str, Any] = {
         "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
     }
-    # Only Linux supports multiple adapters
-    if adapter and platform.system() == "Linux":
-        scanner_kwargs["adapter"] = adapter
+    if platform.system() == "Linux":
+        # Only Linux supports multiple adapters
+        if adapter:
+            scanner_kwargs["adapter"] = adapter
         if scanning_mode == BluetoothScanningMode.PASSIVE:
-            # This is a workaround for the fact that passive scanning
-            # needs at least one matcher to be set. The below matcher
-            # will match all devices.
             scanner_kwargs["bluez"] = PASSIVE_SCANNER_ARGS
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
 
