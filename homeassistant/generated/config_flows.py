@@ -416,6 +416,7 @@ FLOWS = {
         "vizio",
         "vlc_telnet",
         "volumio",
+        "volvooncall",
         "vulcan",
         "wallbox",
         "watttime",
