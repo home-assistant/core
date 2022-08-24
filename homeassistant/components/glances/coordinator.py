@@ -40,4 +40,4 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.api.get_data("all")
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
-        return self.api.data()
+        return self.api.data
