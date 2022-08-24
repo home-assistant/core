@@ -19,6 +19,7 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
@@ -1801,23 +1802,22 @@ async def test_message_coalescing(hass, websocket_client, hass_admin_user):
     )
     hass.states.async_set("light.permitted", "on", {"color": "red"})
 
-    msg = await websocket_client.receive_json()
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
     assert msg["id"] == 1
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
     await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
 
-    msg = await websocket_client.receive_json()
+    data = await websocket_client.receive_str()
+    msgs = json_loads(data)
+    msg = msgs.pop(0)
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    hass.states.async_set("light.permitted", "on", {"color": "yellow"})
-    hass.states.async_set("light.permitted", "on", {"color": "green"})
-    hass.states.async_set("light.permitted", "on", {"color": "blue"})
-
-    msg = await websocket_client.receive_json()
+    msg = msgs.pop(0)
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
@@ -1826,21 +1826,28 @@ async def test_message_coalescing(hass, websocket_client, hass_admin_user):
         }
     }
 
-    msg = await websocket_client.receive_json()
+    hass.states.async_set("light.permitted", "on", {"color": "yellow"})
+    hass.states.async_set("light.permitted", "on", {"color": "green"})
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+
+    data = await websocket_client.receive_str()
+    msgs = json_loads(data)
+
+    msg = msgs.pop(0)
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
         "c": {"light.permitted": {"+": {"a": {"color": "yellow"}, "c": ANY, "lu": ANY}}}
     }
 
-    msg = await websocket_client.receive_json()
+    msg = msgs.pop(0)
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
         "c": {"light.permitted": {"+": {"a": {"color": "green"}, "c": ANY, "lu": ANY}}}
     }
 
-    msg = await websocket_client.receive_json()
+    msg = msgs.pop(0)
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"] == {
