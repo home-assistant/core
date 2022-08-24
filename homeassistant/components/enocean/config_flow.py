@@ -26,20 +26,30 @@ CONF_ENOCEAN_MIN_TEMP = "min_temp"
 CONF_ENOCEAN_MAX_TEMP = "max_temp"
 
 MOCKUP_DEVICES = [
-    selector.SelectOptionDict(value="12:34:56:78", label="Switch 1"),
-    selector.SelectOptionDict(value="12:53:14:78", label="Switch 2"),
-    selector.SelectOptionDict(value="12:53:56:78", label="Switch 3"),
-    selector.SelectOptionDict(value="11:22:33:44", label="Light 1"),
-    selector.SelectOptionDict(value="AB:CE:DE:F0", label="Light 2"),
-    selector.SelectOptionDict(value="AB:CE:DE:F1", label="Light 3"),
+    selector.SelectOptionDict(value="12:34:56:78", label="(Mock-up) Switch 1"),
+    selector.SelectOptionDict(value="12:53:14:78", label="(Mock-up) Switch 2"),
+    selector.SelectOptionDict(value="12:53:56:78", label="(Mock-up) Switch 3"),
+    selector.SelectOptionDict(value="11:22:33:44", label="(Mock-up) Light 1"),
+    selector.SelectOptionDict(value="AB:CE:DE:F0", label="(Mock-up) Light 2"),
+    selector.SelectOptionDict(value="AB:CE:DE:F1", label="(Mock-up) Light 3"),
 ]
 
 MOCKUP_SENDER_IDS = [
-    selector.SelectOptionDict(value="5E:53:AB:92", label="Chip ID (5E:53:AB:92)"),
-    selector.SelectOptionDict(value="FF:FF:46:80", label="Base ID (FF:FF:46:80)"),
-    selector.SelectOptionDict(value="FF:FF:46:81", label="Base ID + 1 (FF:FF:46:81)"),
-    selector.SelectOptionDict(value="FF:FF:46:82", label="Base ID + 2 (FF:FF:46:82)"),
-    selector.SelectOptionDict(value="FF:FF:46:83", label="Base ID + 3 (FF:FF:46:83)"),
+    selector.SelectOptionDict(
+        value="5E:53:AB:92", label="(Mock-up) Chip ID (5E:53:AB:92)"
+    ),
+    selector.SelectOptionDict(
+        value="FF:FF:46:80", label="(Mock-up) Base ID (FF:FF:46:80)"
+    ),
+    selector.SelectOptionDict(
+        value="FF:FF:46:81", label="(Mock-up) Base ID + 1 (FF:FF:46:81)"
+    ),
+    selector.SelectOptionDict(
+        value="FF:FF:46:82", label="(Mock-up) Base ID + 2 (FF:FF:46:82)"
+    ),
+    selector.SelectOptionDict(
+        value="FF:FF:46:83", label="(Mock-up) Base ID + 3 (FF:FF:46:83)"
+    ),
 ]
 
 
@@ -53,10 +63,16 @@ ADD_DEVICE_SCHEMA = vol.Schema(
             # devices, from which the dongle has received telegrams.
             # (FUTURE WORK)
             # Hence the use of a SelectSelector.
-            selector.SelectSelectorConfig(options=[], custom_value=True)
+            selector.SelectSelectorConfig(options=MOCKUP_DEVICES, custom_value=True)
         ),
         vol.Optional(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
-        vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): str,
+        vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): selector.SelectSelector(
+            # For now, the list of sender_ids will always be empty. For a
+            # later version, it shall be pre-filled with the dongles chip ID
+            # and its based IDs. (FUTURE WORK)
+            # Hence the use of a SelectSelector.
+            selector.SelectSelectorConfig(options=MOCKUP_SENDER_IDS, custom_value=True)
+        ),
         vol.Optional(CONF_ENOCEAN_DEVICE_CLASS): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Invalid dongle path",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "invalid_dongle_path": "No valid dongle found for this path"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB dongle path"
+                },
+                "title": "Select the path to you ENOcean dongle"
+            },
+            "manual": {
+                "data": {
+                    "path": "USB dongle path"
+                },
+                "title": "Enter the path to you ENOcean dongle"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_id": "The EnOcean ID provided is not valid."
+        },
+        "step": {
+            "add_device": {
+                "data": {
+                    "device_class": "Device class",
+                    "id": "EnOcean ID",
+                    "name": "Name",
+                    "sender_id": "Sender EnOcean ID"
+                },
+                "description": "Add a new EnOcean device (manually)",
+                "title": "Add new device"
+            },
+            "init": {
+                "data": {
+                    "add_device": "Name",
+                    "manage_devices": "EnOcean ID"
+                },
+                "description": "Configuration of the EnOcean integration"
+            }
+        }
+    }
+}

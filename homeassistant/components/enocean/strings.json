@@ -27,13 +27,22 @@
       "invalid_id": "The EnOcean ID provided is not valid."
     },
     "step": {
+      "init": {
+        "data": {
+          "manage_devices": "EnOcean ID",
+          "add_device": "Name"
+        },
+        "description": "Configuration of the EnOcean integration"
+      },
       "add_device": {
         "title": "Add new device",
         "data": {
-          "id": "The EnOcean ID of the device to add",
-          "name": "A user-defined name for the new device"
+          "id": "EnOcean ID",
+          "name": "Name",
+          "sender_id": "Sender EnOcean ID",
+          "device_class": "Device class"
         },
-        "description": "Add a new EnOcean device"
+        "description": "Add a new EnOcean device (manually)"
       }
     }
   }
