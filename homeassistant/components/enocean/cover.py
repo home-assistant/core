@@ -122,7 +122,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     async def async_added_to_hass(self):
         """Query status after Home Assistant (re)start."""
         await super().async_added_to_hass()
-        self.start_or_feed_watchdog()
+        await self.hass.async_add_executor_job(self.start_or_feed_watchdog)
 
     def open_cover(self, **kwargs) -> None:
         """Open the cover."""
