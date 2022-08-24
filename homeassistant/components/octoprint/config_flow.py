@@ -221,8 +221,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauthorization flow."""
-        if self._reauth_data is None:
-            return self.async_abort(reason="unknown")
+        assert self._reauth_data is not None
 
         if user_input is None:
             return self.async_show_form(
