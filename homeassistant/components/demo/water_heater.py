@@ -1,11 +1,11 @@
 """Demo platform that offers a fake water heater device."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.water_heater import (
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -14,7 +14,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_FLAGS_HEATER = (
-    SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
+    WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    | WaterHeaterEntityFeature.OPERATION_MODE
+    | WaterHeaterEntityFeature.AWAY_MODE
 )
 
 
@@ -55,13 +57,15 @@ class DemoWaterHeater(WaterHeaterEntity):
         self._attr_name = name
         if target_temperature is not None:
             self._attr_supported_features = (
-                self.supported_features | SUPPORT_TARGET_TEMPERATURE
+                self.supported_features | WaterHeaterEntityFeature.TARGET_TEMPERATURE
             )
         if away is not None:
-            self._attr_supported_features = self.supported_features | SUPPORT_AWAY_MODE
+            self._attr_supported_features = (
+                self.supported_features | WaterHeaterEntityFeature.AWAY_MODE
+            )
         if current_operation is not None:
             self._attr_supported_features = (
-                self.supported_features | SUPPORT_OPERATION_MODE
+                self.supported_features | WaterHeaterEntityFeature.OPERATION_MODE
             )
         self._attr_target_temperature = target_temperature
         self._attr_temperature_unit = unit_of_measurement
@@ -77,22 +81,22 @@ class DemoWaterHeater(WaterHeaterEntity):
             "off",
         ]
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
         self.schedule_update_ha_state()
 
-    def turn_away_mode_on(self):
+    def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         self._attr_is_away_mode_on = True
         self.schedule_update_ha_state()
 
-    def turn_away_mode_off(self):
+    def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         self._attr_is_away_mode_on = False
         self.schedule_update_ha_state()

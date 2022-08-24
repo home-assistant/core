@@ -66,12 +66,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:television",
     ),
     SensorEntityDescription(
-        key="wanted",
-        name="Wanted",
-        native_unit_of_measurement="Movies",
-        icon="mdi:television",
-    ),
-    SensorEntityDescription(
         key="movies",
         name="Movies",
         native_unit_of_measurement="Movies",
@@ -138,6 +132,7 @@ def setup_platform(
 ) -> None:
     """Set up the Radarr platform."""
     conditions = config[CONF_MONITORED_CONDITIONS]
+    # deprecated in 2022.3
     entities = [
         RadarrSensor(hass, config, description)
         for description in SENSOR_TYPES

@@ -18,7 +18,7 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -95,6 +95,31 @@ DEFAULT_CONFIG_9_0_0_3 = {
     "lt_st": 0,
     "ver": 1,
 }
+
+
+DEFAULT_SENSOR_CONFIG = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "DHT11": {"Temperature": None},
+        "TempUnit": "C",
+    }
+}
+
+
+async def remove_device(hass, ws_client, device_id, config_entry_id=None):
+    """Remove config entry from a device."""
+    if config_entry_id is None:
+        config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
 
 
 async def help_test_availability_when_connection_lost(

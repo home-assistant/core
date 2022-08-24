@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Bersih",
             "dirty": "Kotor"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Tutup",
+            "open": "Buka",
+            "tilt": "Miring"
         }
     }
 }

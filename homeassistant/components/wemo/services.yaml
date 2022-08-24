@@ -15,7 +15,7 @@ set_humidity:
           min: 0
           max: 100
           step: 5
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 reset_filter_life:
   name: Reset filter life

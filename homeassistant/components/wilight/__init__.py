@@ -1,5 +1,9 @@
 """The WiLight integration."""
 
+from typing import Any
+
+from pywilight.wilight_device import PyWiLightDevice
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -11,7 +15,7 @@ from .parent_device import WiLightParent
 DOMAIN = "wilight"
 
 # List the platforms that you want to support.
-PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT]
+PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -26,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = parent
 
     # Set up all platforms for this device/entry.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -51,61 +55,43 @@ class WiLightDevice(Entity):
     Contains the common logic for WiLight entities.
     """
 
-    def __init__(self, api_device, index, item_name):
+    _attr_should_poll = False
+
+    def __init__(self, api_device: PyWiLightDevice, index: str, item_name: str) -> None:
         """Initialize the device."""
         # WiLight specific attributes for every component type
         self._device_id = api_device.device_id
-        self._sw_version = api_device.swversion
         self._client = api_device.client
-        self._model = api_device.model
-        self._name = item_name
         self._index = index
-        self._unique_id = f"{self._device_id}_{self._index}"
-        self._status = {}
+        self._status: dict[str, Any] = {}
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return a name for this WiLight item."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this WiLight item."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            name=self._name,
-            identifiers={(DOMAIN, self._unique_id)},
-            model=self._model,
+        self._attr_name = item_name
+        self._attr_unique_id = f"{self._device_id}_{index}"
+        self._attr_device_info = DeviceInfo(
+            name=item_name,
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            model=api_device.model,
             manufacturer="WiLight",
-            sw_version=self._sw_version,
+            sw_version=api_device.swversion,
             via_device=(DOMAIN, self._device_id),
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._client.is_connected)
 
     @callback
-    def handle_event_callback(self, states):
+    def handle_event_callback(self, states: dict[str, Any]) -> None:
         """Propagate changes through ha."""
         self._status = states
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Synchronize state with api_device."""
         await self._client.status(self._index)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self._client.register_status_callback(self.handle_event_callback, self._index)
         await self._client.status(self._index)

@@ -7,11 +7,8 @@ from velbusaio.channels import Blind as VelbusBlind
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -45,10 +42,17 @@ class VelbusCover(VelbusEntity, CoverEntity):
         super().__init__(channel)
         if self._channel.support_position():
             self._attr_supported_features = (
-                SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+                | CoverEntityFeature.SET_POSITION
             )
         else:
-            self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
 
     @property
     def is_closed(self) -> bool | None:
@@ -78,4 +82,4 @@ class VelbusCover(VelbusEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self._channel.set_position(100 - kwargs[ATTR_POSITION])
+        await self._channel.set_position(100 - kwargs[ATTR_POSITION])

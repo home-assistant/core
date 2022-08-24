@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import lw12
 import voluptuous as vol
@@ -12,11 +13,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -59,6 +58,10 @@ def setup_platform(
 class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
+
     def __init__(self, name, lw12_light):
         """Initialise LW-12 WiFi LED Controller.
 
@@ -71,10 +74,6 @@ class LW12WiFi(LightEntity):
         self._effect = None
         self._rgb_color = [255, 255, 255]
         self._brightness = 255
-        # Setup feature list
-        self._supported_features = (
-            SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_TRANSITION
-        )
 
     @property
     def name(self):
@@ -102,11 +101,6 @@ class LW12WiFi(LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Return a list of supported features."""
-        return self._supported_features
 
     @property
     def effect_list(self):
@@ -153,7 +147,7 @@ class LW12WiFi(LightEntity):
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()
         self._state = False

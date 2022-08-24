@@ -1,16 +1,19 @@
 """The nuki component."""
+from collections import defaultdict
 from datetime import timedelta
 import logging
 
 import async_timeout
-from pynuki import NukiBridge
+from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
+from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,20 +37,39 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-def _get_bridge_devices(bridge):
+def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
 
 
-def _update_devices(devices):
+def _update_devices(devices: list[NukiDevice]) -> dict[str, set[str]]:
+    """
+    Update the Nuki devices.
+
+    Returns:
+        A dict with the events to be fired. The event type is the key and the device ids are the value
+    """
+
+    events: dict[str, set[str]] = defaultdict(set)
+
     for device in devices:
         for level in (False, True):
             try:
-                device.update(level)
+                if isinstance(device, NukiOpener):
+                    last_ring_action_state = device.ring_action_state
+
+                    device.update(level)
+
+                    if not last_ring_action_state and device.ring_action_state:
+                        events["ring"].add(device.nuki_id)
+                else:
+                    device.update(level)
             except RequestException:
                 continue
 
             if device.state not in ERROR_STATES:
                 break
+
+    return events
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -85,11 +107,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                await hass.async_add_executor_job(_update_devices, locks + openers)
+                events = await hass.async_add_executor_job(
+                    _update_devices, locks + openers
+                )
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
+
+        ent_reg = er.async_get(hass)
+        for event, device_ids in events.items():
+            for device_id in device_ids:
+                entity_id = ent_reg.async_get_entity_id(
+                    Platform.LOCK, DOMAIN, device_id
+                )
+                event_data = {
+                    "entity_id": entity_id,
+                    "type": event,
+                }
+                hass.bus.async_fire("nuki_event", event_data)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -111,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -136,7 +172,9 @@ class NukiEntity(CoordinatorEntity):
 
     """
 
-    def __init__(self, coordinator, nuki_device):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[None], nuki_device: NukiDevice
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device

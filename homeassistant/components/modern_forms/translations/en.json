@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -23,6 +20,5 @@
                 "title": "Discovered Modern Forms fan device"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

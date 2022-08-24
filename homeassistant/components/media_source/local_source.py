@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import http, websocket_api
 from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.core import HomeAssistant, callback
@@ -32,6 +32,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[DOMAIN][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
     hass.http.register_view(UploadMediaView(hass, source))
+    websocket_api.async_register_command(hass, websocket_remove_media)
 
 
 class LocalSource(MediaSource):
@@ -55,10 +56,6 @@ class LocalSource(MediaSource):
         if item.domain != DOMAIN:
             raise Unresolvable("Unknown domain.")
 
-        if not item.identifier:
-            # Empty source_dir_id and location
-            return "", ""
-
         source_dir_id, _, location = item.identifier.partition("/")
         if source_dir_id not in self.hass.config.media_dirs:
             raise Unresolvable("Unknown source directory.")
@@ -73,36 +70,39 @@ class LocalSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
-        if source_dir_id == "" or source_dir_id not in self.hass.config.media_dirs:
-            raise Unresolvable("Unknown source directory.")
-
-        mime_type, _ = mimetypes.guess_type(
-            str(self.async_full_path(source_dir_id, location))
-        )
+        path = self.async_full_path(source_dir_id, location)
+        mime_type, _ = mimetypes.guess_type(str(path))
         assert isinstance(mime_type, str)
         return PlayMedia(f"/media/{item.identifier}", mime_type)
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
-        try:
-            source_dir_id, location = self.async_parse_identifier(item)
-        except Unresolvable as err:
-            raise BrowseError(str(err)) from err
+        if item.identifier:
+            try:
+                source_dir_id, location = self.async_parse_identifier(item)
+            except Unresolvable as err:
+                raise BrowseError(str(err)) from err
+
+        else:
+            source_dir_id, location = None, ""
 
         result = await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
+
         return result
 
-    def _browse_media(self, source_dir_id: str, location: str) -> BrowseMediaSource:
+    def _browse_media(
+        self, source_dir_id: str | None, location: str
+    ) -> BrowseMediaSource:
         """Browse media."""
 
         # If only one media dir is configured, use that as the local media root
-        if source_dir_id == "" and len(self.hass.config.media_dirs) == 1:
+        if source_dir_id is None and len(self.hass.config.media_dirs) == 1:
             source_dir_id = list(self.hass.config.media_dirs)[0]
 
         # Multiple folder, root is requested
-        if source_dir_id == "":
+        if source_dir_id is None:
             if location:
                 raise BrowseError("Folder not found.")
 
@@ -180,9 +180,10 @@ class LocalSource(MediaSource):
         # Append first level children
         media.children = []
         for child_path in path.iterdir():
-            child = self._build_item_response(source_dir_id, child_path, True)
-            if child:
-                media.children.append(child)
+            if child_path.name[0] != ".":
+                child = self._build_item_response(source_dir_id, child_path, True)
+                if child:
+                    media.children.append(child)
 
         # Sort children showing directories first, then by name
         media.children.sort(key=lambda child: (child.can_play, child.title))
@@ -190,7 +191,7 @@ class LocalSource(MediaSource):
         return media
 
 
-class LocalMediaView(HomeAssistantView):
+class LocalMediaView(http.HomeAssistantView):
     """
     Local Media Finder View.
 
@@ -231,7 +232,7 @@ class LocalMediaView(HomeAssistantView):
         return web.FileResponse(media_path)
 
 
-class UploadMediaView(HomeAssistantView):
+class UploadMediaView(http.HomeAssistantView):
     """View to upload images."""
 
     url = "/api/media_source/local_source/upload"
@@ -263,7 +264,7 @@ class UploadMediaView(HomeAssistantView):
             raise web.HTTPBadRequest() from err
 
         try:
-            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"])
+            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"], None)
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest() from err
@@ -300,9 +301,7 @@ class UploadMediaView(HomeAssistantView):
             {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}
         )
 
-    def _move_file(  # pylint: disable=no-self-use
-        self, target_dir: Path, uploaded_file: FileField
-    ) -> None:
+    def _move_file(self, target_dir: Path, uploaded_file: FileField) -> None:
         """Move file to target."""
         if not target_dir.is_dir():
             raise ValueError("Target is not an existing directory")
@@ -314,3 +313,52 @@ class UploadMediaView(HomeAssistantView):
 
         with target_path.open("wb") as target_fp:
             shutil.copyfileobj(uploaded_file.file, target_fp)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_source/local_source/remove",
+        vol.Required("media_content_id"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_remove_media(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Remove media."""
+    try:
+        item = MediaSourceItem.from_uri(hass, msg["media_content_id"], None)
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    source: LocalSource = hass.data[DOMAIN][DOMAIN]
+
+    try:
+        source_dir_id, location = source.async_parse_identifier(item)
+    except Unresolvable as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    item_path = source.async_full_path(source_dir_id, location)
+
+    def _do_delete() -> tuple[str, str] | None:
+        if not item_path.exists():
+            return websocket_api.ERR_NOT_FOUND, "Path does not exist"
+
+        if not item_path.is_file():
+            return websocket_api.ERR_NOT_SUPPORTED, "Path is not a file"
+
+        item_path.unlink()
+        return None
+
+    try:
+        error = await hass.async_add_executor_job(_do_delete)
+    except OSError as err:
+        error = (websocket_api.ERR_UNKNOWN_ERROR, str(err))
+
+    if error:
+        connection.send_error(msg["id"], *error)
+    else:
+        connection.send_result(msg["id"])

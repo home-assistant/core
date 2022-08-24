@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1"
+        },
+        "error": {
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Jm\u00e9no"
+                }
+            }
+        }
+    }
+}

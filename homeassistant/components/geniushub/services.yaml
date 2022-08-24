@@ -21,9 +21,9 @@ set_zone_mode:
       selector:
         select:
           options:
-            - 'off'
-            - 'timer'
-            - 'footprint'
+            - "off"
+            - "timer"
+            - "footprint"
 
 set_zone_override:
   name: Set zone override
@@ -47,7 +47,7 @@ set_zone_override:
           min: 4
           max: 28
           step: 0.1
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     duration:
       name: Duration
       description: >-

@@ -35,6 +35,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    LightEntityFeature,
 )
 from homeassistant.components.yeelight.const import (
     ATTR_COUNT,
@@ -82,7 +83,6 @@ from homeassistant.components.yeelight.light import (
     SERVICE_SET_MODE,
     SERVICE_SET_MUSIC_MODE,
     SERVICE_START_FLOW,
-    SUPPORT_YEELIGHT,
     YEELIGHT_COLOR_EFFECT_LIST,
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
@@ -132,6 +132,10 @@ CONFIG_ENTRY_DATA = {
     CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
     CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
 }
+
+SUPPORT_YEELIGHT = (
+    LightEntityFeature.TRANSITION | LightEntityFeature.FLASH | LightEntityFeature.EFFECT
+)
 
 
 async def test_services(hass: HomeAssistant, caplog):

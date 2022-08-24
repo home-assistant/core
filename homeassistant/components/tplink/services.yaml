@@ -1,0 +1,183 @@
+sequence_effect:
+  description: Set a sequence effect
+  target:
+    entity:
+      integration: tplink
+      domain: light
+  fields:
+    sequence:
+      description: List of HSV sequences (Max 16)
+      example: |
+        - [340, 20, 50]
+        - [20, 50, 50]
+        - [0, 100, 50]
+      required: true
+      selector:
+        object:
+    segments:
+      description: List of Segments (0 for all)
+      example: 0, 2, 4, 6, 8
+      default: 0
+      required: false
+      selector:
+        object:
+    brightness:
+      description: Initial brightness
+      example: 80
+      default: 100
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 100
+          unit_of_measurement: "%"
+    duration:
+      description: Duration
+      example: 0
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 5000
+          unit_of_measurement: "ms"
+    transition:
+      description: Transition
+      example: 2000
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 6000
+          unit_of_measurement: "ms"
+    spread:
+      description: Speed of spread
+      example: 1
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 16
+    direction:
+      description: Direction
+      example: 1
+      default: 4
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 4
+random_effect:
+  description: Set a random effect
+  target:
+    entity:
+      integration: tplink
+      domain: light
+  fields:
+    init_states:
+      description: Initial HSV sequence
+      example: [199, 99, 96]
+      required: true
+      selector:
+        object:
+    backgrounds:
+      description: List of HSV sequences (Max 16)
+      example: |
+        - [199, 89, 50]
+        - [160, 50, 50]
+        - [180, 100, 50]
+      required: false
+      selector:
+        object:
+    segments:
+      description: List of segments (0 for all)
+      example: 0, 2, 4, 6, 8
+      default: 0
+      required: false
+      selector:
+        object:
+    brightness:
+      description: Initial brightness
+      example: 90
+      default: 100
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 100
+          unit_of_measurement: "%"
+    duration:
+      description: Duration
+      example: 0
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 5000
+          unit_of_measurement: "ms"
+    transition:
+      description: Transition
+      example: 2000
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 6000
+          unit_of_measurement: "ms"
+    fadeoff:
+      description: Fade off
+      example: 2000
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 3000
+          unit_of_measurement: "ms"
+    hue_range:
+      description: Range of hue
+      example: 340, 360
+      required: false
+      selector:
+        object:
+    saturation_range:
+      description: Range of saturation
+      example: 40, 95
+      required: false
+      selector:
+        object:
+    brightness_range:
+      description: Range of brightness
+      example: 90, 100
+      required: false
+      selector:
+        object:
+    transition_range:
+      description: Range of transition
+      example: 2000, 6000
+      required: false
+      selector:
+        object:
+    random_seed:
+      description: Random seed
+      example: 80
+      default: 100
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 600

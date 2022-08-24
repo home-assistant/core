@@ -2,14 +2,11 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,6 +41,9 @@ def setup_platform(
 class HomeworksLight(HomeworksDevice, LightEntity):
     """Homeworks Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, controller, addr, name, rate):
         """Create device with Addr, name, and rate."""
         super().__init__(controller, addr, name)
@@ -51,7 +51,7 @@ class HomeworksLight(HomeworksDevice, LightEntity):
         self._level = 0
         self._prev_level = 0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         signal = f"homeworks_entity_{self._addr}"
         _LOGGER.debug("connecting %s", signal)
@@ -60,12 +60,7 @@ class HomeworksLight(HomeworksDevice, LightEntity):
         )
         self._controller.request_dimmer_level(self._addr)
 
-    @property
-    def supported_features(self):
-        """Supported features."""
-        return SUPPORT_BRIGHTNESS
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_BRIGHTNESS in kwargs:
             new_level = kwargs[ATTR_BRIGHTNESS]
@@ -75,7 +70,7 @@ class HomeworksLight(HomeworksDevice, LightEntity):
             new_level = self._prev_level
         self._set_brightness(new_level)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._set_brightness(0)
 

@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
@@ -54,13 +53,6 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self.vera_device.switch_off()
         self._state = False
         self.schedule_update_ha_state()
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        if power := self.vera_device.power:
-            return convert(power, float, 0.0)
-        return None
 
     @property
     def is_on(self) -> bool:

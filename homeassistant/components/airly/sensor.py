@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     PERCENTAGE,
@@ -45,7 +44,6 @@ from .const import (
     ATTR_LIMIT,
     ATTR_PERCENT,
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
     SUFFIX_LIMIT,
@@ -134,10 +132,11 @@ async def async_setup_entry(
     async_add_entities(sensors, False)
 
 
-class AirlySensor(CoordinatorEntity, SensorEntity):
+class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
     """Define an Airly sensor."""
 
-    coordinator: AirlyDataUpdateCoordinator
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     entity_description: AirlySensorEntityDescription
 
     def __init__(
@@ -152,16 +151,15 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
             configuration_url=URL.format(
                 latitude=coordinator.latitude, longitude=coordinator.longitude
             ),
         )
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (
             f"{coordinator.latitude}-{coordinator.longitude}-{description.key}".lower()
         )
-        self._attrs: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attrs: dict[str, Any] = {}
         self.entity_description = description
 
     @property

@@ -7,10 +7,10 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.twinkly.const import (
     CONF_HOST,
     CONF_ID,
-    CONF_MODEL,
     CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry

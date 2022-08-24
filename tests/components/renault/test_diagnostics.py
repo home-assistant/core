@@ -157,6 +157,7 @@ VEHICLE_DATA = {
         "externalTemperature": 8.0,
         "hvacStatus": "off",
     },
+    "res_state": {},
 }
 
 

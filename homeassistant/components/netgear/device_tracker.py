@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -59,7 +59,7 @@ class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
 
-    def get_hostname(self):
+    def get_hostname(self) -> str | None:
         """Return the hostname of the given device or None if we don't know."""
         if (hostname := self._device["name"]) == "--":
             return None
@@ -74,14 +74,14 @@ class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
         self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the router."""
         return self._active
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def ip_address(self) -> str:
@@ -94,7 +94,7 @@ class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
         return self._mac
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return the hostname."""
         return self._hostname
 

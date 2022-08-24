@@ -20,9 +20,7 @@
                     "device_class": "Typ urz\u0105dzenia",
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
-                },
-                "description": "Ustaw wymagane parametry, aby po\u0142\u0105czy\u0107 si\u0119 z Android TV",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Skonfiguruj regu\u0142y wykrywania stanu",
                     "turn_off_command": "Polecenie wy\u0142\u0105czania z pow\u0142oki ADB (pozostaw puste dla warto\u015bci domy\u015blnej)",
                     "turn_on_command": "Polecenie w\u0142\u0105czenia z pow\u0142oki ADB (pozostaw puste dla warto\u015bci domy\u015blnej)"
-                },
-                "title": "Opcje Android TV"
+                }
             },
             "rules": {
                 "data": {

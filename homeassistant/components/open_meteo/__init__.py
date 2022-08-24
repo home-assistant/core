@@ -28,8 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     open_meteo = OpenMeteo(session=session)
 
     async def async_update_forecast() -> Forecast:
-        zone = hass.states.get(entry.data[CONF_ZONE])
-        if zone is None:
+        if (zone := hass.states.get(entry.data[CONF_ZONE])) is None:
             raise UpdateFailed(f"Zone '{entry.data[CONF_ZONE]}' not found")
 
         try:
@@ -63,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

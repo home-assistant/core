@@ -36,6 +36,7 @@ ECOBEE_MODEL_TO_NAME = {
     "nikeEms": "ecobee3 lite EMS",
     "apolloSmart": "ecobee4 Smart",
     "vulcanSmart": "ecobee4 Smart",
+    "aresSmart": "ecobee Smart Premium",
 }
 
 PLATFORMS = [

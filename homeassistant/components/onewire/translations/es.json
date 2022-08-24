@@ -4,22 +4,37 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar",
-            "invalid_path": "Directorio no encontrado."
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
-            "owserver": {
+            "user": {
                 "data": {
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "title": "Configurar los detalles del servidor"
-            },
-            "user": {
+                "title": "Establecer detalles del servidor"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Selecciona los dispositivos para configurar"
+        },
+        "step": {
+            "configure_device": {
                 "data": {
-                    "type": "Tipo de conexi\u00f3n"
+                    "precision": "Precisi\u00f3n del sensor"
                 },
-                "title": "Configurar 1 cable"
+                "description": "Selecciona la precisi\u00f3n del sensor para {sensor_id}",
+                "title": "Precisi\u00f3n del sensor OneWire"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Borrar todas las configuraciones de dispositivo",
+                    "device_selection": "Selecciona los dispositivos para configurar"
+                },
+                "description": "Selecciona qu\u00e9 pasos de configuraci\u00f3n procesar",
+                "title": "Opciones de dispositivo OneWire"
             }
         }
     }

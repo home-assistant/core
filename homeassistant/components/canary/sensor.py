@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from canary.api import Device, Location, SensorType
+from canary.model import Device, Location, SensorType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -76,10 +76,8 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CanarySensor(CoordinatorEntity, SensorEntity):
+class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity):
     """Representation of a Canary sensor."""
-
-    coordinator: CanaryDataUpdateCoordinator
 
     def __init__(
         self,

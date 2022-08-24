@@ -1,0 +1,15 @@
+{
+  "domain": "kaleidescape",
+  "name": "Kaleidescape",
+  "config_flow": true,
+  "ssdp": [
+    {
+      "manufacturer": "Kaleidescape, Inc.",
+      "deviceType": "schemas-upnp-org:device:Basic:1"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/kaleidescape",
+  "requirements": ["pykaleidescape==1.0.1"],
+  "codeowners": ["@SteveEasley"],
+  "iot_class": "local_push"
+}

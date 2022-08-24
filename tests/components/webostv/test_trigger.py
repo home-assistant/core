@@ -1,9 +1,12 @@
 """The tests for WebOS TV automation triggers."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
@@ -57,17 +60,18 @@ async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     with patch("homeassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    await hass.services.async_call(
-        "media_player",
-        "turn_on",
-        {"entity_id": ENTITY_ID},
-        blocking=True,
-    )
+    calls.clear()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
+    assert len(calls) == 0
 
 
 async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):

@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Posizione",
                     "usercode": "Codice utente"
                 },
                 "description": "Inserisci il codice utente per questo utente nella posizione {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Esclusione automatica della batteria scarica"
                 },
-                "title": "Total Connect"
+                "description": "Esclusione automatica delle zone nel momento in cui segnalano una batteria scarica.",
+                "title": "Opzioni TotalConnect"
             }
         }
     }

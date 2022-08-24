@@ -6,7 +6,7 @@ from homeassistant.components.alexa import DOMAIN, smart_home_http
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.setup import async_setup_component
 
-from . import get_new_request
+from .test_common import get_new_request
 
 
 async def do_http_discovery(config, hass, hass_client):

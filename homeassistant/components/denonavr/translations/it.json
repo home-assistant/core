@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Conferma l'aggiunta del ricevitore",
-                "title": "Ricevitori di rete Denon AVR"
+                "description": "Conferma l'aggiunta del ricevitore"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "Indirizzo IP"
                 },
-                "description": "Collega il ricevitore, se l'indirizzo IP non \u00e8 impostato, sar\u00e0 utilizzato il rilevamento automatico",
-                "title": "Ricevitori di rete Denon AVR"
+                "data_description": {
+                    "host": "Lascia vuoto per usare il rilevamento automatico"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Configura la zona 2",
                     "zone3": "Configura la zona 3"
                 },
-                "description": "Specificare le impostazioni opzionali",
-                "title": "Ricevitori di rete Denon AVR"
+                "description": "Specificare le impostazioni opzionali"
             }
         }
     }

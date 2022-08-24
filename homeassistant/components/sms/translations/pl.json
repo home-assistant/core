@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Szybko\u015b\u0107 transmisji (Baud)",
                     "device": "Urz\u0105dzenie"
                 },
                 "title": "Po\u0142\u0105czenie z modemem"

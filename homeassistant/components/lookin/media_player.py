@@ -8,14 +8,7 @@ from aiolookin import Remote
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_STANDBY, Platform
@@ -35,13 +28,13 @@ _TYPE_TO_DEVICE_CLASS = {
 }
 
 _FUNCTION_NAME_TO_FEATURE = {
-    "power": SUPPORT_TURN_OFF,
-    "poweron": SUPPORT_TURN_ON,
-    "poweroff": SUPPORT_TURN_OFF,
-    "mute": SUPPORT_VOLUME_MUTE,
-    "volup": SUPPORT_VOLUME_STEP,
-    "chup": SUPPORT_NEXT_TRACK,
-    "chdown": SUPPORT_PREVIOUS_TRACK,
+    "power": MediaPlayerEntityFeature.TURN_OFF,
+    "poweron": MediaPlayerEntityFeature.TURN_ON,
+    "poweroff": MediaPlayerEntityFeature.TURN_OFF,
+    "mute": MediaPlayerEntityFeature.VOLUME_MUTE,
+    "volup": MediaPlayerEntityFeature.VOLUME_STEP,
+    "chup": MediaPlayerEntityFeature.NEXT_TRACK,
+    "chdown": MediaPlayerEntityFeature.PREVIOUS_TRACK,
 }
 
 

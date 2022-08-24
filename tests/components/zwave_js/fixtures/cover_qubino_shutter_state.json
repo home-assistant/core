@@ -55,13 +55,7 @@
           "key": 7,
           "label": "Motor Control Class C"
         },
-        "mandatorySupportedCCs": [
-          32,
-          38,
-          37,
-          114,
-          134
-        ],
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
         "mandatoryControlledCCs": []
       }
     }
@@ -94,9 +88,7 @@
         "readable": true,
         "writeable": true,
         "label": "Target value",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ]
+        "valueChangeOptions": ["transitionDuration"]
       }
     },
     {
@@ -111,9 +103,7 @@
         "readable": true,
         "writeable": true,
         "label": "Target value",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 99
       },
@@ -759,10 +749,7 @@
         "writeable": false,
         "label": "Z-Wave chip firmware versions"
       },
-      "value": [
-        "71.0",
-        "71.0"
-      ]
+      "value": ["71.0", "71.0"]
     },
     {
       "endpoint": 0,
@@ -782,10 +769,7 @@
   ],
   "isFrequentListening": false,
   "maxDataRate": 100000,
-  "supportedDataRates": [
-    40000,
-    100000
-  ],
+  "supportedDataRates": [40000, 100000],
   "protocolVersion": 3,
   "supportsBeaming": true,
   "supportsSecurity": false,
@@ -805,13 +789,7 @@
       "key": 7,
       "label": "Motor Control Class C"
     },
-    "mandatorySupportedCCs": [
-      32,
-      38,
-      37,
-      114,
-      134
-    ],
+    "mandatorySupportedCCs": [32, 38, 37, 114, 134],
     "mandatoryControlledCCs": []
   },
   "commandClasses": [
@@ -896,5 +874,6 @@
     "commandsDroppedRX": 0,
     "commandsDroppedTX": 0,
     "timeoutResponse": 0
-  }
+  },
+  "isControllerNode": false
 }

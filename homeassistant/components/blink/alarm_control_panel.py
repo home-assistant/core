@@ -1,8 +1,12 @@
 """Support for Blink Alarm Control Panel."""
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -36,7 +40,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
     """Representation of a Blink Alarm Control Panel."""
 
     _attr_icon = ICON
-    _attr_supported_features = SUPPORT_ALARM_ARM_AWAY
+    _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
 
     def __init__(self, data, name, sync):
         """Initialize the alarm control panel."""
@@ -49,7 +53,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
             identifiers={(DOMAIN, sync.serial)}, name=name, manufacturer=DEFAULT_BRAND
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update the state of the device."""
         _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
         self.data.refresh()
@@ -61,12 +65,12 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self.sync.arm = False
         self.sync.refresh()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         self.sync.arm = True
         self.sync.refresh()

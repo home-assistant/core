@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "Vaktinde",
+                    "before_time": "Kapatma zaman\u0131",
+                    "name": "Ad"
+                },
+                "description": "Zamana ba\u011fl\u0131 olarak a\u00e7\u0131l\u0131p kapanan bir ikili sens\u00f6r olu\u015fturun.",
+                "title": "G\u00fcn\u00fcn Saatleri Sens\u00f6r\u00fc Ekleyin"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "Vaktinde",
+                    "before_time": "Kapatma zaman\u0131"
+                }
+            }
+        }
+    },
+    "title": "G\u00fcn\u00fcn Saatleri Sens\u00f6r\u00fc"
+}

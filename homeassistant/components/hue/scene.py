@@ -16,6 +16,8 @@ from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 
 from .bridge import HueBridge
 from .const import DOMAIN
@@ -106,8 +108,7 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
     @property
     def name(self) -> str:
         """Return default entity name."""
-        group = self.controller.get_group(self.resource.id)
-        return f"{group.metadata.name} - {self.resource.metadata.name}"
+        return f"{self.group.metadata.name} {self.resource.metadata.name}"
 
     @property
     def is_dynamic(self) -> bool:
@@ -167,3 +168,18 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
             "brightness": brightness,
             "is_dynamic": self.is_dynamic,
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device (service) info."""
+        # we create a virtual service/device for Hue scenes
+        # so we have a parent for grouped lights and scenes
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.group.id)},
+            entry_type=DeviceEntryType.SERVICE,
+            name=self.group.metadata.name,
+            manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
+            model=self.group.type.value.title(),
+            suggested_area=self.group.metadata.name,
+            via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
+        )

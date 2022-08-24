@@ -108,7 +108,7 @@ class NeatoConnectedSwitch(SwitchEntity):
         )
 
     @property
-    def entity_category(self) -> str:
+    def entity_category(self) -> EntityCategory:
         """Device entity category."""
         return EntityCategory.CONFIG
 

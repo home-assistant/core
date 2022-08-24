@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Nettverksn\u00f8kkel",
                     "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
                     "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
                     "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Vil du konfigurere {name} med Z-Wave JS-tillegget?"
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du legge til Z-Wave JS Server med hjemme-ID {home_id} funnet p\u00e5 {url} til Home Assistant?",
+                "title": "Oppdaget Z-Wave JS Server"
             }
         }
     },
@@ -113,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Emuler maskinvare",
                     "log_level": "Loggniv\u00e5",
-                    "network_key": "Nettverksn\u00f8kkel",
                     "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
                     "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
                     "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
@@ -142,6 +144,5 @@
                 "title": "Z-Wave JS-tillegget starter"
             }
         }
-    },
-    "title": ""
+    }
 }

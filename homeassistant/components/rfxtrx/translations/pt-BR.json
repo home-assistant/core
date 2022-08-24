@@ -61,7 +61,7 @@
                     "debug": "Habilitar a depura\u00e7\u00e3o",
                     "device": "Selecione o dispositivo para configurar",
                     "event_code": "Insira o c\u00f3digo do evento para adicionar",
-                    "remove_device": "Selecione o dispositivo para excluir"
+                    "protocols": "Protocolos"
                 },
                 "title": "Op\u00e7\u00f5es de Rfxtrx"
             },
@@ -70,11 +70,9 @@
                     "command_off": "Valor de bits de dados para comando desligado",
                     "command_on": "Valor de bits de dados para comando ligado",
                     "data_bit": "N\u00famero de bits de dados",
-                    "fire_event": "Ativar evento do dispositivo",
                     "off_delay": "Atraso de desligamento",
                     "off_delay_enabled": "Ativar atraso de desligamento",
                     "replace_device": "Selecione o dispositivo para substituir",
-                    "signal_repetitions": "N\u00famero de repeti\u00e7\u00f5es de sinal",
                     "venetian_blind_mode": "Modo de persianas"
                 },
                 "title": "Configurar op\u00e7\u00f5es do dispositivo"

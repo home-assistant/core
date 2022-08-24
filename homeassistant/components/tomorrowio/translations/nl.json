@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_api_key": "Ongeldige API-sleutel",
+            "rate_limited": "Aantal aanvragen bereikt, probeer later opnieuw",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "location": "Locatie",
+                    "name": "Naam"
+                },
+                "description": "Om een API sleutel te krijgen, meld je aan bij [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. Tussen NowCast Voorspellingen"
+                },
+                "description": "Indien u ervoor kiest om de `nowcast` voorspellingsentiteit in te schakelen, kan u het aantal minuten tussen elke voorspelling configureren. Het aantal voorspellingen hangt af van het aantal gekozen minuten tussen de voorspellingen.",
+                "title": "Update Tomorrow.io Opties"
+            }
+        }
+    }
+}

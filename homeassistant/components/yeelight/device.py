@@ -219,6 +219,7 @@ class YeelightDevice:
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
+        _LOGGER.debug("Received callback: %s", data)
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
         if update_needs_bg_power_workaround(data) or (

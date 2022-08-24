@@ -1,4 +1,6 @@
 """ATAG water heater component."""
+from typing import Any
+
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_PERFORMANCE,
@@ -11,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AtagEntity
 
-SUPPORT_FLAGS_HEATER = 0
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
 
@@ -29,7 +30,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
     _attr_operation_list = OPERATION_LIST
-    _attr_supported_features = SUPPORT_FLAGS_HEATER
+    _attr_supported_features = 0
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property
@@ -43,7 +44,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
         operation = self.coordinator.data.dhw.current_operation
         return operation if operation in self.operation_list else STATE_OFF
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if await self.coordinator.data.dhw.set_temp(kwargs.get(ATTR_TEMPERATURE)):
             self.async_write_ha_state()
@@ -54,11 +55,11 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
         return self.coordinator.data.dhw.target_temperature
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.coordinator.data.dhw.max_temp
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.coordinator.data.dhw.min_temp

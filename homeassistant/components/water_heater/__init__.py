@@ -1,11 +1,13 @@
 """Support for water heater devices."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 import functools as ft
 import logging
-from typing import final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -22,7 +24,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -55,6 +57,17 @@ STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
 
+
+class WaterHeaterEntityFeature(IntEnum):
+    """Supported features of the fan entity."""
+
+    TARGET_TEMPERATURE = 1
+    OPERATION_MODE = 2
+    AWAY_MODE = 4
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the WaterHeaterEntityFeature enum instead.
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
@@ -176,11 +189,11 @@ class WaterHeaterEntity(Entity):
         return PRECISION_WHOLE
 
     @property
-    def capability_attributes(self):
+    def capability_attributes(self) -> Mapping[str, Any]:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
 
-        data = {
+        data: dict[str, Any] = {
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
             ),
@@ -189,16 +202,16 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        if supported_features & SUPPORT_OPERATION_MODE:
+        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        data = {
+        data: dict[str, Any] = {
             ATTR_CURRENT_TEMPERATURE: show_temp(
                 self.hass,
                 self.current_temperature,
@@ -225,12 +238,12 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        supported_features = self.supported_features
+        supported_features = self.supported_features or 0
 
-        if supported_features & SUPPORT_OPERATION_MODE:
+        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
 
-        if supported_features & SUPPORT_AWAY_MODE:
+        if supported_features & WaterHeaterEntityFeature.AWAY_MODE:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
@@ -276,42 +289,42 @@ class WaterHeaterEntity(Entity):
         """Return true if away mode is on."""
         return self._attr_is_away_mode_on
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
         )
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         raise NotImplementedError()
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
-    def turn_away_mode_on(self):
+    def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         raise NotImplementedError()
 
-    async def async_turn_away_mode_on(self):
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.hass.async_add_executor_job(self.turn_away_mode_on)
 
-    def turn_away_mode_off(self):
+    def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         raise NotImplementedError()
 
-    async def async_turn_away_mode_off(self):
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.hass.async_add_executor_job(self.turn_away_mode_off)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         if hasattr(self, "_attr_min_temp"):
             return self._attr_min_temp
@@ -320,7 +333,7 @@ class WaterHeaterEntity(Entity):
         )
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         if hasattr(self, "_attr_max_temp"):
             return self._attr_max_temp
@@ -329,7 +342,9 @@ class WaterHeaterEntity(Entity):
         )
 
 
-async def async_service_away_mode(entity, service):
+async def async_service_away_mode(
+    entity: WaterHeaterEntity, service: ServiceCall
+) -> None:
     """Handle away mode service."""
     if service.data[ATTR_AWAY_MODE]:
         await entity.async_turn_away_mode_on()
@@ -337,7 +352,9 @@ async def async_service_away_mode(entity, service):
         await entity.async_turn_away_mode_off()
 
 
-async def async_service_temperature_set(entity, service):
+async def async_service_temperature_set(
+    entity: WaterHeaterEntity, service: ServiceCall
+) -> None:
     """Handle set temperature service."""
     hass = entity.hass
     kwargs = {}

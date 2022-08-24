@@ -11,7 +11,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AugustData
-from .const import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 from .entity import AugustEntityMixin
 
 
@@ -21,13 +21,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August cameras."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     session = aiohttp_client.async_get_clientsession(hass)
     async_add_entities(
-        [
-            AugustCamera(data, doorbell, session, DEFAULT_TIMEOUT)
-            for doorbell in data.doorbells
-        ]
+        AugustCamera(data, doorbell, session, DEFAULT_TIMEOUT)
+        for doorbell in data.doorbells
     )
 
 
@@ -45,12 +43,12 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property
-    def is_recording(self):
+    def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._device.has_subscription
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return True
 

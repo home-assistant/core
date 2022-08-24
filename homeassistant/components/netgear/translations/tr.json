@@ -11,12 +11,9 @@
                 "data": {
                     "host": "Sunucu (\u0130ste\u011fe ba\u011fl\u0131)",
                     "password": "Parola",
-                    "port": "Port (\u0130ste\u011fe ba\u011fl\u0131)",
-                    "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "username": "Kullan\u0131c\u0131 Ad\u0131 (\u0130ste\u011fe ba\u011fl\u0131)"
                 },
-                "description": "Varsay\u0131lan ana bilgisayar: {host}\n Varsay\u0131lan ba\u011flant\u0131 noktas\u0131: {port}\n Varsay\u0131lan kullan\u0131c\u0131 ad\u0131: {username}",
-                "title": "Netgear"
+                "description": "Varsay\u0131lan sunucu: {host}\nVarsay\u0131lan kullan\u0131c\u0131 ad\u0131: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Ev s\u00fcresini g\u00f6z \u00f6n\u00fcnde bulundurun (saniye)"
                 },
-                "description": "\u0130ste\u011fe ba\u011fl\u0131 ayarlar\u0131 belirtin",
-                "title": "Netgear"
+                "description": "\u0130ste\u011fe ba\u011fl\u0131 ayarlar\u0131 belirtin"
             }
         }
     }

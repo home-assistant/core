@@ -47,11 +47,11 @@ effect_pulse:
       selector:
         select:
           options:
-            - 'blink'
-            - 'breathe'
-            - 'ping'
-            - 'strobe'
-            - 'solid'
+            - "blink"
+            - "breathe"
+            - "ping"
+            - "strobe"
+            - "solid"
     brightness:
       name: Brightness
       description: Number indicating brightness of the temporary color.
@@ -129,7 +129,7 @@ effect_colorloop:
         number:
           min: 0
           max: 360
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     spread:
       name: Spread
       description: Maximum hue difference between participating lights, in degrees on a color wheel.
@@ -138,7 +138,7 @@ effect_colorloop:
         number:
           min: 0
           max: 360
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     power_on:
       name: Power on
       description: Powered off lights are temporarily turned on during the effect.

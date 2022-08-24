@@ -6,6 +6,7 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
+            "invalid_host": "Nieprawid\u0142owy host",
             "no_bridges": "Nie wykryto mostk\u00f3w Hue",
             "not_hue_bridge": "To nie jest mostek Hue",
             "unknown": "Nieoczekiwany b\u0142\u0105d"

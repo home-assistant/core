@@ -21,8 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Configura l'integrazione TV di Sony Bravia. In caso di problemi con la configurazione visita: https://www.home-assistant.io/integrations/braviatv\n\nAssicurati che il televisore sia acceso.",
-                "title": "Sony Bravia TV"
+                "description": "Assicurati che la tua TV sia accesa prima di provare a configurarla."
             }
         }
     },

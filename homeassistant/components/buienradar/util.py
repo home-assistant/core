@@ -115,7 +115,7 @@ class BrData:
             self.load_error_count += 1
             threshold_log(
                 self.load_error_count,
-                "Unable to retrieve json data from Buienradar" "(Msg: %s, status: %s,)",
+                "Unable to retrieve json data from Buienradar (Msg: %s, status: %s)",
                 content.get(MESSAGE),
                 content.get(STATUS_CODE),
             )
@@ -135,7 +135,7 @@ class BrData:
             # unable to get the data
             threshold_log(
                 self.rain_error_count,
-                "Unable to retrieve rain data from Buienradar" "(Msg: %s, status: %s)",
+                "Unable to retrieve rain data from Buienradar (Msg: %s, status: %s)",
                 raincontent.get(MESSAGE),
                 raincontent.get(STATUS_CODE),
             )

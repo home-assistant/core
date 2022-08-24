@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
@@ -11,9 +12,9 @@ from pyControl4.light import C4Light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -164,6 +165,12 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
+        if is_dimmer:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     def create_api_object(self):
         """Create a pyControl4 device object.
@@ -188,10 +195,10 @@ class Control4Light(Control4Entity, LightEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         if self._is_dimmer:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            return LightEntityFeature.TRANSITION
         return 0
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         c4_light = self.create_api_object()
         if self._is_dimmer:
@@ -214,7 +221,7 @@ class Control4Light(Control4Entity, LightEntity):
         await asyncio.sleep(delay_time)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         c4_light = self.create_api_object()
         if self._is_dimmer:

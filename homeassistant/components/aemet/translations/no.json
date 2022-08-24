@@ -14,8 +14,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navnet p\u00e5 integrasjonen"
                 },
-                "description": "Sett opp AEMET OpenData-integrasjon. For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

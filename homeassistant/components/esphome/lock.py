@@ -5,7 +5,7 @@ from typing import Any
 
 from aioesphomeapi import LockCommand, LockEntityState, LockInfo, LockState
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
@@ -44,7 +44,7 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_OPEN if self._static_info.supports_open else 0
+        return LockEntityFeature.OPEN if self._static_info.supports_open else 0
 
     @property
     def code_format(self) -> str | None:

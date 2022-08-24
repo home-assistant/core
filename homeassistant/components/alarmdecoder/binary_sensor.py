@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -87,29 +88,27 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
             CONF_ZONE_NUMBER: self._zone_number,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_ZONE_FAULT, self._fault_callback
+            async_dispatcher_connect(self.hass, SIGNAL_ZONE_FAULT, self._fault_callback)
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_RESTORE, self._restore_callback
             )
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_ZONE_RESTORE, self._restore_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RFX_MESSAGE, self._rfx_message_callback
             )
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_RFX_MESSAGE, self._rfx_message_callback
-            )
-        )
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_REL_MESSAGE, self._rel_message_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_REL_MESSAGE, self._rel_message_callback
             )
         )
 

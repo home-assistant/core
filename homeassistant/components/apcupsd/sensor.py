@@ -1,5 +1,4 @@
 """Support for APCUPSd sensors."""
-# pylint: disable=import-error
 from __future__ import annotations
 
 import logging
@@ -461,7 +460,7 @@ class APCUPSdSensor(SensorEntity):
         self._data = data
         self._attr_name = f"{SENSOR_PREFIX}{description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest status and use it to update our sensor state."""
         key = self.entity_description.key.upper()
         if key not in self._data.status:

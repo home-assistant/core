@@ -8,16 +8,9 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Ressursid"
-                },
-                "title": "Vali j\u00e4lgitavad ressursid"
-            },
             "ups": {
                 "data": {
-                    "alias": "",
-                    "resources": "Ressursid"
+                    "alias": ""
                 },
                 "title": "Vali j\u00e4lgitava UPS"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "\u00dchendus nurjus",
-            "unknown": "Tundmatu viga"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressursid",
                     "scan_interval": "P\u00e4ringute intervall (sekundites)"
-                },
-                "description": "Vali anduri ressursid."
+                }
             }
         }
     }

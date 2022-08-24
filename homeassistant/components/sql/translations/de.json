@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "db_url_invalid": "Datenbank-URL ung\u00fcltig",
+            "query_invalid": "SQL-Abfrage ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Spalte",
+                    "db_url": "Datenbank-URL",
+                    "name": "Name",
+                    "query": "Abfrage ausw\u00e4hlen",
+                    "unit_of_measurement": "Ma\u00dfeinheit",
+                    "value_template": "Wertvorlage"
+                },
+                "data_description": {
+                    "column": "Spalte f\u00fcr die zur\u00fcckgegebene Abfrage, die als Status angezeigt werden soll",
+                    "db_url": "Datenbank-URL, leer lassen, um die Standard-HA-Datenbank zu verwenden",
+                    "name": "Name, der f\u00fcr den Konfigurationseintrag und auch f\u00fcr den Sensor verwendet wird",
+                    "query": "Auszuf\u00fchrende Abfrage, muss mit 'SELECT' beginnen",
+                    "unit_of_measurement": "Ma\u00dfeinheit (optional)",
+                    "value_template": "Wertvorlage (optional)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "Datenbank-URL ung\u00fcltig",
+            "query_invalid": "SQL-Abfrage ung\u00fcltig"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Spalte",
+                    "db_url": "Datenbank-URL",
+                    "name": "Name",
+                    "query": "Abfrage ausw\u00e4hlen",
+                    "unit_of_measurement": "Ma\u00dfeinheit",
+                    "value_template": "Wertvorlage"
+                },
+                "data_description": {
+                    "column": "Spalte f\u00fcr die zur\u00fcckgegebene Abfrage, die als Status angezeigt werden soll",
+                    "db_url": "Datenbank-URL, leer lassen, um die Standard-HA-Datenbank zu verwenden",
+                    "name": "Name, der f\u00fcr den Konfigurationseintrag und auch f\u00fcr den Sensor verwendet wird",
+                    "query": "Auszuf\u00fchrende Abfrage, muss mit 'SELECT' beginnen",
+                    "unit_of_measurement": "Ma\u00dfeinheit (optional)",
+                    "value_template": "Wertvorlage (optional)"
+                }
+            }
+        }
+    }
+}

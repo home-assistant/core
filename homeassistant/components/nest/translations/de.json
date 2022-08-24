@@ -1,6 +1,10 @@
 {
+    "application_credentials": {
+        "description": "Folge den [Anweisungen]({more_info_url}), um die Cloud-Konsole zu konfigurieren:\n\n1. Gehe zum [OAuth-Zustimmungsbildschirm]({oauth_consent_url}) und konfiguriere\n1. Gehe zu [Credentials]({oauth_creds_url}) und klicke auf **Create Credentials**.\n1. W\u00e4hle in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **Webanwendung** f\u00fcr den Anwendungstyp.\n1. F\u00fcge `{redirect_url}` unter *Authorized redirect URI* hinzu."
+    },
     "config": {
         "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
@@ -19,7 +23,7 @@
             "subscriber_error": "Unbekannter Abonnentenfehler, siehe Protokolle",
             "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
             "unknown": "Unerwarteter Fehler",
-            "wrong_project_id": "Bitte gib eine g\u00fcltige Cloud-Projekt-ID ein (gefundene Ger\u00e4tezugriffs-Projekt-ID)"
+            "wrong_project_id": "Gib eine g\u00fcltige Cloud-Projekt-ID ein (identisch mit der Projekt-ID f\u00fcr den Ger\u00e4tezugriff)."
         },
         "step": {
             "auth": {
@@ -28,6 +32,32 @@
                 },
                 "description": "Um dein Google-Konto zu verkn\u00fcpfen, w\u00e4hle [Konto autorisieren]({url}).\n\nKopiere nach der Autorisierung den unten angegebenen Authentifizierungstoken-Code.",
                 "title": "Google-Konto verkn\u00fcpfen"
+            },
+            "auth_upgrade": {
+                "description": "App Auth wurde von Google abgeschafft, um die Sicherheit zu verbessern, und du musst Ma\u00dfnahmen ergreifen, indem du neue Anmeldedaten f\u00fcr die Anwendung erstellst.\n\n\u00d6ffnen die [Dokumentation]({more_info_url}) und folge den n\u00e4chsten Schritten, die du durchf\u00fchren musst, um den Zugriff auf deine Nest-Ger\u00e4te wiederherzustellen.",
+                "title": "Nest: Einstellung der App-Authentifizierung"
+            },
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "Google Cloud Projekt-ID"
+                },
+                "description": "Gib unten die Cloud-Projekt-ID ein, z. B. *example-project-12345*. Siehe die [Google Cloud Console]({cloud_console_url}) oder die Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).",
+                "title": "Nest: Cloud-Projekt-ID eingeben"
+            },
+            "create_cloud_project": {
+                "description": "Die Nest-Integration erm\u00f6glicht es dir, deine Nest-Thermostate, -Kameras und -T\u00fcrklingeln \u00fcber die Smart Device Management API zu integrieren. Die SDM API **erfordert eine einmalige Einrichtungsgeb\u00fchr von US $5**. Siehe Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).\n\n1. Rufe die [Google Cloud Console]({cloud_console_url}) auf.\n1. Wenn dies dein erstes Projekt ist, klicke auf **Projekt erstellen** und dann auf **Neues Projekt**.\n1. Gib deinem Cloud-Projekt einen Namen und klicke dann auf **Erstellen**.\n1. Speichere die Cloud Project ID, z. B. *example-project-12345*, da du diese sp\u00e4ter ben\u00f6tigst.\n1. Gehe zur API-Bibliothek f\u00fcr [Smart Device Management API]({sdm_api_url}) und klicke auf **Aktivieren**.\n1. Wechsele zur API-Bibliothek f\u00fcr [Cloud Pub/Sub API]({pubsub_api_url}) und klicke auf **Aktivieren**.\n\nFahre fort, wenn dein Cloud-Projekt eingerichtet ist.",
+                "title": "Nest: Cloud-Projekt erstellen und konfigurieren"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "Ger\u00e4tezugriffsprojekt ID"
+                },
+                "description": "Erstelle ein Nest Ger\u00e4tezugriffsprojekt, f\u00fcr dessen Einrichtung **eine Geb\u00fchr von 5 US-Dollar** anf\u00e4llt.\n1. Gehe zur [Device Access Console]({device_access_console_url}) und durchlaufe den Zahlungsablauf.\n1. Klicke auf **Projekt erstellen**.\n1. Gib deinem Device Access-Projekt einen Namen und klicke auf **Weiter**.\n1. Gib deine OAuth-Client-ID ein\n1. Aktiviere Ereignisse, indem du auf **Aktivieren** und **Projekt erstellen** klickst.\n\nGib unten deine Ger\u00e4tezugriffsprojekt ID ein ([more info]({more_info_url})).",
+                "title": "Nest: Erstelle ein Ger\u00e4tezugriffsprojekt"
+            },
+            "device_project_upgrade": {
+                "description": "Aktualisiere das Nest Ger\u00e4tezugriffsprojekt mit deiner neuen OAuth Client ID ([more info]({more_info_url}))\n1. Gehe zur [Ger\u00e4tezugriffskonsole]({device_access_console_url}).\n1. Klicke auf das Papierkorbsymbol neben *OAuth Client ID*.\n1. Klicke auf das \u00dcberlaufmen\u00fc und *Client ID hinzuf\u00fcgen*.\n1. Gib deine neue OAuth-Client-ID ein und klicke auf **Hinzuf\u00fcgen**.\n\nDeine OAuth-Client-ID lautet: `{client_id}`",
+                "title": "Nest: Aktualisiere das Ger\u00e4tezugriffsprojekt"
             },
             "init": {
                 "data": {
@@ -65,6 +95,16 @@
             "camera_person": "Person erkannt",
             "camera_sound": "Ger\u00e4usch erkannt",
             "doorbell_chime": "T\u00fcrklingel gedr\u00fcckt"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Das Konfigurieren von Nest in configuration.yaml wird in Home Assistant 2022.10 entfernt. \n\nDeine bestehenden OAuth-Anwendungsdaten und Zugriffseinstellungen wurden automatisch in die Benutzeroberfl\u00e4che importiert. Entferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Nest-YAML-Konfiguration wird entfernt"
+        },
+        "removed_app_auth": {
+            "description": "Um die Sicherheit zu verbessern und das Phishing-Risiko zu verringern, hat Google die von Home Assistant verwendete Authentifizierungsmethode eingestellt. \n\n **Zur L\u00f6sung sind Ma\u00dfnahmen deinerseits erforderlich** ([more info]( {more_info_url} )) \n\n 1. Besuche die Integrationsseite\n 1. Klicke in der Nest-Integration auf Neu konfigurieren.\n 1. Home Assistant f\u00fchrt dich durch die Schritte zum Upgrade auf die Webauthentifizierung. \n\n Informationen zur Fehlerbehebung findest du in der Nest [Integrationsanleitung]( {documentation_url} ).",
+            "title": "Nest-Authentifizierungsdaten m\u00fcssen aktualisiert werden"
         }
     }
 }

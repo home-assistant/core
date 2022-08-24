@@ -7,13 +7,20 @@
             "switchbot_unsupported_type": "Tipo de Switchbot sem suporte.",
             "unknown": "Erro inesperado"
         },
-        "error": {
-            "cannot_connect": "Falha ao conectar"
-        },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Deseja configurar {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Senha"
+                },
+                "description": "O dispositivo {name} requer uma senha"
+            },
             "user": {
                 "data": {
+                    "address": "Endere\u00e7o do dispositivo",
                     "mac": "Endere\u00e7o MAC do dispositivo",
                     "name": "Nome",
                     "password": "Senha"

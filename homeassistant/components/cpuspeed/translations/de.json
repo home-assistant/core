@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "already_configured": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "not_compatible": "CPU-Informationen k\u00f6nnen nicht abgerufen werden, diese Integration ist nicht mit deinem System kompatibel"
         },

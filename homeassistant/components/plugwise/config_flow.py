@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.exceptions import (
+    InvalidAuthentication,
+    InvalidSetupError,
+    PlugwiseException,
+)
 from plugwise.smile import Smile
 import voluptuous as vol
 
@@ -88,14 +92,58 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         _properties = discovery_info.properties
 
         unique_id = discovery_info.hostname.split(".")[0]
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
+        if config_entry := await self.async_set_unique_id(unique_id):
+            try:
+                await validate_gw_input(
+                    self.hass,
+                    {
+                        CONF_HOST: discovery_info.host,
+                        CONF_PORT: discovery_info.port,
+                        CONF_USERNAME: config_entry.data[CONF_USERNAME],
+                        CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+                    },
+                )
+            except Exception:  # pylint: disable=broad-except
+                self._abort_if_unique_id_configured()
+            else:
+                self._abort_if_unique_id_configured(
+                    {
+                        CONF_HOST: discovery_info.host,
+                        CONF_PORT: discovery_info.port,
+                    }
+                )
 
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME
         _product = _properties.get("product", None)
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
+
+        # This is an Anna, but we already have config entries.
+        # Assuming that the user has already configured Adam, aborting discovery.
+        if self._async_current_entries() and _product == "smile_thermo":
+            return self.async_abort(reason="anna_with_adam")
+
+        # If we have discovered an Adam or Anna, both might be on the network.
+        # In that case, we need to cancel the Anna flow, as the Adam should
+        # be added.
+        for flow in self._async_in_progress():
+            # This is an Anna, and there is already an Adam flow in progress
+            if (
+                _product == "smile_thermo"
+                and "context" in flow
+                and flow["context"].get("product") == "smile_open_therm"
+            ):
+                return self.async_abort(reason="anna_with_adam")
+
+            # This is an Adam, and there is already an Anna flow in progress
+            if (
+                _product == "smile_open_therm"
+                and "context" in flow
+                and flow["context"].get("product") == "smile_thermo"
+                and "flow_id" in flow
+            ):
+                self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         self.context.update(
             {
@@ -106,6 +154,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: self._username,
                 },
                 "configuration_url": f"http://{discovery_info.host}:{discovery_info.port}",
+                "product": _product,
             }
         )
         return await self.async_step_user()
@@ -124,6 +173,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 api = await validate_gw_input(self.hass, user_input)
+            except InvalidSetupError:
+                errors[CONF_BASE] = "invalid_setup"
             except InvalidAuthentication:
                 errors[CONF_BASE] = "invalid_auth"
             except PlugwiseException:

@@ -3,12 +3,8 @@
   "name": "Jellyfin",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jellyfin",
-  "requirements": [
-    "jellyfin-apiclient-python==1.7.2"
-  ],
+  "requirements": ["jellyfin-apiclient-python==1.8.1"],
   "iot_class": "local_polling",
-  "codeowners": [
-    "@j-stienstra"
-  ],
+  "codeowners": ["@j-stienstra"],
   "loggers": ["jellyfin_apiclient_python"]
 }

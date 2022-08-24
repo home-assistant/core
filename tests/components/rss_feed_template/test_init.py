@@ -46,6 +46,9 @@ async def test_get_rss_feed(mock_http_client, hass):
     text = await resp.text()
 
     xml = ElementTree.fromstring(text)
-    assert xml[0].text == "feed title is a_state_1"
-    assert xml[1][0].text == "item title is a_state_2"
-    assert xml[1][1].text == "desc a_state_3"
+    feed_title = xml.find("./channel/title").text
+    item_title = xml.find("./channel/item/title").text
+    item_description = xml.find("./channel/item/description").text
+    assert feed_title == "feed title is a_state_1"
+    assert item_title == "item title is a_state_2"
+    assert item_description == "desc a_state_3"

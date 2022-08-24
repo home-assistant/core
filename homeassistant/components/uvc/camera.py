@@ -9,7 +9,7 @@ import requests
 from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -86,6 +86,8 @@ def setup_platform(
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
+    _attr_should_poll = True  # Cameras default to False
+
     def __init__(self, camera, uuid, name, password):
         """Initialize an Unifi camera."""
         super().__init__()
@@ -105,17 +107,12 @@ class UnifiVideoCamera(Camera):
         return self._name
 
     @property
-    def should_poll(self):
-        """If this entity should be polled."""
-        return True
-
-    @property
     def supported_features(self):
         """Return supported features."""
         channels = self._caminfo["channels"]
         for channel in channels:
             if channel["isRtspEnabled"]:
-                return SUPPORT_STREAM
+                return CameraEntityFeature.STREAM
 
         return 0
 

@@ -9,17 +9,12 @@ from horimote.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -42,15 +37,6 @@ DEFAULT_PORT = 5900
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SUPPORT_HORIZON = (
-    SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -91,6 +77,16 @@ def setup_platform(
 class HorizonDevice(MediaPlayerEntity):
     """Representation of a Horizon HD Recorder."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
+
     def __init__(self, client, name, remote_keys):
         """Initialize the remote."""
         self._client = client
@@ -107,11 +103,6 @@ class HorizonDevice(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_HORIZON
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -202,12 +193,12 @@ class HorizonDevice(MediaPlayerEntity):
             try:
                 self._client.connect()
                 self._client.authorize()
-            except AuthenticationError as msg:
-                _LOGGER.error("Authentication to %s failed: %s", self._name, msg)
+            except AuthenticationError as msg2:
+                _LOGGER.error("Authentication to %s failed: %s", self._name, msg2)
                 return
-            except OSError as msg:
+            except OSError as msg2:
                 # occurs if horizon box is offline
-                _LOGGER.error("Reconnect to %s failed: %s", self._name, msg)
+                _LOGGER.error("Reconnect to %s failed: %s", self._name, msg2)
                 return
 
             self._send(key=key, channel=channel)

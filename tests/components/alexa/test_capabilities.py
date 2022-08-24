@@ -27,7 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from . import (
+from .test_common import (
     assert_request_calls_service,
     assert_request_fails,
     get_default_config,
@@ -55,7 +55,7 @@ async def test_api_adjust_brightness(hass, adjust):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -85,7 +85,7 @@ async def test_api_set_color_rgb(hass):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -111,7 +111,7 @@ async def test_api_set_color_temperature(hass):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -139,7 +139,7 @@ async def test_api_decrease_color_temp(hass, result, initial):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -167,7 +167,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -182,7 +182,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 @pytest.mark.parametrize(
     "domain,payload,source_list,idx",
     [
-        ("media_player", "GAME CONSOLE", ["tv", "game console"], 1),
+        ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
@@ -590,7 +590,7 @@ async def test_report_climate_state(hass):
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in (climate.HVAC_MODE_OFF, climate.HVAC_MODE_FAN_ONLY):
+    for off_modes in [climate.HVAC_MODE_OFF]:
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
@@ -626,6 +626,23 @@ async def test_report_climate_state(hass):
         "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
     )
 
+    # assert fan_only is reported as CUSTOM
+    hass.states.async_set(
+        "climate.downstairs",
+        "fan_only",
+        {
+            "friendly_name": "Climate Downstairs",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 31,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    properties = await reported_properties(hass, "climate.downstairs")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 31.0, "scale": "CELSIUS"}
+    )
+
     hass.states.async_set(
         "climate.heat",
         "heat",
@@ -658,13 +675,16 @@ async def test_report_climate_state(hass):
         "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
     )
 
-    hass.states.async_set(
-        "climate.unavailable",
-        "unavailable",
-        {"friendly_name": "Climate Unavailable", "supported_features": 91},
-    )
-    properties = await reported_properties(hass, "climate.unavailable")
-    properties.assert_not_has_property("Alexa.ThermostatController", "thermostatMode")
+    for state in "unavailable", "unknown":
+        hass.states.async_set(
+            f"climate.{state}",
+            state,
+            {"friendly_name": f"Climate {state}", "supported_features": 91},
+        )
+        properties = await reported_properties(hass, f"climate.{state}")
+        properties.assert_not_has_property(
+            "Alexa.ThermostatController", "thermostatMode"
+        )
 
     hass.states.async_set(
         "climate.unsupported",
@@ -843,6 +863,57 @@ async def test_report_image_processing(hass):
         "Alexa.EventDetectionSensor",
         "humanPresenceDetectionState",
         {"value": "DETECTED"},
+    )
+
+
+@pytest.mark.parametrize("domain", ["button", "input_button"])
+async def test_report_button_pressed(hass, domain):
+    """Test button presses report human presence detection events to trigger routines."""
+    hass.states.async_set(
+        f"{domain}.test_button", "now", {"friendly_name": "Test button"}
+    )
+
+    properties = await reported_properties(hass, f"{domain}#test_button")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "DETECTED"},
+    )
+
+
+@pytest.mark.parametrize("domain", ["switch", "input_boolean"])
+async def test_toggle_entities_report_contact_events(hass, domain):
+    """Test toggles and switches report contact sensor events to trigger routines."""
+    hass.states.async_set(
+        f"{domain}.test_toggle", "on", {"friendly_name": "Test toggle"}
+    )
+
+    properties = await reported_properties(hass, f"{domain}#test_toggle")
+    properties.assert_equal(
+        "Alexa.PowerController",
+        "powerState",
+        "ON",
+    )
+    properties.assert_equal(
+        "Alexa.ContactSensor",
+        "detectionState",
+        "DETECTED",
+    )
+
+    hass.states.async_set(
+        f"{domain}.test_toggle", "off", {"friendly_name": "Test toggle"}
+    )
+
+    properties = await reported_properties(hass, f"{domain}#test_toggle")
+    properties.assert_equal(
+        "Alexa.PowerController",
+        "powerState",
+        "OFF",
+    )
+    properties.assert_equal(
+        "Alexa.ContactSensor",
+        "detectionState",
+        "NOT_DETECTED",
     )
 
 

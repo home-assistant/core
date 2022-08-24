@@ -6,22 +6,19 @@ import math
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
+from bond_async import Action, BPUPSubscriptions, DeviceType, Direction
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -29,8 +26,9 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_TRACKED_STATE
+from .const import DOMAIN, SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
+from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,24 +42,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
-
-    fans: list[Entity] = [
-        BondFan(hub, device, bpup_subs)
-        for device in hub.devices
-        if DeviceType.is_fan(device.type)
-    ]
-
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SPEED_TRACKED_STATE,
-        {vol.Required(ATTR_SPEED): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
+        {vol.Required("speed"): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
         "async_set_speed_belief",
     )
 
-    async_add_entities(fans, True)
+    async_add_entities(
+        BondFan(hub, device, bpup_subs)
+        for device in hub.devices
+        if DeviceType.is_fan(device.type)
+    )
 
 
 class BondFan(BondEntity, FanEntity):
@@ -71,15 +66,15 @@ class BondFan(BondEntity, FanEntity):
         self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
     ) -> None:
         """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, bpup_subs)
-
         self._power: bool | None = None
         self._speed: int | None = None
         self._direction: int | None = None
+        super().__init__(hub, device, bpup_subs)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
@@ -91,9 +86,9 @@ class BondFan(BondEntity, FanEntity):
         """Flag supported features."""
         features = 0
         if self._device.supports_speed():
-            features |= SUPPORT_SET_SPEED
+            features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():
-            features |= SUPPORT_DIRECTION
+            features |= FanEntityFeature.DIRECTION
 
         return features
 
@@ -107,7 +102,9 @@ class BondFan(BondEntity, FanEntity):
         """Return the current speed percentage for the fan."""
         if not self._speed or not self._power:
             return 0
-        return ranged_value_to_percentage(self._speed_range, self._speed)
+        return min(
+            100, max(0, ranged_value_to_percentage(self._speed_range, self._speed))
+        )
 
     @property
     def speed_count(self) -> int:
@@ -183,7 +180,6 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

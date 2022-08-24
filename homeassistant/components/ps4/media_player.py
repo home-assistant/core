@@ -7,17 +7,15 @@ from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_GAME,
-    SUPPORT_PAUSE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -46,13 +44,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_PS4 = (
-    SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_SELECT_SOURCE
-)
 
 ICON = "mdi:sony-playstation"
 MEDIA_IMAGE_DEFAULT = None
@@ -80,6 +71,14 @@ async def async_setup_entry(
 
 class PS4Device(MediaPlayerEntity):
     """Representation of a PS4."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, config, name, host, region, ps4, creds):
         """Initialize the ps4 device."""
@@ -334,8 +333,8 @@ class PS4Device(MediaPlayerEntity):
         # If cannot get status on startup, assume info from registry.
         if status is None:
             _LOGGER.info("Assuming status from registry")
-            e_registry = await entity_registry.async_get_registry(self.hass)
-            d_registry = await device_registry.async_get_registry(self.hass)
+            e_registry = entity_registry.async_get(self.hass)
+            d_registry = device_registry.async_get(self.hass)
             for entity_id, entry in e_registry.entities.items():
                 if entry.config_entry_id == self._entry_id:
                     self._unique_id = entry.unique_id
@@ -429,11 +428,6 @@ class PS4Device(MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         return self._media_title
-
-    @property
-    def supported_features(self):
-        """Media player features that are supported."""
-        return SUPPORT_PS4
 
     @property
     def source(self):

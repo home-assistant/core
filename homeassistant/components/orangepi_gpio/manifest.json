@@ -1,9 +1,0 @@
-{
-  "domain": "orangepi_gpio",
-  "name": "Orange Pi GPIO",
-  "documentation": "https://www.home-assistant.io/integrations/orangepi_gpio",
-  "requirements": ["OPi.GPIO==0.5.2"],
-  "codeowners": ["@pascallj"],
-  "iot_class": "local_push",
-  "loggers": ["OPi", "nanopi", "orangepi"]
-}

@@ -24,7 +24,7 @@
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "description": "Skonfiguruj drukark\u0119 za pomoc\u0105 protoko\u0142u IPP (Internet Printing Protocol), aby zintegrowa\u0107 j\u0105 z Home Assistantem.",
-                "title": "Po\u0142\u0105cz swoj\u0105 drukark\u0119"
+                "title": "Po\u0142\u0105czenie z Twoj\u0105 drukark\u0105"
             },
             "zeroconf_confirm": {
                 "description": "Czy chcesz doda\u0107 drukark\u0119 o nazwie `{name}` do Home Assistanta?",

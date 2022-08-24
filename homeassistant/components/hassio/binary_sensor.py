@@ -32,10 +32,11 @@ class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 COMMON_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
         key=ATTR_UPDATE_AVAILABLE,
-        name="Update Available",
+        name="Update available",
     ),
 )
 
@@ -58,7 +59,7 @@ async def async_setup_entry(
     """Binary sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    entities = []
+    entities: list[HassioAddonBinarySensor | HassioOSBinarySensor] = []
 
     for entity_description in ADDON_ENTITY_DESCRIPTIONS:
         for addon in coordinator.data[DATA_KEY_ADDONS].values():

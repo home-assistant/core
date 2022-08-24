@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_account": "\u00c9rv\u00e9nytelen fi\u00f3kazonos\u00edt\u00f3",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "A Steam integr\u00e1ci\u00f3t manu\u00e1lisan \u00fajra kell hiteles\u00edteni .\n\nA kulcs itt tal\u00e1lhat\u00f3: {api_key_url}",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "account": "Steam fi\u00f3k azonos\u00edt\u00f3ja",
+                    "api_key": "API kulcs"
+                },
+                "description": "A {account_id_url} haszn\u00e1lat\u00e1val kaphat\u00f3 meg a Steam fi\u00f3kazonos\u00edt\u00f3"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "A Steam YAML-ben megadott konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fclt.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3j\u00e1t a Home Assistant nem haszn\u00e1lja.\n\nK\u00e9rem, t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Steam YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "A bar\u00e1t-lista korl\u00e1tozva van: K\u00e9rem, olvassa el a dokument\u00e1ci\u00f3t arr\u00f3l, hogyan l\u00e1thatja az \u00f6sszes t\u00f6bbi bar\u00e1tj\u00e1t."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "A nyomon k\u00f6vetend\u0151 fi\u00f3kok nevei"
+                }
+            }
+        }
+    }
+}

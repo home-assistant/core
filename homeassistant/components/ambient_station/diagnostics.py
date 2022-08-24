@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 
 from . import AmbientStation
@@ -14,7 +14,6 @@ from .const import CONF_APP_KEY, DOMAIN
 CONF_API_KEY_CAMEL = "apiKey"
 CONF_APP_KEY_CAMEL = "appKey"
 CONF_DEVICE_ID_CAMEL = "deviceId"
-CONF_LOCATION = "location"
 CONF_MAC_ADDRESS = "mac_address"
 CONF_MAC_ADDRESS_CAMEL = "macAddress"
 CONF_TZ = "tz"

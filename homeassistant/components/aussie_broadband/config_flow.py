@@ -1,10 +1,12 @@
 """Config flow for Aussie Broadband integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB, AuthenticationException
+from aussiebb.const import FETCH_TYPES
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -54,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 self.data = user_input
-                self.services = await self.client.get_services()  # type: ignore[union-attr]
+                self.services = await self.client.get_services(drop_types=FETCH_TYPES)  # type: ignore[union-attr]
 
                 if not self.services:
                     return self.async_abort(reason="no_services_found")
@@ -75,9 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth on credential failure."""
-        self._reauth_username = user_input[CONF_USERNAME]
+        self._reauth_username = entry_data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 

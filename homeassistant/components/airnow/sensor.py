@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
@@ -70,10 +69,10 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class AirNowSensor(CoordinatorEntity, SensorEntity):
+class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity):
     """Define an AirNow sensor."""
 
-    coordinator: AirNowDataUpdateCoordinator
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -84,7 +83,7 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._state = None
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attrs: dict[str, str] = {}
         self._attr_name = f"AirNow {description.name}"
         self._attr_unique_id = (
             f"{coordinator.latitude}-{coordinator.longitude}-{description.key.lower()}"

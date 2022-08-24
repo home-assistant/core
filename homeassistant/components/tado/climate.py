@@ -1,20 +1,18 @@
 """Support for Tado thermostats."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_OFF,
     FAN_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
@@ -24,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
     CONST_FAN_OFF,
     CONST_MODE_AUTO,
@@ -32,10 +31,14 @@ from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TADO_OPTIONS,
     CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
+    HA_TERMINATION_DURATION,
+    HA_TERMINATION_TYPE,
     HA_TO_TADO_FAN_MODE_MAP,
     HA_TO_TADO_HVAC_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
@@ -58,12 +61,16 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_CLIMATE_TIMER = "set_climate_timer"
 ATTR_TIME_PERIOD = "time_period"
+ATTR_REQUESTED_OVERLAY = "requested_overlay"
 
 CLIMATE_TIMER_SCHEMA = {
-    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
+    vol.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
-    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
+    vol.Exclusive(ATTR_REQUESTED_OVERLAY, CONST_EXCLUSIVE_OVERLAY_GROUP): vol.In(
+        CONST_OVERLAY_TADO_OPTIONS
+    ),
 }
 
 SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
@@ -119,7 +126,9 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
-    support_flags = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+    support_flags = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
@@ -136,12 +145,12 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
             if capabilities[mode].get("swings"):
-                support_flags |= SUPPORT_SWING_MODE
+                support_flags |= ClimateEntityFeature.SWING_MODE
 
             if not capabilities[mode].get("fanSpeeds"):
                 continue
 
-            support_flags |= SUPPORT_FAN_MODE
+            support_flags |= ClimateEntityFeature.FAN_MODE
 
             if supported_fan_modes:
                 continue
@@ -153,7 +162,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:
-        supported_hvac_modes.append(HVAC_MODE_HEAT)
+        supported_hvac_modes.append(HVACMode.HEAT)
 
     if CONST_MODE_HEAT in capabilities:
         heat_temperatures = capabilities[CONST_MODE_HEAT]["temperatures"]
@@ -253,7 +262,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
-        self._current_tado_hvac_action = CURRENT_HVAC_OFF
+        self._current_tado_hvac_action = HVACAction.OFF
         self._current_tado_swing_mode = TADO_SWING_OFF
 
         self._tado_zone_data = None
@@ -301,15 +310,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return self._tado_zone_data.current_temp
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVAC_MODE_OFF)
+        return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVACMode.OFF)
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
@@ -317,13 +326,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return self._supported_hvac_modes
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
         """
         return TADO_HVAC_ACTION_TO_HA_HVAC_ACTION.get(
-            self._tado_zone_data.current_hvac_action, CURRENT_HVAC_OFF
+            self._tado_zone_data.current_hvac_action, HVACAction.OFF
         )
 
     @property
@@ -379,11 +388,14 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # the device is switching states
         return self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
 
-    def set_timer(self, time_period, temperature=None):
+    def set_timer(self, temperature=None, time_period=None, requested_overlay=None):
         """Set the timer on the entity, and temperature if supported."""
 
         self._control_hvac(
-            hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
+            hvac_mode=CONST_MODE_HEAT,
+            target_temp=temperature,
+            duration=time_period,
+            overlay_mode=requested_overlay,
         )
 
     def set_temp_offset(self, offset):
@@ -413,7 +425,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         new_hvac_mode = CONST_MODE_COOL if self._ac_device else CONST_MODE_HEAT
         self._control_hvac(target_temp=temperature, hvac_mode=new_hvac_mode)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
         self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
@@ -457,14 +469,21 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_modes(self):
         """Swing modes for the device."""
-        if self._support_flags & SUPPORT_SWING_MODE:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
             return [TADO_SWING_ON, TADO_SWING_OFF]
         return None
 
     @property
     def extra_state_attributes(self):
         """Return temperature offset."""
-        return self._tado_zone_temp_offset
+        state_attr = self._tado_zone_temp_offset
+        state_attr[
+            HA_TERMINATION_TYPE
+        ] = self._tado_zone_data.default_overlay_termination_type
+        state_attr[
+            HA_TERMINATION_DURATION
+        ] = self._tado_zone_data.default_overlay_termination_duration
+        return state_attr
 
     def set_swing_mode(self, swing_mode):
         """Set swing modes for the device."""
@@ -474,6 +493,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_zone_data(self):
         """Load tado data into zone."""
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+
         # Assign offset values to mapped attributes
         for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
             if (
@@ -518,6 +538,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         fan_mode=None,
         swing_mode=None,
         duration=None,
+        overlay_mode=None,
     ):
         """Send new target temperature to Tado."""
 
@@ -559,21 +580,40 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._tado.reset_zone_overlay(self.zone_id)
             return
 
+        # If user gave duration then overlay mode needs to be timer
+        if duration:
+            overlay_mode = CONST_OVERLAY_TIMER
+        # If no duration or timer set to fallback setting
+        if overlay_mode is None:
+            overlay_mode = (
+                self._tado.fallback
+                if self._tado.fallback is not None
+                else CONST_OVERLAY_TADO_MODE
+            )
+        # If default is Tado default then look it up
+        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
+            overlay_mode = (
+                self._tado_zone_data.default_overlay_termination_type
+                if self._tado_zone_data.default_overlay_termination_type is not None
+                else CONST_OVERLAY_TADO_MODE
+            )
+        # If we ended up with a timer but no duration, set a default duration
+        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
+            duration = (
+                self._tado_zone_data.default_overlay_termination_duration
+                if self._tado_zone_data.default_overlay_termination_duration is not None
+                else "3600"
+            )
+
         _LOGGER.debug(
-            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s",
+            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s using overlay %s",
             self._current_tado_hvac_mode,
             self.zone_name,
             self.zone_id,
             self._target_temp,
             duration,
+            overlay_mode,
         )
-
-        overlay_mode = CONST_OVERLAY_MANUAL
-        if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
-        elif self._tado.fallback:
-            # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
-            overlay_mode = CONST_OVERLAY_TADO_MODE
 
         temperature_to_send = self._target_temp
         if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_TEMP_SETTING:
@@ -581,10 +621,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             temperature_to_send = None
 
         fan_speed = None
-        if self._support_flags & SUPPORT_FAN_MODE:
+        if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
         swing = None
-        if self._support_flags & SUPPORT_SWING_MODE:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
             swing = self._current_tado_swing_mode
 
         self._tado.set_zone_overlay(

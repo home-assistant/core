@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 import logging
 import re
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import async_timeout
-import elkm1_lib as elkm1
+from elkm1_lib.elements import Element
+from elkm1_lib.elk import Elk
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -22,6 +24,7 @@ from homeassistant.const import (
     CONF_PREFIX,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
+    CONF_ZONE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     Platform,
@@ -40,6 +43,7 @@ from .const import (
     ATTR_KEY,
     ATTR_KEY_NAME,
     ATTR_KEYPAD_ID,
+    ATTR_KEYPAD_NAME,
     CONF_AREA,
     CONF_AUTO_CONFIGURE,
     CONF_COUNTER,
@@ -50,7 +54,6 @@ from .const import (
     CONF_SETTING,
     CONF_TASK,
     CONF_THERMOSTAT,
-    CONF_ZONE,
     DISCOVER_SCAN_TIMEOUT,
     DISCOVERY_INTERVAL,
     DOMAIN,
@@ -71,6 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
     Platform.SCENE,
@@ -92,7 +96,7 @@ SET_TIME_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def _host_validator(config):
+def _host_validator(config: dict[str, str]) -> dict[str, str]:
     """Validate that a host is properly configured."""
     if config[CONF_HOST].startswith("elks://"):
         if CONF_USERNAME not in config or CONF_PASSWORD not in config:
@@ -104,14 +108,14 @@ def _host_validator(config):
     return config
 
 
-def _elk_range_validator(rng):
-    def _housecode_to_int(val):
+def _elk_range_validator(rng: str) -> tuple[int, int]:
+    def _housecode_to_int(val: str) -> int:
         match = re.search(r"^([a-p])(0[1-9]|1[0-6]|[1-9])$", val.lower())
         if match:
             return (ord(match.group(1)) - ord("a")) * 16 + int(match.group(2))
         raise vol.Invalid("Invalid range")
 
-    def _elk_value(val):
+    def _elk_value(val: str) -> int:
         return int(val) if val.isdigit() else _housecode_to_int(val)
 
     vals = [s.strip() for s in str(rng).split("-")]
@@ -120,7 +124,7 @@ def _elk_range_validator(rng):
     return (start, end)
 
 
-def _has_all_unique_prefixes(value):
+def _has_all_unique_prefixes(value: list[dict[str, str]]) -> list[dict[str, str]]:
     """Validate that each m1 configured has a unique prefix.
 
     Uniqueness is determined case-independently.
@@ -214,10 +218,13 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 
 @callback
-def _async_find_matching_config_entry(hass, prefix):
+def _async_find_matching_config_entry(
+    hass: HomeAssistant, prefix: str
+) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.unique_id == prefix:
             return entry
+    return None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -228,7 +235,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
-    if not entry.unique_id or ":" not in entry.unique_id and is_ip_address(host):
+    if (not entry.unique_id or ":" not in entry.unique_id) and is_ip_address(host):
+        _LOGGER.debug(
+            "Unique id for %s is missing during setup, trying to fill from discovery",
+            host,
+        )
         if device := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, device)
 
@@ -249,7 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.error("Config item: %s; %s", item, err)
                 return False
 
-    elk = elkm1.Elk(
+    elk = Elk(
         {
             "url": conf[CONF_HOST],
             "userid": conf[CONF_USERNAME],
@@ -258,31 +269,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     elk.connect()
 
-    def _element_changed(element, changeset):
+    def _keypad_changed(keypad: Element, changeset: dict[str, Any]) -> None:
         if (keypress := changeset.get("last_keypress")) is None:
             return
 
         hass.bus.async_fire(
             EVENT_ELKM1_KEYPAD_KEY_PRESSED,
             {
-                ATTR_KEYPAD_ID: element.index + 1,
+                ATTR_KEYPAD_NAME: keypad.name,
+                ATTR_KEYPAD_ID: keypad.index + 1,
                 ATTR_KEY_NAME: keypress[0],
                 ATTR_KEY: keypress[1],
             },
         )
 
-    for keypad in elk.keypads:  # pylint: disable=no-member
-        keypad.add_callback(_element_changed)
+    for keypad in elk.keypads:
+        keypad.add_callback(_keypad_changed)
 
     try:
-        if not await async_wait_for_elk_to_sync(
-            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, conf[CONF_HOST]
-        ):
+        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             return False
     except asyncio.TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
-    elk_temp_unit = elk.panel.temperature_units  # pylint: disable=no-member
+    elk_temp_unit = elk.panel.temperature_units
     temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
     config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
@@ -294,23 +304,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "keypads": {},
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-def _included(ranges, set_to, values):
+def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -> None:
     for rng in ranges:
         if not rng[0] <= rng[1] <= len(values):
             raise vol.Invalid(f"Invalid range {rng}")
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 
-def _find_elk_by_prefix(hass, prefix):
+def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
     """Search all config entries for a given prefix."""
     for entry_id in hass.data[DOMAIN]:
         if hass.data[DOMAIN][entry_id]["prefix"] == prefix:
-            return hass.data[DOMAIN][entry_id]["elk"]
+            return cast(Elk, hass.data[DOMAIN][entry_id]["elk"])
+    return None
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -327,14 +338,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_wait_for_elk_to_sync(
-    elk: elkm1.Elk, login_timeout: int, sync_timeout: int, conf_host: str
+    elk: Elk,
+    login_timeout: int,
+    sync_timeout: int,
 ) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
 
     sync_event = asyncio.Event()
     login_event = asyncio.Event()
 
-    def login_status(succeeded):
+    success = True
+
+    def login_status(succeeded: bool) -> None:
         nonlocal success
 
         success = succeeded
@@ -347,27 +362,30 @@ async def async_wait_for_elk_to_sync(
             login_event.set()
             sync_event.set()
 
-    def sync_complete():
+    def sync_complete() -> None:
         sync_event.set()
 
-    success = True
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
-    events = ((login_event, login_timeout), (sync_event, sync_timeout))
-
-    for event, timeout in events:
+    for name, event, timeout in (
+        ("login", login_event, login_timeout),
+        ("sync_complete", sync_event, sync_timeout),
+    ):
+        _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
             async with async_timeout.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
+            _LOGGER.debug("Timed out waiting for %s event", name)
             elk.disconnect()
             raise
+        _LOGGER.debug("Received %s event", name)
 
     return success
 
 
-def _create_elk_services(hass):
-    def _getelk(service):
+def _create_elk_services(hass: HomeAssistant) -> None:
+    def _getelk(service: ServiceCall) -> Elk:
         prefix = service.data["prefix"]
         elk = _find_elk_by_prefix(hass, prefix)
         if elk is None:
@@ -394,12 +412,18 @@ def _create_elk_services(hass):
     )
 
 
-def create_elk_entities(elk_data, elk_elements, element_type, class_, entities):
+def create_elk_entities(
+    elk_data: dict[str, Any],
+    elk_elements: list[Element],
+    element_type: str,
+    class_: Any,
+    entities: list[ElkEntity],
+) -> list[ElkEntity] | None:
     """Create the ElkM1 devices of a particular class."""
     auto_configure = elk_data["auto_configure"]
 
     if not auto_configure and not elk_data["config"][element_type]["enabled"]:
-        return
+        return None
 
     elk = elk_data["elk"]
     _LOGGER.debug("Creating elk entities for %s", elk)
@@ -419,14 +443,15 @@ def create_elk_entities(elk_data, elk_elements, element_type, class_, entities):
 class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
-    def __init__(self, element, elk, elk_data):
+    _attr_has_entity_name = True
+
+    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
         self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
-        self._name_prefix = f"{self._prefix} " if self._prefix else ""
-        self._temperature_unit = elk_data["config"]["temperature_unit"]
+        self._temperature_unit: str = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
         # this is to avoid a conflict between
@@ -440,14 +465,10 @@ class ElkEntity(Entity):
         else:
             uid_start = "elkm1"
         self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
+        self._attr_name = element.name
 
     @property
-    def name(self):
-        """Name of the element."""
-        return f"{self._name_prefix}{self._element.name}"
-
-    @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique id of the element."""
         return self._unique_id
 
@@ -457,31 +478,34 @@ class ElkEntity(Entity):
         return False
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the default attributes of the element."""
-        return {**self._element.as_dict(), **self.initial_attrs()}
+        dict_as_str = {}
+        for key, val in self._element.as_dict().items():
+            dict_as_str[key] = val.value if isinstance(val, Enum) else val
+        return {**dict_as_str, **self.initial_attrs()}
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Is the entity available to be updated."""
         return self._elk.is_connected()
 
-    def initial_attrs(self):
+    def initial_attrs(self) -> dict[str, Any]:
         """Return the underlying element's attributes as a dict."""
         attrs = {}
         attrs["index"] = self._element.index + 1
         return attrs
 
-    def _element_changed(self, element, changeset):
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         pass
 
     @callback
-    def _element_callback(self, element, changeset):
+    def _element_callback(self, element: Element, changeset: dict[str, Any]) -> None:
         """Handle callback from an Elk element that has changed."""
         self._element_changed(element, changeset)
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes and update entity state."""
         self._element.add_callback(self._element_callback)
         self._element_callback(self._element, {})

@@ -61,7 +61,7 @@
                     "debug": "Enable debugging",
                     "device": "Select device to configure",
                     "event_code": "Enter event code to add",
-                    "remove_device": "Select device to delete"
+                    "protocols": "Protocols"
                 },
                 "title": "Rfxtrx Options"
             },
@@ -70,11 +70,9 @@
                     "command_off": "Data bits value for command off",
                     "command_on": "Data bits value for command on",
                     "data_bit": "Number of data bits",
-                    "fire_event": "Enable device event",
                     "off_delay": "Off delay",
                     "off_delay_enabled": "Enable off delay",
                     "replace_device": "Select device to replace",
-                    "signal_repetitions": "Number of signal repetitions",
                     "venetian_blind_mode": "Venetian blind mode"
                 },
                 "title": "Configure device options"

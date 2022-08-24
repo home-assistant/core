@@ -212,8 +212,20 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
         ("BinarySensor", "binary_sensor.opening", "on", {ATTR_DEVICE_CLASS: "opening"}),
         ("BinarySensor", "device_tracker.someone", "not_home", {}),
         ("BinarySensor", "person.someone", "home", {}),
-        ("AirQualitySensor", "sensor.air_quality_pm25", "40", {}),
-        ("AirQualitySensor", "sensor.air_quality", "40", {ATTR_DEVICE_CLASS: "pm25"}),
+        ("PM10Sensor", "sensor.air_quality_pm10", "30", {}),
+        (
+            "PM10Sensor",
+            "sensor.air_quality",
+            "30",
+            {ATTR_DEVICE_CLASS: "pm10"},
+        ),
+        ("PM25Sensor", "sensor.air_quality_pm25", "40", {}),
+        (
+            "PM25Sensor",
+            "sensor.air_quality",
+            "40",
+            {ATTR_DEVICE_CLASS: "pm25"},
+        ),
         (
             "CarbonMonoxideSensor",
             "sensor.co",

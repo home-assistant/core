@@ -163,19 +163,39 @@ class EmonCmsSensor(SensorEntity):
         self._sensorid = sensorid
         self._elem = elem
 
-        if unit_of_measurement == "kWh":
+        if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif unit_of_measurement == "W":
             self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "V":
+            self._attr_device_class = SensorDeviceClass.VOLTAGE
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "A":
+            self._attr_device_class = SensorDeviceClass.CURRENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "VA":
+            self._attr_device_class = SensorDeviceClass.APPARENT_POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement in ("°C", "°F", "K"):
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "Hz":
+            self._attr_device_class = SensorDeviceClass.FREQUENCY
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "hPa":
+            self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
                 elem["value"], STATE_UNKNOWN
             )
-        else:
+        elif elem["value"] is not None:
             self._state = round(float(elem["value"]), DECIMALS)
+        else:
+            self._state = None
 
     @property
     def name(self):
@@ -205,7 +225,7 @@ class EmonCmsSensor(SensorEntity):
             ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(self._elem["time"])),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         self._data.update()
 
@@ -237,8 +257,10 @@ class EmonCmsSensor(SensorEntity):
             self._state = self._value_template.render_with_possible_json_value(
                 elem["value"], STATE_UNKNOWN
             )
-        else:
+        elif elem["value"] is not None:
             self._state = round(float(elem["value"]), DECIMALS)
+        else:
+            self._state = None
 
 
 class EmonCmsData:

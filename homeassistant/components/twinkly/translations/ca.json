@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
-                },
-                "description": "Configura la teva tira LED de Twinkly",
-                "title": "Twinkly"
+                }
             }
         }
     }

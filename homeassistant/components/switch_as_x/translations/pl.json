@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Prze\u0142\u0105cznik",
+                    "target_domain": "Nowy rodzaj"
+                },
+                "description": "Wybierz prze\u0142\u0105cznik, kt\u00f3ry chcesz pokaza\u0107 w Home Assistant jako \u015bwiat\u0142o, rolet\u0119 lub cokolwiek innego. Oryginalny prze\u0142\u0105cznik zostanie ukryty."
+            }
+        }
+    },
+    "title": "Zmiana typu urz\u0105dzenia prze\u0142\u0105cznika"
+}

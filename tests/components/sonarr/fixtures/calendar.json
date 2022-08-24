@@ -51,10 +51,7 @@
       "path": "T:\\Bob's Burgers",
       "year": 2011,
       "firstAired": "2011-01-10T01:30:00Z",
-      "genres": [
-        "Animation",
-        "Comedy"
-      ],
+      "genres": ["Animation", "Comedy"],
       "tags": [],
       "added": "2011-01-26T19:25:55.455594Z",
       "qualityProfile": {

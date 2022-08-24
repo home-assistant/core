@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import io
-import json
 from typing import Any
 from urllib.parse import parse_qsl
 
 from aiohttp import payload, web
+from aiohttp.typedefs import JSONDecoder
 from multidict import CIMultiDict, MultiDict
+
+from homeassistant.helpers.json import json_loads
 
 
 class MockStreamReader:
@@ -64,9 +66,9 @@ class MockRequest:
         """Return the body as text."""
         return MockStreamReader(self._content)
 
-    async def json(self) -> Any:
+    async def json(self, loads: JSONDecoder = json_loads) -> Any:
         """Return the body as JSON."""
-        return json.loads(self._text)
+        return loads(self._text)
 
     async def post(self) -> MultiDict[str]:
         """Return POST parameters."""

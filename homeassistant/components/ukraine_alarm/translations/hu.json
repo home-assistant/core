@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "max_regions": "Legfeljebb 5 r\u00e9gi\u00f3 konfigur\u00e1lhat\u00f3",
+            "rate_limit": "T\u00fal sok k\u00e9r\u00e9s",
+            "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a kapcsolat l\u00e9trehoz\u00e1sa sor\u00e1n",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "R\u00e9gi\u00f3"
+                },
+                "description": "Ha nem csak a megy\u00e9t \u00e9s a ker\u00fcletet szeretn\u00e9 figyelni, v\u00e1lassza ki az adott k\u00f6z\u00f6ss\u00e9get"
+            },
+            "district": {
+                "data": {
+                    "region": "R\u00e9gi\u00f3"
+                },
+                "description": "Ha nem csak megy\u00e9t szeretne figyelni, v\u00e1lassza ki az adott ker\u00fcletet"
+            },
+            "user": {
+                "data": {
+                    "region": "R\u00e9gi\u00f3"
+                },
+                "description": "V\u00e1lassza ki a megfigyelni k\u00edv\u00e1nt megy\u00e9t"
+            }
+        }
+    }
+}

@@ -1,8 +1,6 @@
 """Const for Sonos."""
 import datetime
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
@@ -19,22 +17,20 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 )
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import Platform
 
 UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
 DATA_SONOS = "sonos_media_player"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
-PLATFORMS = {
-    BINARY_SENSOR_DOMAIN,
-    MP_DOMAIN,
-    NUMBER_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-}
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 SONOS_ARTIST = "artists"
 SONOS_ALBUM = "albums"
@@ -152,6 +148,7 @@ SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
 SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
+SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
 SONOS_CREATE_MIC_SENSOR = "sonos_create_mic_sensor"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"
@@ -159,14 +156,31 @@ SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_FALLBACK_POLL = "sonos_fallback_poll"
 SONOS_ALARMS_UPDATED = "sonos_alarms_updated"
 SONOS_FAVORITES_UPDATED = "sonos_favorites_updated"
+SONOS_MEDIA_UPDATED = "sonos_media_updated"
 SONOS_SPEAKER_ACTIVITY = "sonos_speaker_activity"
 SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_REBOOTED = "sonos_rebooted"
 SONOS_VANISHED = "sonos_vanished"
 
+SOURCE_AIRPLAY = "AirPlay"
 SOURCE_LINEIN = "Line-in"
+SOURCE_SPOTIFY_CONNECT = "Spotify Connect"
 SOURCE_TV = "TV"
+
+MODELS_LINEIN_ONLY = (
+    "CONNECT",
+    "CONNECT:AMP",
+    "PORT",
+    "PLAY:5",
+)
+MODELS_TV_ONLY = (
+    "ARC",
+    "BEAM",
+    "PLAYBAR",
+    "PLAYBASE",
+)
+MODELS_LINEIN_AND_TV = ("AMP",)
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5

@@ -15,10 +15,9 @@
                     "latitude": "Lintang",
                     "longitude": "Bujur",
                     "mode": "Mode",
-                    "name": "Nama integrasi"
+                    "name": "Nama"
                 },
-                "description": "Siapkan integrasi OpenWeatherMap. Untuk membuat kunci API, buka https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Untuk membuat kunci API, buka https://openweathermap.org/appid"
             }
         }
     },

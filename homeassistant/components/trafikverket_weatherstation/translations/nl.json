@@ -13,8 +13,6 @@
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
-                    "conditions": "Gemonitorde condities",
-                    "name": "Gebruikersnaam",
                     "station": "Station"
                 }
             }

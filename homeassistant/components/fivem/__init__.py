@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -128,10 +128,9 @@ class FiveMEntityDescription(EntityDescription):
     extra_attrs: list[str] | None = None
 
 
-class FiveMEntity(CoordinatorEntity):
+class FiveMEntity(CoordinatorEntity[FiveMDataUpdateCoordinator]):
     """Representation of a FiveM base entity."""
 
-    coordinator: FiveMDataUpdateCoordinator
     entity_description: FiveMEntityDescription
 
     def __init__(

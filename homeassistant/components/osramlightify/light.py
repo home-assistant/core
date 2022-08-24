@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import random
+from typing import Any
 
 from lightify import Lightify
 import voluptuous as vol
@@ -18,9 +19,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -210,13 +210,18 @@ class Luminary(LightEntity):
         """Get list of supported features."""
         features = 0
         if "lum" in self._luminary.supported_features():
-            features = features | SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            features = features | SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
 
         if "temp" in self._luminary.supported_features():
-            features = features | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION
+            features = features | SUPPORT_COLOR_TEMP | LightEntityFeature.TRANSITION
 
         if "rgb" in self._luminary.supported_features():
-            features = features | SUPPORT_COLOR | SUPPORT_TRANSITION | SUPPORT_EFFECT
+            features = (
+                features
+                | SUPPORT_COLOR
+                | LightEntityFeature.TRANSITION
+                | LightEntityFeature.EFFECT
+            )
 
         return features
 
@@ -302,7 +307,7 @@ class Luminary(LightEntity):
 
         return False
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = int(kwargs.get(ATTR_TRANSITION, 0) * 10)
         if ATTR_EFFECT in kwargs:
@@ -327,7 +332,7 @@ class Luminary(LightEntity):
         else:
             self._luminary.set_onoff(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._is_on = False
         if ATTR_TRANSITION in kwargs:
@@ -370,7 +375,7 @@ class Luminary(LightEntity):
         if self._supported_features & SUPPORT_COLOR:
             self._rgb_color = self._luminary.rgb()
 
-    def update(self):
+    def update(self) -> None:
         """Synchronize state with bridge."""
         changed = self.update_func()
         if changed > self._changed:
@@ -416,7 +421,7 @@ class OsramLightifyGroup(Luminary):
         """Get list of supported features."""
         features = super()._get_supported_features()
         if self._luminary.scenes():
-            features = features | SUPPORT_EFFECT
+            features = features | LightEntityFeature.EFFECT
 
         return features
 

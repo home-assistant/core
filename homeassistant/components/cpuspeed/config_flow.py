@@ -6,7 +6,6 @@ from typing import Any
 from cpuinfo import cpuinfo
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -36,8 +35,3 @@ class CPUSpeedFlowHandler(ConfigFlow, domain=DOMAIN):
             title=self._imported_name or "CPU Speed",
             data={},
         )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-        self._imported_name = config.get(CONF_NAME)
-        return await self.async_step_user(user_input={})

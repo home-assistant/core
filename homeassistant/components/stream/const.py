@@ -42,3 +42,15 @@ STREAM_RESTART_RESET_TIME = 300  # Reset wait_timeout after this many seconds
 CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
+
+CONF_PREFER_TCP = "prefer_tcp"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
+# The first dict entry below may be used as the default when populating options
+RTSP_TRANSPORTS = {
+    "tcp": "TCP",
+    "udp": "UDP",
+    "udp_multicast": "UDP Multicast",
+    "http": "HTTP",
+}
+CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
+CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"

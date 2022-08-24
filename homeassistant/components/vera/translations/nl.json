@@ -10,8 +10,9 @@
                     "lights": "Vera-schakelapparaat id's behandelen als lichten in Home Assistant.",
                     "vera_controller_url": "Controller-URL"
                 },
-                "description": "Geef hieronder een URL voor de Vera-controller op. Het zou er zo uit moeten zien: http://192.168.1.161:3480.",
-                "title": "Stel Vera controller in"
+                "data_description": {
+                    "vera_controller_url": "Het zou er zo uit moeten zien: http://192.168.1.161:3480"
+                }
             }
         }
     },

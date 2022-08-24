@@ -30,7 +30,7 @@ class ActiveConnection:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
         user: User,
         refresh_token: RefreshToken,
     ) -> None:
@@ -52,13 +52,6 @@ class ActiveConnection:
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
-
-    async def send_big_result(self, msg_id: int, result: Any) -> None:
-        """Send a result message that would be expensive to JSON serialize."""
-        content = await self.hass.async_add_executor_job(
-            const.JSON_DUMP, messages.result_message(msg_id, result)
-        )
-        self.send_message(content)
 
     @callback
     def send_error(self, msg_id: int, code: str, message: str) -> None:
@@ -93,7 +86,7 @@ class ActiveConnection:
             return
 
         if msg["type"] not in handlers:
-            self.logger.error("Received invalid command: {}".format(msg["type"]))
+            self.logger.info("Received unknown command: {}".format(msg["type"]))
             self.send_message(
                 messages.error_message(
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."
@@ -121,6 +114,9 @@ class ActiveConnection:
         """Handle an exception while processing a handler."""
         log_handler = self.logger.error
 
+        code = const.ERR_UNKNOWN_ERROR
+        err_message = None
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
@@ -131,13 +127,15 @@ class ActiveConnection:
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):
-            code = const.ERR_UNKNOWN_ERROR
             err_message = str(err)
-        else:
-            code = const.ERR_UNKNOWN_ERROR
+
+        # This if-check matches all other errors but also matches errors which
+        # result in an empty message. In that case we will also log the stack
+        # trace so it can be fixed.
+        if not err_message:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        log_handler("Error handling message: %s", err_message)
+        log_handler("Error handling message: %s (%s)", err_message, code)
 
         self.send_message(messages.error_message(msg["id"], code, err_message))

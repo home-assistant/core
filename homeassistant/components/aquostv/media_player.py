@@ -6,18 +6,10 @@ import logging
 import sharp_aquos_rc
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -42,18 +34,6 @@ DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "password"
 DEFAULT_TIMEOUT = 0.5
 DEFAULT_RETRIES = 2
-
-SUPPORT_SHARPTV = (
-    SUPPORT_TURN_OFF
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PLAY
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -122,7 +102,17 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     """Representation of a Aquos TV."""
 
     _attr_source_list = list(SOURCES.values())
-    _attr_supported_features = SUPPORT_SHARPTV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(
         self, name: str, remote: sharp_aquos_rc.TV, power_on_enabled: bool = False
@@ -130,7 +120,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         """Initialize the aquos device."""
         self._power_on_enabled = power_on_enabled
         if power_on_enabled:
-            self._attr_supported_features |= SUPPORT_TURN_ON
+            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         # Save a reference to the imported class
         self._attr_name = name
         # Assume that the TV is not muted
@@ -141,7 +131,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_state = state
 
     @_retry
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest data."""
         if self._remote.power() == 1:
             self._attr_state = STATE_ON
@@ -163,61 +153,67 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_volume_level = self._remote.volume() / 60
 
     @_retry
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off tvplayer."""
         self._remote.power(0)
 
     @_retry
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
+        if self.volume_level is None:
+            _LOGGER.debug("Unknown volume in volume_up")
+            return
         self._remote.volume(int(self.volume_level * 60) + 2)
 
     @_retry
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
+        if self.volume_level is None:
+            _LOGGER.debug("Unknown volume in volume_down")
+            return
         self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set Volume media player."""
         self._remote.volume(int(volume * 60))
 
     @_retry
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._remote.mute(0)
 
     @_retry
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._remote.power(1)
 
     @_retry
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self._remote.remote_button(40)
 
     @_retry
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._remote.remote_button(16)
 
     @_retry
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._remote.remote_button(16)
 
     @_retry
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._remote.remote_button(21)
 
     @_retry
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._remote.remote_button(19)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         for key, value in SOURCES.items():
             if source == value:

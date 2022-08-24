@@ -15,6 +15,5 @@
                 "description": "\u00dchenda oma Habitica profiil, et saaksid j\u00e4lgida oma kasutaja profiili ja \u00fclesandeid. Pane t\u00e4hele, et api_id ja api_key tuleb hankida aadressilt https://habitica.com/user/settings/api"
             }
         }
-    },
-    "title": ""
+    }
 }

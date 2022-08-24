@@ -98,9 +98,9 @@ class Integration:
         return self.manifest.get("quality_scale")
 
     @property
-    def config_flow(self) -> str:
+    def config_flow(self) -> bool:
         """Return if the integration has a config flow."""
-        return self.manifest.get("config_flow")
+        return self.manifest.get("config_flow", False)
 
     @property
     def requirements(self) -> list[str]:
@@ -111,6 +111,16 @@ class Integration:
     def dependencies(self) -> list[str]:
         """List of dependencies."""
         return self.manifest.get("dependencies", [])
+
+    @property
+    def supported_brands(self) -> dict[str]:
+        """Return dict of supported brands."""
+        return self.manifest.get("supported_brands", {})
+
+    @property
+    def integration_type(self) -> str:
+        """Get integration_type."""
+        return self.manifest.get("integration_type", "integration")
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""

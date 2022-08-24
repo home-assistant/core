@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
+from typing import Any
 
 from pysmartthings import Capability
 
@@ -14,8 +15,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -86,7 +87,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         features = 0
         # Brightness and transition
         if Capability.switch_level in self._device.capabilities:
-            features |= SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            features |= SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
         # Color Temperature
         if Capability.color_temperature in self._device.capabilities:
             features |= SUPPORT_COLOR_TEMP
@@ -96,7 +97,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
 
         return features
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         tasks = []
         # Color temperature
@@ -121,10 +122,13 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         # Switch/transition
-        if self._supported_features & SUPPORT_TRANSITION and ATTR_TRANSITION in kwargs:
+        if (
+            self._supported_features & LightEntityFeature.TRANSITION
+            and ATTR_TRANSITION in kwargs
+        ):
             await self.async_set_level(0, int(kwargs[ATTR_TRANSITION]))
         else:
             await self._device.switch_off(set_status=True)
@@ -133,7 +137,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if self._supported_features & SUPPORT_BRIGHTNESS:

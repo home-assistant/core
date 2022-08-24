@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "firmware_not_fully_provisioned": "Das Ger\u00e4t ist nicht vollst\u00e4ndig eingerichtet. Bitte kontaktiere den Shelly Support",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },

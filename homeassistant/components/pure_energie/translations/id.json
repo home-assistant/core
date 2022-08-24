@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "{model} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Alamat IP atau nama host Pure Energi Meter Anda."
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Ingin menambahkan Pure Energie Meter (`{name}`) ke Home Assistant?",
+                "title": "Peranti Pure Energie Meter yang ditemukan"
+            }
+        }
+    }
+}

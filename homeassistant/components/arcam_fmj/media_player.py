@@ -1,28 +1,27 @@
 """Arcam media player."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from arcam.fmj import SourceCodes
 from arcam.fmj.state import State
 
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_MUSIC,
     MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -77,17 +76,17 @@ class ArcamFmj(MediaPlayerEntity):
         self._attr_name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
         self._attr_supported_features = (
-            SUPPORT_SELECT_SOURCE
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_BROWSE_MEDIA
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
+            MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.BROWSE_MEDIA
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
         )
         if state.zn == 1:
-            self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+            self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{state.zn}"
         self._attr_entity_registry_enabled_default = state.zn == 1
 
@@ -111,7 +110,7 @@ class ArcamFmj(MediaPlayerEntity):
             name=self._device_name,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Once registered, add listener for events."""
         await self._state.start()
         await self._state.update()
@@ -132,34 +131,28 @@ class ArcamFmj(MediaPlayerEntity):
                 self.async_schedule_update_ha_state(force_refresh=True)
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_CLIENT_DATA, _data
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_DATA, _data)
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_CLIENT_STARTED, _started
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STARTED, _started)
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_CLIENT_STOPPED, _stopped
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STOPPED, _stopped)
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Force update of state."""
         _LOGGER.debug("Update state %s", self.name)
         await self._state.update()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._state.set_mute(mute)
         self.async_write_ha_state()
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select a specific source."""
         try:
             value = SourceCodes[source]
@@ -170,7 +163,7 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.set_source(value)
         self.async_write_ha_state()
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a specific source."""
         try:
             await self._state.set_decode_mode(sound_mode)
@@ -180,22 +173,22 @@ class ArcamFmj(MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._state.set_volume(round(volume * 99.0))
         self.async_write_ha_state()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._state.inc_volume()
         self.async_write_ha_state()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume up for media player."""
         await self._state.dec_volume()
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if self._state.get_power() is not None:
             _LOGGER.debug("Turning on device using connection")
@@ -204,11 +197,13 @@ class ArcamFmj(MediaPlayerEntity):
             _LOGGER.debug("Firing event to turn on device")
             self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._state.set_power(False)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if media_content_id not in (None, "root"):
             raise BrowseError(
@@ -230,7 +225,7 @@ class ArcamFmj(MediaPlayerEntity):
         ]
 
         root = BrowseMedia(
-            title="Root",
+            title="Arcam FMJ Receiver",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="root",
             media_content_type="library",
@@ -241,7 +236,9 @@ class ArcamFmj(MediaPlayerEntity):
 
         return root
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
 
         if media_id.startswith("preset:"):

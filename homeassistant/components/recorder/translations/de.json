@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Aktuelle Startzeit der Ausf\u00fchrung",
+            "database_engine": "Datenbank-Engine",
+            "database_version": "Datenbankversion",
+            "estimated_db_size": "Gesch\u00e4tzte Datenbankgr\u00f6\u00dfe (MiB)",
+            "oldest_recorder_run": "\u00c4lteste Startzeit der Ausf\u00fchrung"
+        }
+    }
+}

@@ -12,7 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .entity import HomeKitEntity
 
 
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
@@ -63,7 +64,7 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit BO sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.GAS
+    _attr_device_class = BinarySensorDeviceClass.CO
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""

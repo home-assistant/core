@@ -73,6 +73,7 @@ def test_validate_requirements_format_successful(integration: Integration):
     integration.manifest["requirements"] = [
         "test_package==1.2.3",
         "test_package[async]==1.2.3",
+        "test_package[async,encrypted]==1.2.3",
     ]
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "service_unavailable_error": "Rozhranie API je moment\u00e1lne nedostupn\u00e9, sk\u00faste to pros\u00edm nesk\u00f4r."
+        }
+    }
+}

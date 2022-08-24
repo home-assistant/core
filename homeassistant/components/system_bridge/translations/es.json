@@ -16,7 +16,7 @@
                 "data": {
                     "api_key": "Clave API"
                 },
-                "description": "Escribe la clave API que estableciste en la configuraci\u00f3n para {name}."
+                "description": "Por favor, escribe la clave API que estableciste en la configuraci\u00f3n para {name}."
             },
             "user": {
                 "data": {
@@ -27,6 +27,5 @@
                 "description": "Por favor, introduce tus datos de conexi\u00f3n."
             }
         }
-    },
-    "title": "Pasarela del sistema"
+    }
 }

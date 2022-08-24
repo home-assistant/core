@@ -35,6 +35,7 @@ def validate_integration(config: Config, integration: Integration):
 
     needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and (
         "async_step_discovery" in config_flow
+        or "async_step_bluetooth" in config_flow
         or "async_step_hassio" in config_flow
         or "async_step_homekit" in config_flow
         or "async_step_mqtt" in config_flow
@@ -69,7 +70,10 @@ def validate_integration(config: Config, integration: Integration):
 
 def generate_and_validate(integrations: dict[str, Integration], config: Config):
     """Validate and generate config flow data."""
-    domains = []
+    domains = {
+        "integration": [],
+        "helper": [],
+    }
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -79,7 +83,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
 
         validate_integration(config, integration)
 
-        domains.append(domain)
+        domains[integration.integration_type].append(domain)
 
     return BASE.format(json.dumps(domains, indent=4))
 

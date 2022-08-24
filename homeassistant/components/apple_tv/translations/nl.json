@@ -2,15 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_configured_device": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "backoff": "Het apparaat accepteert op dit moment geen koppelingsverzoeken (u heeft mogelijk te vaak een ongeldige pincode ingevoerd), probeer het later opnieuw.",
             "device_did_not_pair": "Er is geen poging gedaan om het koppelingsproces te voltooien vanaf het apparaat.",
             "device_not_found": "Apparaat werd niet gevonden tijdens het zoeken, probeer het opnieuw toe te voegen.",
             "inconsistent_device": "De verwachte protocollen zijn niet gevonden tijdens het zoeken. Dit wijst gewoonlijk op een probleem met multicast DNS (Zeroconf). Probeer het apparaat opnieuw toe te voegen.",
-            "invalid_config": "De configuratie voor dit apparaat is onvolledig. Probeer het opnieuw toe te voegen.",
+            "ipv6_not_supported": "IPv6 wordt niet ondersteund.",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "setup_failed": "Kan het apparaat niet instellen.",
             "unknown": "Onverwachte fout"
         },
@@ -18,7 +17,6 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "invalid_auth": "Ongeldige authenticatie",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "no_usable_service": "Er is een apparaat gevonden, maar er kon geen manier worden gevonden om er verbinding mee te maken. Als u dit bericht blijft zien, probeert u het IP-adres in te voeren of uw Apple TV opnieuw op te starten.",
             "unknown": "Onverwachte fout"
         },
         "flow_title": "{name} ( {type} )",
@@ -33,7 +31,7 @@
             },
             "pair_with_pin": {
                 "data": {
-                    "pin": "PIN-code"
+                    "pin": "Pincode"
                 },
                 "description": "Koppelen is vereist voor het `{protocol}` protocol. Voer de PIN-code in die op het scherm wordt getoond. Beginnende nullen moeten worden weggelaten, d.w.z. voer 123 in als de getoonde code 0123 is.",
                 "title": "Koppelen"
@@ -72,6 +70,5 @@
                 "description": "Algemene apparaatinstellingen configureren"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

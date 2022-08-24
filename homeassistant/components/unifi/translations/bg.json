@@ -22,6 +22,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "UniFi \u0438\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044f\u0442\u0430 \u043d\u0435 \u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u0430"
+        },
         "step": {
             "device_tracker": {
                 "data": {

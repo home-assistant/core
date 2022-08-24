@@ -9,9 +9,10 @@ from pymelcloud.atw_device import (
 from pymelcloud.device import PROPERTY_POWER
 
 from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
@@ -38,6 +39,11 @@ async def async_setup_entry(
 
 class AtwWaterHeater(WaterHeaterEntity):
     """Air-to-Water water heater."""
+
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
 
     def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
         """Initialize water heater device."""
@@ -118,16 +124,11 @@ class AtwWaterHeater(WaterHeaterEntity):
         await self._device.set({PROPERTY_OPERATION_MODE: operation_mode})
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-
-    @property
-    def min_temp(self) -> float | None:
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._device.target_tank_temperature_min
+        return self._device.target_tank_temperature_min or DEFAULT_MIN_TEMP
 
     @property
-    def max_temp(self) -> float | None:
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._device.target_tank_temperature_max
+        return self._device.target_tank_temperature_max or DEFAULT_MAX_TEMP

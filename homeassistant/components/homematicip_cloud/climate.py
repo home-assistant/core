@@ -11,18 +11,13 @@ from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -68,6 +63,10 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
     """
 
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
@@ -93,11 +92,6 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
-
-    @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._device.setPointTemperature
@@ -115,31 +109,29 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return self._device.humidity
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie."""
         if self._disabled_by_cooling_mode and not self._has_switch:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
         if self._device.boostMode:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if self._device.controlMode == HMIP_MANUAL_CM:
-            return HVAC_MODE_HEAT if self._heat_mode_enabled else HVAC_MODE_COOL
+            return HVACMode.HEAT if self._heat_mode_enabled else HVACMode.COOL
 
-        return HVAC_MODE_AUTO
+        return HVACMode.AUTO
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         if self._disabled_by_cooling_mode and not self._has_switch:
-            return [HVAC_MODE_OFF]
+            return [HVACMode.OFF]
 
-        return (
-            [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
-            if self._heat_mode_enabled
-            else [HVAC_MODE_AUTO, HVAC_MODE_COOL]
-        )
+        if self._heat_mode_enabled:
+            return [HVACMode.AUTO, HVACMode.HEAT]
+        return [HVACMode.AUTO, HVACMode.COOL]
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """
         Return the current hvac_action.
 
@@ -150,9 +142,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             and self._has_radiator_thermostat
             and self._heat_mode_enabled
         ):
-            return (
-                CURRENT_HVAC_HEAT if self._device.valvePosition else CURRENT_HVAC_IDLE
-            )
+            return HVACAction.HEATING if self._device.valvePosition else HVACAction.IDLE
 
         return None
 
@@ -161,7 +151,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         """Return the current preset mode."""
         if self._device.boostMode:
             return PRESET_BOOST
-        if self.hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF):
+        if self.hvac_mode in (HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF):
             return PRESET_NONE
         if self._device.controlMode == HMIP_ECO_CM:
             if self._indoor_climate.absenceType == AbsenceType.VACATION:
@@ -216,12 +206,12 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         if self.min_temp <= temperature <= self.max_temp:
             await self._device.set_point_temperature(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             return
 
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
         else:
             await self._device.set_control_mode(HMIP_MANUAL_CM)
@@ -238,7 +228,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             if self._device.controlMode != HMIP_AUTOMATIC_CM:
-                await self.async_set_hvac_mode(HVAC_MODE_AUTO)
+                await self.async_set_hvac_mode(HVACMode.AUTO)
             await self._device.set_active_profile(profile_idx)
 
     @property

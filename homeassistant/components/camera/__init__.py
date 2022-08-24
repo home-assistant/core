@@ -2,21 +2,19 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import IntEnum
 from functools import partial
-import hashlib
-import inspect
 import logging
 import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import async_timeout
 import attr
 import voluptuous as vol
@@ -29,15 +27,19 @@ from homeassistant.components.media_player.const import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.stream import Stream, create_stream
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
+from homeassistant.components.stream import (
+    FORMAT_CONTENT_TYPE,
+    OUTPUT_FORMATS,
+    Stream,
+    create_stream,
+)
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -50,11 +52,12 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import (
+from .const import (  # noqa: F401
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -65,6 +68,7 @@ from .const import (
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
+    StreamType,
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
@@ -89,11 +93,20 @@ STATE_RECORDING: Final = "recording"
 STATE_STREAMING: Final = "streaming"
 STATE_IDLE: Final = "idle"
 
-# Bitfield of features supported by the camera entity
+
+class CameraEntityFeature(IntEnum):
+    """Supported features of the camera entity."""
+
+    ON_OFF = 1
+    STREAM = 2
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Pleease use the CameraEntityFeature enum instead.
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
 
-RTSP_PREFIXES = {"rtsp://", "rtsps://"}
+RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
@@ -115,14 +128,6 @@ CAMERA_SERVICE_RECORD: Final = {
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
-
-WS_TYPE_CAMERA_THUMBNAIL: Final = "camera_thumbnail"
-SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CAMERA_THUMBNAIL,
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
 
 
 @dataclass
@@ -161,18 +166,9 @@ async def _async_get_image(
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with async_timeout.timeout(timeout):
-            # Calling inspect will be removed in 2022.1 after all
-            # custom components have had a chance to change their signature
-            sig = inspect.signature(camera.async_camera_image)
-            if "height" in sig.parameters and "width" in sig.parameters:
-                image_bytes = await camera.async_camera_image(
-                    width=width, height=height
-                )
-            else:
-                camera.async_warn_old_async_camera_image_signature()
-                image_bytes = await camera.async_camera_image()
-
-            if image_bytes:
+            if image_bytes := await camera.async_camera_image(
+                width=width, height=height
+            ):
                 content_type = camera.content_type
                 image = Image(content_type, image_bytes)
                 if (
@@ -357,12 +353,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_CAMERA_THUMBNAIL,
-        websocket_camera_thumbnail,
-        SCHEMA_WS_CAMERA_THUMBNAIL,
-    )
+
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
@@ -381,9 +372,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             stream.keepalive = True
             stream.add_provider("hls")
-            stream.start()
+            await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
@@ -393,7 +384,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_update_token()
             entity.async_write_ha_state()
 
-    hass.helpers.event.async_track_time_interval(update_tokens, TOKEN_CHANGE_INTERVAL)
+    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
@@ -436,7 +427,7 @@ class Camera(Entity):
     # Entity Properties
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
-    _attr_frontend_stream_type: str | None
+    _attr_frontend_stream_type: StreamType | None
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
     _attr_is_streaming: bool = False
@@ -449,7 +440,7 @@ class Camera(Entity):
     def __init__(self) -> None:
         """Initialize a camera."""
         self.stream: Stream | None = None
-        self.stream_options: dict[str, str] = {}
+        self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False
@@ -500,7 +491,7 @@ class Camera(Entity):
         return self._attr_frame_interval
 
     @property
-    def frontend_stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> StreamType | None:
         """Return the type of stream supported by this camera.
 
         A camera may have a single stream type which is used to inform the
@@ -509,11 +500,11 @@ class Camera(Entity):
         """
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
-        if not self.supported_features & SUPPORT_STREAM:
+        if not self.supported_features & CameraEntityFeature.STREAM:
             return None
         if self._rtsp_to_webrtc:
-            return STREAM_TYPE_WEB_RTC
-        return STREAM_TYPE_HLS
+            return StreamType.WEB_RTC
+        return StreamType.HLS
 
     @property
     def available(self) -> bool:
@@ -545,15 +536,16 @@ class Camera(Entity):
     async def stream_source(self) -> str | None:
         """Return the source of the stream.
 
-        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_HLS.
+        This is used by cameras with CameraEntityFeature.STREAM
+        and StreamType.HLS.
         """
-        # pylint: disable=no-self-use
         return None
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
         """Handle the WebRTC offer and return an answer.
 
-        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_WEB_RTC.
+        This is used by cameras with CameraEntityFeature.STREAM
+        and StreamType.WEB_RTC.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -576,27 +568,9 @@ class Camera(Entity):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        sig = inspect.signature(self.camera_image)
-        # Calling inspect will be removed in 2022.1 after all
-        # custom components have had a chance to change their signature
-        if "height" in sig.parameters and "width" in sig.parameters:
-            return await self.hass.async_add_executor_job(
-                partial(self.camera_image, width=width, height=height)
-            )
-        self.async_warn_old_async_camera_image_signature()
-        return await self.hass.async_add_executor_job(self.camera_image)
-
-    # Remove in 2022.1 after all custom components have had a chance to change their signature
-    @callback
-    def async_warn_old_async_camera_image_signature(self) -> None:
-        """Warn once when calling async_camera_image with the function old signature."""
-        if self._warned_old_signature:
-            return
-        _LOGGER.warning(
-            "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
-            self.entity_id,
+        return await self.hass.async_add_executor_job(
+            partial(self.camera_image, width=width, height=height)
         )
-        self._warned_old_signature = True
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float
@@ -686,9 +660,7 @@ class Camera(Entity):
     @callback
     def async_update_token(self) -> None:
         """Update the used token."""
-        self.access_tokens.append(
-            hashlib.sha256(_RND.getrandbits(256).to_bytes(32, "little")).hexdigest()
-        )
+        self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -710,7 +682,7 @@ class Camera(Entity):
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""
-        if not self.supported_features & SUPPORT_STREAM:
+        if not self.supported_features & CameraEntityFeature.STREAM:
             return False
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False
@@ -743,7 +715,12 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            raise web.HTTPUnauthorized()
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
+                raise web.HTTPUnauthorized()
+            # Invalid sigAuth or camera access token
+            raise web.HTTPForbidden()
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
@@ -807,32 +784,6 @@ class CameraMjpegStream(CameraView):
             raise web.HTTPBadRequest() from err
 
 
-@websocket_api.async_response
-async def websocket_camera_thumbnail(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Handle get camera thumbnail websocket command.
-
-    Async friendly.
-    """
-    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated")
-    try:
-        image = await async_get_image(hass, msg["entity_id"])
-        await connection.send_big_result(
-            msg["id"],
-            {
-                "content_type": image.content_type,
-                "content": base64.b64encode(image.content).decode("utf-8"),
-            },
-        )
-    except HomeAssistantError:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "image_fetch_failed", "Unable to fetch image"
-            )
-        )
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/stream",
@@ -886,7 +837,7 @@ async def ws_camera_web_rtc_offer(
     entity_id = msg["entity_id"]
     offer = msg["offer"]
     camera = _get_camera_from_entity_id(hass, entity_id)
-    if camera.frontend_stream_type != STREAM_TYPE_WEB_RTC:
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",
@@ -1010,7 +961,7 @@ async def _async_stream_endpoint_url(
     stream.keepalive = camera_prefs.preload_stream
 
     stream.add_provider(fmt)
-    stream.start()
+    await stream.start()
     return stream.endpoint_url(fmt)
 
 

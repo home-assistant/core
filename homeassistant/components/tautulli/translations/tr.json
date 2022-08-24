@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "API anahtar\u0131n\u0131z\u0131 bulmak i\u00e7in Tautulli web sayfas\u0131n\u0131 a\u00e7\u0131n ve Ayarlar'a ve ard\u0131ndan Web aray\u00fcz\u00fcne gidin. API anahtar\u0131 o sayfan\u0131n alt\u0131nda olacakt\u0131r.",
+                "title": "Tautulli'yi yeniden do\u011frulay\u0131n"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "url": "URL",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                },
+                "description": "API anahtar\u0131n\u0131z\u0131 bulmak i\u00e7in Tautulli web sayfas\u0131n\u0131 a\u00e7\u0131n ve Ayarlar'a ve ard\u0131ndan Web aray\u00fcz\u00fcne gidin. API anahtar\u0131 o sayfan\u0131n alt\u0131nda olacakt\u0131r. \n\n URL \u00f6rne\u011fi: ```http://192.168.0.10:8181``` 8181 varsay\u0131lan ba\u011flant\u0131 noktas\u0131d\u0131r."
+            }
+        }
+    }
+}

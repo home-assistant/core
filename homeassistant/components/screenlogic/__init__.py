@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -167,10 +167,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(ex) from ex
 
 
-class ScreenlogicEntity(CoordinatorEntity):
+class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     """Base class for all ScreenLogic entities."""
-
-    coordinator: ScreenlogicDataUpdateCoordinator
 
     def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""

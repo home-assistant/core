@@ -3,6 +3,7 @@ import asyncio
 import functools
 import logging
 import secrets
+from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -32,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.storage import Store
 
 from .const import (
     APP_NAME_PREFIX,
@@ -210,7 +212,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
         return
 
     # Get/create config to store a unique id for this hass instance.
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if not (config := await store.async_load()):
         # Create config
         config = {
@@ -282,7 +284,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistant):
     if cloudhook_url and cloud.async_is_logged_in(hass):
         await cloud.async_delete_cloudhook(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
         # Remove cloudhook from storage
-        store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(
             {
                 CONF_INSTANCE_ID: hass.data[DOMAIN][CONF_INSTANCE_ID],
@@ -404,7 +406,7 @@ async def _continue_flow(
         (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-            if flow["context"]["unique_id"] == unique_id
+            if flow["context"].get("unique_id") == unique_id
         ),
         None,
     )

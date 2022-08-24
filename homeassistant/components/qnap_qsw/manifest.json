@@ -1,0 +1,15 @@
+{
+  "domain": "qnap_qsw",
+  "name": "QNAP QSW",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/qnap_qsw",
+  "requirements": ["aioqsw==0.2.2"],
+  "codeowners": ["@Noltari"],
+  "iot_class": "local_polling",
+  "loggers": ["aioqsw"],
+  "dhcp": [
+    {
+      "macaddress": "245EBE*"
+    }
+  ]
+}

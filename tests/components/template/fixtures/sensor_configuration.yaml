@@ -6,18 +6,20 @@ sensor:
     host: 192.168.210.25
     community: public
     accept_errors: true
-    value_template: '{{ ((value | int) / 1000) | float | round(3) }}'
+    value_template: "{{ ((value | int) / 1000) | float | round(3) }}"
     scan_interval: 900
   - platform: template
     sensors:
       combined_sensor_energy_usage:
         friendly_name: Combined Sense Energy Usage
         unit_of_measurement: kW
-        value_template: '{{ ((states(''sensor.energy_usage'') | float) + (states(''sensor.energy_usage_2'')
-          | float)) / 1000 }}'
+        value_template:
+          "{{ ((states('sensor.energy_usage') | float(default=0)) + (states('sensor.energy_usage_2')
+          | float(default=0))) / 1000 }}"
       watching_tv_in_master_bedroom:
         friendly_name: Watching TV in Master Bedroom
-        value_template: '{% if state_attr("remote.alexander_master_bedroom","current_activity")
+        value_template:
+          '{% if state_attr("remote.alexander_master_bedroom","current_activity")
           == "Watch TV" or state_attr("remote.alexander_master_bedroom","current_activity")
           == "Watch Apple TV" %}on{% else %}off{% endif %}'
 

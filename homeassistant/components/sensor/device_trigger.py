@@ -15,12 +15,18 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_TYPE,
 )
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import (
+    get_capability,
+    get_device_class,
+    get_unit_of_measurement,
+)
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, SensorDeviceClass
+from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -131,7 +137,12 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     numeric_state_config = {
         numeric_state_trigger.CONF_PLATFORM: "numeric_state",
@@ -148,26 +159,29 @@ async def async_attach_trigger(hass, config, action, automation_info):
         hass, numeric_state_config
     )
     return await numeric_state_trigger.async_attach_trigger(
-        hass, numeric_state_config, action, automation_info, platform_type="device"
+        hass, numeric_state_config, action, trigger_info, platform_type="device"
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers = []
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    triggers: list[dict[str, str]] = []
+    entity_registry = er.async_get(hass)
 
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == DOMAIN
     ]
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not unit_of_measurement:
+        if not unit_of_measurement and not state_class:
             continue
 
         templates = ENTITY_TRIGGERS.get(
@@ -188,7 +202,9 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     try:
         unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])

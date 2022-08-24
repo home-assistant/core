@@ -24,11 +24,12 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity, entity_registry, update_coordinator
+from homeassistant.helpers import entity, entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import (
@@ -159,11 +160,10 @@ async def async_setup_entry(
     coordinator.async_add_listener(new_data_received)
 
 
-class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
     entity_description: IotaWattSensorEntityDescription
-    coordinator: IotawattUpdater
 
     def __init__(
         self,

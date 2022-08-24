@@ -2,10 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "ignore_ip6_link_local": "IPv6 link lokaal adres wordt niet ondersteund.",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
             "not_supported": "Verbonden met AVM FRITZ! Box, maar het kan geen Smart Home-apparaten bedienen.",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie"

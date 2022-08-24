@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -14,6 +10,7 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
@@ -75,13 +72,11 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
-) -> CALLBACK_TYPE | None:
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    trigger_type = config[CONF_TYPE]
-
-    if trigger_type == TURN_ON_PLATFORM_TYPE:
+    if (trigger_type := config[CONF_TYPE]) == TURN_ON_PLATFORM_TYPE:
         trigger_config = {
             CONF_PLATFORM: trigger_type,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],
@@ -90,7 +85,7 @@ async def async_attach_trigger(
             hass, trigger_config
         )
         return await trigger.async_attach_trigger(
-            hass, trigger_config, action, automation_info
+            hass, trigger_config, action, trigger_info
         )
 
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")

@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Hostitel"
-                },
-                "description": "Nastavte sv\u016fj LED p\u00e1sek Twinkly",
-                "title": "Twinkly"
+                }
             }
         }
     }

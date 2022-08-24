@@ -12,12 +12,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,7 +24,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_HOST,
     CONF_ID,
-    CONF_MODEL,
     CONF_NAME,
     DATA_CLIENT,
     DATA_DEVICE_INFO,
@@ -70,16 +68,16 @@ class TwinklyLight(LightEntity):
         self._conf = conf
 
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
-            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
-            self._attr_color_mode = COLOR_MODE_RGBW
+            self._attr_supported_color_modes = {ColorMode.RGBW}
+            self._attr_color_mode = ColorMode.RGBW
             self._attr_rgbw_color = (255, 255, 255, 0)
         elif device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGB:
-            self._attr_supported_color_modes = {COLOR_MODE_RGB}
-            self._attr_color_mode = COLOR_MODE_RGB
+            self._attr_supported_color_modes = {ColorMode.RGB}
+            self._attr_color_mode = ColorMode.RGB
             self._attr_rgb_color = (255, 255, 255)
         else:
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
 
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
@@ -142,7 +140,7 @@ class TwinklyLight(LightEntity):
 
         return attributes
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
@@ -185,7 +183,7 @@ class TwinklyLight(LightEntity):
         if not self._is_on:
             await self._client.turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self._client.turn_off()
 

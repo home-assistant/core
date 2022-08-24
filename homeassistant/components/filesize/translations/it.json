@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "not_allowed": "Il percorso non \u00e8 consentito",
+            "not_valid": "Il percorso non \u00e8 valido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "Percorso del file"
+                }
+            }
+        }
+    },
+    "title": "Dimensione file"
+}

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_home": "V konfiguraci Home Assistant nejsou nastaveny \u017e\u00e1dn\u00e9 domovsk\u00e9 sou\u0159adnice"
+        },
         "error": {
             "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },

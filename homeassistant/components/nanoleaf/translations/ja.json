@@ -24,5 +24,13 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "\u4e0b\u306b\u30b9\u30ef\u30a4\u30d7",
+            "swipe_left": "\u5de6\u306b\u30b9\u30ef\u30a4\u30d7",
+            "swipe_right": "\u53f3\u306b\u30b9\u30ef\u30a4\u30d7",
+            "swipe_up": "\u4e0a\u306b\u30b9\u30ef\u30a4\u30d7"
+        }
     }
 }

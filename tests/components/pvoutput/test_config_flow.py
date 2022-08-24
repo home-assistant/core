@@ -5,14 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 from pvo import PVOutputAuthenticationError, PVOutputConnectionError
 
 from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +23,7 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -39,7 +35,7 @@ async def test_full_user_flow(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "12345"
     assert result2.get("data") == {
         CONF_SYSTEM_ID: 12345,
@@ -64,7 +60,7 @@ async def test_full_flow_with_authentication_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -77,7 +73,7 @@ async def test_full_flow_with_authentication_error(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"base": "invalid_auth"}
     assert "flow_id" in result2
@@ -94,7 +90,7 @@ async def test_full_flow_with_authentication_error(
         },
     )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
         CONF_SYSTEM_ID: 12345,
@@ -120,7 +116,7 @@ async def test_connection_error(
         },
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
 
     assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
@@ -147,35 +143,8 @@ async def test_already_configured(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_pvoutput_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_SYSTEM_ID: 1337,
-            CONF_API_KEY: "tadaaa",
-            CONF_NAME: "Test",
-        },
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "Test"
-    assert result.get("data") == {
-        CONF_SYSTEM_ID: 1337,
-        CONF_API_KEY: "tadaaa",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
 
 
 async def test_reauth_flow(
@@ -196,7 +165,7 @@ async def test_reauth_flow(
         },
         data=mock_config_entry.data,
     )
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
     assert "flow_id" in result
 
@@ -206,7 +175,7 @@ async def test_reauth_flow(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_SYSTEM_ID: 12345,
@@ -239,7 +208,7 @@ async def test_reauth_with_authentication_error(
         },
         data=mock_config_entry.data,
     )
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
     assert "flow_id" in result
 
@@ -250,7 +219,7 @@ async def test_reauth_with_authentication_error(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "invalid_auth"}
     assert "flow_id" in result2
@@ -265,7 +234,7 @@ async def test_reauth_with_authentication_error(
     )
     await hass.async_block_till_done()
 
-    assert result3.get("type") == RESULT_TYPE_ABORT
+    assert result3.get("type") == FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_SYSTEM_ID: 12345,
@@ -293,7 +262,7 @@ async def test_reauth_api_error(
         },
         data=mock_config_entry.data,
     )
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
     assert "flow_id" in result
 
@@ -304,6 +273,6 @@ async def test_reauth_api_error(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "cannot_connect"}

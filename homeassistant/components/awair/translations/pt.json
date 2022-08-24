@@ -16,6 +16,12 @@
                     "email": "Email"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Token de Acesso",
+                    "email": "Email"
+                }
+            },
             "user": {
                 "data": {
                     "access_token": "Token de Acesso",

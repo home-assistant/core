@@ -2,10 +2,10 @@
   "config": {
     "step": {
       "user": {
-        "description": "Input IP address of Z-Way server and Z-Way access token. IP address can be prefixed with wss:// if HTTPS should be used instead of HTTP. To get the token go to the Z-Way user interface > Menu > Settings > User > API token. It is suggested to create a new user for Home Assistant and grant access to devices you need to control from Home Assistant. It is also possible to use remote access via find.z-wave.me to connect a remote Z-Way. Input wss://find.z-wave.me in IP field and copy the token with Global scope (log-in to Z-Way via find.z-wave.me for this).",
+        "description": "Input IP address with port and access token of Z-Way server. To get the token go to the Z-Way user interface Smart Home UI > Menu > Settings > Users > Administrator > API token.\n\nExample of connecting to Z-Way in the local network:\nURL: {local_url}\nToken: {local_token}\n\nExample of connecting to Z-Way via remote access find.z-wave.me:\nURL: {find_url}\nToken: {find_token}\n\nExample of connecting to Z-Way with a static public IP address:\nURL: {remote_url}\nToken: {local_token}\n\nWhen connecting via find.z-wave.me you need to use a token with a global scope (log-in to Z-Way via find.z-wave.me for this).",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "token": "Token"
+          "token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     },

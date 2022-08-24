@@ -12,8 +12,9 @@
                 "data": {
                     "code": "Jaama kood"
                 },
-                "description": "Sisesta Meteoclimatic jaama kood (nt ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "N\u00e4eb v\u00e4lja nagu ESCAT4300000043206B"
+                }
             }
         }
     }

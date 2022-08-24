@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
@@ -175,46 +176,44 @@ async def test_switch_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED switches."""
     mock_wled.nightlight.side_effect = WLEDError
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("switch.wled_rgb_light_nightlight")
     assert state
     assert state.state == STATE_OFF
-    assert "Invalid response from API" in caplog.text
 
 
 async def test_switch_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED switches."""
     mock_wled.nightlight.side_effect = WLEDConnectionError
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("switch.wled_rgb_light_nightlight")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Error communicating with API" in caplog.text
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)

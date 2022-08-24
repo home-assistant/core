@@ -4,9 +4,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -47,8 +46,6 @@ WATER_HEATER_MAP_TADO = {
     CONST_MODE_SMART_SCHEDULE: MODE_AUTO,
     CONST_MODE_OFF: MODE_OFF,
 }
-
-SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
 SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
 ATTR_TIME_PERIOD = "time_period"
@@ -147,9 +144,9 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
         self._target_temp = None
 
-        self._supported_features = SUPPORT_FLAGS_HEATER
+        self._attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
         if self._supports_temperature_control:
-            self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
         self._current_tado_hvac_mode = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
@@ -168,11 +165,6 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             )
         )
         self._async_update_data()
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
 
     @property
     def name(self):

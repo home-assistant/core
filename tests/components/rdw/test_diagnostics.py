@@ -29,7 +29,6 @@ async def test_diagnostics(
         "license_plate": "11ZKZ3",
         "list_price": 10697,
         "first_admission": "2013-01-04",
-        "first_admission_netherlands": "2013-01-04",
         "mass_empty": 840,
         "mass_driveable": 940,
         "model": "Citigo",

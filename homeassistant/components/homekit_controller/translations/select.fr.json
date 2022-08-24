@@ -1,7 +1,7 @@
 {
     "state": {
         "homekit_controller__ecobee_mode": {
-            "away": "Loin",
+            "away": "Absent",
             "home": "Domicile",
             "sleep": "Sommeil"
         }

@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
-import json
+import asyncio
+from collections.abc import Callable, Coroutine
+from functools import partial
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -21,6 +22,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_MODEL,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -29,31 +31,27 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    discovery,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import (
+    ENTITY_CATEGORIES_SCHEMA,
     DeviceInfo,
     Entity,
     EntityCategory,
     async_generate_entity_id,
-    validate_entity_category,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DATA_MQTT,
-    PLATFORMS,
-    MqttValueTemplate,
-    async_publish,
-    debug_info,
-    subscription,
-)
+from . import debug_info, subscription
+from .client import async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -62,7 +60,10 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
-    DATA_MQTT_RELOAD_NEEDED,
+    DATA_MQTT,
+    DATA_MQTT_CONFIG,
+    DATA_MQTT_RELOAD_DISPATCHERS,
+    DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -78,13 +79,13 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import PublishPayloadType, ReceiveMessage
+from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import valid_subscribe_topic
+from .util import mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +107,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
@@ -212,7 +212,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
-        vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -220,6 +220,31 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+
+def warn_for_legacy_schema(domain: str) -> Callable:
+    """Warn once when a legacy platform schema is used."""
+    warned = set()
+
+    def validator(config: ConfigType) -> ConfigType:
+        """Return a validator."""
+        nonlocal warned
+
+        if domain in warned:
+            return config
+
+        _LOGGER.warning(
+            "Manually configured MQTT %s(s) found under platform key '%s', "
+            "please move to the mqtt integration key, see "
+            "https://www.home-assistant.io/integrations/%s.mqtt/#new_format",
+            domain,
+            domain,
+            domain,
+        )
+        warned.add(domain)
+        return config
+
+    return validator
 
 
 class SetupEntity(Protocol):
@@ -236,11 +261,63 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_setup_entry_helper(hass, domain, async_setup, schema):
+async def async_discover_yaml_entities(
+    hass: HomeAssistant, platform_domain: str
+) -> None:
+    """Discover entities for a platform."""
+    if DATA_MQTT_UPDATED_CONFIG in hass.data:
+        # The platform has been reloaded
+        config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
+    else:
+        config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
+    if not config_yaml:
+        return
+    if platform_domain not in config_yaml:
+        return
+    await asyncio.gather(
+        *(
+            discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
+            for config in await async_get_platform_config_from_yaml(
+                hass, platform_domain, config_yaml
+            )
+        )
+    )
+
+
+async def async_get_platform_config_from_yaml(
+    hass: HomeAssistant,
+    platform_domain: str,
+    config_yaml: ConfigType | None = None,
+) -> list[ConfigType]:
+    """Return a list of validated configurations for the domain."""
+
+    if config_yaml is None:
+        config_yaml = hass.data.get(DATA_MQTT_CONFIG)
+    if not config_yaml:
+        return []
+    if not (platform_configs := config_yaml.get(platform_domain)):
+        return []
+    return platform_configs
+
+
+async def async_setup_entry_helper(
+    hass: HomeAssistant,
+    domain: str,
+    async_setup: partial[Coroutine[HomeAssistant, str, None]],
+    schema: vol.Schema,
+) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT entity, automation or tag."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.warning(
+                "MQTT integration is disabled, skipping setup of discovered item "
+                "MQTT %s, payload %s",
+                domain,
+                discovery_payload,
+            )
+            return
         discovery_data = discovery_payload.discovery_data
         try:
             config = schema(discovery_payload)
@@ -253,29 +330,31 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
             )
             raise
 
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+    hass.data.setdefault(DATA_MQTT_RELOAD_DISPATCHERS, []).append(
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+        )
     )
 
 
 async def async_setup_platform_helper(
     hass: HomeAssistant,
     platform_domain: str,
-    config: ConfigType,
+    config: ConfigType | DiscoveryInfoType,
     async_add_entities: AddEntitiesCallback,
     async_setup_entities: SetupEntity,
 ) -> None:
-    """Return true if platform setup should be aborted."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    if not bool(hass.config_entries.async_entries(DOMAIN)):
-        hass.data[DATA_MQTT_RELOAD_NEEDED] = None
+    """Help to set up the platform for manual configured MQTT entities."""
+    if not (entry_status := mqtt_config_entry_enabled(hass)):
         _LOGGER.warning(
-            "MQTT integration is not setup, skipping setup of manually configured "
-            "MQTT %s",
+            "MQTT integration is %s, skipping setup of manually configured MQTT %s",
+            "not setup" if entry_status is None else "disabled",
             platform_domain,
         )
         return
-    await async_setup_entities(hass, async_add_entities, config)
+    # Ensure we set config_entry when entries are set up to enable clean up
+    config_entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    await async_setup_entities(hass, async_add_entities, config, config_entry)
 
 
 def init_entity_id_from_config(hass, entity, config, entity_id_format):
@@ -293,7 +372,7 @@ class MqttAttributes(Entity):
 
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes: dict | None = None
+        self._attributes: dict[str, Any] | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -323,7 +402,7 @@ class MqttAttributes(Entity):
         def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = attr_tpl(msg.payload)
-                json_dict = json.loads(payload) if isinstance(payload, str) else None
+                json_dict = json_loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
                         k: v
@@ -364,7 +443,7 @@ class MqttAttributes(Entity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self._attributes
 
@@ -496,8 +575,10 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(hass, device_id, config_entry_id):
-    """Remove device registry entry if there are no remaining entities or triggers."""
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+) -> None:
+    """Remove MQTT from the device registry entry if there are no remaining entities, triggers or tags."""
     # Local import to avoid circular dependencies
     # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
@@ -506,6 +587,7 @@ async def cleanup_device_registry(hass, device_id, config_entry_id):
     entity_registry = er.async_get(hass)
     if (
         device_id
+        and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
@@ -517,14 +599,176 @@ async def cleanup_device_registry(hass, device_id, config_entry_id):
         )
 
 
-class MqttDiscoveryUpdate(Entity):
-    """Mixin used to handle updated discovery message."""
+def get_discovery_hash(discovery_data: dict) -> tuple:
+    """Get the discovery hash from the discovery data."""
+    return discovery_data[ATTR_DISCOVERY_HASH]
 
-    def __init__(self, discovery_data, discovery_update=None) -> None:
+
+def send_discovery_done(hass: HomeAssistant, discovery_data: dict) -> None:
+    """Acknowledge a discovery message has been handled."""
+    discovery_hash = get_discovery_hash(discovery_data)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+
+
+def stop_discovery_updates(
+    hass: HomeAssistant,
+    discovery_data: dict,
+    remove_discovery_updated: Callable[[], None] | None = None,
+) -> None:
+    """Stop discovery updates of being sent."""
+    if remove_discovery_updated:
+        remove_discovery_updated()
+        remove_discovery_updated = None
+    discovery_hash = get_discovery_hash(discovery_data)
+    clear_discovery_hash(hass, discovery_hash)
+
+
+async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: dict):
+    """Clear retained discovery topic in broker to avoid rediscovery after a restart of HA."""
+    discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
+    await async_publish(hass, discovery_topic, "", retain=True)
+
+
+class MqttDiscoveryDeviceUpdate:
+    """Add support for auto discovery for platforms without an entity."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        discovery_data: dict,
+        device_id: str | None,
+        config_entry: ConfigEntry,
+        log_name: str,
+    ) -> None:
+        """Initialize the update service."""
+
+        self.hass = hass
+        self.log_name = log_name
+
+        self._discovery_data = discovery_data
+        self._device_id = device_id
+        self._config_entry = config_entry
+        self._config_entry_id = config_entry.entry_id
+        self._skip_device_removal: bool = False
+
+        discovery_hash = get_discovery_hash(discovery_data)
+        self._remove_discovery_updated = async_dispatcher_connect(
+            hass,
+            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+            self.async_discovery_update,
+        )
+        config_entry.async_on_unload(self._entry_unload)
+        if device_id is not None:
+            self._remove_device_updated = hass.bus.async_listen(
+                EVENT_DEVICE_REGISTRY_UPDATED, self._async_device_removed
+            )
+        _LOGGER.info(
+            "%s %s has been initialized",
+            self.log_name,
+            discovery_hash,
+        )
+
+    @callback
+    def _entry_unload(self, *_: Any) -> None:
+        """Handle cleanup when the config entry is unloaded."""
+        stop_discovery_updates(
+            self.hass, self._discovery_data, self._remove_discovery_updated
+        )
+        self._config_entry.async_create_task(self.hass, self.async_tear_down())
+
+    async def async_discovery_update(
+        self,
+        discovery_payload: DiscoveryInfoType | None,
+    ) -> None:
+        """Handle discovery update."""
+        discovery_hash = get_discovery_hash(self._discovery_data)
+        _LOGGER.info(
+            "Got update for %s with hash: %s '%s'",
+            self.log_name,
+            discovery_hash,
+            discovery_payload,
+        )
+        if (
+            discovery_payload
+            and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+        ):
+            _LOGGER.info(
+                "%s %s updating",
+                self.log_name,
+                discovery_hash,
+            )
+            await self.async_update(discovery_payload)
+        if not discovery_payload:
+            # Unregister and clean up the current discovery instance
+            stop_discovery_updates(
+                self.hass, self._discovery_data, self._remove_discovery_updated
+            )
+            await self._async_tear_down()
+            send_discovery_done(self.hass, self._discovery_data)
+            _LOGGER.info(
+                "%s %s has been removed",
+                self.log_name,
+                discovery_hash,
+            )
+        else:
+            # Normal update without change
+            send_discovery_done(self.hass, self._discovery_data)
+            _LOGGER.info(
+                "%s %s no changes",
+                self.log_name,
+                discovery_hash,
+            )
+            return
+
+    async def _async_device_removed(self, event: Event) -> None:
+        """Handle the manual removal of a device."""
+        if self._skip_device_removal or not async_removed_from_device(
+            self.hass, event, cast(str, self._device_id), self._config_entry_id
+        ):
+            return
+        # Prevent a second cleanup round after the device is removed
+        self._remove_device_updated()
+        self._skip_device_removal = True
+        # Unregister and clean up and publish an empty payload
+        # so the service is not rediscovered after a restart
+        stop_discovery_updates(
+            self.hass, self._discovery_data, self._remove_discovery_updated
+        )
+        await self._async_tear_down()
+        await async_remove_discovery_payload(self.hass, self._discovery_data)
+
+    async def _async_tear_down(self) -> None:
+        """Handle the cleanup of the discovery service."""
+        # Cleanup platform resources
+        await self.async_tear_down()
+        # remove the service for auto discovery updates and clean up the device registry
+        if not self._skip_device_removal:
+            # Prevent a second cleanup round after the device is removed
+            self._skip_device_removal = True
+            await cleanup_device_registry(
+                self.hass, self._device_id, self._config_entry_id
+            )
+
+    async def async_update(self, discovery_data: dict) -> None:
+        """Handle the update of platform specific parts, extend to the platform."""
+
+    @abstractmethod
+    async def async_tear_down(self) -> None:
+        """Handle the cleanup of platform specific parts, extend to the platform."""
+
+
+class MqttDiscoveryUpdate(Entity):
+    """Mixin used to handle updated discovery message for entity based platforms."""
+
+    def __init__(
+        self,
+        discovery_data: dict,
+        discovery_update: Callable | None = None,
+    ) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_signal: Callable | None = None
+        self._remove_discovery_updated: Callable | None = None
         self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:
@@ -572,9 +816,7 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+            send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -582,13 +824,10 @@ class MqttDiscoveryUpdate(Entity):
             )
             # Set in case the entity has been removed and is re-added, for example when changing entity_id
             set_discovery_hash(self.hass, discovery_hash)
-            self._remove_signal = async_dispatcher_connect(
+            self._remove_discovery_updated = async_dispatcher_connect(
                 self.hass,
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
-            )
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
     async def async_removed_from_registry(self) -> None:
@@ -599,18 +838,14 @@ class MqttDiscoveryUpdate(Entity):
             self._cleanup_discovery_on_remove()
 
             # Clear the discovery topic so the entity is not rediscovered after a restart
-            discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
-            await async_publish(self.hass, discovery_topic, "", retain=True)
+            await async_remove_discovery_payload(self.hass, self._discovery_data)
 
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         if self._discovery_data:
-            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(self.hass, discovery_hash)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+            stop_discovery_updates(self.hass, self._discovery_data)
+            send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -620,12 +855,10 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
-            clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
+            stop_discovery_updates(
+                self.hass, self._discovery_data, self._remove_discovery_updated
+            )
             self._removed_from_hass = True
-
-        if self._remove_signal:
-            self._remove_signal()
-            self._remove_signal = None
 
 
 def device_info_from_config(config) -> DeviceInfo | None:
@@ -723,11 +956,21 @@ class MqttEntity(
             self.hass, self, self._config, self._entity_id_format
         )
 
+    @final
     async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
+        """Subscribe to MQTT events."""
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
+        await self.mqtt_async_added_to_hass()
+        if self._discovery_data is not None:
+            send_discovery_done(self.hass, self._discovery_data)
+
+    async def mqtt_async_added_to_hass(self):
+        """Call before the discovery message is acknowledged.
+
+        To be extended by subclasses.
+        """
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
@@ -798,7 +1041,7 @@ class MqttEntity(
         return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 
@@ -823,6 +1066,28 @@ class MqttEntity(
         return self._unique_id
 
 
+def update_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    config: ConfigType,
+) -> str | None:
+    """Update device registry."""
+    if CONF_DEVICE not in config:
+        return None
+
+    device = None
+    device_registry = dr.async_get(hass)
+    config_entry_id = config_entry.entry_id
+    device_info = device_info_from_config(config[CONF_DEVICE])
+
+    if config_entry_id is not None and device_info is not None:
+        update_device_info = cast(dict, device_info)
+        update_device_info["config_entry_id"] = config_entry_id
+        device = device_registry.async_get_or_create(**update_device_info)
+
+    return device.id if device else None
+
+
 @callback
 def async_removed_from_device(
     hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
@@ -839,8 +1104,7 @@ def async_removed_from_device(
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(device_id)
-        if not device_entry:
+        if not (device_entry := device_registry.async_get(device_id)):
             # The device is already removed, do cleanup when we get "remove" event
             return False
         if config_entry_id in device_entry.config_entries:

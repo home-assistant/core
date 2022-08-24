@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Entit\u00e0 di ingresso",
+                    "name": "Nome",
+                    "round_digits": "Precisione",
+                    "type": "Caratteristica statistica"
+                },
+                "data_description": {
+                    "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media o mediana."
+                },
+                "description": "Crea un sensore che calcoli un valore minimo, massimo, medio o mediano da un elenco di sensori di input.",
+                "title": "Aggiungi sensore min / max / media / mediana"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Entit\u00e0 di ingresso",
+                    "round_digits": "Precisione",
+                    "type": "Caratteristica statistica"
+                },
+                "data_description": {
+                    "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media o mediana."
+                }
+            }
+        }
+    },
+    "title": "Sensore min / max / media / mediana"
+}

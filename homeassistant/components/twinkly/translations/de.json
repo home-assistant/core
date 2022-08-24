@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "description": "Einrichten deiner Twinkly-Led-Kette",
-                "title": "Twinkly"
+                }
             }
         }
     }

@@ -2,8 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Sensor setup",
-        "description": "This sensor uses official API to get [hourly pricing of electricity (PVPC)](https://www.esios.ree.es/es/pvpc) in Spain.\nFor more precise explanation visit the [integration docs](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
         "data": {
           "name": "Sensor Name",
           "tariff": "Applicable tariff by geographic zone",
@@ -19,8 +17,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "Sensor setup",
-        "description": "This sensor uses official API to get [hourly pricing of electricity (PVPC)](https://www.esios.ree.es/es/pvpc) in Spain.\nFor more precise explanation visit the [integration docs](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
         "data": {
           "tariff": "Applicable tariff by geographic zone",
           "power": "Contracted power (kW)",

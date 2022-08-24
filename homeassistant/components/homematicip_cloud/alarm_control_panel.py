@@ -5,10 +5,9 @@ import logging
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,6 +40,11 @@ async def async_setup_entry(
 
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
@@ -79,20 +83,15 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def _security_and_alarm(self) -> SecurityAndAlarmHome:
         return self._home.get_functionalHome(SecurityAndAlarmHome)
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    async def async_alarm_disarm(self, code=None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._home.set_security_zones_activation(False, False)
 
-    async def async_alarm_arm_home(self, code=None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._home.set_security_zones_activation(False, True)
 
-    async def async_alarm_arm_away(self, code=None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._home.set_security_zones_activation(True, True)
 

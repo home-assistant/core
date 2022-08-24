@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel"
+                },
+                "description": "Ange API-nyckeln fr\u00e5n https://home.freedompro.eu",
+                "title": "Freedompro API-nyckel"
+            }
+        }
+    }
+}

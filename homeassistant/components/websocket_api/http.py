@@ -14,6 +14,7 @@ import async_timeout
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .auth import AuthPhase, auth_required_message
@@ -42,7 +43,6 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
-        # pylint: disable=no-self-use
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
@@ -73,9 +73,13 @@ class WebSocketHandler:
         # Exceptions if Socket disconnected or cancelled by connection handler
         with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
-                if (message := await self._to_write.get()) is None:
+                if (process := await self._to_write.get()) is None:
                     break
 
+                if not isinstance(process, str):
+                    message: str = process()
+                else:
+                    message = process
                 self._logger.debug("Sending %s", message)
                 await self.wsock.send_str(message)
 
@@ -85,14 +89,14 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | dict[str, Any]) -> None:
+    def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
 
         Async friendly.
         """
-        if not isinstance(message, str):
+        if isinstance(message, dict):
             message = message_to_json(message)
 
         try:
@@ -200,9 +204,7 @@ class WebSocketHandler:
             self.hass.data[DATA_CONNECTIONS] = (
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             )
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_WEBSOCKET_CONNECTED
-            )
+            async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
 
             # Command phase
             while not wsock.closed:
@@ -255,8 +257,6 @@ class WebSocketHandler:
 
                 if connection is not None:
                     self.hass.data[DATA_CONNECTIONS] -= 1
-                self.hass.helpers.dispatcher.async_dispatcher_send(
-                    SIGNAL_WEBSOCKET_DISCONNECTED
-                )
+                async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
 
         return wsock

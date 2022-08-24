@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -143,11 +144,11 @@ class AquaLogicSensor(SensorEntity):
         self._processor = processor
         self._attr_name = f"AquaLogic {description.name}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                UPDATE_TOPIC, self.async_update_callback
+            async_dispatcher_connect(
+                self.hass, UPDATE_TOPIC, self.async_update_callback
             )
         )
 

@@ -71,10 +71,4 @@ SENSORS = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
-    SensorEntityDescription(
-        key="inverters",
-        name="Inverter",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 )

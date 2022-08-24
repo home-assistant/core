@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
@@ -82,19 +83,19 @@ class KiwiLock(LockEntity):
         }
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the lock."""
         name = self._sensor.get("name")
         specifier = self._sensor["address"].get("specifier")
         return name or specifier
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return self._device_attrs
 
@@ -104,7 +105,7 @@ class KiwiLock(LockEntity):
         self._state = STATE_LOCKED
         self.async_write_ha_state()
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
 
         try:

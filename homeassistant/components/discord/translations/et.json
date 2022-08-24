@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API v\u00f5ti"
+                },
+                "description": "Vaata oma Discordi roboti v\u00f5tme hankimise dokumentatsiooni. \n\n {url}"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API v\u00f5ti"
+                },
+                "description": "Vaata oma Discordi roboti v\u00f5tme hankimise dokumentatsiooni. \n\n {url}"
+            }
+        }
+    }
+}

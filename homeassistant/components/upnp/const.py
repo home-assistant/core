@@ -8,7 +8,6 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_LOCAL_IP = "local_ip"
 DOMAIN = "upnp"
-DOMAIN_DEVICES = "devices"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"
@@ -20,10 +19,11 @@ WAN_STATUS = "wan_status"
 ROUTER_IP = "ip"
 ROUTER_UPTIME = "uptime"
 KIBIBYTE = 1024
-CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"
 CONFIG_ENTRY_ST = "st"
 CONFIG_ENTRY_UDN = "udn"
-CONFIG_ENTRY_HOSTNAME = "hostname"
+CONFIG_ENTRY_ORIGINAL_UDN = "original_udn"
+CONFIG_ENTRY_MAC_ADDRESS = "mac_address"
+CONFIG_ENTRY_LOCATION = "location"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()
 ST_IGD_V1 = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 ST_IGD_V2 = "urn:schemas-upnp-org:device:InternetGatewayDevice:2"

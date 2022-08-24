@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import os
+from typing import Any
 
 import greenwavereality as greenwave
 import voluptuous as vol
@@ -11,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST
@@ -24,8 +25,6 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = "version"
-
-SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_VERSION): cv.positive_int}
@@ -67,6 +66,9 @@ def setup_platform(
 class GreenwaveLight(LightEntity):
     """Representation of an Greenwave Reality Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, light, host, token, gatewaydata):
         """Initialize a Greenwave Reality Light."""
         self._did = int(light["did"])
@@ -77,11 +79,6 @@ class GreenwaveLight(LightEntity):
         self._online = greenwave.check_online(light)
         self._token = token
         self._gatewaydata = gatewaydata
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
 
     @property
     def available(self):
@@ -103,17 +100,17 @@ class GreenwaveLight(LightEntity):
         """Return true if light is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         temp_brightness = int((kwargs.get(ATTR_BRIGHTNESS, 255) / 255) * 100)
         greenwave.set_brightness(self._host, self._did, temp_brightness, self._token)
         greenwave.turn_on(self._host, self._did, self._token)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         greenwave.turn_off(self._host, self._did, self._token)
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for this light."""
         self._gatewaydata.update()
         bulbs = self._gatewaydata.greenwave

@@ -4,6 +4,7 @@ from datetime import datetime as dt, timedelta
 import pytest
 
 from homeassistant.components import jewish_calendar
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -167,7 +168,6 @@ MELACHA_TEST_IDS = [
 )
 async def test_issur_melacha_sensor(
     hass,
-    legacy_patchable_time,
     now,
     candle_lighting,
     havdalah,
@@ -181,7 +181,7 @@ async def test_issur_melacha_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = tzname
+    hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -258,7 +258,6 @@ async def test_issur_melacha_sensor(
 )
 async def test_issur_melacha_sensor_update(
     hass,
-    legacy_patchable_time,
     now,
     candle_lighting,
     havdalah,
@@ -272,7 +271,7 @@ async def test_issur_melacha_sensor_update(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = tzname
+    hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -304,3 +303,15 @@ async def test_issur_melacha_sensor_update(
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result[1]
         )
+
+
+async def test_no_discovery_info(hass, caplog):
+    """Test setup without discovery info."""
+    assert BINARY_SENSOR_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {BINARY_SENSOR_DOMAIN: {"platform": jewish_calendar.DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert BINARY_SENSOR_DOMAIN in hass.config.components

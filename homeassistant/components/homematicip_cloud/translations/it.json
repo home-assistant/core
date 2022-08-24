@@ -6,7 +6,7 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "invalid_sgtin_or_pin": "SGTIN o Codice PIN non valido, si prega di riprovare.",
+            "invalid_sgtin_or_pin": "SGTIN o Codice PIN non valido, riprova.",
             "press_the_button": "Premi il pulsante blu.",
             "register_failed": "Registrazione non riuscita, riprova.",
             "timeout_button": "Timeout della pressione del pulsante blu, riprovare."

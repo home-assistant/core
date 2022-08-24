@@ -19,6 +19,7 @@ from .const import (
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
+    DEPRECATED_URLS,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
 )
@@ -62,11 +63,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Growatt sensor."""
-    config = config_entry.data
+    config = {**config_entry.data}
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     url = config.get(CONF_URL, DEFAULT_URL)
     name = config[CONF_NAME]
+
+    # If the URL has been deprecated then change to the default instead
+    if url in DEPRECATED_URLS:
+        _LOGGER.info(
+            "URL: %s has been deprecated, migrating to the latest default: %s",
+            url,
+            DEFAULT_URL,
+        )
+        url = DEFAULT_URL
+        config[CONF_URL] = url
+        hass.config_entries.async_update_entry(config_entry, data=config)
 
     api = growattServer.GrowattApi()
     api.server_url = url
@@ -221,12 +233,9 @@ class GrowattData:
                 # Create datetime from the latest entry
                 date_now = dt.now().date()
                 last_updated_time = dt.parse_time(str(sorted_keys[-1]))
-                combined_timestamp = datetime.datetime.combine(
-                    date_now, last_updated_time
+                mix_detail["lastdataupdate"] = datetime.datetime.combine(
+                    date_now, last_updated_time, dt.DEFAULT_TIME_ZONE
                 )
-                # Convert datetime to UTC
-                combined_timestamp_utc = dt.as_utc(combined_timestamp)
-                mix_detail["lastdataupdate"] = combined_timestamp_utc.isoformat()
 
                 # Dashboard data is largely inaccurate for mix system but it is the only call with the ability to return the combined
                 # imported from grid value that is the combination of charging AND load consumption

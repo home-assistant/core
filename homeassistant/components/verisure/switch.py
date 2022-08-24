@@ -27,18 +27,16 @@ async def async_setup_entry(
     )
 
 
-class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
+class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], SwitchEntity):
     """Representation of a Verisure smartplug."""
 
-    coordinator: VerisureDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure device."""
         super().__init__(coordinator)
-
-        self._attr_name = coordinator.data["smart_plugs"][serial_number]["area"]
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number

@@ -109,12 +109,6 @@ async def async_setup_legacy(hass: HomeAssistant, config: dict) -> bool:
     if DOMAIN not in config:
         return True
 
-    _LOGGER.warning(
-        "The Legacy Works With Nest API is deprecated and support will be removed "
-        "in Home Assistant Core 2022.5; See instructions for using the Smart Device "
-        "Management API at https://www.home-assistant.io/integrations/nest/"
-    )
-
     conf = config[DOMAIN]
 
     local_auth.initialize(hass, conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET])

@@ -8,14 +8,23 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "one": "Pi\u00f9",
-            "other": "Altri"
+            "one": "Vuoto",
+            "other": "Vuoti"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Vuoi configurare {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Il dispositivo {name} richiede una password"
+            },
             "user": {
                 "data": {
+                    "address": "Indirizzo del dispositivo",
                     "mac": "Indirizzo MAC del dispositivo",
                     "name": "Nome",
                     "password": "Password"

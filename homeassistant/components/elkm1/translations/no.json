@@ -4,7 +4,9 @@
             "address_already_configured": "En ElkM1 med denne adressen er allerede konfigurert",
             "already_configured": "En ElkM1 med dette prefikset er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "IP-adressen eller domenet eller seriell port hvis du kobler til via seriell.",
-                    "device": "Enhet",
-                    "password": "Passord",
-                    "prefix": "Et unikt prefiks (la v\u00e6re tomt hvis du bare har en ElkM1).",
-                    "protocol": "Protokoll",
-                    "temperature_unit": "Temperaturenheten ElkM1 bruker.",
-                    "username": "Brukernavn"
+                    "device": "Enhet"
                 },
                 "description": "Velg et oppdaget system eller \"Manuell oppf\u00f8ring\" hvis ingen enheter har blitt oppdaget.",
                 "title": "Koble til Elk-M1-kontroll"

@@ -4,10 +4,7 @@ from __future__ import annotations
 from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,8 +14,6 @@ from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 
 MIN_TEMP = 8
 MAX_TEMP = 25
-
-SUPPORT_HVAC = [HVAC_MODE_HEAT]
 
 
 def setup_platform(
@@ -51,6 +46,10 @@ def setup_platform(
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     """Representation of a XS1 thermostat."""
 
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, device, sensor):
         """Initialize the actuator."""
         super().__init__(device)
@@ -60,27 +59,6 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     def name(self):
         """Return the name of the device if any."""
         return self.device.name()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def hvac_mode(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return SUPPORT_HVAC
 
     @property
     def current_temperature(self):
@@ -119,7 +97,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         if self.sensor is not None:
             self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
     async def async_update(self):

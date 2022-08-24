@@ -6,44 +6,25 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import cast
 
-import voluptuous as vol
 from whois import Domain
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DOMAIN, TIME_DAYS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import (
-    ATTR_EXPIRES,
-    ATTR_NAME_SERVERS,
-    ATTR_REGISTRAR,
-    ATTR_UPDATED,
-    DEFAULT_NAME,
-    DOMAIN,
-    LOGGER,
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
 @dataclass
@@ -98,7 +79,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="days_until_expiration",
-        name="Days Until Expiration",
+        name="Days until expiration",
         icon="mdi:calendar-clock",
         native_unit_of_measurement=TIME_DAYS,
         value_fn=_days_until_expiration,
@@ -112,7 +93,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="last_updated",
-        name="Last Updated",
+        name="Last updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda domain: _ensure_timezone(domain.last_updated),
@@ -152,28 +133,6 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the WHOIS sensor."""
-    LOGGER.warning(
-        "Configuration of the Whois platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.4; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_DOMAIN: config[CONF_DOMAIN], CONF_NAME: config[CONF_NAME]},
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -197,6 +156,7 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
     """Implementation of a WHOIS sensor."""
 
     entity_description: WhoisSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -207,10 +167,10 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._attr_name = f"{domain} {description.name}"
         self._attr_unique_id = f"{domain}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, domain)},
+            name=domain,
             entry_type=DeviceEntryType.SERVICE,
         )
         self._domain = domain

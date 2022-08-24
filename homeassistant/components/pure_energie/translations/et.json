@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "{model} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "Pure Energie Meteri IP-aadress v\u00f5i hostinimi."
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Kas lisada Home Assistantile Pure Energie Meteri(`{model}`)?",
+                "title": "Leiti Pure Energie Meter seade"
+            }
+        }
+    }
+}

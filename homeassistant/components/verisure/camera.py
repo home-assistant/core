@@ -43,10 +43,10 @@ async def async_setup_entry(
     )
 
 
-class VerisureSmartcam(CoordinatorEntity, Camera):
+class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera):
     """Representation of a Verisure camera."""
 
-    coordinator: VerisureDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -58,7 +58,6 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         super().__init__(coordinator)
         Camera.__init__(self)
 
-        self._attr_name = coordinator.data["cameras"][serial_number]["area"]
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number

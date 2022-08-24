@@ -188,6 +188,33 @@ RPC_SENSORS: Final = {
         },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "overtemp": RpcBinarySensorDescription(
+        key="switch",
+        sub_key="errors",
+        name="Overheating",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "overtemp" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("apower") is not None,
+    ),
+    "overpower": RpcBinarySensorDescription(
+        key="switch",
+        sub_key="errors",
+        name="Overpowering",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "overpower" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("apower") is not None,
+    ),
+    "overvoltage": RpcBinarySensorDescription(
+        key="switch",
+        sub_key="errors",
+        name="Overvoltage",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "overvoltage" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("apower") is not None,
+    ),
 }
 
 
@@ -208,12 +235,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_entry_rpc(
+        return async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
         )
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -222,7 +249,7 @@ async def async_setup_entry(
             _build_block_description,
         )
     else:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -230,7 +257,7 @@ async def async_setup_entry(
             BlockBinarySensor,
             _build_block_description,
         )
-        await async_setup_entry_rest(
+        async_setup_entry_rest(
             hass,
             config_entry,
             async_add_entities,

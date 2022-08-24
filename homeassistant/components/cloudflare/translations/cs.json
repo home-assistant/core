@@ -14,7 +14,8 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_token": "API token"
+                    "api_token": "API token",
+                    "description": "Op\u011bt ov\u011b\u0159te sv\u016fj Cloudflare \u00fa\u010det."
                 }
             },
             "records": {
@@ -27,7 +28,7 @@
                 "data": {
                     "api_token": "API token"
                 },
-                "description": "Tato integrace vy\u017eaduje API token vytvo\u0159en\u00fd s opravn\u011bn\u00edmi Z\u00f3na:Z\u00f3na:\u010c\u00edst a Z\u00f3na:DNS: Upravit pro v\u0161echny z\u00f3ny ve va\u0161em \u00fa\u010dtu.",
+                "description": "Tato integrace vy\u017eaduje API token vytvo\u0159en\u00fd s opravn\u011bn\u00edmi Zone:Zone:Read a Zone:DNS:Edit pro v\u0161echny z\u00f3ny ve va\u0161em \u00fa\u010dtu.",
                 "title": "P\u0159ipojen\u00ed ke Cloudflare"
             },
             "zone": {

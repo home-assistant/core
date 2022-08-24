@@ -8,11 +8,10 @@ from pyblackbird import get_blackbird
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,8 +30,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DOMAIN, SERVICE_SETALLZONES
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
@@ -141,7 +138,11 @@ def setup_platform(
 class BlackbirdZone(MediaPlayerEntity):
     """Representation of a Blackbird matrix zone."""
 
-    _attr_supported_features = SUPPORT_BLACKBIRD
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, blackbird, sources, zone_id, zone_name):
         """Initialize new zone."""
@@ -157,7 +158,7 @@ class BlackbirdZone(MediaPlayerEntity):
         self._zone_id = zone_id
         self._attr_name = zone_name
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
@@ -182,7 +183,7 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting all zones source to %s", idx)
         self._blackbird.set_all_zone_source(idx)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
             return
@@ -190,12 +191,12 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting zone %d source to %s", self._zone_id, idx)
         self._blackbird.set_zone_source(self._zone_id, idx)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         _LOGGER.debug("Turning zone %d on", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, True)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         _LOGGER.debug("Turning zone %d off", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, False)

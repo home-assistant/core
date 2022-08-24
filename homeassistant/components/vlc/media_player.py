@@ -6,16 +6,17 @@ import logging
 import vlc
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -27,15 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ARGUMENTS = "arguments"
 DEFAULT_NAME = "Vlc"
-
-SUPPORT_VLC = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_STOP
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,6 +51,16 @@ def setup_platform(
 
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     def __init__(self, name, arguments):
         """Initialize the vlc device."""
@@ -113,11 +115,6 @@ class VlcDevice(MediaPlayerEntity):
         return self._muted
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_VLC
-
-    @property
     def media_content_type(self):
         """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
@@ -167,15 +164,38 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc.stop()
         self._state = STATE_IDLE
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL or file."""
-        if media_type != MEDIA_TYPE_MUSIC:
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = sourced_media.url
+
+        elif media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
                 MEDIA_TYPE_MUSIC,
             )
             return
-        self._vlc.set_media(self._instance.media_new(media_id))
-        self._vlc.play()
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        def play():
+            self._vlc.set_media(self._instance.media_new(media_id))
+            self._vlc.play()
+
+        await self.hass.async_add_executor_job(play)
         self._state = STATE_PLAYING
+
+    async def async_browse_media(
+        self, media_content_type=None, media_content_id=None
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

@@ -1,15 +1,14 @@
 """Support for Freedompro cover."""
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -66,7 +65,9 @@ class Device(CoordinatorEntity, CoverEntity):
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
         self._attr_supported_features = (
-            SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
+            CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.SET_POSITION
         )
         self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
 
@@ -96,23 +97,21 @@ class Device(CoordinatorEntity, CoverEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.async_set_cover_position(position=100)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.async_set_cover_position(position=0)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
-        payload = {}
-        payload["position"] = kwargs[ATTR_POSITION]
-        payload = json.dumps(payload)
+        payload = {"position": kwargs[ATTR_POSITION]}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()

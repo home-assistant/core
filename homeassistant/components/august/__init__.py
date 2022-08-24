@@ -1,13 +1,19 @@
 """Support for August devices."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import ValuesView
 from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
+from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
+from homeassistant.components import yalexs_ble
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
@@ -16,21 +22,22 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .activity import ActivityStream
-from .const import DATA_AUGUST, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
+from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-API_CACHED_ATTRS = (
+API_CACHED_ATTRS = {
     "door_state",
     "door_state_datetime",
     "lock_status",
     "lock_status_datetime",
-)
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -52,7 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
+    data: AugustData = hass.data[DOMAIN][entry.entry_id]
+    data.async_stop()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -78,14 +86,32 @@ async def async_setup_august(
     await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
-    data = hass.data[DOMAIN][config_entry.entry_id] = {
-        DATA_AUGUST: AugustData(hass, august_gateway)
-    }
-    await data[DATA_AUGUST].async_setup()
+    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(hass, august_gateway)
+    await data.async_setup()
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
+
+
+@callback
+def _async_trigger_ble_lock_discovery(
+    hass: HomeAssistant, locks_with_offline_keys: list[LockDetail]
+):
+    """Update keys for the yalexs-ble integration if available."""
+    for lock_detail in locks_with_offline_keys:
+        yalexs_ble.async_discovery(
+            hass,
+            yalexs_ble.YaleXSBLEDiscovery(
+                {
+                    "name": lock_detail.device_name,
+                    "address": lock_detail.mac_address,
+                    "serial": lock_detail.serial_number,
+                    "key": lock_detail.offline_key,
+                    "slot": lock_detail.offline_slot,
+                }
+            ),
+        )
 
 
 class AugustData(AugustSubscriberMixin):
@@ -128,6 +154,19 @@ class AugustData(AugustSubscriberMixin):
         # detail as we cannot determine if they are usable.
         # This also allows us to avoid checking for
         # detail being None all over the place
+
+        # Currently we know how to feed data to yalexe_ble
+        # but we do not know how to send it to homekit_controller
+        # yet
+        _async_trigger_ble_lock_discovery(
+            self._hass,
+            [
+                lock_detail
+                for lock_detail in self._device_detail_by_id.values()
+                if isinstance(lock_detail, LockDetail) and lock_detail.offline_key
+            ],
+        )
+
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
@@ -189,16 +228,16 @@ class AugustData(AugustSubscriberMixin):
         self.activity_stream.async_stop()
 
     @property
-    def doorbells(self):
+    def doorbells(self) -> ValuesView[Doorbell]:
         """Return a list of py-august Doorbell objects."""
         return self._doorbells_by_id.values()
 
     @property
-    def locks(self):
+    def locks(self) -> ValuesView[Lock]:
         """Return a list of py-august Lock objects."""
         return self._locks_by_id.values()
 
-    def get_device_detail(self, device_id):
+    def get_device_detail(self, device_id: str) -> DoorbellDetail | LockDetail:
         """Return the py-august LockDetail or DoorbellDetail object for a device."""
         return self._device_detail_by_id[device_id]
 
@@ -279,12 +318,15 @@ class AugustData(AugustSubscriberMixin):
             device.device_id,
         )
 
-    def _get_device_name(self, device_id):
+    def get_device(self, device_id: str) -> Doorbell | Lock | None:
+        """Get a device by id."""
+        return self._locks_by_id.get(device_id) or self._doorbells_by_id.get(device_id)
+
+    def _get_device_name(self, device_id: str) -> str | None:
         """Return doorbell or lock name as August has it stored."""
-        if device_id in self._locks_by_id:
-            return self._locks_by_id[device_id].device_name
-        if device_id in self._doorbells_by_id:
-            return self._doorbells_by_id[device_id].device_name
+        if device := self.get_device(device_id):
+            return device.device_name
+        return None
 
     async def async_lock(self, device_id):
         """Lock the device."""
@@ -399,3 +441,15 @@ def _restore_live_attrs(lock_detail, attrs):
     """Restore the non-cache attributes after a cached update."""
     for attr, value in attrs.items():
         setattr(lock_detail, attr, value)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove august config entry from a device if its no longer present."""
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN and data.get_device(identifier[1])
+    )

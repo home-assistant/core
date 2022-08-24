@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 
 
@@ -34,12 +35,12 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return (
-            mp.const.SUPPORT_VOLUME_SET
-            | mp.const.SUPPORT_VOLUME_STEP
-            | mp.const.SUPPORT_PLAY
-            | mp.const.SUPPORT_PAUSE
-            | mp.const.SUPPORT_TURN_OFF
-            | mp.const.SUPPORT_TURN_ON
+            mp.const.MediaPlayerEntityFeature.VOLUME_SET
+            | mp.const.MediaPlayerEntityFeature.VOLUME_STEP
+            | mp.const.MediaPlayerEntityFeature.PLAY
+            | mp.const.MediaPlayerEntityFeature.PAUSE
+            | mp.const.MediaPlayerEntityFeature.TURN_OFF
+            | mp.const.MediaPlayerEntityFeature.TURN_ON
         )
 
     def set_volume_level(self, volume):
@@ -79,9 +80,13 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
         """Turn off state."""
         self._state = STATE_OFF
 
+    def standby(self):
+        """Put device in standby."""
+        self._state = STATE_STANDBY
+
     def toggle(self):
         """Toggle the power on the media player."""
-        if self._state in [STATE_OFF, STATE_IDLE]:
+        if self._state in [STATE_OFF, STATE_IDLE, STATE_STANDBY]:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
@@ -110,12 +115,12 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return (
-            mp.const.SUPPORT_VOLUME_SET
-            | mp.const.SUPPORT_VOLUME_STEP
-            | mp.const.SUPPORT_PLAY
-            | mp.const.SUPPORT_PAUSE
-            | mp.const.SUPPORT_TURN_OFF
-            | mp.const.SUPPORT_TURN_ON
+            mp.const.MediaPlayerEntityFeature.VOLUME_SET
+            | mp.const.MediaPlayerEntityFeature.VOLUME_STEP
+            | mp.const.MediaPlayerEntityFeature.PLAY
+            | mp.const.MediaPlayerEntityFeature.PAUSE
+            | mp.const.MediaPlayerEntityFeature.TURN_OFF
+            | mp.const.MediaPlayerEntityFeature.TURN_ON
         )
 
     def set_volume_level(self, volume):
@@ -137,6 +142,10 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
     def turn_off(self):
         """Turn off state."""
         self._state = STATE_OFF
+
+    def standby(self):
+        """Put device in standby."""
+        self._state = STATE_STANDBY
 
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
@@ -188,3 +197,7 @@ async def test_toggle(player):
     assert player.state == STATE_ON
     await player.async_toggle()
     assert player.state == STATE_OFF
+    player.standby()
+    assert player.state == STATE_STANDBY
+    await player.async_toggle()
+    assert player.state == STATE_ON

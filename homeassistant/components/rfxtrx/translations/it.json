@@ -66,7 +66,7 @@
                     "debug": "Attiva il debug",
                     "device": "Seleziona il dispositivo da configurare",
                     "event_code": "Inserire il codice dell'evento da aggiungere",
-                    "remove_device": "Seleziona il dispositivo da eliminare"
+                    "protocols": "Protocolli"
                 },
                 "title": "Opzioni Rfxtrx"
             },
@@ -75,11 +75,9 @@
                     "command_off": "Valore dei bit di dati per il comando disattivato",
                     "command_on": "Valore dei bit di dati per il comando attivato",
                     "data_bit": "Numero di bit di dati",
-                    "fire_event": "Abilita evento dispositivo",
                     "off_delay": "Ritardo di spegnimento",
                     "off_delay_enabled": "Attiva il ritardo di spegnimento",
                     "replace_device": "Seleziona il dispositivo da sostituire",
-                    "signal_repetitions": "Numero di ripetizioni del segnale",
                     "venetian_blind_mode": "Modalit\u00e0 veneziana"
                 },
                 "title": "Configura le opzioni del dispositivo"

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 import logging
 import socket
 import sys
@@ -37,7 +37,6 @@ from .const import (
     CONF_VERSION,
     DOMAIN,
     MYSENSORS_GATEWAY_START_TASK,
-    MYSENSORS_GATEWAYS,
     ConfGatewayType,
     GatewayId,
 )
@@ -122,16 +121,6 @@ async def try_connect(
         return False
 
 
-def get_mysensors_gateway(
-    hass: HomeAssistant, gateway_id: GatewayId
-) -> BaseAsyncGateway | None:
-    """Return the Gateway for a given GatewayId."""
-    if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
-    gateways = hass.data[DOMAIN].get(MYSENSORS_GATEWAYS)
-    return gateways.get(gateway_id)
-
-
 async def setup_gateway(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> BaseAsyncGateway | None:
@@ -207,7 +196,6 @@ async def _get_gateway(
             in_prefix=topic_in_prefix,
             out_prefix=topic_out_prefix,
             retain=retain,
-            loop=hass.loop,
             event_callback=None,
             persistence=persistence,
             persistence_file=persistence_file,
@@ -217,7 +205,6 @@ async def _get_gateway(
         gateway = mysensors.AsyncSerialGateway(
             device,
             baud=baud_rate,
-            loop=hass.loop,
             event_callback=None,
             persistence=persistence,
             persistence_file=persistence_file,
@@ -227,7 +214,6 @@ async def _get_gateway(
         gateway = mysensors.AsyncTCPGateway(
             device,
             port=tcp_port,
-            loop=hass.loop,
             event_callback=None,
             persistence=persistence,
             persistence_file=persistence_file,
@@ -337,9 +323,7 @@ def _gw_callback_factory(
         _LOGGER.debug("Node update: node %s child %s", msg.node_id, msg.child_id)
 
         msg_type = msg.gateway.const.MessageType(msg.type)
-        msg_handler: Callable[
-            [HomeAssistant, GatewayId, Message], Coroutine[Any, Any, None]
-        ] | None = HANDLERS.get(msg_type.name)
+        msg_handler = HANDLERS.get(msg_type.name)
 
         if msg_handler is None:
             return

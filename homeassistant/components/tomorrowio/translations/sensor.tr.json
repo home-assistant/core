@@ -1,0 +1,27 @@
+{
+    "state": {
+        "tomorrowio__health_concern": {
+            "good": "\u0130yi",
+            "hazardous": "Tehlikeli",
+            "moderate": "Il\u0131ml\u0131",
+            "unhealthy": "Sa\u011fl\u0131ks\u0131z",
+            "unhealthy_for_sensitive_groups": "Hassas Gruplar \u0130\u00e7in Sa\u011fl\u0131ks\u0131z",
+            "very_unhealthy": "\u00c7ok Sa\u011fl\u0131ks\u0131z"
+        },
+        "tomorrowio__pollen_index": {
+            "high": "Y\u00fcksek",
+            "low": "D\u00fc\u015f\u00fck",
+            "medium": "Orta",
+            "none": "Hi\u00e7biri",
+            "very_high": "\u00c7ok Y\u00fcksek",
+            "very_low": "\u00c7ok D\u00fc\u015f\u00fck"
+        },
+        "tomorrowio__precipitation_type": {
+            "freezing_rain": "Dondurucu Ya\u011fmur",
+            "ice_pellets": "Buz Peletleri",
+            "none": "Hi\u00e7biri",
+            "rain": "Ya\u011fmur",
+            "snow": "Kar"
+        }
+    }
+}

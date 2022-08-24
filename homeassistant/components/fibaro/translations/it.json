@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "import_plugins": "Vuoi importare le entit\u00e0 dai plugin fibaro?",
+                    "password": "Password",
+                    "url": "URL nel formato http://HOST/api/",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    }
+}

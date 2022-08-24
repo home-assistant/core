@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Google Calendar integration needs to re-authenticate your account"
+      },
+      "auth": {
+        "title": "Link Google Account"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "progress": {
+      "exchange": "To link your Google account, visit the [{url}]({url}) and enter code:\n\n{user_code}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calendar_access": "Home Assistant access to Google Calendar"
+        }
+      }
+    }
+  },
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your Calendar:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **TV and Limited Input devices** for the Application Type.\n\n"
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Google Calendar YAML configuration is being removed",
+      "description": "Configuring the Google Calendar in configuration.yaml is being removed in Home Assistant 2022.9.\n\nYour existing OAuth Application Credentials and access settings have been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "removed_track_new_yaml": {
+      "title": "Google Calendar entity tracking has changed",
+      "description": "You have disabled entity tracking for Google Calendar in configuration.yaml, which is no longer supported. You must manually change the integration System Options in the UI to disable newly discovered entities going forward. Remove the track_new setting from configuration.yaml and restart Home Assistant to fix this issue."
+    }
+  }
+}

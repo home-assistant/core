@@ -11,8 +11,8 @@ set_away_mode:
       selector:
         select:
           options:
-            - 'away'
-            - 'home'
+            - "away"
+            - "home"
     structure:
       name: Structure
       description: Name(s) of structure(s) to change. Defaults to all structures if not specified.

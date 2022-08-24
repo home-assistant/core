@@ -10,7 +10,7 @@ async def test_automation_scenes(hass):
 
     state = hass.states.get("scene.away_short")
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "description": "When IFTTT activates the automation Upstairs "
         "West Wing will permanently hold the heat to 63.0 "
         "and cool to 80.0 AND Downstairs East Wing will "
@@ -37,7 +37,7 @@ async def test_automation_scenes(hass):
 
     state = hass.states.get("scene.power_outage")
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "description": "When IFTTT activates the automation Upstairs "
         "West Wing will permanently hold the heat to 55.0 "
         "and cool to 90.0 AND Downstairs East Wing will "
@@ -56,7 +56,7 @@ async def test_automation_scenes(hass):
 
     state = hass.states.get("scene.power_restored")
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "description": "When IFTTT activates the automation Upstairs "
         "West Wing will Run Schedule AND Downstairs East "
         "Wing will Run Schedule AND Downstairs West Wing "

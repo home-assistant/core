@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
@@ -12,7 +11,7 @@ from aioshelly.rpc_device import RpcDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, singleton
+from homeassistant.helpers import device_registry, entity_registry, singleton
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -21,6 +20,7 @@ from .const import (
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    LOGGER,
     MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -29,17 +29,16 @@ from .const import (
     UPTIME_DEVIATION,
 )
 
-_LOGGER: Final = logging.getLogger(__name__)
 
-
-async def async_remove_shelly_entity(
+@callback
+def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = entity_registry.async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
-        _LOGGER.debug("Removing entity: %s", entity_id)
+        LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
 
 
@@ -220,7 +219,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
-    _LOGGER.info("Starting CoAP context with UDP port %s", port)
+    LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port)
 
     @callback
@@ -267,10 +266,14 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
     device_name = get_rpc_device_name(device)
-    entity_name: str | None = device.config[key].get("name", device_name)
+    entity_name: str | None = None
+    if key in device.config:
+        entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
-        return f"{device_name} {key.replace(':', '_')}"
+        if [k for k in key if k.startswith(("input", "switch"))]:
+            return f"{device_name} {key.replace(':', '_')}"
+        return device_name
 
     return entity_name
 
@@ -297,6 +300,9 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key in keys_dict:
         return [key]
 
+    if key == "switch" and "cover:0" in keys_dict:
+        key = "cover"
+
     keys_list: list[str] = []
     for i in range(MAX_RPC_KEY_INSTANCES):
         key_inst = f"{key}:{i}"
@@ -321,7 +327,9 @@ def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     return key_ids
 
 
-def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
+def is_rpc_momentary_input(
+    config: dict[str, Any], status: dict[str, Any], key: str
+) -> bool:
     """Return true if rpc input button settings is set to a momentary type."""
     return cast(bool, config[key]["type"] == "button")
 
@@ -338,6 +346,13 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 
+def is_rpc_device_externally_powered(
+    config: dict[str, Any], status: dict[str, Any], key: str
+) -> bool:
+    """Return true if device has external power instead of battery."""
+    return cast(bool, status[key]["external"]["present"])
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
@@ -346,7 +361,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
     for id_ in key_ids:
         key = f"input:{id_}"
-        if not is_rpc_momentary_input(device.config, key):
+        if not is_rpc_momentary_input(device.config, device.status, key):
             continue
 
         for trigger_type in RPC_INPUTS_EVENTS_TYPES:
@@ -362,7 +377,7 @@ def device_update_info(
 ) -> None:
     """Update device registry info."""
 
-    _LOGGER.debug("Updating device registry info for %s", entry.title)
+    LOGGER.debug("Updating device registry info for %s", entry.title)
 
     assert entry.unique_id
 

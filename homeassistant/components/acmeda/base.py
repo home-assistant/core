@@ -2,10 +2,8 @@
 import aiopulse
 
 from homeassistant.core import callback
-from homeassistant.helpers import entity
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
 from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
 
@@ -21,11 +19,11 @@ class AcmedaBase(entity.Entity):
         """Unregister from entity and device registry and call entity remove function."""
         LOGGER.error("Removing %s %s", self.__class__.__name__, self.unique_id)
 
-        ent_registry = await get_ent_reg(self.hass)
+        ent_registry = er.async_get(self.hass)
         if self.entity_id in ent_registry.entities:
             ent_registry.async_remove(self.entity_id)
 
-        dev_registry = await get_dev_reg(self.hass)
+        dev_registry = dr.async_get(self.hass)
         device = dev_registry.async_get_device(identifiers={(DOMAIN, self.unique_id)})
         if device is not None:
             dev_registry.async_update_device(

@@ -4,19 +4,16 @@ from __future__ import annotations
 from aiosteamist import SteamistStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MODEL
 from .coordinator import SteamistDataUpdateCoordinator
 
 
-class SteamistEntity(CoordinatorEntity, Entity):
+class SteamistEntity(CoordinatorEntity[SteamistDataUpdateCoordinator], Entity):
     """Representation of an Steamist entity."""
-
-    coordinator: SteamistDataUpdateCoordinator
 
     def __init__(
         self,

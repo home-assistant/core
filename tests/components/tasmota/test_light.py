@@ -10,7 +10,7 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components.light import SUPPORT_EFFECT, SUPPORT_TRANSITION
+from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
 
@@ -105,7 +105,7 @@ async def test_attributes_dimmer(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("effect_list") is None
     assert state.attributes.get("min_mireds") is None
     assert state.attributes.get("max_mireds") is None
-    assert state.attributes.get("supported_features") == SUPPORT_TRANSITION
+    assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["brightness"]
     assert state.attributes.get("color_mode") == "brightness"
 
@@ -131,7 +131,7 @@ async def test_attributes_ct(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("effect_list") is None
     assert state.attributes.get("min_mireds") == 153
     assert state.attributes.get("max_mireds") == 500
-    assert state.attributes.get("supported_features") == SUPPORT_TRANSITION
+    assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["color_temp"]
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -158,7 +158,7 @@ async def test_attributes_ct_reduced(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("effect_list") is None
     assert state.attributes.get("min_mireds") == 200
     assert state.attributes.get("max_mireds") == 380
-    assert state.attributes.get("supported_features") == SUPPORT_TRANSITION
+    assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["color_temp"]
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -192,7 +192,7 @@ async def test_attributes_rgb(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("max_mireds") is None
     assert (
         state.attributes.get("supported_features")
-        == SUPPORT_EFFECT | SUPPORT_TRANSITION
+        == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     )
     assert state.attributes.get("supported_color_modes") == ["hs"]
     assert state.attributes.get("color_mode") == "hs"
@@ -227,7 +227,7 @@ async def test_attributes_rgbw(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("max_mireds") is None
     assert (
         state.attributes.get("supported_features")
-        == SUPPORT_EFFECT | SUPPORT_TRANSITION
+        == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     )
     assert state.attributes.get("supported_color_modes") == ["hs", "white"]
     assert state.attributes.get("color_mode") == "hs"
@@ -262,7 +262,7 @@ async def test_attributes_rgbww(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("max_mireds") == 500
     assert (
         state.attributes.get("supported_features")
-        == SUPPORT_EFFECT | SUPPORT_TRANSITION
+        == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     )
     assert state.attributes.get("supported_color_modes") == ["color_temp", "hs"]
     assert state.attributes.get("color_mode") == "color_temp"
@@ -298,7 +298,7 @@ async def test_attributes_rgbww_reduced(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("max_mireds") == 380
     assert (
         state.attributes.get("supported_features")
-        == SUPPORT_EFFECT | SUPPORT_TRANSITION
+        == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     )
     assert state.attributes.get("supported_color_modes") == ["color_temp", "hs"]
     assert state.attributes.get("color_mode") == "color_temp"
@@ -574,7 +574,6 @@ async def test_controlling_state_via_mqtt_rgbww(hass, mqtt_mock, setup_tasmota):
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert "white_value" not in state.attributes
     # Setting white > 0 should clear the color
     assert "rgb_color" not in state.attributes
     assert state.attributes.get("color_mode") == "color_temp"
@@ -593,7 +592,6 @@ async def test_controlling_state_via_mqtt_rgbww(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     # Setting white to 0 should clear the color_temp
-    assert "white_value" not in state.attributes
     assert "color_temp" not in state.attributes
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
@@ -686,7 +684,6 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(hass, mqtt_mock, setup_tasm
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert "white_value" not in state.attributes
     # Setting white > 0 should clear the color
     assert "rgb_color" not in state.attributes
     assert state.attributes.get("color_mode") == "color_temp"
@@ -704,8 +701,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(hass, mqtt_mock, setup_tasm
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    # Setting white to 0 should clear the white_value and color_temp
-    assert not state.attributes.get("white_value")
+    # Setting white to 0 should clear the color_temp
     assert not state.attributes.get("color_temp")
     assert state.attributes.get("color_mode") == "hs"
 
@@ -904,16 +900,6 @@ async def test_sending_mqtt_commands_rgbw_legacy(hass, mqtt_mock, setup_tasmota)
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.test", white_value=128)
-    # white_value should be ignored
-    mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
-        0,
-        False,
-    )
-    mqtt_mock.async_publish.reset_mock()
-
     await common.async_turn_on(hass, "light.test", effect="Random")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
@@ -1011,16 +997,6 @@ async def test_sending_mqtt_commands_rgbw(hass, mqtt_mock, setup_tasmota):
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.test", white_value=128)
-    # white_value should be ignored
-    mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
-        0,
-        False,
-    )
-    mqtt_mock.async_publish.reset_mock()
-
     await common.async_turn_on(hass, "light.test", effect="Random")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
@@ -1091,16 +1067,6 @@ async def test_sending_mqtt_commands_rgbww(hass, mqtt_mock, setup_tasmota):
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Power1 ON;NoDelay;CT 200",
-        0,
-        False,
-    )
-    mqtt_mock.async_publish.reset_mock()
-
-    await common.async_turn_on(hass, "light.test", white_value=128)
-    # white_value should be ignored
-    mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
         0,
         False,
     )
@@ -1597,7 +1563,7 @@ async def test_discovery_update_reconfigure_light(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
     state = hass.states.get("light.test")
-    assert state.attributes.get("supported_features") == SUPPORT_TRANSITION
+    assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["brightness"]
 
     # Reconfigure as RGB light
@@ -1606,7 +1572,7 @@ async def test_discovery_update_reconfigure_light(
     state = hass.states.get("light.test")
     assert (
         state.attributes.get("supported_features")
-        == SUPPORT_EFFECT | SUPPORT_TRANSITION
+        == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     )
     assert state.attributes.get("supported_color_modes") == ["hs"]
 

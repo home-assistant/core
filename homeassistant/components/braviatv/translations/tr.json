@@ -21,8 +21,7 @@
                 "data": {
                     "host": "Ana Bilgisayar"
                 },
-                "description": "Sony Bravia TV entegrasyonunu ayarlay\u0131n. Yap\u0131land\u0131rmayla ilgili sorunlar\u0131n\u0131z varsa \u015fu adrese gidin: https://www.home-assistant.io/integrations/braviatv \n\n TV'nizin a\u00e7\u0131k oldu\u011fundan emin olun.",
-                "title": "Sony Bravia TV"
+                "description": "Kurmaya \u00e7al\u0131\u015fmadan \u00f6nce TV'nizin a\u00e7\u0131k oldu\u011fundan emin olun."
             }
         }
     },

@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_account": "Kehtetu konto ID",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Steami sidumine tuleb k\u00e4sitsi uuesti autentida \n\n Oma v\u00f5tme leiad siit: {api_key_url}",
+                "title": "Taastuvasta sidumine"
+            },
+            "user": {
+                "data": {
+                    "account": "Steami konto ID",
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Steami konto ID leidmiseks kasuta {account_id_url}"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Steami seadistamine YAML-i abil on eemaldatud.\n\nHome Assistant ei kasuta teie olemasolevat YAML-i konfiguratsiooni.\n\nEemaldage FAILIST CONFIGURATION.yaml YAML-konfiguratsioon ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",
+            "title": "Steam YAML konfiguratsioon on eemaldatud"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "S\u00f5prade nimekiri on piiratud: vaata dokumentatsiooni kuidas n\u00e4ha k\u00f5iki teisi s\u00f5pru"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "J\u00e4lgitavate kontode nimed"
+                }
+            }
+        }
+    }
+}

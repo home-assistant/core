@@ -1,4 +1,22 @@
 {
+    "config": {
+        "step": {
+            "media_player": {
+                "data": {
+                    "name": "Meno"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "light": {
+                "data": {
+                    "entities": "\u010clenovia"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Zatvoren\u00e1",

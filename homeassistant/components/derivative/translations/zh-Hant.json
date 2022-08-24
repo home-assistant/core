@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u540d\u7a31",
+                    "round": "\u6e96\u78ba\u5ea6",
+                    "source": "\u8f38\u5165\u611f\u6e2c\u5668",
+                    "time_window": "\u6642\u9593\u8996\u7a97",
+                    "unit_prefix": "\u516c\u5236\u524d\u7db4",
+                    "unit_time": "\u6642\u9593\u55ae\u4f4d"
+                },
+                "data_description": {
+                    "round": "\u63a7\u5236\u8f38\u51fa\u4e2d\u7684\u5c0f\u6578\u4f4d\u6578\u3002",
+                    "time_window": "\u8a2d\u5b9a\u5f8c\u3001\u611f\u6e2c\u5668\u6578\u503c\u5c07\u70ba\u8996\u7a97\u5167\u5c0e\u6578\u7684\u6642\u9593\u52a0\u6b0a\u52a0\u6b0a\u79fb\u52d5\u5e73\u5747\u503c\u3002",
+                    "unit_prefix": "\u8f38\u51fa\u5c07\u53d7\u6240\u9078\u64c7\u516c\u5236\u524d\u7db4\u53ca\u5c0e\u6578\u6642\u9593\u55ae\u4f4d\u800c\u8b8a\u5316\u3002"
+                },
+                "description": "\u65b0\u589e\u9810\u4f30\u611f\u6e2c\u5668\u5c0e\u6578\u4e4b\u611f\u6e2c\u5668\u3002",
+                "title": "\u65b0\u589e\u5c0e\u6578\u611f\u6e2c\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "\u540d\u7a31",
+                    "round": "\u6e96\u78ba\u5ea6",
+                    "source": "\u8f38\u5165\u611f\u6e2c\u5668",
+                    "time_window": "\u6642\u9593\u8996\u7a97",
+                    "unit_prefix": "\u516c\u5236\u524d\u7db4",
+                    "unit_time": "\u6642\u9593\u55ae\u4f4d"
+                },
+                "data_description": {
+                    "round": "\u63a7\u5236\u8f38\u51fa\u4e2d\u7684\u5c0f\u6578\u4f4d\u6578\u3002",
+                    "time_window": "\u8a2d\u5b9a\u5f8c\u3001\u611f\u6e2c\u5668\u6578\u503c\u5c07\u70ba\u8996\u7a97\u5167\u5c0e\u6578\u7684\u6642\u9593\u52a0\u6b0a\u52a0\u6b0a\u79fb\u52d5\u5e73\u5747\u503c\u3002",
+                    "unit_prefix": "\u8f38\u51fa\u5c07\u53d7\u6240\u9078\u64c7\u516c\u5236\u524d\u7db4\u53ca\u5c0e\u6578\u6642\u9593\u55ae\u4f4d\u800c\u8b8a\u5316\u3002."
+                }
+            }
+        }
+    },
+    "title": "\u5c0e\u6578\u611f\u6e2c\u5668"
+}

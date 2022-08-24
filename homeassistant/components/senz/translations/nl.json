@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
+            "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})",
+            "oauth_error": "Ongeldige tokengegevens ontvangen."
+        },
+        "create_entry": {
+            "default": "Authenticatie geslaagd"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De nVent RAYCHEM SENZ YAML-configuratie is verwijderd"
+        }
+    }
+}

@@ -6,18 +6,15 @@
             "connection_error": "Ha fallat la connexi\u00f3"
         },
         "error": {
-            "discovery_error": "No s'ha pogut descobrir cap Motion Gateway",
-            "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida"
+            "discovery_error": "No s'ha pogut descobrir cap Motion Gateway"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "Clau API",
-                    "interface": "Interf\u00edcie de xarxa a utilitzar"
+                    "api_key": "Clau API"
                 },
-                "description": "Necessitar\u00e0s la clau API de 16 car\u00e0cters, consulta les instruccions a https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key.",
-                "title": "Motion Blinds"
+                "description": "Necessitar\u00e0s la clau API de 16 car\u00e0cters, consulta les instruccions a https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key."
             },
             "select": {
                 "data": {
@@ -28,11 +25,9 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Clau API",
                     "host": "Adre\u00e7a IP"
                 },
-                "description": "Connecta el teu Motion Gateway, si no es configura l'adre\u00e7a IP, s'utilitza el descobriment autom\u00e0tic",
-                "title": "Motion Blinds"
+                "description": "Connecta el teu Motion Gateway, si no es configura l'adre\u00e7a IP, s'utilitza el descobriment autom\u00e0tic"
             }
         }
     },
@@ -41,9 +36,7 @@
             "init": {
                 "data": {
                     "wait_for_push": "Espera l'entrada multidifusi\u00f3 en actualitzar"
-                },
-                "description": "Especifica configuracions opcionals",
-                "title": "Motion Blinds"
+                }
             }
         }
     }

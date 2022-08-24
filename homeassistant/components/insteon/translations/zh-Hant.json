@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "not_insteon_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e Insteon \u88dd\u7f6e",
             "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "select_single": "\u9078\u64c7\u9078\u9805\u3002"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP \u4f4d\u5740",
@@ -36,10 +41,9 @@
             },
             "user": {
                 "data": {
-                    "modem_type": "\u6578\u64da\u6a5f\u985e\u578b\u3002"
+                    "modem_type": "\u6578\u64da\u6a5f\u985e\u5225\u3002"
                 },
-                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u578b\u3002",
-                "title": "Insteon"
+                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u5225\u3002"
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "\u88dd\u7f6e\u5b50\u985e\u5225\uff08\u4f8b\u5982 0x10\uff09",
                     "subcat": "\u88dd\u7f6e\u5b50\u985e\u5225\uff08\u4f8b\u5982 0x0a\uff09"
                 },
-                "description": "\u65b0\u589e\u88dd\u7f6e\u8986\u5beb\u3002",
-                "title": "Insteon"
+                "description": "\u65b0\u589e\u88dd\u7f6e\u8986\u5beb\u3002"
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "\u8abf\u5149\u968e\u6bb5\uff08\u50c5\u9069\u7528\u7167\u660e\u88dd\u7f6e\u3001\u9810\u8a2d\u503c\u70ba 22\uff09",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "\u8b8a\u66f4 Insteon Hub \u5bc6\u78bc\u3002",
-                "title": "Insteon"
+                "description": "\u8b8a\u66f4 Insteon Hub \u5bc6\u78bc\u3002"
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "\u901a\u8a0a\u57e0",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8b8a\u66f4 Insteon Hub \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 Hub \u88dd\u7f6e\u672c\u8eab\u7684\u8a2d\u5b9a\uff0c\u5982\u6b32\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3001\u5247\u8acb\u4f7f\u7528 Hub app\u3002",
-                "title": "Insteon"
+                "description": "\u8b8a\u66f4 Insteon Hub \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 Hub \u88dd\u7f6e\u672c\u8eab\u7684\u8a2d\u5b9a\uff0c\u5982\u6b32\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3001\u5247\u8acb\u4f7f\u7528 Hub app\u3002"
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3002",
                     "remove_override": "\u79fb\u9664\u88dd\u7f6e\u8986\u5beb",
                     "remove_x10": "\u79fb\u9664 X10 \u88dd\u7f6e\u3002"
-                },
-                "description": "\u9078\u64c7\u9078\u9805\u4ee5\u8a2d\u5b9a",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "\u9078\u64c7\u88dd\u7f6e\u4f4d\u5740\u4ee5\u79fb\u9664"
                 },
-                "description": "\u79fb\u9664\u88dd\u7f6e\u8986\u5beb",
-                "title": "Insteon"
+                "description": "\u79fb\u9664\u88dd\u7f6e\u8986\u5beb"
             },
             "remove_x10": {
                 "data": {
                     "address": "\u9078\u64c7\u88dd\u7f6e\u4f4d\u5740\u4ee5\u79fb\u9664"
                 },
-                "description": "\u79fb\u9664 X10 \u88dd\u7f6e",
-                "title": "Insteon"
+                "description": "\u79fb\u9664 X10 \u88dd\u7f6e"
             }
         }
     }

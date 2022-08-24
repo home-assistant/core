@@ -6,18 +6,15 @@
             "connection_error": "\u9023\u7dda\u5931\u6557"
         },
         "error": {
-            "discovery_error": "\u63a2\u7d22 Motion \u9598\u9053\u5668\u5931\u6557",
-            "invalid_interface": "\u7db2\u8def\u4ecb\u9762\u7121\u6548"
+            "discovery_error": "\u641c\u7d22 Motion \u9598\u9053\u5668\u5931\u6557"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API \u91d1\u9470",
-                    "interface": "\u4f7f\u7528\u7684\u7db2\u8def\u4ecb\u9762"
+                    "api_key": "API \u91d1\u9470"
                 },
-                "description": "\u5c07\u9700\u8981\u8f38\u5165 16 \u4f4d\u5b57\u5143 API \u91d1\u9470\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key \u4ee5\u7372\u5f97\u7372\u53d6\u91d1\u9470\u7684\u6559\u5b78\u3002",
-                "title": "Motion Blinds"
+                "description": "\u5c07\u9700\u8981\u8f38\u5165 16 \u4f4d\u5b57\u5143 API \u91d1\u9470\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key \u4ee5\u7372\u5f97\u7372\u53d6\u91d1\u9470\u7684\u6559\u5b78\u3002"
             },
             "select": {
                 "data": {
@@ -28,11 +25,9 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API \u91d1\u9470",
                     "host": "IP \u4f4d\u5740"
                 },
-                "description": "\u9023\u7dda\u81f3 Motion \u9598\u9053\u5668\uff0c\u5047\u5982\u672a\u63d0\u4f9b IP \u4f4d\u5740\uff0c\u5c07\u4f7f\u7528\u81ea\u52d5\u63a2\u7d22",
-                "title": "Motion Blinds"
+                "description": "\u9023\u7dda\u81f3 Motion \u9598\u9053\u5668\uff0c\u5047\u5982\u672a\u63d0\u4f9b IP \u4f4d\u5740\uff0c\u5c07\u4f7f\u7528\u81ea\u52d5\u641c\u7d22"
             }
         }
     },
@@ -41,9 +36,7 @@
             "init": {
                 "data": {
                     "wait_for_push": "\u7b49\u5019 Multicast \u63a8\u9001\u901a\u77e5"
-                },
-                "description": "\u6307\u5b9a\u9078\u9805\u8a2d\u5b9a",
-                "title": "Motion Blinds"
+                }
             }
         }
     }

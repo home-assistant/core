@@ -1,8 +1,6 @@
 """The tests for the demo platform."""
 
-from unittest.mock import patch
-
-import pytest
+from freezegun import freeze_time
 
 from homeassistant.components import geo_location
 from homeassistant.components.demo.geo_location import (
@@ -23,17 +21,11 @@ from tests.common import assert_setup_component, async_fire_time_changed
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 
 
-@pytest.fixture(autouse=True)
-def mock_legacy_time(legacy_patchable_time):
-    """Make time patchable for all the tests."""
-    yield
-
-
 async def test_setup_platform(hass):
     """Test setup of demo platform via configuration."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+    with freeze_time(utcnow):
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
         await hass.async_block_till_done()

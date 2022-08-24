@@ -7,9 +7,9 @@
             "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
         "error": {
-            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
+            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification expir\u00e9.",
             "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur Soumettre.",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "step": {
             "auth": {

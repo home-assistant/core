@@ -7,8 +7,7 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "invalid_auth": "Ongeldige authenticatie"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "cloud": {
@@ -26,12 +25,9 @@
             },
             "user": {
                 "data": {
-                    "account_id": "Account ID",
-                    "connection_type": "Selecteer verbindingstype",
-                    "host": "Host",
-                    "password": "Wachtwoord"
+                    "connection_type": "Selecteer verbindingstype"
                 },
-                "description": "Selecteer verbindingstype. Lokaal vereist verwarming met bluetooth"
+                "description": "Selecteer verbindingstype. Lokaal vereist verwarming met Bluetooth."
             }
         }
     }

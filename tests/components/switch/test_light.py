@@ -1,9 +1,8 @@
 """The tests for the Light Switch platform."""
-
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_ONOFF,
+    ColorMode,
 )
 from homeassistant.setup import async_setup_component
 
@@ -33,10 +32,9 @@ async def test_default_state(hass):
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("color_temp") is None
-    assert state.attributes.get("white_value") is None
     assert state.attributes.get("effect_list") is None
     assert state.attributes.get("effect") is None
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [COLOR_MODE_ONOFF]
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]
     assert state.attributes.get(ATTR_COLOR_MODE) is None
 
 
@@ -63,7 +61,7 @@ async def test_light_service_calls(hass):
     assert hass.states.get("light.light_switch").state == "on"
     assert (
         hass.states.get("light.light_switch").attributes.get(ATTR_COLOR_MODE)
-        == COLOR_MODE_ONOFF
+        == ColorMode.ONOFF
     )
 
     await common.async_turn_off(hass, "light.light_switch")

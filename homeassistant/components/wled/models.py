@@ -7,10 +7,10 @@ from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 
 
-class WLEDEntity(CoordinatorEntity):
+class WLEDEntity(CoordinatorEntity[WLEDDataUpdateCoordinator]):
     """Defines a base WLED entity."""
 
-    coordinator: WLEDDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo:

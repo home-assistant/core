@@ -1,0 +1,20 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "Kolmonoxid",
+            "n2": "Kv\u00e4vedioxid",
+            "o3": "Ozon",
+            "p1": "PM10",
+            "p2": "PM2,5",
+            "s2": "Svaveldioxid"
+        },
+        "airvisual__pollutant_level": {
+            "good": "Bra",
+            "hazardous": "Farlig",
+            "moderate": "M\u00e5ttlig",
+            "unhealthy": "Oh\u00e4lsosam",
+            "unhealthy_sensitive": "Oh\u00e4lsosamt f\u00f6r k\u00e4nsliga grupper",
+            "very_unhealthy": "Mycket oh\u00e4lsosamt"
+        }
+    }
+}

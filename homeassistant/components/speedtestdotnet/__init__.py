@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -85,7 +85,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
     def initialize(self) -> None:
         """Initialize speedtest api."""
-        self.api = speedtest.Speedtest()
+        self.api = speedtest.Speedtest(secure=True)
         self.update_servers()
 
     def update_servers(self):

@@ -8,6 +8,7 @@ from random import randrange
 
 import aiohttp
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
@@ -32,11 +33,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -239,7 +243,7 @@ async def async_setup_entry(
     entity_registry = async_get_entity_reg(hass)
     device_registry = async_get_dev_reg(hass)
 
-    coordinator: update_coordinator.DataUpdateCoordinator | None = None
+    coordinator: TibberDataCoordinator | None = None
     entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -392,13 +396,13 @@ class TibberSensorElPrice(TibberSensor):
         ]["estimatedAnnualConsumption"]
 
 
-class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
+class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"]):
     """Representation of a Tibber sensor."""
 
     def __init__(
         self,
         tibber_home,
-        coordinator: update_coordinator.DataUpdateCoordinator,
+        coordinator: TibberDataCoordinator,
         entity_description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
@@ -420,7 +424,7 @@ class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
         return getattr(self._tibber_home, self.entity_description.key)
 
 
-class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
+class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
     """Representation of a Tibber sensor for real time consumption."""
 
     def __init__(
@@ -450,7 +454,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore[attr-defined]
+        if not (live_measurement := self.coordinator.get_live_measurement()):
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
@@ -479,7 +483,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
         self.async_write_ha_state()
 
 
-class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
+class TibberRtDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber realtime data."""
 
     def __init__(self, async_add_entities, tibber_home, hass):
@@ -538,7 +542,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
         return self.data.get("data", {}).get("liveMeasurement")
 
 
-class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
+class TibberDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber data and insert statistics."""
 
     def __init__(self, hass, tibber_connection):
@@ -554,44 +558,54 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via API."""
         await self._tibber_connection.fetch_consumption_data_active_homes()
+        await self._tibber_connection.fetch_production_data_active_homes()
         await self._insert_statistics()
 
     async def _insert_statistics(self):
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            if not home.hourly_consumption_data:
-                continue
-            for sensor_type in (
-                "consumption",
-                "totalCost",
-            ):
+            sensors = []
+            if home.hourly_consumption_data:
+                sensors.append(("consumption", False, ENERGY_KILO_WATT_HOUR))
+                sensors.append(("totalCost", False, home.currency))
+            if home.hourly_production_data:
+                sensors.append(("production", True, ENERGY_KILO_WATT_HOUR))
+                sensors.append(("profit", True, home.currency))
+
+            for sensor_type, is_production, unit in sensors:
                 statistic_id = (
                     f"{TIBBER_DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
                     f"{home.home_id.replace('-', '')}"
                 )
 
-                last_stats = await self.hass.async_add_executor_job(
+                last_stats = await get_instance(self.hass).async_add_executor_job(
                     get_last_statistics, self.hass, 1, statistic_id, True
                 )
 
                 if not last_stats:
                     # First time we insert 5 years of data (if available)
-                    hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
+                    hourly_data = await home.get_historic_data(
+                        5 * 365 * 24, production=is_production
+                    )
 
                     _sum = 0
                     last_stats_time = None
                 else:
-                    # hourly_consumption_data contains the last 30 days
-                    # of consumption data.
+                    # hourly_consumption/production_data contains the last 30 days
+                    # of consumption/production data.
                     # We update the statistics with the last 30 days
                     # of data to handle corrections in the data.
-                    hourly_consumption_data = home.hourly_consumption_data
+                    hourly_data = (
+                        home.hourly_production_data
+                        if is_production
+                        else home.hourly_consumption_data
+                    )
 
-                    start = dt_util.parse_datetime(
-                        hourly_consumption_data[0]["from"]
-                    ) - timedelta(hours=1)
-                    stat = await self.hass.async_add_executor_job(
+                    start = dt_util.parse_datetime(hourly_data[0]["from"]) - timedelta(
+                        hours=1
+                    )
+                    stat = await get_instance(self.hass).async_add_executor_job(
                         statistics_during_period,
                         self.hass,
                         start,
@@ -605,7 +619,7 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
 
                 statistics = []
 
-                for data in hourly_consumption_data:
+                for data in hourly_data:
                     if data.get(sensor_type) is None:
                         continue
 
@@ -623,10 +637,6 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
                         )
                     )
 
-                if sensor_type == "consumption":
-                    unit = ENERGY_KILO_WATT_HOUR
-                else:
-                    unit = home.currency
                 metadata = StatisticMetaData(
                     has_mean=False,
                     has_sum=True,

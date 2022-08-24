@@ -5,8 +5,11 @@ from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.siren import SirenEntity, SirenEntityDescription
-from homeassistant.components.siren.const import SUPPORT_TURN_OFF, SUPPORT_TURN_ON
+from homeassistant.components.siren import (
+    SirenEntity,
+    SirenEntityDescription,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,6 +22,14 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # All descriptions can be found here:
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        SirenEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+            name="Siren",
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -71,6 +82,8 @@ async def async_setup_entry(
 class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
+    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+
     def __init__(
         self,
         device: TuyaDevice,
@@ -81,7 +94,6 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
     @property
     def is_on(self) -> bool:

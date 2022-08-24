@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "not_insteon_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Insteon",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "select_single": "Wybierz jedn\u0105 z opcji"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Adres IP",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Typ modemu."
                 },
-                "description": "Wybierz typ modemu Insteon.",
-                "title": "Insteon"
+                "description": "Wybierz typ modemu Insteon."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Kategoria urz\u0105dzenia (np. 0x10)",
                     "subcat": "Podkategoria urz\u0105dzenia (np. 0x0a)"
                 },
-                "description": "Dodawanie nadpisanie urz\u0105dzenia.",
-                "title": "Insteon"
+                "description": "Dodawanie nadpisanie urz\u0105dzenia."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Kroki \u015bciemniacza (tylko dla urz\u0105dze\u0144 o\u015bwietleniowych, domy\u015blnie 22)",
                     "unitcode": "Unitcode (1\u201316)"
                 },
-                "description": "Zmie\u0144 has\u0142o Huba Insteon.",
-                "title": "Insteon"
+                "description": "Zmie\u0144 has\u0142o Huba Insteon."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistanta. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
-                "title": "Insteon"
+                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistanta. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Zmie\u0144 konfiguracj\u0119 Huba.",
                     "remove_override": "Usu\u0144 nadpisanie urz\u0105dzenia.",
                     "remove_x10": "Usu\u0144 urz\u0105dzenie X10."
-                },
-                "description": "Wybierz opcj\u0119 do skonfigurowania.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Wybierz adres urz\u0105dzenia do usuni\u0119cia"
                 },
-                "description": "Usu\u0144 nadpisanie urz\u0105dzenia",
-                "title": "Insteon"
+                "description": "Usu\u0144 nadpisanie urz\u0105dzenia"
             },
             "remove_x10": {
                 "data": {
                     "address": "Wybierz adres urz\u0105dzenia do usuni\u0119cia"
                 },
-                "description": "Usu\u0144 urz\u0105dzenie X10",
-                "title": "Insteon"
+                "description": "Usu\u0144 urz\u0105dzenie X10"
             }
         }
     }

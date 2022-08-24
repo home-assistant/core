@@ -2,8 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Vallox",
-        "description": "Set up the Vallox integration. If you have problems with configuration go to {integration_docs_url}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }

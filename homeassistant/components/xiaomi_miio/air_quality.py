@@ -1,18 +1,18 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+from collections.abc import Callable
 import logging
 
 from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MODEL,
     MODEL_AIRQUALITYMONITOR_B1,
     MODEL_AIRQUALITYMONITOR_CGDN1,
     MODEL_AIRQUALITYMONITOR_S1,
@@ -219,7 +219,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         return self._particulate_matter_10
 
 
-DEVICE_MAP = {
+DEVICE_MAP: dict[str, dict[str, Callable]] = {
     MODEL_AIRQUALITYMONITOR_S1: {
         "device_class": AirQualityMonitor,
         "entity_class": AirMonitorS1,

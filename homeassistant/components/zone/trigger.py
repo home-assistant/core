@@ -18,6 +18,7 @@ from homeassistant.helpers import (
     location,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-incomplete-defs, allow-untyped-defs
@@ -49,18 +50,23 @@ async def async_validate_trigger_config(
     """Validate trigger config."""
     config = _TRIGGER_SCHEMA(config)
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, config[CONF_ENTITY_ID]
     )
     return config
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type: str = "zone"
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+    *,
+    platform_type: str = "zone",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    entity_id = config.get(CONF_ENTITY_ID)
+    trigger_data = trigger_info["trigger_data"]
+    entity_id: list[str] = config[CONF_ENTITY_ID]
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
     job = HassJob(action)
@@ -79,11 +85,10 @@ async def async_attach_trigger(
         ):
             return
 
-        zone_state = hass.states.get(zone_entity_id)
-        if not zone_state:
+        if not (zone_state := hass.states.get(zone_entity_id)):
             _LOGGER.warning(
                 "Automation '%s' is referencing non-existing zone '%s' in a zone trigger",
-                automation_info["name"],
+                trigger_info["name"],
                 zone_entity_id,
             )
             return

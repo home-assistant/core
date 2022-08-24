@@ -110,16 +110,3 @@ class MfiSwitch(SwitchEntity):
         """Turn the switch off."""
         self._port.control(False)
         self._target_state = False
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return int(self._port.data.get("active_pwr", 0))
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes for the device."""
-        return {
-            "volts": round(self._port.data.get("v_rms", 0), 1),
-            "amps": round(self._port.data.get("i_rms", 0), 1),
-        }

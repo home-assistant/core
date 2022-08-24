@@ -96,9 +96,7 @@ async def async_setup_platform(
     conditions = config[CONF_MONITORED_CONDITIONS]
 
     session = async_get_clientsession(hass)
-    vz_api = VolkszaehlerData(
-        Volkszaehler(hass.loop, session, uuid, host=host, port=port)
-    )
+    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
 
     await vz_api.async_update()
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from functools import partial
 from typing import Any, cast
 
@@ -29,11 +30,16 @@ from .const import (
 
 CONF_FIELDS = "fields"
 NOTIFY_SERVICES = "notify_services"
+NOTIFY_DISCOVERY_DISPATCHER = "notify_discovery_dispatcher"
 
 
-async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
+@callback
+def async_setup_legacy(
+    hass: HomeAssistant, config: ConfigType
+) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
+    hass.data.setdefault(NOTIFY_DISCOVERY_DISPATCHER, None)
 
     async def async_setup_platform(
         integration_name: str,
@@ -99,22 +105,21 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
             )
             hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(integration_name, p_config))
-        for integration_name, p_config in config_per_platform(config, DOMAIN)
-        if integration_name is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None
     ) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    hass.data[NOTIFY_DISCOVERY_DISPATCHER] = discovery.async_listen_platform(
+        hass, DOMAIN, async_platform_discovered
+    )
+
+    return [
+        async_setup_platform(integration_name, p_config)
+        for integration_name, p_config in config_per_platform(config, DOMAIN)
+        if integration_name is not None
+    ]
 
 
 @callback
@@ -147,6 +152,9 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
+    if NOTIFY_DISCOVERY_DISPATCHER in hass.data:
+        hass.data[NOTIFY_DISCOVERY_DISPATCHER]()
+        hass.data[NOTIFY_DISCOVERY_DISPATCHER] = None
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 

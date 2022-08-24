@@ -73,11 +73,6 @@ class MyStromSwitch(SwitchEntity):
         return self.plug._mac  # pylint: disable=protected-access
 
     @property
-    def current_power_w(self):
-        """Return the current power consumption in W."""
-        return self.plug.consumption
-
-    @property
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._available
@@ -103,5 +98,6 @@ class MyStromSwitch(SwitchEntity):
             self.relay = self.plug.relay
             self._available = True
         except MyStromConnectionError:
-            self._available = False
-            _LOGGER.error("No route to myStrom plug")
+            if self._available:
+                self._available = False
+                _LOGGER.error("No route to myStrom plug")

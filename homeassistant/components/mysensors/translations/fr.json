@@ -5,7 +5,7 @@
             "cannot_connect": "\u00c9chec de connexion",
             "duplicate_persistence_file": "Fichier de persistance d\u00e9j\u00e0 utilis\u00e9",
             "duplicate_topic": "Sujet d\u00e9j\u00e0 utilis\u00e9",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "invalid_device": "Appareil non valide",
             "invalid_ip": "Adresse IP non valide",
             "invalid_persistence_file": "Fichier de persistance non valide",
@@ -14,6 +14,7 @@
             "invalid_serial": "Port s\u00e9rie non valide",
             "invalid_subscribe_topic": "Sujet d'abonnement non valide",
             "invalid_version": "Version de MySensors non valide",
+            "mqtt_required": "L'int\u00e9gration MQTT n'est pas configur\u00e9e",
             "not_a_number": "Veuillez saisir un nombre",
             "port_out_of_range": "Le num\u00e9ro de port doit \u00eatre au moins 1 et au plus 65535",
             "same_topic": "Les sujets de souscription et de publication sont identiques",
@@ -24,7 +25,7 @@
             "cannot_connect": "\u00c9chec de connexion",
             "duplicate_persistence_file": "Fichier de persistance d\u00e9j\u00e0 utilis\u00e9",
             "duplicate_topic": "Sujet d\u00e9j\u00e0 utilis\u00e9",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "invalid_device": "Appareil non valide",
             "invalid_ip": "Adresse IP non valide",
             "invalid_persistence_file": "Fichier de persistance non valide",
@@ -68,6 +69,14 @@
                 },
                 "description": "Configuration de la passerelle Ethernet"
             },
+            "select_gateway_type": {
+                "description": "S\u00e9lectionnez la passerelle \u00e0 configurer.",
+                "menu_options": {
+                    "gw_mqtt": "Configurer une passerelle MQTT",
+                    "gw_serial": "Configurer une passerelle s\u00e9rie",
+                    "gw_tcp": "Configurer une passerelle TCP"
+                }
+            },
             "user": {
                 "data": {
                     "gateway_type": "Type de passerelle"
@@ -75,6 +84,5 @@
                 "description": "Choisissez la m\u00e9thode de connexion \u00e0 la passerelle"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

@@ -60,7 +60,7 @@ def create_mock_bridge(hass, api_version=1):
 
     bridge.async_initialize_bridge = async_initialize_bridge
 
-    async def async_request_call(task, *args, allowed_errors=None, **kwargs):
+    async def async_request_call(task, *args, **kwargs):
         await task(*args, **kwargs)
 
     bridge.async_request_call = async_request_call

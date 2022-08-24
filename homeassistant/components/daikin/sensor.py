@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -87,6 +88,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_TOTAL_POWER,
         name="Estimated Power Consumption",
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
     ),
@@ -110,6 +112,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_COMPRESSOR_FREQUENCY,
         name="Compressor Frequency",
         icon="mdi:fan",
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_HERTZ,
         value_func=lambda device: device.compressor_frequency,
     ),
@@ -178,7 +182,7 @@ class DaikinSensor(SensorEntity):
         self._attr_name = f"{api.name} {description.name}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._api.device.mac}-{self.entity_description.key}"
 
@@ -187,11 +191,11 @@ class DaikinSensor(SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_func(self._api.device)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return self._api.device_info

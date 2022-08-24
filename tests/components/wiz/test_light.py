@@ -22,6 +22,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import (
     FAKE_MAC,
+    FAKE_OLD_FIRMWARE_DIMMABLE_BULB,
     FAKE_RGBW_BULB,
     FAKE_RGBWW_BULB,
     FAKE_TURNABLE_BULB,
@@ -169,3 +170,34 @@ async def test_turnable_light(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP] == 153
+
+
+async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
+    """Test a light operation with a dimmable light with old firmware."""
+    bulb, _ = await async_setup_integration(
+        hass, bulb_type=FAKE_OLD_FIRMWARE_DIMMABLE_BULB
+    )
+    entity_id = "light.mock_title"
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+    pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
+    assert pilot.pilot_params == {"dimming": 50, "state": True}
+
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+    bulb.turn_on.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
+    assert pilot.pilot_params == {"dimming": 100, "state": True}

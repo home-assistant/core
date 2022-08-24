@@ -15,14 +15,13 @@
                 "data": {
                     "host": "Host",
                     "type": "Typ des Druckers"
-                },
-                "description": "Einrichten der Brother-Drucker-Integration. Wenn Du Probleme mit der Konfiguration hast, gehe zu: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Typ des Druckers"
                 },
-                "description": "M\u00f6chtest du den Brother Drucker {model} mit der Seriennummer `{serial_number}` zum Home Assistant hinzuf\u00fcgen?",
+                "description": "M\u00f6chtest du den Drucker {model} mit der Seriennummer ` {serial_number} ` zu Home Assistant hinzuf\u00fcgen?",
                 "title": "Brother-Drucker entdeckt"
             }
         }

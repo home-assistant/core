@@ -37,6 +37,7 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
             "device_id": hue_tap_device.id,
             "type": t_type,
             "subtype": t_subtype,
+            "metadata": {},
         }
         for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE
     ]
@@ -56,6 +57,7 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
         "device_id": hue_dimmer_device.id,
         "type": "battery_level",
         "entity_id": "sensor.hue_dimmer_switch_1_battery_level",
+        "metadata": {"secondary": True},
     }
     expected_triggers = [
         trigger_batt,
@@ -66,6 +68,7 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
                 "device_id": hue_dimmer_device.id,
                 "type": t_type,
                 "subtype": t_subtype,
+                "metadata": {},
             }
             for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE
         ),

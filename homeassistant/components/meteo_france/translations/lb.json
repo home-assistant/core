@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Stad"
                 },
-                "description": "Wiel deng Stad aus der L\u00ebscht aus",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Wiel deng Stad aus der L\u00ebscht aus"
             },
             "user": {
                 "data": {
                     "city": "Stad"
                 },
-                "description": "Gitt de Postcode an (n\u00ebmme fir Frankr\u00e4ich, recommand\u00e9iert) oder den Numm vun der Stad",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Gitt de Postcode an (n\u00ebmme fir Frankr\u00e4ich, recommand\u00e9iert) oder den Numm vun der Stad"
             }
         }
     },

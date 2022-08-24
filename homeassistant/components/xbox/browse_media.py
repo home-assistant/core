@@ -56,6 +56,7 @@ async def build_item_response(
     apps: InstalledPackagesList = await client.smartglass.get_installed_apps(device_id)
 
     if media_content_type in (None, "library"):
+        children: list[BrowseMedia] = []
         library_info = BrowseMedia(
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="library",
@@ -63,7 +64,7 @@ async def build_item_response(
             title="Installed Applications",
             can_play=False,
             can_expand=True,
-            children=[],
+            children=children,
         )
 
         # Add Home
@@ -76,7 +77,7 @@ async def build_item_response(
         home_thumb = _find_media_image(
             home_catalog.products[0].localized_properties[0].images
         )
-        library_info.children.append(
+        children.append(
             BrowseMedia(
                 media_class=MEDIA_CLASS_APP,
                 media_content_id="Home",
@@ -84,7 +85,7 @@ async def build_item_response(
                 title="Home",
                 can_play=True,
                 can_expand=False,
-                thumbnail=home_thumb.uri,
+                thumbnail=None if home_thumb is None else home_thumb.uri,
             )
         )
 
@@ -99,7 +100,7 @@ async def build_item_response(
             tv_thumb = _find_media_image(
                 tv_catalog.products[0].localized_properties[0].images
             )
-            library_info.children.append(
+            children.append(
                 BrowseMedia(
                     media_class=MEDIA_CLASS_APP,
                     media_content_id="TV",
@@ -107,7 +108,7 @@ async def build_item_response(
                     title="Live TV",
                     can_play=True,
                     can_expand=False,
-                    thumbnail=tv_thumb.uri,
+                    thumbnail=None if tv_thumb is None else tv_thumb.uri,
                 )
             )
 
@@ -115,7 +116,7 @@ async def build_item_response(
             {app.content_type for app in apps.result if app.content_type in TYPE_MAP}
         )
         for c_type in content_types:
-            library_info.children.append(
+            children.append(
                 BrowseMedia(
                     media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id=c_type,

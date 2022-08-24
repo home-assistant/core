@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -24,17 +25,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_URL,
     MEDIA_TYPE_VIDEO,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +41,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import roku_exception_handler
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
@@ -65,23 +54,9 @@ from .const import (
 )
 from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
-from .helpers import format_channel_name
+from .helpers import format_channel_name, roku_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_ROKU = (
-    SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_BROWSE_MEDIA
-)
 
 
 STREAM_FORMAT_TO_MEDIA_TYPE = {
@@ -124,7 +99,15 @@ async def async_setup_entry(
     """Set up the Roku config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
-    async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
+    async_add_entities(
+        [
+            RokuMediaPlayer(
+                device_id=unique_id,
+                coordinator=coordinator,
+            )
+        ],
+        True,
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -138,18 +121,19 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
-    def __init__(
-        self, unique_id: str | None, coordinator: RokuDataUpdateCoordinator
-    ) -> None:
-        """Initialize the Roku device."""
-        super().__init__(
-            coordinator=coordinator,
-            device_id=unique_id,
-        )
-
-        self._attr_name = coordinator.data.info.name
-        self._attr_unique_id = unique_id
-        self._attr_supported_features = SUPPORT_ROKU
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
@@ -289,7 +273,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             app.name for app in self.coordinator.data.apps if app.name is not None
         )
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def search(self, keyword: str) -> None:
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
@@ -321,68 +305,68 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             media_content_type,
         )
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
         await self.coordinator.roku.remote("poweron")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler(ignore_timeout=True)
     async def async_turn_off(self) -> None:
         """Turn off the Roku."""
         await self.coordinator.roku.remote("poweroff")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_pause(self) -> None:
         """Send pause command."""
         if self.state not in (STATE_STANDBY, STATE_PAUSED):
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_play(self) -> None:
         """Send play command."""
         if self.state not in (STATE_STANDBY, STATE_PLAYING):
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
         if self.state != STATE_STANDBY:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.roku.remote("reverse")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.roku.remote("forward")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.coordinator.roku.remote("volume_mute")
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self.coordinator.roku.remote("volume_up")
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self.coordinator.roku.remote("volume_down")
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
@@ -396,15 +380,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = MEDIA_TYPE_URL
             media_id = sourced_media.url
             mime_type = sourced_media.mime_type
             stream_name = original_media_id
             stream_format = guess_stream_format(media_id, mime_type)
-
-        # If media ID is a relative URL, we serve it from HA.
-        media_id = async_process_play_media_url(self.hass, media_id)
 
         if media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
             media_type = MEDIA_TYPE_VIDEO
@@ -413,6 +396,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             stream_format = "hls"
 
         if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, MEDIA_TYPE_VIDEO):
+            # If media ID is a relative URL, we serve it from HA.
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             parsed = yarl.URL(media_id)
 
             if mime_type is None:
@@ -487,7 +473,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         await self.coordinator.async_request_refresh()
 
-    @roku_exception_handler
+    @roku_exception_handler()
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source == "Home":

@@ -6,6 +6,7 @@ import logging
 
 import bellows.zigbee.application
 import voluptuous as vol
+import zigpy.application
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
 import zigpy.types as t
 import zigpy_deconz.zigbee.application
@@ -16,8 +17,7 @@ import zigpy_znp.zigbee.application
 from homeassistant.const import Platform
 import homeassistant.helpers.config_validation as cv
 
-from .typing import CALLABLE_T
-
+ATTR_ACTIVE_COORDINATOR = "active_coordinator"
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
 ATTR_ATTRIBUTE_ID = "attribute_id"
@@ -44,6 +44,7 @@ ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
 ATTR_OUT_CLUSTERS = "out_clusters"
+ATTR_PARAMS = "params"
 ATTR_POWER_SOURCE = "power_source"
 ATTR_PROFILE_ID = "profile_id"
 ATTR_QUIRK_APPLIED = "quirk_applied"
@@ -127,6 +128,9 @@ CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
 CONF_DATABASE = "database_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
+CONF_ENABLE_ENHANCED_LIGHT_TRANSITION = "enhanced_light_transition"
+CONF_ENABLE_LIGHT_TRANSITIONING_FLAG = "light_transitioning_flag"
+CONF_ALWAYS_PREFER_XY_COLOR_MODE = "always_prefer_xy_color_mode"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_FLOWCONTROL = "flow_control"
@@ -142,6 +146,9 @@ CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
+        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
+        vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
+        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
             CONF_CONSIDER_UNAVAILABLE_MAINS,
@@ -170,7 +177,6 @@ DATA_ZHA_CONFIG = "config"
 DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
 DATA_ZHA_GATEWAY = "zha_gateway"
-DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
 DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
 
 DEBUG_COMP_BELLOWS = "bellows"
@@ -224,6 +230,8 @@ ZHA_CONFIG_SCHEMAS = {
     ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
 }
 
+_ControllerClsType = type[zigpy.application.ControllerApplication]
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
@@ -262,13 +270,13 @@ class RadioType(enum.Enum):
                 return radio.name
         raise ValueError
 
-    def __init__(self, description: str, controller_cls: CALLABLE_T) -> None:
+    def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:
         """Init instance."""
         self._desc = description
         self._ctrl_cls = controller_cls
 
     @property
-    def controller(self) -> CALLABLE_T:
+    def controller(self) -> _ControllerClsType:
         """Return controller class."""
         return self._ctrl_cls
 
@@ -372,6 +380,7 @@ ZHA_CHANNEL_MSG_CFG_RPT = "zha_channel_configure_reporting"
 ZHA_CHANNEL_MSG_DATA = "zha_channel_msg_data"
 ZHA_CHANNEL_CFG_DONE = "zha_channel_cfg_done"
 ZHA_CHANNEL_READS_PER_REQ = 5
+ZHA_EVENT = "zha_event"
 ZHA_GW_MSG = "zha_gateway_message"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
 ZHA_GW_MSG_DEVICE_INFO = "device_info"
@@ -385,6 +394,7 @@ ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
+ZHA_DEVICES_LOADED_EVENT = "zha_devices_loaded_event"
 
 EFFECT_BLINK = 0x00
 EFFECT_BREATHE = 0x01

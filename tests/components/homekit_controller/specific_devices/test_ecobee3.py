@@ -6,7 +6,7 @@ https://github.com/home-assistant/core/issues/15336
 
 from unittest import mock
 
-from aiohomekit import AccessoryDisconnectedError
+from aiohomekit import AccessoryNotFoundError
 from aiohomekit.testing import FakePairing
 
 from homeassistant.components.climate.const import (
@@ -14,12 +14,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.homekit_controller.common import (
     HUB_TEST_ACCESSORY_ID,
@@ -124,84 +122,6 @@ async def test_ecobee3_setup(hass):
                     state="heat",
                 ),
                 EntityTestInfo(
-                    entity_id="number.homew_home_cool_target",
-                    friendly_name="HomeW Home Cool Target",
-                    unique_id="homekit-123456789012-aid:1-sid:16-cid:35",
-                    entity_category=EntityCategory.CONFIG,
-                    capabilities={
-                        "max": 33.3,
-                        "min": 18.3,
-                        "mode": NumberMode.AUTO,
-                        "step": 0.1,
-                    },
-                    state="24.4",
-                ),
-                EntityTestInfo(
-                    entity_id="number.homew_home_heat_target",
-                    friendly_name="HomeW Home Heat Target",
-                    unique_id="homekit-123456789012-aid:1-sid:16-cid:34",
-                    entity_category=EntityCategory.CONFIG,
-                    capabilities={
-                        "max": 26.1,
-                        "min": 7.2,
-                        "mode": NumberMode.AUTO,
-                        "step": 0.1,
-                    },
-                    state="22.2",
-                ),
-                EntityTestInfo(
-                    entity_id="number.homew_sleep_cool_target",
-                    friendly_name="HomeW Sleep Cool Target",
-                    unique_id="homekit-123456789012-aid:1-sid:16-cid:37",
-                    entity_category=EntityCategory.CONFIG,
-                    capabilities={
-                        "max": 33.3,
-                        "min": 18.3,
-                        "mode": NumberMode.AUTO,
-                        "step": 0.1,
-                    },
-                    state="27.8",
-                ),
-                EntityTestInfo(
-                    entity_id="number.homew_sleep_heat_target",
-                    friendly_name="HomeW Sleep Heat Target",
-                    unique_id="homekit-123456789012-aid:1-sid:16-cid:36",
-                    entity_category=EntityCategory.CONFIG,
-                    capabilities={
-                        "max": 26.1,
-                        "min": 7.2,
-                        "mode": NumberMode.AUTO,
-                        "step": 0.1,
-                    },
-                    state="17.8",
-                ),
-                EntityTestInfo(
-                    entity_id="number.homew_away_cool_target",
-                    friendly_name="HomeW Away Cool Target",
-                    unique_id="homekit-123456789012-aid:1-sid:16-cid:39",
-                    entity_category=EntityCategory.CONFIG,
-                    capabilities={
-                        "max": 33.3,
-                        "min": 18.3,
-                        "mode": NumberMode.AUTO,
-                        "step": 0.1,
-                    },
-                    state="26.7",
-                ),
-                EntityTestInfo(
-                    entity_id="number.homew_away_heat_target",
-                    friendly_name="HomeW Away Heat Target",
-                    unique_id="homekit-123456789012-aid:1-sid:16-cid:38",
-                    entity_category=EntityCategory.CONFIG,
-                    capabilities={
-                        "max": 26.1,
-                        "min": 7.2,
-                        "mode": NumberMode.AUTO,
-                        "step": 0.1,
-                    },
-                    state="18.9",
-                ),
-                EntityTestInfo(
                     entity_id="sensor.homew_current_temperature",
                     friendly_name="HomeW Current Temperature",
                     unique_id="homekit-123456789012-aid:1-sid:16-cid:19",
@@ -264,9 +184,8 @@ async def test_ecobee3_setup_connection_failure(hass):
 
     # Test that the connection fails during initial setup.
     # No entities should be created.
-    list_accessories = "list_accessories_and_characteristics"
-    with mock.patch.object(FakePairing, list_accessories) as laac:
-        laac.side_effect = AccessoryDisconnectedError("Connection failed")
+    with mock.patch.object(FakePairing, "async_populate_accessories_state") as laac:
+        laac.side_effect = AccessoryNotFoundError("Connection failed")
 
         # If there is no cached entity map and the accessory connection is
         # failing then we have to fail the config entry setup.

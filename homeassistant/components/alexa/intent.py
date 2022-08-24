@@ -12,7 +12,7 @@ from .const import DOMAIN, SYN_RESOLUTION_MATCH
 
 _LOGGER = logging.getLogger(__name__)
 
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 
 INTENTS_API_ENDPOINT = "/api/alexa"
 
@@ -127,11 +127,6 @@ async def async_handle_message(hass, message):
 
 
 @HANDLERS.register("SessionEndedRequest")
-async def async_handle_session_end(hass, message):
-    """Handle a session end request."""
-    return None
-
-
 @HANDLERS.register("IntentRequest")
 @HANDLERS.register("LaunchRequest")
 async def async_handle_intent(hass, message):
@@ -151,6 +146,11 @@ async def async_handle_intent(hass, message):
         intent_name = (
             message.get("session", {}).get("application", {}).get("applicationId")
         )
+    elif req["type"] == "SessionEndedRequest":
+        app_id = message.get("session", {}).get("application", {}).get("applicationId")
+        intent_name = f"{app_id}.{req['type']}"
+        alexa_response.variables["reason"] = req["reason"]
+        alexa_response.variables["error"] = req.get("error")
     else:
         intent_name = alexa_intent_info["name"]
 

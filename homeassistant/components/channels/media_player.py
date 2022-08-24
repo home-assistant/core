@@ -1,23 +1,21 @@
 """Support for interfacing with an instance of getchannels.com."""
 from __future__ import annotations
 
+from typing import Any
+
 from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
 )
 from homeassistant.const import (
     ATTR_SECONDS,
@@ -38,17 +36,6 @@ from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
 DEFAULT_PORT = 57000
-
-FEATURE_SUPPORT = (
-    SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SELECT_SOURCE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -90,6 +77,17 @@ async def async_setup_platform(
 
 class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
@@ -171,7 +169,7 @@ class ChannelsPlayer(MediaPlayerEntity):
 
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         self.update_favorite_channels()
         self.update_state(self.client.status())
@@ -215,44 +213,39 @@ class ChannelsPlayer(MediaPlayerEntity):
 
         return None
 
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return FEATURE_SUPPORT
-
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) player."""
         if mute != self.muted:
             response = self.client.toggle_muted()
             self.update_state(response)
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send media_stop command to player."""
         self.status = "stopped"
         response = self.client.stop()
         self.update_state(response)
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send media_play command to player."""
         response = self.client.resume()
         self.update_state(response)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media_pause command to player."""
         response = self.client.pause()
         self.update_state(response)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Seek ahead."""
         response = self.client.skip_forward()
         self.update_state(response)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Seek back."""
         response = self.client.skip_backward()
         self.update_state(response)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select a channel to tune to."""
         for channel in self.favorite_channels:
             if channel["name"] == source:
@@ -260,7 +253,7 @@ class ChannelsPlayer(MediaPlayerEntity):
                 self.update_state(response)
                 break
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the player."""
         if media_type == MEDIA_TYPE_CHANNEL:
             response = self.client.play_channel(media_id)

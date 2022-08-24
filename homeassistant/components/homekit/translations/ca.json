@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)",
                     "devices": "Dispositius (disparadors)"
                 },
                 "description": "Els interruptors programables es creen per cada dispositiu seleccionat. HomeKit pot ser programat per a que executi una automatitzaci\u00f3 o escena quan un dispositiu es dispari.",
@@ -55,18 +54,9 @@
                 "description": "S'inclouran totes les entitats de \u201c{domains}\u201d tret que se'n seleccionin d'espec\u00edfiques.",
                 "title": "Selecciona les entitats a incloure"
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Entitats",
-                    "mode": "Mode"
-                },
-                "description": "Tria les entitats a incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat. En mode enlla\u00e7 inclusiu, s'inclouran totes les entitats del domini tret de que se'n seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'inclouran totes les entitats del domini excepte les entitats excloses. Per obtenir el millor rendiment, es crea una inst\u00e0ncia HomeKit per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
-                "title": "Selecciona les entitats a incloure"
-            },
             "init": {
                 "data": {
                     "domains": "Dominis a incloure",
-                    "include_domains": "Dominis a incloure",
                     "include_exclude_mode": "Mode d'inclusi\u00f3",
                     "mode": "Mode de HomeKit"
                 },

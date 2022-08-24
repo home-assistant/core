@@ -1,10 +1,10 @@
 """Data template classes for discovery used to generate additional data for setup."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import Any, Union, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -148,6 +148,7 @@ from .const import (
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
 )
+from .helpers import ZwaveValueID
 
 METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
@@ -227,16 +228,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ZwaveValueID:
-    """Class to represent a value ID."""
-
-    property_: str | int
-    command_class: int
-    endpoint: int | None = None
-    property_key: str | int | None = None
-
-
-@dataclass
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
 
@@ -249,16 +240,14 @@ class BaseDiscoverySchemaDataTemplate:
         Can optionally be implemented by subclasses if input data needs to be
         transformed once discovered Value is available.
         """
-        # pylint: disable=no-self-use
         return {}
 
-    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue]:
+    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue | None]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
 
         Should be implemented by subclasses only if there are values to watch.
         """
-        # pylint: disable=no-self-use
         return []
 
     def value_ids_to_watch(self, resolved_data: Any) -> set[str]:
@@ -272,7 +261,7 @@ class BaseDiscoverySchemaDataTemplate:
     @staticmethod
     def _get_value_from_id(
         node: ZwaveNode, value_id_obj: ZwaveValueID
-    ) -> ZwaveValue | None:
+    ) -> ZwaveValue | ZwaveConfigurationValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
         value_id = get_value_id(
             node,
@@ -306,7 +295,9 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
 
         return data
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]
+    ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
         return [
             *resolved_data["lookup_table"].values(),
@@ -342,8 +333,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     @staticmethod
     def find_key_from_matching_set(
         enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
-        set_map: dict[
-            str, set[MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType]
+        set_map: Mapping[
+            str,
+            set[MultilevelSensorType]
+            | set[MultilevelSensorScaleType]
+            | set[MeterScaleType],
         ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
@@ -365,11 +359,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
-            scale_type = get_meter_scale_type(value)
-            unit = self.find_key_from_matching_set(scale_type, METER_UNIT_MAP)
+            meter_scale_type = get_meter_scale_type(value)
+            unit = self.find_key_from_matching_set(meter_scale_type, METER_UNIT_MAP)
             # We do this because even though these are energy scales, they don't meet
             # the unit requirements for the energy device class.
-            if scale_type in (
+            if meter_scale_type in (
                 ElectricScale.PULSE_COUNT,
                 ElectricScale.KILOVOLT_AMPERE_HOUR,
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
@@ -379,19 +373,21 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 )
             # We do this because even though these are power scales, they don't meet
             # the unit requirements for the power device class.
-            if scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
+            if meter_scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
                 return NumericSensorDataTemplateData(ENTITY_DESC_KEY_MEASUREMENT, unit)
 
             return NumericSensorDataTemplateData(
-                self.find_key_from_matching_set(scale_type, METER_DEVICE_CLASS_MAP),
+                self.find_key_from_matching_set(
+                    meter_scale_type, METER_DEVICE_CLASS_MAP
+                ),
                 unit,
             )
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
             sensor_type = get_multilevel_sensor_type(value)
-            scale_type = get_multilevel_sensor_scale_type(value)
+            multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
             unit = self.find_key_from_matching_set(
-                scale_type, MULTILEVEL_SENSOR_UNIT_MAP
+                multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
             )
             if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
                 return NumericSensorDataTemplateData(
@@ -417,42 +413,30 @@ class TiltValueMix:
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue | None]:
         """Resolve helper class data for a discovered value."""
         return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]
+    ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
         return [resolved_data["tilt_value"]]
 
     @staticmethod
-    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+    def current_tilt_value(
+        resolved_data: dict[str, ZwaveValue | None]
+    ) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
 
 
 @dataclass
-class FanSpeedDataTemplate:
-    """Mixin to define get_speed_config."""
+class FanValueMapping:
+    """Data class to represent how a fan's values map to features."""
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
-        """
-        Get the fan speed configuration for this device.
-
-        Values should indicate the highest allowed device setting for each
-        actual speed, and should be sorted in ascending order.
-
-        Empty lists are not permissible.
-        """
-        raise NotImplementedError
-
-
-@dataclass
-class ConfigurableFanSpeedValueMix:
-    """Mixin data class for defining configurable fan speeds."""
-
-    configuration_option: ZwaveValueID
-    configuration_value_to_speeds: dict[int, list[int]]
+    presets: dict[int, str] = field(default_factory=dict)
+    speeds: list[tuple[int, int]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """
@@ -461,14 +445,36 @@ class ConfigurableFanSpeedValueMix:
         These inputs are hardcoded in `discovery.py`, so these checks should
         only fail due to developer error.
         """
-        for speeds in self.configuration_value_to_speeds.values():
-            assert len(speeds) > 0
-            assert sorted(speeds) == speeds
+        assert len(self.speeds) > 0, "At least one speed must be specified"
+        for speed_range in self.speeds:
+            (low, high) = speed_range
+            assert high >= low, "Speed range values must be ordered"
 
 
 @dataclass
-class ConfigurableFanSpeedDataTemplate(
-    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, ConfigurableFanSpeedValueMix
+class FanValueMappingDataTemplate:
+    """Mixin to define `get_fan_value_mapping`."""
+
+    def get_fan_value_mapping(
+        self, resolved_data: dict[str, Any]
+    ) -> FanValueMapping | None:
+        """Get the value mappings for this device."""
+        raise NotImplementedError
+
+
+@dataclass
+class ConfigurableFanValueMappingValueMix:
+    """Mixin data class for defining fan properties that change based on a device configuration option."""
+
+    configuration_option: ZwaveValueID
+    configuration_value_to_fan_value_mapping: dict[int, FanValueMapping]
+
+
+@dataclass
+class ConfigurableFanValueMappingDataTemplate(
+    BaseDiscoverySchemaDataTemplate,
+    FanValueMappingDataTemplate,
+    ConfigurableFanValueMappingValueMix,
 ):
     """
     Gets fan speeds based on a configuration value.
@@ -476,95 +482,98 @@ class ConfigurableFanSpeedDataTemplate(
     Example:
       ZWaveDiscoverySchema(
           platform="fan",
-          hint="configured_fan_speed",
+          hint="has_fan_value_mapping",
           ...
-          data_template=ConfigurableFanSpeedDataTemplate(
+          data_template=ConfigurableFanValueMappingDataTemplate(
             configuration_option=ZwaveValueID(
-                5, CommandClass.CONFIGURATION, endpoint=0
+                property_=5, command_class=CommandClass.CONFIGURATION, endpoint=0
             ),
-            configuration_value_to_speeds={0: [32, 65, 99], 1: [24, 49, 74, 99]},
+            configuration_value_to_fan_value_mapping={
+                0: FanValueMapping(speeds=[(1,33), (34,66), (67,99)]),
+                1: FanValueMapping(speeds=[(1,24), (25,49), (50,74), (75,99)]),
+            },
           ),
-      ),
 
-    `configuration_option` is a reference to the setting that determines how
-    many speeds are supported.
+    `configuration_option` is a reference to the setting that determines which
+    value mapping to use (e.g., 3 speeds or 4 speeds).
 
-    `configuration_value_to_speeds` maps the values from `configuration_option`
-    to a list of speeds.  The specified speeds indicate the maximum setting on
-    the underlying switch for each actual speed.
+    `configuration_value_to_fan_value_mapping` maps the values from
+    `configuration_option` to the value mapping object.
     """
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
+    def resolve_data(
+        self, value: ZwaveValue
+    ) -> dict[str, ZwaveConfigurationValue | None]:
         """Resolve helper class data for a discovered value."""
-        zwave_value: ZwaveValue = self._get_value_from_id(
-            value.node, self.configuration_option
+        zwave_value = cast(
+            Union[ZwaveConfigurationValue, None],
+            self._get_value_from_id(value.node, self.configuration_option),
         )
         return {"configuration_value": zwave_value}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, ZwaveConfigurationValue | None]
+    ) -> Iterable[ZwaveConfigurationValue | None]:
         """Return list of all ZwaveValues that should be watched."""
         return [
             resolved_data["configuration_value"],
         ]
 
-    def get_speed_config(
-        self, resolved_data: dict[str, ZwaveConfigurationValue]
-    ) -> list[int] | None:
-        """Get current speed configuration from resolved data."""
-        zwave_value: ZwaveValue = resolved_data["configuration_value"]
+    def get_fan_value_mapping(
+        self, resolved_data: dict[str, ZwaveConfigurationValue | None]
+    ) -> FanValueMapping | None:
+        """Get current fan properties from resolved data."""
+        zwave_value = resolved_data["configuration_value"]
+
+        if zwave_value is None:
+            _LOGGER.warning("Unable to read device configuration value")
+            return None
 
         if zwave_value.value is None:
-            _LOGGER.warning("Unable to read fan speed configuration value")
+            _LOGGER.warning("Fan configuration value is missing")
             return None
 
-        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
-        if speed_config is None:
-            _LOGGER.warning("Unrecognized speed configuration value")
+        fan_value_mapping = self.configuration_value_to_fan_value_mapping.get(
+            zwave_value.value
+        )
+        if fan_value_mapping is None:
+            _LOGGER.warning("Unrecognized fan configuration value")
             return None
 
-        return speed_config
+        return fan_value_mapping
 
 
 @dataclass
-class FixedFanSpeedValueMix:
+class FixedFanValueMappingValueMix:
     """Mixin data class for defining supported fan speeds."""
 
-    speeds: list[int]
-
-    def __post_init__(self) -> None:
-        """
-        Validate inputs.
-
-        These inputs are hardcoded in `discovery.py`, so these checks should
-        only fail due to developer error.
-        """
-        assert len(self.speeds) > 0
-        assert sorted(self.speeds) == self.speeds
+    fan_value_mapping: FanValueMapping
 
 
 @dataclass
-class FixedFanSpeedDataTemplate(
-    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, FixedFanSpeedValueMix
+class FixedFanValueMappingDataTemplate(
+    BaseDiscoverySchemaDataTemplate,
+    FanValueMappingDataTemplate,
+    FixedFanValueMappingValueMix,
 ):
     """
-    Specifies a fixed set of fan speeds.
+    Specifies a fixed set of properties for a fan.
 
     Example:
       ZWaveDiscoverySchema(
           platform="fan",
-          hint="configured_fan_speed",
+          hint="has_fan_value_mapping",
           ...
-          data_template=FixedFanSpeedDataTemplate(
-              speeds=[32,65,99]
+          data_template=FixedFanValueMappingDataTemplate(
+              config=FanValueMapping(
+                speeds=[(1, 32), (33, 65), (66, 99)]
+              )
           ),
       ),
-
-    `speeds` indicates the maximum setting on the underlying fan controller
-    for each actual speed.
     """
 
-    def get_speed_config(
+    def get_fan_value_mapping(
         self, resolved_data: dict[str, ZwaveConfigurationValue]
-    ) -> list[int]:
-        """Get the fan speed configuration for this device."""
-        return self.speeds
+    ) -> FanValueMapping:
+        """Get the fan properties for this device."""
+        return self.fan_value_mapping

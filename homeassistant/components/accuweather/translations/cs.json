@@ -15,9 +15,7 @@
                     "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
                     "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",
                     "name": "Jm\u00e9no"
-                },
-                "description": "Pokud pot\u0159ebujete pomoc s nastaven\u00ed, pod\u00edvejte se na: https://www.home-assistant.io/integrations/accuweather/\n\nN\u011bkter\u00e9 senzory nejsou ve v\u00fdchoz\u00edm nastaven\u00ed povoleny. M\u016f\u017eete je povolit  po nastaven\u00ed integrace v registru entit.\nP\u0159edpov\u011b\u010f po\u010das\u00ed nen\u00ed ve v\u00fdchoz\u00edm nastaven\u00ed povolena. M\u016f\u017eete ji povolit v mo\u017enostech integrace.",
-                "title": "AccuWeather"
+                }
             }
         }
     },
@@ -27,8 +25,7 @@
                 "data": {
                     "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"
                 },
-                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 80 minut nam\u00edsto 40 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather.",
-                "title": "Mo\u017enosti AccuWeather"
+                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 80 minut nam\u00edsto 40 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather."
             }
         }
     },

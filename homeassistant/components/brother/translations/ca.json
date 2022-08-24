@@ -15,14 +15,13 @@
                 "data": {
                     "host": "Amfitri\u00f3",
                     "type": "Tipus d'impressora"
-                },
-                "description": "Configura la integraci\u00f3 d'impressora Brother. Si tens problemes amb la configuraci\u00f3, visita: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Tipus d'impressora"
                 },
-                "description": "Vols afegir la impressora Brother {model} amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",
+                "description": "Vols afegir la impressora {model} amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",
                 "title": "Impressora Brother descoberta"
             }
         }

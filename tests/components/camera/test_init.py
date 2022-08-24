@@ -1,9 +1,8 @@
 """The tests for the camera component."""
 import asyncio
-import base64
 from http import HTTPStatus
 import io
-from unittest.mock import Mock, PropertyMock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
 
@@ -14,7 +13,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -58,7 +57,7 @@ async def mock_stream_source_fixture():
         return_value=STREAM_SOURCE,
     ) as mock_stream_source, patch(
         "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+        return_value=camera.CameraEntityFeature.STREAM,
     ):
         yield mock_stream_source
 
@@ -71,7 +70,7 @@ async def mock_hls_stream_source_fixture():
         return_value=HLS_STREAM_SOURCE,
     ) as mock_hls_stream_source, patch(
         "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+        return_value=camera.CameraEntityFeature.STREAM,
     ):
         yield mock_hls_stream_source
 
@@ -106,28 +105,6 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
-
-
-async def test_legacy_async_get_image_signature_warns_only_once(
-    hass, image_mock_url, caplog
-):
-    """Test that we only warn once when we encounter a legacy async_get_image function signature."""
-
-    async def _legacy_async_camera_image(self):
-        return b"Image"
-
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-        new=_legacy_async_camera_image,
-    ):
-        image = await camera.async_get_image(hass, "camera.demo_camera")
-        assert image.content == b"Image"
-        assert "does not support requesting width and height" in caplog.text
-        caplog.clear()
-
-        image = await camera.async_get_image(hass, "camera.demo_camera")
-        assert image.content == b"Image"
-        assert "does not support requesting width and height" not in caplog.text
 
 
 async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
@@ -255,24 +232,6 @@ async def test_snapshot_service(hass, mock_camera):
 
         assert len(mock_write.mock_calls) == 1
         assert mock_write.mock_calls[0][1][0] == b"Test"
-
-
-async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
-    """Test camera_thumbnail websocket command."""
-    await async_setup_component(hass, "camera", {})
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "camera_thumbnail", "entity_id": "camera.demo_camera"}
-    )
-
-    msg = await client.receive_json()
-
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["content_type"] == "image/jpg"
-    assert msg["result"]["content"] == base64.b64encode(b"Test").decode("utf-8")
 
 
 async def test_websocket_stream_no_source(
@@ -415,7 +374,7 @@ async def test_no_preload_stream(hass, mock_stream):
     ) as mock_stream_source:
         mock_stream_source.return_value = io.BytesIO()
         await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert not mock_request_stream.called
 
@@ -432,11 +391,12 @@ async def test_preload_stream(hass, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
     ):
+        mock_create_stream.return_value.start = AsyncMock()
         assert await async_setup_component(
             hass, "camera", {DOMAIN: {"platform": "demo"}}
         )
         await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert mock_create_stream.called
 

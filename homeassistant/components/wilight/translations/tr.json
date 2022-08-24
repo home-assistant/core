@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "{name} kurmak istiyor musunuz? \n\n \u015eunlar\u0131 destekler: {components}",
-                "title": "WiLight"
+                "description": "A\u015fa\u011f\u0131daki bile\u015fenler desteklenir: {components}"
             }
         }
     }

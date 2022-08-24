@@ -16,15 +16,5 @@
                 "title": "Configurer le connecteur mural Tesla"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Fr\u00e9quence de mise \u00e0 jour"
-                },
-                "title": "Configurer les options pour le connecteur mural Tesla"
-            }
-        }
     }
 }

@@ -12,8 +12,9 @@
                 "data": {
                     "code": "C\u00f3digo da esta\u00e7\u00e3o"
                 },
-                "description": "Digite o c\u00f3digo da esta\u00e7\u00e3o Meteoclim\u00e1tica (por exemplo, ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "\u00c9 parecido com isso ESCAT4300000043206B"
+                }
             }
         }
     }

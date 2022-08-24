@@ -13,6 +13,11 @@
                     "password": "Palavra-passe",
                     "username": "Email / devolo ID"
                 }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
             }
         }
     }

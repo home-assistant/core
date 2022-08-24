@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats",
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "invalid_access_token": "Ogiltig \u00e5tkomstnyckel",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "\u00c5tkomstnyckel",
+                    "email": "E-post"
+                },
+                "description": "Ange din Awair-utvecklar\u00e5tkomsttoken igen."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "\u00c5tkomsttoken",
+                    "email": "Epost"
+                },
+                "description": "Ange din Awair-utvecklar\u00e5tkomsttoken igen."
+            },
+            "user": {
+                "data": {
+                    "access_token": "\u00c5tkomstnyckel",
+                    "email": "E-post"
+                },
+                "description": "Du m\u00e5ste registrera dig f\u00f6r en Awair-utvecklar\u00e5tkomsttoken p\u00e5: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. Lubatud on ainult \u00fcks sidumine."
+        },
+        "step": {
+            "user": {
+                "description": "Kas alustada seadistamist?"
+            }
+        }
+    },
+    "title": "Kuu"
+}

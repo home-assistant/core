@@ -1,0 +1,89 @@
+{
+  "config": {
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_exists": "A camera with these URL settings already exists.",
+      "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
+      "no_still_image_or_stream_url": "You must specify at least a still image or stream URL",
+      "invalid_still_image": "URL did not return a valid still image",
+      "malformed_url": "Malformed URL",
+      "relative_url": "Relative URLs are not allowed",
+      "stream_file_not_found": "File not found while trying to connect to stream (is ffmpeg installed?)",
+      "stream_http_not_found": "HTTP 404 Not found while trying to connect to stream",
+      "template_error": "Error rendering template. Review log for more info.",
+      "timeout": "Timeout while loading URL",
+      "stream_no_route_to_host": "Could not find host while trying to connect to stream",
+      "stream_io_error": "Input/Output error while trying to connect to stream. Wrong RTSP transport protocol?",
+      "stream_not_permitted": "Operation not permitted while trying to connect to stream. Wrong RTSP transport protocol?"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "description": "Enter the settings to connect to the camera.",
+        "data": {
+          "still_image_url": "Still Image URL (e.g. http://...)",
+          "stream_source": "Stream Source URL (e.g. rtsp://...)",
+          "rtsp_transport": "RTSP transport protocol",
+          "authentication": "Authentication",
+          "limit_refetch_to_url_change": "Limit refetch to url change",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "framerate": "Frame Rate (Hz)",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "content_type": {
+        "description": "Specify the content type for the stream.",
+        "data": {
+          "content_type": "Content Type"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "still_image_url": "[%key:component::generic::config::step::user::data::still_image_url%]",
+          "stream_source": "[%key:component::generic::config::step::user::data::stream_source%]",
+          "rtsp_transport": "[%key:component::generic::config::step::user::data::rtsp_transport%]",
+          "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
+          "limit_refetch_to_url_change": "[%key:component::generic::config::step::user::data::limit_refetch_to_url_change%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "use_wallclock_as_timestamps": "Use wallclock as timestamps",
+          "username": "[%key:common::config_flow::data::username%]",
+          "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
+        }
+      },
+      "content_type": {
+        "description": "[%key:component::generic::config::step::content_type::description%]",
+        "data": {
+          "content_type": "[%key:component::generic::config::step::content_type::data::content_type%]"
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_exists": "[%key:component::generic::config::error::already_exists%]",
+      "unable_still_load": "[%key:component::generic::config::error::unable_still_load%]",
+      "no_still_image_or_stream_url": "[%key:component::generic::config::error::no_still_image_or_stream_url%]",
+      "invalid_still_image": "[%key:component::generic::config::error::invalid_still_image%]",
+      "malformed_url": "[%key:component::generic::config::error::malformed_url%]",
+      "relative_url": "[%key:component::generic::config::error::relative_url%]",
+      "template_error": "[%key:component::generic::config::error::template_error%]",
+      "timeout": "[%key:component::generic::config::error::timeout%]",
+      "stream_no_route_to_host": "[%key:component::generic::config::error::stream_no_route_to_host%]",
+      "stream_io_error": "[%key:component::generic::config::error::stream_io_error%]",
+      "stream_not_permitted": "[%key:component::generic::config::error::stream_not_permitted%]"
+    }
+  }
+}

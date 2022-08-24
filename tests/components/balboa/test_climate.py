@@ -13,18 +13,13 @@ from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
@@ -41,9 +36,9 @@ FAN_SETTINGS = [
 ]
 
 HVAC_SETTINGS = [
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    HVAC_MODE_AUTO,
+    HVACMode.HEAT,
+    HVACMode.OFF,
+    HVACMode.AUTO,
 ]
 
 ENTITY_CLIMATE = "climate.fakespa_climate"
@@ -58,13 +53,13 @@ async def test_spa_defaults(hass: HomeAssistant, client: MagicMock) -> None:
     assert state
     assert (
         state.attributes["supported_features"]
-        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
     assert state.attributes[ATTR_MAX_TEMP] == 40.0
     assert state.attributes[ATTR_PRESET_MODE] == "Ready"
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_spa_defaults_fake_tscale(hass: HomeAssistant, client: MagicMock) -> None:
@@ -78,13 +73,13 @@ async def test_spa_defaults_fake_tscale(hass: HomeAssistant, client: MagicMock) 
     assert state
     assert (
         state.attributes["supported_features"]
-        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_MIN_TEMP] == 10.0
     assert state.attributes[ATTR_MAX_TEMP] == 40.0
     assert state.attributes[ATTR_PRESET_MODE] == "Ready"
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
@@ -102,7 +97,9 @@ async def test_spa_with_blower(hass: HomeAssistant, client: MagicMock) -> None:
     assert state
     assert (
         state.attributes["supported_features"]
-        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_FAN_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
     )
 
     for fan_state in range(4):
@@ -151,7 +148,7 @@ async def test_spa_hvac_modes(hass: HomeAssistant, client: MagicMock) -> None:
         state = await _patch_spa_heatmode(hass, config_entry, heat_mode, client)
         assert state
         modes = state.attributes.get(ATTR_HVAC_MODES)
-        assert [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF] == modes
+        assert [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF] == modes
         assert state.state == HVAC_SETTINGS[heat_mode]
 
     with pytest.raises(ValueError):
@@ -166,10 +163,10 @@ async def test_spa_hvac_action(hass: HomeAssistant, client: MagicMock) -> None:
     # try out the different heat states
     state = await _patch_spa_heatstate(hass, config_entry, 1, client)
     assert state
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
 
     state = await _patch_spa_heatstate(hass, config_entry, 0, client)
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_spa_preset_modes(hass: HomeAssistant, client: MagicMock) -> None:

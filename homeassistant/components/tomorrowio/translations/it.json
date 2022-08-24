@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_api_key": "Chiave API non valida",
+            "rate_limited": "Attualmente la tariffa \u00e8 limitata, riprova pi\u00f9 tardi.",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "location": "Posizione",
+                    "name": "Nome"
+                },
+                "description": "Per ottenere una chiave API, registrati su [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. tra le previsioni di NowCast"
+                },
+                "description": "Se scegli di abilitare l'entit\u00e0 di previsione `nowcast`, puoi configurare il numero di minuti tra ciascuna previsione. Il numero di previsioni fornite dipende dal numero di minuti scelti tra le previsioni.",
+                "title": "Aggiorna le opzioni di Tomorrow.io"
+            }
+        }
+    }
+}

@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import ipaddress
-import logging
 import re
-from typing import Any, Final
+from typing import Any
 
 from pdunehd import DuneHDPlayer
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 def host_valid(host: str) -> bool:
@@ -71,23 +68,6 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=""): str}),
             errors=errors,
         )
-
-    async def async_step_import(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Handle configuration by yaml file."""
-        assert user_input is not None
-        host: str = user_input[CONF_HOST]
-
-        self._async_abort_entries_match({CONF_HOST: host})
-
-        try:
-            await self.init_device(host)
-        except CannotConnect:
-            _LOGGER.error("Import aborted, cannot connect to %s", host)
-            return self.async_abort(reason="cannot_connect")
-        else:
-            return self.async_create_entry(title=host, data=user_input)
 
     def host_already_configured(self, host: str) -> bool:
         """See if we already have a dunehd entry matching user input configured."""

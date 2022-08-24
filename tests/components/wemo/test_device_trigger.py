@@ -65,6 +65,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
             CONF_TYPE: EVENT_TYPE_LONG_PRESS,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -72,6 +73,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "changed_states",
+            "metadata": {"secondary": False},
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -79,6 +81,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
+            "metadata": {"secondary": False},
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -86,6 +89,7 @@ async def test_get_triggers(hass, wemo_entity):
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_on",
+            "metadata": {"secondary": False},
         },
     ]
     triggers = await async_get_device_automations(

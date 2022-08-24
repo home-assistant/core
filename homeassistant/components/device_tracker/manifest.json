@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/device_tracker",
   "dependencies": ["zone"],
   "after_dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

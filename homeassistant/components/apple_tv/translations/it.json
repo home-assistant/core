@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "backoff": "Il dispositivo non accetta richieste di abbinamento in questo momento (potresti aver inserito un codice PIN non valido troppe volte), riprova pi\u00f9 tardi.",
             "device_did_not_pair": "Nessun tentativo di completare il processo di abbinamento \u00e8 stato effettuato dal dispositivo.",
             "device_not_found": "Il dispositivo non \u00e8 stato trovato durante il rilevamento, prova ad aggiungerlo di nuovo.",
             "inconsistent_device": "I protocolli previsti non sono stati trovati durante il rilevamento. Questo normalmente indica un problema con DNS multicast (Zeroconf). Prova ad aggiungere di nuovo il dispositivo.",
-            "invalid_config": "La configurazione per questo dispositivo \u00e8 incompleta. Prova ad aggiungerlo di nuovo.",
+            "ipv6_not_supported": "IPv6 non \u00e8 supportato.",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "setup_failed": "Impossibile configurare il dispositivo.",
@@ -18,7 +17,6 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "invalid_auth": "Autenticazione non valida",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
-            "no_usable_service": "\u00c8 stato trovato un dispositivo ma non \u00e8 stato possibile identificare alcun modo per stabilire una connessione ad esso. Se continui a vedere questo messaggio, prova a specificarne l'indirizzo IP o a riavviare l'Apple TV.",
             "unknown": "Errore imprevisto"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +70,5 @@
                 "description": "Configura le impostazioni generali del dispositivo"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

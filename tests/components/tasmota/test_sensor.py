@@ -22,6 +22,7 @@ from homeassistant.util import dt
 
 from .test_common import (
     DEFAULT_CONFIG,
+    DEFAULT_SENSOR_CONFIG,
     help_test_availability,
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
@@ -34,14 +35,6 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
-
-DEFAULT_SENSOR_CONFIG = {
-    "sn": {
-        "Time": "2020-09-25T12:47:15",
-        "DHT11": {"Temperature": None},
-        "TempUnit": "C",
-    }
-}
 
 BAD_INDEXED_SENSOR_CONFIG_3 = {
     "sn": {
@@ -291,7 +284,7 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
@@ -340,7 +333,7 @@ async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total_1")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()

@@ -21,8 +21,7 @@
         "step": {
             "account_options": {
                 "data": {
-                    "read_only": "Schreibgesch\u00fctzt (nur Sensoren und Notify, keine Ausf\u00fchrung von Diensten, kein Abschlie\u00dfen)",
-                    "use_location": "Standort des Home Assistant f\u00fcr die Abfrage des Fahrzeugstandorts verwenden (erforderlich f\u00fcr nicht i3/i8 Fahrzeuge, die vor 7/2014 produziert wurden)"
+                    "read_only": "Schreibgesch\u00fctzt (nur Sensoren und Notify, keine Ausf\u00fchrung von Diensten, kein Abschlie\u00dfen)"
                 }
             }
         }

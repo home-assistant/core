@@ -16,15 +16,5 @@
                 "title": "\u8a2d\u5b9a\u7279\u65af\u62c9\u58c1\u639b\u5f0f\u5145\u96fb\u5ea7"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "\u66f4\u65b0\u983b\u7387"
-                },
-                "title": "\u7279\u65af\u62c9\u58c1\u639b\u5f0f\u5145\u96fb\u5ea7\u8a2d\u5b9a\u9078\u9805"
-            }
-        }
     }
 }

@@ -59,8 +59,6 @@
             "connected": "{entity_name} verbonden",
             "gas": "{entity_name} begon gas te detecteren",
             "hot": "{entity_name} werd heet",
-            "is_not_tampered": "{entity_name} gestopt met het detecteren van sabotage",
-            "is_tampered": "{entity_name} begonnen met het detecteren van sabotage",
             "light": "{entity_name} begon licht te detecteren",
             "locked": "{entity_name} vergrendeld",
             "moist": "{entity_name} werd vochtig",
@@ -134,7 +132,7 @@
             "off": "Niet aan het opladen",
             "on": "Opladen"
         },
-        "co": {
+        "carbon_monoxide": {
             "off": "Niet gedetecteerd",
             "on": "Gedetecteerd"
         },

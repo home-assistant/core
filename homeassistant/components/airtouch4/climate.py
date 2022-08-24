@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -11,14 +12,8 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -29,24 +24,23 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 AT_TO_HA_STATE = {
-    "Heat": HVAC_MODE_HEAT,
-    "Cool": HVAC_MODE_COOL,
-    "AutoHeat": HVAC_MODE_AUTO,  # airtouch reports either autoheat or autocool
-    "AutoCool": HVAC_MODE_AUTO,
-    "Auto": HVAC_MODE_AUTO,
-    "Dry": HVAC_MODE_DRY,
-    "Fan": HVAC_MODE_FAN_ONLY,
+    "Heat": HVACMode.HEAT,
+    "Cool": HVACMode.COOL,
+    "AutoHeat": HVACMode.AUTO,  # airtouch reports either autoheat or autocool
+    "AutoCool": HVACMode.AUTO,
+    "Auto": HVACMode.AUTO,
+    "Dry": HVACMode.DRY,
+    "Fan": HVACMode.FAN_ONLY,
 }
 
 HA_STATE_TO_AT = {
-    HVAC_MODE_HEAT: "Heat",
-    HVAC_MODE_COOL: "Cool",
-    HVAC_MODE_AUTO: "Auto",
-    HVAC_MODE_DRY: "Dry",
-    HVAC_MODE_FAN_ONLY: "Fan",
-    HVAC_MODE_OFF: "Off",
+    HVACMode.HEAT: "Heat",
+    HVACMode.COOL: "Cool",
+    HVACMode.AUTO: "Auto",
+    HVACMode.DRY: "Dry",
+    HVACMode.FAN_ONLY: "Fan",
+    HVACMode.OFF: "Off",
 }
 
 AT_TO_HA_FAN_SPEED = {
@@ -59,7 +53,7 @@ AT_TO_HA_FAN_SPEED = {
     "Turbo": "turbo",
 }
 
-AT_GROUP_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+AT_GROUP_MODES = [HVACMode.OFF, HVACMode.FAN_ONLY]
 
 HA_FAN_SPEED_TO_AT = {value: key for key, value in AT_TO_HA_FAN_SPEED.items()}
 
@@ -90,7 +84,9 @@ async def async_setup_entry(
 class AirtouchAC(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 ac."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, ac_number, info):
@@ -147,7 +143,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         """Return hvac target hvac state."""
         is_off = self._unit.PowerState == "Off"
         if is_off:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         return AT_TO_HA_STATE[self._airtouch.acs[self._ac_number].AcMode]
 
@@ -156,15 +152,15 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         """Return the list of available operation modes."""
         airtouch_modes = self._airtouch.GetSupportedCoolingModesForAc(self._ac_number)
         modes = [AT_TO_HA_STATE[mode] for mode in airtouch_modes]
-        modes.append(HVAC_MODE_OFF)
+        modes.append(HVACMode.OFF)
         return modes
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode not in HA_STATE_TO_AT:
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             return await self.async_turn_off()
         await self._airtouch.SetCoolingModeForAc(
             self._ac_number, HA_STATE_TO_AT[hvac_mode]
@@ -175,7 +171,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         _LOGGER.debug("Setting operation mode of %s to %s", self._ac_number, hvac_mode)
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan mode: {fan_mode}")
@@ -187,14 +183,14 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         self._unit = self._airtouch.GetAcs()[self._ac_number]
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
         # in case ac is not on. Airtouch turns itself off if no groups are turned on
         # (even if groups turned back on)
         await self._airtouch.TurnAcOn(self._ac_number)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         await self._airtouch.TurnAcOff(self._ac_number)
@@ -204,7 +200,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 group."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
 
@@ -267,18 +263,18 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         # there are other power states that aren't 'on' but still count as on (eg. 'Turbo')
         is_off = self._unit.PowerState == "Off"
         if is_off:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
-        return HVAC_MODE_FAN_ONLY
+        return HVACMode.FAN_ONLY
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode not in HA_STATE_TO_AT:
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             return await self.async_turn_off()
-        if self.hvac_mode == HVAC_MODE_OFF:
+        if self.hvac_mode == HVACMode.OFF:
             await self.async_turn_on()
         self._unit = self._airtouch.GetGroups()[self._group_number]
         _LOGGER.debug(
@@ -299,9 +295,11 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         return [AT_TO_HA_FAN_SPEED[speed] for speed in airtouch_fan_speeds]
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            _LOGGER.debug("Argument `temperature` is missing in set_temperature")
+            return
 
         _LOGGER.debug("Setting temp of %s to %s", self._group_number, str(temp))
         self._unit = await self._airtouch.SetGroupToTemperature(
@@ -309,7 +307,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan mode: {fan_mode}")
@@ -320,7 +318,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
         await self._airtouch.TurnGroupOn(self._group_number)
@@ -335,7 +333,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         await self._airtouch.TurnGroupOff(self._group_number)

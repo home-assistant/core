@@ -10,7 +10,7 @@ set_mode:
     mode:
       description: New mode
       required: true
-      example: 'away'
+      example: "away"
       selector:
         text:
 

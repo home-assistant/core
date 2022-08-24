@@ -12,7 +12,7 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
@@ -35,6 +35,7 @@ from .const import (
     DATA_AMCREST,
     DEVICES,
     DOMAIN,
+    RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
 )
@@ -163,6 +164,9 @@ class AmcrestCommandFailed(Exception):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
+    _attr_should_poll = True  # Cameras default to False
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
+
     def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
@@ -279,14 +283,6 @@ class AmcrestCam(Camera):
     # Entity property overrides
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
-
-    @property
     def name(self) -> str:
         """Return the name of this camera."""
         return self._name
@@ -309,11 +305,6 @@ class AmcrestCam(Camera):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_ON_OFF | SUPPORT_STREAM
 
     # Camera property overrides
 
@@ -533,13 +524,14 @@ class AmcrestCam(Camera):
                 return
 
     async def _async_get_video(self) -> bool:
-        stream = {0: "Main", 1: "Extra"}
         return await self._api.async_is_video_enabled(
-            channel=0, stream=stream[self._resolution]
+            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
         )
 
     async def _async_set_video(self, enable: bool) -> None:
-        await self._api.async_set_video_enabled(enable, channel=0)
+        await self._api.async_set_video_enabled(
+            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
 
     async def _async_enable_video(self, enable: bool) -> None:
         """Enable or disable camera video stream."""
@@ -548,7 +540,7 @@ class AmcrestCam(Camera):
         # recording on if video stream is being turned off.
         if self.is_recording and not enable:
             await self._async_enable_recording(False)
-        await self._async_change_setting(enable, "video", "is_streaming")
+        await self._async_change_setting(enable, "video", "_attr_is_streaming")
         if self._control_light:
             await self._async_change_light()
 
@@ -585,10 +577,14 @@ class AmcrestCam(Camera):
         )
 
     async def _async_get_audio(self) -> bool:
-        return await self._api.async_audio_enabled
+        return await self._api.async_is_audio_enabled(
+            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
 
     async def _async_set_audio(self, enable: bool) -> None:
-        await self._api.async_set_audio_enabled(enable)
+        await self._api.async_set_audio_enabled(
+            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
 
     async def _async_enable_audio(self, enable: bool) -> None:
         """Enable or disable audio stream."""

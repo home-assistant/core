@@ -1,4 +1,6 @@
 """Constants for the Subaru integration."""
+from subarulink.const import ALL_DOORS, DRIVERS_DOOR, TAILGATE_DOOR
+
 from homeassistant.const import Platform
 
 DOMAIN = "subaru"
@@ -32,8 +34,24 @@ API_GEN_2 = "g2"
 MANUFACTURER = "Subaru Corp."
 
 PLATFORMS = [
+    Platform.LOCK,
     Platform.SENSOR,
 ]
+
+SERVICE_LOCK = "lock"
+SERVICE_UNLOCK = "unlock"
+SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
+
+ATTR_DOOR = "door"
+
+UNLOCK_DOOR_ALL = "all"
+UNLOCK_DOOR_DRIVERS = "driver"
+UNLOCK_DOOR_TAILGATE = "tailgate"
+UNLOCK_VALID_DOORS = {
+    UNLOCK_DOOR_ALL: ALL_DOORS,
+    UNLOCK_DOOR_DRIVERS: DRIVERS_DOOR,
+    UNLOCK_DOOR_TAILGATE: TAILGATE_DOOR,
+}
 
 ICONS = {
     "Avg Fuel Consumption": "mdi:leaf",

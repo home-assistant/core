@@ -12,15 +12,13 @@
                 "data": {
                     "city": "City"
                 },
-                "description": "Choose your city from the list",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Choose your city from the list"
             },
             "user": {
                 "data": {
                     "city": "City"
                 },
-                "description": "Enter the postal code (only for France, recommended) or city name",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Enter the postal code (only for France, recommended) or city name"
             }
         }
     },

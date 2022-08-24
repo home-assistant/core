@@ -2,22 +2,19 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "connection_error": "Kan geen verbinding maken"
         },
         "error": {
-            "discovery_error": "Kan geen Motion Gateway vinden",
-            "invalid_interface": "Ongeldige netwerkinterface"
+            "discovery_error": "Kan geen Motion Gateway vinden"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API-sleutel",
-                    "interface": "De te gebruiken netwerkinterface"
+                    "api_key": "API-sleutel"
                 },
-                "description": "U hebt de API-sleutel van 16 tekens nodig, zie https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key voor instructies",
-                "title": "Motion Blinds"
+                "description": "U hebt de API-sleutel van 16 tekens nodig, zie https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key voor instructies"
             },
             "select": {
                 "data": {
@@ -28,11 +25,9 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-sleutel",
                     "host": "IP-adres"
                 },
-                "description": "Maak verbinding met uw Motion Gateway, als het IP-adres niet is ingesteld, wordt auto-discovery gebruikt",
-                "title": "Motion Blinds"
+                "description": "Maak verbinding met uw Motion Gateway, als het IP-adres niet is ingesteld, wordt auto-discovery gebruikt"
             }
         }
     },
@@ -41,9 +36,7 @@
             "init": {
                 "data": {
                     "wait_for_push": "Wacht op multicast push bij update"
-                },
-                "description": "Optionele instellingen opgeven",
-                "title": "Motion Blinds"
+                }
             }
         }
     }

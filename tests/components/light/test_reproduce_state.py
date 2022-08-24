@@ -4,11 +4,11 @@ import pytest
 from homeassistant.components import light
 from homeassistant.components.light.reproduce_state import DEPRECATION_WARNING
 from homeassistant.core import State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
-VALID_WHITE_VALUE = {"white_value": 200}
 VALID_FLASH = {"flash": "short"}
 VALID_EFFECT = {"effect": "random"}
 VALID_TRANSITION = {"transition": 15}
@@ -27,7 +27,6 @@ async def test_reproducing_states(hass, caplog):
     """Test reproducing Light states."""
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
-    hass.states.async_set("light.entity_white", "on", VALID_WHITE_VALUE)
     hass.states.async_set("light.entity_flash", "on", VALID_FLASH)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
     hass.states.async_set("light.entity_trans", "on", VALID_TRANSITION)
@@ -43,11 +42,11 @@ async def test_reproducing_states(hass, caplog):
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
-            State("light.entity_white", "on", VALID_WHITE_VALUE),
             State("light.entity_flash", "on", VALID_FLASH),
             State("light.entity_effect", "on", VALID_EFFECT),
             State("light.entity_trans", "on", VALID_TRANSITION),
@@ -58,28 +57,26 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_profile", "on", VALID_PROFILE),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
             State("light.entity_xy", "on", VALID_XY_COLOR),
-        ]
+        ],
     )
 
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity_off", "not_supported")]
-    )
+    await async_reproduce_state(hass, [State("light.entity_off", "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("light.entity_xy", "off"),
             State("light.entity_off", "on", VALID_BRIGHTNESS),
-            State("light.entity_bright", "on", VALID_WHITE_VALUE),
-            State("light.entity_white", "on", VALID_FLASH),
+            State("light.entity_bright", "on", VALID_FLASH),
             State("light.entity_flash", "on", VALID_EFFECT),
             State("light.entity_effect", "on", VALID_TRANSITION),
             State("light.entity_trans", "on", VALID_COLOR_NAME),
@@ -92,7 +89,7 @@ async def test_reproducing_states(hass, caplog):
         ],
     )
 
-    assert len(turn_on_calls) == 12
+    assert len(turn_on_calls) == 11
 
     expected_calls = []
 
@@ -100,13 +97,9 @@ async def test_reproducing_states(hass, caplog):
     expected_off["entity_id"] = "light.entity_off"
     expected_calls.append(expected_off)
 
-    expected_bright = dict(VALID_WHITE_VALUE)
+    expected_bright = dict(VALID_FLASH)
     expected_bright["entity_id"] = "light.entity_bright"
     expected_calls.append(expected_bright)
-
-    expected_white = dict(VALID_FLASH)
-    expected_white["entity_id"] = "light.entity_white"
-    expected_calls.append(expected_white)
 
     expected_flash = dict(VALID_EFFECT)
     expected_flash["entity_id"] = "light.entity_flash"
@@ -164,23 +157,22 @@ async def test_reproducing_states(hass, caplog):
 @pytest.mark.parametrize(
     "color_mode",
     (
-        light.COLOR_MODE_COLOR_TEMP,
-        light.COLOR_MODE_BRIGHTNESS,
-        light.COLOR_MODE_HS,
-        light.COLOR_MODE_ONOFF,
-        light.COLOR_MODE_RGB,
-        light.COLOR_MODE_RGBW,
-        light.COLOR_MODE_RGBWW,
-        light.COLOR_MODE_UNKNOWN,
-        light.COLOR_MODE_WHITE,
-        light.COLOR_MODE_XY,
+        light.ColorMode.COLOR_TEMP,
+        light.ColorMode.BRIGHTNESS,
+        light.ColorMode.HS,
+        light.ColorMode.ONOFF,
+        light.ColorMode.RGB,
+        light.ColorMode.RGBW,
+        light.ColorMode.RGBWW,
+        light.ColorMode.UNKNOWN,
+        light.ColorMode.WHITE,
+        light.ColorMode.XY,
     ),
 )
 async def test_filter_color_modes(hass, caplog, color_mode):
     """Test filtering of parameters according to color mode."""
     hass.states.async_set("light.entity", "off", {})
     all_colors = {
-        **VALID_WHITE_VALUE,
         **VALID_COLOR_NAME,
         **VALID_COLOR_TEMP,
         **VALID_HS_COLOR,
@@ -194,28 +186,27 @@ async def test_filter_color_modes(hass, caplog, color_mode):
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity", "on", {**all_colors, "color_mode": color_mode})]
+    await async_reproduce_state(
+        hass, [State("light.entity", "on", {**all_colors, "color_mode": color_mode})]
     )
 
     expected_map = {
-        light.COLOR_MODE_COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
-        light.COLOR_MODE_BRIGHTNESS: VALID_BRIGHTNESS,
-        light.COLOR_MODE_HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
-        light.COLOR_MODE_ONOFF: {**VALID_BRIGHTNESS},
-        light.COLOR_MODE_RGB: {**VALID_BRIGHTNESS, **VALID_RGB_COLOR},
-        light.COLOR_MODE_RGBW: {**VALID_BRIGHTNESS, **VALID_RGBW_COLOR},
-        light.COLOR_MODE_RGBWW: {**VALID_BRIGHTNESS, **VALID_RGBWW_COLOR},
-        light.COLOR_MODE_UNKNOWN: {
+        light.ColorMode.COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
+        light.ColorMode.BRIGHTNESS: VALID_BRIGHTNESS,
+        light.ColorMode.HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
+        light.ColorMode.ONOFF: {**VALID_BRIGHTNESS},
+        light.ColorMode.RGB: {**VALID_BRIGHTNESS, **VALID_RGB_COLOR},
+        light.ColorMode.RGBW: {**VALID_BRIGHTNESS, **VALID_RGBW_COLOR},
+        light.ColorMode.RGBWW: {**VALID_BRIGHTNESS, **VALID_RGBWW_COLOR},
+        light.ColorMode.UNKNOWN: {
             **VALID_BRIGHTNESS,
             **VALID_HS_COLOR,
-            **VALID_WHITE_VALUE,
         },
-        light.COLOR_MODE_WHITE: {
+        light.ColorMode.WHITE: {
             **VALID_BRIGHTNESS,
             light.ATTR_WHITE: VALID_BRIGHTNESS[light.ATTR_BRIGHTNESS],
         },
-        light.COLOR_MODE_XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
+        light.ColorMode.XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
     }
     expected = expected_map[color_mode]
 
@@ -225,8 +216,8 @@ async def test_filter_color_modes(hass, caplog, color_mode):
 
     # This should do nothing, the light is already in the desired state
     hass.states.async_set("light.entity", "on", {"color_mode": color_mode, **expected})
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity", "on", {**expected, "color_mode": color_mode})]
+    await async_reproduce_state(
+        hass, [State("light.entity", "on", {**expected, "color_mode": color_mode})]
     )
     assert len(turn_on_calls) == 1
 
@@ -235,8 +226,8 @@ async def test_deprecation_warning(hass, caplog):
     """Test deprecation warning."""
     hass.states.async_set("light.entity_off", "off", {})
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity_off", "on", {"brightness_pct": 80})]
+    await async_reproduce_state(
+        hass, [State("light.entity_off", "on", {"brightness_pct": 80})]
     )
     assert len(turn_on_calls) == 1
     assert DEPRECATION_WARNING % ["brightness_pct"] in caplog.text

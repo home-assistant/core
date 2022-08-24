@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Metodo di integrazione",
+                    "name": "Nome",
+                    "round": "Precisione",
+                    "source": "Sensore di ingresso",
+                    "unit_prefix": "Prefisso metrico",
+                    "unit_time": "Unit\u00e0 di tempo"
+                },
+                "data_description": {
+                    "round": "Controlla il numero di cifre decimali nell'output.",
+                    "unit_prefix": "L'output sar\u00e0 ridimensionato in base al prefisso della metrica selezionato.",
+                    "unit_time": "L'output sar\u00e0 ridimensionato in base all'unit\u00e0 di tempo selezionata."
+                },
+                "description": "Crea un sensore che calcoli una somma di Riemann per stimare l'integrale di un sensore.",
+                "title": "Aggiungi il sensore integrale della somma di Riemann"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "Precisione"
+                },
+                "data_description": {
+                    "round": "Controlla il numero di cifre decimali nell'output."
+                }
+            }
+        }
+    },
+    "title": "Integrazione - Sensore integrale di somma Riemann"
+}

@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "zmieni si\u0119 dost\u0119pno\u015b\u0107 aktualizacji {entity_name}",
+            "turned_off": "wykonano aktualizacj\u0119 dla {entity_name}",
+            "turned_on": "{entity_name} ma dost\u0119pn\u0105 aktualizacj\u0119"
+        }
+    },
+    "title": "Aktualizacja"
+}

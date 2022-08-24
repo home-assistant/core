@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "already_configured": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "not_compatible": "Nie mo\u017cna uzyska\u0107 informacji o procesorze, ta integracja nie jest zgodna z twoim systemem"
         },

@@ -3,11 +3,7 @@ from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_GROUP_MEMBER_UNREACHABLE,
 )
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W,
-    ATTR_TODAY_ENERGY_KWH,
-    DOMAIN as SWITCH_DOMAIN,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
@@ -132,12 +128,6 @@ async def test_hmip_switch_measuring(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "currentPowerConsumption", 50)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
-    assert ha_state.attributes[ATTR_CURRENT_POWER_W] == 50
-    assert ha_state.attributes[ATTR_TODAY_ENERGY_KWH] == 36
-
-    await async_manipulate_test_data(hass, hmip_device, "energyCounter", None)
-    ha_state = hass.states.get(entity_id)
-    assert not ha_state.attributes.get(ATTR_TODAY_ENERGY_KWH)
 
 
 async def test_hmip_group_switch(hass, default_mock_hap_factory):

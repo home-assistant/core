@@ -42,6 +42,20 @@ ZEROCONF = {
             "domain": "apple_tv"
         }
     ],
+    "_api._tcp.local.": [
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "haiku*"
+            }
+        },
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "i6*"
+            }
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -103,7 +117,10 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         },
         {
-            "domain": "devolo_home_network"
+            "domain": "devolo_home_network",
+            "properties": {
+                "MT": "*"
+            }
         }
     ],
     "_easylink._tcp.local.": [
@@ -150,6 +167,11 @@ ZEROCONF = {
             "name": "*z.wave-me*"
         }
     ],
+    "_hap._udp.local.": [
+        {
+            "domain": "homekit_controller"
+        }
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
@@ -161,6 +183,10 @@ ZEROCONF = {
         }
     ],
     "_http._tcp.local.": [
+        {
+            "domain": "awair",
+            "name": "awair*"
+        },
         {
             "domain": "bosch_shc",
             "name": "bosch shc*"
@@ -174,6 +200,10 @@ ZEROCONF = {
             "properties": {
                 "manufacturer": "nettigo"
             }
+        },
+        {
+            "domain": "pure_energie",
+            "name": "smartbridge*"
         },
         {
             "domain": "rachio",
@@ -211,10 +241,6 @@ ZEROCONF = {
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
-            "name": "gateway*"
-        },
-        {
-            "domain": "somfy",
             "name": "gateway*"
         }
     ],
@@ -330,6 +356,11 @@ ZEROCONF = {
             "domain": "sonos"
         }
     ],
+    "_soundtouch._tcp.local.": [
+        {
+            "domain": "soundtouch"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"
@@ -349,7 +380,7 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
-    "_system-bridge._udp.local.": [
+    "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge"
         }
@@ -373,11 +404,23 @@ ZEROCONF = {
         {
             "domain": "kodi"
         }
+    ],
+    "_zigate-zigbee-gateway._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigate*"
+        }
+    ],
+    "_zwave-js-server._tcp.local.": [
+        {
+            "domain": "zwave_js"
+        }
     ]
 }
 
 HOMEKIT = {
     "3810X": "roku",
+    "3820X": "roku",
     "4660X": "roku",
     "7820X": "roku",
     "819LMB": "myq",
@@ -387,9 +430,30 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "Escea": "escea",
+    "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
-    "LIFX": "lifx",
+    "LIFX A19": "lifx",
+    "LIFX BR30": "lifx",
+    "LIFX Beam": "lifx",
+    "LIFX Candle": "lifx",
+    "LIFX Clean": "lifx",
+    "LIFX Color": "lifx",
+    "LIFX DLCOL": "lifx",
+    "LIFX DLWW": "lifx",
+    "LIFX Dlight": "lifx",
+    "LIFX Downlight": "lifx",
+    "LIFX Filament": "lifx",
+    "LIFX GU10": "lifx",
+    "LIFX Lightstrip": "lifx",
+    "LIFX Mini": "lifx",
+    "LIFX Nightvision": "lifx",
+    "LIFX Pls": "lifx",
+    "LIFX Plus": "lifx",
+    "LIFX Tile": "lifx",
+    "LIFX White": "lifx",
+    "LIFX Z": "lifx",
     "MYQ": "myq",
     "NL29": "nanoleaf",
     "NL42": "nanoleaf",

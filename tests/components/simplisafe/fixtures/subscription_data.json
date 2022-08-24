@@ -50,17 +50,8 @@
         "Freeze",
         "Water"
       ],
-      "monitoredPanicConditions": [
-        "Fire",
-        "Medical",
-        "Duress"
-      ],
-      "dispatchTypes": [
-        "Police",
-        "Fire",
-        "Medical",
-        "Guard"
-      ],
+      "monitoredPanicConditions": ["Fire", "Medical", "Duress"],
+      "dispatchTypes": ["Police", "Fire", "Medical", "Guard"],
       "remoteControl": [
         "ArmDisarm",
         "LockUnlock",
@@ -79,27 +70,10 @@
         "professionalInstall": false
       },
       "cellCommunicationBackup": true,
-      "alertChannels": [
-        "Push",
-        "SMS",
-        "Email"
-      ],
-      "alertTypes": [
-        "Alarm",
-        "Error",
-        "Activity",
-        "Camera"
-      ],
-      "alarmModes": [
-        "Alarm",
-        "SecretAlert",
-        "Disabled"
-      ],
-      "supportedIntegrations": [
-        "GoogleAssistant",
-        "AmazonAlexa",
-        "AugustLock"
-      ],
+      "alertChannels": ["Push", "SMS", "Email"],
+      "alertTypes": ["Alarm", "Error", "Activity", "Camera"],
+      "alarmModes": ["Alarm", "SecretAlert", "Disabled"],
+      "supportedIntegrations": ["GoogleAssistant", "AmazonAlexa", "AugustLock"],
       "timeline": {}
     },
     "dispatcher": "cops",
@@ -189,10 +163,7 @@
               "vaZoningCols": 0,
               "vaZoningMask": [],
               "maxDigitalZoom": 10,
-              "supportedResolutions": [
-                "480p",
-                "720p"
-              ],
+              "supportedResolutions": ["480p", "720p"],
               "admin": {
                 "IRLED": 0,
                 "pirSens": 0,
@@ -237,12 +208,7 @@
                 "irThreshold1x": 388,
                 "irThreshold2x": 335,
                 "irThreshold3x": 260,
-                "rssi": [
-                  [
-                    1600935204,
-                    -43
-                  ]
-                ],
+                "rssi": [[1600935204, -43]],
                 "battery": [],
                 "dbm": 0,
                 "vmUse": 161592,
@@ -305,13 +271,8 @@
                 "recording": "simplisafe",
                 "live": "simplisafe"
               },
-              "audioEncodings": [
-                "speex"
-              ],
-              "resolutions": [
-                "480p",
-                "720p"
-              ],
+              "audioEncodings": ["speex"],
+              "resolutions": ["480p", "720p"],
               "_id": "1234567890",
               "pir": true,
               "videoAnalytics": false,

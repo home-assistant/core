@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as entity_reg
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -36,7 +37,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = entity_reg.async_get(hass)
 
     with patch(
         "flipr_api.FliprAPIRestClient.get_pool_measure_latest",

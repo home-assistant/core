@@ -2,47 +2,56 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Protocol, Union, overload
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Union, overload
 
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant
+from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import IntegrationNotFound, bind_hass
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:
-    from homeassistant.components.automation import (
-        AutomationActionType,
-        AutomationTriggerInfo,
-    )
-    from homeassistant.helpers import condition
+    from .action import DeviceAutomationActionProtocol
+    from .condition import DeviceAutomationConditionProtocol
+    from .trigger import DeviceAutomationTriggerProtocol
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+    DeviceAutomationPlatformType = Union[
+        ModuleType,
+        DeviceAutomationTriggerProtocol,
+        DeviceAutomationConditionProtocol,
+        DeviceAutomationActionProtocol,
+    ]
 
 DOMAIN = "device_automation"
 
-DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_DEVICE_ID): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -83,95 +92,6 @@ TYPES = {
 }
 
 
-class DeviceAutomationTriggerProtocol(Protocol):
-    """Define the format of device_trigger modules.
-
-    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
-    """
-
-    TRIGGER_SCHEMA: vol.Schema
-
-    async def async_validate_trigger_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-        raise NotImplementedError
-
-    async def async_attach_trigger(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        action: AutomationActionType,
-        automation_info: AutomationTriggerInfo,
-    ) -> CALLBACK_TYPE:
-        """Attach a trigger."""
-        raise NotImplementedError
-
-
-class DeviceAutomationConditionProtocol(Protocol):
-    """Define the format of device_condition modules.
-
-    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
-    """
-
-    CONDITION_SCHEMA: vol.Schema
-
-    async def async_validate_condition_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-        raise NotImplementedError
-
-    def async_condition_from_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> condition.ConditionCheckerType:
-        """Evaluate state based on configuration."""
-        raise NotImplementedError
-
-
-class DeviceAutomationActionProtocol(Protocol):
-    """Define the format of device_action modules.
-
-    Each module must define either ACTION_SCHEMA or async_validate_action_config.
-    """
-
-    ACTION_SCHEMA: vol.Schema
-
-    async def async_validate_action_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-        raise NotImplementedError
-
-    async def async_call_action_from_config(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        variables: dict[str, Any],
-        context: Context | None,
-    ) -> None:
-        """Execute a device action."""
-        raise NotImplementedError
-
-
-@bind_hass
-async def async_get_device_automations(
-    hass: HomeAssistant,
-    automation_type: DeviceAutomationType | str,
-    device_ids: Iterable[str] | None = None,
-) -> Mapping[str, Any]:
-    """Return all the device automations for a type optionally limited to specific device ids."""
-    if isinstance(automation_type, str):
-        report(
-            "uses str for async_get_device_automations automation_type. This is "
-            "deprecated and will stop working in Home Assistant 2022.4, it should be "
-            "updated to use DeviceAutomationType instead",
-            error_if_core=False,
-        )
-        automation_type = DeviceAutomationType[automation_type.upper()]
-    return await _async_get_device_automations(hass, automation_type, device_ids)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up device automation."""
     websocket_api.async_register_command(hass, websocket_device_automation_list_actions)
@@ -191,14 +111,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, websocket_device_automation_get_trigger_capabilities
     )
     return True
-
-
-DeviceAutomationPlatformType = Union[
-    ModuleType,
-    DeviceAutomationTriggerProtocol,
-    DeviceAutomationConditionProtocol,
-    DeviceAutomationActionProtocol,
-]
 
 
 @overload
@@ -230,26 +142,18 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 @overload
 async def async_get_device_automation_platform(  # noqa: D103
-    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
-) -> DeviceAutomationPlatformType:
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
+) -> "DeviceAutomationPlatformType":
     ...
 
 
 async def async_get_device_automation_platform(
-    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
-) -> DeviceAutomationPlatformType:
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
+) -> "DeviceAutomationPlatformType":
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    if isinstance(automation_type, str):
-        report(
-            "uses str for async_get_device_automation_platform automation_type. This "
-            "is deprecated and will stop working in Home Assistant 2022.4, it should "
-            "be updated to use DeviceAutomationType instead",
-            error_if_core=False,
-        )
-        automation_type = DeviceAutomationType[automation_type.upper()]
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
@@ -267,20 +171,42 @@ async def async_get_device_automation_platform(
     return platform
 
 
+@callback
+def _async_set_entity_device_automation_metadata(
+    hass: HomeAssistant, automation: dict[str, Any]
+) -> None:
+    """Set device automation metadata based on entity registry entry data."""
+    if "metadata" not in automation:
+        automation["metadata"] = {}
+    if ATTR_ENTITY_ID not in automation or "secondary" in automation["metadata"]:
+        return
+
+    entity_registry = er.async_get(hass)
+    # Guard against the entry being removed before this is called
+    if not (entry := entity_registry.async_get(automation[ATTR_ENTITY_ID])):
+        return
+
+    automation["metadata"]["secondary"] = bool(entry.entity_category or entry.hidden_by)
+
+
 async def _async_get_device_automations_from_domain(
-    hass, domain, automation_type, device_ids, return_exceptions
-):
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: DeviceAutomationType,
+    device_ids: Iterable[str],
+    return_exceptions: bool,
+) -> list[list[dict[str, Any]] | Exception]:
     """List device automations."""
     try:
         platform = await async_get_device_automation_platform(
             hass, domain, automation_type
         )
     except InvalidDeviceAutomationConfig:
-        return {}
+        return []
 
     function_name = automation_type.value.get_automations_func
 
-    return await asyncio.gather(
+    return await asyncio.gather(  # type: ignore[no-any-return]
         *(
             getattr(platform, function_name)(hass, device_id)
             for device_id in device_ids
@@ -289,10 +215,10 @@ async def _async_get_device_automations_from_domain(
     )
 
 
-async def _async_get_device_automations(
+async def async_get_device_automations(
     hass: HomeAssistant,
     automation_type: DeviceAutomationType,
-    device_ids: Iterable[str] | None,
+    device_ids: Iterable[str] | None = None,
 ) -> Mapping[str, list[dict[str, Any]]]:
     """List device automations."""
     device_registry = dr.async_get(hass)
@@ -342,6 +268,7 @@ async def _async_get_device_automations(
                 )
                 continue
             for automation in device_results:
+                _async_set_entity_device_automation_metadata(hass, automation)
                 combined_results[automation["device_id"]].append(automation)
 
     return combined_results
@@ -383,11 +310,17 @@ async def _async_get_device_automation_capabilities(
     return capabilities  # type: ignore[no-any-return]
 
 
-def handle_device_errors(func):
+def handle_device_errors(
+    func: Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]]
+) -> Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], Coroutine[Any, Any, None]
+]:
     """Handle device automation errors."""
 
     @wraps(func)
-    async def with_error_handling(hass, connection, msg):
+    async def with_error_handling(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
         try:
             await func(hass, connection, msg)
         except DeviceNotFound:
@@ -406,11 +339,13 @@ def handle_device_errors(func):
 )
 @websocket_api.async_response
 @handle_device_errors
-async def websocket_device_automation_list_actions(hass, connection, msg):
+async def websocket_device_automation_list_actions(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle request for device actions."""
     device_id = msg["device_id"]
     actions = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.ACTION, [device_id]
         )
     ).get(device_id)
@@ -425,11 +360,13 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
 )
 @websocket_api.async_response
 @handle_device_errors
-async def websocket_device_automation_list_conditions(hass, connection, msg):
+async def websocket_device_automation_list_conditions(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle request for device conditions."""
     device_id = msg["device_id"]
     conditions = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.CONDITION, [device_id]
         )
     ).get(device_id)
@@ -444,11 +381,13 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
 )
 @websocket_api.async_response
 @handle_device_errors
-async def websocket_device_automation_list_triggers(hass, connection, msg):
+async def websocket_device_automation_list_triggers(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle request for device triggers."""
     device_id = msg["device_id"]
     triggers = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, [device_id]
         )
     ).get(device_id)
@@ -463,7 +402,9 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
 )
 @websocket_api.async_response
 @handle_device_errors
-async def websocket_device_automation_get_action_capabilities(hass, connection, msg):
+async def websocket_device_automation_get_action_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle request for device action capabilities."""
     action = msg["action"]
     capabilities = await _async_get_device_automation_capabilities(
@@ -482,7 +423,9 @@ async def websocket_device_automation_get_action_capabilities(hass, connection, 
 )
 @websocket_api.async_response
 @handle_device_errors
-async def websocket_device_automation_get_condition_capabilities(hass, connection, msg):
+async def websocket_device_automation_get_condition_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle request for device condition capabilities."""
     condition = msg["condition"]
     capabilities = await _async_get_device_automation_capabilities(
@@ -501,7 +444,9 @@ async def websocket_device_automation_get_condition_capabilities(hass, connectio
 )
 @websocket_api.async_response
 @handle_device_errors
-async def websocket_device_automation_get_trigger_capabilities(hass, connection, msg):
+async def websocket_device_automation_get_trigger_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle request for device trigger capabilities."""
     trigger = msg["trigger"]
     capabilities = await _async_get_device_automation_capabilities(

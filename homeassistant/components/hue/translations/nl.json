@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "Alle Philips Hue bridges zijn al geconfigureerd",
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "cannot_connect": "Kan geen verbinding maken",
             "discover_timeout": "Hue bridges kunnen niet worden gevonden",
+            "invalid_host": "Ongeldige host",
             "no_bridges": "Geen Philips Hue bridges ontdekt",
             "not_hue_bridge": "Dit is geen Hue bridge",
             "unknown": "Onverwachte fout"
@@ -69,7 +70,7 @@
                 "data": {
                     "allow_hue_groups": "Sta Hue-groepen toe",
                     "allow_hue_scenes": "Sta Hue sc\u00e8nes toe",
-                    "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden",
+                    "allow_unreachable": "Onbereikbare lampen toestaan hun status te melden",
                     "ignore_availability": "Verbindingsstatus negeren voor de opgegeven apparaten"
                 }
             }

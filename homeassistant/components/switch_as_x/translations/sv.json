@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Brytare",
+                    "target_domain": "Typ"
+                },
+                "description": "V\u00e4lj en str\u00f6mbrytare som du vill visa i Home Assistant som lampa, skal eller n\u00e5got annat. Den ursprungliga switchen kommer att d\u00f6ljas."
+            }
+        }
+    },
+    "title": "Kontakt som X"
+}

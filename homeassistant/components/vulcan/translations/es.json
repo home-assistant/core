@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "all_student_already_configured": "Todos los estudiantes ya han sido a\u00f1adidos.",
+            "already_configured": "Ese estudiante ya ha sido a\u00f1adido.",
+            "no_matching_entries": "No se encontraron entradas que coincidan, por favor, usa una cuenta diferente o elimina la integraci\u00f3n con el estudiante obsoleto.",
+            "reauth_successful": "Re-autenticaci\u00f3n exitosa"
+        },
+        "error": {
+            "cannot_connect": "Error de conexi\u00f3n - por favor, comprueba tu conexi\u00f3n a Internet",
+            "expired_credentials": "Credenciales caducadas - por favor, crea unas nuevas en la p\u00e1gina de registro de la aplicaci\u00f3n m\u00f3vil de Vulcan",
+            "expired_token": "Token caducado - por favor, genera un token nuevo",
+            "invalid_pin": "Pin no v\u00e1lido",
+            "invalid_symbol": "S\u00edmbolo inv\u00e1lido",
+            "invalid_token": "Token inv\u00e1lido",
+            "unknown": "Se produjo un error desconocido"
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "Usar credenciales guardadas"
+                },
+                "description": "A\u00f1adir otro estudiante."
+            },
+            "auth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "S\u00edmbolo",
+                    "token": "Token"
+                },
+                "description": "Inicia sesi\u00f3n en tu cuenta de Vulcan utilizando la p\u00e1gina de registro de la aplicaci\u00f3n m\u00f3vil."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "S\u00edmbolo",
+                    "token": "Token"
+                },
+                "description": "Inicie sesi\u00f3n en tu cuenta de Vulcan utilizando la p\u00e1gina de registro de la aplicaci\u00f3n m\u00f3vil."
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "Inicio de sesi\u00f3n"
+                },
+                "description": "Seleccione las credenciales guardadas."
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "Selecciona al alumno"
+                },
+                "description": "Selecciona el estudiante, puedes a\u00f1adir m\u00e1s estudiantes a\u00f1adiendo de nuevo la integraci\u00f3n."
+            }
+        }
+    }
+}

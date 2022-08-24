@@ -11,7 +11,7 @@ from . import PresenceData, XboxUpdateCoordinator
 from .const import DOMAIN
 
 
-class XboxBaseSensorEntity(CoordinatorEntity):
+class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):
     """Base Sensor for the Xbox Integration."""
 
     def __init__(
@@ -33,7 +33,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         return self.coordinator.data.presence.get(self.xuid)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         if not self.data:
             return None
@@ -45,7 +45,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         return f"{self.data.gamertag} {attr_name}"
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return the gamer pic."""
         if not self.data:
             return None

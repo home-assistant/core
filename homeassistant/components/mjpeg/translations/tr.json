@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL'si",
+                    "name": "Ad",
+                    "password": "Parola",
+                    "still_image_url": "Sabit Resim URL'si",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL'si",
+                    "name": "Ad",
+                    "password": "Parola",
+                    "still_image_url": "Sabit Resim URL'si",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                }
+            }
+        }
+    }
+}

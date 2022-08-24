@@ -6,10 +6,6 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -29,9 +25,11 @@ from homeassistant.helpers import (
     device_registry,
     entity_registry,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_DATA_TYPE,
@@ -52,12 +50,12 @@ from .const import (
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     NODE_STATUSES,
+    async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
 )
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
-    async_is_device_config_entry_not_loaded,
     check_type_schema_map,
     copy_available_params,
     get_value_state_schema,
@@ -79,14 +77,6 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation
 CONFIG_PARAMETER_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.config_parameter"
 VALUE_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.value"
 NODE_STATUS = "state.node_status"
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    cv.boolean,
-    cv.string,
-)
 
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
@@ -222,7 +212,7 @@ async def async_validate_trigger_config(
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
     try:
-        device_config_entry_not_loaded = async_is_device_config_entry_not_loaded(
+        bypass_dynamic_config_validation = async_bypass_dynamic_config_validation(
             hass, config[CONF_DEVICE_ID]
         )
     except ValueError as err:
@@ -230,7 +220,7 @@ async def async_validate_trigger_config(
             f"Device {config[CONF_DEVICE_ID]} not found"
         ) from err
 
-    if device_config_entry_not_loaded:
+    if bypass_dynamic_config_validation:
         return config
 
     trigger_type = config[CONF_TYPE]
@@ -261,7 +251,7 @@ async def async_get_triggers(
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
-    triggers = []
+    triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
@@ -273,7 +263,11 @@ async def async_get_triggers(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )
-    if (entity := ent_reg.async_get(entity_id)) is not None and not entity.disabled:
+    if (
+        entity_id
+        and (entity := ent_reg.async_get(entity_id)) is not None
+        and not entity.disabled
+    ):
         triggers.append(
             {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
         )
@@ -369,8 +363,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
@@ -414,7 +408,7 @@ async def async_attach_trigger(
 
         event_config = event.TRIGGER_SCHEMA(event_config)
         return await event.async_attach_trigger(
-            hass, event_config, action, automation_info, platform_type="device"
+            hass, event_config, action, trigger_info, platform_type="device"
         )
 
     if trigger_platform == "state":
@@ -430,7 +424,7 @@ async def async_attach_trigger(
 
         state_config = await state.async_validate_trigger_config(hass, state_config)
         return await state.async_attach_trigger(
-            hass, state_config, action, automation_info, platform_type="device"
+            hass, state_config, action, trigger_info, platform_type="device"
         )
 
     if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
@@ -454,7 +448,7 @@ async def async_attach_trigger(
             hass, zwave_js_config
         )
         return await trigger.async_attach_trigger(
-            hass, zwave_js_config, action, automation_info
+            hass, zwave_js_config, action, trigger_info
         )
 
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
@@ -537,7 +531,9 @@ async def async_get_trigger_capabilities(
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
                             CommandClass(cc.id).value: cc.name
-                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            for cc in sorted(
+                                node.command_classes, key=lambda cc: cc.name
+                            )
                             if cc.id != CommandClass.CONFIGURATION
                         }
                     ),

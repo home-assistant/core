@@ -6,15 +6,15 @@
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Guardian \uae30\uae30\ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP \uc8fc\uc18c",
                     "port": "\ud3ec\ud2b8"
                 },
                 "description": "\ub85c\uceec Elexa Guardian \uae30\uae30\ub97c \uad6c\uc131\ud574\uc8fc\uc138\uc694."
-            },
-            "zeroconf_confirm": {
-                "description": "\uc774 Guardian \uae30\uae30\ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
             }
         }
     }

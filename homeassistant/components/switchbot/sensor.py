@@ -5,19 +5,19 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_MAC,
-    CONF_NAME,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -31,16 +31,37 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "wifi_rssi": SensorEntityDescription(
+        key="wifi_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "battery": SensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
         native_unit_of_measurement="Level",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    "temperature": SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 }
 
@@ -49,46 +70,31 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-
-    if not coordinator.data[entry.unique_id].get("data"):
-        return
-
+    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            SwitchBotSensor(
-                coordinator,
-                entry.unique_id,
-                sensor,
-                entry.data[CONF_MAC],
-                entry.data[CONF_NAME],
-            )
-            for sensor in coordinator.data[entry.unique_id]["data"]
-            if sensor in SENSOR_TYPES
-        ]
+        SwitchBotSensor(
+            coordinator,
+            sensor,
+        )
+        for sensor in coordinator.data["data"]
+        if sensor in SENSOR_TYPES
     )
 
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     """Representation of a Switchbot sensor."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
-        idx: str | None,
         sensor: str,
-        mac: str,
-        switchbot_name: str,
     ) -> None:
         """Initialize the Switchbot sensor."""
-        super().__init__(coordinator, idx, mac, name=switchbot_name)
+        super().__init__(coordinator)
         self._sensor = sensor
-        self._attr_unique_id = f"{idx}-{sensor}"
-        self._attr_name = f"{switchbot_name} {sensor.title()}"
+        self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
+        name = coordinator.device_name
+        self._attr_name = f"{name} {sensor.replace('_', ' ').title()}"
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property

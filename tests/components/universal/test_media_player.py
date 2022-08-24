@@ -9,6 +9,7 @@ from homeassistant import config as hass_config
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
+from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
@@ -20,6 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, callback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, get_fixture_path
@@ -420,6 +422,12 @@ async def test_active_child_state(hass, mock_states):
     await ump.async_update()
     assert mock_states.mock_mp_1.entity_id == ump._child_state.entity_id
 
+    mock_states.mock_mp_1._state = STATE_PAUSED
+    mock_states.mock_mp_1.async_schedule_update_ha_state()
+    await hass.async_block_till_done()
+    await ump.async_update()
+    assert mock_states.mock_mp_2.entity_id == ump._child_state.entity_id
+
     mock_states.mock_mp_1._state = STATE_OFF
     mock_states.mock_mp_1.async_schedule_update_ha_state()
     await hass.async_block_till_done()
@@ -696,22 +704,22 @@ async def test_supported_features_children_and_cmds(
     await ump.async_update()
 
     check_flags = (
-        universal.SUPPORT_TURN_ON
-        | universal.SUPPORT_TURN_OFF
-        | universal.SUPPORT_VOLUME_STEP
-        | universal.SUPPORT_VOLUME_MUTE
-        | universal.SUPPORT_SELECT_SOUND_MODE
-        | universal.SUPPORT_SELECT_SOURCE
-        | universal.SUPPORT_REPEAT_SET
-        | universal.SUPPORT_SHUFFLE_SET
-        | universal.SUPPORT_VOLUME_SET
-        | universal.SUPPORT_PLAY
-        | universal.SUPPORT_PAUSE
-        | universal.SUPPORT_STOP
-        | universal.SUPPORT_NEXT_TRACK
-        | universal.SUPPORT_PREVIOUS_TRACK
-        | universal.SUPPORT_PLAY_MEDIA
-        | universal.SUPPORT_CLEAR_PLAYLIST
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     )
 
     assert check_flags == ump.supported_features
@@ -910,7 +918,7 @@ async def test_supported_features_play_pause(
     await hass.async_block_till_done()
     await ump.async_update()
 
-    check_flags = universal.SUPPORT_PLAY | universal.SUPPORT_PAUSE
+    check_flags = MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
 
     assert check_flags == ump.supported_features
 
@@ -1135,8 +1143,8 @@ async def test_master_state_with_template(hass):
 
     events = []
 
-    hass.helpers.event.async_track_state_change_event(
-        "media_player.tv", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass, "media_player.tv", callback(lambda event: events.append(event))
     )
 
     context = Context()

@@ -4,27 +4,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
+import pyiss
+import requests
+from requests.exceptions import HTTPError
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_NAME,
-    CONF_SHOW_ON_MAP,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
-
-from . import IssData
-from .const import DOMAIN
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,34 +23,7 @@ ATTR_ISS_NUMBER_PEOPLE_SPACE = "number_of_people_in_space"
 DEFAULT_NAME = "ISS"
 DEFAULT_DEVICE_CLASS = "visible"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-    }
-)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import ISS configuration from yaml."""
-    _LOGGER.warning(
-        "Configuration of the iss platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.5; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 async def async_setup_entry(

@@ -61,7 +61,7 @@
                     "debug": "Aktifkan debugging",
                     "device": "Pilih perangkat untuk dikonfigurasi",
                     "event_code": "Masukkan kode event untuk ditambahkan",
-                    "remove_device": "Pilih perangkat yang akan dihapus"
+                    "protocols": "Protokol"
                 },
                 "title": "Opsi Rfxtrx"
             },
@@ -70,11 +70,9 @@
                     "command_off": "Nilai bit data untuk perintah mematikan",
                     "command_on": "Nilai bit data untuk perintah menyalakan",
                     "data_bit": "Jumlah bit data",
-                    "fire_event": "Aktifkan event perangkat",
                     "off_delay": "Penundaan mematikan",
                     "off_delay_enabled": "Aktifkan penundaan mematikan",
                     "replace_device": "Pilih perangkat yang akan diganti",
-                    "signal_repetitions": "Jumlah pengulangan sinyal",
                     "venetian_blind_mode": "Mode penutup kerai Venesia"
                 },
                 "title": "Konfigurasi opsi perangkat"

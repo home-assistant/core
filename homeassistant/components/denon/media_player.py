@@ -6,18 +6,10 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -30,18 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Music station"
 
 SUPPORT_DENON = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 SUPPORT_MEDIA_MODES = (
-    SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -92,7 +84,7 @@ def setup_platform(
     """Set up the Denon platform."""
     denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
-    if denon.update():
+    if denon.do_update():
         add_entities([denon])
 
 
@@ -169,8 +161,12 @@ class DenonDevice(MediaPlayerEntity):
         telnet.read_very_eager()  # skip response
         telnet.close()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
+        self.do_update()
+
+    def do_update(self) -> bool:
+        """Get the latest details from the device, as boolean."""
         try:
             telnet = telnetlib.Telnet(self._host)
         except OSError:
@@ -261,51 +257,51 @@ class DenonDevice(MediaPlayerEntity):
             if self._mediasource == name:
                 return pretty_name
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.telnet_command("PWSTANDBY")
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up media player."""
         self.telnet_command("MVUP")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self.telnet_command("MVDOWN")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.telnet_command(f"MV{round(volume * self._volume_max):02}")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         mute_status = "ON" if mute else "OFF"
         self.telnet_command(f"MU{mute_status})")
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Play media player."""
         self.telnet_command("NS9A")
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause media player."""
         self.telnet_command("NS9B")
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Pause media player."""
         self.telnet_command("NS9C")
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send the next track command."""
         self.telnet_command("NS9D")
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
         self.telnet_command("NS9E")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.telnet_command("PWON")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.telnet_command(f"SI{self._source_list.get(source)}")

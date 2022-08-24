@@ -1,10 +1,11 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
+from typing import Any, TypeVar
 
 from denonavr import DenonAVR
 from denonavr.const import POWER_ON
@@ -15,27 +16,25 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    ATTR_COMMAND,
+    CONF_HOST,
+    CONF_MODEL,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
@@ -44,7 +43,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import CONF_RECEIVER
 from .config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
@@ -58,21 +56,21 @@ ATTR_SOUND_MODE_RAW = "sound_mode_raw"
 ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 SUPPORT_DENON = (
-    SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_SET
+    MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.VOLUME_SET
 )
 
 SUPPORT_MEDIA_MODES = (
-    SUPPORT_PLAY_MEDIA
-    | SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.PLAY
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -82,6 +80,10 @@ PARALLEL_UPDATES = 1
 SERVICE_GET_COMMAND = "get_command"
 SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
 SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+_DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 
 async def async_setup_entry(
@@ -135,6 +137,79 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
+def async_log_errors(
+    func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+    """
+    Log errors occurred when calling a Denon AVR receiver.
+
+    Decorates methods of DenonDevice class.
+    Declaration of staticmethod for this method is at the end of this class.
+    """
+
+    @wraps(func)
+    async def wrapper(
+        self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
+        # pylint: disable=protected-access
+        available = True
+        try:
+            return await func(self, *args, **kwargs)
+        except AvrTimoutError:
+            available = False
+            if self._available is True:
+                _LOGGER.warning(
+                    "Timeout connecting to Denon AVR receiver at host %s. "
+                    "Device is unavailable",
+                    self._receiver.host,
+                )
+                self._available = False
+        except AvrNetworkError:
+            available = False
+            if self._available is True:
+                _LOGGER.warning(
+                    "Network error connecting to Denon AVR receiver at host %s. "
+                    "Device is unavailable",
+                    self._receiver.host,
+                )
+                self._available = False
+        except AvrForbiddenError:
+            available = False
+            if self._available is True:
+                _LOGGER.warning(
+                    "Denon AVR receiver at host %s responded with HTTP 403 error. "
+                    "Device is unavailable. Please consider power cycling your "
+                    "receiver",
+                    self._receiver.host,
+                )
+                self._available = False
+        except AvrCommandError as err:
+            available = False
+            _LOGGER.error(
+                "Command %s failed with error: %s",
+                func.__name__,
+                err,
+            )
+        except DenonAvrError as err:
+            available = False
+            _LOGGER.error(
+                "Error %s occurred in method %s for Denon AVR receiver",
+                err,
+                func.__name__,
+                exc_info=True,
+            )
+        finally:
+            if available is True and self._available is False:
+                _LOGGER.info(
+                    "Denon AVR receiver at host %s is available again",
+                    self._receiver.host,
+                )
+                self._available = True
+        return None
+
+    return wrapper
+
+
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
@@ -148,11 +223,13 @@ class DenonDevice(MediaPlayerEntity):
         """Initialize the device."""
         self._attr_name = receiver.name
         self._attr_unique_id = unique_id
+        assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
+            hw_version=config_entry.data[CONF_TYPE],
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
-            model=f"{config_entry.data[CONF_MODEL]}-{config_entry.data[CONF_TYPE]}",
+            model=config_entry.data[CONF_MODEL],
             name=config_entry.title,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
@@ -162,72 +239,10 @@ class DenonDevice(MediaPlayerEntity):
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
-            self._receiver.support_sound_mode and SUPPORT_SELECT_SOUND_MODE
+            self._receiver.support_sound_mode
+            and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
         self._available = True
-
-    def async_log_errors(
-        func: Coroutine,
-    ) -> Coroutine:
-        """
-        Log errors occurred when calling a Denon AVR receiver.
-
-        Decorates methods of DenonDevice class.
-        Declaration of staticmethod for this method is at the end of this class.
-        """
-
-        @wraps(func)
-        async def wrapper(self, *args, **kwargs):
-            # pylint: disable=protected-access
-            available = True
-            try:
-                return await func(self, *args, **kwargs)
-            except AvrTimoutError:
-                available = False
-                if self._available is True:
-                    _LOGGER.warning(
-                        "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
-                        self._receiver.host,
-                    )
-                    self._available = False
-            except AvrNetworkError:
-                available = False
-                if self._available is True:
-                    _LOGGER.warning(
-                        "Network error connecting to Denon AVR receiver at host %s. Device is unavailable",
-                        self._receiver.host,
-                    )
-                    self._available = False
-            except AvrForbiddenError:
-                available = False
-                if self._available is True:
-                    _LOGGER.warning(
-                        "Denon AVR receiver at host %s responded with HTTP 403 error. Device is unavailable. Please consider power cycling your receiver",
-                        self._receiver.host,
-                    )
-                    self._available = False
-            except AvrCommandError as err:
-                _LOGGER.error(
-                    "Command %s failed with error: %s",
-                    func.__name__,
-                    err,
-                )
-            except DenonAvrError as err:
-                _LOGGER.error(
-                    "Error %s occurred in method %s for Denon AVR receiver",
-                    err,
-                    func.__name__,
-                    exc_info=True,
-                )
-            finally:
-                if available is True and self._available is False:
-                    _LOGGER.info(
-                        "Denon AVR receiver at host %s is available again",
-                        self._receiver.host,
-                    )
-                    self._available = True
-
-        return wrapper
 
     @async_log_errors
     async def async_update(self) -> None:
@@ -375,32 +390,32 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.dynamic_eq
 
     @async_log_errors
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._receiver.async_toggle_play_pause()
 
     @async_log_errors
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._receiver.async_play()
 
     @async_log_errors
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
 
     @async_log_errors
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._receiver.async_previous_track()
 
     @async_log_errors
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._receiver.async_next_track()
 
     @async_log_errors
-    async def async_select_source(self, source: str):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         # Ensure that the AVR is turned on, which is necessary for input
         # switch to work.
@@ -408,32 +423,32 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_set_input_func(source)
 
     @async_log_errors
-    async def async_select_sound_mode(self, sound_mode: str):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self._receiver.async_set_sound_mode(sound_mode)
 
     @async_log_errors
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on media player."""
         await self._receiver.async_power_on()
 
     @async_log_errors
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._receiver.async_power_off()
 
     @async_log_errors
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._receiver.async_volume_up()
 
     @async_log_errors
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._receiver.async_volume_down()
 
     @async_log_errors
-    async def async_set_volume_level(self, volume: int):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
@@ -443,7 +458,7 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_set_volume(volume_denon)
 
     @async_log_errors
-    async def async_mute_volume(self, mute: bool):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._receiver.async_mute(mute)
 
@@ -467,8 +482,3 @@ class DenonDevice(MediaPlayerEntity):
 
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
-
-    # Decorator defined before is a staticmethod
-    async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator
-        async_log_errors
-    )

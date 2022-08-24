@@ -1,14 +1,11 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from typing import Any
+
+from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    CONF_WEBHOOK_ID,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_DEVICE_NAME,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_ENTITY_CATEGORY,
@@ -28,10 +24,10 @@ from .const import (
     ATTR_SENSOR_TYPE_SENSOR as ENTITY_TYPE,
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
-    DATA_DEVICES,
     DOMAIN,
 )
-from .entity import MobileAppEntity, unique_id
+from .entity import MobileAppEntity
+from .webhook import _extract_sensor_unique_id
 
 
 async def async_setup_entry(
@@ -49,7 +45,7 @@ async def async_setup_entry(
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
             continue
-        config = {
+        config: dict[str, Any] = {
             ATTR_SENSOR_ATTRIBUTES: {},
             ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
@@ -60,7 +56,7 @@ async def async_setup_entry(
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
-        entities.append(MobileAppSensor(config, entry.device_id, config_entry))
+        entities.append(MobileAppSensor(config, config_entry))
 
     async_add_entities(entities)
 
@@ -69,16 +65,7 @@ async def async_setup_entry(
         if data[CONF_WEBHOOK_ID] != webhook_id:
             return
 
-        data[CONF_UNIQUE_ID] = unique_id(
-            data[CONF_WEBHOOK_ID], data[ATTR_SENSOR_UNIQUE_ID]
-        )
-        data[
-            CONF_NAME
-        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
-
-        device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
-
-        async_add_entities([MobileAppSensor(data, device, config_entry)])
+        async_add_entities([MobileAppSensor(data, config_entry)])
 
     async_dispatcher_connect(
         hass,
@@ -87,8 +74,29 @@ async def async_setup_entry(
     )
 
 
-class MobileAppSensor(MobileAppEntity, SensorEntity):
+class MobileAppSensor(MobileAppEntity, RestoreSensor):
     """Representation of an mobile app sensor."""
+
+    async def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+
+        await super().async_restore_last_state(last_state)
+
+        if not (last_sensor_data := await self.async_get_last_sensor_data()):
+            # Workaround to handle migration to RestoreSensor, can be removed
+            # in HA Core 2023.4
+            self._config[ATTR_SENSOR_STATE] = None
+            webhook_id = self._entry.data[CONF_WEBHOOK_ID]
+            sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
+            if (
+                self.device_class == SensorDeviceClass.TEMPERATURE
+                and sensor_unique_id == "battery_temperature"
+            ):
+                self._config[ATTR_SENSOR_UOM] = TEMP_CELSIUS
+            return
+
+        self._config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
+        self._config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 
     @property
     def native_value(self):

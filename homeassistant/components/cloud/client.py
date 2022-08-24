@@ -118,14 +118,15 @@ class CloudClient(Interface):
 
                 cloud_user = await self._prefs.get_cloud_user()
 
-                self._google_config = google_config.CloudGoogleConfig(
+                google_conf = google_config.CloudGoogleConfig(
                     self._hass,
                     self.google_user_config,
                     cloud_user,
                     self._prefs,
                     self.cloud,
                 )
-                await self._google_config.async_initialize()
+                await google_conf.async_initialize()
+                self._google_config = google_conf
 
         return self._google_config
 
@@ -209,10 +210,10 @@ class CloudClient(Interface):
 
     async def async_google_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud google message to client."""
-        if not self._prefs.google_enabled:
-            return ga.turned_off_response(payload)
-
         gconf = await self.get_google_config()
+
+        if not self._prefs.google_enabled:
+            return ga.api_disabled_response(payload, gconf.agent_user_id)
 
         return await ga.async_handle_message(
             self._hass, gconf, gconf.cloud_user, payload, gc.SOURCE_CLOUD

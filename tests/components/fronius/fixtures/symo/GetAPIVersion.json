@@ -1,5 +1,5 @@
 {
-    "APIVersion": 1,
-    "BaseURL": "/solar_api/v1/",
-    "CompatibilityRange": "1.6-3"
+  "APIVersion": 1,
+  "BaseURL": "/solar_api/v1/",
+  "CompatibilityRange": "1.6-3"
 }

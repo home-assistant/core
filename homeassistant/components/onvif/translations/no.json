@@ -11,13 +11,6 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Passord",
-                    "username": "Brukernavn"
-                },
-                "title": "Konfigurere godkjenning"
-            },
             "configure": {
                 "data": {
                     "host": "Vert",
@@ -40,14 +33,6 @@
                     "host": "Velg oppdaget ONVIF-enhet"
                 },
                 "title": "Velg ONVIF-enhet"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "Vert",
-                    "name": "Navn",
-                    "port": "Port"
-                },
-                "title": "Konfigurere ONVIF-enhet"
             },
             "user": {
                 "data": {

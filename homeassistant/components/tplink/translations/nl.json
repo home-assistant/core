@@ -2,17 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
         },
         "error": {
-            "cannot_connect": "Kon geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{name} {model} ({host})",
         "step": {
-            "confirm": {
-                "description": "Wil je TP-Link slimme apparaten instellen?"
-            },
             "discovery_confirm": {
                 "description": "Wilt u {name} {model} ({host}) instellen?"
             },

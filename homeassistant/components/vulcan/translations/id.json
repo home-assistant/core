@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "all_student_already_configured": "Semua siswa telah ditambahkan.",
+            "already_configured": "Siswa tersebut telah ditambahkan.",
+            "no_matching_entries": "Tidak ditemukan entri yang cocok. Gunakan akun lain atau hapus integrasi dengan data siswa yang usang.",
+            "reauth_successful": "Otorisasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Kesalahan koneksi - periksa koneksi internet Anda",
+            "expired_credentials": "Kredensial kedaluwarsa - buat baru di halaman pendaftaran aplikasi seluler Vulcan",
+            "expired_token": "Token kedaluwarsa - buat token baru",
+            "invalid_pin": "PIN tidak valid",
+            "invalid_symbol": "Simbol tidak valid",
+            "invalid_token": "Token tidak valid",
+            "unknown": "Kesalahan tidak dikenal terjadi."
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "Menggunakan kredensial yang disimpan"
+                },
+                "description": "Tambahkan siswa lain."
+            },
+            "auth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "Simbol",
+                    "token": "Token"
+                },
+                "description": "Masuk ke Akun Vulcan Anda menggunakan halaman pendaftaran aplikasi seluler."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "Simbol",
+                    "token": "Token"
+                },
+                "description": "Masuk ke Akun Vulcan Anda menggunakan halaman pendaftaran aplikasi seluler."
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "Masuk"
+                },
+                "description": "Pilih kredensial yang disimpan."
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "Pilih siswa"
+                },
+                "description": "Pilih siswa, Anda dapat menambahkan lebih banyak siswa dengan menambahkan integrasi lagi."
+            }
+        }
+    }
+}

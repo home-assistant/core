@@ -5,14 +5,11 @@ from homeassistant.setup import async_setup_component
 
 from .test_common import mock_get_homes
 
-from tests.common import async_init_recorder_component
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client, config_entry):
+async def test_entry_diagnostics(hass, hass_client, recorder_mock, config_entry):
     """Test config entry diagnostics."""
-    await async_init_recorder_component(hass)
-
     with patch(
         "tibber.Tibber.update_info",
         return_value=None,

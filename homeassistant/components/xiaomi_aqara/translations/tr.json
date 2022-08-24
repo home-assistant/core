@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "IP Adresi"
                 },
-                "description": "Ek a\u011f ge\u00e7itlerini ba\u011flamak istiyorsan\u0131z kurulumu tekrar \u00e7al\u0131\u015ft\u0131r\u0131n.",
-                "title": "Ba\u011flamak istedi\u011finiz Xiaomi Aqara A\u011f Ge\u00e7idini se\u00e7in"
+                "description": "Ba\u011flamak istedi\u011finiz Xiaomi Aqara A\u011f Ge\u00e7idini se\u00e7in"
             },
             "settings": {
                 "data": {
@@ -27,7 +26,7 @@
                     "name": "A\u011f Ge\u00e7idinin Ad\u0131"
                 },
                 "description": "Anahtar (parola) bu \u00f6\u011fretici kullan\u0131larak al\u0131nabilir: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Anahtar sa\u011flanmazsa, yaln\u0131zca sens\u00f6rlere eri\u015filebilir",
-                "title": "Xiaomi Aqara A\u011f Ge\u00e7idi, iste\u011fe ba\u011fl\u0131 ayarlar"
+                "title": "\u0130ste\u011fe ba\u011fl\u0131 ayarlar"
             },
             "user": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Kullan\u0131lacak a\u011f aray\u00fcz\u00fc",
                     "mac": "Mac Adresi (iste\u011fe ba\u011fl\u0131)"
                 },
-                "description": "Xiaomi Aqara Gateway'inize ba\u011flan\u0131n, IP ve MAC adresleri bo\u015f b\u0131rak\u0131l\u0131rsa otomatik ke\u015fif kullan\u0131l\u0131r",
-                "title": "Xiaomi Aqara A\u011f Ge\u00e7idi"
+                "description": "IP ve MAC adresleri bo\u015f b\u0131rak\u0131l\u0131rsa otomatik ke\u015fif kullan\u0131l\u0131r"
             }
         }
     }

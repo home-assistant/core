@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_EMAIL,
     CONF_ENTITY_ID,
+    CONF_LOCATION,
     CONF_SENSORS,
     CONF_STATE,
     CONF_URL,
@@ -55,7 +56,6 @@ CONF_ICON_OPEN = "icon_open"
 CONF_ICONS = "icons"
 CONF_IRC = "irc"
 CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
-CONF_LOCATION = "location"
 CONF_SPACEFED = "spacefed"
 CONF_SPACENET = "spacenet"
 CONF_SPACESAML = "spacesaml"

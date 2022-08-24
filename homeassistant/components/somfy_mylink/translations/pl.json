@@ -25,17 +25,8 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "Roleta/pokrywa jest odwr\u00f3cona"
-                },
-                "description": "Konfiguracja opcji dla \"{entity_id}\"",
-                "title": "Konfiguracja encji"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Domy\u015blny stan odwr\u00f3cenia nieskonfigurowanych rolet/pokryw",
-                    "entity_id": "Skonfiguruj okre\u015blon\u0105 encj\u0119.",
                     "target_id": "Konfiguracja opcji rolety"
                 },
                 "title": "Konfiguracja opcji MyLink"
@@ -48,6 +39,5 @@
                 "title": "Konfiguracja rolety MyLink"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

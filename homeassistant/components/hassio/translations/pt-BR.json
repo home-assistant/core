@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Vers\u00e3o do Agent",
             "board": "Borda",
             "disk_total": "Total do disco",
             "disk_used": "Disco usado",

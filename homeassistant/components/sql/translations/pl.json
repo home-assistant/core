@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "db_url_invalid": "Nieprawid\u0142owy adres URL bazy danych",
+            "query_invalid": "Nieprawid\u0142owe zapytanie SQL"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Kolumna",
+                    "db_url": "Adres URL bazy danych",
+                    "name": "Nazwa",
+                    "query": "Wybierz zapytanie",
+                    "unit_of_measurement": "Jednostka miary",
+                    "value_template": "Szablon warto\u015bci"
+                },
+                "data_description": {
+                    "column": "Kolumna dla zwr\u00f3conego zapytania do przedstawienia jako stan",
+                    "db_url": "Adres URL bazy danych, pozostaw puste, aby u\u017cy\u0107 domy\u015blnej bazy danych HA",
+                    "name": "Nazwa, kt\u00f3ra b\u0119dzie u\u017cywana do wprowadzania konfiguracji, a tak\u017ce do sensora",
+                    "query": "Zapytanie do uruchomienia, musi zaczyna\u0107 si\u0119 od \u201eSELECT\u201d",
+                    "unit_of_measurement": "Jednostka miary (opcjonalnie)",
+                    "value_template": "Szablon warto\u015bci (opcjonalnie)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "Nieprawid\u0142owy adres URL bazy danych",
+            "query_invalid": "Nieprawid\u0142owe zapytanie SQL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Kolumna",
+                    "db_url": "Adres URL bazy danych",
+                    "name": "Nazwa",
+                    "query": "Wybierz zapytanie",
+                    "unit_of_measurement": "Jednostka miary",
+                    "value_template": "Szablon warto\u015bci"
+                },
+                "data_description": {
+                    "column": "Kolumna dla zwr\u00f3conego zapytania do przedstawienia jako stan",
+                    "db_url": "Adres URL bazy danych, pozostaw puste, aby u\u017cy\u0107 domy\u015blnej bazy danych HA",
+                    "name": "Nazwa, kt\u00f3ra b\u0119dzie u\u017cywana do wprowadzania konfiguracji, a tak\u017ce do sensora",
+                    "query": "Zapytanie do uruchomienia, musi zaczyna\u0107 si\u0119 od \u201eSELECT\u201d",
+                    "unit_of_measurement": "Jednostka miary (opcjonalnie)",
+                    "value_template": "Szablon warto\u015bci (opcjonalnie)"
+                }
+            }
+        }
+    }
+}
