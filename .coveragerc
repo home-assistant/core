@@ -37,6 +37,8 @@ omit =
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airthings/__init__.py
     homeassistant/components/airthings/sensor.py
+    homeassistant/components/airthings_ble/__init.py
+    homeassistant/components/airthings_ble/sensors.py
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/const.py
