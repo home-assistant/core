@@ -141,6 +141,8 @@ async def async_setup_platform(
 class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
+    _attr_should_poll = False
+
     def __init__(self, emby, device_id):
         """Initialize the Emby device."""
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
@@ -148,10 +150,10 @@ class EmbyDevice(MediaPlayerEntity):
         self.device_id = device_id
         self.device = self.emby.devices[self.device_id]
 
-        self._available = True
-
         self.media_status_last_position = None
         self.media_status_received = None
+
+        self._attr_unique_id = device_id
 
     async def async_added_to_hass(self) -> None:
         """Register callback."""
@@ -172,19 +174,9 @@ class EmbyDevice(MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    def set_available(self, value):
+    def set_available(self, value: bool) -> None:
         """Set available property."""
-        self._available = value
-
-    @property
-    def unique_id(self):
-        """Return the id of this emby client."""
-        return self.device_id
+        self._attr_available = value
 
     @property
     def supports_remote_control(self):
@@ -195,11 +187,6 @@ class EmbyDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
     @property
     def state(self):

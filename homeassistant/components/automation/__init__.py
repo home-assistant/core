@@ -443,9 +443,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         This method is a coroutine.
         """
         reason = ""
-        if "trigger" in run_variables and "description" in run_variables["trigger"]:
-            reason = f' by {run_variables["trigger"]["description"]}'
-        self._logger.debug("Automation triggered%s", reason)
+        alias = ""
+        if "trigger" in run_variables:
+            if "description" in run_variables["trigger"]:
+                reason = f' by {run_variables["trigger"]["description"]}'
+            if "alias" in run_variables["trigger"]:
+                alias = f' trigger \'{run_variables["trigger"]["alias"]}\''
+        self._logger.debug("Automation%s triggered%s", alias, reason)
 
         # Create a new context referring to the old context.
         parent_id = None if context is None else context.id

@@ -317,6 +317,7 @@ omit =
     homeassistant/components/escea/__init__.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
+    homeassistant/components/esphome/bluetooth.py
     homeassistant/components/esphome/button.py
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
@@ -641,6 +642,7 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/__init__.py
+    homeassistant/components/lametric/button.py
     homeassistant/components/lametric/coordinator.py
     homeassistant/components/lametric/entity.py
     homeassistant/components/lametric/notify.py
@@ -1427,7 +1429,14 @@ omit =
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py
     homeassistant/components/volumio/media_player.py
-    homeassistant/components/volvooncall/*
+    homeassistant/components/volvooncall/__init__.py
+    homeassistant/components/volvooncall/binary_sensor.py
+    homeassistant/components/volvooncall/const.py
+    homeassistant/components/volvooncall/device_tracker.py
+    homeassistant/components/volvooncall/errors.py
+    homeassistant/components/volvooncall/lock.py
+    homeassistant/components/volvooncall/sensor.py
+    homeassistant/components/volvooncall/switch.py
     homeassistant/components/vulcan/__init__.py
     homeassistant/components/vulcan/calendar.py
     homeassistant/components/vulcan/fetch_data.py

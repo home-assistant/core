@@ -111,7 +111,7 @@ class FlumeSensor(CoordinatorEntity, SensorEntity):
 
         return _format_state_value(self.coordinator.flume_device.values[sensor_key])
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Request an update when added."""
         await super().async_added_to_hass()
         # We do not ask for an update with async_add_entities()

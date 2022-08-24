@@ -267,12 +267,14 @@ def _update_or_add_metadata(
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
+        or old_metadata["name"] != new_metadata["name"]
         or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
     ):
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
                 StatisticsMeta.has_mean: new_metadata["has_mean"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
+                StatisticsMeta.name: new_metadata["name"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
             },
             synchronize_session=False,
