@@ -40,6 +40,7 @@ from .const import (
     KEY_DEVICE,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRFRESH_VA4,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -87,6 +88,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
     ],
     MODEL_AIRFRESH_VA2: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirfreshLedBrightness)
+    ],
+    MODEL_AIRFRESH_VA4: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirfreshLedBrightness)
     ],
     MODEL_AIRHUMIDIFIER_CA1: [
