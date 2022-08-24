@@ -21,7 +21,7 @@ async def test_bluetooth_discovery(hass):
         data=SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "init"
 
     with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -61,7 +61,7 @@ async def test_bluetooth_discovery_already_setup(hass):
 
 
 async def test_async_step_bluetooth_not_microbot(hass):
-    """Test discovery via bluetooth not switchbot."""
+    """Test discovery via bluetooth not microbot."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
@@ -82,7 +82,7 @@ async def test_user_setup(hass):
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "init"
     assert result["errors"] == {}
 
     with patch_async_setup_entry() as mock_setup_entry:
@@ -103,7 +103,7 @@ async def test_user_setup(hass):
 
 
 async def test_user_setup_already_configured(hass):
-    """Test the user initiated form with password and valid mac."""
+    """Test the user initiated form with valid mac."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -125,7 +125,7 @@ async def test_user_setup_already_configured(hass):
 
 
 async def test_user_no_devices(hass):
-    """Test the user initiated form with password and valid mac."""
+    """Test the user initiated form with valid mac."""
     with patch(
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[],
@@ -145,7 +145,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
         data=SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "init"
 
     with patch(
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
