@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Airthings BLE device from a config entry."""
-    _LOGGER.debug("async setup entry")
     hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
 
@@ -41,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _update_method():
         """Get data from Airthings BLE."""
         ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
-
         airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
 
         try:

@@ -74,7 +74,6 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if 820 not in discovery_info.manufacturer_data:
             return self.async_abort(reason="not_supported")
-
         device = await self._get_device_data(discovery_info)
         name = get_name(device)
         self.context["title_placeholders"] = {"name": name}
@@ -87,7 +86,9 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            return self._async_get_or_create_entry()
+            return self.async_create_entry(
+                title=self.context["title_placeholders"]["name"], data={}
+            )
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -111,7 +112,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._discovered_device = discovery
 
-            return self._async_get_or_create_entry()
+            return self.async_create_entry(title=discovery.name, data={})
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
@@ -140,22 +141,4 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ADDRESS): vol.In(titles),
                 },
             ),
-        )
-
-    def _async_get_or_create_entry(self):
-        if entry_id := self.context.get("entry_id"):
-            entry = self.hass.config_entries.async_get_entry(entry_id)
-            assert entry is not None
-
-            self.hass.config_entries.async_update_entry(entry)
-
-            # Reload the config entry to notify of updated config
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_create_entry(
-            title=self.context["title_placeholders"]["name"], data={}
         )
