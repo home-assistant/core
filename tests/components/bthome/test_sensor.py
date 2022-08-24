@@ -239,7 +239,7 @@ async def test_bthome_energy(hass):
 
     assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Energy"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kWh"
-    assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
+    assert sensor_attr[ATTR_STATE_CLASS] == "total_increasing"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -458,7 +458,7 @@ async def test_bthome_voc(hass):
         sensor_attr[ATTR_FRIENDLY_NAME]
         == "Test Device 8D18B2 Volatile Organic Compounds"
     )
-    assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
+    assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "µg/m³"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)

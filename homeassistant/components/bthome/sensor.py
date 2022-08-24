@@ -114,11 +114,11 @@ SENSOR_DESCRIPTIONS = {
     ),
     (
         DeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        Units.CONCENTRATION_PARTS_PER_MILLION,
+        Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ): SensorEntityDescription(
-        key=f"{DeviceClass.VOLATILE_ORGANIC_COMPOUNDS}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        key=f"{DeviceClass.VOLATILE_ORGANIC_COMPOUNDS}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
