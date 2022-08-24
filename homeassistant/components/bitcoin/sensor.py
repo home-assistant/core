@@ -181,7 +181,7 @@ class BitcoinSensor(SensorEntity):
         self.data = data
         self._currency = currency
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
         stats = self.data.stats

@@ -161,6 +161,7 @@ def mock_sensor_statistics():
                 "unit_of_measurement": "dogs",
                 "has_mean": True,
                 "has_sum": False,
+                "name": None,
             },
             "stat": {"start": start},
         }
@@ -599,7 +600,7 @@ async def test_import_statistics(
         ]
     }
 
-    # Update the previously inserted statistics
+    # Update the previously inserted statistics + rename
     external_statistics = {
         "start": period1,
         "max": 1,
@@ -609,8 +610,34 @@ async def test_import_statistics(
         "state": 4,
         "sum": 5,
     }
+    external_metadata["name"] = "Total imported energy renamed"
     import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "has_mean": False,
+            "has_sum": True,
+            "statistic_id": statistic_id,
+            "name": "Total imported energy renamed",
+            "source": source,
+            "unit_of_measurement": "kWh",
+        }
+    ]
+    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    assert metadata == {
+        statistic_id: (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "name": "Total imported energy renamed",
+                "source": source,
+                "statistic_id": statistic_id,
+                "unit_of_measurement": "kWh",
+            },
+        )
+    }
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         statistic_id: [
@@ -639,6 +666,7 @@ async def test_import_statistics(
         ]
     }
 
+    # Adjust the statistics
     await client.send_json(
         {
             "id": 1,

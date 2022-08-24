@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from pydroid_ipcam import PyDroidIPCam
+from pydroid_ipcam.exceptions import PyDroidIPCamException, Unauthorized
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,7 +34,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)
@@ -45,8 +46,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
         password=data.get(CONF_PASSWORD),
         ssl=False,
     )
-    await cam.update()
-    return cam.available
+    errors = {}
+    try:
+        await cam.update()
+    except Unauthorized:
+        errors[CONF_USERNAME] = "invalid_auth"
+        errors[CONF_PASSWORD] = "invalid_auth"
+    except PyDroidIPCamException:
+        errors["base"] = "cannot_connect"
+
+    return errors
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,13 +77,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         # to be removed when YAML import is removed
         title = user_input.get(CONF_NAME) or user_input[CONF_HOST]
-        if await validate_input(self.hass, user_input):
+        if not (errors := await validate_input(self.hass, user_input)):
             return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
-            errors={"base": "cannot_connect"},
+            errors=errors,
         )
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:

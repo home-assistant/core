@@ -210,7 +210,7 @@ class Flexit(ClimateEntity):
         else:
             _LOGGER.error("Modbus error setting target temperature to Flexit")
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if await self._async_write_int16_to_register(
             17, self.fan_modes.index(fan_mode)
