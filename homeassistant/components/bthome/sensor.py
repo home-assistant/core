@@ -1,7 +1,6 @@
 """Support for BThome sensors."""
 from __future__ import annotations
 
-import logging
 from typing import Optional, Union
 
 from bthome_ble import DeviceClass, SensorUpdate, Units
@@ -25,6 +24,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
+    MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_MBAR,
@@ -32,12 +32,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -69,6 +68,7 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
         key=str(Units.ELECTRIC_POTENTIAL_VOLT),
@@ -131,11 +131,11 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    # Used for e.g. moisture sensor on HHCCJCY01
-    (None, Units.PERCENTAGE): SensorEntityDescription(
-        key=str(Units.PERCENTAGE),
+    # Used for e.g. weight sensor
+    (None, Units.MASS_KILOGRAMS): SensorEntityDescription(
+        key=str(Units.MASS_KILOGRAMS),
         device_class=None,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=MASS_KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

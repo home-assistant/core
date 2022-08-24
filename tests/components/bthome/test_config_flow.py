@@ -467,18 +467,7 @@ async def test_async_step_reauth(hass):
 
     assert len(hass.states.async_all()) == 0
 
-    # WARNING: This test data is synthetic, rather than captured from a real device
-    # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
     saved_callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-
-    # saved_callback(
-    #     make_encrypted_advertisement(
-    #         "54:48:E6:8F:80:A5",
-    #         b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99',
-    #     ),
-    #     BluetoothChange.ADVERTISEMENT,
-    # )
-
     await hass.async_block_till_done()
 
     results = hass.config_entries.flow.async_progress()
