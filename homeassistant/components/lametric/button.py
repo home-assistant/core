@@ -55,7 +55,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up WLED button based on a config entry."""
+    """Set up LaMetric button based on a config entry."""
     coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         LaMetricButtonEntity(
