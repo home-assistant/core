@@ -730,7 +730,7 @@ async def handle_supported_brands(
 @decorators.websocket_command(
     {
         vol.Required("type"): "supported_features",
-        vol.Required("features"): dict,
+        vol.Required("features"): {str: int},
     }
 )
 def handle_supported_features(
