@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationen \u00e4r redan ig\u00e5ng",
+            "no_devices_found": "Inga enheter hittades p\u00e5 n\u00e4tverket"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vill du s\u00e4tta upp {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhet"
+                },
+                "description": "V\u00e4lj en enhet att s\u00e4tta upp"
+            }
+        }
+    }
+}
