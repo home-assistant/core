@@ -6,7 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
 import async_timeout
@@ -22,6 +22,7 @@ from .auth import AuthPhase, auth_required_message
 from .const import (
     CANCELLATION_ERRORS,
     DATA_CONNECTIONS,
+    FEATURE_COALESCE_MESSAGES,
     MAX_PENDING_MSG,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
@@ -31,6 +32,10 @@ from .const import (
 )
 from .error import Disconnect
 from .messages import message_to_json
+
+if TYPE_CHECKING:
+    from .connection import ActiveConnection
+
 
 _WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
 
@@ -62,13 +67,13 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.command_phase = False
         self.wsock = web.WebSocketResponse(heartbeat=55)
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
+        self.connection: ActiveConnection | None = None
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
@@ -83,7 +88,12 @@ class WebSocketHandler:
                         return
                     message = process if isinstance(process, str) else process()
 
-                    if not self.command_phase or to_write.empty():
+                    if (
+                        to_write.empty()
+                        or not self.connection
+                        or FEATURE_COALESCE_MESSAGES
+                        not in self.connection.supported_features
+                    ):
                         logger.debug("Sending %s", message)
                         await wsock.send_str(message)
                         continue
@@ -189,8 +199,8 @@ class WebSocketHandler:
         auth = AuthPhase(
             self._logger, self.hass, self._send_message, self._cancel, request
         )
-        connection = None
         disconnect_warn = None
+        connection = None
 
         try:
             self._send_message(auth_required_message())
@@ -217,12 +227,11 @@ class WebSocketHandler:
                 raise Disconnect from err
 
             self._logger.debug("Received %s", msg_data)
-            connection = await auth.async_handle(msg_data)
+            self.connection = connection = await auth.async_handle(msg_data)
             self.hass.data[DATA_CONNECTIONS] = (
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             )
             async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
-            self.command_phase = True
 
             # Command phase
             while not wsock.closed:
@@ -280,6 +289,8 @@ class WebSocketHandler:
 
                 if connection is not None:
                     self.hass.data[DATA_CONNECTIONS] -= 1
+                    self.connection = None
+
                 async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
 
         return wsock
