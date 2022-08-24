@@ -8,20 +8,13 @@ from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import AUDIOMANAGER_STREAM_MUSIC, DOMAIN
+from .const import AUDIOMANAGER_STREAM_MUSIC, DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
-
-MEDIA_SUPPORT_FULLYKIOSK = (
-    MediaPlayerEntityFeature.PLAY_MEDIA
-    | MediaPlayerEntityFeature.STOP
-    | MediaPlayerEntityFeature.VOLUME_SET
-)
 
 
 async def async_setup_entry(
