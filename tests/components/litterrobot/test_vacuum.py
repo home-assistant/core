@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
@@ -95,6 +96,16 @@ async def test_vacuum_with_error(
         ),
         (SERVICE_SET_SLEEP_MODE, "set_sleep_mode", {"data": {"enabled": True}}),
         (SERVICE_SET_SLEEP_MODE, "set_sleep_mode", {"data": {"enabled": False}}),
+        (
+            SERVICE_SET_WAIT_TIME,
+            "set_wait_time",
+            {"data": {"minutes": 3}, "deprecated": True},
+        ),
+        (
+            SERVICE_SET_WAIT_TIME,
+            "set_wait_time",
+            {"data": {"minutes": "15"}, "deprecated": True},
+        ),
     ],
 )
 async def test_commands(
@@ -126,3 +137,21 @@ async def test_commands(
     async_fire_time_changed(hass, future)
     getattr(mock_account.robots[0], command).assert_called_once()
     assert (f"'{DOMAIN}.{service}' service is deprecated" in caplog.text) is deprecated
+
+
+async def test_invalid_wait_time(hass: HomeAssistant, mock_account: MagicMock) -> None:
+    """Test an attempt to send an invalid wait time to the vacuum."""
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+
+    vacuum = hass.states.get(VACUUM_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == STATE_DOCKED
+
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_WAIT_TIME,
+            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, "minutes": 10},
+            blocking=True,
+        )
+    assert not mock_account.robots[0].set_wait_time.called
