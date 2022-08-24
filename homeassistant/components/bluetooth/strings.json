@@ -25,5 +25,17 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "no_adapters": "No unconfigured Bluetooth adapters found"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "passive": "Passive listening"
+        }
+      }
+    },
+    "abort": {
+      "no_options": "No options available"
+    }
   }
 }

@@ -26,6 +26,7 @@ from .const import (
     ADAPTER_SW_VERSION,
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_PASSIVE,
     DATA_MANAGER,
     DEFAULT_ADDRESS,
     DOMAIN,
@@ -326,8 +327,10 @@ async def async_setup_entry(
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
 
+    passive = entry.options.get(CONF_PASSIVE)
+    mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     try:
-        bleak_scanner = create_bleak_scanner(BluetoothScanningMode.ACTIVE, adapter)
+        bleak_scanner = create_bleak_scanner(mode, adapter)
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
