@@ -1,31 +1,31 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
-            "no_adapters": "N\u00e3o foram encontrados adaptadores Bluetooth n\u00e3o configurados"
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "no_adapters": "No se encontraron adaptadores Bluetooth no configurados"
         },
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Deseja configurar {name}?"
+                "description": "\u00bfQuieres configurar {name}?"
             },
             "enable_bluetooth": {
-                "description": "Deseja configurar o Bluetooth?"
+                "description": "\u00bfQuieres configurar Bluetooth?"
             },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adaptador"
                 },
-                "description": "Selecione um adaptador Bluetooth para configurar"
+                "description": "Selecciona un adaptador Bluetooth para configurar"
             },
             "single_adapter": {
-                "description": "Deseja configurar o adaptador Bluetooth {name}?"
+                "description": "\u00bfQuieres configurar el adaptador Bluetooth {name}?"
             },
             "user": {
                 "data": {
                     "address": "Dispositivo"
                 },
-                "description": "Escolha um dispositivo para configurar"
+                "description": "Elige un dispositivo para configurar"
             }
         }
     },
@@ -33,7 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "O adaptador Bluetooth a ser usado para escaneamento"
+                    "adapter": "El adaptador Bluetooth que se usar\u00e1 para escanear"
                 }
             }
         }

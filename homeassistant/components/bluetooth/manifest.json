@@ -2,9 +2,14 @@
   "domain": "bluetooth",
   "name": "Bluetooth",
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
-  "dependencies": ["websocket_api"],
+  "dependencies": ["usb"],
   "quality_scale": "internal",
-  "requirements": ["bleak==0.15.0a1", "bluetooth-adapters==0.1.2"],
+  "requirements": [
+    "bleak==0.15.1",
+    "bluetooth-adapters==0.2.0",
+    "bluetooth-auto-recovery==0.2.2",
+    "msgpack==1.0.4"
+  ],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "iot_class": "local_push"

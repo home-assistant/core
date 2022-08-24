@@ -4,13 +4,13 @@ from __future__ import annotations
 import logging
 import time
 
-from home_assistant_bluetooth import BluetoothServiceInfo
-
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from . import (
     BluetoothCallbackMatcher,
     BluetoothChange,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
     async_register_callback,
     async_track_unavailable,
 )
@@ -27,15 +27,19 @@ class BasePassiveBluetoothCoordinator:
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
+        mode: BluetoothScanningMode,
+        connectable: bool,
     ) -> None:
         """Initialize the coordinator."""
         self.hass = hass
         self.logger = logger
         self.name: str | None = None
         self.address = address
+        self.connectable = connectable
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
         self._present = False
+        self.mode = mode
         self.last_seen = 0.0
 
     @callback
@@ -60,12 +64,13 @@ class BasePassiveBluetoothCoordinator:
         self._cancel_bluetooth_advertisements = async_register_callback(
             self.hass,
             self._async_handle_bluetooth_event,
-            BluetoothCallbackMatcher(address=self.address),
+            BluetoothCallbackMatcher(
+                address=self.address, connectable=self.connectable
+            ),
+            self.mode,
         )
         self._cancel_track_unavailable = async_track_unavailable(
-            self.hass,
-            self._async_handle_unavailable,
-            self.address,
+            self.hass, self._async_handle_unavailable, self.address, self.connectable
         )
 
     @callback
@@ -86,7 +91,7 @@ class BasePassiveBluetoothCoordinator:
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
