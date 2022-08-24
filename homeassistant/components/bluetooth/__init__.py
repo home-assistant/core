@@ -8,7 +8,6 @@ import platform
 from typing import TYPE_CHECKING, cast
 
 import async_timeout
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components import usb
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
@@ -51,8 +50,9 @@ from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.typing import ConfigType
+    from bleak.backends.device import BLEDevice
 
+    from homeassistant.helpers.typing import ConfigType
 
 __all__ = [
     "async_ble_device_from_address",
