@@ -738,3 +738,4 @@ def handle_supported_features(
 ) -> None:
     """Handle setting supported features."""
     connection.supported_features = msg["features"]
+    connection.send_result(msg["id"])
