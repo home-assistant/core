@@ -109,16 +109,13 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator[AirthingsDevice] = hass.data[DOMAIN][
         entry.entry_id
     ]
-    _LOGGER.debug(
-        "ok  setup entry reached, coordinator set: %s", coordinator is not None
-    )
 
     # we need to change some units
     if not is_metric:
-        for k, v in SENSORS.items():
-            if v.native_unit_of_measurement is not VOLUME_BECQUEREL:
+        for key, val in SENSORS.items():
+            if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
                 continue
-            SENSORS[k].native_unit_of_measurement = VOLUME_PICOCURIE
+            SENSORS[key].native_unit_of_measurement = VOLUME_PICOCURIE
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors.keys())
@@ -140,7 +137,7 @@ async def async_setup_entry(
 class AirthingsSensor(
     CoordinatorEntity[DataUpdateCoordinator[AirthingsDevice]], SensorEntity
 ):
-    """Repping that Airthings BLE sensor."""
+    """Airthings BLE sensors for the device."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
