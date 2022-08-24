@@ -1936,7 +1936,7 @@ python-homewizard-energy==1.1.0
 python-hpilo==4.3
 
 # homeassistant.components.izone
-python-izone==1.2.3
+python-izone==1.2.9
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
