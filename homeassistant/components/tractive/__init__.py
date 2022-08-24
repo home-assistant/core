@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.close()
         raise ConfigEntryNotReady from error
 
-    tractive = TractiveClient(hass, client, creds["user_id"])
+    tractive = TractiveClient(hass, client, creds["user_id"], entry)
     tractive.subscribe()
 
     try:
@@ -148,7 +148,11 @@ class TractiveClient:
     """A Tractive client."""
 
     def __init__(
-        self, hass: HomeAssistant, client: aiotractive.Tractive, user_id: str
+        self,
+        hass: HomeAssistant,
+        client: aiotractive.Tractive,
+        user_id: str,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the client."""
         self._hass = hass
@@ -157,6 +161,7 @@ class TractiveClient:
         self._last_hw_time = 0
         self._last_pos_time = 0
         self._listen_task: asyncio.Task | None = None
+        self._config_entry = config_entry
 
     @property
     def user_id(self) -> str:
@@ -211,14 +216,14 @@ class TractiveClient:
                         self._last_pos_time = event["position"]["time"]
                         self._send_position_update(event)
             except aiotractive.exceptions.UnauthorizedError:
-                _LOGGER.debug(
-                    "Tractive responds with unauthorized. Have you changed your password? Disabling integration"
+                self._config_entry.async_start_reauth(self._hass)
+                asyncio.create_task(self.unsubscribe())
+                _LOGGER.exception(
+                    "Authentication failed for %s, try reconfiguring device",
+                    self._config_entry.data[CONF_EMAIL],
                 )
-                async_dispatcher_send(
-                    self._hass, f"{SERVER_UNAVAILABLE}-{self._user_id}"
-                )
-                # How do I disable the integration till restart and show an error message in the HASS UI from here?
                 return
+
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
