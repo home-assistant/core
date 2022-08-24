@@ -123,6 +123,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             await self.async_update_playing()
         except BraviaTVNotFound:
             self.connected = False
+            _LOGGER.debug("Update skipped, Bravia API service is reloading")
         except BraviaTVError as err:
             self.is_on = False
             self.connected = False
