@@ -46,7 +46,7 @@ def process_service_info(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up BThome BLE from a config entry."""
+    """Set up BThome Bluetooth from a config entry."""
     address = entry.unique_id
     assert address is not None
 

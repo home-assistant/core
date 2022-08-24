@@ -159,8 +159,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
 /homeassistant/components/bt_smarthub/ @jxwolstenholme
-/homeassistant/components/bthome_ble/ @Ernst79
-/tests/components/bthome_ble/ @Ernst79
+/homeassistant/components/bthome/ @Ernst79
+/tests/components/bthome/ @Ernst79
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221
 /homeassistant/components/button/ @home-assistant/core

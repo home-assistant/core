@@ -1,4 +1,4 @@
-"""Support for BThome ble sensors."""
+"""Support for BThome sensors."""
 from __future__ import annotations
 
 import logging

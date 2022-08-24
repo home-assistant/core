@@ -1,8 +1,8 @@
 {
-  "domain": "bthome_ble",
-  "name": "BThome BLE",
+  "domain": "bthome",
+  "name": "BThome",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/bthome_ble",
+  "documentation": "https://www.home-assistant.io/integrations/bthome",
   "bluetooth": [
     {
       "connectable": false,

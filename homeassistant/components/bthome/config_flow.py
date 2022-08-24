@@ -55,11 +55,10 @@ class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         device = DeviceData()
-        _LOGGER.error("Supported %s", device.supported(discovery_info))
+
         if not device.supported(discovery_info):
-            _LOGGER.error("NOT SUPPORTED")
             return self.async_abort(reason="not_supported")
-        _LOGGER.error("Hier ben ik")
+
         title = _title(discovery_info, device)
         self.context["title_placeholders"] = {"name": title}
         self._discovery_info = discovery_info
@@ -75,7 +74,7 @@ class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Enter a bindkey for an encrypted BThome device."""
         assert self._discovery_info
         assert self._discovered_device
-        _LOGGER.error("Encryption key decoding")
+
         errors = {}
 
         if user_input is not None:
@@ -107,7 +106,6 @@ class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        _LOGGER.error("BT confirm")
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self._async_get_or_create_entry()
 
@@ -164,7 +162,6 @@ class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a flow initialized by a reauth event."""
-        _LOGGER.error("Reauthing")
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
 
