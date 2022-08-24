@@ -1110,6 +1110,7 @@ build.json @home-assistant/supervisor
 /tests/components/tesla_wall_connector/ @einarhauks
 /homeassistant/components/tfiac/ @fredrike @mellado
 /homeassistant/components/thermopro/ @bdraco
+/tests/components/thermopro/ @bdraco
 /homeassistant/components/thethingsnetwork/ @fabaff
 /homeassistant/components/threshold/ @fabaff
 /tests/components/threshold/ @fabaff

@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/thermopro",
   "bluetooth": [{ "local_name": "TP35*", "connectable": false }],
-  "requirements": ["thermopro-ble==0.1.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
