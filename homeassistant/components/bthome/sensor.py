@@ -80,7 +80,7 @@ SENSOR_DESCRIPTIONS = {
         key=str(Units.ENERGY_KILO_WATT_HOUR),
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (DeviceClass.POWER, Units.POWER_WATT): SensorEntityDescription(
         key=str(Units.POWER_WATT),
@@ -129,6 +129,7 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     # Used for e.g. weight sensor
