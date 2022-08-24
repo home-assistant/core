@@ -61,7 +61,7 @@ WazeRouteCalculator==0.14
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.3.0
+accuweather==0.4.0
 
 # homeassistant.components.adax
 adax==0.2.0
