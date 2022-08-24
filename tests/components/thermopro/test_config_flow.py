@@ -27,7 +27,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "iBBQ AC3D"
+    assert result2["title"] == "TP357 (2142) AC3D"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
@@ -70,12 +70,12 @@ async def test_async_step_user_with_found_devices(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
+            user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "IBS-TH 8105"
+    assert result2["title"] == "TP357 (2142) AC3D"
     assert result2["data"] == {}
-    assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
+    assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
 
 async def test_async_step_user_device_added_between_steps(hass):
@@ -93,7 +93,7 @@ async def test_async_step_user_device_added_between_steps(hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     )
     entry.add_to_hass(hass)
 
@@ -102,7 +102,7 @@ async def test_async_step_user_device_added_between_steps(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
+            user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
         )
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
@@ -112,7 +112,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
     """Test setup from service info cache with devices found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     )
     entry.add_to_hass(hass)
 
@@ -132,7 +132,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass):
     """Test we can't start a flow if there is already a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     )
     entry.add_to_hass(hass)
 
@@ -189,12 +189,12 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
+            user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "IBS-TH 8105"
+    assert result2["title"] == "TP357 (2142) AC3D"
     assert result2["data"] == {}
-    assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
+    assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
     # Verify the original one was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
