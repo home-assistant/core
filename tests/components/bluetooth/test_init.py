@@ -20,6 +20,7 @@ from homeassistant.components.bluetooth import (
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
+    CONF_PASSIVE,
     DEFAULT_ADDRESS,
     DOMAIN,
     SOURCE_LOCAL,
@@ -59,6 +60,52 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start, enable_bluetooth):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+
+async def test_setup_and_stop_passive(hass, mock_bleak_scanner_start, one_adapter):
+    """Test we and setup and stop the scanner the passive scanner."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN,
+        data={},
+        options={CONF_PASSIVE: True},
+        unique_id="00:00:00:00:00:01",
+    )
+    entry.add_to_hass(hass)
+    init_kwargs = None
+
+    class MockPassiveBleakScanner:
+        def __init__(self, *args, **kwargs):
+            """Init the scanner."""
+            nonlocal init_kwargs
+            init_kwargs = kwargs
+
+        async def start(self, *args, **kwargs):
+            """Start the scanner."""
+
+        async def stop(self, *args, **kwargs):
+            """Stop the scanner."""
+
+        def register_detection_callback(self, *args, **kwargs):
+            """Register a callback."""
+
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
+        MockPassiveBleakScanner,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert init_kwargs == {
+        "adapter": "hci0",
+        "bluez": scanner.PASSIVE_SCANNER_ARGS,
+        "scanning_mode": "passive",
+    }
 
 
 async def test_setup_and_stop_no_bluetooth(hass, caplog, macos_adapter):

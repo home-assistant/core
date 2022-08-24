@@ -238,14 +238,13 @@ async def test_async_step_integration_discovery_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-@patch("homeassistant.components.bluetooth.util.platform.system", return_value="Linux")
-async def test_options_flow_linux(mock_system, hass, mock_bleak_scanner_start):
+async def test_options_flow_linux(hass, mock_bleak_scanner_start, one_adapter):
     """Test options on Linux."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
         options={},
-        unique_id="DOMAIN",
+        unique_id="00:00:00:00:00:01",
     )
     entry.add_to_hass(hass)
 
@@ -294,7 +293,6 @@ async def test_options_flow_macos(mock_system, hass, mock_bleak_scanner_start):
         domain=DOMAIN,
         data={},
         options={},
-        unique_id="DOMAIN",
     )
     entry.add_to_hass(hass)
 
