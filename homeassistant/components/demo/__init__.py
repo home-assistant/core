@@ -6,6 +6,7 @@ from random import random
 from homeassistant import config_entries, setup
 from homeassistant.components import persistent_notification
 from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -260,15 +261,16 @@ def _generate_sum_statistics(start, end, init_value, max_diff):
     return statistics
 
 
-async def _insert_statistics(hass):
+async def _insert_statistics(hass: HomeAssistant) -> None:
     """Insert some fake statistics."""
     now = dt_util.now()
     yesterday = now - datetime.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Fake yesterday's temperatures
-    metadata = {
+    metadata: StatisticMetaData = {
         "source": DOMAIN,
+        "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
         "unit_of_measurement": "°C",
         "has_mean": True,
@@ -279,23 +281,91 @@ async def _insert_statistics(hass):
     )
     async_add_external_statistics(hass, metadata, statistics)
 
-    # Fake yesterday's energy consumption
+    # Add external energy consumption in kWh, ~ 12 kWh / day
+    # This should be possible to pick for the energy dashboard
+    statistic_id = f"{DOMAIN}:energy_consumption_kwh"
     metadata = {
         "source": DOMAIN,
-        "statistic_id": f"{DOMAIN}:energy_consumption",
+        "name": "Energy consumption 1",
+        "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
         "has_mean": False,
         "has_sum": True,
     }
-    statistic_id = f"{DOMAIN}:energy_consumption"
     sum_ = 0
     last_stats = await get_instance(hass).async_add_executor_job(
         get_last_statistics, hass, 1, statistic_id, True
     )
-    if "domain:energy_consumption" in last_stats:
-        sum_ = last_stats["domain.electricity_total"]["sum"] or 0
+    if statistic_id in last_stats:
+        sum_ = last_stats[statistic_id][0]["sum"] or 0
+    statistics = _generate_sum_statistics(
+        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum_, 2
+    )
+    async_add_external_statistics(hass, metadata, statistics)
+
+    # Add external energy consumption in MWh, ~ 12 kWh / day
+    # This should not be possible to pick for the energy dashboard
+    statistic_id = f"{DOMAIN}:energy_consumption_mwh"
+    metadata = {
+        "source": DOMAIN,
+        "name": "Energy consumption 2",
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "MWh",
+        "has_mean": False,
+        "has_sum": True,
+    }
+    sum_ = 0
+    last_stats = await get_instance(hass).async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True
+    )
+    if statistic_id in last_stats:
+        sum_ = last_stats[statistic_id][0]["sum"] or 0
+    statistics = _generate_sum_statistics(
+        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum_, 0.002
+    )
+    async_add_external_statistics(hass, metadata, statistics)
+
+    # Add external gas consumption in m³, ~6 m3/day
+    # This should be possible to pick for the energy dashboard
+    statistic_id = f"{DOMAIN}:gas_consumption_m3"
+    metadata = {
+        "source": DOMAIN,
+        "name": "Gas consumption 1",
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "m³",
+        "has_mean": False,
+        "has_sum": True,
+    }
+    sum_ = 0
+    last_stats = await get_instance(hass).async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True
+    )
+    if statistic_id in last_stats:
+        sum_ = last_stats[statistic_id][0]["sum"] or 0
     statistics = _generate_sum_statistics(
         yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum_, 1
+    )
+    async_add_external_statistics(hass, metadata, statistics)
+
+    # Add external gas consumption in ft³, ~180 ft3/day
+    # This should not be possible to pick for the energy dashboard
+    statistic_id = f"{DOMAIN}:gas_consumption_ft3"
+    metadata = {
+        "source": DOMAIN,
+        "name": "Gas consumption 2",
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "ft³",
+        "has_mean": False,
+        "has_sum": True,
+    }
+    sum_ = 0
+    last_stats = await get_instance(hass).async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True
+    )
+    if statistic_id in last_stats:
+        sum_ = last_stats[statistic_id][0]["sum"] or 0
+    statistics = _generate_sum_statistics(
+        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum_, 30
     )
     async_add_external_statistics(hass, metadata, statistics)
 
