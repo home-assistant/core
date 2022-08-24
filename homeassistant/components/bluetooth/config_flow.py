@@ -130,6 +130,12 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return platform.system() == "Linux"
+
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle the option flow for bluetooth."""
@@ -144,9 +150,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-
-        if platform.system() != "Linux":
-            return self.async_abort(reason="no_options")
 
         data_schema = vol.Schema(
             {

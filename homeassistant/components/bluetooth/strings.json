@@ -34,9 +34,6 @@
           "passive": "Passive listening"
         }
       }
-    },
-    "abort": {
-      "no_options": "No options available"
     }
   }
 }
