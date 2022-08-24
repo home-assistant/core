@@ -47,8 +47,6 @@ from .models import (
 from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
 from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
-_LOGGER = logging.getLogger(__name__)
-
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
