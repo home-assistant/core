@@ -846,6 +846,8 @@ class FritzData:
 class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
+    _attr_should_poll = False
+
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         super().__init__(avm_wrapper)
@@ -876,11 +878,6 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
         if self._mac:
             return self._avm_wrapper.devices[self._mac].hostname
         return None
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     async def async_process_update(self) -> None:
         """Update device."""
