@@ -302,65 +302,40 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     def media_seek(self, position: int) -> None:
         """Send seek command."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Playing/Seek",
-            action="POST",
-            params={"seekPositionTicks": int(position * 10000000)},
-        )
+        self._client.jellyfin.remote_seek(self._id, int(position * 10000000))
 
     def media_pause(self) -> None:
         """Send pause command."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Playing/Pause",
-            action="POST",
-        )
+        self._client.jellyfin.remote_pause(self._id)
 
     def media_play(self) -> None:
         """Send play command."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Playing/Unpause",
-            action="POST",
-        )
+        self._client.jellyfin.remote_unpause(self._id)
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Playing/PlayPause",
-            action="POST",
-        )
+        self._client.jellyfin.remote_playpause(self._id)
 
     def media_stop(self) -> None:
         """Send stop command."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Playing/Stop",
-            action="POST",
-        )
+        self._client.jellyfin.remote_stop(self._id)
 
     def play_media(
         self, media_type: str, media_id: str, **kwargs: dict[str, Any]
     ) -> None:
         """Play a piece of media."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Playing",
-            action="POST",
-            params={"playCommand": "PlayNow", "itemIds": [media_id]},
-        )
+        self._client.jellyfin.remote_play_media(self._id, [media_id])
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Command",
-            action="POST",
-            json={"Name": "SetVolume", "Arguments": {"Volume": int(volume * 100)}},
-        )
+        self._client.jellyfin.remote_set_volume(self._id, int(volume * 100))
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        self._client.jellyfin.sessions(
-            handler=f"/{self._id}/Command",
-            action="POST",
-            json={"Name": "Mute" if mute else "Unmute"},
-        )
+        if mute:
+            self._client.jellyfin.remote_mute(self._id)
+        else:
+            self._client.jellyfin.remote_unmute(self._id)
 
     @property
     def device_info(self) -> DeviceInfo | None:
