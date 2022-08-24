@@ -90,6 +90,7 @@ class AladdinDevice(CoverEntity):
         self._number = device["door_number"]
         self._name = device["name"]
         self._serial = device["serial"]
+        self._model = device["model"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
         self._attr_has_entity_name = True
 
@@ -97,9 +98,10 @@ class AladdinDevice(CoverEntity):
     def device_info(self) -> DeviceInfo | None:
         """Device information for Aladdin Connect cover."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
             name=self._name,
             manufacturer="Overhead Door",
+            model=self._model,
         )
 
     async def async_added_to_hass(self) -> None:
