@@ -135,7 +135,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "thermopro",
-        "local_name": "TH35*",
+        "local_name": "TP35*",
         "connectable": False
     },
     {
