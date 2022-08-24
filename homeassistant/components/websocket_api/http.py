@@ -90,14 +90,8 @@ class WebSocketHandler:
                 messages: list[str] = [message]
                 while not to_write.empty():
                     if (process := to_write.get_nowait()) is None:
-                        continue
+                        break
                     messages.append(process if isinstance(process, str) else process())
-
-                if len(messages) == 1:
-                    # The next message was None so we are done
-                    logger.debug("Sending %s", messages[0])
-                    await wsock.send_str(messages[0])
-                    break
 
                 coalesced_messages = "[" + ",".join(messages) + "]"
                 self._logger.debug("Sending %s", coalesced_messages)
