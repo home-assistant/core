@@ -9,7 +9,6 @@ from lektricowifi import lektricowifi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -38,12 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_HOST],
         session=session,
     )
-
-    # Ensure we can connect to it
-    try:
-        await charger.charger_info()
-    except lektricowifi.ChargerConnectionError as exception:
-        raise ConfigEntryNotReady("Unable to connect") from exception
 
     settings = await charger.charger_config()
     _lektrico_device = LektricoDeviceDataUpdateCoordinator(
