@@ -37,7 +37,7 @@ class LektricoNumberEntityDescription(NumberEntityDescription):
         return None
 
     @classmethod
-    def set_value(
+    async def set_value(
         cls, device: lektricowifi.Charger, value: float, data: Any
     ) -> bool | None:
         """Return None."""
@@ -54,12 +54,14 @@ class LedBrightnessNumberEntityDescription(LektricoNumberEntityDescription):
         return int(data.led_max_brightness)
 
     @classmethod
-    def set_value(cls, device: lektricowifi.Charger, value: float, data: Any) -> bool:
+    async def set_value(
+        cls, device: lektricowifi.Charger, value: float, data: Any
+    ) -> bool:
         """Set the value for the led brightness in %, from 20 to 100."""
         # Quick change the value displayed on the entity.
         data.led_max_brightness = int(value)
         return bool(
-            device.send_command(
+            await device.send_command(
                 f'app_config.set?config_key="led_max_brightness"&config_value={int(value)}'
             )
         )
@@ -75,12 +77,16 @@ class DynamicCurrentNumberEntityDescription(LektricoNumberEntityDescription):
         return int(data.dynamic_current)
 
     @classmethod
-    def set_value(cls, device: lektricowifi.Charger, value: float, data: Any) -> bool:
+    async def set_value(
+        cls, device: lektricowifi.Charger, value: float, data: Any
+    ) -> bool:
         """Set the value of the dynamic current, as int between 0 and 32 A."""
         # Quick change the value displayed on the entity.
         data.dynamic_current = int(value)
         return bool(
-            device.send_command(f'dynamic_current.set?dynamic_current="{int(value)}"')
+            await device.send_command(
+                f'dynamic_current.set?dynamic_current="{int(value)}"'
+            )
         )
 
 
@@ -94,12 +100,14 @@ class UserCurrentNumberEntityDescription(LektricoNumberEntityDescription):
         return int(data.user_current)
 
     @classmethod
-    def set_value(cls, device: lektricowifi.Charger, value: float, data: Any) -> bool:
+    async def set_value(
+        cls, device: lektricowifi.Charger, value: float, data: Any
+    ) -> bool:
         """Set the value of the user current, as int between 6 and 32 A."""
         # Quick change the value displayed on the entity.
         data.user_current = int(value)
         return bool(
-            device.send_command(
+            await device.send_command(
                 f'app_config.set?config_key="user_current"&config_value="{int(value)}"'
             )
         )
@@ -204,7 +212,7 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number."""
-        self.entity_description.set_value(
+        await self.entity_description.set_value(
             self._lektrico_device.device, value, self._lektrico_device.data
         )
         # Refresh the coordinator because some buttons change some values.
