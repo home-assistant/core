@@ -4,16 +4,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pyiss
-import requests
-from requests.exceptions import HTTPError
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from . import IssData
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,8 +21,6 @@ ATTR_ISS_NUMBER_PEOPLE_SPACE = "number_of_people_in_space"
 
 DEFAULT_NAME = "ISS"
 DEFAULT_DEVICE_CLASS = "visible"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 async def async_setup_entry(
