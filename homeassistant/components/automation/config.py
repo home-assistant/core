@@ -117,7 +117,7 @@ async def _try_async_validate_config_item(
         IntegrationNotFound,
         InvalidDeviceAutomationConfig,
     ) as ex:
-        async_log_exception(ex, DOMAIN, full_config or config, hass)
+        async_log_exception(ex, DOMAIN, config, hass)
         return None
 
     if isinstance(validated_config, blueprint.BlueprintInputs):

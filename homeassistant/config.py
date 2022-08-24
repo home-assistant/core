@@ -23,6 +23,7 @@ from .const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
+    CONF_ALIAS,
     CONF_ALLOWLIST_EXTERNAL_DIRS,
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
@@ -540,6 +541,10 @@ def _format_config_error(
         f" (See {getattr(domain_config, '__config_file__', '?')}, "
         f"line {getattr(domain_config, '__line__', '?')}). "
     )
+    if config.get(CONF_ID):
+        message += f"Entry id: {config.get(ATTR_ID)}. "
+    if config.get(CONF_ALIAS):
+        message += f"Alias: {config.get(CONF_ALIAS)}. "
 
     if domain != CONF_CORE and link:
         message += f"Please check the docs at {link}"
