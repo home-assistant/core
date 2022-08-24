@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
-from homeassistant.core import callback
+from homeassistant.core import async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.config_validation import (
@@ -39,6 +39,11 @@ def mock_handlers():
 
     with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
         yield
+
+
+async def test_hass_cv(hass):
+    """Test hass context variable."""
+    assert hass == async_get_hass()
 
 
 async def test_validate_component_config(hass):

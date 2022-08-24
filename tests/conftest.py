@@ -227,6 +227,8 @@ def hass(loop, load_registries, hass_storage, request):
 
     exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
+    ha._cv_hass.set(hass)
+
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
