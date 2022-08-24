@@ -11,3 +11,5 @@ LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_PORT = 2323
+
+AUDIOMANAGER_STREAM_MUSIC = 3
