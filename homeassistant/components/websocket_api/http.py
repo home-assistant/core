@@ -199,8 +199,8 @@ class WebSocketHandler:
         auth = AuthPhase(
             self._logger, self.hass, self._send_message, self._cancel, request
         )
-        disconnect_warn = None
         connection = None
+        disconnect_warn = None
 
         try:
             self._send_message(auth_required_message())
