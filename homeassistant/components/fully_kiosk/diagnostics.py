@@ -1,6 +1,8 @@
 """Provides diagnostics for Fully Kiosk Browser."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,7 +36,7 @@ SETTINGS_TO_REDACT = {
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return device diagnostics."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     data = coordinator.data
