@@ -248,8 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @hass_callback
 def async_migrate_entries(
-    hass: HomeAssistant,
-    adapters: dict[str, AdapterDetails],
+    hass: HomeAssistant, adapters: dict[str, AdapterDetails]
 ) -> None:
     """Migrate config entries to support multiple."""
     current_entries = hass.config_entries.async_entries(DOMAIN)
@@ -289,9 +288,7 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    adapter: str,
+    hass: HomeAssistant, entry: ConfigEntry, adapter: str
 ) -> None:
     """Update device registry entry.
 
