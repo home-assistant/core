@@ -7,10 +7,14 @@ from datetime import datetime
 import logging
 import platform
 import time
+from typing import Any
 
 import async_timeout
 import bleak
 from bleak import BleakError
+from bleak.assigned_numbers import AdvertisementDataType
+from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
+from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from dbus_next import InvalidMessageError
@@ -81,13 +85,26 @@ def create_bleak_scanner(
     scanning_mode: BluetoothScanningMode, adapter: str | None
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
-    scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
+    scanner_kwargs: dict[str, Any] = {
+        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
+    }
     # Only Linux supports multiple adapters
     if adapter and platform.system() == "Linux":
         scanner_kwargs["adapter"] = adapter
+        if scanning_mode == BluetoothScanningMode.PASSIVE:
+            # This is a workaround for the fact that passive scanning
+            # needs at least one matcher to be set. The below matcher
+            # will match all devices.
+            scanner_kwargs["bluez"] = BlueZScannerArgs(
+                or_patterns=[
+                    OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
+                    OrPattern(0, AdvertisementDataType.FLAGS, b"\x1a"),
+                ]
+            )
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
+
     try:
-        return OriginalBleakScanner(**scanner_kwargs)  # type: ignore[arg-type]
+        return OriginalBleakScanner(**scanner_kwargs)
     except (FileNotFoundError, BleakError) as ex:
         raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
 

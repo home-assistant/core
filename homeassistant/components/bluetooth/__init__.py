@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, cast
 import async_timeout
 from bleak.backends.device import BLEDevice
 
-from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -26,6 +26,7 @@ from .const import (
     ADAPTER_SW_VERSION,
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_PASSIVE,
     DATA_MANAGER,
     DEFAULT_ADDRESS,
     DOMAIN,
@@ -284,14 +285,14 @@ async def async_discover_adapters(
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: adapter, CONF_DETAILS: details},
         )
 
 
 async def async_update_device(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: ConfigEntry,
     adapter: str,
 ) -> None:
     """Update device registry entry.
@@ -314,9 +315,7 @@ async def async_update_device(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
     address = entry.unique_id
     assert address is not None
@@ -326,8 +325,10 @@ async def async_setup_entry(
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
 
+    passive = entry.options.get(CONF_PASSIVE)
+    mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     try:
-        bleak_scanner = create_bleak_scanner(BluetoothScanningMode.ACTIVE, adapter)
+        bleak_scanner = create_bleak_scanner(mode, adapter)
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
@@ -342,12 +343,16 @@ async def async_setup_entry(
     entry.async_on_unload(async_register_scanner(hass, scanner, True))
     await async_update_device(hass, entry, adapter)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     scanner: HaScanner = hass.data[DOMAIN].pop(entry.entry_id)
     await scanner.async_stop()

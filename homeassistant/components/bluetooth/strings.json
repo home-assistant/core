@@ -25,5 +25,18 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "no_adapters": "No unconfigured Bluetooth adapters found"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Passive listening requires BlueZ 5.63 or later with experimental features enabled.",
+        "data": {
+          "passive": "Passive listening"
+        }
+      }
+    },
+    "abort": {
+      "no_options": "No options available"
+    }
   }
 }
