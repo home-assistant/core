@@ -340,9 +340,9 @@ class ConfigEntrySelector(Selector):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, str]:
+    def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        config: dict[str, str] = vol.Schema(str)(data)
+        config: str = vol.Schema(str)(data)
         return config
 
 
