@@ -8,7 +8,6 @@ import platform
 from typing import TYPE_CHECKING, cast
 
 import async_timeout
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components import usb
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
@@ -48,11 +47,10 @@ from .models import (
 from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
 from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
-_LOGGER = logging.getLogger(__name__)
-
 if TYPE_CHECKING:
-    from homeassistant.helpers.typing import ConfigType
+    from bleak.backends.device import BLEDevice
 
+    from homeassistant.helpers.typing import ConfigType
 
 __all__ = [
     "async_ble_device_from_address",
@@ -250,8 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @hass_callback
 def async_migrate_entries(
-    hass: HomeAssistant,
-    adapters: dict[str, AdapterDetails],
+    hass: HomeAssistant, adapters: dict[str, AdapterDetails]
 ) -> None:
     """Migrate config entries to support multiple."""
     current_entries = hass.config_entries.async_entries(DOMAIN)
@@ -291,9 +288,7 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    adapter: str,
+    hass: HomeAssistant, entry: ConfigEntry, adapter: str
 ) -> None:
     """Update device registry entry.
 
