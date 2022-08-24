@@ -8,6 +8,7 @@ DOMAIN = "bluetooth"
 
 CONF_ADAPTER = "adapter"
 CONF_DETAILS = "details"
+CONF_PASSIVE = "passive"
 
 WINDOWS_DEFAULT_BLUETOOTH_ADAPTER = "bluetooth"
 MACOS_DEFAULT_BLUETOOTH_ADAPTER = "Core Bluetooth"
