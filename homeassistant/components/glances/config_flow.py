@@ -19,14 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
-from .const import (
-    CONF_VERSION,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_VERSION,
-    DOMAIN,
-    SUPPORTED_VERSIONS,
-)
+from .const import CONF_VERSION, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_VERSION, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
