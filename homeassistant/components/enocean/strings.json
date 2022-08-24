@@ -21,5 +21,20 @@
       "invalid_dongle_path": "Invalid dongle path",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "options": {
+    "error": {
+      "invalid_id": "The EnOcean ID provided is not valid."
+    },
+    "step": {
+      "add_device": {
+        "title": "Add new device",
+        "data": {
+          "id": "The EnOcean ID of the device to add",
+          "name": "A user-defined name for the new device"
+        },
+        "description": "Add a new EnOcean device"
+      }
+    }
   }
 }
