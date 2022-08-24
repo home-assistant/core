@@ -6,6 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth.const import (
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_PASSIVE,
     DEFAULT_ADDRESS,
     DOMAIN,
     AdapterDetails,
@@ -235,3 +236,71 @@ async def test_async_step_integration_discovery_already_exists(hass):
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@patch("homeassistant.components.bluetooth.util.platform.system", return_value="Linux")
+async def test_options_flow_linux(mock_system, hass, mock_bleak_scanner_start):
+    """Test options on Linux."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+        unique_id="DOMAIN",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSIVE: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PASSIVE] is True
+
+    # Verify we can change it to False
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSIVE: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PASSIVE] is False
+
+
+@patch("homeassistant.components.bluetooth.util.platform.system", return_value="Darwin")
+async def test_options_flow_macos(mock_system, hass, mock_bleak_scanner_start):
+    """Test options on MacOS."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+        unique_id="DOMAIN",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_options"
