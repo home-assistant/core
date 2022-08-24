@@ -28,7 +28,6 @@ async def async_setup_entry(
             for device_coordinator in coordinator_data
             if device_coordinator.device.device_type == Platform.SWITCH
         ],
-        True,
     )
 
 

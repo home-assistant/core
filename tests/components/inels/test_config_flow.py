@@ -1,6 +1,7 @@
 """Test config flow."""
 from unittest.mock import patch
 
+from inelsmqtt.const import MQTT_TRANSPORT
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -73,6 +74,7 @@ async def test_user_config_flow_finised_successfully(
         CONF_PORT: 1883,
         CONF_USERNAME: "test",
         CONF_PASSWORD: "pwd",
+        MQTT_TRANSPORT: "tcp",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -106,6 +108,7 @@ async def test_use_config_flow_finised_failed(
         CONF_PORT: 1883,
         CONF_USERNAME: "test",
         CONF_PASSWORD: "pwd",
+        MQTT_TRANSPORT: "tcp",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -138,6 +141,7 @@ async def test_config_setup(
         CONF_PORT: 1883,
         CONF_USERNAME: "test",
         CONF_PASSWORD: "pwd",
+        MQTT_TRANSPORT: "tcp",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -150,7 +154,9 @@ async def test_config_setup(
     assert result[CONF_TYPE] == "create_entry"
     assert result["result"].data == config
 
-    mock_try_connection.assert_called_once_with(hass, "127.0.0.1", 1883, "test", "pwd")
+    mock_try_connection.assert_called_once_with(
+        hass, "127.0.0.1", 1883, "test", "pwd", "tcp"
+    )
 
     assert len(mock_is_available.mock_calls) == 1
 
@@ -217,6 +223,7 @@ async def test_hassio_confirm(
                 CONF_USERNAME: "user",
                 CONF_PASSWORD: "pass",
                 CONF_PROTOCOL: "3.1.1",  # Set by the addon's discovery, ignored by HA
+                MQTT_TRANSPORT: "tcp",
                 CONF_SSL: False,  # Set by the addon's discovery, ignored by HA
             }
         ),
@@ -237,6 +244,7 @@ async def test_hassio_confirm(
         CONF_PORT: 1883,
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
+        MQTT_TRANSPORT: "tcp",
         CONF_DISCOVERY: True,
     }
     assert len(mock_try_connection.mock_calls) == 1
@@ -252,6 +260,7 @@ async def test_inels_option_flow(hass: HomeAssistant, mock_try_connection) -> No
     config_entry.data = {
         CONF_HOST: "test-mqtt",
         CONF_PORT: 1883,
+        MQTT_TRANSPORT: "tcp",
     }
     # setup option form
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -267,6 +276,7 @@ async def test_inels_option_flow(hass: HomeAssistant, mock_try_connection) -> No
         user_input={
             CONF_HOST: "another-mqtt-broker",
             CONF_PORT: 2883,
+            MQTT_TRANSPORT: "tcp",
         },
     )
     assert result[CONF_TYPE] == data_entry_flow.FlowResultType.FORM
@@ -281,6 +291,7 @@ async def test_inels_option_flow(hass: HomeAssistant, mock_try_connection) -> No
             CONF_PORT: 2883,
             CONF_USERNAME: "user-new",
             CONF_PASSWORD: "pass-new",
+            MQTT_TRANSPORT: "tcp",
         },
     )
     assert result[CONF_TYPE] == data_entry_flow.FlowResultType.CREATE_ENTRY

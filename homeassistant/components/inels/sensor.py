@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from operator import itemgetter
 from typing import Any
 
-from inelsmqtt.const import BATTERY, TEMP_IN, TEMP_OUT, TEMP_SENSOR_DATA, TEMPERATURE
+from inelsmqtt.const import BATTERY, RFTI_10B, TEMP_IN, TEMP_OUT, TEMP_SENSOR_DATA
 from inelsmqtt.devices import Device
 
 from homeassistant.components.sensor import (
@@ -118,7 +118,7 @@ async def async_setup_entry(
 
     for device_coordinator in coordinator_data:
         if device_coordinator.device.device_type == Platform.SENSOR:
-            if device_coordinator.device.inels_type == TEMPERATURE:
+            if device_coordinator.device.inels_type == RFTI_10B:
                 descriptions = SENSOR_DESCRIPTION_TEMPERATURE
             else:
                 continue

@@ -24,9 +24,9 @@ from .coordinator import InelsDeviceUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.SWITCH,
-    Platform.SENSOR,
     Platform.LIGHT,
     Platform.COVER,
+    Platform.SENSOR,
 ]
 
 

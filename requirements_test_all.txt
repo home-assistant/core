@@ -646,7 +646,7 @@ icmplib==3.0
 ifaddr==0.1.7
 
 # homeassistant.components.inels
-inels-mqtt==0.0.31
+inels-mqtt==0.0.35
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0

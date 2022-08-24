@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from inelsmqtt.const import DIMMER
+from inelsmqtt.const import RFDAC_71B
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -37,7 +37,6 @@ async def async_setup_entry(
             for device_coordinator in coordinator_data
             if device_coordinator.device.device_type == Platform.LIGHT
         ],
-        True,
     )
 
 
@@ -50,7 +49,7 @@ class InelsLight(InelsBaseEntity, LightEntity):
         self._device_control = self._device
 
         self._attr_supported_color_modes: set[ColorMode] = set()
-        if self._device_control.inels_type is DIMMER:
+        if self._device_control.inels_type is RFDAC_71B:
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
     def _refresh(self) -> None:
@@ -71,7 +70,7 @@ class InelsLight(InelsBaseEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Light brightness."""
-        if self._device_control.inels_type is not DIMMER:
+        if self._device_control.inels_type is not RFDAC_71B:
             return None
         return cast(int, self._device_control.state * 2.55)
 
