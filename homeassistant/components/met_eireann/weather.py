@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     LENGTH_MILLIMETERS,
     PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -58,7 +58,7 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     _attr_native_precipitation_unit = LENGTH_MILLIMETERS
     _attr_native_pressure_unit = PRESSURE_HPA
     _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
 
     def __init__(self, coordinator, config, hourly):
         """Initialise the platform with a data instance and site."""
