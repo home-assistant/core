@@ -76,31 +76,34 @@ class WebSocketHandler:
         to_write = self._to_write
         logger = self._logger
         wsock = self.wsock
-        with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
-            while not self.wsock.closed:
-                if (process := await to_write.get()) is None:
-                    break
-                message = process if isinstance(process, str) else process()
+        try:
+            with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
+                while not self.wsock.closed:
+                    if (process := await to_write.get()) is None:
+                        return
+                    message = process if isinstance(process, str) else process()
 
-                if not self.command_phase or to_write.empty():
-                    logger.debug("Sending %s", message)
-                    await wsock.send_str(message)
-                    continue
+                    if not self.command_phase or to_write.empty():
+                        logger.debug("Sending %s", message)
+                        await wsock.send_str(message)
+                        continue
 
-                messages: list[str] = [message]
-                while not to_write.empty():
-                    if (process := to_write.get_nowait()) is None:
-                        break
-                    messages.append(process if isinstance(process, str) else process())
+                    messages: list[str] = [message]
+                    while not to_write.empty():
+                        if (process := to_write.get_nowait()) is None:
+                            return
+                        messages.append(
+                            process if isinstance(process, str) else process()
+                        )
 
-                coalesced_messages = "[" + ",".join(messages) + "]"
-                self._logger.debug("Sending %s", coalesced_messages)
-                await self.wsock.send_str(coalesced_messages)
-
-        # Clean up the peaker checker when we shut down the writer
-        if self._peak_checker_unsub is not None:
-            self._peak_checker_unsub()
-            self._peak_checker_unsub = None
+                    coalesced_messages = "[" + ",".join(messages) + "]"
+                    self._logger.debug("Sending %s", coalesced_messages)
+                    await self.wsock.send_str(coalesced_messages)
+        finally:
+            # Clean up the peaker checker when we shut down the writer
+            if self._peak_checker_unsub is not None:
+                self._peak_checker_unsub()
+                self._peak_checker_unsub = None
 
     @callback
     def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
