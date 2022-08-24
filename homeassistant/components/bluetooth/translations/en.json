@@ -27,9 +27,6 @@
         }
     },
     "options": {
-        "abort": {
-            "no_options": "No options available"
-        },
         "step": {
             "init": {
                 "data": {
