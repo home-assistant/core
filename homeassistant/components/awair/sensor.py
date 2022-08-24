@@ -47,11 +47,13 @@ async def async_setup_entry(
     data: list[AwairResult] = coordinator.data.values()
     for result in data:
         if result.air_data:
-            entities.append(AwairSensor(result.device, coordinator, SENSOR_TYPE_SCORE))
+            entities.append(
+                AwairSensor(result.device, coordinator, SENSOR_TYPE_SCORE, config_entry)
+            )
             device_sensors = result.air_data.sensors.keys()
             entities.extend(
                 [
-                    AwairSensor(result.device, coordinator, description)
+                    AwairSensor(result.device, coordinator, description, config_entry)
                     for description in (*SENSOR_TYPES, *SENSOR_TYPES_DUST)
                     if description.key in device_sensors
                 ]
@@ -66,7 +68,9 @@ async def async_setup_entry(
             if API_DUST in device_sensors:
                 entities.extend(
                     [
-                        AwairSensor(result.device, coordinator, description)
+                        AwairSensor(
+                            result.device, coordinator, description, config_entry
+                        )
                         for description in SENSOR_TYPES_DUST
                     ]
                 )
@@ -78,25 +82,26 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     """Defines an Awair sensor entity."""
 
     entity_description: AwairSensorEntityDescription
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         device: AwairBaseDevice,
         coordinator: AwairDataUpdateCoordinator,
         description: AwairSensorEntityDescription,
+        config_entry: ConfigEntry,
     ) -> None:
         """Set up an individual AwairSensor."""
         super().__init__(coordinator)
         self.entity_description = description
+        self.config_entry = config_entry
         self._device = device
 
     @property
     def name(self) -> str | None:
         """Return the name of the sensor."""
-        if self._device.name:
-            return f"{self._device.name} {self.entity_description.name}"
-
-        return self.entity_description.name
+        name = self._device.name if self._device.name else self.config_entry.title
+        return f"{name} {self.entity_description.name}"
 
     @property
     def unique_id(self) -> str:
