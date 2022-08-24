@@ -7,7 +7,7 @@ from functools import wraps
 import logging
 from typing import Any, Final, TypeVar
 
-from pybravia import BraviaTV, BraviaTVError
+from pybravia import BraviaTV, BraviaTVError, BraviaTVNotFound
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player.const import (
@@ -121,6 +121,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
+        except BraviaTVNotFound:
+            self.connected = False
         except BraviaTVError as err:
             self.is_on = False
             self.connected = False
