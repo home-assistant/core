@@ -1223,16 +1223,14 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
                     "sequence": {
                         "service": "test.script",
                         "data_template": {"entity_id": "{{ this.entity_id }}"},
-                    }
-                }
-            }
+                    },
+                },
+            },
         },
     )
-
     await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
 
     await hass.async_block_till_done()
-
     assert len(calls) == 1
     assert calls[0].data["entity_id"] == "script.custom_entity_id"
 
@@ -1248,3 +1246,29 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
 
     assert len(calls) == 2
     assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
+
+
+async def test_script_bad_condition(hass, caplog):
+    """Test bad trigger configuration."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "hello": {
+                    "alias": "hello",
+                    "sequence": {
+                        "condition": {
+                            "condition": "state",
+                            "entity_id": "hello.world",
+                            "to": "test",
+                        },
+                        "service": "test.script",
+                    },
+                },
+            },
+        },
+    )
+
+    assert "Unexpected value for condition:" in caplog.text
+    assert "Alias: hello" in caplog.text
