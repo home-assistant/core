@@ -109,26 +109,26 @@ SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
     LedBrightnessNumberEntityDescription(
         key="led_max_brightness",
         name="Led Brightness",
-        min_value=20,
-        max_value=100,
-        step=5,
-        unit_of_measurement=PERCENTAGE,
+        native_min_value=20,
+        native_max_value=100,
+        native_step=5,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     DynamicCurrentNumberEntityDescription(
         key="dynamic_current",
         name="Dynamic Current",
-        min_value=0,
-        max_value=32,
-        step=1,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_min_value=0,
+        native_max_value=32,
+        native_step=1,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     UserCurrentNumberEntityDescription(
         key="user_current",
         name="User Current",
-        min_value=6,
-        max_value=32,
-        step=1,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_min_value=6,
+        native_max_value=32,
+        native_step=1,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
 )
 
@@ -178,16 +178,16 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
 
         self._lektrico_device = _lektrico_device
 
-        self._attr_value = 20
-        if description.step is not None:
-            self._attr_step = description.step
-        if description.max_value is not None:
-            self._attr_max_value = description.max_value
-        if description.min_value is not None:
-            self._attr_min_value = description.min_value
+        self._attr_native_value = 20
+        if description.native_step is not None:
+            self._attr_native_step = description.native_step
+        if description.native_max_value is not None:
+            self._attr_native_max_value = description.native_max_value
+        if description.native_min_value is not None:
+            self._attr_native_min_value = description.native_min_value
 
     @property
-    def value(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the value of the number as integer."""
         return self.entity_description.get_value(self._lektrico_device.data)
 
@@ -202,7 +202,7 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
             ATTR_SW_VERSION: self._lektrico_device.data.fw_version,
         }
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number."""
         self.entity_description.set_value(
             self._lektrico_device.device, value, self._lektrico_device.data
