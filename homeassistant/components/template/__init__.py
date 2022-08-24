@@ -161,8 +161,7 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             start_event is not None,
         )
 
-    @callback
-    def _handle_triggered(self, run_variables, context=None):
+    async def _handle_triggered(self, run_variables, context=None):
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )
