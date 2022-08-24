@@ -767,7 +767,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue",
         ),
         (
-            "sensor.today_energy",
+            "sensor.power_consumption",
             "from integration demo ",
             "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+demo%22",
         ),
