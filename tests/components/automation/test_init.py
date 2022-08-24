@@ -1348,6 +1348,57 @@ async def test_automation_bad_trigger(hass, caplog):
     assert "Integration 'automation' does not provide trigger support." in caplog.text
 
 
+async def test_automation_bad_trigger_2(hass, caplog):
+    """Test bad trigger configuration."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "12345678",
+                "alias": "hello",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "hello.world",
+                    "state": None,
+                },
+                "action": [],
+            }
+        },
+    )
+    assert "[state] is an invalid option for [automation]." in caplog.text
+    assert "Entry id: 12345678" in caplog.text
+    assert "Alias: hello" in caplog.text
+
+
+async def test_automation_bad_condition(hass, caplog):
+    """Test bad trigger configuration."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "12345678",
+                "alias": "hello",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "hello.world",
+                    "to": "Test",
+                },
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "hello.world",
+                    "to": "test",
+                },
+                "action": [],
+            }
+        },
+    )
+    assert "[to] is an invalid option for [automation]." in caplog.text
+    assert "Entry id: 12345678" in caplog.text
+    assert "Alias: hello" in caplog.text
+
+
 async def test_automation_with_error_in_script(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1376,7 +1427,7 @@ async def test_automation_with_error_in_script(
     assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
 
 
-async def test_automation_with_error_in_script_2(hass, caplog):
+async def test_automation_with_error_in_script_2(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
     """Test automation with an error in script."""
     assert await async_setup_component(
         hass,
