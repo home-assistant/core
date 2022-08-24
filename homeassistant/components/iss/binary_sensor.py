@@ -37,7 +37,9 @@ async def async_setup_entry(
     async_add_entities([IssBinarySensor(coordinator, name, show_on_map)], True)
 
 
-class IssBinarySensor(CoordinatorEntity[IssData], BinarySensorEntity):
+class IssBinarySensor(
+    CoordinatorEntity[DataUpdateCoordinator[IssData]], BinarySensorEntity
+    ):
     """Implementation of the ISS binary sensor."""
 
     _attr_device_class = DEFAULT_DEVICE_CLASS
@@ -54,7 +56,7 @@ class IssBinarySensor(CoordinatorEntity[IssData], BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data["is_above"] is True
+        return self.coordinator["is_above"] is True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
