@@ -542,7 +542,7 @@ def _format_config_error(
         f"line {getattr(domain_config, '__line__', '?')}). "
     )
     try:
-        message += f"Entry id: {config.get(ATTR_ID)}. Alias: {config.get(CONF_ALIAS)}. "
+        message += f"Entry id: {config.get(CONF_ID)}. Alias: {config.get(CONF_ALIAS)}. "
     except AttributeError:
         pass
 
