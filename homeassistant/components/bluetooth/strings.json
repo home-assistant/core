@@ -29,7 +29,7 @@
   "options": {
     "step": {
       "init": {
-        "description": "Passive listening requires BlueZ 5.63 with experimental features enabled.",
+        "description": "Passive listening requires BlueZ 5.63 or later with experimental features enabled.",
         "data": {
           "passive": "Passive listening"
         }
