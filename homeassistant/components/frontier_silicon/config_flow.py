@@ -1,7 +1,6 @@
 """Config flow for Frontier Silicon Media Player integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -9,19 +8,10 @@ from afsapi import AFSAPI, ConnectionError as FSConnectionError, InvalidPinExcep
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_PIN,
-    CONF_WEBFSAPI_URL,
-    DEFAULT_PIN,
-    DEFAULT_PORT,
-    DOMAIN,
-    SSDP_ATTR_SPEAKER_NAME,
-    SSDP_ST,
-)
+from .const import CONF_PIN, CONF_WEBFSAPI_URL, DEFAULT_PIN, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +43,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._webfsapi_url: str | None = None
         self._name: str | None = None
         self._unique_id: str | None = None
-
-        # Only used in reauth flows:
-        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Handle the import of legacy configuration.yaml entries."""
@@ -117,54 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Process entity discovered via SSDP."""
-
-        device_url = discovery_info.ssdp_location
-
-        speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
-        self.context["title_placeholders"] = {"name": speaker_name}
-
-        try:
-            self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-        except FSConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            return self.async_abort(reason="unknown")
-
-        # For manually added devices the unique_id is the radio_id,
-        # for devices discovered through SSDP it is the UDN
-        self._unique_id = discovery_info.ssdp_udn
-        await self.async_set_unique_id(self._unique_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_WEBFSAPI_URL: self._webfsapi_url}, reload_on_update=True
-        )
-
-        return await self._async_step_device_config_if_needed(show_confirm=True)
-
-    async def async_step_unignore(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Rediscover previously ignored devices by their unique_id."""
-        if not user_input or "unique_id" not in user_input:
-            return self.async_abort(reason="unknown")
-
-        udn = user_input.get("unique_id")
-        assert udn
-
-        # Find a discovery matching the unignored unique_id for a Frontier Silicon device
-        discovery = await ssdp.async_get_discovery_info_by_udn_st(
-            self.hass, udn, SSDP_ST
-        )
-        if not discovery:
-            return self.async_abort(reason="discovery_error")
-
-        return await self.async_step_ssdp(discovery_info=discovery)
-
-    async def _async_step_device_config_if_needed(
-        self, show_confirm=False
-    ) -> FlowResult:
+    async def _async_step_device_config_if_needed(self) -> FlowResult:
         """Most users will not have changed the default PIN on their radio.
 
         We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
@@ -186,25 +126,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self._unique_id)
                 self._abort_if_unique_id_configured()
 
-            if show_confirm:
-                return await self.async_step_confirm()
-
             return await self._create_entry()
         except InvalidPinException:
             pass  # Ask for a PIN
 
         return await self.async_step_device_config()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
-
-        if user_input is not None:
-            return await self._create_entry()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="confirm")
 
     async def async_step_device_config(
         self, user_input: dict[str, Any] | None = None
@@ -258,25 +184,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = {CONF_WEBFSAPI_URL: self._webfsapi_url, CONF_PIN: pin or DEFAULT_PIN}
 
-        if self._reauth_entry:
-            self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
         return self.async_create_entry(title=self._name, data=data)
-
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        assert config is not None
-
-        self._webfsapi_url = config.get(CONF_WEBFSAPI_URL)
-        assert self._webfsapi_url
-
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
-        # Set unique_id to prevent check for duplicate entity
-        assert self._reauth_entry
-        self._unique_id = self._reauth_entry.unique_id
-        return await self.async_step_device_config()
