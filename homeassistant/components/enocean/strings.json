@@ -38,6 +38,7 @@
         "title": "Add new device",
         "data": {
           "id": "EnOcean ID",
+          "eep": "Model or EnOcean Equipment Profile (EEP)",
           "name": "Name",
           "sender_id": "Sender EnOcean ID",
           "device_class": "Device class"

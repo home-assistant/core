@@ -30,6 +30,7 @@
             "add_device": {
                 "data": {
                     "device_class": "Device class",
+                    "eep": "Model or EnOcean Equipment Profile (EEP)",
                     "id": "EnOcean ID",
                     "name": "Name",
                     "sender_id": "Sender EnOcean ID"
