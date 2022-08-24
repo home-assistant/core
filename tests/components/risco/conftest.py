@@ -57,13 +57,13 @@ def two_zone_cloud():
 @fixture
 def options():
     """Fixture for default (empty) options."""
-    yield {}
+    return {}
 
 
 @fixture
 def events():
     """Fixture for default (empty) events."""
-    yield []
+    return []
 
 
 @fixture
@@ -73,7 +73,7 @@ def cloud_config_entry(hass, options):
         domain=DOMAIN, data=TEST_CLOUD_CONFIG, options=options
     )
     config_entry.add_to_hass(hass)
-    yield config_entry
+    return config_entry
 
 
 @fixture
@@ -107,7 +107,7 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
         await hass.config_entries.async_setup(cloud_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return cloud_config_entry
+        yield cloud_config_entry
 
 
 @fixture
@@ -117,7 +117,7 @@ def local_config_entry(hass, options):
         domain=DOMAIN, data=TEST_LOCAL_CONFIG, options=options
     )
     config_entry.add_to_hass(hass)
-    yield config_entry
+    return config_entry
 
 
 @fixture
@@ -145,4 +145,4 @@ async def setup_risco_local(hass, local_config_entry):
         await hass.config_entries.async_setup(local_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    yield local_config_entry
+        yield local_config_entry

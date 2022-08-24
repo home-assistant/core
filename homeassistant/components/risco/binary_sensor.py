@@ -38,22 +38,20 @@ async def async_setup_entry(
 
     if is_local(config_entry):
         local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
-        local_entities = [
+        async_add_entities(
             RiscoLocalBinarySensor(
                 local_data.system.id, zone_id, zone, local_data.zone_updates
             )
             for zone_id, zone in local_data.system.zones.items()
-        ]
-        async_add_entities(local_entities, False)
+        )
     else:
         coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
             config_entry.entry_id
         ][DATA_COORDINATOR]
-        cloud_entities = [
+        async_add_entities(
             RiscoCloudBinarySensor(coordinator, zone_id, zone)
             for zone_id, zone in coordinator.data.zones.items()
-        ]
-        async_add_entities(cloud_entities, False)
+        )
 
 
 class RiscoBinarySensor(BinarySensorEntity):
@@ -87,7 +85,7 @@ class RiscoBinarySensor(BinarySensorEntity):
         """Unbypass this zone."""
         await self._bypass(False)
 
-    async def _bypass(self, bypass):
+    async def _bypass(self, bypass: bool) -> None:
         raise NotImplementedError
 
 
@@ -106,10 +104,10 @@ class RiscoCloudBinarySensor(RiscoBinarySensor, RiscoEntity):
             name=self._zone.name,
         )
 
-    def _get_data_from_coordinator(self):
+    def _get_data_from_coordinator(self) -> None:
         self._zone = self.coordinator.data.zones[self._zone_id]
 
-    async def _bypass(self, bypass):
+    async def _bypass(self, bypass: bool) -> None:
         alarm = await self._risco.bypass_zone(self._zone_id, bypass)
         self._zone = alarm.zones[self._zone_id]
         self.async_write_ha_state()
@@ -150,5 +148,5 @@ class RiscoLocalBinarySensor(RiscoBinarySensor):
             "groups": self._zone.groups,
         }
 
-    async def _bypass(self, bypass):
+    async def _bypass(self, bypass: bool) -> None:
         await self._zone.bypass(bypass)

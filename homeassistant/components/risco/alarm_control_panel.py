@@ -174,7 +174,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
         else:
             await self._call_alarm_method(risco_state)
 
-    async def _call_alarm_method(self, method, *args):
+    async def _call_alarm_method(self, method: str, *args: Any) -> None:
         raise NotImplementedError
 
 
@@ -203,7 +203,7 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoEntity):
             manufacturer="Risco",
         )
 
-    def _get_data_from_coordinator(self):
+    def _get_data_from_coordinator(self) -> None:
         self._partition = self.coordinator.data.partitions[self._partition_id]
 
     async def _call_alarm_method(self, method, *args):
@@ -243,5 +243,5 @@ class RiscoLocalAlarm(RiscoAlarm):
         """Subscribe to updates."""
         self._partition_updates[self._partition_id] = self.async_write_ha_state
 
-    async def _call_alarm_method(self, method, *args):
+    async def _call_alarm_method(self, method: str, *args: Any) -> None:
         await getattr(self._partition, method)(*args)
