@@ -22,7 +22,7 @@ async def test_diagnostics(
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test standard Fully Kiosk buttons."""
+    """Test Fully Kiosk diagnostics."""
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device({(DOMAIN, "abcdef-123456")})
