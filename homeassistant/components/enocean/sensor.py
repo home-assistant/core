@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean.utils import combine_hex
+from enocean.utils import combine_hex, from_hex_string
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -31,7 +31,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import LOGGER
 from .device import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
@@ -159,12 +158,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for device in devices:
         eep = device["eep"]
-        LOGGER.debug(eep)
-        # device_id = from_hex_string(device["id"])
-        LOGGER.debug(eep[0:5])
+        device_id = from_hex_string(device["id"])
+
+        # Temperature sensors
         if eep[0:5] == "A5-02":
             sensor_range_type = int(eep[6:8], 16)
-            LOGGER.debug(sensor_range_type)
             min_temp = 0
             max_temp = 0
 
@@ -178,10 +176,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 min_temp = -60 + multiplier * 10
                 max_temp = 20 + multiplier * 10
 
-            LOGGER.debug(min_temp)
-            LOGGER.debug(max_temp)
-
-            # async_add_entities([E(device_id, device["name"], None)])
+            async_add_entities(
+                [
+                    EnOceanTemperatureSensor(
+                        device_id,
+                        device["name"],
+                        SENSOR_DESC_TEMPERATURE,
+                        scale_min=min_temp,
+                        scale_max=max_temp,
+                        range_from=255,
+                        range_to=0,
+                    )
+                ]
+            )
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
