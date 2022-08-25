@@ -1,8 +1,6 @@
 """The IntelliFire integration."""
 from __future__ import annotations
 
-from pyflume import FlumeData
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
