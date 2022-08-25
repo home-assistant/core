@@ -14,7 +14,7 @@ from homeassistant.helpers import selector
 import homeassistant.helpers.entity_registry
 
 from . import dongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from .const import DOMAIN, ENOCEAN_EQUIPMENT_PROFILES, ERROR_INVALID_DONGLE_PATH, LOGGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,65 +31,6 @@ CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
 ENOCEAN_EDIT_DEVICE_COMMAND = "edit"
 ENOCEAN_DELETE_DEVICE_COMMAND = "delete"
 
-ENOCEAN_EQUIPMENT_PROFILES = [
-    selector.SelectOptionDict(value="12:34:56:78", label="Eltako FUD61 dimmer"),
-    selector.SelectOptionDict(
-        value="12:53:14:78", label="Eltako FT55 battery-less wall switch"
-    ),
-    selector.SelectOptionDict(
-        value="12:53:56:78", label="Jung ENOA590WW battery-less wall switch"
-    ),
-    selector.SelectOptionDict(
-        value="11:22:33:44", label="Omnio WS-CH-102-L-rw battery-less wall switch"
-    ),
-    selector.SelectOptionDict(
-        value="AB:CE:DE:F0", label="Permundo PSC234 (switch and power monitor)"
-    ),
-    selector.SelectOptionDict(
-        value="AB:CE:DE:F1", label="EnOcean STM-330 temperature sensor"
-    ),
-    selector.SelectOptionDict(
-        value="AB:CE:DE:F1", label="Hoppe SecuSignal window handle from Somfy"
-    ),
-    selector.SelectOptionDict(value="AB:CE:DE:F1", label="Eltako FT55"),
-    selector.SelectOptionDict(value="AB:CE:DE:F1", label="TRIO2SYS Wall switches "),
-    selector.SelectOptionDict(value="AB:CE:DE:F1", label="Omnio WS-CH-102"),
-    selector.SelectOptionDict(
-        value="F6-02-01",
-        label="Generic EEP F6-02-01 (Light and Blind Control - Application Style 2)",
-    ),
-    selector.SelectOptionDict(
-        value="F5-02-02",
-        label="Generic EEP F6-02-02 (Light and Blind Control - Application Style 1)",
-    ),
-    selector.SelectOptionDict(
-        value="A5-12-01",
-        label="Generic EEP A5-12-01 (Light and Blind Control - Application Style 1)",
-    ),
-    selector.SelectOptionDict(
-        value="A5-04-01",
-        label="Generic EEP A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)",
-    ),
-    selector.SelectOptionDict(
-        value="A5-04-02",
-        label="Generic EEP A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)",
-    ),
-    selector.SelectOptionDict(
-        value="A5-10-10", label="Generic EEP A5-10-10 (Room Operating Panel)"
-    ),
-    selector.SelectOptionDict(
-        value="A5-10-11", label="Generic EEP A5-10-11 (Room Operating Panel)"
-    ),
-    selector.SelectOptionDict(
-        value="A5-10-12", label="Generic EEP A5-10-12 (Room Operating Panel)"
-    ),
-    selector.SelectOptionDict(
-        value="A5-10-13", label="Generic EEP A5-10-13 (Room Operating Panel)"
-    ),
-    selector.SelectOptionDict(
-        value="A5-10-14", label="Generic EEP A5-10-14 (Room Operating Panel)"
-    ),
-]
 
 MOCKUP_DEVICES = [
     selector.SelectOptionDict(value="12:34:56:78", label="(Mock-up) Switch 1"),
