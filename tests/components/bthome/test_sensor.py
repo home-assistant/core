@@ -39,19 +39,19 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
-    temp_sensor = hass.states.get("sensor.atc_8d18b2_temperature")
+    temp_sensor = hass.states.get("sensor.atc_18b2_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "25.06"
 
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "ATC 8D18B2 Temperature"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "ATC 18B2 Temperature"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    humi_sensor = hass.states.get("sensor.atc_8d18b2_humidity")
+    humi_sensor = hass.states.get("sensor.atc_18b2_humidity")
     humi_sensor_attribtes = humi_sensor.attributes
     assert humi_sensor.state == "50.55"
 
-    assert humi_sensor_attribtes[ATTR_FRIENDLY_NAME] == "ATC 8D18B2 Humidity"
+    assert humi_sensor_attribtes[ATTR_FRIENDLY_NAME] == "ATC 18B2 Humidity"
     assert humi_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert humi_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
@@ -91,27 +91,27 @@ async def test_bthome_temperature_humidity_battery(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 3
 
-    temp_sensor = hass.states.get("sensor.test_device_8d18b2_temperature")
+    temp_sensor = hass.states.get("sensor.test_device_18b2_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "23.97"
 
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Temperature"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Temperature"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    humi_sensor = hass.states.get("sensor.test_device_8d18b2_humidity")
+    humi_sensor = hass.states.get("sensor.test_device_18b2_humidity")
     humi_sensor_attribtes = humi_sensor.attributes
     assert humi_sensor.state == "63.27"
 
-    assert humi_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Humidity"
+    assert humi_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Humidity"
     assert humi_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert humi_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    batt_sensor = hass.states.get("sensor.test_device_8d18b2_battery")
+    batt_sensor = hass.states.get("sensor.test_device_18b2_battery")
     batt_sensor_attr = batt_sensor.attributes
     assert batt_sensor.state == "93"
 
-    assert batt_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Battery"
+    assert batt_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Battery"
     assert batt_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert batt_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -149,11 +149,11 @@ async def test_bthome_pressure(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_pressure")
+    sensor = hass.states.get("sensor.test_device_18b2_pressure")
     sensor_attr = sensor.attributes
     assert sensor.state == "1008.83"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Pressure"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Pressure"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "mbar"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -191,11 +191,11 @@ async def test_bthome_illuminance(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_illuminance")
+    sensor = hass.states.get("sensor.test_device_18b2_illuminance")
     sensor_attr = sensor.attributes
     assert sensor.state == "13460.67"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Illuminance"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Illuminance"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -233,11 +233,11 @@ async def test_bthome_energy(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_energy")
+    sensor = hass.states.get("sensor.test_device_18b2_energy")
     sensor_attr = sensor.attributes
     assert sensor.state == "1346.067"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Energy"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Energy"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kWh"
     assert sensor_attr[ATTR_STATE_CLASS] == "total_increasing"
 
@@ -275,11 +275,11 @@ async def test_bthome_power(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_power")
+    sensor = hass.states.get("sensor.test_device_18b2_power")
     sensor_attr = sensor.attributes
     assert sensor.state == "69.14"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Power"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Power"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "W"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -317,11 +317,11 @@ async def test_bthome_voltage(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_voltage")
+    sensor = hass.states.get("sensor.test_device_18b2_voltage")
     sensor_attr = sensor.attributes
     assert sensor.state == "3.074"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Voltage"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Voltage"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "V"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -359,19 +359,19 @@ async def test_bthome_pm(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_pm10")
+    sensor = hass.states.get("sensor.test_device_18b2_pm10")
     sensor_attr = sensor.attributes
     assert sensor.state == "7170"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Pm10"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Pm10"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "µg/m³"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_pm25")
+    sensor = hass.states.get("sensor.test_device_18b2_pm25")
     sensor_attr = sensor.attributes
     assert sensor.state == "3090"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Pm25"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Pm25"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "µg/m³"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -408,11 +408,11 @@ async def test_bthome_c02(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_carbon_dioxide")
+    sensor = hass.states.get("sensor.test_device_18b2_carbon_dioxide")
     sensor_attr = sensor.attributes
     assert sensor.state == "1250"
 
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 8D18B2 Carbon Dioxide"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Carbon Dioxide"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -450,13 +450,12 @@ async def test_bthome_voc(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_8d18b2_volatile_organic_compounds")
+    sensor = hass.states.get("sensor.test_device_18b2_volatile_organic_compounds")
     sensor_attr = sensor.attributes
     assert sensor.state == "307"
 
     assert (
-        sensor_attr[ATTR_FRIENDLY_NAME]
-        == "Test Device 8D18B2 Volatile Organic Compounds"
+        sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device 18B2 Volatile Organic Compounds"
     )
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "µg/m³"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
@@ -499,17 +498,17 @@ async def test_temperature_humidity_encrypted(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
-    temp_sensor = hass.states.get("sensor.test_device_8f80a5_temperature")
+    temp_sensor = hass.states.get("sensor.test_device_80a5_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "25.06"
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 8F80A5 Temperature"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 80A5 Temperature"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    humi_sensor = hass.states.get("sensor.test_device_8f80a5_humidity")
+    humi_sensor = hass.states.get("sensor.test_device_80a5_humidity")
     humi_sensor_attribtes = humi_sensor.attributes
     assert humi_sensor.state == "50.55"
-    assert humi_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 8F80A5 Humidity"
+    assert humi_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device 80A5 Humidity"
     assert humi_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert humi_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import dataclasses
-import logging
 from typing import Any
 
 from bthome_ble import BThomeBluetoothDeviceData as DeviceData
@@ -20,8 +19,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -178,7 +175,6 @@ class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _async_get_or_create_entry(self, bindkey=None):
         data = {}
-
         if bindkey:
             data["bindkey"] = bindkey
 

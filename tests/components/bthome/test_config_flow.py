@@ -34,7 +34,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "ATC 8D18B2"
+    assert result2["title"] == "ATC 18B2"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "A4:C1:38:8D:18:B2"
 
@@ -54,7 +54,7 @@ async def test_async_step_bluetooth_during_onboarding(hass):
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "ATC 8D18B2"
+    assert result["title"] == "ATC 18B2"
     assert result["data"] == {}
     assert result["result"].unique_id == "A4:C1:38:8D:18:B2"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -77,7 +77,7 @@ async def test_async_step_bluetooth_valid_device_with_encryption(hass):
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -107,7 +107,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key(hass):
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -138,7 +138,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(has
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -200,7 +200,7 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "54:48:E6:8F:80:A5"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -232,7 +232,7 @@ async def test_async_step_user_with_found_devices_encryption(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -276,7 +276,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -321,7 +321,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key_length(ha
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -436,7 +436,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
             user_input={"address": "54:48:E6:8F:80:A5"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 8F80A5"
+    assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -468,6 +468,7 @@ async def test_async_step_reauth(hass):
     assert len(hass.states.async_all()) == 0
 
     saved_callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+
     await hass.async_block_till_done()
 
     results = hass.config_entries.flow.async_progress()
@@ -484,7 +485,7 @@ async def test_async_step_reauth(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-# async def test_async_step_reauth_v4_wrong_key(hass):
+# async def test_async_step_reauth_wrong_key(hass):
 #     """Test reauth for v4 with a bad key, and that we can recover."""
 #     entry = MockConfigEntry(
 #         domain=DOMAIN,
@@ -523,14 +524,14 @@ async def test_async_step_reauth(hass):
 #     assert len(results) == 1
 #     result = results[0]
 
-#     assert result["step_id"] == "get_encryption_key_4_5"
+#     assert result["step_id"] == "get_encryption_key"
 
 #     result2 = await hass.config_entries.flow.async_configure(
 #         result["flow_id"],
 #         user_input={"bindkey": "5b51a7c91cde6707c9ef18dada143a58"},
 #     )
 #     assert result2["type"] == FlowResultType.FORM
-#     assert result2["step_id"] == "get_encryption_key_4_5"
+#     assert result2["step_id"] == "get_encryption_key"
 #     assert result2["errors"]["bindkey"] == "decryption_failed"
 
 #     result2 = await hass.config_entries.flow.async_configure(
@@ -539,32 +540,3 @@ async def test_async_step_reauth(hass):
 #     )
 #     assert result2["type"] == FlowResultType.ABORT
 #     assert result2["reason"] == "reauth_successful"
-
-
-# async def test_async_step_reauth_abort_early(hass):
-#     """
-#     Test we can abort the reauth if there is no encryption.
-
-#     (This can't currently happen in practice).
-#     """
-#     entry = MockConfigEntry(
-#         domain=DOMAIN,
-#         unique_id="54:EF:44:E3:9C:BC",
-#     )
-#     entry.add_to_hass(hass)
-
-#     device = DeviceData()
-
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={
-#             "source": config_entries.SOURCE_REAUTH,
-#             "entry_id": entry.entry_id,
-#             "title_placeholders": {"name": entry.title},
-#             "unique_id": entry.unique_id,
-#         },
-#         data=entry.data | {"device": device},
-#     )
-
-#     assert result["type"] == FlowResultType.ABORT
-#     assert result["reason"] == "reauth_successful"
