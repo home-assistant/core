@@ -320,6 +320,7 @@ async def async_setup_entry(
             data,
             ProtectPrivacyModeSwitch,
             camera_descs=[PRIVACY_MODE_SWITCH],
+            ufp_device=device,
         )
         async_add_entities(entities)
 
