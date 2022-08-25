@@ -42,6 +42,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await usb_dongle.async_setup()
     enocean_data[ENOCEAN_DONGLE] = usb_dongle
 
+    # Forward to the configured platforms
+    # Use `hass.async_create_task` to avoid a circular dependency between the platform and the component
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
+    )
+
     return True
 
 

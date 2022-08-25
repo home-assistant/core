@@ -1,8 +1,8 @@
-"""Config flows for the ENOcean integration."""
+"""Config flows for the EnOcean integration."""
 
+from copy import deepcopy
 import logging
 
-from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,6 +11,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CONF_DEVICE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
+import homeassistant.helpers.entity_registry
 
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
@@ -280,10 +281,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self.options = config_entry.options
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
+        entity_registry = (
+            await homeassistant.helpers.entity_registry.async_get_registry(self.hass)
+        )
+        entity_entries = (
+            homeassistant.helpers.entity_registry.async_entries_for_config_entry(
+                entity_registry, self.config_entry.entry_id
+            )
+        )
+        _LOGGER.debug(entity_entries)
+
         if user_input is not None:
             command = user_input["command"]
             if command == "add_device":
@@ -291,8 +301,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             if command == "manage_devices":
                 return await self.async_step_manage_devices()
-
-            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_menu(
             step_id="init",
@@ -304,16 +312,30 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_device(self, user_input=None) -> FlowResult:
         """Add an EnOcean device."""
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+
         if user_input is not None:
             # validate input (not yet finished)
             # e.g. to check that device_id is indeed a valid id
-
-            device_id = from_hex_string(user_input["id"])
-            _LOGGER.debug(device_id)
-
-            device_name = user_input["name"].strip()
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+            eep = user_input[CONF_ENOCEAN_EQUIPMENT_PROFILE]
+            sender_id = user_input[CONF_ENOCEAN_SENDER_ID]
+            device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
-                device_name = "EnOcean device " + to_hex_string(device_id)
+                device_name = "EnOcean device " + device_id
+
+            devices.append(
+                {
+                    CONF_ENOCEAN_DEVICE_ID: device_id,
+                    CONF_ENOCEAN_EQUIPMENT_PROFILE: eep,
+                    CONF_ENOCEAN_DEVICE_NAME: device_name,
+                    CONF_ENOCEAN_SENDER_ID: sender_id,
+                }
+            )
+
+            return self.async_create_entry(
+                title="", data={CONF_ENOCEAN_DEVICES: devices}
+            )
 
         device_schema = ADD_DEVICE_SCHEMA
 
@@ -327,11 +349,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_manage_devices(self, user_input=None) -> FlowResult:
         """Manage the configured EnOcean devices."""
-        devices = self.options.get("devices", [])
+        devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
         if user_input is not None:
             devices.append(user_input)
-            return self.async_create_entry(title="", data={"devices": devices})
+            return self.async_create_entry(
+                title="", data={CONF_ENOCEAN_DEVICES: devices}
+            )
 
         return self.async_show_form(
             step_id="manage_devices",

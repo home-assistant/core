@@ -16,6 +16,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .config_flow import CONF_ENOCEAN_DEVICES
+from .const import LOGGER
 from .device import EnOceanEntity
 
 DEFAULT_NAME = "EnOcean binary sensor"
@@ -43,6 +45,13 @@ def setup_platform(
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up entry."""
+    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES)
+    for device in devices:
+        LOGGER.debug(device)
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
