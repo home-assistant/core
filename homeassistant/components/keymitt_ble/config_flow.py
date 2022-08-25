@@ -149,4 +149,5 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input[CONF_ADDRESS] = self._bdaddr
         user_input[CONF_ACCESS_TOKEN] = token
 
+        assert self._name is not None
         return self.async_create_entry(title=self._name, data=user_input)
