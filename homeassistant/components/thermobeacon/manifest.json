@@ -4,12 +4,19 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/thermobeacon",
   "bluetooth": [
-    { "local_name": "ThermoBeacon*", "connectable": false },
-    { "local_name": "Lee Guitars*", "connectable": false },
     {
-      "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 16,
+      "manufacturer_data_start": [0, 0],
       "connectable": false
-    }
+    },
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 21,
+      "manufacturer_data_start": [0, 0],
+      "connectable": false
+    },
+    { "local_name": "ThermoBeacon", "connectable": false }
   ],
   "requirements": ["thermobeacon-ble==0.6.0"],
   "dependencies": ["bluetooth"],
