@@ -19,7 +19,7 @@ THERMOBEACON_SERVICE_INFO = BluetoothServiceInfo(
     rssi=-60,
     service_data={},
     manufacturer_data={
-        21: b"\x00\x00\xf0\x05\x00\x00\xd7n\xbe\x01e\x00\x00\x00\xa7\x01\x00\x00\x00\x00"
+        16: b"\x00\x00\xb0\x02\x00\x00G\xa4\xe2\x0c\x80\x01\xb6\x02J\x00\x00\x00"
     },
     service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
     source="local",
