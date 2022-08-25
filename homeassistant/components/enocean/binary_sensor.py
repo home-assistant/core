@@ -49,7 +49,7 @@ def setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
-    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES)
+    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
         if device["eep"] in ["F6-02-01", "F6-02-02"]:

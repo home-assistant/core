@@ -24,7 +24,8 @@
     },
     "options": {
         "error": {
-            "invalid_id": "The EnOcean ID provided is not valid."
+            "invalid_id": "The EnOcean ID provided is not valid.",
+            "no_configured_device": "No EnOcean devices are configured."
         },
         "step": {
             "add_device": {
@@ -35,7 +36,7 @@
                     "name": "Name",
                     "sender_id": "Sender EnOcean ID"
                 },
-                "description": "To add an EnOcean device you need at least its type and its ID. The EnOcean ID is usually printed on the device and looks like '1E:F4:BA:C7'.",
+                "description": "To add an EnOcean device you need at least its type and its ID. The EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
                 "title": "Add new EnOcean device"
             },
             "init": {

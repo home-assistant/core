@@ -105,18 +105,6 @@ ENOCEAN_MANAGE_DEVICE_COMMANDS = [
     ),
 ]
 
-MANAGE_DEVICES_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE, default="none"): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=MOCKUP_DEVICES)
-        ),
-        vol.Optional(
-            CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS, default=ENOCEAN_EDIT_DEVICE_COMMAND
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=ENOCEAN_MANAGE_DEVICE_COMMANDS)
-        ),
-    }
-)
 
 ADD_DEVICE_SCHEMA_ADVANCED_OPTIONS = {
     vol.Optional("channel", default=0): int,
@@ -243,6 +231,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if command == "manage_devices":
                 return await self.async_step_manage_devices()
 
+        devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+
+        if len(devices) == 0:
+            return self.async_show_menu(
+                step_id="init",
+                menu_options={
+                    "add_device": "Add new device",
+                },
+            )
+
         return self.async_show_menu(
             step_id="init",
             menu_options={
@@ -291,14 +289,33 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_manage_devices(self, user_input=None) -> FlowResult:
         """Manage the configured EnOcean devices."""
         devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
-
-        if user_input is not None:
-            devices.append(user_input)
-            return self.async_create_entry(
-                title="", data={CONF_ENOCEAN_DEVICES: devices}
+        device_list = [
+            selector.SelectOptionDict(
+                value=device["id"], label=device["name"] + " [" + device["id"] + "]"
             )
+            for device in devices
+        ]
+        device_list.sort(key=lambda entry: entry["label"].lower())
+
+        LOGGER.debug(device_list[0])
+
+        manage_devices_schema = vol.Schema(
+            {
+                vol.Required(CONF_DEVICE, default="none"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=device_list)
+                ),
+                vol.Optional(
+                    CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS,
+                    default=ENOCEAN_EDIT_DEVICE_COMMAND,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=ENOCEAN_MANAGE_DEVICE_COMMANDS
+                    )
+                ),
+            }
+        )
 
         return self.async_show_form(
             step_id="manage_devices",
-            data_schema=MANAGE_DEVICES_SCHEMA,
+            data_schema=manage_devices_schema,
         )
