@@ -14,7 +14,6 @@ from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry
-from homeassistant.helpers.issue_registry import async_create_issue
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
