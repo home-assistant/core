@@ -1,25 +1,18 @@
 """The IntelliFire integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from pyflume import FlumeData
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
-
-NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=1)
-DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+from .const import _LOGGER, DEVICE_SCAN_INTERVAL, DOMAIN
 
 
-class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[object]):
+class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[FlumeData]):
     """Data update coordinator for an individual flume device."""
 
-    def __init__(
-        self, hass: HomeAssistant, flume_auth, device_id, device_timezone, http_session
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, flume_device) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
@@ -27,16 +20,8 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[object]):
             logger=_LOGGER,
             update_interval=DEVICE_SCAN_INTERVAL,
         )
-        self.hass = hass
 
-        self.flume_device = FlumeData(
-            flume_auth,
-            device_id,
-            device_timezone,
-            scan_interval=DEVICE_SCAN_INTERVAL,
-            update_on_init=False,
-            http_session=http_session,
-        )
+        self.flume_device = flume_device
 
     async def _async_update_data(self):
         """Get the latest data from the Flume."""
@@ -46,9 +31,7 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[object]):
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
-            "Flume update details: %s",
-            {
-                "values": self.flume_device.values,
-                "query_payload": self.flume_device.query_payload,
-            },
+            "Flume update details: {'values': %s, 'query_payload': %s}",
+            self.flume_device.values,
+            self.flume_device.query_payload,
         )
