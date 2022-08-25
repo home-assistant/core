@@ -63,6 +63,8 @@ CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 LOGGING_INTEGRATIONS = {
     # Set log levels
     "logger",
+    # Issue reporting
+    "repairs",
     # Error logging
     "system_log",
     "sentry",
