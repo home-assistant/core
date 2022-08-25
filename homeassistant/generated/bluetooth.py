@@ -131,6 +131,16 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "qingping",
+        "local_name": "Lee Guitars*",
+        "connectable": False
+    },
+    {
+        "domain": "qingping",
+        "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
         "domain": "sensorpush",
         "local_name": "SensorPush*",
         "connectable": False
@@ -143,6 +153,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        "connectable": False
+    },
+    {
+        "domain": "thermopro",
+        "local_name": "TP35*",
         "connectable": False
     },
     {

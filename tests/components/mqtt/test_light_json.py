@@ -124,7 +124,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -614,32 +614,29 @@ async def test_sending_mqtt_commands_and_optimistic(
             "color_temp": 100,
         },
     )
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "json",
-                    "name": "test",
-                    "command_topic": "test_light_rgb/set",
-                    "brightness": True,
-                    "color_temp": True,
-                    "effect": True,
-                    "hs": True,
-                    "rgb": True,
-                    "xy": True,
-                    "qos": 2,
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "platform": "mqtt",
+                "schema": "json",
+                "name": "test",
+                "command_topic": "test_light_rgb/set",
+                "brightness": True,
+                "color_temp": True,
+                "effect": True,
+                "hs": True,
+                "rgb": True,
+                "xy": True,
+                "qos": 2,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -754,30 +751,27 @@ async def test_sending_mqtt_commands_and_optimistic2(
             "hs_color": [100, 100],
         },
     )
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "brightness": True,
-                    "color_mode": True,
-                    "command_topic": "test_light_rgb/set",
-                    "effect": True,
-                    "name": "test",
-                    "platform": "mqtt",
-                    "qos": 2,
-                    "schema": "json",
-                    "supported_color_modes": supported_color_modes,
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "brightness": True,
+                "color_mode": True,
+                "command_topic": "test_light_rgb/set",
+                "effect": True,
+                "name": "test",
+                "platform": "mqtt",
+                "qos": 2,
+                "schema": "json",
+                "supported_color_modes": supported_color_modes,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
