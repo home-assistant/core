@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
             },
+            "confirm_hardware": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "R\u00e1di\u00f3 t\u00edpusa"

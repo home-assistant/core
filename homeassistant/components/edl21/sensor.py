@@ -386,7 +386,7 @@ class EDL21Entity(SensorEntity):
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
         @callback
@@ -411,7 +411,7 @@ class EDL21Entity(SensorEntity):
             self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._async_remove_dispatcher:
             self._async_remove_dispatcher()

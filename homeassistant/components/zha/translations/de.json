@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "M\u00f6chtest du {name} einrichten?"
             },
+            "confirm_hardware": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Funktyp"

@@ -9,6 +9,9 @@
                     "host": "Host",
                     "name": "Nama"
                 },
+                "data_description": {
+                    "host": "Alamat IP atau nama host instalasi P1 Monitor Anda."
+                },
                 "description": "Siapkan Monitor P1 untuk diintegrasikan dengan Home Assistant."
             }
         }

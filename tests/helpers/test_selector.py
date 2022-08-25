@@ -287,11 +287,51 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 
 @pytest.mark.parametrize(
     "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
+            (None, True, 1),
+        ),
+        (
+            {"integration": "adguard"},
+            ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_config_entry_selector_schema(schema, valid_selections, invalid_selections):
+    """Test boolean selector."""
+    _test_selector("config_entry", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
     (({}, ("00:00:00",), ("blah", None)),),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
     """Test time selector."""
     _test_selector("time", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {"entity_id": "sensor.abc"},
+            ("on", "armed"),
+            (None, True, 1),
+        ),
+        (
+            {"entity_id": "sensor.abc", "attribute": "device_class"},
+            ("temperature", "humidity"),
+            (None,),
+        ),
+    ),
+)
+def test_state_selector_schema(schema, valid_selections, invalid_selections):
+    """Test state selector."""
+    _test_selector("state", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -436,6 +476,11 @@ def test_select_selector_schema_error(schema):
         (
             {"entity_id": "sensor.abc"},
             ("friendly_name", "device_class"),
+            (None,),
+        ),
+        (
+            {"entity_id": "sensor.abc", "hide_attributes": ["friendly_name"]},
+            ("device_class", "state_class"),
             (None,),
         ),
     ),

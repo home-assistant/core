@@ -9,7 +9,13 @@ from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_ENABLED,
+    CONF_ID,
+    CONF_PLATFORM,
+    CONF_VARIABLES,
+)
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -43,6 +49,7 @@ class TriggerData(TypedDict):
 
     id: str
     idx: str
+    alias: str | None
 
 
 class TriggerInfo(TypedDict):
@@ -130,7 +137,8 @@ async def async_initialize_triggers(
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
         trigger_idx = f"{idx}"
-        trigger_data = TriggerData(id=trigger_id, idx=trigger_idx)
+        trigger_alias = conf.get(CONF_ALIAS)
+        trigger_data = TriggerData(id=trigger_id, idx=trigger_idx, alias=trigger_alias)
         info = TriggerInfo(
             domain=domain,
             name=name,
