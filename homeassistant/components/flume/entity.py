@@ -21,7 +21,7 @@ class FlumeEntity(CoordinatorEntity[FlumeDeviceDataUpdateCoordinator]):
         device_id: str,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
         self.device_id = device_id
         self._attr_unique_id = f"{description.key}_{device_id}"
