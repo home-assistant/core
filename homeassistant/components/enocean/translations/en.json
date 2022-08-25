@@ -39,6 +39,17 @@
                 "description": "To add an EnOcean device you need at least its type and its ID. The EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
                 "title": "Add new EnOcean device"
             },
+            "edit_device": {
+                "data": {
+                    "device_class": "Device class",
+                    "eep": "Device type or EnOcean Equipment Profile (EEP)",
+                    "id": "EnOcean ID",
+                    "name": "Name",
+                    "sender_id": "Sender EnOcean ID"
+                },
+                "description": "Edit device",
+                "title": "Edit device"
+            },
             "init": {
                 "data": {
                     "add_device": "Name",

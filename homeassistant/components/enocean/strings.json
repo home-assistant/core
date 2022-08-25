@@ -53,6 +53,17 @@
           "manage_device_command": "Action"
         },
         "description": "Edit or delete an existing device"
+      },
+      "edit_device": {
+        "title": "Edit device",
+        "data": {
+          "id": "EnOcean ID",
+          "eep": "Device type or EnOcean Equipment Profile (EEP)",
+          "name": "Name",
+          "sender_id": "Sender EnOcean ID",
+          "device_class": "Device class"
+        },
+        "description": "Edit device"
       }
     }
   }

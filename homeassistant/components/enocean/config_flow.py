@@ -6,8 +6,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CONF_DEVICE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
@@ -96,17 +94,9 @@ ADD_DEVICE_SCHEMA = vol.Schema(
             # Hence the use of a SelectSelector.
             selector.SelectSelectorConfig(options=MOCKUP_SENDER_IDS, custom_value=True)
         ),
-        vol.Optional(CONF_ENOCEAN_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[
-                    "BinarySensorDeviceClass." + dc.name
-                    for dc in BinarySensorDeviceClass
-                ]
-                + ["SensorDeviceClass." + dc.name for dc in SensorDeviceClass]
-            )
-        ),
     }
 )
+
 
 ENOCEAN_MANAGE_DEVICE_COMMANDS = [
     selector.SelectOptionDict(
@@ -116,15 +106,6 @@ ENOCEAN_MANAGE_DEVICE_COMMANDS = [
         value=ENOCEAN_DELETE_DEVICE_COMMAND, label="Delete device"
     ),
 ]
-
-
-ADD_DEVICE_SCHEMA_ADVANCED_OPTIONS = {
-    vol.Optional("channel", default=0): int,
-    vol.Optional("min_temp", default=0): int,
-    vol.Optional("max_temp", default=40): int,
-    vol.Optional("range_from", default=255): int,
-    vol.Optional("range_to", default=0): int,
-}
 
 
 class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -288,14 +269,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 title="", data={CONF_ENOCEAN_DEVICES: devices}
             )
 
-        device_schema = ADD_DEVICE_SCHEMA
-
-        if self.show_advanced_options:
-            device_schema.extend(ADD_DEVICE_SCHEMA_ADVANCED_OPTIONS)
-
         return self.async_show_form(
             step_id="add_device",
-            data_schema=device_schema,
+            data_schema=ADD_DEVICE_SCHEMA,
         )
 
     async def async_step_manage_devices(self, user_input=None) -> FlowResult:
@@ -315,16 +291,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             device_id = user_input[CONF_DEVICE]
             command = user_input[CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS]
 
-            if command == ENOCEAN_DELETE_DEVICE_COMMAND:
-                for device in devices:
-                    if device["id"] == device_id:
-                        # we still need to delete all associated entities (not yet done)
-                        devices.remove(device)
-                        break
+            # find the device belonging to the device_id
+            device = None
+            for dev in devices:
+                if dev["id"] == device_id:
+                    device = dev
+                    break
 
+            if command == ENOCEAN_DELETE_DEVICE_COMMAND:
+                devices.remove(device)
                 return self.async_create_entry(
                     title="", data={CONF_ENOCEAN_DEVICES: devices}
                 )
+
+            if command == ENOCEAN_EDIT_DEVICE_COMMAND:
+                return await self.async_step_edit_device(None, device)
 
         manage_devices_schema = vol.Schema(
             {
@@ -345,4 +326,39 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="manage_devices",
             data_schema=manage_devices_schema,
+        )
+
+    async def async_step_edit_device(self, user_input=None, device=None) -> FlowResult:
+        """Edit an EnOcean device."""
+
+        edit_device_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_ID, default=device["id"]
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=[device["id"]])
+                ),
+                vol.Required(
+                    CONF_ENOCEAN_EQUIPMENT_PROFILE, default=device["eep"]
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=ENOCEAN_EQUIPMENT_PROFILES)
+                ),
+                vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=device["name"]): str,
+                vol.Optional(
+                    CONF_ENOCEAN_SENDER_ID, default=device["sender_id"]
+                ): selector.SelectSelector(
+                    # For now, the list of sender_ids will always be empty. For a
+                    # later version, it shall be pre-filled with the dongles chip ID
+                    # and its based IDs. (FUTURE WORK)
+                    # Hence the use of a SelectSelector.
+                    selector.SelectSelectorConfig(
+                        options=MOCKUP_SENDER_IDS, custom_value=True
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="edit_device",
+            data_schema=edit_device_schema,
         )
