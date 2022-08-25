@@ -12,7 +12,6 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import async_timeout
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -24,6 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,

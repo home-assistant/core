@@ -49,8 +49,8 @@ class IntegrationMatchHistory:
     """Track which fields have been seen."""
 
     manufacturer_data: bool
-    service_data: bool
-    service_uuids: bool
+    service_data: set[str]
+    service_uuids: set[str]
 
 
 def seen_all_fields(
@@ -59,9 +59,15 @@ def seen_all_fields(
     """Return if we have seen all fields."""
     if not previous_match.manufacturer_data and advertisement_data.manufacturer_data:
         return False
-    if not previous_match.service_data and advertisement_data.service_data:
+    if advertisement_data.service_data and (
+        not previous_match.service_data
+        or not previous_match.service_data.issuperset(advertisement_data.service_data)
+    ):
         return False
-    if not previous_match.service_uuids and advertisement_data.service_uuids:
+    if advertisement_data.service_uuids and (
+        not previous_match.service_uuids
+        or not previous_match.service_uuids.issuperset(advertisement_data.service_uuids)
+    ):
         return False
     return True
 
@@ -114,13 +120,13 @@ class IntegrationMatcher:
             previous_match.manufacturer_data |= bool(
                 advertisement_data.manufacturer_data
             )
-            previous_match.service_data |= bool(advertisement_data.service_data)
-            previous_match.service_uuids |= bool(advertisement_data.service_uuids)
+            previous_match.service_data |= set(advertisement_data.service_data)
+            previous_match.service_uuids |= set(advertisement_data.service_uuids)
         else:
             matched[device.address] = IntegrationMatchHistory(
                 manufacturer_data=bool(advertisement_data.manufacturer_data),
-                service_data=bool(advertisement_data.service_data),
-                service_uuids=bool(advertisement_data.service_uuids),
+                service_data=set(advertisement_data.service_data),
+                service_uuids=set(advertisement_data.service_uuids),
             )
         return matched_domains
 

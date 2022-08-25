@@ -11,7 +11,7 @@
       "connectable": false
     }
   ],
-  "requirements": ["qingping-ble==0.5.0"],
+  "requirements": ["qingping-ble==0.6.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
