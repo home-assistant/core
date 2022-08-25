@@ -18,10 +18,12 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
 )
+from homeassistant.helpers.issue_registry import (
+    async_get as async_get_issue_registry,
+    async_ignore_issue,
+)
 
 from .const import DOMAIN
-from .issue_handler import async_ignore_issue
-from .issue_registry import async_get as async_get_issue_registry
 
 
 @callback
