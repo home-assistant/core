@@ -23,7 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WhirlpoolData
@@ -111,6 +111,18 @@ class AirConEntity(ClimateEntity):
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._attr_name = name if name is not None else said
         self._attr_unique_id = said
+        self._said = said
+        self._attr_has_entity_name = True
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Device information for Aladdin Connect sensors."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._said)},
+            name=self._attr_name,
+            manufacturer="Whirlpool",
+            model="Sixth Sense",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""

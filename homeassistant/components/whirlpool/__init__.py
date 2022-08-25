@@ -5,14 +5,14 @@ import logging
 import aiohttp
 from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
-from whirlpool.backendselector import BackendSelector, Brand, Region
+from whirlpool.backendselector import BackendSelector, Brand
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONF_REGIONS_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +23,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Whirlpool Sixth Sense from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    backend_selector = BackendSelector(Brand.Whirlpool, Region.EU)
-    auth = Auth(backend_selector, entry.data["username"], entry.data["password"])
+    region = entry.data.get(CONF_REGION, "EU")
+    brand = Brand.Whirlpool
+    if region == "US":
+        brand = Brand.Maytag
+    backend_selector = BackendSelector(brand, CONF_REGIONS_MAP[region])
+    auth = Auth(backend_selector, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     try:
         await auth.do_auth(store=False)
     except aiohttp.ClientError as ex:
@@ -45,7 +49,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         backend_selector,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    myplatform = []
+
+    if appliances_manager.washer_dryers:
+        myplatform.append(Platform.SENSOR)
+
+    if appliances_manager.aircons:
+        myplatform.append(Platform.CLIMATE)
+
+    if myplatform:
+        await hass.config_entries.async_forward_entry_setups(entry, myplatform)
 
     return True
 
