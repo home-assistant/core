@@ -2339,7 +2339,7 @@ tesla-wall-connector==1.0.1
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.2.0
+thermobeacon-ble==0.3.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.0
