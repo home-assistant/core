@@ -27,7 +27,6 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[object]):
             logger=_LOGGER,
             update_interval=DEVICE_SCAN_INTERVAL,
         )
-        self.hass = hass
 
         self.flume_device = FlumeData(
             flume_auth,
