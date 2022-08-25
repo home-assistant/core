@@ -94,8 +94,8 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 parsed = parse_advertisement_data(
                     discovery_info.device, discovery_info.advertisement
                 )
-                self._discovered_adv = parsed
                 if parsed:
+                    self._discovered_adv = parsed
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
