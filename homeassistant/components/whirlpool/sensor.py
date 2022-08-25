@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 import time
 
@@ -27,7 +26,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_INTERVAL = timedelta(minutes=5)
 ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
