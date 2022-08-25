@@ -33,8 +33,10 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Adaptor Bluetooth yang digunakan untuk pemindaian"
-                }
+                    "adapter": "Adaptor Bluetooth yang digunakan untuk pemindaian",
+                    "passive": "Mendengarkan secara pasif"
+                },
+                "description": "Mendengarkan secara pasif memerlukan BlueZ 5.63 atau lebih baru dengan fitur eksperimental yang diaktifkan."
             }
         }
     }
