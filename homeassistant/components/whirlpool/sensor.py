@@ -148,6 +148,6 @@ class Washer(Entity):
             if value == 3540:
                 value = 0
             washertime = time.gmtime(value)
-            return time.strftime("%M:%S", washertime)
+            return time.strftime("%H:%M:%S", washertime)
 
         return self._entity_description.value_fn(self._wd).name
