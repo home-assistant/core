@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from .const import MANUFACTURER
 
 if TYPE_CHECKING:
-    from .__init__ import MicroBotDataUpdateCoordinator
+    from . import MicroBotDataUpdateCoordinator
 
 
 class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
