@@ -7,7 +7,7 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermobeacon.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
-from . import LIGHT_AND_SIGNAL_SERVICE_INFO
+from . import THERMOBEACON_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -35,16 +35,16 @@ async def test_sensors(hass):
         await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    saved_callback(LIGHT_AND_SIGNAL_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    saved_callback(THERMOBEACON_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all("sensor")) == 4
 
-    lux_sensor = hass.states.get("sensor.motion_light_eeff_illuminance")
-    lux_sensor_attrs = lux_sensor.attributes
-    assert lux_sensor.state == "13"
-    assert lux_sensor_attrs[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF Illuminance"
-    assert lux_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "lx"
-    assert lux_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+    humid_sensor = hass.states.get("sensor.smart_hygrometer_eeff_humidity")
+    humid_sensor_attrs = humid_sensor.attributes
+    assert humid_sensor.state == "26.4375"
+    assert humid_sensor_attrs[ATTR_FRIENDLY_NAME] == "Smart hygrometer EEFF Humidity"
+    assert humid_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert humid_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

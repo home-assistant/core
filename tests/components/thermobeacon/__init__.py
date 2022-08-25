@@ -3,7 +3,7 @@
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-NOT_QINGPING_SERVICE_INFO = BluetoothServiceInfo(
+NOT_THERMOBEACON_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     rssi=-63,
@@ -13,28 +13,14 @@ NOT_QINGPING_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-LIGHT_AND_SIGNAL_SERVICE_INFO = BluetoothServiceInfo(
-    name="ThermoBeacon Motion & Light",
-    manufacturer_data={},
-    service_uuids=[],
+THERMOBEACON_SERVICE_INFO = BluetoothServiceInfo(
+    name="ThermoBeacon",
     address="aa:bb:cc:dd:ee:ff",
     rssi=-60,
-    service_data={
-        "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12"
-        b"\xcd\xd5`4-X\x08\x04\x00\r\x00\x00\x0f\x01\xee"
+    service_data={},
+    manufacturer_data={
+        21: b"\x00\x00\xf0\x05\x00\x00\xd7n\xbe\x01e\x00\x00\x00\xa7\x01\x00\x00\x00\x00"
     },
-    source="local",
-)
-
-
-NO_DATA_SERVICE_INFO = BluetoothServiceInfo(
-    name="ThermoBeacon Motion & Light",
-    manufacturer_data={},
-    service_uuids=[],
-    address="aa:bb:cc:dd:ee:ff",
-    rssi=-60,
-    service_data={
-        "0000fdcd-0000-1000-8000-00805f9b34fb": b"0X\x83\n\x02\xcd\xd5`4-X\x08"
-    },
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
     source="local",
 )

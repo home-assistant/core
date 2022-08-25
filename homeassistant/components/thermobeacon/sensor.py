@@ -23,11 +23,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    LIGHT_LUX,
+    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
-    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
@@ -46,55 +43,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (
-        ThermoBeaconSensorDeviceClass.CO2,
-        Units.CONCENTRATION_PARTS_PER_MILLION,
-    ): SensorEntityDescription(
-        key=f"{ThermoBeaconSensorDeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
-        device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     (ThermoBeaconSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{ThermoBeaconSensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (
-        ThermoBeaconSensorDeviceClass.ILLUMINANCE,
-        Units.LIGHT_LUX,
-    ): SensorEntityDescription(
-        key=f"{ThermoBeaconSensorDeviceClass.ILLUMINANCE}_{Units.LIGHT_LUX}",
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        native_unit_of_measurement=LIGHT_LUX,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (
-        ThermoBeaconSensorDeviceClass.PM10,
-        Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ): SensorEntityDescription(
-        key=f"{ThermoBeaconSensorDeviceClass.PM10}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
-        device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (
-        ThermoBeaconSensorDeviceClass.PM25,
-        Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ): SensorEntityDescription(
-        key=f"{ThermoBeaconSensorDeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
-        device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (
-        ThermoBeaconSensorDeviceClass.PRESSURE,
-        Units.PRESSURE_MBAR,
-    ): SensorEntityDescription(
-        key=f"{ThermoBeaconSensorDeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -115,6 +67,15 @@ SENSOR_DESCRIPTIONS = {
         key=f"{ThermoBeaconSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        ThermoBeaconSensorDeviceClass.VOLTAGE,
+        Units.ELECTRIC_POTENTIAL_VOLT,
+    ): SensorEntityDescription(
+        key=f"{ThermoBeaconSensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
