@@ -28,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -50,8 +51,24 @@ class LocalData:
     """A data class for local data passed to the platforms."""
 
     system: RiscoLocal
-    zone_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
+    zone_entities: dict[int, list[Entity]] = field(default_factory=dict)
     partition_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
+
+    def add_zone_entity(self, zone_id: int, entity: Entity) -> Callable[[], None]:
+        """Add an entity to be updated when the matching zone is updated."""
+        self.zone_entities.setdefault(zone_id, [])
+        self.zone_entities[zone_id].append(entity)
+
+        def _remove() -> None:
+            self.zone_entities[zone_id].remove(entity)
+
+        return _remove
+
+    def update_entities(self, zone_id: int) -> None:
+        """Update the entities for a given zone_id."""
+        self.zone_entities.setdefault(zone_id, [])
+        for entity in self.zone_entities[zone_id]:
+            entity.async_write_ha_state()
 
 
 def is_local(entry: ConfigEntry) -> bool:
@@ -95,9 +112,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     async def _zone(zone_id: int, zone: Zone) -> None:
         _LOGGER.debug("Risco zone update for %d", zone_id)
-        callback = local_data.zone_updates.get(zone_id)
-        if callback:
-            callback()
+        local_data.update_entities(zone_id)
 
     entry.async_on_unload(risco.add_zone_handler(_zone))
 
