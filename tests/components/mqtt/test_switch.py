@@ -47,7 +47,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.components.switch import common
 
 DEFAULT_CONFIG = {
@@ -108,27 +108,24 @@ async def test_sending_mqtt_commands_and_optimistic(
 ):
     """Test the sending MQTT commands in optimistic mode."""
     fake_state = ha.State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            switch.DOMAIN,
-            {
-                switch.DOMAIN: {
-                    "platform": "mqtt",
-                    "name": "test",
-                    "command_topic": "command-topic",
-                    "payload_on": "beer on",
-                    "payload_off": "beer off",
-                    "qos": "2",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            switch.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": "beer on",
+                "payload_off": "beer off",
+                "qos": "2",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON

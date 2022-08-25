@@ -29,6 +29,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
+    "hw_version": "rev1",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -39,6 +40,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
+    "hw_version": "rev1",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
     "configuration_url": "http://example.com",
@@ -958,6 +960,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
     assert device.configuration_url == "http://example.com"
@@ -990,6 +993,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
     assert device.configuration_url == "http://example.com"

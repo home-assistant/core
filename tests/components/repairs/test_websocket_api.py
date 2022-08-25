@@ -9,14 +9,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import (
-    RepairsFlow,
-    async_create_issue,
-    issue_registry,
-)
+from homeassistant.components.repairs import RepairsFlow, async_create_issue
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform

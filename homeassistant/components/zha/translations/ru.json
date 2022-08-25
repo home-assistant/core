@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "\u0425\u043e\u0442\u0438\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c {name}?"
             },
+            "confirm_hardware": {
+                "description": "\u0425\u043e\u0442\u0438\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "\u0422\u0438\u043f \u0440\u0430\u0434\u0438\u043e\u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430"
