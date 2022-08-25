@@ -21,7 +21,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
         """Return true if switch is on."""
         if self._refresh_callback is not None:
             return self._assumed_state
-        return self.robot.night_light_mode_enabled  # type: ignore[no-any-return]
+        return self.robot.night_light_mode_enabled
 
     @property
     def icon(self) -> str:
@@ -45,7 +45,7 @@ class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
         """Return true if switch is on."""
         if self._refresh_callback is not None:
             return self._assumed_state
-        return self.robot.panel_lock_enabled  # type: ignore[no-any-return]
+        return self.robot.panel_lock_enabled
 
     @property
     def icon(self) -> str:
@@ -76,10 +76,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-
-    entities: list[SwitchEntity] = []
-    for robot in hub.account.robots:
-        for switch_class, switch_type in ROBOT_SWITCHES:
-            entities.append(switch_class(robot=robot, entity_type=switch_type, hub=hub))
-
-    async_add_entities(entities)
+    async_add_entities(
+        switch_class(robot=robot, entity_type=switch_type, hub=hub)
+        for switch_class, switch_type in ROBOT_SWITCHES
+        for robot in hub.litter_robots()
+    )

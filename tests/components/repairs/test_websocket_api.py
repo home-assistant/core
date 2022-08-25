@@ -9,14 +9,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import (
-    RepairsFlow,
-    async_create_issue,
-    issue_registry,
-)
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -52,7 +49,7 @@ async def create_issues(hass, ws_client, issues=None):
         issues = DEFAULT_ISSUES
 
     for issue in issues:
-        async_create_issue(
+        issue_registry.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
@@ -466,7 +463,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
     ]
 
     for issue in issues:
-        async_create_issue(
+        issue_registry.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],

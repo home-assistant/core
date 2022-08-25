@@ -42,6 +42,7 @@ class ActiveConnection:
         self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
+        self.supported_features: dict[str, float] = {}
         current_connection.set(self)
 
     def context(self, msg: dict[str, Any]) -> Context:

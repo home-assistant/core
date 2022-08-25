@@ -20,6 +20,7 @@ from homeassistant.components.bluetooth import (
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
+    CONF_PASSIVE,
     DEFAULT_ADDRESS,
     DOMAIN,
     SOURCE_LOCAL,
@@ -59,6 +60,52 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start, enable_bluetooth):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+
+async def test_setup_and_stop_passive(hass, mock_bleak_scanner_start, one_adapter):
+    """Test we and setup and stop the scanner the passive scanner."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN,
+        data={},
+        options={CONF_PASSIVE: True},
+        unique_id="00:00:00:00:00:01",
+    )
+    entry.add_to_hass(hass)
+    init_kwargs = None
+
+    class MockPassiveBleakScanner:
+        def __init__(self, *args, **kwargs):
+            """Init the scanner."""
+            nonlocal init_kwargs
+            init_kwargs = kwargs
+
+        async def start(self, *args, **kwargs):
+            """Start the scanner."""
+
+        async def stop(self, *args, **kwargs):
+            """Stop the scanner."""
+
+        def register_detection_callback(self, *args, **kwargs):
+            """Register a callback."""
+
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
+        MockPassiveBleakScanner,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert init_kwargs == {
+        "adapter": "hci0",
+        "bluez": scanner.PASSIVE_SCANNER_ARGS,
+        "scanning_mode": "passive",
+    }
 
 
 async def test_setup_and_stop_no_bluetooth(hass, caplog, macos_adapter):
@@ -655,6 +702,87 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         inject_advertisement(hass, device, adv_without_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovery_match_by_service_data_uuid_when_format_changes(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
+    """Test bluetooth discovery match by service_data_uuid when format changes."""
+    mock_bt = [
+        {
+            "domain": "xiaomi_ble",
+            "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb",
+        },
+        {
+            "domain": "qingping",
+            "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = BLEDevice("44:44:33:11:23:45", "lock")
+        adv_without_service_data_uuid = AdvertisementData(
+            local_name="Qingping Temp RH M",
+            service_uuids=[],
+            manufacturer_data={},
+        )
+        xiaomi_format_adv = AdvertisementData(
+            local_name="Qingping Temp RH M",
+            service_data={
+                "0000fe95-0000-1000-8000-00805f9b34fb": b"0XH\x0b\x06\xa7%\x144-X\x08"
+            },
+        )
+        qingping_format_adv = AdvertisementData(
+            local_name="Qingping Temp RH M",
+            service_data={
+                "0000fdcd-0000-1000-8000-00805f9b34fb": b"\x08\x16\xa7%\x144-X\x01\x04\xdb\x00\xa6\x01\x02\x01d"
+            },
+        )
+        # 1st discovery should not generate a flow because the
+        # service_data_uuid is not in the advertisement
+        inject_advertisement(hass, device, adv_without_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery should generate a flow because the
+        # service_data_uuid matches xiaomi format
+        inject_advertisement(hass, device, xiaomi_format_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "xiaomi_ble"
+        mock_config_flow.reset_mock()
+
+        # 4th discovery should generate a flow because the
+        # service_data_uuid matches qingping format
+        inject_advertisement(hass, device, qingping_format_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "qingping"
+        mock_config_flow.reset_mock()
+
+        # 5th discovery should not generate a flow because the
+        # we already saw an advertisement with the service_data_uuid
+        inject_advertisement(hass, device, qingping_format_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 6th discovery should not generate a flow because the
+        # we already saw an advertisement with the service_data_uuid
+        inject_advertisement(hass, device, xiaomi_format_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
 
 
 async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
@@ -1641,3 +1769,59 @@ async def test_migrate_single_entry_linux(hass, mock_bleak_scanner_start, one_ad
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     assert entry.unique_id == "00:00:00:00:00:01"
+
+
+async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_adapter):
+    """Test we can discover new usb adapters."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_scan_request_callback(_hass, _callback):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.usb.async_register_scan_request_callback",
+        _async_register_scan_request_callback,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    saved_callback()
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+            "hci1": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:02",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ):
+        for wait_sec in range(10, 20):
+            async_fire_time_changed(
+                hass, dt_util.utcnow() + timedelta(seconds=wait_sec)
+            )
+            await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1

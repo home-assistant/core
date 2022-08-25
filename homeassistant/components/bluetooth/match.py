@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import fnmatch
+from fnmatch import translate
+from functools import lru_cache
+import re
 from typing import TYPE_CHECKING, Final, TypedDict
 
 from lru import LRU  # pylint: disable=no-name-in-module
@@ -47,8 +49,8 @@ class IntegrationMatchHistory:
     """Track which fields have been seen."""
 
     manufacturer_data: bool
-    service_data: bool
-    service_uuids: bool
+    service_data: set[str]
+    service_uuids: set[str]
 
 
 def seen_all_fields(
@@ -57,9 +59,15 @@ def seen_all_fields(
     """Return if we have seen all fields."""
     if not previous_match.manufacturer_data and advertisement_data.manufacturer_data:
         return False
-    if not previous_match.service_data and advertisement_data.service_data:
+    if advertisement_data.service_data and (
+        not previous_match.service_data
+        or not previous_match.service_data.issuperset(advertisement_data.service_data)
+    ):
         return False
-    if not previous_match.service_uuids and advertisement_data.service_uuids:
+    if advertisement_data.service_uuids and (
+        not previous_match.service_uuids
+        or not previous_match.service_uuids.issuperset(advertisement_data.service_uuids)
+    ):
         return False
     return True
 
@@ -112,13 +120,13 @@ class IntegrationMatcher:
             previous_match.manufacturer_data |= bool(
                 advertisement_data.manufacturer_data
             )
-            previous_match.service_data |= bool(advertisement_data.service_data)
-            previous_match.service_uuids |= bool(advertisement_data.service_uuids)
+            previous_match.service_data |= set(advertisement_data.service_data)
+            previous_match.service_uuids |= set(advertisement_data.service_uuids)
         else:
             matched[device.address] = IntegrationMatchHistory(
                 manufacturer_data=bool(advertisement_data.manufacturer_data),
-                service_data=bool(advertisement_data.service_data),
-                service_uuids=bool(advertisement_data.service_uuids),
+                service_data=set(advertisement_data.service_data),
+                service_uuids=set(advertisement_data.service_uuids),
             )
         return matched_domains
 
@@ -136,12 +144,6 @@ def ble_device_matches(
         return False
 
     advertisement_data = service_info.advertisement
-    if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        local_name,
-    ):
-        return False
-
     if (
         service_uuid := matcher.get(SERVICE_UUID)
     ) is not None and service_uuid not in advertisement_data.service_uuids:
@@ -165,4 +167,34 @@ def ble_device_matches(
         ):
             return False
 
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and (
+        (device_name := advertisement_data.local_name or device.name) is None
+        or not _memorized_fnmatch(
+            device_name,
+            local_name,
+        )
+    ):
+        return False
+
     return True
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(pattern))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+
+    Bluetooth has its own memorized fnmatch with its own lru_cache
+    since the data is going to be relatively the same
+    since the devices will not change frequently.
+    """
+    return bool(_compile_fnmatch(pattern).match(name))
