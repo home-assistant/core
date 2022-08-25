@@ -77,9 +77,7 @@ async def async_setup_entry(
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            switch_class(robot=robot, entity_type=switch_type, hub=hub)
-            for switch_class, switch_type in ROBOT_SWITCHES
-            for robot in hub.litter_robots()
-        ]
+        switch_class(robot=robot, entity_type=switch_type, hub=hub)
+        for switch_class, switch_type in ROBOT_SWITCHES
+        for robot in hub.litter_robots()
     )

@@ -22,12 +22,10 @@ async def async_setup_entry(
     hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            LitterRobotSelect(
-                robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
-            )
-            for robot in hub.litter_robots()
-        ]
+        LitterRobotSelect(
+            robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
+        )
+        for robot in hub.litter_robots()
     )
 
 

@@ -24,13 +24,11 @@ async def async_setup_entry(
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            LitterRobotResetWasteDrawerButton(
-                robot=robot, entity_type=TYPE_RESET_WASTE_DRAWER, hub=hub
-            )
-            for robot in hub.litter_robots()
-            if isinstance(robot, LitterRobot3)
-        ]
+        LitterRobotResetWasteDrawerButton(
+            robot=robot, entity_type=TYPE_RESET_WASTE_DRAWER, hub=hub
+        )
+        for robot in hub.litter_robots()
+        if isinstance(robot, LitterRobot3)
     )
 
 
