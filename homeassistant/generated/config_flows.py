@@ -379,6 +379,7 @@ FLOWS = {
         "tautulli",
         "tellduslive",
         "tesla_wall_connector",
+        "thermobeacon",
         "thermopro",
         "tibber",
         "tile",
