@@ -30,6 +30,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .config_flow import CONF_ENOCEAN_DEVICES
+from .const import LOGGER
 from .device import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
@@ -150,6 +152,36 @@ def setup_platform(
 
     add_entities(entities)
 
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up entry."""
+    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES)
+
+    for device in devices:
+        eep = device["eep"]
+        LOGGER.debug(eep)
+        # device_id = from_hex_string(device["id"])
+        LOGGER.debug(eep[0:5])
+        if eep[0:5] == "A5-02":
+            sensor_range_type = int(eep[6:8], 16)
+            LOGGER.debug(sensor_range_type)
+            min_temp = 0
+            max_temp = 0
+
+            if sensor_range_type in range(0x01, 0x0B):
+                multiplier = sensor_range_type - 0x01
+                min_temp = -40 + multiplier * 10
+                max_temp = multiplier * 10
+
+            elif sensor_range_type in range(0x10, 0x1B):
+                multiplier = sensor_range_type - 0x10
+                min_temp = -60 + multiplier * 10
+                max_temp = 20 + multiplier * 10
+
+            LOGGER.debug(min_temp)
+            LOGGER.debug(max_temp)
+
+            # async_add_entities([E(device_id, device["name"], None)])
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
