@@ -4,9 +4,8 @@ from __future__ import annotations
 import contextlib
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-import importlib
-from typing import TYPE_CHECKING
 
+import psutil_home_assistant as ha_psutil
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -19,15 +18,12 @@ from .const import DOMAIN
 from .hardware import async_process_hardware_platforms
 from .models import HardwareProtocol
 
-if TYPE_CHECKING:
-    import psutil  # noqa: F401
-
 
 @dataclass
 class SystemStatus:
     """System status."""
 
-    psutil: psutil
+    ha_psutil: ha_psutil
     remove_periodic_timer: CALLBACK_TYPE | None
     subscribers: set[tuple[websocket_api.ActiveConnection, int]]
 
@@ -37,13 +33,8 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the hardware websocket API."""
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_subscribe_system_status)
-    # Make a local copy of the psutil module because it relies on global variables
-    psutil_spec = importlib.util.find_spec("psutil")
-    assert psutil_spec and psutil_spec.loader
-    psutil_module = importlib.util.module_from_spec(psutil_spec)
-    psutil_spec.loader.exec_module(psutil_module)
     hass.data[DOMAIN]["system_status"] = SystemStatus(
-        psutil=psutil_module,
+        ha_psutil=ha_psutil.PsutilWrapper(),
         remove_periodic_timer=None,
         subscribers=set(),
     )
@@ -88,8 +79,10 @@ async def ws_subscribe_system_status(hass, connection, msg):
 
     @callback
     def async_update_status(now: datetime) -> None:
-        cpu_percentage = round(system_status.psutil.cpu_percent(interval=None))
-        virtual_memory = system_status.psutil.virtual_memory()
+        cpu_percentage = round(
+            system_status.ha_psutil.psutil.cpu_percent(interval=None)
+        )
+        virtual_memory = system_status.ha_psutil.psutil.virtual_memory()
         json_msg = {
             "cpu_percent": cpu_percentage,
             "memory_used_percent": virtual_memory.percent,

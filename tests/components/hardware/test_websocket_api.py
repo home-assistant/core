@@ -40,9 +40,13 @@ async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, f
     vmem = VirtualMem(10 * 1024**2, 50, 30 * 1024**2)
 
     with patch.object(
-        hass.data[DOMAIN]["system_status"].psutil, "cpu_percent", return_value=123
+        hass.data[DOMAIN]["system_status"].ha_psutil.psutil,
+        "cpu_percent",
+        return_value=123,
     ), patch.object(
-        hass.data[DOMAIN]["system_status"].psutil, "virtual_memory", return_value=vmem
+        hass.data[DOMAIN]["system_status"].ha_psutil.psutil,
+        "virtual_memory",
+        return_value=vmem,
     ):
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
         await hass.async_block_till_done()
@@ -62,9 +66,9 @@ async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, f
     assert response["success"]
 
     with patch.object(
-        hass.data[DOMAIN]["system_status"].psutil, "cpu_percent"
+        hass.data[DOMAIN]["system_status"].ha_psutil.psutil, "cpu_percent"
     ) as cpu_mock, patch.object(
-        hass.data[DOMAIN]["system_status"].psutil, "virtual_memory"
+        hass.data[DOMAIN]["system_status"].ha_psutil.psutil, "virtual_memory"
     ) as vmem_mock:
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
         await hass.async_block_till_done()
