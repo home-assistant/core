@@ -49,12 +49,12 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     unique_id_suffix: str | None = None
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
         self._name: str = ""
         self._force_update: bool = False
-        self._should_poll: bool = False
         self._unique_id: str = unique_id
         if self.unique_id_suffix:
             self._unique_id += f"-{self.unique_id_suffix}"
@@ -88,11 +88,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def force_update(self) -> bool:
         """Force update this entity."""
         return self._force_update
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return self._should_poll
 
     @property
     def device_info(self) -> entity.DeviceInfo:
