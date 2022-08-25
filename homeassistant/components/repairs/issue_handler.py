@@ -11,7 +11,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.issue_registry import (
+
+# pylint: disable-next=unused-import
+from homeassistant.helpers.issue_registry import (  # noqa: F401; Remove when integrations have been updated
+    async_create_issue,
     async_delete_issue,
     async_get as async_get_issue_registry,
 )
