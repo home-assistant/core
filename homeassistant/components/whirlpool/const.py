@@ -3,6 +3,8 @@
 from whirlpool.backendselector import Region
 from whirlpool.washerdryer import MachineState, WasherDryer
 
+from whirlpool.backendselector import Region
+
 DOMAIN = "whirlpool"
 CONF_ALLOWED_REGIONS = ["EU", "US"]
 
