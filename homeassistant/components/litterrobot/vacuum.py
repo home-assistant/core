@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from pylitterbot.enums import LitterBoxStatus
-from pylitterbot.robot.litterrobot import VALID_WAIT_TIMES
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -30,9 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TYPE_LITTER_BOX = "Litter Box"
 
-SERVICE_RESET_WASTE_DRAWER = "reset_waste_drawer"
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
-SERVICE_SET_WAIT_TIME = "set_wait_time"
 
 LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
@@ -62,22 +59,12 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_RESET_WASTE_DRAWER,
-        {},
-        "async_reset_waste_drawer",
-    )
-    platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
             vol.Required("enabled"): cv.boolean,
             vol.Optional("start_time"): cv.time,
         },
         "async_set_sleep_mode",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_WAIT_TIME,
-        {vol.Required("minutes"): vol.All(vol.Coerce(int), vol.In(VALID_WAIT_TIMES))},
-        "async_set_wait_time",
     )
 
 
@@ -116,18 +103,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
         """Start a clean cycle."""
         await self.perform_action_and_refresh(self.robot.start_cleaning)
 
-    async def async_reset_waste_drawer(self) -> None:
-        """Reset the waste drawer level."""
-        # The Litter-Robot reset waste drawer service has been replaced by a
-        # dedicated button entity and marked as deprecated
-        _LOGGER.warning(
-            "The 'litterrobot.reset_waste_drawer' service is deprecated and "
-            "replaced by a dedicated reset waste drawer button entity; Please "
-            "use that entity to reset the waste drawer instead"
-        )
-        await self.robot.reset_waste_drawer()
-        self.coordinator.async_set_updated_data(True)
-
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None
     ) -> None:
@@ -137,17 +112,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
             enabled,
             self.parse_time_at_default_timezone(start_time),
         )
-
-    async def async_set_wait_time(self, minutes: int) -> None:
-        """Set the wait time."""
-        # The Litter-Robot set wait time service has been replaced by a
-        # dedicated select entity and marked as deprecated
-        _LOGGER.warning(
-            "The 'litterrobot.set_wait_time' service is deprecated and "
-            "replaced by a dedicated set wait time select entity; Please "
-            "use that entity to set the wait time instead"
-        )
-        await self.perform_action_and_refresh(self.robot.set_wait_time, minutes)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
