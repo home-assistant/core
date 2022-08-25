@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pydeconz.interfaces.lights import CoverAction
+from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
 from pydeconz.models.light.cover import Cover
 
@@ -23,9 +24,9 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_TYPE_TO_DEVICE_CLASS = {
-    "Level controllable output": CoverDeviceClass.DAMPER,
-    "Window covering controller": CoverDeviceClass.SHADE,
-    "Window covering device": CoverDeviceClass.SHADE,
+    ResourceType.LEVEL_CONTROLLABLE_OUTPUT.value: CoverDeviceClass.DAMPER,
+    ResourceType.WINDOW_COVERING_CONTROLLER.value: CoverDeviceClass.SHADE,
+    ResourceType.WINDOW_COVERING_DEVICE.value: CoverDeviceClass.SHADE,
 }
 
 
@@ -72,6 +73,8 @@ class DeconzCover(DeconzDevice, CoverEntity):
 
         self._attr_device_class = DECONZ_TYPE_TO_DEVICE_CLASS.get(cover.type)
 
+        self.legacy_mode = cover.type == ResourceType.LEVEL_CONTROLLABLE_OUTPUT.value
+
     @property
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
@@ -88,6 +91,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             lift=position,
+            legacy_mode=self.legacy_mode,
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -95,6 +99,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             action=CoverAction.OPEN,
+            legacy_mode=self.legacy_mode,
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -102,6 +107,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             action=CoverAction.CLOSE,
+            legacy_mode=self.legacy_mode,
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -109,6 +115,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             action=CoverAction.STOP,
+            legacy_mode=self.legacy_mode,
         )
 
     @property
@@ -124,6 +131,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             tilt=position,
+            legacy_mode=self.legacy_mode,
         )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
@@ -131,6 +139,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             tilt=0,
+            legacy_mode=self.legacy_mode,
         )
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
@@ -138,6 +147,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             tilt=100,
+            legacy_mode=self.legacy_mode,
         )
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
@@ -145,4 +155,5 @@ class DeconzCover(DeconzDevice, CoverEntity):
         await self.gateway.api.lights.covers.set_state(
             id=self._device.resource_id,
             action=CoverAction.STOP,
+            legacy_mode=self.legacy_mode,
         )
