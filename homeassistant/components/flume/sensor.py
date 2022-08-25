@@ -29,8 +29,6 @@ from .const import (
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
-SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(
