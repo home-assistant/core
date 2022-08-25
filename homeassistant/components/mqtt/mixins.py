@@ -10,7 +10,6 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -49,6 +48,7 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
