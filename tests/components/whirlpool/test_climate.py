@@ -72,7 +72,11 @@ async def test_no_appliances(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMock):
+async def test_static_attributes(
+    hass: HomeAssistant,
+    mock_aircon1_api: MagicMock,
+    mock_aircon_api_instances: MagicMock,
+):
     """Test static climate attributes."""
     await init_integration(hass)
 
@@ -233,7 +237,10 @@ async def test_dynamic_attributes(
 
 
 async def test_service_calls(
-    hass: HomeAssistant, mock_aircon1_api: MagicMock, mock_aircon2_api: MagicMock
+    hass: HomeAssistant,
+    mock_aircon1_api: MagicMock,
+    mock_aircon2_api: MagicMock,
+    mock_aircon_api_instances: MagicMock,
 ):
     """Test controlling the entity through service calls."""
     await init_integration(hass)

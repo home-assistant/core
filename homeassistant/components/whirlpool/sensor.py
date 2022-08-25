@@ -135,7 +135,7 @@ class WasherDryerClass(SensorEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Connect aircon to the cloud."""
+        """Connect WasherDryer to the cloud."""
         await self._wd.connect()
 
     @property

@@ -83,19 +83,19 @@ def get_aircon_mock(said):
     return mock_aircon
 
 
-@pytest.fixture(name="mock_aircon1_api", autouse=True)
+@pytest.fixture(name="mock_aircon1_api", autouse=False)
 def fixture_mock_aircon1_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
     yield get_aircon_mock(MOCK_SAID1)
 
 
-@pytest.fixture(name="mock_aircon2_api", autouse=True)
+@pytest.fixture(name="mock_aircon2_api", autouse=False)
 def fixture_mock_aircon2_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
     yield get_aircon_mock(MOCK_SAID2)
 
 
-@pytest.fixture(name="mock_aircon_api_instances", autouse=True)
+@pytest.fixture(name="mock_aircon_api_instances", autouse=False)
 def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
     """Set up air conditioner API fixture."""
     with mock.patch(
@@ -106,11 +106,32 @@ def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
 
 
 def get_sensor_mock(said):
-    """Get a mock of an air conditioner."""
+    """Get a mock of an sensor."""
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
-    mock_sensor.get_online.return_value = True
-    mock_sensor.get_machine_state = "1"
-    mock_sensor.get_attribute.return_value = "5496"
+    mock_sensor.get_machine_state.return_value.name = "Waiting"
+    mock_sensor.get_attribute.return_value = "3540"
 
     return mock_sensor
+
+
+@pytest.fixture(name="mock_sensor1_api", autouse=False)
+def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_api):
+    """Set up sensor API fixture."""
+    yield get_sensor_mock(MOCK_SAID3)
+
+
+@pytest.fixture(name="mock_sensor2_api", autouse=False)
+def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_api):
+    """Set up sensor API fixture."""
+    yield get_sensor_mock(MOCK_SAID4)
+
+
+@pytest.fixture(name="mock_sensor_api_instances", autouse=False)
+def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
+    """Set up sensor API fixture."""
+    with mock.patch(
+        "homeassistant.components.whirlpool.sensor.WasherDryer"
+    ) as mock_sensor_api:
+        mock_sensor_api.side_effect = [mock_sensor1_api, mock_sensor2_api]
+        yield mock_sensor_api
