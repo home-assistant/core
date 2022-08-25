@@ -31,9 +31,7 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[FlumeData]):
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
-            "Flume update details: %s",
-            {
-                "values": self.flume_device.values,
-                "query_payload": self.flume_device.query_payload,
-            },
+            "Flume update details: {'values': %s, 'query_payload': %s}",
+            self.flume_device.values,
+            self.flume_device.query_payload,
         )
