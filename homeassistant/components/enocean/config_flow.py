@@ -33,12 +33,24 @@ ENOCEAN_DELETE_DEVICE_COMMAND = "delete"
 
 
 MOCKUP_DEVICES = [
-    selector.SelectOptionDict(value="12:34:56:78", label="(Mock-up) Switch 1"),
-    selector.SelectOptionDict(value="12:53:14:78", label="(Mock-up) Switch 2"),
-    selector.SelectOptionDict(value="12:53:56:78", label="(Mock-up) Switch 3"),
-    selector.SelectOptionDict(value="11:22:33:44", label="(Mock-up) Light 1"),
-    selector.SelectOptionDict(value="AB:CE:DE:F0", label="(Mock-up) Light 2"),
-    selector.SelectOptionDict(value="AB:CE:DE:F1", label="(Mock-up) Light 3"),
+    selector.SelectOptionDict(
+        value="12:34:56:78", label="12:34:56:78 [last seen on YYYY-MM-DD HH:MM]"
+    ),
+    selector.SelectOptionDict(
+        value="12:53:14:78", label="12:53:14:78 [last seen on YYYY-MM-DD HH:MM]"
+    ),
+    selector.SelectOptionDict(
+        value="12:53:56:78", label="12:53:56:78 [last seen on YYYY-MM-DD HH:MM]"
+    ),
+    selector.SelectOptionDict(
+        value="11:22:33:44", label="11:22:33:44 [last seen on YYYY-MM-DD HH:MM]"
+    ),
+    selector.SelectOptionDict(
+        value="AB:CE:DE:F0", label="AB:CE:DE:F0 [last seen on YYYY-MM-DD HH:MM]"
+    ),
+    selector.SelectOptionDict(
+        value="AB:CE:DE:F1", label="AB:CE:DE:F1 [last seen on YYYY-MM-DD HH:MM]"
+    ),
 ]
 
 MOCKUP_SENDER_IDS = [
@@ -76,7 +88,7 @@ ADD_DEVICE_SCHEMA = vol.Schema(
             # Hence the use of a SelectSelector.
             selector.SelectSelectorConfig(options=MOCKUP_DEVICES, custom_value=True)
         ),
-        vol.Optional(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
+        vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
         vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): selector.SelectSelector(
             # For now, the list of sender_ids will always be empty. For a
             # later version, it shall be pre-filled with the dongles chip ID
@@ -288,7 +300,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_manage_devices(self, user_input=None) -> FlowResult:
         """Manage the configured EnOcean devices."""
-        devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
             selector.SelectOptionDict(
                 value=device["id"], label=device["name"] + " [" + device["id"] + "]"
@@ -298,6 +310,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         device_list.sort(key=lambda entry: entry["label"].lower())
 
         LOGGER.debug(device_list[0])
+
+        if user_input is not None:
+            device_id = user_input[CONF_DEVICE]
+            command = user_input[CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS]
+
+            if command == ENOCEAN_DELETE_DEVICE_COMMAND:
+                for device in devices:
+                    if device["id"] == device_id:
+                        # we still need to delete all associated entities (not yet done)
+                        devices.remove(device)
+                        break
+
+                return self.async_create_entry(
+                    title="", data={CONF_ENOCEAN_DEVICES: devices}
+                )
 
         manage_devices_schema = vol.Schema(
             {
