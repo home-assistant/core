@@ -15,11 +15,7 @@ from homeassistant.components.hassmpris.const import (
     STEP_ZEROCONF_CONFIRM,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 
 class MockECDH:
@@ -84,7 +80,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch("hassmpris_client.AsyncCAKESClient", return_value=MockCakesClient()):
@@ -94,7 +90,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["type"] == FlowResultType.FORM
         assert result2["step_id"] == STEP_CONFIRM
 
         result3 = await hass.config_entries.flow.async_configure(
@@ -105,7 +101,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -124,7 +120,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "cannot_connect"
 
 
@@ -135,7 +131,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=_zeroconfinfo,
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == STEP_ZEROCONF_CONFIRM
 
     with patch("hassmpris_client.AsyncCAKESClient", return_value=MockCakesClient()):
@@ -144,7 +140,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
             _hostinfo,
         )
         await hass.async_block_till_done()
-        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["type"] == FlowResultType.FORM
         assert result2["step_id"] == STEP_CONFIRM
 
         result3 = await hass.config_entries.flow.async_configure(
@@ -155,7 +151,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
 
 
 # Possible additional tests:
