@@ -253,6 +253,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     @catch_braviatv_errors
     async def async_send_command(self, command: Iterable[str], repeats: int) -> None:
         """Send command to device."""
+        commands = await self.client.get_command_list()
         for _ in range(repeats):
             for cmd in command:
-                await self.client.send_command(cmd)
+                if cmd in commands:
+                    await self.client.send_command(cmd)
+                else:
+                    available_commands = ", ".join(commands.keys())
+                    _LOGGER.error(
+                        "Unsupported command: %s, list of available commands: %s",
+                        cmd,
+                        available_commands,
+                    )
