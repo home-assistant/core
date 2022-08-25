@@ -353,8 +353,8 @@ build.json @home-assistant/supervisor
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
 /tests/components/flo/ @dmulcahey
-/homeassistant/components/flume/ @ChrisMandich @bdraco
-/tests/components/flume/ @ChrisMandich @bdraco
+/homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
+/tests/components/flume/ @ChrisMandich @bdraco @jeeftor
 /homeassistant/components/flunearyou/ @bachya
 /tests/components/flunearyou/ @bachya
 /homeassistant/components/flux_led/ @icemanch @bdraco
