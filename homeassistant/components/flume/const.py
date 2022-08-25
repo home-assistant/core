@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "flume"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 DEFAULT_NAME = "Flume Sensor"
 
@@ -71,3 +71,8 @@ KEY_DEVICE_ID = "id"
 KEY_DEVICE_LOCATION = "location"
 KEY_DEVICE_LOCATION_NAME = "name"
 KEY_DEVICE_LOCATION_TIMEZONE = "tz"
+
+
+NOTIFICATION_HIGH_FLOW = "High Flow Alert"
+NOTIFICATION_BRIDGE_DISCONNECT = "Bridge Disconnection"
+NOTIFICATION_LEAK_DETECTED = "Flume Smart Leak Alert"

@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
-from .coordinator import FlumeDeviceDataUpdateCoordinator
 
 
-class FlumeEntity(CoordinatorEntity[FlumeDeviceDataUpdateCoordinator]):
+class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"
@@ -16,7 +18,7 @@ class FlumeEntity(CoordinatorEntity[FlumeDeviceDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: FlumeDeviceDataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator,
         description: EntityDescription,
         device_id: str,
     ) -> None:
