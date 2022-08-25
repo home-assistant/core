@@ -1,9 +1,7 @@
 {
   "config": {
-    "flow_title": "{serial_number}",
     "step": {
       "user": {
-        "description": "Set up your Lektrico Charger to integrate",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "friendly_name": "[%key:common::config_flow::data::name%]"
