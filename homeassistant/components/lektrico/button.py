@@ -108,13 +108,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    _lektrico_device: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = [
         LektricoButton(
             sensor_desc,
-            _lektrico_device,
+            coordinator,
             entry.data[CONF_FRIENDLY_NAME],
         )
         for sensor_desc in SENSORS
@@ -131,14 +129,14 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
     def __init__(
         self,
         description: LektricoButtonEntityDescription,
-        _lektrico_device: LektricoDeviceDataUpdateCoordinator,
+        coordinator: LektricoDeviceDataUpdateCoordinator,
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        super().__init__(_lektrico_device)
+        super().__init__(coordinator)
         self.friendly_name = friendly_name
-        self.serial_number = _lektrico_device.serial_number
-        self.board_revision = _lektrico_device.board_revision
+        self.serial_number = coordinator.serial_number
+        self.board_revision = coordinator.board_revision
         self.entity_description = description
 
         self._attr_name = f"{self.friendly_name} {description.name}"
@@ -148,11 +146,11 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
             model=f"1P7K {self.serial_number} rev.{self.board_revision}",
             name=self.friendly_name,
             manufacturer="Lektrico",
-            sw_version=_lektrico_device.data.fw_version,
+            sw_version=coordinator.data.fw_version,
         )
 
-        self._lektrico_device = _lektrico_device
+        self.coordinator = coordinator
 
     async def async_press(self) -> None:
         """Send the command corresponding to the pressed button."""
-        await self.entity_description.get_async_press(self._lektrico_device.device)
+        await self.entity_description.get_async_press(self.coordinator.device)

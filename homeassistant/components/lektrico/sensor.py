@@ -214,14 +214,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    _lektrico_device: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
         LektricoSensor(
             sensor_desc,
-            _lektrico_device,
+            coordinator,
             entry.data[CONF_FRIENDLY_NAME],
         )
         for sensor_desc in SENSORS
@@ -238,14 +236,14 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         description: LektricoSensorEntityDescription,
-        _lektrico_device: LektricoDeviceDataUpdateCoordinator,
+        coordinator: LektricoDeviceDataUpdateCoordinator,
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        super().__init__(_lektrico_device)
+        super().__init__(coordinator)
         self.friendly_name = friendly_name
-        self.serial_number = _lektrico_device.serial_number
-        self.board_revision = _lektrico_device.board_revision
+        self.serial_number = coordinator.serial_number
+        self.board_revision = coordinator.board_revision
         self.entity_description = description
 
         self._attr_name = f"{self.friendly_name} {description.name}"
@@ -256,12 +254,12 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
             model=f"1P7K {self.serial_number} rev.{self.board_revision}",
             name=self.friendly_name,
             manufacturer="Lektrico",
-            sw_version=_lektrico_device.data.fw_version,
+            sw_version=coordinator.data.fw_version,
         )
 
-        self._lektrico_device = _lektrico_device
+        self.coordinator = coordinator
 
     @property
     def native_value(self) -> float | str | int | None:
         """Return the state of the sensor."""
-        return self.entity_description.get_native_value(self._lektrico_device.data)
+        return self.entity_description.get_native_value(self.coordinator.data)

@@ -112,13 +112,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    _lektrico_device: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = [
         LektricoSwitch(
             sensor_desc,
-            _lektrico_device,
+            coordinator,
             entry.data[CONF_FRIENDLY_NAME],
         )
         for sensor_desc in SENSORS
@@ -135,14 +133,14 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
     def __init__(
         self,
         description: LektricoSwitchEntityDescription,
-        _lektrico_device: LektricoDeviceDataUpdateCoordinator,
+        coordinator: LektricoDeviceDataUpdateCoordinator,
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        super().__init__(_lektrico_device)
+        super().__init__(coordinator)
         self.friendly_name = friendly_name
-        self.serial_number = _lektrico_device.serial_number
-        self.board_revision = _lektrico_device.board_revision
+        self.serial_number = coordinator.serial_number
+        self.board_revision = coordinator.board_revision
         self.entity_description = description
 
         self._attr_name = f"{self.friendly_name} {description.name}"
@@ -153,28 +151,28 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
             model=f"1P7K {self.serial_number} rev.{self.board_revision}",
             name=self.friendly_name,
             manufacturer="Lektrico",
-            sw_version=_lektrico_device.data.fw_version,
+            sw_version=coordinator.data.fw_version,
         )
 
-        self._lektrico_device = _lektrico_device
+        self.coordinator = coordinator
 
     @property
     def is_on(self) -> bool:
         """If the switch is currently on or off."""
-        return bool(self.entity_description.get_is_on(self._lektrico_device.data))
+        return bool(self.entity_description.get_is_on(self.coordinator.data))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.turn_on(
-            self._lektrico_device.device, self._lektrico_device.data
+            self.coordinator.device, self.coordinator.data
         )
         # Refresh the coordinator because a switch changed a value.
-        await self._lektrico_device.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.turn_off(
-            self._lektrico_device.device, self._lektrico_device.data
+            self.coordinator.device, self.coordinator.data
         )
         # Refresh the coordinator because a switch changed a value.
-        await self._lektrico_device.async_refresh()
+        await self.coordinator.async_refresh()
