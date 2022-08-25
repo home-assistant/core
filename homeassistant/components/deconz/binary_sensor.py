@@ -159,7 +159,7 @@ ENTITY_DESCRIPTIONS = {
     ],
 }
 
-BINARY_SENSOR_DESCRIPTIONS = [
+COMMON_BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tampered",
         value_fn=lambda device: device.tampered,
@@ -215,7 +215,8 @@ async def async_setup_entry(
         sensor = gateway.api.sensors[sensor_id]
 
         for description in (
-            ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
+            ENTITY_DESCRIPTIONS.get(type(sensor), [])
+            + COMMON_BINARY_SENSOR_DESCRIPTIONS
         ):
             if (
                 not hasattr(sensor, description.key)
@@ -284,8 +285,8 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
 
-        if self._device.secondary_temperature is not None:
-            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
+        if self._device.internal_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Presence):
 
