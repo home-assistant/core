@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
@@ -107,6 +108,7 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
+CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
@@ -199,6 +201,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_MANUFACTURER): cv.string,
             vol.Optional(CONF_MODEL): cv.string,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_HW_VERSION): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
@@ -879,6 +882,9 @@ def device_info_from_config(config) -> DeviceInfo | None:
 
     if CONF_NAME in config:
         info[ATTR_NAME] = config[CONF_NAME]
+
+    if CONF_HW_VERSION in config:
+        info[ATTR_HW_VERSION] = config[CONF_HW_VERSION]
 
     if CONF_SW_VERSION in config:
         info[ATTR_SW_VERSION] = config[CONF_SW_VERSION]
