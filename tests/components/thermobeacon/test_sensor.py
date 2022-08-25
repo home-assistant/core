@@ -39,10 +39,13 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 4
 
-    humid_sensor = hass.states.get("sensor.smart_hygrometer_eeff_humidity")
+    humid_sensor = hass.states.get("sensor.lanyard_mini_hygrometer_eeff_humidity")
     humid_sensor_attrs = humid_sensor.attributes
-    assert humid_sensor.state == "26.4375"
-    assert humid_sensor_attrs[ATTR_FRIENDLY_NAME] == "Smart hygrometer EEFF Humidity"
+    assert humid_sensor.state == "43.38"
+    assert (
+        humid_sensor_attrs[ATTR_FRIENDLY_NAME]
+        == "Lanyard/mini hygrometer EEFF Humidity"
+    )
     assert humid_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert humid_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
