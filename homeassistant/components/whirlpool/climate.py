@@ -70,9 +70,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-    if not (aircons := whirlpool_data.appliances_manager.aircons):
-        _LOGGER.debug("No aircons found")
-        return
+    aircons = whirlpool_data.appliances_manager.aircons
+    #      _LOGGER.debug("No aircons found")
+    #      return
 
     aircons = [
         AirConEntity(
@@ -109,7 +109,8 @@ class AirConEntity(ClimateEntity):
         self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
 
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._attr_name = name if name is not None else said
+        # self._attr_name = name if name is not None else said
+        self._name = name if name is not None else said
         self._attr_unique_id = said
         self._said = said
         self._attr_has_entity_name = True
@@ -119,7 +120,7 @@ class AirConEntity(ClimateEntity):
         """Device information for Aladdin Connect sensors."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._said)},
-            name=self._attr_name,
+            name=self._name,
             manufacturer="Whirlpool",
             model="Sixth Sense",
         )

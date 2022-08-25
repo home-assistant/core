@@ -47,7 +47,7 @@ class WhirlpoolSensorEntityDescription(
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="washer",
-        name="washer state",
+        name="state",
         entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
@@ -55,7 +55,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
-        name="washer time remaining",
+        name="time remaining",
         # device_class=SensorDeviceClass.DURATION,
         # native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
