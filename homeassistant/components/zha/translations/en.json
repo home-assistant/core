@@ -59,16 +59,16 @@
             },
             "maybe_confirm_ezsp_restore": {
                 "data": {
-                    "overwrite_coordinator_ieee": "Overwrite the radio IEEE address"
+                    "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
                 },
-                "description": "Your chosen backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.  This is a permanent operation.",
+                "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
                 "title": "Overwrite Radio IEEE Address"
             },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Upload a file"
                 },
-                "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from \"Diagnostics\", or use a Zigbee2MQTT `coordinator_backup.json` file.",
+                "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from **Network Settings**, or use a Zigbee2MQTT `coordinator_backup.json` file.",
                 "title": "Upload a Manual Backup"
             }
         }

@@ -53,9 +53,9 @@
       },
       "maybe_confirm_ezsp_restore": {
         "title": "Overwrite Radio IEEE Address",
-        "description": "Your chosen backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.  This is a permanent operation.",
+        "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
         "data": {
-          "overwrite_coordinator_ieee": "Overwrite the radio IEEE address"
+          "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
         }
       }
     },
