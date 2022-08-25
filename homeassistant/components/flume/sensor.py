@@ -1,5 +1,4 @@
 """Sensor for displaying the number of result from Flume."""
-from datetime import timedelta
 from numbers import Number
 
 from pyflume import FlumeData
@@ -28,7 +27,6 @@ from .const import (
     KEY_DEVICE_TYPE,
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
-
 
 
 async def async_setup_entry(
