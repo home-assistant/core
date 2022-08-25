@@ -12,11 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_FRIENDLY_NAME,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -39,7 +34,7 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
     @classmethod
-    def get_native_value(cls, data: Any) -> float | str | int | bool | None:
+    def get_native_value(cls, data: Any) -> float | str | int | None:
         """Return None."""
         return None
 
@@ -256,21 +251,17 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{self.serial_number}_{description.name}"
         # ex: 500006_Led Brightness
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            model=f"1P7K {self.serial_number} rev.{self.board_revision}",
+            name=self.friendly_name,
+            manufacturer="Lektrico",
+            sw_version=_lektrico_device.data.fw_version,
+        )
 
         self._lektrico_device = _lektrico_device
 
     @property
-    def native_value(self) -> float | str | int | bool | None:
+    def native_value(self) -> float | str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.get_native_value(self._lektrico_device.data)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Lektrico charger."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.serial_number)},
-            ATTR_NAME: self.friendly_name,
-            ATTR_MANUFACTURER: "Lektrico",
-            ATTR_MODEL: f"1P7K {self.serial_number} rev.{self.board_revision}",
-            ATTR_SW_VERSION: self._lektrico_device.data.fw_version,
-        }

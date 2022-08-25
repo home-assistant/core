@@ -8,14 +8,7 @@ import lektricowifi
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    CONF_FRIENDLY_NAME,
-)
+from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -150,20 +143,16 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
 
         self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{self.serial_number}_{description.name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            model=f"1P7K {self.serial_number} rev.{self.board_revision}",
+            name=self.friendly_name,
+            manufacturer="Lektrico",
+            sw_version=_lektrico_device.data.fw_version,
+        )
 
         self._lektrico_device = _lektrico_device
 
     async def async_press(self) -> None:
         """Send the command corresponding to the pressed button."""
         await self.entity_description.get_async_press(self._lektrico_device.device)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Lektrico charger."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.serial_number)},
-            ATTR_NAME: self.friendly_name,
-            ATTR_MANUFACTURER: "Lektrico",
-            ATTR_MODEL: f"1P7K {self.serial_number} rev.{self.board_revision}",
-            ATTR_SW_VERSION: self._lektrico_device.data.fw_version,
-        }
