@@ -11,7 +11,6 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
 )
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,6 +20,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 

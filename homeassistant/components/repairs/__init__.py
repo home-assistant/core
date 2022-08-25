@@ -2,13 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-    create_issue,
-    delete_issue,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, websocket_api
@@ -17,13 +10,8 @@ from .issue_handler import ConfirmRepairFlow
 from .models import RepairsFlow
 
 __all__ = [
-    "async_create_issue",
-    "async_delete_issue",
-    "create_issue",
-    "delete_issue",
     "DOMAIN",
     "ConfirmRepairFlow",
-    "IssueSeverity",
     "RepairsFlow",
 ]
 
