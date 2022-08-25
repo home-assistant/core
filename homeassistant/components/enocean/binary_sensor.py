@@ -1,7 +1,7 @@
 """Support for EnOcean binary sensors."""
 from __future__ import annotations
 
-from enocean.utils import combine_hex
+from enocean.utils import combine_hex, from_hex_string
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -47,11 +47,15 @@ def setup_platform(
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES)
+
     for device in devices:
-        LOGGER.debug(device)
+        if device["eep"] in ["F6-02-01", "F6-02-02"]:
+            device_id = from_hex_string(device["id"])
+            LOGGER.debug(device_id)
+            async_add_entities([EnOceanBinarySensor(device_id, device["name"], None)])
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
