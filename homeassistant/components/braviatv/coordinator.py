@@ -10,7 +10,6 @@ from typing import Any, Final, TypeVar
 from pybravia import BraviaTV, BraviaTVError
 from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components import persistent_notification
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
@@ -257,16 +256,3 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         for _ in range(repeats):
             for cmd in command:
                 await self.client.send_command(cmd)
-
-    @catch_braviatv_errors
-    async def async_learn_command(self, entity_id: str) -> None:
-        """Display a list of available commands in a persistent notification."""
-        commands = await self.client.get_command_list()
-        codes = ", ".join(commands.keys())
-        title = "Bravia TV"
-        message = f"**List of available commands for `{entity_id}`**:\n\n{codes}"
-        persistent_notification.async_create(
-            self.hass,
-            title=title,
-            message=message,
-        )
