@@ -15,6 +15,13 @@
                     "email": "Email",
                     "password": "Password"
                 }
+            },
+            "reauth_confirm": {
+                "description": "Please update your password for {email}",
+                "title": "Reauthenticate Integration",
+                "data": {
+                    "password": "Password"
+                }
             }
         }
     },
