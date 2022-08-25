@@ -1,5 +1,7 @@
 """Test the Whirlpool Sensor domain."""
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
+
+from attr import dataclass
 
 from attr import dataclass
 from whirlpool.washerdryer import MachineState
