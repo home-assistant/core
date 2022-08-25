@@ -31,6 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Flume sensor."""
+
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
 
     flume_auth = flume_domain_data[FLUME_AUTH]
@@ -81,8 +82,8 @@ class FlumeSensor(FlumeEntity, SensorEntity):
     def __init__(
         self,
         coordinator: FlumeDeviceDataUpdateCoordinator,
-        description: SensorEntityDescription,
         device_id: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Inlitializer function with type hints."""
         super().__init__(coordinator, description, device_id)
@@ -95,13 +96,6 @@ class FlumeSensor(FlumeEntity, SensorEntity):
             return None
 
         return _format_state_value(self.coordinator.flume_device.values[sensor_key])
-
-    async def async_added_to_hass(self) -> None:
-        """Request an update when added."""
-        await super().async_added_to_hass()
-        # We do not ask for an update with async_add_entities()
-        # because it will update disabled entities
-        await self.coordinator.async_request_refresh()
 
 
 def _format_state_value(value):

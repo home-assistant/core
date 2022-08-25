@@ -168,7 +168,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.4.0
+aiohomekit==1.5.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1647,7 +1647,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.7.0
+pylitterbot==2022.8.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -2337,6 +2337,9 @@ tesla-wall-connector==1.0.1
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.5.0
+
+# homeassistant.components.thermopro
+thermopro-ble==0.4.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
