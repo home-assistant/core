@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
-from pyunifiprotect.data import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import ProtectAdoptableDeviceModel, ProtectModelWithId
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -38,6 +38,7 @@ class ProtectButtonEntityDescription(
 
 
 DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
+KEY_ADOPT = "adopt"
 
 
 ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
@@ -60,7 +61,7 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 ADOPT_BUTTON = ProtectButtonEntityDescription[ProtectAdoptableDeviceModel](
-    key="adopt",
+    key=KEY_ADOPT,
     name="Adopt Device",
     icon="mdi:plus-circle",
     ufp_press="adopt",
@@ -178,6 +179,15 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         """Initialize an UniFi camera."""
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+
+        if self.entity_description.key == KEY_ADOPT:
+            self._attr_available = self.device.can_adopt and self.device.can_create(
+                self.data.api.bootstrap.auth_user
+            )
 
     async def async_press(self) -> None:
         """Press the button."""
