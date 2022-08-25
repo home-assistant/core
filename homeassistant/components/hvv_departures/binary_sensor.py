@@ -136,11 +136,6 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self.coordinator.data[self.idx]["state"]
 
     @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
     def available(self):
         """Return if entity is available."""
         return (

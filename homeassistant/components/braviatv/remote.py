@@ -47,3 +47,7 @@ class BraviaTVRemote(BraviaTVEntity, RemoteEntity):
         """Send a command to device."""
         repeats = kwargs[ATTR_NUM_REPEATS]
         await self.coordinator.async_send_command(command, repeats)
+
+    async def async_learn_command(self, **kwargs: Any) -> None:
+        """Learn commands from the device."""
+        await self.coordinator.async_learn_command(self.entity_id)
