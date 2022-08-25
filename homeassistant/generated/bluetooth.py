@@ -144,6 +144,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "thermobeacon",
+        "local_name": "ThermoBeacon*",
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "local_name": "Lee Guitars*",
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
         "domain": "thermopro",
         "local_name": "TP35*",
         "connectable": False
