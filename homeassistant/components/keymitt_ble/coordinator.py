@@ -51,9 +51,6 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         if adv := parse_advertisement_data(
             service_info.device, service_info.advertisement
         ):
-            _LOGGER.debug("Service_info: %s", service_info)
-            _LOGGER.debug("Change: %s", change)
             self.data = adv.data
-            _LOGGER.debug("self.data: %s", self.data)
             _LOGGER.debug("%s: MicroBot data: %s", self.ble_device.address, self.data)
             self.api.update_from_advertisement(adv)
