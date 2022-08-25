@@ -11,15 +11,15 @@ from whirlpool.backendselector import BackendSelector
 from whirlpool.washerdryer import WasherDryer
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import WhirlpoolData
 from .const import DOMAIN
@@ -49,18 +49,22 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="washer",
         name="washer state",
         entity_registry_enabled_default=True,
+        icon=ICON_W,
         has_entity_name=True,
-        value_fn=WasherDryer.get_machine_state,
+        value_fn=lambda WasherDryer: WasherDryer.get_machine_state().name,
     ),
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
         name="washer time remaining",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        native_unit_of_measurement=TIME_SECONDS,
+        # device_class=SensorDeviceClass.DURATION,
+        # native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
+        icon=ICON_W,
         has_entity_name=True,
-        value_fn=WasherDryer.get_attribute,
+        value_fn=lambda WasherDryer: WasherDryer.get_attribute(
+            "Cavity_TimeStatusEstTimeRemaining"
+        ),
     ),
 )
 
@@ -74,12 +78,12 @@ async def async_setup_entry(
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
 
-    for washer in whirlpool_data.appliances_manager.washer_dryers:
+    for appliance in whirlpool_data.appliances_manager.washer_dryers:
         entities.extend(
             [
-                Washer(
-                    washer["SAID"],
-                    washer["NAME"],
+                WasherDryerClass(
+                    appliance["SAID"],
+                    appliance["NAME"],
                     whirlpool_data.backend_selector,
                     whirlpool_data.auth,
                     description,
@@ -92,7 +96,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class Washer(Entity):
+class WasherDryerClass(SensorEntity):
     """A class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
@@ -115,8 +119,9 @@ class Washer(Entity):
             self._said,
             self.async_write_ha_state,
         )
-        self._attr_icon = ICON_W
-        self._entity_description = description
+        if self._name == "dryer":
+            self._attr_icon = ICON_D
+        self.entity_description: WhirlpoolSensorEntityDescription = description
         self._attr_unique_id = f"{said}-{description.key}"
 
     @property
@@ -134,18 +139,14 @@ class Washer(Entity):
         await self._wd.connect()
 
     @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        if self._entity_description.key == "timeremaining":
-            value = int(
-                self._entity_description.value_fn(
-                    self._wd, "Cavity_TimeStatusEstTimeRemaining"
-                )
-            )
+    def native_value(self) -> StateType | str:
+        """Return native value of sensor."""
+        if self.entity_description.key == "timeremaining":
+            value = int(self.entity_description.value_fn(self._wd))
 
             if value == 3540:
                 value = 0
             washertime = time.gmtime(value)
             return time.strftime("%H:%M:%S", washertime)
 
-        return self._entity_description.value_fn(self._wd).name
+        return self.entity_description.value_fn(self._wd)
