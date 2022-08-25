@@ -3,6 +3,8 @@
 import logging
 from unittest.mock import patch
 
+from bthome_ble import BThomeBluetoothDeviceData as DeviceData
+
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bthome.const import DOMAIN
@@ -468,7 +470,6 @@ async def test_async_step_reauth(hass):
     assert len(hass.states.async_all()) == 0
 
     saved_callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-
     await hass.async_block_till_done()
 
     results = hass.config_entries.flow.async_progress()
@@ -485,58 +486,78 @@ async def test_async_step_reauth(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-# async def test_async_step_reauth_wrong_key(hass):
-#     """Test reauth for v4 with a bad key, and that we can recover."""
-#     entry = MockConfigEntry(
-#         domain=DOMAIN,
-#         unique_id="54:EF:44:E3:9C:BC",
-#     )
-#     entry.add_to_hass(hass)
-#     saved_callback = None
+async def test_async_step_reauth_wrong_key(hass):
+    """Test reauth with a bad key, and that we can recover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="54:48:E6:8F:80:A5",
+    )
+    entry.add_to_hass(hass)
+    saved_callback = None
 
-#     def _async_register_callback(_hass, _callback, _matcher, _mode):
-#         nonlocal saved_callback
-#         saved_callback = _callback
-#         return lambda: None
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
 
-#     with patch(
-#         "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-#         _async_register_callback,
-#     ):
-#         assert await hass.config_entries.async_setup(entry.entry_id)
-#         await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-#     assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all()) == 0
 
-#     # WARNING: This test data is synthetic, rather than captured from a real device
-#     # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
-#     saved_callback(
-#         make_advertisement(
-#             "54:EF:44:E3:9C:BC",
-#             b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01" b"\x08\x12\x05\x00\x00\x00q^\xbe\x90",
-#         ),
-#         BluetoothChange.ADVERTISEMENT,
-#     )
+    saved_callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
 
-#     await hass.async_block_till_done()
+    results = hass.config_entries.flow.async_progress()
+    assert len(results) == 1
+    result = results[0]
 
-#     results = hass.config_entries.flow.async_progress()
-#     assert len(results) == 1
-#     result = results[0]
+    assert result["step_id"] == "get_encryption_key"
 
-#     assert result["step_id"] == "get_encryption_key"
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"bindkey": "5b51a7c91cde6707c9ef18dada143a58"},
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "get_encryption_key"
+    assert result2["errors"]["bindkey"] == "decryption_failed"
 
-#     result2 = await hass.config_entries.flow.async_configure(
-#         result["flow_id"],
-#         user_input={"bindkey": "5b51a7c91cde6707c9ef18dada143a58"},
-#     )
-#     assert result2["type"] == FlowResultType.FORM
-#     assert result2["step_id"] == "get_encryption_key"
-#     assert result2["errors"]["bindkey"] == "decryption_failed"
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
 
-#     result2 = await hass.config_entries.flow.async_configure(
-#         result["flow_id"],
-#         user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
-#     )
-#     assert result2["type"] == FlowResultType.ABORT
-#     assert result2["reason"] == "reauth_successful"
+
+async def test_async_step_reauth_abort_early(hass):
+    """
+    Test we can abort the reauth if there is no encryption.
+
+    (This can't currently happen in practice).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="54:48:E6:8F:80:A5",
+    )
+    entry.add_to_hass(hass)
+
+    device = DeviceData()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data | {"device": device},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

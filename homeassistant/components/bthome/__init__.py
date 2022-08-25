@@ -32,14 +32,8 @@ def process_service_info(
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
-
-    # If device isn't pending we know it has seen at least one broadcast with a payload
     # If that payload was encrypted and the bindkey was not verified then we need to reauth
-    if (
-        not data.pending
-        and data.encryption_scheme != EncryptionScheme.NONE
-        and not data.bindkey_verified
-    ):
+    if data.encryption_scheme != EncryptionScheme.NONE and not data.bindkey_verified:
         entry.async_start_reauth(hass, data={"device": data})
 
     return update
