@@ -1001,7 +1001,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==103
+pydeconz==104
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
