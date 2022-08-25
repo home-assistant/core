@@ -127,10 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, volvo_data
     )
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed:
-        return False
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -199,14 +196,19 @@ class VolvoData:
 
     async def update(self):
         """Update status from the online service."""
-        if not await self.connection.update(journal=True):
-            return False
+        try:
+            if not await self.connection.update(journal=True):
+                return False
 
-        for vehicle in self.connection.vehicles:
-            if vehicle.vin not in self.vehicles:
-                self.discover_vehicle(vehicle)
+            for vehicle in self.connection.vehicles:
+                if vehicle.vin not in self.vehicles:
+                    self.discover_vehicle(vehicle)
 
-        return True
+            return True
+        except ClientResponseError as ex:
+            if ex.status == 401:
+                raise ConfigEntryAuthFailed(ex) from ex
+            raise
 
     async def auth_is_valid(self):
         """Check if provided username/password/region authenticate."""

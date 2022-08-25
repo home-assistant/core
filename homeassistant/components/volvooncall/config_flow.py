@@ -1,6 +1,7 @@
 """Config flow for Volvo On Call integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -19,18 +20,6 @@ from .errors import InvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_REGION, default=None): vol.In(
-            {"na": "North America", "cn": "China", None: "Rest of world"}
-        ),
-        vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
-        vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
-    },
-)
-
 
 class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
@@ -42,9 +31,16 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle user step."""
         errors = {}
+        defaults = {
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_REGION: None,
+            CONF_MUTABLE: True,
+            CONF_SCANDINAVIAN_MILES: False,
+        }
+
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
-            self._abort_if_unique_id_configured()
+            existing_entry = await self.async_set_unique_id(user_input[CONF_USERNAME])
 
             try:
                 await self.is_valid(user_input)
@@ -54,17 +50,63 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unhandled exception in user step")
                 errors["base"] = "unknown"
             if not errors:
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
+        elif self.source == config_entries.SOURCE_REAUTH:
+            existing_entry = self.hass.config_entries.async_get_entry(
+                self.context["entry_id"]
+            )
+
+            if existing_entry is None:
+                return self.async_abort(reason="cant_reauth")
+
+            for key in defaults:
+                defaults[key] = existing_entry.data.get(key)
+
+        user_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=defaults[CONF_USERNAME]): cv.string,
+                vol.Required(CONF_PASSWORD, default=defaults[CONF_PASSWORD]): cv.string,
+                vol.Required(CONF_REGION, default=defaults[CONF_REGION]): vol.In(
+                    {"na": "North America", "cn": "China", None: "Rest of world"}
+                ),
+                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): cv.boolean,
+                vol.Optional(
+                    CONF_SCANDINAVIAN_MILES, default=defaults[CONF_SCANDINAVIAN_MILES]
+                ): cv.boolean,
+            },
+        )
 
         return self.async_show_form(
-            step_id="user", data_schema=USER_SCHEMA, errors=errors
+            step_id="user", data_schema=user_schema, errors=errors
         )
 
     async def async_step_import(self, import_data) -> FlowResult:
         """Import volvooncall config from configuration.yaml."""
         return await self.async_step_user(import_data)
+
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user()
 
     async def is_valid(self, user_input):
         """Check for user input errors."""
