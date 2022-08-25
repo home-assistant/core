@@ -119,7 +119,7 @@ class AirConEntity(ClimateEntity):
         """Device information for Aladdin Connect sensors."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._said)},
-            name=self._attr_name,
+            name=self._name,
             manufacturer="Whirlpool",
             model="Sixth Sense",
         )
