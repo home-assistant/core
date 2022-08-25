@@ -25,6 +25,8 @@ from .test_common import (
     help_test_unload_config_entry_with_platform,
 )
 
+from tests.common import mock_restore_cache
+
 DEFAULT_CONFIG = {
     scene.DOMAIN: {
         "platform": "mqtt",
@@ -45,25 +47,22 @@ def scene_platform_only():
 async def test_sending_mqtt_commands(hass, mqtt_mock_entry_with_yaml_config):
     """Test the sending MQTT commands."""
     fake_state = ha.State("scene.test", STATE_UNKNOWN)
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            scene.DOMAIN,
-            {
-                scene.DOMAIN: {
-                    "platform": "mqtt",
-                    "name": "test",
-                    "command_topic": "command-topic",
-                    "payload_on": "beer on",
-                },
+    assert await async_setup_component(
+        hass,
+        scene.DOMAIN,
+        {
+            scene.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": "beer on",
             },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("scene.test")
     assert state.state == STATE_UNKNOWN

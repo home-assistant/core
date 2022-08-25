@@ -13,6 +13,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     list_statistic_ids,
 )
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -115,6 +116,7 @@ async def test_demo_statistics_growth(hass, recorder_mock):
 
 async def test_issues_created(hass, hass_client, hass_ws_client):
     """Test issues are created and can be fixed."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     await hass.async_start()

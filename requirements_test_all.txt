@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.42
+AIOAladdinConnect==0.1.43
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -61,7 +61,7 @@ WazeRouteCalculator==0.14
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.3.0
+accuweather==0.4.0
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -198,7 +198,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==1.6.19
+aiopvapi==2.0.0
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
@@ -1022,7 +1022,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==103
+pydeconz==104
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1350,7 +1350,7 @@ python-picnic-api==1.1.0
 python-smarttub==0.0.32
 
 # homeassistant.components.songpal
-python-songpal==0.14.1
+python-songpal==0.15
 
 # homeassistant.components.tado
 python-tado==0.12.0
@@ -1418,7 +1418,7 @@ pyws66i==1.1
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.5.0
+qingping-ble==0.6.0
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
@@ -1586,6 +1586,9 @@ tesla-powerwall==0.3.18
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.1
+
+# homeassistant.components.thermopro
+thermopro-ble==0.4.0
 
 # homeassistant.components.todoist
 todoist-python==8.0.0
