@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import _LOGGER, DEVICE_SCAN_INTERVAL, DOMAIN
 
 
-class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[FlumeData]):
+class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for an individual flume device."""
 
     def __init__(self, hass: HomeAssistant, flume_device) -> None:
@@ -23,7 +23,7 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[FlumeData]):
 
         self.flume_device = flume_device
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Get the latest data from the Flume."""
         _LOGGER.debug("Updating Flume data")
         try:
