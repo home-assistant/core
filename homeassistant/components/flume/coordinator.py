@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import _LOGGER, DEVICE_SCAN_INTERVAL, DOMAIN
 
 
-class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[FlumeData]):
+class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for an individual flume device."""
 
     def __init__(self, hass: HomeAssistant, flume_device) -> None:
