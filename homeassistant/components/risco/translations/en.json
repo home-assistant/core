@@ -24,6 +24,11 @@
                 }
             },
             "user": {
+                "data": {
+                    "password": "Password",
+                    "pin": "PIN Code",
+                    "username": "Username"
+                },
                 "menu_options": {
                     "cloud": "Risco Cloud (recommended)",
                     "local": "Local Risco Panel (advanced)"
