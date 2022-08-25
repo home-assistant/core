@@ -26,4 +26,4 @@ async def test_hass_cv(hass):
     When tests are using the `hass`, this tests that the hass context variable was set
     in the fixture and that async_get_hass() works correctly.
     """
-    assert hass == async_get_hass()
+    assert async_get_hass() is hass
