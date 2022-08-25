@@ -1,8 +1,11 @@
 """The Washer/Dryer Sensor for Whirlpool account."""
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import time
 
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
@@ -54,7 +57,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
         name="washer time remaining",
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
@@ -107,8 +110,6 @@ class Washer(Entity):
         """Initialize the washer sensor."""
         self._name = name
         self._said = said
-        self._reauthorize = False
-        self._state = "offline"
 
         self._wd: WasherDryer = WasherDryer(
             backend,
@@ -138,11 +139,15 @@ class Washer(Entity):
     def state(self) -> str:
         """Return the state of the sensor."""
         if self._entity_description.key == "timeremaining":
-            value = self._entity_description.value_fn(
-                self._wd, "Cavity_TimeStatusEstTimeRemaining"
+            value = int(
+                self._entity_description.value_fn(
+                    self._wd, "Cavity_TimeStatusEstTimeRemaining"
+                )
             )
-            if value == "3540":
-                value = "0"
-            return value
+
+            if value == 3540:
+                value = 0
+            washertime = time.gmtime(value)
+            return time.strftime("%M:%S", washertime)
 
         return self._entity_description.value_fn(self._wd).name
