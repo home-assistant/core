@@ -1,5 +1,4 @@
 """Sensor for displaying the number of result from Flume."""
-from datetime import timedelta
 from numbers import Number
 
 from pyflume import FlumeData
@@ -24,9 +23,6 @@ from .const import (
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
 from .entity import FlumeEntity
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
-SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(

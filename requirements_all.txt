@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.42
+AIOAladdinConnect==0.1.43
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -71,7 +71,7 @@ WazeRouteCalculator==0.14
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.3.0
+accuweather==0.4.0
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -1467,7 +1467,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==103
+pydeconz==104
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1975,7 +1975,7 @@ python-ripple-api==0.0.3
 python-smarttub==0.0.32
 
 # homeassistant.components.songpal
-python-songpal==0.14.1
+python-songpal==0.15
 
 # homeassistant.components.tado
 python-tado==0.12.0
@@ -2070,7 +2070,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.5.0
+qingping-ble==0.6.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
