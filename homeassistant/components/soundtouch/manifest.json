@@ -4,7 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/soundtouch",
   "requirements": ["libsoundtouch==0.8"],
   "zeroconf": ["_soundtouch._tcp.local."],
-  "dependencies": ["repairs"],
   "codeowners": ["@kroimon"],
   "iot_class": "local_polling",
   "loggers": ["libsoundtouch"],
