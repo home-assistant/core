@@ -105,15 +105,11 @@ class Washer(Entity):
         description: WhirlpoolSensorEntityDescription,
     ) -> None:
         """Initialize the washer sensor."""
-        self._name = (said).lower()
+        self._name = name
         self._said = said
         self._reauthorize = False
-        self._auth = auth
         self._state = "offline"
-        self._status = "Unknown"
-        self.attrib: dict[str, str] = {}
-        self._actualtimeremaining = None
-        self._timeremaining = None
+
         self._wd: WasherDryer = WasherDryer(
             backend,
             auth,
