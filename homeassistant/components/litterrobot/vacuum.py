@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from pylitterbot.enums import LitterBoxStatus
-from pylitterbot.robot import VALID_WAIT_TIMES
+from pylitterbot.robot.litterrobot import VALID_WAIT_TIMES
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -56,10 +56,8 @@ async def async_setup_entry(
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
-            for robot in hub.account.robots
-        ]
+        LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
+        for robot in hub.litter_robots()
     )
 
     platform = entity_platform.async_get_current_platform()
