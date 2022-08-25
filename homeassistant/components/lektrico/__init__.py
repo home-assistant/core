@@ -39,13 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     settings = await charger.charger_config()
-    _lektrico_device = LektricoDeviceDataUpdateCoordinator(
+    coordinator = LektricoDeviceDataUpdateCoordinator(
         charger, hass, entry.data[CONF_FRIENDLY_NAME], settings
     )
 
-    await _lektrico_device.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = _lektrico_device
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -88,8 +88,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
-        a_data = self.device.charger_info()
-        data = await a_data
+        data = await self.device.charger_info()
         entity_reg = er.async_get(self._hass)
         my_entry = entity_reg.async_get(f"sensor.{self.friendly_name}_charger_state")
         if my_entry is not None:
