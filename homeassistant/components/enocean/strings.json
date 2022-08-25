@@ -35,15 +35,23 @@
         "description": "Configuration of the EnOcean integration"
       },
       "add_device": {
-        "title": "Add new device",
+        "title": "Add new EnOcean device",
         "data": {
+          "eep": "Device type or EnOcean Equipment Profile (EEP)",
           "id": "EnOcean ID",
-          "eep": "Model or EnOcean Equipment Profile (EEP)",
           "name": "Name",
           "sender_id": "Sender EnOcean ID",
           "device_class": "Device class"
         },
-        "description": "Add a new EnOcean device (manually)"
+        "description": "To add an EnOcean device you need at least its type and its ID. The EnOcean ID is usually printed on the device and looks like '1E:F4:BA:C7'."
+      },
+      "manage_devices": {
+        "title": "Manage existing devices",
+        "data": {
+          "device": "Device",
+          "manage_device_command": "Action"
+        },
+        "description": "Edit or delete an existing device"
       }
     }
   }

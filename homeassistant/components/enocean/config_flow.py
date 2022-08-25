@@ -26,6 +26,10 @@ CONF_ENOCEAN_DEVICE_CLASS = "device_class"
 CONF_ENOCEAN_MIN_TEMP = "min_temp"
 CONF_ENOCEAN_MAX_TEMP = "max_temp"
 
+CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
+ENOCEAN_EDIT_DEVICE_COMMAND = "edit"
+ENOCEAN_DELETE_DEVICE_COMMAND = "delete"
+
 ENOCEAN_EQUIPMENT_PROFILES = [
     selector.SelectOptionDict(value="12:34:56:78", label="Eltako FUD61 dimmer"),
     selector.SelectOptionDict(
@@ -113,9 +117,13 @@ MOCKUP_SENDER_IDS = [
     ),
 ]
 
-
 ADD_DEVICE_SCHEMA = vol.Schema(
     {
+        vol.Required(
+            CONF_ENOCEAN_EQUIPMENT_PROFILE, default=""
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=ENOCEAN_EQUIPMENT_PROFILES)
+        ),
         vol.Required(
             CONF_ENOCEAN_DEVICE_ID, default="00:00:00:00"
         ): selector.SelectSelector(
@@ -125,11 +133,6 @@ ADD_DEVICE_SCHEMA = vol.Schema(
             # (FUTURE WORK)
             # Hence the use of a SelectSelector.
             selector.SelectSelectorConfig(options=MOCKUP_DEVICES, custom_value=True)
-        ),
-        vol.Required(
-            CONF_ENOCEAN_EQUIPMENT_PROFILE, default=""
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=ENOCEAN_EQUIPMENT_PROFILES)
         ),
         vol.Optional(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
         vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): selector.SelectSelector(
@@ -147,6 +150,28 @@ ADD_DEVICE_SCHEMA = vol.Schema(
                 ]
                 + ["SensorDeviceClass." + dc.name for dc in SensorDeviceClass]
             )
+        ),
+    }
+)
+
+ENOCEAN_MANAGE_DEVICE_COMMANDS = [
+    selector.SelectOptionDict(
+        value=ENOCEAN_EDIT_DEVICE_COMMAND, label="Edit device settings"
+    ),
+    selector.SelectOptionDict(
+        value=ENOCEAN_DELETE_DEVICE_COMMAND, label="Delete device"
+    ),
+]
+
+MANAGE_DEVICES_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE, default="none"): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=MOCKUP_DEVICES)
+        ),
+        vol.Optional(
+            CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS, default=ENOCEAN_EDIT_DEVICE_COMMAND
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=ENOCEAN_MANAGE_DEVICE_COMMANDS)
         ),
     }
 )
@@ -261,19 +286,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             command = user_input["command"]
-            if command == "manage_devices":
-                return await self.async_step_manage_devices()
-
             if command == "add_device":
                 return await self.async_step_add_device()
+
+            if command == "manage_devices":
+                return await self.async_step_manage_devices()
 
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_menu(
             step_id="init",
             menu_options={
-                "manage_devices": "Manage configured devices",
                 "add_device": "Add new device",
+                "manage_devices": "Manage configured devices",
             },
         )
 
@@ -310,5 +335,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="manage_devices",
-            data_schema=ADD_DEVICE_SCHEMA,
+            data_schema=MANAGE_DEVICES_SCHEMA,
         )
