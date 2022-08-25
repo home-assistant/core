@@ -29,6 +29,7 @@ from .const import (
     CONF_MAX_MEDIA,
     DEFAULT_MAX_MEDIA,
     DEVICES_THAT_ADOPT,
+    DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DOMAIN,
@@ -157,35 +158,54 @@ class ProtectData:
         self._pending_camera_ids.add(camera_id)
 
     @callback
+    def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
+        if device.is_adopted_by_us:
+            _LOGGER.debug("Device adopted: %s", device.id)
+            async_dispatcher_send(
+                self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
+            )
+        else:
+            _LOGGER.debug("New device detected: %s", device.id)
+            async_dispatcher_send(self._hass, _ufpd(self._entry, DISPATCH_ADD), device)
+
+    @callback
+    def _async_update_device(
+        self, device: ProtectAdoptableDeviceModel | NVR, changed_data: dict[str, Any]
+    ) -> None:
+        self._async_signal_device_update(device)
+        if (
+            device.model == ModelType.CAMERA
+            and device.id in self._pending_camera_ids
+            and "channels" in changed_data
+        ):
+            self._pending_camera_ids.remove(device.id)
+            async_dispatcher_send(
+                self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), device
+            )
+
+        # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
+        if "doorbell_settings" in changed_data:
+            _LOGGER.debug(
+                "Doorbell messages updated. Updating devices with LCD screens"
+            )
+            self.api.bootstrap.nvr.update_all_messages()
+            for camera in self.api.bootstrap.cameras.values():
+                if camera.feature_flags.has_lcd_screen:
+                    self._async_signal_device_update(camera)
+
+    @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         # removed packets are not processed yet
-        if message.new_obj is None or not getattr(
-            message.new_obj, "is_adopted_by_us", True
-        ):
+        if message.new_obj is None:
             return
 
         obj = message.new_obj
         if isinstance(obj, (ProtectAdoptableDeviceModel, NVR)):
-            self._async_signal_device_update(obj)
-            if (
-                obj.model == ModelType.CAMERA
-                and obj.id in self._pending_camera_ids
-                and "channels" in message.changed_data
-            ):
-                self._pending_camera_ids.remove(obj.id)
-                async_dispatcher_send(
-                    self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), obj
-                )
+            if message.old_obj is None and isinstance(obj, ProtectAdoptableDeviceModel):
+                self._async_add_device(obj)
+            elif getattr(obj, "is_adopted_by_us", True):
+                self._async_update_device(obj, message.changed_data)
 
-            # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
-            if "doorbell_settings" in message.changed_data:
-                _LOGGER.debug(
-                    "Doorbell messages updated. Updating devices with LCD screens"
-                )
-                self.api.bootstrap.nvr.update_all_messages()
-                for camera in self.api.bootstrap.cameras.values():
-                    if camera.feature_flags.has_lcd_screen:
-                        self._async_signal_device_update(camera)
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):
             if obj.type == EventType.DEVICE_ADOPTED:
@@ -194,10 +214,7 @@ class ProtectData:
                         obj.metadata.device_id
                     )
                     if device is not None:
-                        _LOGGER.debug("New device detected: %s", device.id)
-                        async_dispatcher_send(
-                            self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
-                        )
+                        self._async_add_device(device)
             elif obj.camera is not None:
                 self._async_signal_device_update(obj.camera)
             elif obj.light is not None:
