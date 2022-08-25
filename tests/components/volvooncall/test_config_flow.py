@@ -189,3 +189,28 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+async def test_cant_reauth(hass: HomeAssistant) -> None:
+    """Test that we handle a failure in the reauth flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": "some_impossible_entry_id",
+        },
+    )
+
+    # the first form is just the confirmation prompt
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+
+    # the second form (user auth) should fail
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "cant_reauth"
