@@ -1,25 +1,18 @@
 """The IntelliFire integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from pyflume import FlumeData
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
-
-NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=1)
-DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+from .const import _LOGGER, DEVICE_SCAN_INTERVAL, DOMAIN
 
 
-class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[object]):
+class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[FlumeData]):
     """Data update coordinator for an individual flume device."""
 
-    def __init__(
-        self, hass: HomeAssistant, flume_auth, device_id, device_timezone, http_session
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, flume_device) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
@@ -28,14 +21,7 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[object]):
             update_interval=DEVICE_SCAN_INTERVAL,
         )
 
-        self.flume_device = FlumeData(
-            flume_auth,
-            device_id,
-            device_timezone,
-            scan_interval=DEVICE_SCAN_INTERVAL,
-            update_on_init=False,
-            http_session=http_session,
-        )
+        self.flume_device = flume_device
 
     async def _async_update_data(self):
         """Get the latest data from the Flume."""

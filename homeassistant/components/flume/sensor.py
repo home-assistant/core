@@ -2,6 +2,8 @@
 from datetime import timedelta
 from numbers import Number
 
+from pyflume import FlumeData
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -12,6 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DEFAULT_NAME,
+    DEVICE_SCAN_INTERVAL,
     DOMAIN,
     FLUME_AUTH,
     FLUME_DEVICES,
@@ -55,12 +58,17 @@ async def async_setup_entry(
         device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
         device_friendly_name = f"{name} {device_name}"
 
-        coordinator = FlumeDeviceDataUpdateCoordinator(
-            hass=hass,
-            flume_auth=flume_auth,
-            device_id=device_id,
-            device_timezone=device_timezone,
+        flume_device = FlumeData(
+            flume_auth,
+            device_id,
+            device_timezone,
+            scan_interval=DEVICE_SCAN_INTERVAL,
+            update_on_init=False,
             http_session=http_session,
+        )
+
+        coordinator = FlumeDeviceDataUpdateCoordinator(
+            hass=hass, flume_device=flume_device
         )
 
         flume_entity_list.extend(
