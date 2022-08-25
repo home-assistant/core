@@ -23,7 +23,7 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.flume_device = flume_device
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Get the latest data from the Flume."""
         _LOGGER.debug("Updating Flume data")
         try:
