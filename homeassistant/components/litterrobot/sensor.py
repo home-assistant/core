@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Union, cast
 
-from pylitterbot.robot import Robot
+from pylitterbot import LitterRobot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,7 +40,7 @@ class LitterRobotSensorEntityDescription(SensorEntityDescription):
     """A class that describes Litter-Robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
-    should_report: Callable[[Robot], bool] = lambda _: True
+    should_report: Callable[[LitterRobot], bool] = lambda _: True
 
 
 class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
@@ -50,7 +50,7 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
 
     def __init__(
         self,
-        robot: Robot,
+        robot: LitterRobot,
         hub: LitterRobotHub,
         description: LitterRobotSensorEntityDescription,
     ) -> None:
@@ -87,13 +87,13 @@ ROBOT_SENSORS = [
         name="Sleep Mode Start Time",
         key="sleep_mode_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        should_report=lambda robot: robot.sleep_mode_enabled,  # type: ignore[no-any-return]
+        should_report=lambda robot: robot.sleep_mode_enabled,
     ),
     LitterRobotSensorEntityDescription(
         name="Sleep Mode End Time",
         key="sleep_mode_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        should_report=lambda robot: robot.sleep_mode_enabled,  # type: ignore[no-any-return]
+        should_report=lambda robot: robot.sleep_mode_enabled,
     ),
     LitterRobotSensorEntityDescription(
         name="Last Seen",
@@ -120,5 +120,5 @@ async def async_setup_entry(
     async_add_entities(
         LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SENSORS
-        for robot in hub.account.robots
+        for robot in hub.litter_robots()
     )
