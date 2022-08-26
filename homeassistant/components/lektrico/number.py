@@ -167,7 +167,7 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.name}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_number)},
             model=f"1P7K {coordinator.serial_number} rev.{coordinator.board_revision}",
