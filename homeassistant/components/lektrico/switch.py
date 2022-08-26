@@ -129,6 +129,7 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
     """The entity class for Lektrico charging stations switches."""
 
     entity_description: LektricoSwitchEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -143,7 +144,6 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
         self.board_revision = coordinator.board_revision
         self.entity_description = description
 
-        self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{self.serial_number}_{description.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.serial_number)},

@@ -125,6 +125,7 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
     """The entity class for Lektrico charging stations binary sensors."""
 
     entity_description: LektricoButtonEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -139,7 +140,6 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
         self.board_revision = coordinator.board_revision
         self.entity_description = description
 
-        self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{self.serial_number}_{description.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.serial_number)},
