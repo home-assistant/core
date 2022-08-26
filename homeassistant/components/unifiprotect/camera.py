@@ -7,6 +7,7 @@ import logging
 from pyunifiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
@@ -42,12 +43,9 @@ def get_camera_channels(
     """Get all the camera channels."""
 
     devices = (
-        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for camera in devices:
-        if not camera.is_adopted_by_us:
-            continue
-
         if not camera.channels:
             if ufp_device is None:
                 # only warn on startup

@@ -35,11 +35,7 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import (
-    async_dispatch_id as _ufpd,
-    async_get_devices,
-    async_get_devices_by_type,
-)
+from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 ProtectDeviceType = Union[ProtectAdoptableDeviceModel, NVR]
@@ -92,13 +88,17 @@ class ProtectData:
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
 
     def get_by_types(
-        self, device_types: Iterable[ModelType]
+        self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
         """Get all devices matching types."""
         for device_type in device_types:
-            yield from async_get_devices_by_type(
+            devices = async_get_devices_by_type(
                 self.api.bootstrap, device_type
             ).values()
+            for device in devices:
+                if ignore_unadopted and not device.is_adopted_by_us:
+                    continue
+                yield device
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
@@ -202,7 +202,7 @@ class ProtectData:
                 "Doorbell messages updated. Updating devices with LCD screens"
             )
             self.api.bootstrap.nvr.update_all_messages()
-            for camera in self.api.bootstrap.cameras.values():
+            for camera in self.get_by_types({ModelType.CAMERA}):
                 if camera.feature_flags.has_lcd_screen:
                     self._async_signal_device_update(camera)
 
@@ -250,7 +250,7 @@ class ProtectData:
             return
 
         self._async_signal_device_update(self.api.bootstrap.nvr)
-        for device in async_get_devices(self.api.bootstrap, DEVICES_THAT_ADOPT):
+        for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
 
     @callback

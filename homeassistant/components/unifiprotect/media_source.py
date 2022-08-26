@@ -7,7 +7,13 @@ from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, cast
 
-from pyunifiprotect.data import Camera, Event, EventType, SmartDetectObjectType
+from pyunifiprotect.data import (
+    Camera,
+    Event,
+    EventType,
+    ModelType,
+    SmartDetectObjectType,
+)
 from pyunifiprotect.exceptions import NvrError
 from pyunifiprotect.utils import from_js_time
 from yarl import URL
@@ -810,7 +816,7 @@ class ProtectMediaSource(MediaSource):
 
         cameras: list[BrowseMediaSource] = [await self._build_camera(data, "all")]
 
-        for camera in data.api.bootstrap.cameras.values():
+        for camera in data.get_by_types({ModelType.CAMERA}):
             if not camera.can_read_media(data.api.bootstrap.auth_user):
                 continue
             cameras.append(await self._build_camera(data, camera.id))

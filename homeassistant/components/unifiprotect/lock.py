@@ -7,6 +7,7 @@ from typing import Any
 from pyunifiprotect.data import (
     Doorlock,
     LockStatusType,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
 )
@@ -42,10 +43,7 @@ async def async_setup_entry(
     )
 
     entities = []
-    for device in data.api.bootstrap.doorlocks.values():
-        if not device.is_adopted_by_us:
-            continue
-
+    for device in data.get_by_types({ModelType.DOORLOCK}):
         entities.append(ProtectLock(data, device))
 
     async_add_entities(entities)
