@@ -108,7 +108,6 @@ class DeconzBinarySensor(DeconzDevice[_SensorDeviceT], BinarySensorEntity):
 
     unique_id_suffix: str
     update_key: str
-    value_attr: str
 
     name_suffix = ""
     old_unique_id_suffix = ""
@@ -126,8 +125,6 @@ class DeconzBinarySensor(DeconzDevice[_SensorDeviceT], BinarySensorEntity):
         if self.unique_id_suffix in PROVIDES_EXTRA_ATTRIBUTES:
             self._update_keys.update({"on", "state"})
 
-        self._attr_is_on = getattr(device, self.value_attr)
-
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
@@ -137,7 +134,6 @@ class DeconzBinarySensor(DeconzDevice[_SensorDeviceT], BinarySensorEntity):
     def async_update_callback(self) -> None:
         """Update the sensor's state."""
         if self._device.changed_keys.intersection(self._update_keys):
-            self._attr_is_on = getattr(self._device, self.value_attr)
             super().async_update_callback()
 
     @property
@@ -172,9 +168,13 @@ class DeconzAlarmBinarySensor(DeconzBinarySensor[Alarm]):
 
     unique_id_suffix = "alarm"
     update_key = "alarm"
-    value_attr = "alarm"
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.alarm
 
 
 class DeconzCarbonMonoxideBinarySensor(DeconzBinarySensor[CarbonMonoxide]):
@@ -182,9 +182,13 @@ class DeconzCarbonMonoxideBinarySensor(DeconzBinarySensor[CarbonMonoxide]):
 
     unique_id_suffix = "carbon_monoxide"
     update_key = "carbonmonoxide"
-    value_attr = "carbon_monoxide"
 
     _attr_device_class = BinarySensorDeviceClass.CO
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.carbon_monoxide
 
 
 class DeconzFireBinarySensor(DeconzBinarySensor[Fire]):
@@ -192,9 +196,13 @@ class DeconzFireBinarySensor(DeconzBinarySensor[Fire]):
 
     unique_id_suffix = "fire"
     update_key = "fire"
-    value_attr = "fire"
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.fire
 
 
 class DeconzFireInTestModeBinarySensor(DeconzBinarySensor[Fire]):
@@ -204,10 +212,14 @@ class DeconzFireInTestModeBinarySensor(DeconzBinarySensor[Fire]):
     unique_id_suffix = "in_test_mode"
     old_unique_id_suffix = "test mode"
     update_key = "test"
-    value_attr = "in_test_mode"
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.in_test_mode
 
 
 class DeconzFlagBinarySensor(DeconzBinarySensor[GenericFlag]):
@@ -215,7 +227,11 @@ class DeconzFlagBinarySensor(DeconzBinarySensor[GenericFlag]):
 
     unique_id_suffix = "flag"
     update_key = "flag"
-    value_attr = "flag"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.flag
 
 
 class DeconzOpenCloseBinarySensor(DeconzBinarySensor[OpenClose]):
@@ -223,9 +239,13 @@ class DeconzOpenCloseBinarySensor(DeconzBinarySensor[OpenClose]):
 
     unique_id_suffix = "open"
     update_key = "open"
-    value_attr = "open"
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.open
 
 
 class DeconzPresenceBinarySensor(DeconzBinarySensor[Presence]):
@@ -233,9 +253,13 @@ class DeconzPresenceBinarySensor(DeconzBinarySensor[Presence]):
 
     unique_id_suffix = "presence"
     update_key = "presence"
-    value_attr = "presence"
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.presence
 
 
 class DeconzVibrationBinarySensor(DeconzBinarySensor[Vibration]):
@@ -243,9 +267,13 @@ class DeconzVibrationBinarySensor(DeconzBinarySensor[Vibration]):
 
     unique_id_suffix = "vibration"
     update_key = "vibration"
-    value_attr = "vibration"
 
     _attr_device_class = BinarySensorDeviceClass.VIBRATION
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.vibration
 
 
 class DeconzWaterBinarySensor(DeconzBinarySensor[Water]):
@@ -253,9 +281,13 @@ class DeconzWaterBinarySensor(DeconzBinarySensor[Water]):
 
     unique_id_suffix = "water"
     update_key = "water"
-    value_attr = "water"
 
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.water
 
 
 class DeconzTamperedCommonBinarySensor(DeconzBinarySensor[SensorResources]):
@@ -265,10 +297,14 @@ class DeconzTamperedCommonBinarySensor(DeconzBinarySensor[SensorResources]):
     unique_id_suffix = "tampered"
     old_unique_id_suffix = "tampered"
     update_key = "tampered"
-    value_attr = "tampered"
 
     _attr_device_class = BinarySensorDeviceClass.TAMPER
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the sensor."""
+        return self._device.tampered
 
 
 class DeconzLowBatteryCommonBinarySensor(DeconzBinarySensor[SensorResources]):
@@ -278,10 +314,14 @@ class DeconzLowBatteryCommonBinarySensor(DeconzBinarySensor[SensorResources]):
     unique_id_suffix = "low_battery"
     old_unique_id_suffix = "low battery"
     update_key = "lowbattery"
-    value_attr = "low_battery"
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the sensor."""
+        return self._device.low_battery
 
 
 ENTITY_CLASSES = (
