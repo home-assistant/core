@@ -288,8 +288,6 @@ class BluetoothManager:
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error in bluetooth callback")
 
-        if not matched_domains:
-            return
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
