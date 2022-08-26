@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .device import EnOceanEntity
 
 DEFAULT_NAME = "EnOcean binary sensor"
@@ -54,7 +54,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in devices:
         if device["eep"] in ["F6-02-01", "F6-02-02"]:
             device_id = from_hex_string(device["id"])
-            LOGGER.debug(device_id)
             async_add_entities([EnOceanBinarySensor(device_id, device["name"], None)])
 
 
@@ -144,7 +143,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     def device_info(self):
         """Get device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.dev_id_string())},
             "name": self.name,
             "manufacturer": "",
             "model": "",

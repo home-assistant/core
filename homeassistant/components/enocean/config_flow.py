@@ -9,7 +9,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
-import homeassistant.helpers.entity_registry
 
 from . import dongle
 from .const import DOMAIN, ENOCEAN_EQUIPMENT_PROFILES, ERROR_INVALID_DONGLE_PATH, LOGGER
@@ -206,16 +205,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
-        entity_registry = (
-            await homeassistant.helpers.entity_registry.async_get_registry(self.hass)
-        )
-        entity_entries = (
-            homeassistant.helpers.entity_registry.async_entries_for_config_entry(
-                entity_registry, self.config_entry.entry_id
-            )
-        )
-        _LOGGER.debug(entity_entries)
-
         if user_input is not None:
             command = user_input["command"]
             if command == "add_device":
@@ -284,8 +273,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             for device in devices
         ]
         device_list.sort(key=lambda entry: entry["label"].lower())
-
-        LOGGER.debug(device_list[0])
 
         if user_input is not None:
             device_id = user_input[CONF_DEVICE]

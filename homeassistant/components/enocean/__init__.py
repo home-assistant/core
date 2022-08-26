@@ -1,5 +1,4 @@
 """Support for EnOcean devices."""
-from enocean.utils import combine_hex, from_hex_string
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -64,21 +63,17 @@ def async_cleanup_device_registry(
         config_entry_id=entry.entry_id,
     )
 
-    device_ids = [
-        combine_hex(from_hex_string(dev["id"]))
-        for dev in entry.options.get("devices", [])
-    ]
-    LOGGER.debug(device_ids)
+    device_ids = [dev["id"].upper() for dev in entry.options.get("devices", [])]
+
     for device in devices:
         for item in device.identifiers:
-            LOGGER.debug(item)
             domain = item[0]
-            device_id = int(str(item[1]).split("-", maxsplit=1)[0])
+            device_id = (str(item[1]).split("-", maxsplit=1)[0]).upper()
             if DOMAIN == domain and device_id not in device_ids:
                 LOGGER.debug(
                     "Removing Home Assistant device %s and associated entities for non-existing EnOcean device %s in config entry %s",
                     device.id,
-                    item[1],
+                    device_id,
                     entry.entry_id,
                 )
                 device_registry.async_update_device(

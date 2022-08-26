@@ -24,6 +24,11 @@ class EnOceanEntity(Entity):
             )
         )
 
+    @property
+    def full_device_name(self):
+        """Return the device name including the device's EnOcean id."""
+        return ((self.dev_name + " [" + self.dev_id_string() + "]").strip(),)
+
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
 
@@ -38,3 +43,12 @@ class EnOceanEntity(Entity):
 
         packet = Packet(packet_type, data=data, optional=optional)
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
+
+    def dev_id_number(self):
+        """Return the EnOcean id as integer."""
+        return combine_hex(self.dev_id)
+
+    def dev_id_string(self):
+        """Return the EnOcean id as colon-separated hex string."""
+        value = hex(self.dev_id_number())[2:].rjust(8, "0").upper()
+        return ":".join(value[i : i + 2] for i in range(0, len(value), 2))
