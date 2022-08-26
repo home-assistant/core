@@ -62,6 +62,7 @@ async def async_setup_entry(
 class OpenThermClimate(ClimateEntity):
     """Representation of a climate device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
@@ -200,11 +201,6 @@ class OpenThermClimate(ClimateEntity):
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES
         return PRECISION_WHOLE
-
-    @property
-    def should_poll(self):
-        """Disable polling for this entity."""
-        return False
 
     @property
     def temperature_unit(self):
