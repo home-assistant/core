@@ -37,7 +37,7 @@ async def test_lock_remove(
 
     await init_entry(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
-    await remove_entities(hass, [doorlock])
+    await remove_entities(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 0, 0)
     await adopt_devices(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
