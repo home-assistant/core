@@ -180,8 +180,6 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
             sw_version=coordinator.data.fw_version,
         )
 
-        self.coordinator = coordinator
-
         self._attr_native_value = 20
         if description.native_step is not None:
             self._attr_native_step = description.native_step

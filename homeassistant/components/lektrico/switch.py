@@ -154,8 +154,6 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
             sw_version=coordinator.data.fw_version,
         )
 
-        self.coordinator = coordinator
-
     @property
     def is_on(self) -> bool:
         """If the switch is currently on or off."""

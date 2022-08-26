@@ -149,8 +149,6 @@ class LektricoButton(CoordinatorEntity, ButtonEntity):
             sw_version=coordinator.data.fw_version,
         )
 
-        self.coordinator = coordinator
-
     async def async_press(self) -> None:
         """Send the command corresponding to the pressed button."""
         await self.entity_description.get_async_press(self.coordinator.device)

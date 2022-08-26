@@ -257,8 +257,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
             sw_version=coordinator.data.fw_version,
         )
 
-        self.coordinator = coordinator
-
     @property
     def native_value(self) -> float | str | int | None:
         """Return the state of the sensor."""

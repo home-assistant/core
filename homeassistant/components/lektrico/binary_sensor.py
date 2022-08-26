@@ -118,8 +118,6 @@ class LektricoBinarySensor(CoordinatorEntity, BinarySensorEntity):
             sw_version=coordinator.data.fw_version,
         )
 
-        self.coordinator = coordinator
-
         # add extra_state_attributes for HasActiveErrorsBinarySensorEntityDescription
         if isinstance(description, HasActiveErrorsBinarySensorEntityDescription):
             self._attr_extra_state_attributes = {
