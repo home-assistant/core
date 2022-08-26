@@ -1,30 +1,22 @@
 """Test the Whirlpool Sensor domain."""
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from attr import dataclass
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 
 from . import init_integration
-
-# from attr import dataclass
-# import pytest
-# import whirlpool
-
-
-# from homeassistant.helpers import entity_registry as er
-
-# from . import init_integration
 
 
 async def update_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
-    mock_aircon_api_instances: MagicMock,
+    mock_sensor_api_instances: MagicMock,
     mock_instance_idx: int,
 ):
     """Simulate an update trigger from the API."""
-    update_ha_state_cb = mock_aircon_api_instances.call_args_list[
+    update_ha_state_cb = mock_sensor_api_instances.call_args_list[
         mock_instance_idx
     ].args[3]
     update_ha_state_cb()
@@ -36,12 +28,8 @@ async def test_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
-    mock_sensor2_api: MagicMock,
-    mock_aircon_api_instances: MagicMock,
-    mock_aircon1_api: MagicMock,
 ):
     """Test the sensor value callbacks."""
-    mock_sensor1_api.connect = AsyncMock()
     await init_integration(hass)
 
     @dataclass
@@ -53,11 +41,22 @@ async def test_sensor_values(
         mock_instance_idx: int
 
     for sensor_test_instance in (
-        SensorTestInstance("sensor.said3", mock_sensor1_api, 0),
-        SensorTestInstance("sensor.said4", mock_sensor2_api, 1),
+        SensorTestInstance("sensor.washer_state", mock_sensor1_api, 0),
     ):
         entity_id = sensor_test_instance.entity_id
-        # mock_instance = sensor_test_instance.mock_instance
-        # mock_instance_idx = sensor_test_instance.mock_instance_idx
-        # state = hass.states.get(entity_id)
-        assert entity_id
+        mock_instance_idx = sensor_test_instance.mock_instance_idx
+        registry = entity_registry.async_get(hass)
+        entry = registry.async_get(entity_id)
+        assert entry
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "Waiting"
+
+        state = await update_sensor_state(
+            hass, entity_id, mock_sensor_api_instances, mock_instance_idx
+        )
+        assert state is not None
+        id = f"{entity_id.split('_')[0]}_time_remaining"
+        state = hass.states.get(id)
+        assert state is not None
+        assert state.state == "00:00:00"
