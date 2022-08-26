@@ -61,6 +61,7 @@ class Touchline(ClimateEntity):
 
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
@@ -83,11 +84,6 @@ class Touchline(ClimateEntity):
         self._preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
