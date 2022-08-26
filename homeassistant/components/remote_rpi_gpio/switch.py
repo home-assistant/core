@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components import remote_rpi_gpio
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
@@ -12,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
+from .. import remote_rpi_gpio
 
 CONF_PORTS = "ports"
 

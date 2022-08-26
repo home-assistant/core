@@ -9,7 +9,7 @@ import attr
 from homeassistant.core import HomeAssistant
 
 from . import debug_info
-from .. import mqtt  # pylint:disable=[hass-absolute-import]
+from .. import mqtt
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 

@@ -11,22 +11,15 @@ from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .. import mqtt  # pylint:disable=[hass-absolute-import]
-from .const import (
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_TOPIC,
-    DEFAULT_ENCODING,
-    DEFAULT_QOS,
-    DOMAIN,
-)
+from .. import mqtt
+from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAULT_QOS
 
 # mypy: allow-untyped-defs
 
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
+        vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,

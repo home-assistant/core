@@ -4,7 +4,6 @@ from __future__ import annotations
 import requests
 import voluptuous as vol
 
-from homeassistant.components import remote_rpi_gpio
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -20,6 +19,7 @@ from . import (
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
 )
+from .. import remote_rpi_gpio
 
 CONF_PORTS = "ports"
 

@@ -20,7 +20,7 @@ from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.loader import async_get_mqtt
 
-from .. import mqtt  # pylint:disable=[hass-absolute-import]
+from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 from .const import (
     ATTR_DISCOVERY_HASH,
