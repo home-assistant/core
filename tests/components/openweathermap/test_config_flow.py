@@ -8,6 +8,7 @@ from homeassistant.components.openweathermap.const import (
     CONF_LANGUAGE,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
+    DEFAULT_WEATHER_UPDATE_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -17,6 +18,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
 )
 
 from tests.common import MockConfigEntry
@@ -28,6 +30,7 @@ CONFIG = {
     CONF_LONGITUDE: 40,
     CONF_MODE: DEFAULT_FORECAST_MODE,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
+    CONF_SCAN_INTERVAL: DEFAULT_WEATHER_UPDATE_INTERVAL,
 }
 
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
@@ -101,6 +104,7 @@ async def test_form_options(hass):
         assert config_entry.options == {
             CONF_MODE: "daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
+            CONF_SCAN_INTERVAL: DEFAULT_WEATHER_UPDATE_INTERVAL,
         }
 
         await hass.async_block_till_done()
@@ -120,6 +124,7 @@ async def test_form_options(hass):
         assert config_entry.options == {
             CONF_MODE: "onecall_daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
+            CONF_SCAN_INTERVAL: DEFAULT_WEATHER_UPDATE_INTERVAL,
         }
 
         await hass.async_block_till_done()

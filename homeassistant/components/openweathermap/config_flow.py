@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -22,9 +23,11 @@ from .const import (
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
+    DEFAULT_WEATHER_UPDATE_INTERVAL,
     DOMAIN,
     FORECAST_MODES,
     LANGUAGES,
+    WEATHER_MIN_UPDATE_INTERVAL,
 )
 
 
@@ -84,6 +87,9 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_WEATHER_UPDATE_INTERVAL
+                ): vol.All(cv.positive_int, vol.Clamp(min=WEATHER_MIN_UPDATE_INTERVAL)),
             }
         )
 
@@ -124,6 +130,12 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                         self.config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE),
                     ),
                 ): vol.In(LANGUAGES),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.data.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_WEATHER_UPDATE_INTERVAL
+                    ),
+                ): vol.All(cv.positive_int, vol.Clamp(min=WEATHER_MIN_UPDATE_INTERVAL)),
             }
         )
 

@@ -37,12 +37,14 @@ from homeassistant.const import (
 DOMAIN = "openweathermap"
 DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
+DEFAULT_WEATHER_UPDATE_INTERVAL = 10
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
 CONF_LANGUAGE = "language"
 CONFIG_FLOW_VERSION = 2
 ENTRY_NAME = "name"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
+WEATHER_MIN_UPDATE_INTERVAL = 1
 ATTR_API_PRECIPITATION = "precipitation"
 ATTR_API_PRECIPITATION_KIND = "precipitation_kind"
 ATTR_API_DATETIME = "datetime"

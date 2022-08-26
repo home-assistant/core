@@ -52,13 +52,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
-
 
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
-    def __init__(self, owm, latitude, longitude, forecast_mode, hass):
+    def __init__(self, owm, latitude, longitude, forecast_mode, update_interval, hass):
         """Initialize coordinator."""
         self._owm_client = owm
         self._latitude = latitude
@@ -69,7 +67,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             self._forecast_limit = 15
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=update_interval),
         )
 
     async def _async_update_data(self):

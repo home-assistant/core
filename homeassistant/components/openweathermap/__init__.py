@@ -14,12 +14,14 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
+    DEFAULT_WEATHER_UPDATE_INTERVAL,
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
@@ -41,12 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     forecast_mode = _get_config_value(entry, CONF_MODE)
     language = _get_config_value(entry, CONF_LANGUAGE)
+    update_interval = (
+        _get_config_value(entry, CONF_SCAN_INTERVAL) or DEFAULT_WEATHER_UPDATE_INTERVAL
+    )
 
     config_dict = _get_owm_config(language)
 
     owm = OWM(api_key, config_dict).weather_manager()
     weather_coordinator = WeatherUpdateCoordinator(
-        owm, latitude, longitude, forecast_mode, hass
+        owm, latitude, longitude, forecast_mode, update_interval, hass
     )
 
     await weather_coordinator.async_config_entry_first_refresh()
@@ -104,8 +109,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
     if config_entry.options:
-        return config_entry.options[key]
-    return config_entry.data[key]
+        return config_entry.options.get(key)
+    return config_entry.data.get(key)
 
 
 def _get_owm_config(language: str) -> dict[str, Any]:

@@ -15,7 +15,8 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "mode": "[%key:common::config_flow::data::mode%]",
-          "name": "Name"
+          "name": "Name",
+          "scan_interval": "Update interval in minutes"
         },
         "description": "To generate API key go to https://openweathermap.org/appid"
       }
@@ -26,7 +27,8 @@
       "init": {
         "data": {
           "language": "Language",
-          "mode": "[%key:common::config_flow::data::mode%]"
+          "mode": "[%key:common::config_flow::data::mode%]",
+          "scan_interval": "Update interval in minutes"
         }
       }
     }
