@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
 
 CONF_SENDER_ID = "sender_id"
@@ -43,9 +43,15 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean light platform."""
-    sender_id: list[int] = config[CONF_SENDER_ID]
-    dev_name: str = config[CONF_NAME]
-    dev_id: list[int] = config[CONF_ID]
+
+    LOGGER.warning(
+        "Configuring EnOcean via configuration.yaml is deprecated"
+        "It will be removed in a future release"
+    )
+
+    sender_id = config.get(CONF_SENDER_ID)
+    dev_name = config.get(CONF_NAME)
+    dev_id = config.get(CONF_ID)
 
     add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
