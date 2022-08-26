@@ -139,7 +139,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SDS011_CAQI,
         name="SDS011 CAQI",
-        native_unit_of_measurement="CAQI",
         device_class=SensorDeviceClass.AQI,
     ),
     SensorEntityDescription(
