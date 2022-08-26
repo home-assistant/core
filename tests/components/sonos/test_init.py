@@ -45,7 +45,7 @@ async def test_configuring_sonos_creates_entry(hass: core.HomeAssistant):
         await async_setup_component(
             hass,
             sonos.DOMAIN,
-            {"sonos": {"media_player": {"interface_addr": "127.0.0.1"}}},
+            {"sonos": {"media_player": {"interface_addr": "127.0.0.1", "listener_port": 1234}}},
         )
         await hass.async_block_till_done()
 
