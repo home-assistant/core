@@ -331,7 +331,7 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
         """Check for a match."""
         return cast(
             list[BluetoothCallbackMatcherWithCallback],
-            [*super()._match(service_info), *self._match_addresses(service_info)],
+            self._match(service_info).extend(self._match_addresses(service_info)),
         )
 
 
