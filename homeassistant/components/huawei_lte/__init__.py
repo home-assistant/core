@@ -588,6 +588,7 @@ class HuaweiLteBaseEntity(Entity):
     _available: bool = field(default=True, init=False)
     _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
     _attr_has_entity_name: bool = field(default=True, init=False)
+    _attr_should_poll = False
 
     @property
     def _device_unique_id(self) -> str:
@@ -603,11 +604,6 @@ class HuaweiLteBaseEntity(Entity):
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._available
-
-    @property
-    def should_poll(self) -> bool:
-        """Huawei LTE entities report their state without polling."""
-        return False
 
     async def async_update(self) -> None:
         """Update state."""
