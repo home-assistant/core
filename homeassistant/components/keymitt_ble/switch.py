@@ -17,13 +17,11 @@ if TYPE_CHECKING:
     from . import MicroBotDataUpdateCoordinator
 
 CALIBRATE = "calibrate"
-CALIBRATE_SCHEMA = vol.Schema(
-    {
+CALIBRATE_SCHEMA = {
         vol.Required("depth"): cv.positive_int,
         vol.Required("duration"): cv.positive_int,
         vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
-    }
-)
+}
 
 
 async def async_setup_entry(
