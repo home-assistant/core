@@ -279,10 +279,8 @@ class BluetoothManager:
             matched_domains,
         )
 
-        for callback in {
-            match[CALLBACK]
-            for match in self._callback_index.match_callbacks(service_info)
-        }:
+        for match in self._callback_index.match_callbacks(service_info):
+            callback = match[CALLBACK]
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
             except Exception:  # pylint: disable=broad-except
