@@ -104,7 +104,11 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
     # Gather Tuya states
     for dpcode, value in device.status.items():
         # These statuses may contain sensitive information, redact these..
-        if dpcode in {DPCode.ALARM_MESSAGE, DPCode.MOVEMENT_DETECT_PIC}:
+        if dpcode in {
+            DPCode.ALARM_MESSAGE,
+            DPCode.MOVEMENT_DETECT_PIC,
+            DPCode.DOORBELL_SNAPSHOT,
+        }:
             data["status"][dpcode] = REDACTED
             continue
 

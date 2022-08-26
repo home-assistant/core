@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import PERCENTAGE, TIME_MINUTES, TIME_SECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -182,18 +182,31 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             name="Volume",
             icon="mdi:volume-high",
             entity_category=EntityCategory.CONFIG,
+            native_max_value="100",
+            native_min_value="1",
+            native_unit_of_measurement=PERCENTAGE,
+            native_step="1",
         ),
         NumberEntityDescription(
             key=DPCode.CHIME_RING_VOLUME,
             name="Chime Volume",
             icon="mdi:bell-ring",
             entity_category=EntityCategory.CONFIG,
+            native_max_value="10",
+            native_min_value="1",
+            native_unit_of_measurement=PERCENTAGE,
+            native_step="1",
         ),
         NumberEntityDescription(
             key=DPCode.CHIME_TIME,
             name="Chime Time",
             icon="mdi:timer-play-outline",
             entity_category=EntityCategory.CONFIG,
+            native_max_value="30",
+            native_min_value="5",
+            native_step="1",
+            native_unit_of_measurement=TIME_SECONDS,
+            step="1",
         ),
     ),
     # Dimmer Switch

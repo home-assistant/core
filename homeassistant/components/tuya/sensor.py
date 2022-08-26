@@ -489,18 +489,21 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_TEMPERATURE,
             name="Temperature",
+            icon="mdi:thermometer",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_HUMIDITY,
             name="Humidity",
+            icon="mdi:water-percent",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WIRELESS_ELECTRICITY,
             name="Battery",
+            icon="mdi:battery",
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
@@ -508,32 +511,49 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SD_STATUS,
             name="SD Card Status",
+            icon="mdi:sd",
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=PERCENTAGE
+            native_unit_of_measurement=PERCENTAGE,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SD_FORMAT_STATE,
             name="SD Card Format State",
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.ALARM_MESSAGE,
-            name="Alarm Message",
+            key=DPCode.SD_STORAGE,
+            name="SD Card Storage",
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        # TuyaSensorEntityDescription(
+        #     key=DPCode.ALARM_MESSAGE,
+        #     name="Alarm Message",
+        #     entity_category=EntityCategory.DIAGNOSTIC,
+        #     # TODO: Handle it being too long
+        # ),
         TuyaSensorEntityDescription(
             key=DPCode.DOORBELL_ACTIVE,
-            name="Doorbell Motion",
+            name="Doorbell Active",
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.MOVEMENT_DETECT_PIC,
-            name="Motion Detection",
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.DOORBELL_PICTURE,
-            name="Motion DetectionMotion Detection",
-        ),
+        # TuyaSensorEntityDescription(
+        #     key=DPCode.MOVEMENT_DETECT_PIC,
+        #     name="Movement Detection Picture",
+        #     entity_category=EntityCategory.DIAGNOSTIC,
+        #     icon="mdi:camera-image",
+        #     # TODO: Make it raw so it can be parsed
+        # ),
+        # TuyaSensorEntityDescription(
+        #     key=DPCode.DOORBELL_SNAPSHOT,
+        #     name="Doorbell Snapshot",
+        #     entity_category=EntityCategory.DIAGNOSTIC,
+        #     icon="mdi:panorama-variant-outline",
+        #     # TODO: Make it raw so it can be parsed
+        # ),
     ),
     # Fingerbot
     "szjqr": BATTERY_SENSORS,
@@ -1129,6 +1149,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
                 return None
+            # TODO: Handle images!
             values = ElectricityTypeData.from_raw(value)
             return getattr(values, self.entity_description.subkey)
 

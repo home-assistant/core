@@ -218,7 +218,7 @@ class DPCode(StrEnum):
     DEVICE_RESTART = "device_restart"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORBELL_ACTIVE = "doorbell_active"
-    DOORBELL_PICTURE = "doorbell_pic"
+    DOORBELL_SNAPSHOT = "doorbell_pic"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
@@ -315,6 +315,7 @@ class DPCode(StrEnum):
     SD_FORMAT = "sd_format"
     SD_FORMAT_STATE = "sd_format_state"
     SD_STATUS = "sd_status"
+    SD_STORAGE = "sd_storge"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"

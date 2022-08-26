@@ -210,13 +210,9 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "sp": (
         TuyaLightEntityDescription(
             key=DPCode.FLOODLIGHT_SWITCH,
+            icon="mdi:light-flood-down",
             brightness=DPCode.FLOODLIGHT_LIGHTNESS,
             name="Floodlight",
-        ),
-        TuyaLightEntityDescription(
-            key=DPCode.BASIC_INDICATOR,
-            name="Indicator Light",
-            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Dimmer Switch

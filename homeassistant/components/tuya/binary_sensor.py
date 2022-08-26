@@ -270,12 +270,10 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SOS_STATE,
             device_class=BinarySensorDeviceClass.MOTION,
+            name="Doorbell Alarm",
+            on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.BASIC_INDICATOR,
-            device_class=BinarySensorDeviceClass.MOTION,
-        ),
     ),
     # Volatile Organic Compound Sensor
     # Note: Undocumented in cloud API docs, based on test device
@@ -353,7 +351,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya binary sensor dynamically through Tuya discovery."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
@@ -389,10 +387,10 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     entity_description: TuyaBinarySensorEntityDescription
 
     def __init__(
-            self,
-            device: TuyaDevice,
-            device_manager: TuyaDeviceManager,
-            description: TuyaBinarySensorEntityDescription,
+        self,
+        device: TuyaDevice,
+        device_manager: TuyaDeviceManager,
+        description: TuyaBinarySensorEntityDescription,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)

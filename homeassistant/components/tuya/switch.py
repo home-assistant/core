@@ -485,6 +485,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Restart Device",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_INDICATOR,
+            name="Indicator Light",
+            icon="mdi:toggle-switch-variant",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Fingerbot
     "szjqr": (
