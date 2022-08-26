@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import combine_hex
+from enocean.utils import combine_hex, from_hex_string
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -19,6 +19,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .config_flow import CONF_ENOCEAN_DEVICES
+from .const import DOMAIN
 from .device import EnOceanEntity
 
 CONF_SENDER_ID = "sender_id"
@@ -46,6 +48,17 @@ def setup_platform(
     dev_id: list[int] = config[CONF_ID]
 
     add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up entry."""
+    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+
+    for device in devices:
+        if device["eep"] == "eltako_fud61npn":
+            device_id = from_hex_string(device["id"])
+            sender_id = from_hex_string(device["sender_id"])
+            async_add_entities([EnOceanLight(sender_id, device_id, device["name"])])
 
 
 class EnOceanLight(EnOceanEntity, LightEntity):
@@ -114,3 +127,15 @@ class EnOceanLight(EnOceanEntity, LightEntity):
             self._brightness = math.floor(val / 100.0 * 256.0)
             self._on_state = bool(val != 0)
             self.schedule_update_ha_state()
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Eltako",
+            "model": "FUD61NPN",
+            "sw_version": "",
+            "via_device": (DOMAIN, "not yet set"),
+        }
