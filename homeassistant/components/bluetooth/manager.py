@@ -136,7 +136,6 @@ class BluetoothManager:
             str, list[Callable[[str], None]]
         ] = {}
         self._callback_index = BluetoothCallbackMatcherIndex()
-        self._connectable_callback_index = BluetoothCallbackMatcherIndex()
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
@@ -280,20 +279,10 @@ class BluetoothManager:
             matched_domains,
         )
 
-        callbacks: set[BluetoothCallback] = {
+        for callback in {
             match[CALLBACK]
-            for match in self._get_callback_index_by_type(False).match_callbacks(
-                service_info
-            )
-        }
-        if connectable:
-            callbacks.update(
-                match[CALLBACK]
-                for match in self._get_callback_index_by_type(True).match_callbacks(
-                    service_info
-                )
-            )
-        for callback in callbacks:
+            for match in self._callback_index.match_callbacks(service_info)
+        }:
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
             except Exception:  # pylint: disable=broad-except
@@ -342,14 +331,13 @@ class BluetoothManager:
             callback_matcher[CONNECTABLE] = matcher.get(CONNECTABLE, True)
 
         connectable = callback_matcher[CONNECTABLE]
-        callback_index = self._get_callback_index_by_type(connectable)
-        callback_index.add_with_address(callback_matcher)
-        callback_index.build()
+        self._callback_index.add_with_address(callback_matcher)
+        self._callback_index.build()
 
         @hass_callback
         def _async_remove_callback() -> None:
-            callback_index.remove_with_address(callback_matcher)
-            callback_index.build()
+            self._callback_index.remove_with_address(callback_matcher)
+            self._callback_index.build()
 
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
@@ -413,12 +401,6 @@ class BluetoothManager:
     ) -> dict[str, BluetoothServiceInfoBleak]:
         """Return the history by type."""
         return self._connectable_history if connectable else self._history
-
-    def _get_callback_index_by_type(
-        self, connectable: bool
-    ) -> BluetoothCallbackMatcherIndex:
-        """Return the callbacks by type."""
-        return self._connectable_callback_index if connectable else self._callback_index
 
     def async_register_scanner(
         self, scanner: BaseHaScanner, connectable: bool
