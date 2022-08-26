@@ -48,6 +48,7 @@ from .speaker import SonosSpeaker
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
+CONF_LISTENER_PORT = "listener_port"
 CONF_INTERFACE_ADDR = "interface_addr"
 DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 
@@ -61,6 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
+                            vol.Optional(CONF_LISTENER_PORT): cv.port,
                             vol.Optional(CONF_INTERFACE_ADDR): cv.string,
                             vol.Optional(CONF_HOSTS): vol.All(
                                 cv.ensure_list_csv, [cv.string]
@@ -132,6 +134,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if advertise_addr := config.get(CONF_ADVERTISE_ADDR):
         soco_config.EVENT_ADVERTISE_IP = advertise_addr
+
+    if listener_port := config.get(CONF_LISTENER_PORT):
+        soco_config.EVENT_LISTENER_PORT = listener_port
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
         _LOGGER.warning(
