@@ -68,7 +68,10 @@ async def async_setup_entry(
     for device in devices:
         if device["eep"] == "eltako_fud61npn":
             device_id = from_hex_string(device["id"])
-            sender_id = from_hex_string(device["sender_id"])
+            sender_id = 0
+            if not device["sender_id"] == "":
+                sender_id = from_hex_string(device["sender_id"])
+
             async_add_entities([EnOceanLight(sender_id, device_id, device["name"])])
 
 

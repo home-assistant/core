@@ -251,7 +251,7 @@ class EnOceanPowerSensor(EnOceanSensor):
     def device_info(self):
         """Get device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, combine_hex(self.dev_id))},
             "name": self.name,
             "manufacturer": "",
             "model": "",
@@ -313,7 +313,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     def device_info(self):
         """Get device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, combine_hex(self.dev_id))},
             "name": self.name,
             "manufacturer": "",
             "model": "",

@@ -63,15 +63,17 @@ def async_cleanup_device_registry(
         registry=device_registry,
         config_entry_id=entry.entry_id,
     )
+
     device_ids = [
-        combine_hex(from_hex_string(dev["id"])) for dev in entry.options["devices"]
+        combine_hex(from_hex_string(dev["id"]))
+        for dev in entry.options.get("devices", [])
     ]
     LOGGER.debug(device_ids)
     for device in devices:
         for item in device.identifiers:
             LOGGER.debug(item)
             domain = item[0]
-            device_id = int(item[1].split("-")[0])
+            device_id = int(str(item[1]).split("-", maxsplit=1)[0])
             if DOMAIN == domain and device_id not in device_ids:
                 LOGGER.debug(
                     "Removing Home Assistant device %s and associated entities for non-existing EnOcean device %s in config entry %s",
