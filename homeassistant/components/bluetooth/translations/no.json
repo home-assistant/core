@@ -33,8 +33,10 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Bluetooth-adapteren som skal brukes til skanning"
-                }
+                    "adapter": "Bluetooth-adapteren som skal brukes til skanning",
+                    "passive": "Passiv lytting"
+                },
+                "description": "Passiv lytting krever BlueZ 5.63 eller nyere med eksperimentelle funksjoner aktivert."
             }
         }
     }
