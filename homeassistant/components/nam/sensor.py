@@ -139,7 +139,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SDS011_CAQI,
         name="SDS011 CAQI",
-        device_class=SensorDeviceClass.AQI,
+        icon="mdi:air-filter",
     ),
     SensorEntityDescription(
         key=ATTR_SDS011_CAQI_LEVEL,
