@@ -215,8 +215,9 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:microphone",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(

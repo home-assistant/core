@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyunifiprotect.data import (
+    NVR,
     Camera,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
@@ -22,7 +23,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
-from .entity import ProtectDeviceEntity, async_all_device_entities
+from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
@@ -90,8 +91,9 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="System Sounds",
         icon="mdi:speaker",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_speaker",
+        ufp_required_field="has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
+        ufp_enabled="feature_flags.has_speaker",
         ufp_set_method="set_system_sounds",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -296,6 +298,25 @@ VIEWER_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="analytics_enabled",
+        name="Analytics Enabled",
+        icon="mdi:google-analytics",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="is_analytics_enabled",
+        ufp_set_method="set_anonymous_analytics",
+    ),
+    ProtectSwitchEntityDescription(
+        key="insights_enabled",
+        name="Insights Enabled",
+        icon="mdi:magnify",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="is_insights_enabled",
+        ufp_set_method="set_insights",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -342,6 +363,17 @@ async def async_setup_entry(
         ProtectPrivacyModeSwitch,
         camera_descs=[PRIVACY_MODE_SWITCH],
     )
+
+    if (
+        data.api.bootstrap.nvr.can_write(data.api.bootstrap.auth_user)
+        and data.api.bootstrap.nvr.is_insights_enabled is not None
+    ):
+        for switch in NVR_SWITCHES:
+            entities.append(
+                ProtectNVRSwitch(
+                    data, device=data.api.bootstrap.nvr, description=switch
+                )
+            )
     async_add_entities(entities)
 
 
@@ -353,7 +385,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
+        device: ProtectAdoptableDeviceModel | NVR,
         description: ProtectSwitchEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect Switch."""
@@ -375,6 +407,10 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         """Turn the device off."""
 
         await self.entity_description.ufp_set(self.device, False)
+
+
+class ProtectNVRSwitch(ProtectSwitch, ProtectNVREntity):
+    """A UniFi Protect NVR Switch."""
 
 
 class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
