@@ -79,6 +79,8 @@ async def async_setup_entry(
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     """The musiccast media player."""
 
+    _attr_should_poll = False
+
     def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the musiccast device."""
         self._player_state = STATE_PLAYING
@@ -118,11 +120,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self.coordinator.musiccast.remove_group_update_callback(
             self.update_all_mc_entities
         )
-
-    @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return False
 
     @property
     def ip_address(self):
