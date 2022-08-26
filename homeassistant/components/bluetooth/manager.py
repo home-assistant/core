@@ -253,7 +253,7 @@ class BluetoothManager:
         device = service_info.device
         connectable = service_info.connectable
         address = device.address
-        all_history = self._get_history_by_type(connectable)
+        all_history = self._connectable_history if connectable else self._history
         old_service_info = all_history.get(address)
         if old_service_info and _prefer_previous_adv(old_service_info, service_info):
             return
