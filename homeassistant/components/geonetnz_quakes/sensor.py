@@ -42,6 +42,8 @@ async def async_setup_entry(
 class GeonetnzQuakesSensor(SensorEntity):
     """This is a status sensor for the GeoNet NZ Quakes integration."""
 
+    _attr_should_poll = False
+
     def __init__(self, config_entry_id, config_unique_id, config_title, manager):
         """Initialize entity."""
         self._config_entry_id = config_entry_id
@@ -79,11 +81,6 @@ class GeonetnzQuakesSensor(SensorEntity):
         """Call status update method."""
         _LOGGER.debug("Received status update for %s", self._config_entry_id)
         self.async_schedule_update_ha_state(True)
-
-    @property
-    def should_poll(self):
-        """No polling needed for GeoNet NZ Quakes status sensor."""
-        return False
 
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
