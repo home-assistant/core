@@ -108,7 +108,7 @@ def make_encrypted_advertisement(
 ) -> BluetoothServiceInfoBleak:
     """Make a dummy encrypted advertisement."""
     return BluetoothServiceInfoBleak(
-        name="Test Device",
+        name="ATC 8F80A5",
         address=address,
         device=BLEDevice(address, None),
         rssi=-56,
@@ -118,7 +118,7 @@ def make_encrypted_advertisement(
         },
         service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
         source="local",
-        advertisement=AdvertisementData(local_name="Test Device"),
+        advertisement=AdvertisementData(local_name="ATC 8F80A5"),
         time=0,
         connectable=False,
     )

@@ -15,11 +15,14 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "mac_address, service_data, bind_key, result",
+    "mac_address, advertisement, bind_key, result",
     [
         (
             "A4:C1:38:8D:18:B2",
-            b"#\x02\xca\t\x03\x03\xbf\x13",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"#\x02\xca\t\x03\x03\xbf\x13",
+            ),
             None,
             [
                 {
@@ -40,7 +43,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x02\x00\xa8#\x02]\t\x03\x03\xb7\x18\x02\x01]",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x02\x00\xa8#\x02]\t\x03\x03\xb7\x18\x02\x01]",
+            ),
             None,
             [
                 {
@@ -68,7 +74,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x02\x00\x0c\x04\x04\x13\x8a\x01",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x02\x00\x0c\x04\x04\x13\x8a\x01",
+            ),
             None,
             [
                 {
@@ -82,7 +91,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "AA:BB:CC:DD:EE:FF",
-            b"\x04\x05\x13\x8a\x14",
+            make_advertisement(
+                "AA:BB:CC:DD:EE:FF",
+                b"\x04\x05\x13\x8a\x14",
+            ),
             None,
             [
                 {
@@ -96,7 +108,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x04\n\x13\x8a\x14",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x04\n\x13\x8a\x14",
+            ),
             None,
             [
                 {
@@ -110,7 +125,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x04\x0b\x02\x1b\x00",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x04\x0b\x02\x1b\x00",
+            ),
             None,
             [
                 {
@@ -124,7 +142,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x03\x0c\x02\x0c",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x03\x0c\x02\x0c",
+            ),
             None,
             [
                 {
@@ -138,7 +159,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x03\r\x12\x0c\x03\x0e\x02\x1c",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x03\r\x12\x0c\x03\x0e\x02\x1c",
+            ),
             None,
             [
                 {
@@ -159,7 +183,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x03\x12\xe2\x04",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x03\x12\xe2\x04",
+            ),
             None,
             [
                 {
@@ -173,7 +200,10 @@ from tests.common import MockConfigEntry
         ),
         (
             "A4:C1:38:8D:18:B2",
-            b"\x03\x133\x01",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x03\x133\x01",
+            ),
             None,
             [
                 {
@@ -187,19 +217,22 @@ from tests.common import MockConfigEntry
         ),
         (
             "54:48:E6:8F:80:A5",
-            b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99',
+            make_encrypted_advertisement(
+                "54:48:E6:8F:80:A5",
+                b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99',
+            ),
             "231d39c1d7cc1ab1aee224cd096db932",
             [
                 {
-                    "sensor_entity": "sensor.test_device_80a5_temperature",
-                    "friendly_name": "Test Device 80A5 Temperature",
+                    "sensor_entity": "sensor.atc_80a5_temperature",
+                    "friendly_name": "ATC 80A5 Temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "25.06",
                 },
                 {
-                    "sensor_entity": "sensor.test_device_80a5_humidity",
-                    "friendly_name": "Test Device 80A5 Humidity",
+                    "sensor_entity": "sensor.atc_80a5_humidity",
+                    "friendly_name": "ATC 80A5 Humidity",
                     "unit_of_measurement": "%",
                     "state_class": "measurement",
                     "expected_state": "50.55",
@@ -211,7 +244,7 @@ from tests.common import MockConfigEntry
 async def test_sensors(
     hass,
     mac_address,
-    service_data,
+    advertisement,
     bind_key,
     result,
 ):
@@ -229,11 +262,6 @@ async def test_sensors(
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
-
-    if entry.data["bindkey"]:
-        advertisement = make_encrypted_advertisement(mac_address, service_data)
-    else:
-        advertisement = make_advertisement(mac_address, service_data)
 
     with patch(
         "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
