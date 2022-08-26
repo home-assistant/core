@@ -44,10 +44,7 @@ async def async_setup_entry(
     )
 
     entities = []
-    for device in data.api.bootstrap.lights.values():
-        if not device.is_adopted_by_us:
-            continue
-
+    for device in data.get_by_types({ModelType.LIGHT}):
         if device.can_write(data.api.bootstrap.auth_user):
             entities.append(ProtectLight(data, device))
 
