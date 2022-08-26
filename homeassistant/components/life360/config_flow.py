@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast
 
+from aiohttp import ClientTimeout
 from life360 import Life360, Life360Error, LoginError
 import voluptuous as vol
 
@@ -12,10 +13,10 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    COMM_MAX_RETRIES,
     COMM_TIMEOUT,
     CONF_AUTHORIZATION,
     CONF_DRIVING_SPEED,
@@ -53,13 +54,10 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Life360 integration config flow."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self._api = Life360(timeout=COMM_TIMEOUT, max_retries=COMM_MAX_RETRIES)
-        self._username: str | vol.UNDEFINED = vol.UNDEFINED
-        self._password: str | vol.UNDEFINED = vol.UNDEFINED
-        self._reauth_entry: ConfigEntry | None = None
+    _api: Life360 | None = None
+    _username: str | vol.UNDEFINED = vol.UNDEFINED
+    _password: str | vol.UNDEFINED = vol.UNDEFINED
+    _reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -69,10 +67,16 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_verify(self, step_id: str) -> FlowResult:
         """Attempt to authorize the provided credentials."""
+        if not self._api:
+            self._api = Life360(
+                session=async_create_clientsession(
+                    self.hass, timeout=ClientTimeout(total=COMM_TIMEOUT)
+                ),
+            )
         errors: dict[str, str] = {}
         try:
-            authorization = await self.hass.async_add_executor_job(
-                self._api.get_authorization, self._username, self._password
+            authorization = await self._api.get_authorization(
+                self._username, self._password
             )
         except LoginError as exc:
             LOGGER.debug("Login error: %s", exc)
