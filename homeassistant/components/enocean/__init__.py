@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await usb_dongle.async_setup()
     enocean_data[ENOCEAN_DONGLE] = usb_dongle
 
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
     async_cleanup_device_registry(hass=hass, entry=config_entry)
 
@@ -70,7 +70,9 @@ def async_cleanup_device_registry(
     for device in devices:
         for item in device.identifiers:
             LOGGER.debug(item)
-            if DOMAIN == item[0] and int(item[1]) not in device_ids:
+            domain = item[0]
+            device_id = int(item[1].split("-")[0])
+            if DOMAIN == domain and device_id not in device_ids:
                 LOGGER.debug(
                     "Removing Home Assistant device %s and associated entities for non-existing EnOcean device %s in config entry %s",
                     device.id,
@@ -86,29 +88,25 @@ def async_cleanup_device_registry(
 def forward_entry_setup_to_platforms(hass, config_entry):
     """Forward entry setup to the configured platforms."""
     # Use `hass.async_create_task` to avoid a circular dependency between the platform and the component
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-    )
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "light")
-    )
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
 
 
-async def update_listener(hass, entry):
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
-    LOGGER.debug("OPTIONS UPDATE")
-    # use await hass.config_entries.async_reload(entry.entry_id) ?
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload EnOcean config entry."""
     enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
     enocean_dongle.unload()
-    hass.data.pop(DATA_ENOCEAN)
 
-    return True
+    if unload_platforms := await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS
+    ):
+        hass.data.pop(DATA_ENOCEAN)
+
+    return unload_platforms

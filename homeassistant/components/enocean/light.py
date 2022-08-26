@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -56,9 +57,13 @@ def setup_platform(
     add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
-    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
         if device["eep"] == "eltako_fud61npn":

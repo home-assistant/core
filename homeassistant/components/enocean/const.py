@@ -15,7 +15,7 @@ SIGNAL_SEND_MESSAGE = "enocean.send_message"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS = [
+PLATFORMS: list[Platform] = [
     Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,

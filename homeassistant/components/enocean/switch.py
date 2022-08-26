@@ -3,16 +3,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean.utils import combine_hex
+from enocean.utils import combine_hex, from_hex_string
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
 
@@ -71,6 +73,27 @@ async def async_setup_platform(
 
     _migrate_to_new_unique_id(hass, dev_id, channel)
     async_add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up entry."""
+    devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
+
+    for device in devices:
+        if device["eep"] == "A5-12-01":
+            device_id = from_hex_string(device["id"])
+            # sender_id = from_hex_string(device["sender_id"])
+
+            async_add_entities(
+                [
+                    EnOceanSwitch(device_id, device["name"], 0),
+                    EnOceanSwitch(device_id, device["name"], 1),
+                ]
+            )
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
@@ -140,3 +163,15 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 if channel == self.channel:
                     self._on_state = output > 0
                     self.schedule_update_ha_state()
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "",
+            "model": "",
+            "sw_version": "",
+            "via_device": (DOMAIN, "not yet set"),
+        }
