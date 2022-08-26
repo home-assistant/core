@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.4.0
+aiohomekit==1.5.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -766,7 +766,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.16.0
+govee-ble==0.16.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1650,7 +1650,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.7.0
+pylitterbot==2022.8.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -2022,7 +2022,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.4
+pyunifiprotect==4.1.7
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
