@@ -35,6 +35,8 @@ async def async_setup_entry(
 class LiteJetSwitch(SwitchEntity):
     """Representation of a single LiteJet switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, entry_id, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet switch."""
         self._entry_id = entry_id
@@ -77,11 +79,6 @@ class LiteJetSwitch(SwitchEntity):
     def is_on(self):
         """Return if the switch is pressed."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
 
     @property
     def extra_state_attributes(self):
