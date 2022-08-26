@@ -122,7 +122,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
         self._unsub_dispatcher = async_dispatcher_connect(
@@ -158,7 +158,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         }
         self._battery = attr.get(ATTR_BATTERY_LEVEL)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()
         self._unsub_dispatcher()

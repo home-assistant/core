@@ -59,7 +59,7 @@ class GdacsSensor(SensorEntity):
         self._removed = None
         self._remove_signal_status = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
             self.hass,
@@ -81,7 +81,7 @@ class GdacsSensor(SensorEntity):
         _LOGGER.debug("Received status update for %s", self._config_entry_id)
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
         if self._manager:

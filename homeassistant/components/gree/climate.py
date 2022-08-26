@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from greeclimate.device import (
     TEMP_MAX,
@@ -166,7 +167,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Missing parameter {ATTR_TEMPERATURE}")
@@ -265,7 +266,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             return PRESET_BOOST
         return PRESET_NONE
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in PRESET_MODES:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
@@ -304,7 +305,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in FAN_MODES_REVERSE:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
@@ -332,7 +333,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             return SWING_VERTICAL
         return SWING_OFF
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if swing_mode not in SWING_MODES:
             raise ValueError(f"Invalid swing mode: {swing_mode}")
