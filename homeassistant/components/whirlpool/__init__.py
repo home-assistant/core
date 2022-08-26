@@ -59,8 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if myplatform:
         await hass.config_entries.async_forward_entry_setups(entry, myplatform)
+        return True
 
-    return True
+    _LOGGER.debug("No Appliances found")
+    return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
