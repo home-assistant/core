@@ -1,5 +1,6 @@
 """Tests for ZHA config flow."""
 
+import copy
 import json
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import uuid
@@ -55,6 +56,15 @@ def mock_app():
         yield mock_app
 
 
+@pytest.fixture
+def backup():
+    """Zigpy network backup with non-default settings."""
+    backup = zigpy.backups.NetworkBackup()
+    backup.node_info.ieee = zigpy.types.EUI64.convert("AA:BB:CC:DD:11:22:33:44")
+
+    return backup
+
+
 def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
     """Mock `_detect_radio_type` that just sets the appropriate attributes."""
 
@@ -82,7 +92,7 @@ def com_port():
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery(hass):
+async def test_zeroconf_discovery_znp(hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -96,13 +106,22 @@ async def test_discovery(hass):
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    result = await hass.config_entries.flow.async_configure(
+    result1 = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "socket://192.168.1.200:6638"
-    assert result["data"] == {
+    assert result1["type"] == FlowResultType.MENU
+    assert result1["step_id"] == "choose_formation_strategy"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "socket://192.168.1.200:6638"
+    assert result2["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
             CONF_FLOWCONTROL: None,
@@ -128,13 +147,22 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass):
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    result = await hass.config_entries.flow.async_configure(
+    result1 = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "socket://192.168.1.200:1234"
-    assert result["data"] == {
+    assert result1["type"] == FlowResultType.MENU
+    assert result1["step_id"] == "choose_formation_strategy"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "socket://192.168.1.200:1234"
+    assert result2["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
         },
@@ -158,13 +186,22 @@ async def test_efr32_via_zeroconf(hass):
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    result = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], user_input={"baudrate": 115200}
+    result1 = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "socket://192.168.1.200:6638"
-    assert result["data"] == {
+    assert result1["type"] == FlowResultType.MENU
+    assert result1["step_id"] == "choose_formation_strategy"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "socket://192.168.1.200:6638"
+    assert result2["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
             CONF_BAUDRATE: 115200,
@@ -768,13 +805,20 @@ async def test_user_port_config(probe_mock, hass):
         user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"].startswith("/dev/ttyUSB33")
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "choose_formation_strategy"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
     assert (
-        result["data"][zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
+        result2["data"][zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
         == "/dev/ttyUSB33"
     )
-    assert result["data"][CONF_RADIO_TYPE] == "ezsp"
+    assert result2["data"][CONF_RADIO_TYPE] == "ezsp"
     assert probe_mock.await_count == 1
 
 
@@ -1061,7 +1105,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
 )
 async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
-    allow_overwrite_ieee_mock, pick_radio, mock_app, hass
+    allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
     """Test restoring a manual backup on EZSP coordinators (overwrite IEEE)."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1077,7 +1121,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
 
     with patch(
         "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
-        return_value=zigpy.backups.NetworkBackup(),
+        return_value=backup,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -1293,7 +1337,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
 )
 async def test_ezsp_restore_without_settings_change_ieee(
-    allow_overwrite_ieee_mock, pick_radio, mock_app, hass
+    allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
     """Test a manual backup on EZSP coordinators without settings (no IEEE write)."""
     # Fail to load settings
@@ -1303,9 +1347,9 @@ async def test_ezsp_restore_without_settings_change_ieee(
         result, port = await pick_radio(RadioType.ezsp)
 
     # Set the network state, it'll be picked up later after the load "succeeds"
-    backup = zigpy.backups.NetworkBackup()
-    mock_app.state.network_info = backup.network_info
     mock_app.state.node_info = backup.node_info
+    mock_app.state.network_info = copy.deepcopy(backup.network_info)
+    mock_app.state.network_info.network_key.tx_counter += 10000
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1326,11 +1370,8 @@ async def test_ezsp_restore_without_settings_change_ieee(
         )
 
     # We wrote settings when connecting
-    mock_app.write_network_info.assert_called_once()
-
-    # The backup was also immediately restored, since settings were compatible
     allow_overwrite_ieee_mock.assert_not_called()
-    mock_app.backups.restore_backup.assert_called_once_with(backup)
+    mock_app.backups.restore_backup.assert_called_once_with(backup, create_new=False)
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "ezsp"

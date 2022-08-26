@@ -6,6 +6,7 @@ import contextlib
 import copy
 import json
 import logging
+import os
 from typing import Any
 
 import serial.tools.list_ports
@@ -107,10 +108,17 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._radio_type is not None
 
         app_config = config.get(CONF_ZIGPY, {}).copy()
-        app_config[CONF_DATABASE] = config.get(
+
+        database_path = config.get(
             CONF_DATABASE,
             self.hass.config.path(DEFAULT_DATABASE_NAME),
         )
+
+        # Don't create `zigbee.db` if it doesn't already exist
+        if not os.path.exists(database_path):
+            database_path = None
+
+        app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self._device_settings
         app_config = self._radio_type.controller.SCHEMA(app_config)
 
@@ -123,6 +131,17 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             yield app
         finally:
             await app.disconnect()
+
+    async def _restore_backup(
+        self, backup: zigpy.backups.NetworkBackup, **kwargs: dict[str, Any]
+    ) -> None:
+        if self._current_settings is not None and self._current_settings.supersedes(
+            self._chosen_backup
+        ):
+            return
+
+        async with self._connect_zigpy_app() as app:
+            await app.backups.restore_backup(backup, **kwargs)
 
     async def _detect_radio_type(self) -> bool:
         """Probe all radio types on the current port."""
@@ -155,6 +174,21 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         new_stack_specific.setdefault("ezsp", {})[
             "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
         ] = True
+
+        return backup.replace(
+            network_info=backup.network_info.replace(stack_specific=new_stack_specific)
+        )
+
+    def _prevent_overwrite_ezsp_ieee(
+        self, backup: zigpy.backups.NetworkBackup
+    ) -> zigpy.backups.NetworkBackup:
+        if "ezsp" not in backup.network_info.stack_specific:
+            return backup
+
+        new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
+        new_stack_specific.setdefault("ezsp", {}).pop(
+            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it", None
+        )
 
         return backup.replace(
             network_info=backup.network_info.replace(stack_specific=new_stack_specific)
@@ -241,12 +275,10 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._title = user_input[CONF_DEVICE_PATH]
             self._device_path = user_input[CONF_DEVICE_PATH]
-            self._device_settings = {
-                k: v for k, v in user_input.items() if k != CONF_DEVICE_PATH
-            }
+            self._device_settings = user_input.copy()
 
             if await self._radio_type.controller.probe(user_input):
-                return await self._async_create_radio_entity()
+                return await self.async_step_choose_formation_strategy()
 
             errors["base"] = "cannot_connect"
 
@@ -258,11 +290,14 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         source = self.context.get("source")
         for param, value in self._radio_type.controller.SCHEMA_DEVICE.schema.items():
-            if param in SUPPORTED_PORT_SETTINGS:
-                if source == config_entries.SOURCE_ZEROCONF and param == CONF_BAUDRATE:
-                    value = 115200
+            if param not in SUPPORTED_PORT_SETTINGS:
+                continue
 
-                schema[param] = value
+            if source == config_entries.SOURCE_ZEROCONF and param == CONF_BAUDRATE:
+                value = 115200
+                param = vol.Required(CONF_BAUDRATE, default=value)
+
+            schema[param] = value
 
         return self.async_show_form(
             step_id="manual_port_config",
@@ -279,12 +314,13 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except NetworkNotFormed:
                 pass
             else:
-                # Load the current info while we're connected, to save time
-                self._backups = app.backups.backups.copy()
                 self._current_settings = zigpy.backups.NetworkBackup(
                     network_info=app.state.network_info,
                     node_info=app.state.node_info,
                 )
+
+            # The list of backups will always exist
+            self._backups = app.backups.backups.copy()
 
     async def async_step_choose_formation_strategy(self, user_input=None):
         """Choose how to deal with the current radio's settings."""
@@ -293,10 +329,13 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         strategies = []
 
         # Check if we have any automatic backups *and* if the backups differ from
-        # the current radio settings (since restoring would be redundant)
-        if self._backups and any(
-            not backup.is_compatible_with(self._current_settings)
-            for backup in self._backups
+        # the current radio settings, if they exist (since restoring would be redundant)
+        if self._backups and (
+            self._current_settings is None
+            or any(
+                not backup.is_compatible_with(self._current_settings)
+                for backup in self._backups
+            )
         ):
             strategies.append(CHOOSE_AUTOMATIC_BACKUP)
 
@@ -397,22 +436,16 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_maybe_confirm_ezsp_restore(self, user_input=None):
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
         if self._radio_type != RadioType.ezsp:
-            async with self._connect_zigpy_app() as app:
-                await app.backups.restore_backup(self._chosen_backup)
-
+            await self._restore_backup(self._chosen_backup)
             return await self._async_create_radio_entity()
 
         # We have no way to partially load network settings if no network is formed
         if self._current_settings is None:
-            async with self._connect_zigpy_app() as app:
-                # Since we are going to be restoring the backup anyways, write it to the
-                # radio without overwriting the IEEE but don't take a backup with these
-                # temporary settings
-                await app.write_network_info(
-                    network_info=self._chosen_backup.network_info,
-                    node_info=self._chosen_backup.node_info,
-                )
-
+            # Since we are going to be restoring the backup anyways, write it to the
+            # radio without overwriting the IEEE but don't take a backup with these
+            # temporary settings
+            temp_backup = self._prevent_overwrite_ezsp_ieee(self._chosen_backup)
+            await self._restore_backup(temp_backup, create_new=False)
             await self._async_load_network_settings()
 
         if (
@@ -423,8 +456,7 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             # No point in prompting the user if the backup doesn't have a new IEEE
             # address or if there is no way to overwrite the IEEE address a second time
-            async with self._connect_zigpy_app() as app:
-                await app.backups.restore_backup(self._chosen_backup)
+            await self._restore_backup(self._chosen_backup)
 
             return await self._async_create_radio_entity()
 
@@ -434,8 +466,9 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[OVERWRITE_COORDINATOR_IEEE]:
                 backup = self._allow_overwrite_ezsp_ieee(backup)
 
-            async with self._connect_zigpy_app() as app:
-                await app.backups.restore_backup(backup)
+            # If the user declined to overwrite the IEEE *and* we wrote the backup to
+            # their empty radio above, restoring it again would be redundant.
+            await self._restore_backup(backup)
 
             return await self._async_create_radio_entity()
 
