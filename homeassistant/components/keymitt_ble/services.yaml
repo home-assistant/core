@@ -2,9 +2,17 @@ calibrate:
   name: Calibrate
   description: Calibration - Set mode, depth and press&hold duration. Warning - this will send a push command to the device
   fields:
+    entity_id:
+      name: Entity
+      description: Name of entity to calibrate
+      selector:
+        entity:
+          integration: keymitt_ble
+          domain: switch
     depth:
       name: Depth
-      description: Depth (0-100)
+      description: Depth in percent
+      example: 50
       required: true
       selector:
         number:
@@ -12,19 +20,23 @@ calibrate:
           step: 1
           min: 0
           max: 100
+          unit_of_measurement: '%'
     duration:
       name: Duration
       description: Duration in seconds
+      example: 1
       required: true
       selector:
         number:
           mode: box
           step: 1
           min: 0
-          max: 999999
+          max: 60
+          unit_of_measurement: seconds
     mode:
       name: Mode
       description: normal | invert | toggle
+      example: "normal"
       required: true
       selector:
         select:
