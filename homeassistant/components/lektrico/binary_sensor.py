@@ -77,16 +77,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
     coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    sensors = [
+
+    async_add_entities(
         LektricoBinarySensor(
-            sensor_desc,
+            description,
             coordinator,
             entry.data[CONF_FRIENDLY_NAME],
         )
-        for sensor_desc in SENSORS
-    ]
-
-    async_add_entities(sensors, False)
+        for description in SENSORS
+    )
 
 
 class LektricoBinarySensor(CoordinatorEntity, BinarySensorEntity):
