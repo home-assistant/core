@@ -675,6 +675,8 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         entry_data: RuntimeEntryData,
@@ -803,11 +805,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             return None
 
         return cast(str, ICON_SCHEMA(self._static_info.icon))
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:

@@ -61,6 +61,8 @@ async def async_setup_entry(
 class GeonetnzVolcanoSensor(SensorEntity):
     """This represents an external event with GeoNet NZ Volcano feed data."""
 
+    _attr_should_poll = False
+
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
         """Initialize entity with data from feed entry."""
         self._config_entry_id = config_entry_id
@@ -96,11 +98,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
     def _update_callback(self):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
-
-    @property
-    def should_poll(self):
-        """No polling needed for GeoNet NZ Volcano feed location events."""
-        return False
 
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
