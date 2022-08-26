@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -26,10 +27,7 @@ from .const import DOMAIN
 class LektricoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes the Lektrico binary sensor entities."""
 
-    @classmethod
-    def get_is_on(cls, data: Any) -> bool | None:
-        """Return None."""
-        return None
+    get_is_on: Callable[[Any], bool] | None = None
 
 
 @dataclass
@@ -37,11 +35,6 @@ class HasActiveErrorsBinarySensorEntityDescription(
     LektricoBinarySensorEntityDescription
 ):
     """A class that describes the Lektrico Has Active Errors binary sensor entity."""
-
-    @classmethod
-    def get_is_on(cls, data: Any) -> bool:
-        """Get the has_active_errors."""
-        return bool(data.has_active_errors)
 
     @classmethod
     def set_extra_state_att(cls, lektrico_binary_sensor: LektricoBinarySensor) -> None:
@@ -66,6 +59,7 @@ SENSORS: tuple[LektricoBinarySensorEntityDescription, ...] = (
         key="has_active_errors",
         name="Errors",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        get_is_on=lambda data: bool(data.has_active_errors),
     ),
 )
 
@@ -133,6 +127,8 @@ class LektricoBinarySensor(CoordinatorEntity, BinarySensorEntity):
             self.entity_description, HasActiveErrorsBinarySensorEntityDescription
         ):
             self.entity_description.set_extra_state_att(self)
+        if self.entity_description.get_is_on is None:
+            return None
         return self.entity_description.get_is_on(self.coordinator.data)
 
     def set_attr_extra_state_attributes_for_errors(
