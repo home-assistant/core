@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
-from pyunifiprotect.data import Camera, ProtectAdoptableDeviceModel, ProtectModelWithId
+from pyunifiprotect.data import (
+    Camera,
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+)
 from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -51,9 +56,8 @@ async def async_setup_entry(
     )
 
     entities = []
-    for device in data.api.bootstrap.cameras.values():
-        if not device.is_adopted_by_us:
-            continue
+    for device in data.get_by_types({ModelType.CAMERA}):
+        device = cast(Camera, device)
         if device.feature_flags.has_speaker:
             entities.append(ProtectMediaPlayer(data, device))
 

@@ -46,7 +46,9 @@ def _async_device_entities(
 
     entities: list[ProtectDeviceEntity] = []
     devices = (
-        [ufp_device] if ufp_device is not None else data.get_by_types({model_type})
+        [ufp_device]
+        if ufp_device is not None
+        else data.get_by_types({model_type}, ignore_unadopted=False)
     )
     for device in devices:
         assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
