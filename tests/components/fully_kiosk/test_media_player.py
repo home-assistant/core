@@ -1,11 +1,15 @@
 """Test the Fully Kiosk Browser media player."""
 from unittest.mock import MagicMock
 
+from aiohttp import ClientSession
+
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
 import homeassistant.components.media_player as media_player
+from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -71,3 +75,37 @@ async def test_media_player(
     assert device_entry.model == "KFDOWI"
     assert device_entry.name == "Amazon Fire"
     assert device_entry.sw_version == "1.42.5"
+
+
+async def test_browse_media(
+    hass: HomeAssistant,
+    hass_ws_client: ClientSession,
+    mock_fully_kiosk: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test Fully Kiosk browse media."""
+
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.amazon_fire",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_child_audio = {
+        "title": "test.mp3",
+        "media_class": "music",
+        "media_content_type": "audio/mpeg",
+        "media_content_id": "media-source://media_source/local/test.mp3",
+        "can_play": True,
+        "can_expand": False,
+        "thumbnail": None,
+        "children_media_class": None,
+    }
+    assert expected_child_audio in response["result"]["children"]
