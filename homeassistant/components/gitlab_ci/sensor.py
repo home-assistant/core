@@ -126,7 +126,7 @@ class GitLabSensor(SensorEntity):
             return ICON_SAD
         return ICON_OTHER
 
-    def update(self):
+    def update(self) -> None:
         """Collect updated data from GitLab API."""
         self._gitlab_data.update()
 
