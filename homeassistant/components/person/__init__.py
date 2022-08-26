@@ -125,6 +125,38 @@ async def async_add_user_device_tracker(
         break
 
 
+@callback
+def persons_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all persons that reference the entity."""
+    if (
+        DOMAIN not in hass.data
+        or split_entity_id(entity_id)[0] != DEVICE_TRACKER_DOMAIN
+    ):
+        return []
+
+    component: EntityComponent = hass.data[DOMAIN][2]
+
+    return [
+        person_entity.entity_id
+        for person_entity in component.entities
+        if entity_id in cast(Person, person_entity).device_trackers
+    ]
+
+
+@callback
+def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all entities belonging to a person."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component: EntityComponent = hass.data[DOMAIN][2]
+
+    if (person_entity := component.get_entity(entity_id)) is None:
+        return []
+
+    return cast(Person, person_entity).device_trackers
+
+
 CREATE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
@@ -318,7 +350,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    hass.data[DOMAIN] = (yaml_collection, storage_collection)
+    hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
@@ -418,6 +450,11 @@ class Person(RestoreEntity):
         """Return a unique ID for the person."""
         return self._config[CONF_ID]
 
+    @property
+    def device_trackers(self):
+        """Return the device trackers for the person."""
+        return self._config[CONF_DEVICE_TRACKERS]
+
     async def async_added_to_hass(self):
         """Register device trackers."""
         await super().async_added_to_hass()
@@ -512,7 +549,7 @@ def ws_list_person(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
 ):
     """List persons."""
-    yaml, storage = hass.data[DOMAIN]
+    yaml, storage, _ = hass.data[DOMAIN]
     connection.send_result(
         msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
     )
