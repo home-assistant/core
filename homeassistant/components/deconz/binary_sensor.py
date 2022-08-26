@@ -89,7 +89,8 @@ async def async_setup_entry(
                 assert isinstance(entity_class, DeconzBinarySensor)
             if (
                 not isinstance(sensor, sensor_type)
-                or getattr(sensor, entity_class.unique_id_suffix) is None
+                or entity_class.unique_id_suffix is not None
+                and getattr(sensor, entity_class.unique_id_suffix) is None
             ):
                 continue
 
@@ -106,35 +107,18 @@ async def async_setup_entry(
 class DeconzBinarySensor(DeconzDevice[_SensorDeviceT], BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
-    unique_id_suffix: str
-    update_key: str
-
-    name_suffix = ""
     old_unique_id_suffix = ""
-
     TYPE = DOMAIN
 
     def __init__(self, device: _SensorDeviceT, gateway: DeconzGateway) -> None:
         """Initialize deCONZ binary sensor."""
         super().__init__(device, gateway)
 
-        if self.name_suffix:
-            self._attr_name = f"{self._device.name} {self.name_suffix}"
-
-        self._update_keys = {self.update_key, "reachable"}
-        if self.unique_id_suffix in PROVIDES_EXTRA_ATTRIBUTES:
+        if (
+            self.unique_id_suffix in PROVIDES_EXTRA_ATTRIBUTES
+            and self._update_keys is not None
+        ):
             self._update_keys.update({"on", "state"})
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return f"{super().unique_id}-{self.unique_id_suffix}"
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the sensor's state."""
-        if self._device.changed_keys.intersection(self._update_keys):
-            super().async_update_callback()
 
     @property
     def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
@@ -167,7 +151,7 @@ class DeconzAlarmBinarySensor(DeconzBinarySensor[Alarm]):
     """Representation of a deCONZ alarm binary sensor."""
 
     unique_id_suffix = "alarm"
-    update_key = "alarm"
+    _update_key = "alarm"
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
@@ -181,7 +165,7 @@ class DeconzCarbonMonoxideBinarySensor(DeconzBinarySensor[CarbonMonoxide]):
     """Representation of a deCONZ carbon monoxide binary sensor."""
 
     unique_id_suffix = "carbon_monoxide"
-    update_key = "carbonmonoxide"
+    _update_key = "carbonmonoxide"
 
     _attr_device_class = BinarySensorDeviceClass.CO
 
@@ -195,7 +179,7 @@ class DeconzFireBinarySensor(DeconzBinarySensor[Fire]):
     """Representation of a deCONZ fire binary sensor."""
 
     unique_id_suffix = "fire"
-    update_key = "fire"
+    _update_key = "fire"
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
 
@@ -208,10 +192,10 @@ class DeconzFireBinarySensor(DeconzBinarySensor[Fire]):
 class DeconzFireInTestModeBinarySensor(DeconzBinarySensor[Fire]):
     """Representation of a deCONZ fire in-test-mode binary sensor."""
 
-    name_suffix = "Test Mode"
+    _name_suffix = "Test Mode"
     unique_id_suffix = "in_test_mode"
     old_unique_id_suffix = "test mode"
-    update_key = "test"
+    _update_key = "test"
 
     _attr_device_class = BinarySensorDeviceClass.SMOKE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -226,7 +210,7 @@ class DeconzFlagBinarySensor(DeconzBinarySensor[GenericFlag]):
     """Representation of a deCONZ generic flag binary sensor."""
 
     unique_id_suffix = "flag"
-    update_key = "flag"
+    _update_key = "flag"
 
     @property
     def is_on(self) -> bool:
@@ -238,7 +222,7 @@ class DeconzOpenCloseBinarySensor(DeconzBinarySensor[OpenClose]):
     """Representation of a deCONZ open/close binary sensor."""
 
     unique_id_suffix = "open"
-    update_key = "open"
+    _update_key = "open"
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
 
@@ -252,7 +236,7 @@ class DeconzPresenceBinarySensor(DeconzBinarySensor[Presence]):
     """Representation of a deCONZ presence binary sensor."""
 
     unique_id_suffix = "presence"
-    update_key = "presence"
+    _update_key = "presence"
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
@@ -266,7 +250,7 @@ class DeconzVibrationBinarySensor(DeconzBinarySensor[Vibration]):
     """Representation of a deCONZ vibration binary sensor."""
 
     unique_id_suffix = "vibration"
-    update_key = "vibration"
+    _update_key = "vibration"
 
     _attr_device_class = BinarySensorDeviceClass.VIBRATION
 
@@ -280,7 +264,7 @@ class DeconzWaterBinarySensor(DeconzBinarySensor[Water]):
     """Representation of a deCONZ water binary sensor."""
 
     unique_id_suffix = "water"
-    update_key = "water"
+    _update_key = "water"
 
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
@@ -293,10 +277,10 @@ class DeconzWaterBinarySensor(DeconzBinarySensor[Water]):
 class DeconzTamperedCommonBinarySensor(DeconzBinarySensor[SensorResources]):
     """Representation of a deCONZ tampered binary sensor."""
 
-    name_suffix = "Tampered"
+    _name_suffix = "Tampered"
     unique_id_suffix = "tampered"
     old_unique_id_suffix = "tampered"
-    update_key = "tampered"
+    _update_key = "tampered"
 
     _attr_device_class = BinarySensorDeviceClass.TAMPER
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -310,10 +294,10 @@ class DeconzTamperedCommonBinarySensor(DeconzBinarySensor[SensorResources]):
 class DeconzLowBatteryCommonBinarySensor(DeconzBinarySensor[SensorResources]):
     """Representation of a deCONZ low battery binary sensor."""
 
-    name_suffix = "Low Battery"
+    _name_suffix = "Low Battery"
     unique_id_suffix = "low_battery"
     old_unique_id_suffix = "low battery"
-    update_key = "lowbattery"
+    _update_key = "lowbattery"
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
