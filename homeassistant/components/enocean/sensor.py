@@ -31,6 +31,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICES
+from .const import DOMAIN
 from .device import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
@@ -289,6 +290,18 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         temperature += self._scale_min
         self._attr_native_value = round(temperature, 1)
         self.schedule_update_ha_state()
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "",
+            "model": "",
+            "sw_version": "",
+            "via_device": (DOMAIN, "not yet set"),
+        }
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing

@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
 
 DEFAULT_NAME = "EnOcean binary sensor"
@@ -139,3 +139,15 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
                 "onoff": self.onoff,
             },
         )
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "",
+            "model": "",
+            "sw_version": "",
+            "via_device": (DOMAIN, "not yet set"),
+        }
