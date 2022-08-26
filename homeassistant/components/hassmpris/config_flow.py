@@ -128,13 +128,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host: str,
         cakes_port: int,
         mpris_port: int,
-        unique_id: str,
+        unique_id: str | None = None,
     ):
         self._title = title
         self._host = host
         self._cakes_port = cakes_port
         self._mpris_port = mpris_port
         self._unique_id = unique_id
+
+    def _get_unique_id_by_connection_data(self):
+        return _genuid(self._host, self._cakes_port, self._mpris_port)
+
+    def _get_unique_id_by_zeroconf(self):
+        return self._unique_id
+
+    def _get_any_unique_id(self):
+        if x := self._get_unique_id_by_zeroconf():
+            return x
+        return self._get_unique_id_by_connection_data()
 
     def _update_server_data(self, host: str, cakes_port: int, mpris_port: int):
         self._host = host
@@ -145,28 +156,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = self._get_data()
 
         # Update existing entry that has the same unique ID.
-        if self._unique_id:
-            existing_entry = await self.async_set_unique_id(self._unique_id)
-            if existing_entry:
+        if zeroconf_uid := self._get_unique_id_by_zeroconf():
+            if existing_entry := await self.async_set_unique_id(zeroconf_uid):
                 _LOGGER.debug("Existing entry, unique ID")
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         # Update existing entry that has the same host / ports.
-        existing_entry = await self.async_set_unique_id(
-            _genuid(self._host, self._cakes_port, self._mpris_port)
-        )
-        if existing_entry:
+        if existing_entry := await self.async_set_unique_id(
+            self._get_unique_id_by_connection_data()
+        ):
             _LOGGER.debug("Existing entry, generated ID")
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         # OK, no entries found with those two identifiers.
-        # Let's set a unique ID if available
-        if self._unique_id:
-            await self.async_set_unique_id(self._unique_id)
+        # Let's set a unique ID.
+        await self.async_set_unique_id(self._get_any_unique_id())
 
         _LOGGER.debug("New entry")
         assert self._title, "Impossible: the title is %r" % self._title
@@ -191,7 +199,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST],
             user_input[CONF_CAKES_PORT],
             user_input[CONF_MPRIS_PORT],
-            _genuid(self._host, self._cakes_port, self._mpris_port),
         )
 
         # Do not proceed if the device is already configured by hand.
@@ -234,13 +241,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # # Do not proceed if the device is already configured by hand.
-        await self.async_set_unique_id(
-            _genuid(self._host, self._cakes_port, self._mpris_port)
-        )
+        await self.async_set_unique_id(self._get_unique_id_by_connection_data())
         self._abort_if_unique_id_configured()
 
         # Do not proceed if the device is already configured by Zeroconf.
-        await self.async_set_unique_id(self._unique_id)
+        await self.async_set_unique_id(self._get_unique_id_by_zeroconf())
         self._abort_if_unique_id_configured()
 
         return await self.async_step_zeroconf_confirm()
@@ -278,10 +283,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entry_data[CONF_MPRIS_PORT],
             entry_data[CONF_UNIQUE_ID],
         )
-
-        if self._unique_id:
-            await self.async_set_unique_id(self._unique_id)
-
+        await self.async_set_unique_id(self._get_any_unique_id())
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None):
