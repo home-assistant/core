@@ -280,11 +280,19 @@ class BluetoothManager:
             matched_domains,
         )
 
-        callbacks: set[BluetoothCallback] = set()
-        for connectable_callback in (True, False):
-            callback_index = self._get_callback_index_by_type(connectable_callback)
-            for match in callback_index.match_callbacks(service_info):
-                callbacks.add(match[CALLBACK])
+        callbacks: set[BluetoothCallback] = {
+            match[CALLBACK]
+            for match in self._get_callback_index_by_type(False).match_callbacks(
+                service_info
+            )
+        }
+        if connectable:
+            callbacks.update(
+                match[CALLBACK]
+                for match in self._get_callback_index_by_type(True).match_callbacks(
+                    service_info
+                )
+            )
         for callback in callbacks:
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
