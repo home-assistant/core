@@ -1,5 +1,5 @@
 """Test the Fully Kiosk Browser media player."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
 
@@ -42,6 +42,27 @@ async def test_media_player(
         blocking=True,
     )
     assert len(mock_fully_kiosk.playSound.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=Mock(url="http://example.com/test.mp3"),
+    ):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: "media_player.amazon_fire",
+                "media_content_id": "media-source://some_source/some_id",
+                "media_content_type": "audio/mpeg",
+            },
+            blocking=True,
+        )
+
+        assert len(mock_fully_kiosk.playSound.mock_calls) == 2
+        assert (
+            mock_fully_kiosk.playSound.mock_calls[1].args[0]
+            == "http://example.com/test.mp3"
+        )
 
     await hass.services.async_call(
         media_player.DOMAIN,
