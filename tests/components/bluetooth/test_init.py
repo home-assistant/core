@@ -1321,6 +1321,60 @@ async def test_register_callback_by_manufacturer_id(
     assert service_info.manufacturer_id == 76
 
 
+async def test_register_callback_by_address_connectable_manufacturer_id(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test registering a callback by address, manufacturer_id, and connectable."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {MANUFACTURER_ID: 76, CONNECTABLE: False, ADDRESS: "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+        )
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        apple_device = BLEDevice("44:44:33:11:23:45", "apple")
+        apple_adv = AdvertisementData(
+            local_name="apple",
+            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+        )
+
+        inject_advertisement(hass, apple_device, apple_adv)
+
+        apple_device_wrong_address = BLEDevice("44:44:33:11:23:46", "apple")
+
+        inject_advertisement(hass, apple_device_wrong_address, apple_adv)
+        await hass.async_block_till_done()
+
+        cancel()
+
+    assert len(callbacks) == 1
+
+    service_info: BluetoothServiceInfo = callbacks[0][0]
+    assert service_info.name == "apple"
+    assert service_info.manufacturer == "Apple, Inc."
+    assert service_info.manufacturer_id == 76
+
+
 async def test_register_callback_by_manufacturer_id_and_address(
     hass, mock_bleak_scanner_start, enable_bluetooth
 ):

@@ -176,16 +176,23 @@ class BluetoothMatcherIndex:
             self.local_name.setdefault(
                 _local_name_to_index_key(matcher[LOCAL_NAME]), []
             ).append(matcher)
+            return
+
         if SERVICE_UUID in matcher:
             self.service_uuid.setdefault(matcher[SERVICE_UUID], []).append(matcher)
+            return
+
         if SERVICE_DATA_UUID in matcher:
             self.service_data_uuid.setdefault(matcher[SERVICE_DATA_UUID], []).append(
                 matcher
             )
+            return
+
         if MANUFACTURER_ID in matcher:
             self.manufacturer_id.setdefault(matcher[MANUFACTURER_ID], []).append(
                 matcher
             )
+            return
 
     def remove(self, matcher: _MatcherTypes) -> None:
         """Remove a matcher from the index."""
@@ -193,12 +200,19 @@ class BluetoothMatcherIndex:
             self.local_name[_local_name_to_index_key(matcher[LOCAL_NAME])].remove(
                 matcher
             )
+            return
+
         if SERVICE_UUID in matcher:
             self.service_uuid[matcher[SERVICE_UUID]].remove(matcher)
+            return
+
         if SERVICE_DATA_UUID in matcher:
             self.service_data_uuid[matcher[SERVICE_DATA_UUID]].remove(matcher)
+            return
+
         if MANUFACTURER_ID in matcher:
             self.manufacturer_id[matcher[MANUFACTURER_ID]].remove(matcher)
+            return
 
     def build(self) -> None:
         """Rebuild the index sets."""
@@ -258,6 +272,8 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
         """Add a matcher to the index."""
         if ADDRESS in matcher:
             self.address.setdefault(matcher[ADDRESS], []).append(matcher)
+            return
+
         super().add(matcher)
 
     def remove_with_address(
@@ -266,6 +282,8 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
         """Remove a matcher from the index."""
         if ADDRESS in matcher:
             self.address[matcher[ADDRESS]].remove(matcher)
+            return
+
         super().remove(matcher)
 
     def _match_addresses(
@@ -319,8 +337,10 @@ def ble_device_matches(
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
     device = service_info.device
-    if (address := matcher.get(ADDRESS)) is not None and device.address != address:
-        return False
+
+    # Do don't check address here since all callers already
+    # check the address and we don't want to double check
+    # since it would result in an unreachable reject case.
 
     if matcher.get(CONNECTABLE, True) and not service_info.connectable:
         return False
