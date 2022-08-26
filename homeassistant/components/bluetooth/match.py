@@ -374,28 +374,26 @@ def ble_device_matches(
     advertisement_data = service_info.advertisement
     if (
         service_uuid := matcher.get(SERVICE_UUID)
-    ) is not None and service_uuid not in advertisement_data.service_uuids:
+    ) and service_uuid not in advertisement_data.service_uuids:
         return False
 
     if (
         service_data_uuid := matcher.get(SERVICE_DATA_UUID)
-    ) is not None and service_data_uuid not in advertisement_data.service_data:
+    ) and service_data_uuid not in advertisement_data.service_data:
         return False
 
-    if (
-        manfacturer_id := matcher.get(MANUFACTURER_ID)
-    ) is not None and manfacturer_id not in advertisement_data.manufacturer_data:
-        return False
-
-    if (manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)) is not None:
-        manufacturer_data_start_bytes = bytearray(manufacturer_data_start)
-        if not any(
-            manufacturer_data.startswith(manufacturer_data_start_bytes)
-            for manufacturer_data in advertisement_data.manufacturer_data.values()
-        ):
+    if manfacturer_id := matcher.get(MANUFACTURER_ID):
+        if manfacturer_id not in advertisement_data.manufacturer_data:
             return False
+        if manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START):
+            manufacturer_data_start_bytes = bytearray(manufacturer_data_start)
+            if not any(
+                manufacturer_data.startswith(manufacturer_data_start_bytes)
+                for manufacturer_data in advertisement_data.manufacturer_data.values()
+            ):
+                return False
 
-    if (local_name := matcher.get(LOCAL_NAME)) is not None and (
+    if (local_name := matcher.get(LOCAL_NAME)) and (
         (device_name := advertisement_data.local_name or device.name) is None
         or not _memorized_fnmatch(
             device_name,
