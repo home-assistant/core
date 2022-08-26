@@ -165,10 +165,10 @@ class BluetoothMatcherIndex:
 
     def __init__(self) -> None:
         """Initialize the matcher index."""
-        self.local_name: dict[str, list[_MatcherTypes]] = {}
-        self.service_uuid: dict[str, list[_MatcherTypes]] = {}
-        self.service_data_uuid: dict[str, list[_MatcherTypes]] = {}
-        self.manufacturer_id: dict[int, list[_MatcherTypes]] = {}
+        self.local_name: dict[str, list[BluetoothMatcherOptional]] = {}
+        self.service_uuid: dict[str, list[BluetoothMatcherOptional]] = {}
+        self.service_data_uuid: dict[str, list[BluetoothMatcherOptional]] = {}
+        self.manufacturer_id: dict[int, list[BluetoothMatcherOptional]] = {}
         self.service_uuid_set: set[str] = set()
         self.service_data_uuid_set: set[str] = set()
         self.manufacturer_id_set: set[int] = set()
@@ -232,7 +232,9 @@ class BluetoothMatcherIndex:
         self.service_data_uuid_set = set(self.service_data_uuid)
         self.manufacturer_id_set = set(self.manufacturer_id)
 
-    def _match(self, service_info: BluetoothServiceInfoBleak) -> list[_MatcherTypes]:
+    def _match(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> list[BluetoothMatcherOptional]:
         """Check for a match."""
         matches = []
         if len(service_info.name) >= LOCAL_NAME_MIN_MATCH_LENGTH:
@@ -341,7 +343,7 @@ def _local_name_to_index_key(local_name: str) -> str:
 
 
 def ble_device_matches(
-    matcher: BluetoothMatcher | BluetoothCallbackMatcherWithCallback,
+    matcher: BluetoothMatcherOptional,
     service_info: BluetoothServiceInfoBleak,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
