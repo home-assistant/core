@@ -156,7 +156,7 @@ class BluetoothMatcherIndex:
     """Bluetooth matcher for the bluetooth integration.
 
     The indexer puts each matcher in the bucket that it is most
-    likely to matcher. This allows us to only check the service infos
+    likely to match. This allows us to only check the service infos
     against each bucket to see if we should match against the data.
 
     This is optimized for cases were no service infos will be matched in
