@@ -9,7 +9,6 @@ from lektricowifi import lektricowifi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -88,13 +87,4 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
-        data = await self.device.charger_info()
-        entity_reg = er.async_get(self._hass)
-        my_entry = entity_reg.async_get(f"sensor.{self.friendly_name}_charger_state")
-        if my_entry is not None:
-            dev_reg = dr.async_get(self._hass)
-            if my_entry.device_id is not None:
-                device = dev_reg.async_get(my_entry.device_id)
-                if device is not None:
-                    dev_reg.async_update_device(device.id, sw_version=data.fw_version)
-        return data
+        return await self.device.charger_info()
