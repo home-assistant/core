@@ -20,4 +20,5 @@ MEDIA_SUPPORT_FULLYKIOSK = (
     MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
 )

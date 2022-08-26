@@ -6,6 +6,7 @@ from typing import Any
 from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,12 +31,12 @@ async def async_setup_entry(
 class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
     """Representation of a Fully Kiosk Browser media player entity."""
 
+    _attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
+
     def __init__(self, coordinator: FullyKioskDataUpdateCoordinator) -> None:
         """Initialize the media player entity."""
         super().__init__(coordinator)
-        self._attr_name = "Media Player"
         self._attr_unique_id = f"{coordinator.data['deviceID']}-mediaplayer"
-        self._attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
@@ -55,4 +56,16 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         """Set volume level, range 0..1."""
         await self.coordinator.fully.setAudioVolume(
             int(volume * 100), AUDIOMANAGER_STREAM_MUSIC
+        )
+
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the WebSocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
