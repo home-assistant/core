@@ -24,11 +24,6 @@ class EnOceanEntity(Entity):
             )
         )
 
-    @property
-    def full_device_name(self):
-        """Return the device name including the device's EnOcean id."""
-        return ((self.dev_name + " [" + self.dev_id_string() + "]").strip(),)
-
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
 

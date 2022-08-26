@@ -86,8 +86,6 @@ async def async_setup_entry(
     for device in devices:
         if device["eep"] == "A5-12-01":
             device_id = from_hex_string(device["id"])
-            # sender_id = from_hex_string(device["sender_id"])
-
             async_add_entities(
                 [
                     EnOceanSwitch(device_id, device["name"], 0),
@@ -115,8 +113,8 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     @property
     def name(self):
-        """Return the device name."""
-        return self.dev_name + " [" + str(self.channel) + "]"
+        """Return the entity name."""
+        return self.dev_name + " Channel " + str(self.channel)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -169,7 +167,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Get device info."""
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.full_device_name,
+            "name": self.dev_name,
             "manufacturer": "",
             "model": "",
             "sw_version": "",

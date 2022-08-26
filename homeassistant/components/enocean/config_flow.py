@@ -205,14 +205,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
-        if user_input is not None:
-            command = user_input["command"]
-            if command == "add_device":
-                return await self.async_step_add_device()
-
-            if command == "manage_devices":
-                return await self.async_step_manage_devices()
-
         devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
         if len(devices) == 0:
@@ -227,7 +219,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             menu_options={
                 "add_device": "Add new device",
-                "manage_devices": "Manage configured devices",
+                "select_device": "Edit configured device",
+                "delete_devices": "Delete configured device(s)",
             },
         )
 
@@ -263,8 +256,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=ADD_DEVICE_SCHEMA,
         )
 
-    async def async_step_manage_devices(self, user_input=None) -> FlowResult:
-        """Manage the configured EnOcean devices."""
+    async def async_step_select_device(self, user_input=None) -> FlowResult:
+        """Select a configured EnOcean device."""
+
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
             selector.SelectOptionDict(
@@ -276,7 +270,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             device_id = user_input[CONF_DEVICE]
-            command = user_input[CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS]
 
             # find the device belonging to the device_id
             device = None
@@ -285,54 +278,56 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     device = dev
                     break
 
-            if command == ENOCEAN_DELETE_DEVICE_COMMAND:
-                devices.remove(device)
-                return self.async_create_entry(
-                    title="", data={CONF_ENOCEAN_DEVICES: devices}
-                )
+            return await self.async_step_edit_device(None, device)
 
-            if command == ENOCEAN_EDIT_DEVICE_COMMAND:
-                return await self.async_step_edit_device(None, device)
-
-        manage_devices_schema = vol.Schema(
+        select_device_schema = vol.Schema(
             {
                 vol.Required(CONF_DEVICE, default="none"): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=device_list)
-                ),
-                vol.Optional(
-                    CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS,
-                    default=ENOCEAN_EDIT_DEVICE_COMMAND,
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=ENOCEAN_MANAGE_DEVICE_COMMANDS
-                    )
-                ),
+                )
             }
         )
 
         return self.async_show_form(
-            step_id="manage_devices",
-            data_schema=manage_devices_schema,
+            step_id="select_device",
+            data_schema=select_device_schema,
         )
 
     async def async_step_edit_device(self, user_input=None, device=None) -> FlowResult:
         """Edit an EnOcean device."""
+        default_device_id = "none"
+        if device is not None:
+            default_device_id = device["id"]
+
+        default_device_name = "none"
+        if device is not None:
+            default_device_name = device["name"]
+
+        default_eep = "none"
+        if device is not None:
+            default_eep = device["eep"]
+
+        default_sender_id = "none"
+        if device is not None:
+            default_sender_id = device["sender_id"]
 
         edit_device_schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_ENOCEAN_DEVICE_ID, default=device["id"]
+                    CONF_ENOCEAN_DEVICE_ID, default=default_device_id
                 ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(options=[device["id"]])
+                    selector.SelectSelectorConfig(options=[default_device_id])
                 ),
                 vol.Required(
-                    CONF_ENOCEAN_EQUIPMENT_PROFILE, default=device["eep"]
+                    CONF_ENOCEAN_EQUIPMENT_PROFILE, default=default_eep
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=ENOCEAN_EQUIPMENT_PROFILES)
                 ),
-                vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=device["name"]): str,
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_NAME, default=default_device_name
+                ): str,
                 vol.Optional(
-                    CONF_ENOCEAN_SENDER_ID, default=device["sender_id"]
+                    CONF_ENOCEAN_SENDER_ID, default=default_sender_id
                 ): selector.SelectSelector(
                     # For now, the list of sender_ids will always be empty. For a
                     # later version, it shall be pre-filled with the dongles chip ID
@@ -348,4 +343,45 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="edit_device",
             data_schema=edit_device_schema,
+        )
+
+    async def async_step_delete_devices(self, user_input=None) -> FlowResult:
+        """Delete one or multiple EnOcean devices."""
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+        device_list = [
+            selector.SelectOptionDict(
+                value=device["id"], label=device["name"] + " [" + device["id"] + "]"
+            )
+            for device in devices
+        ]
+        device_list.sort(key=lambda entry: entry["label"].lower())
+
+        if user_input is not None:
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+
+            # find the device belonging to the device_id
+            device = None
+            for dev in devices:
+                if dev["id"] == device_id:
+                    device = dev
+                    break
+
+            devices.remove(device)
+            return self.async_create_entry(
+                title="", data={CONF_ENOCEAN_DEVICES: devices}
+            )
+
+        delete_devices_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_ID, default="none"
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=device_list)
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="delete_devices",
+            data_schema=delete_devices_schema,
         )

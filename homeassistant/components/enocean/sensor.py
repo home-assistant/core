@@ -210,7 +210,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name)
         self.entity_description = description
-        self._attr_name = f"{description.name} {dev_name}"
+        self._attr_name = f"{dev_name} {description.name}"
         self._attr_unique_id = description.unique_id(dev_id)
 
     async def async_added_to_hass(self) -> None:
@@ -252,7 +252,7 @@ class EnOceanPowerSensor(EnOceanSensor):
         """Get device info."""
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.full_device_name,
+            "name": self.dev_name,
             "manufacturer": "",
             "model": "",
             "sw_version": "",
@@ -314,7 +314,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         """Get device info."""
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.full_device_name,
+            "name": self.dev_name,
             "manufacturer": "",
             "model": "",
             "sw_version": "",

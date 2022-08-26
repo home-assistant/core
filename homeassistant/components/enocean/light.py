@@ -147,7 +147,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         """Get device info."""
         return {
             "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.full_device_name,
+            "name": self.dev_name,
             "manufacturer": "Eltako",
             "model": "FUD61NPN",
             "sw_version": "",
