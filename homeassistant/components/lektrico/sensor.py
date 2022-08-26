@@ -1,6 +1,7 @@
 """Support for Lektrico charging station sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -33,177 +34,73 @@ from .const import DOMAIN
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
-    @classmethod
-    def get_native_value(cls, data: Any) -> float | str | int | None:
-        """Return None."""
-        return None
-
-
-@dataclass
-class ChargerStateSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Charger State sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> str:
-        """Get the charger_state."""
-        return str(data.charger_state)
-
-
-@dataclass
-class ChargingTimeSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Charging Time sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> int:
-        """Get the charging_time."""
-        return int(data.charging_time)
-
-
-@dataclass
-class CurrentSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Current sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> float:
-        """Get the current."""
-        return float(data.current)
-
-
-@dataclass
-class InstantPowerSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Instant Power sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> float:
-        """Get the instant_power."""
-        return float(data.instant_power)
-
-
-@dataclass
-class SessionEnergySensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Session Energy sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> float:
-        """Get the session_energy."""
-        return float(data.session_energy)
-
-
-@dataclass
-class TemperatureSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Temperature sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> float:
-        """Get the temperature."""
-        return float(data.temperature)
-
-
-@dataclass
-class TotalChargedEnergySensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Total Charged Energy sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> int:
-        """Get the total_charged_energy."""
-        return int(data.total_charged_energy)
-
-
-@dataclass
-class VoltageSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Voltage sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> float:
-        """Get the voltage."""
-        return float(data.voltage)
-
-
-@dataclass
-class InstallCurrentSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Install Current sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> int:
-        """Get the install_current."""
-        return int(data.install_current)
-
-
-@dataclass
-class DynamicCurrentSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Dynamic Current sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> int:
-        """Get the dynamic_current."""
-        return int(data.dynamic_current)
-
-
-@dataclass
-class LedMaxBrightnessSensorEntityDescription(LektricoSensorEntityDescription):
-    """A class that describes the Lektrico Led Max Brightness sensor entity."""
-
-    @classmethod
-    def get_native_value(cls, data: Any) -> int:
-        """Get the led_max_brightness."""
-        return int(data.led_max_brightness)
+    value: Callable[[Any], float | str | int] | None = None
 
 
 SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
-    ChargerStateSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="charger_state",
         name="Charger state",
+        value=lambda data: str(data.charger_state),
     ),
-    ChargingTimeSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="charging_time",
         name="Charging time",
         native_unit_of_measurement=TIME_SECONDS,
+        value=lambda data: int(data.charging_time),
     ),
-    CurrentSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="current",
         name="Current",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        value=lambda data: float(data.current),
     ),
-    InstantPowerSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="instant_power",
         name="Instant power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
+        value=lambda data: float(data.instant_power),
     ),
-    SessionEnergySensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="session_energy",
         name="Session energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value=lambda data: float(data.session_energy),
     ),
-    TemperatureSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="temperature",
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        value=lambda data: float(data.temperature),
     ),
-    TotalChargedEnergySensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="total_charged_energy",
         name="Total charged energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value=lambda data: int(data.total_charged_energy),
     ),
-    VoltageSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda data: float(data.voltage),
     ),
-    InstallCurrentSensorEntityDescription(
+    LektricoSensorEntityDescription(
         key="install_current",
         name="Install current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        value=lambda data: int(data.install_current),
     ),
 )
 
@@ -254,4 +151,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | str | int | None:
         """Return the state of the sensor."""
-        return self.entity_description.get_native_value(self.coordinator.data)
+        if self.entity_description.value is None:
+            return None
+        return self.entity_description.value(self.coordinator.data)
