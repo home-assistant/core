@@ -1,6 +1,6 @@
 calibrate:
   name: Calibrate
-  description: Calibration - Set mode, depth and press&hold duration. Warning - this will send a push command to the device
+  description: Calibration - Set depth, press & hold duration, and operation mode. Warning - this will send a push command to the device
   fields:
     entity_id:
       name: Entity
@@ -20,7 +20,7 @@ calibrate:
           step: 1
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
     duration:
       name: Duration
       description: Duration in seconds

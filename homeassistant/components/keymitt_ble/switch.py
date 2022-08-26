@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 
 CALIBRATE = "calibrate"
 CALIBRATE_SCHEMA = {
-        vol.Required("depth"): cv.positive_int,
-        vol.Required("duration"): cv.positive_int,
-        vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
+    vol.Required("depth"): cv.positive_int,
+    vol.Required("duration"): cv.positive_int,
+    vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
 }
 
 
@@ -56,7 +56,7 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.coordinator.api.is_on
 
