@@ -25,7 +25,6 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -62,6 +61,8 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
+    STARTUP_FAILURE_DELAY_S,
+    STARTUP_RETRIES,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -166,17 +167,27 @@ class ZHAGateway:
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
         app_config = app_controller_cls.SCHEMA(app_config)
-        try:
-            self.application_controller = await app_controller_cls.new(
-                app_config, auto_form=True, start_radio=True
-            )
-        except (asyncio.TimeoutError, SerialException, OSError) as exception:
-            _LOGGER.error(
-                "Couldn't start %s coordinator",
-                self.radio_description,
-                exc_info=exception,
-            )
-            raise ConfigEntryNotReady from exception
+
+        for attempt in range(STARTUP_RETRIES):
+            try:
+                self.application_controller = await app_controller_cls.new(
+                    app_config, auto_form=True, start_radio=True
+                )
+            except (asyncio.TimeoutError, SerialException, OSError) as exc:
+                _LOGGER.warning(
+                    "Couldn't start %s coordinator (attempt %s of %s)",
+                    self.radio_description,
+                    attempt + 1,
+                    STARTUP_RETRIES,
+                    exc_info=exc,
+                )
+
+                if attempt == STARTUP_RETRIES - 1:
+                    raise exc
+
+                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
+            else:
+                break
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
