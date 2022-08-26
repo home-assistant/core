@@ -478,6 +478,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:sd",
             name="Format SD Card",
             entity_category=EntityCategory.CONFIG,
+            entity_registry_visible_default=False,
         ),
         SwitchEntityDescription(
             key=DPCode.DEVICE_RESTART,
