@@ -160,6 +160,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in devices:
         eep = device["eep"]
         device_id = from_hex_string(device["id"])
+        device_name = device["name"]
 
         # Temperature sensors
         if eep[0:5] == "A5-02":
@@ -181,7 +182,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 [
                     EnOceanTemperatureSensor(
                         device_id,
-                        device["name"],
+                        device_name,
                         SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
@@ -191,7 +192,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ]
             )
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+        if eep == "A5-12-01":
+            async_add_entities(
+                [EnOceanPowerSensor(device_id, device_name, SENSOR_DESC_POWER)]
+            )
+
+
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
@@ -240,6 +246,18 @@ class EnOceanPowerSensor(EnOceanSensor):
             divisor = packet.parsed["DIV"]["raw_value"]
             self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "",
+            "model": "",
+            "sw_version": "",
+            "via_device": (DOMAIN, "not yet set"),
+        }
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
