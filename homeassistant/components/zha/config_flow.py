@@ -85,6 +85,37 @@ def _format_backup_choice(
     return f"{backup.backup_time.strftime('%c')} ({identifier})"
 
 
+def _allow_overwrite_ezsp_ieee(
+    backup: zigpy.backups.NetworkBackup,
+) -> zigpy.backups.NetworkBackup:
+    """Return a new backup with the flag to allow overwriting the EZSP EUI64."""
+    new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
+    new_stack_specific.setdefault("ezsp", {})[
+        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+    ] = True
+
+    return backup.replace(
+        network_info=backup.network_info.replace(stack_specific=new_stack_specific)
+    )
+
+
+def _prevent_overwrite_ezsp_ieee(
+    backup: zigpy.backups.NetworkBackup,
+) -> zigpy.backups.NetworkBackup:
+    """Return a new backup without the flag to allow overwriting the EZSP EUI64."""
+    if "ezsp" not in backup.network_info.stack_specific:
+        return backup
+
+    new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
+    new_stack_specific.setdefault("ezsp", {}).pop(
+        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it", None
+    )
+
+    return backup.replace(
+        network_info=backup.network_info.replace(stack_specific=new_stack_specific)
+    )
+
+
 class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -166,33 +197,6 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return True
 
         return False
-
-    def _allow_overwrite_ezsp_ieee(
-        self, backup: zigpy.backups.NetworkBackup
-    ) -> zigpy.backups.NetworkBackup:
-        new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-        new_stack_specific.setdefault("ezsp", {})[
-            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
-        ] = True
-
-        return backup.replace(
-            network_info=backup.network_info.replace(stack_specific=new_stack_specific)
-        )
-
-    def _prevent_overwrite_ezsp_ieee(
-        self, backup: zigpy.backups.NetworkBackup
-    ) -> zigpy.backups.NetworkBackup:
-        if "ezsp" not in backup.network_info.stack_specific:
-            return backup
-
-        new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-        new_stack_specific.setdefault("ezsp", {}).pop(
-            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it", None
-        )
-
-        return backup.replace(
-            network_info=backup.network_info.replace(stack_specific=new_stack_specific)
-        )
 
     async def _async_create_radio_entity(self):
         device_settings = self._device_settings.copy()
@@ -444,7 +448,7 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Since we are going to be restoring the backup anyways, write it to the
             # radio without overwriting the IEEE but don't take a backup with these
             # temporary settings
-            temp_backup = self._prevent_overwrite_ezsp_ieee(self._chosen_backup)
+            temp_backup = _prevent_overwrite_ezsp_ieee(self._chosen_backup)
             await self._restore_backup(temp_backup, create_new=False)
             await self._async_load_network_settings()
 
@@ -464,7 +468,7 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             backup = self._chosen_backup
 
             if user_input[OVERWRITE_COORDINATOR_IEEE]:
-                backup = self._allow_overwrite_ezsp_ieee(backup)
+                backup = _allow_overwrite_ezsp_ieee(backup)
 
             # If the user declined to overwrite the IEEE *and* we wrote the backup to
             # their empty radio above, restoring it again would be redundant.

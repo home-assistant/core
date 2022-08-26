@@ -964,10 +964,8 @@ async def test_hardware_invalid_data(hass, data):
 
 def test_allow_overwrite_ezsp_ieee():
     """Test modifying the backup to allow bellows to override the IEEE address."""
-    handler = config_flow.ZhaConfigFlowHandler()
-
     backup = zigpy.backups.NetworkBackup()
-    new_backup = handler._allow_overwrite_ezsp_ieee(backup)
+    new_backup = config_flow._allow_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
     assert (
@@ -1067,9 +1065,7 @@ def test_parse_uploaded_backup(process_mock):
     assert backup == parsed_backup
 
 
-@patch(
-    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
-)
+@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_non_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
@@ -1101,9 +1097,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
-@patch(
-    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
-)
+@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
@@ -1143,9 +1137,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
-@patch(
-    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
-)
+@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
@@ -1333,9 +1325,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
-@patch(
-    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
-)
+@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
 async def test_ezsp_restore_without_settings_change_ieee(
     allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
