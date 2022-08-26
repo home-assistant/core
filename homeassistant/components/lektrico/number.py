@@ -171,7 +171,6 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
 
         self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{self.serial_number}_{description.name}"
-        # ex: 500006_No Authorisation
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.serial_number)},
             model=f"1P7K {self.serial_number} rev.{self.board_revision}",
