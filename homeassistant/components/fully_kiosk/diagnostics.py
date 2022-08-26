@@ -20,6 +20,8 @@ DEVICE_INFO_TO_REDACT = {
     "deviceID",
     "startUrl",
     "currentPage",
+    "SSID",
+    "BSSID",
 }
 SETTINGS_TO_REDACT = {
     "startURL",
@@ -31,6 +33,24 @@ SETTINGS_TO_REDACT = {
     "authUsername",
     "mqttBrokerUrl",
     "kioskPin",
+    "wifiSSID",
+    "screensaverWallpaperURL",
+    "barcodeScanTargetUrl",
+    "launcherBgUrl",
+    "clientCaUrl",
+    "urlWhitelist",
+    "alarmSoundFileUrl",
+    "errorURL",
+    "actionBarIconUrl",
+    "kioskWifiPin",
+    "knoxApnConfig",
+    "injectJsCode",
+    "mdmApnConfig",
+    "mdmProxyConfig",
+    "wifiEnterpriseIdentity",
+    "sebExamKey",
+    "sebConfigKey",
+    "kioskPinEnc",
 }
 
 
