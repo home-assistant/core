@@ -312,24 +312,15 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
 
         super().remove(matcher)
 
-    def _match_addresses(
-        self, service_info: BluetoothServiceInfoBleak
-    ) -> list[BluetoothCallbackMatcherWithCallback]:
-        """Check for a match."""
-        return [
-            matcher
-            for matcher in self.address.get(service_info.address, [])
-            if ble_device_matches(matcher, service_info)
-        ]
-
     def match_callbacks(
         self, service_info: BluetoothServiceInfoBleak
     ) -> list[BluetoothCallbackMatcherWithCallback]:
         """Check for a match."""
-        return cast(
-            list[BluetoothCallbackMatcherWithCallback],
-            self._match(service_info).extend(self._match_addresses(service_info)),
-        )
+        matches = self._match(service_info)
+        for matcher in self.address.get(service_info.address, []):
+            if ble_device_matches(matcher, service_info):
+                matches.append(matcher)
+        return cast(list[BluetoothCallbackMatcherWithCallback], matches)
 
 
 def _local_name_to_index_key(local_name: str) -> str:
