@@ -41,7 +41,7 @@ def _async_device_entities(
     unadopted_descs: Sequence[ProtectRequiredKeysMixin],
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
-    if len(descs) + len(unadopted_descs) == 0:
+    if not descs and not unadopted_descs:
         return []
 
     entities: list[ProtectDeviceEntity] = []
@@ -162,7 +162,7 @@ def async_all_device_entities(
     elif ufp_device.model == ModelType.CHIME:
         descs = chime_descs
 
-    if len(descs) + len(unadopted_descs) == 0 or ufp_device.model is None:
+    if not descs and not unadopted_descs or ufp_device.model is None:
         return []
     return _async_device_entities(
         data, klass, ufp_device.model, descs, unadopted_descs, ufp_device
