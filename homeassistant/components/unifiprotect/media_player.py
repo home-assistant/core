@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     Camera,
@@ -57,6 +57,7 @@ async def async_setup_entry(
 
     entities = []
     for device in data.get_by_types({ModelType.CAMERA}):
+        device = cast(Camera, device)
         if device.feature_flags.has_speaker:
             entities.append(ProtectMediaPlayer(data, device))
 

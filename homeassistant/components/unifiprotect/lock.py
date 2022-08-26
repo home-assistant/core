@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     Doorlock,
@@ -44,6 +44,7 @@ async def async_setup_entry(
 
     entities = []
     for device in data.get_by_types({ModelType.DOORLOCK}):
+        device = cast(Doorlock, device)
         entities.append(ProtectLock(data, device))
 
     async_add_entities(entities)

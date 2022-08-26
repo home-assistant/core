@@ -4,12 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Union
+from typing import Any, Union, cast
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     NVR,
     Bootstrap,
+    Camera,
     Event,
     EventType,
     Liveview,
@@ -203,6 +204,7 @@ class ProtectData:
             )
             self.api.bootstrap.nvr.update_all_messages()
             for camera in self.get_by_types({ModelType.CAMERA}):
+                camera = cast(Camera, camera)
                 if camera.feature_flags.has_lcd_screen:
                     self._async_signal_device_update(camera)
 

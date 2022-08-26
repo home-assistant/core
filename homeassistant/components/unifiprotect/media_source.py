@@ -817,6 +817,7 @@ class ProtectMediaSource(MediaSource):
         cameras: list[BrowseMediaSource] = [await self._build_camera(data, "all")]
 
         for camera in data.get_by_types({ModelType.CAMERA}):
+            camera = cast(Camera, camera)
             if not camera.can_read_media(data.api.bootstrap.auth_user):
                 continue
             cameras.append(await self._build_camera(data, camera.id))

@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     NVR,
@@ -653,6 +653,7 @@ def _async_motion_entities(
         data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for device in devices:
+        device = cast(Camera, device)
         for description in MOTION_TRIP_SENSORS:
             entities.append(ProtectDeviceSensor(data, device, description))
             _LOGGER.debug(

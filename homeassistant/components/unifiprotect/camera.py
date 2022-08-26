@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 import logging
+from typing import cast
 
 from pyunifiprotect.data import (
     Camera as UFPCamera,
@@ -46,6 +47,7 @@ def get_camera_channels(
         data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for camera in devices:
+        camera = cast(UFPCamera, camera)
         if not camera.channels:
             if ufp_device is None:
                 # only warn on startup
