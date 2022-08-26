@@ -139,16 +139,13 @@ class LektricoSwitch(CoordinatorEntity, SwitchEntity):
     ) -> None:
         """Initialize Lektrico charger."""
         super().__init__(coordinator)
-        self.friendly_name = friendly_name
-        self.serial_number = coordinator.serial_number
-        self.board_revision = coordinator.board_revision
         self.entity_description = description
 
-        self._attr_unique_id = f"{self.serial_number}_{description.name}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial_number)},
-            model=f"1P7K {self.serial_number} rev.{self.board_revision}",
-            name=self.friendly_name,
+            identifiers={(DOMAIN, coordinator.serial_number)},
+            model=f"1P7K {coordinator.serial_number} rev.{coordinator.board_revision}",
+            name=friendly_name,
             manufacturer="Lektrico",
             sw_version=coordinator.data.fw_version,
         )
