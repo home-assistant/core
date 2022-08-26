@@ -54,6 +54,15 @@ SUPPORTED_MINIMAL = (
 SUPPORTED_TURN_OFF = MediaPlayerEntityFeature.TURN_OFF
 SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
 
+# Enable to remove clones (second / third, nth instances)
+# of any player when the player exits.  Not enabled by
+# default because events in the logbook disappear when
+# the player goes away.
+# Clones are always removed upon start or reload of the
+# integration, since there is no value in keeping them
+# around.
+REMOVE_CLONES_WHILE_RUNNING = False
+
 
 def _feat2bitfield(bitfield: int, obj: object) -> str:
     fields = []
@@ -374,14 +383,12 @@ class EntityManager:
                     "We have been deauthorized -- no further updates "
                     "will occur until reauthentication"
                 )
-                await self._mark_all_entities_unavailable()
                 self.config_entry.async_start_reauth(self.hass)
                 await self.stop()
             except hassmpris_client.ClientException as exc:
                 _LOGGER.error(
                     "%X: We lost connectivity (%s) -- reconnecting", id(self), exc
                 )
-                await self._mark_all_entities_unavailable()
                 await asyncio.sleep(5)
             except Exception as exc:
                 await self.stop(exception=exc)
@@ -411,68 +418,147 @@ class EntityManager:
         for entity in self.players.values():
             await entity.set_available(self.client)
 
-    async def _sync_entity_entries(self):
-        reg = er.async_get(self.hass)
+    async def _finish_initial_players_sync(self):
+        """
+        Sync know player and registry entry state.
 
-        def player_id_from_entity(entity: er.RegistryEntry) -> str:
+        Called when the agent has sent us the full list of players it knows
+        about, and we are ready to materialize players for entities in the
+        registry but currently unknown to the agent.
+
+        This is necessary so that Home Assistant can later request the agent
+        turn on (spawn) a known player that is currently off.
+        """
+
+        def get_player_id(
+            entity: er.RegistryEntry | HASSMPRISEntity,
+        ) -> str:
             return entity.unique_id.split("-", 1)[1]
 
-        def is_copy(player_id: str) -> bool:
-            return bool(re.match(".* [(]\\d+[)]", player_id))
+        reg = er.async_get(self.hass)
+
+        player_entries = {
+            get_player_id(e): e
+            for e in reg.entities.values()
+            if e.config_entry_id == self.config_entry.entry_id
+        }
+
+        player_ids = {
+            get_player_id(entity)
+            for entity in list(player_entries.values()) + list(self.players.values())
+        }
+
+        for player_id in player_ids:
+            self._sync_player_presence(
+                player_id,
+                self.players.get(player_id),
+                player_entries.get(player_id),
+            )
+
+    def _sync_player_presence(
+        self,
+        player_id: str,
+        player: HASSMPRISEntity | None,
+        entry: er.RegistryEntry | None,
+    ):
+        """Sync entity and config entry for the player.
+
+        `player` will be None if the directory of known players does not
+        contain it.  Else it will be defined.
+        """
+
+        def is_first_instance() -> bool:
+            return not bool(re.match(".* [(]\\d+[)]", player_id))
 
         def is_off(player: HASSMPRISEntity) -> bool:
             offstates = [STATE_OFF, STATE_UNKNOWN]
             return player.state in offstates
 
-        def known(player_id: str) -> HASSMPRISEntity | None:
-            return self.players.get(player_id)
+        if is_first_instance():
+            # This is (by ID) the first instance of a player.
+            if player is None:
+                # We do not have a player in our directory that represents
+                # this entity in the registry.  So we "bring it back", in OFF
+                # state.
+                _LOGGER.debug("%X: Resuscitating known player %s", id(self), player_id)
+                entity = HASSMPRISEntity(
+                    self.client,
+                    self.config_entry.entry_id,
+                    player_id,
+                    initial_state=STATE_OFF,
+                )
+                self.players[player_id] = entity
+                self.async_add_entities([entity])
+        else:
+            # This is a second instance of a player.
+            # E.g. `VLC media player`` is not a second instance,
+            # but `VLC media player 2`` is in fact a second instance.
+            # Many media players can launch multiple instances, but we
+            # don't necessarily want to keep all those instances around
+            # if they are off or unknown.
 
-        for entity in [
-            e
-            for e in reg.entities.values()
-            if e.config_entry_id == self.config_entry.entry_id
-        ]:
-            player_id = player_id_from_entity(entity)
-            if is_copy(player_id):
-                remove = True
-                if player := known(player_id):
-                    if is_off(player):
-                        del self.players[player_id]
-                    else:
-                        # Player is not off.  Not removing.
-                        remove = False
-                if remove:
-                    _LOGGER.debug("%X: Removing copy %s", id(self), player_id)
-                    reg.async_remove(entity.entity_id)
-            else:
-                if not known(player_id):
+            # The copycat player is in the directory, but its state is off
+            # or unknown.  This means the agent knew about it at some
+            # point, but it is now gone.  So we remove it from the list of
+            # players we know about.
+            remove_from_directory = player and is_off(player)
+
+            # The agent does not know about this player, or the player
+            # is off / unknown.  That means we can remove its entity record
+            # from the registry (to keep the record clean of entities
+            # which may very well never reappear).
+            remove_from_registry = not player or remove_from_directory
+
+            if remove_from_directory:
+                _LOGGER.debug(
+                    "%X: Removing copy %s from directory", id(self), player_id
+                )
+                del self.players[player_id]
+            if remove_from_registry:
+                entity_id = (
+                    entry.entity_id if entry else player.entity_id if player else None
+                )
+                if entity_id is not None:
+                    # Entry and player cannot both be None, but the typing
+                    # machinery does not know that.
                     _LOGGER.debug(
-                        "%X: Resuscitating known player %s", id(self), player_id
-                    )
-                    entity = HASSMPRISEntity(
-                        self.client,
-                        self.config_entry.entry_id,
+                        "%X: Removing copy %s from registry (entity ID %s)",
+                        id(self),
                         player_id,
-                        initial_state=STATE_OFF,
+                        entity_id,
                     )
-                    self.players[player_id] = entity
-                    self.async_add_entities([entity])
+                    reg = er.async_get(self.hass)
+                    reg.async_remove(entity_id)
 
     async def _monitor_updates(self):
-        marked = False
-        async for update in self.client.stream_updates():
-            if not marked:
-                await self._mark_all_entities_available()
-            marked = True
-            if update.HasField("player"):
-                await self._handle_update(update.player)
-            else:
-                await self._sync_entity_entries()
+        """Obtain a real-time eed of player updates."""
+        try:
+            started_syncing = False
+            finished_syncing = False
+            async for update in self.client.stream_updates():
+                if not started_syncing:
+                    # First update.  Mark entities available.
+                    await self._mark_all_entities_available()
+                    started_syncing = True
+                if update.HasField("player"):
+                    # There's a player update incoming.
+                    await self._handle_update(update.player)
+                elif not finished_syncing:
+                    # Ah, this is the signal that all players known to the agent
+                    # have had their information sent to Home Assistant.
+                    await self._finish_initial_players_sync()
+                    finished_syncing = True
+        finally:
+            # Whether due to error or request, we no longer get updates.
+            # All entities are now unavailable from the standpoint of the
+            # HASS MPRIS client, so we mark them as such.
+            await self._mark_all_entities_unavailable()
 
     async def _handle_update(
         self,
         discovery_data: mpris_pb2.MPRISUpdateReply,
     ):
+        """Handle a single player update."""
         _LOGGER.debug("%X: Handling update: %s", id(self), discovery_data)
         state = STATE_IDLE
         fire_status_update_observed = False
@@ -504,24 +590,28 @@ class EntityManager:
         player_id = discovery_data.player_id
 
         if player_id in self.players:
-            entity: HASSMPRISEntity = self.players[player_id]
+            player: HASSMPRISEntity = self.players[player_id]
         else:
-            entity = HASSMPRISEntity(
+            player = HASSMPRISEntity(
                 self.client,
                 self.config_entry.entry_id,
                 player_id,
             )
-            self.async_add_entities([entity])
-            self.players[player_id] = entity
+            self.async_add_entities([player])
+            self.players[player_id] = player
 
         if fire_status_update_observed:
-            await entity.update_state(state)
+            await player.update_state(state)
         if fire_metadata_update_observed:
-            await entity.update_metadata(metadata)
+            await player.update_metadata(metadata)
         if fire_properties_update_observed:
-            await entity.update_mpris_properties(mpris_properties)
+            await player.update_mpris_properties(mpris_properties)
         if fire_seeked_observed:
-            await entity.update_position(position)
+            await player.update_position(position)
+
+        # Final hook to remove duplicates which are gone.
+        if fire_status_update_observed and REMOVE_CLONES_WHILE_RUNNING:
+            self._sync_player_presence(player_id, player, None)
 
 
 async def async_setup_entry(
