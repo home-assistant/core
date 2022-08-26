@@ -187,7 +187,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._set_data(
-            f"MPRIS on {self._host}",
+            f"MPRIS on {user_input[CONF_HOST]}",
             user_input[CONF_HOST],
             user_input[CONF_CAKES_PORT],
             user_input[CONF_MPRIS_PORT],
