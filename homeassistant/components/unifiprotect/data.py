@@ -21,6 +21,7 @@ from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -169,6 +170,18 @@ class ProtectData:
             async_dispatcher_send(self._hass, _ufpd(self._entry, DISPATCH_ADD), device)
 
     @callback
+    def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
+        registry = dr.async_get(self._hass)
+        device_entry = registry.async_get_device(
+            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+        )
+        if device_entry:
+            _LOGGER.debug("Device removed: %s", device.id)
+            registry.async_update_device(
+                device_entry.id, remove_config_entry_id=self._entry.entry_id
+            )
+
+    @callback
     def _async_update_device(
         self, device: ProtectAdoptableDeviceModel | NVR, changed_data: dict[str, Any]
     ) -> None:
@@ -195,8 +208,9 @@ class ProtectData:
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
-        # removed packets are not processed yet
         if message.new_obj is None:
+            if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
+                self._async_remove_device(message.old_obj)
             return
 
         obj = message.new_obj
