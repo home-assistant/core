@@ -2,10 +2,10 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
+    CONF_ENTITY_ID,
     CONF_NAME,
     CONF_TYPE,
 )
@@ -81,7 +81,7 @@ class KonnectedBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""
-        self._data[ATTR_ENTITY_ID] = self.entity_id
+        self._data[CONF_ENTITY_ID] = self.entity_id
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, f"konnected.{self.entity_id}.update", self.async_set_state

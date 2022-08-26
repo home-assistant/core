@@ -14,11 +14,12 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
+    CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_DISCOVERY,
+    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_REPEAT,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_SWITCHES,
     CONF_TYPE,
     CONF_ZONE,
@@ -365,7 +367,7 @@ class KonnectedView(HomeAssistantView):
                 "unregistered sensor/actuator", status_code=HTTPStatus.BAD_REQUEST
             )
 
-        zone_data["device_id"] = device_id
+        zone_data[CONF_DEVICE_ID] = device_id
 
         for attr in ("state", "temp", "humi", "addr"):
             value = payload.get(attr)
@@ -423,14 +425,14 @@ class KonnectedView(HomeAssistantView):
             resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup
-        if zone_entity_id := zone.get(ATTR_ENTITY_ID):
-            resp["state"] = self.binary_value(
+        if zone_entity_id := zone.get(CONF_ENTITY_ID):
+            resp[CONF_STATE] = self.binary_value(
                 hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
             )
             return self.json(resp)
 
         _LOGGER.warning("Konnected entity not yet setup, returning default")
-        resp["state"] = self.binary_value(STATE_OFF, zone[CONF_ACTIVATION])
+        resp[CONF_STATE] = self.binary_value(STATE_OFF, zone[CONF_ACTIVATION])
         return self.json(resp)
 
     async def put(self, request: Request, device_id) -> Response:

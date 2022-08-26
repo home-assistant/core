@@ -5,19 +5,20 @@ import logging
 import konnected
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_STATE,
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
     CONF_DISCOVERY,
+    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
     CONF_REPEAT,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_SWITCHES,
     CONF_TYPE,
     CONF_ZONE,
@@ -120,7 +121,7 @@ class AlarmPanel:
             )
             self.status = await self.client.get_status()
             self.api_version = KONN_API_VERSIONS.get(
-                self.status.get("model", KONN_MODEL), KONN_API_VERSIONS[KONN_MODEL]
+                self.status.get(CONF_MODEL, KONN_MODEL), KONN_API_VERSIONS[KONN_MODEL]
             )
             _LOGGER.info(
                 "Connected to new %s device", self.status.get("model", "Konnected")
@@ -202,12 +203,12 @@ class AlarmPanel:
                     CONF_NAME, f"Konnected {self.device_id[6:]} Zone {zone}"
                 ),
                 CONF_INVERSE: entity.get(CONF_INVERSE),
-                ATTR_STATE: None,
+                CONF_STATE: None,
             }
             _LOGGER.debug(
                 "Set up binary_sensor %s (initial state: %s)",
-                binary_sensors[zone].get("name"),
-                binary_sensors[zone].get(ATTR_STATE),
+                binary_sensors[zone].get(CONF_NAME),
+                binary_sensors[zone].get(CONF_STATE),
             )
 
         actuators = []
@@ -220,7 +221,7 @@ class AlarmPanel:
                     CONF_NAME,
                     f"Konnected {self.device_id[6:]} Actuator {zone}",
                 ),
-                ATTR_STATE: None,
+                CONF_STATE: None,
                 CONF_ACTIVATION: entity[CONF_ACTIVATION],
                 CONF_MOMENTARY: entity.get(CONF_MOMENTARY),
                 CONF_PAUSE: entity.get(CONF_PAUSE),
@@ -246,7 +247,7 @@ class AlarmPanel:
                 "Set up %s sensor %s (initial state: %s)",
                 sensor.get(CONF_TYPE),
                 sensor.get(CONF_NAME),
-                sensor.get(ATTR_STATE),
+                sensor.get(CONF_STATE),
             )
 
         device_data = {
@@ -318,9 +319,9 @@ class AlarmPanel:
             sensor_config = self.stored_configuration[CONF_BINARY_SENSORS].get(
                 sensor_data.get(CONF_ZONE, sensor_data.get(CONF_PIN)), {}
             )
-            entity_id = sensor_config.get(ATTR_ENTITY_ID)
+            entity_id = sensor_config.get(CONF_ENTITY_ID)
 
-            state = bool(sensor_data.get(ATTR_STATE))
+            state = bool(sensor_data.get(CONF_STATE))
             if sensor_config.get(CONF_INVERSE):
                 state = not state
 
@@ -337,14 +338,14 @@ class AlarmPanel:
         desired_api_endpoint = desired_api_host + ENDPOINT_ROOT
 
         return {
-            "sensors": self.async_binary_sensor_configuration(),
+            CONF_SENSORS: self.async_binary_sensor_configuration(),
             "actuators": self.async_actuator_configuration(),
             "dht_sensors": self.async_dht_sensor_configuration(),
             "ds18b20_sensors": self.async_ds18b20_sensor_configuration(),
             "auth_token": self.config.get(CONF_ACCESS_TOKEN),
             "endpoint": desired_api_endpoint,
             "blink": self.options.get(CONF_BLINK, True),
-            "discovery": self.options.get(CONF_DISCOVERY, True),
+            CONF_DISCOVERY: self.options.get(CONF_DISCOVERY, True),
         }
 
     @callback
@@ -353,9 +354,9 @@ class AlarmPanel:
         settings = self.status["settings"] or {}
 
         return {
-            "sensors": [
+            CONF_SENSORS: [
                 {self.api_version: s[self.api_version]}
-                for s in self.status.get("sensors")
+                for s in self.status.get(CONF_SENSORS)
             ],
             "actuators": self.status.get("actuators"),
             "dht_sensors": self.status.get(CONF_DHT_SENSORS),
@@ -363,7 +364,7 @@ class AlarmPanel:
             "auth_token": settings.get("token"),
             "endpoint": settings.get("endpoint"),
             "blink": settings.get(CONF_BLINK),
-            "discovery": settings.get(CONF_DISCOVERY),
+            CONF_DISCOVERY: settings.get(CONF_DISCOVERY),
         }
 
     async def async_sync_device_config(self):

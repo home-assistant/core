@@ -19,15 +19,18 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
+    CONF_BASE,
     CONF_BINARY_SENSORS,
     CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
+    CONF_MAC,
     CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_REPEAT,
     CONF_SENSORS,
+    CONF_STATE,
     CONF_SWITCHES,
     CONF_TYPE,
     CONF_ZONE,
@@ -188,11 +191,11 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_PORT] = port
         try:
             status = await get_status(self.hass, host, port)
-            self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
+            self.data[CONF_ID] = status.get("chipId", status[CONF_MAC].replace(":", ""))
         except (CannotConnect, KeyError) as err:
             raise CannotConnect from err
         else:
-            self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+            self.data[CONF_MODEL] = status.get(CONF_MODEL, KONN_MODEL)
             self.data[CONF_ACCESS_TOKEN] = "".join(
                 random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
             )
@@ -286,9 +289,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data[CONF_HOST] = netloc[0]
                 self.data[CONF_PORT] = int(netloc[1])
                 self.data[CONF_ID] = status.get(
-                    "chipId", status["mac"].replace(":", "")
+                    "chipId", status[CONF_MAC].replace(":", "")
                 )
-                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+                self.data[CONF_MODEL] = status.get(CONF_MODEL, KONN_MODEL)
 
                 KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
                     CONF_HOST: self.data[CONF_HOST],
@@ -313,12 +316,12 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, self.data[CONF_HOST], self.data[CONF_PORT]
                 )
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors[CONF_BASE] = "cannot_connect"
             else:
                 self.data[CONF_ID] = status.get(
-                    "chipId", status["mac"].replace(":", "")
+                    "chipId", status[CONF_MAC].replace(":", "")
                 )
-                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+                self.data[CONF_MODEL] = status.get(CONF_MODEL, KONN_MODEL)
 
                 # save off our discovered host info
                 KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
@@ -330,8 +333,8 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={
-                "host": self.data.get(CONF_HOST, "Unknown"),
-                "port": self.data.get(CONF_PORT, "Unknown"),
+                CONF_HOST: self.data.get(CONF_HOST, "Unknown"),
+                CONF_PORT: self.data.get(CONF_PORT, "Unknown"),
             },
             data_schema=vol.Schema(
                 {
@@ -357,10 +360,10 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
-                    "model": KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]],
-                    "id": self.unique_id,
-                    "host": self.data[CONF_HOST],
-                    "port": self.data[CONF_PORT],
+                    CONF_MODEL: KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]],
+                    CONF_ID: self.unique_id,
+                    CONF_HOST: self.data[CONF_HOST],
+                    CONF_PORT: self.data[CONF_PORT],
                 },
             )
 
@@ -457,8 +460,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "model": KONN_PANEL_MODEL_NAMES[self.model],
-                    "host": self.entry.data[CONF_HOST],
+                    CONF_MODEL: KONN_PANEL_MODEL_NAMES[self.model],
+                    CONF_HOST: self.entry.data[CONF_HOST],
                 },
                 errors=errors,
             )
@@ -493,8 +496,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "model": KONN_PANEL_MODEL_NAMES[self.model],
-                    "host": self.entry.data[CONF_HOST],
+                    CONF_MODEL: KONN_PANEL_MODEL_NAMES[self.model],
+                    CONF_HOST: self.entry.data[CONF_HOST],
                 },
                 errors=errors,
             )
@@ -551,8 +554,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "model": KONN_PANEL_MODEL_NAMES[self.model],
-                    "host": self.entry.data[CONF_HOST],
+                    CONF_MODEL: KONN_PANEL_MODEL_NAMES[self.model],
+                    CONF_HOST: self.entry.data[CONF_HOST],
                 },
                 errors=errors,
             )
@@ -592,7 +595,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": f"Zone {self.active_cfg}"
+                    CONF_ZONE: f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper
                 },
@@ -663,7 +666,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": f"Zone {self.active_cfg}"
+                    CONF_ZONE: f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -693,7 +696,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": f"Zone {self.active_cfg}"
+                        CONF_ZONE: f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },
@@ -706,7 +709,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Allow the user to configure the IO options for switches."""
         errors = {}
         if user_input is not None:
-            zone = {"zone": self.active_cfg}
+            zone = {CONF_ZONE: self.active_cfg}
             zone.update(user_input)
             del zone[CONF_MORE_STATES]
             self.new_opt[CONF_SWITCHES] = self.new_opt.get(CONF_SWITCHES, []) + [zone]
@@ -755,10 +758,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": f"Zone {self.active_cfg}"
+                    CONF_ZONE: f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper(),
-                    "state": str(self.current_state),
+                    CONF_STATE: str(self.current_state),
                 },
                 errors=errors,
             )
@@ -807,10 +810,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": f"Zone {self.active_cfg}"
+                        CONF_ZONE: f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper(),
-                        "state": str(self.current_state),
+                        CONF_STATE: str(self.current_state),
                     },
                     errors=errors,
                 )
@@ -828,7 +831,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 else:
                     user_input[CONF_API_HOST] = ""
             except vol.Invalid:
-                errors["base"] = "bad_host"
+                errors[CONF_BASE] = "bad_host"
             else:
                 # no need to store the override - can infer
                 del user_input[CONF_OVERRIDE_API_HOST]
