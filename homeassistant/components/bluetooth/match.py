@@ -171,7 +171,12 @@ class BluetoothMatcherIndex:
         self.manufacturer_id_set: set[int] = set()
 
     def add(self, matcher: _MatcherTypes) -> None:
-        """Add a matcher to the index."""
+        """Add a matcher to the index.
+
+        Matchers must end up only in one bucket.
+
+        We put them in the bucket that they are most likely to match.
+        """
         if LOCAL_NAME in matcher:
             self.local_name.setdefault(
                 _local_name_to_index_key(matcher[LOCAL_NAME]), []
@@ -195,7 +200,11 @@ class BluetoothMatcherIndex:
             return
 
     def remove(self, matcher: _MatcherTypes) -> None:
-        """Remove a matcher from the index."""
+        """Remove a matcher from the index.
+
+        Matchers only end up in one bucket, so once we have
+        removed one, we are done.
+        """
         if LOCAL_NAME in matcher:
             self.local_name[_local_name_to_index_key(matcher[LOCAL_NAME])].remove(
                 matcher
@@ -269,7 +278,12 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
         self.address: dict[str, list[BluetoothCallbackMatcherWithCallback]] = {}
 
     def add_with_address(self, matcher: BluetoothCallbackMatcherWithCallback) -> None:
-        """Add a matcher to the index."""
+        """Add a matcher to the index.
+
+        Matchers must end up only in one bucket.
+
+        We put them in the bucket that they are most likely to match.
+        """
         if ADDRESS in matcher:
             self.address.setdefault(matcher[ADDRESS], []).append(matcher)
             return
@@ -279,7 +293,11 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
     def remove_with_address(
         self, matcher: BluetoothCallbackMatcherWithCallback
     ) -> None:
-        """Remove a matcher from the index."""
+        """Remove a matcher from the index.
+
+        Matchers only end up in one bucket, so once we have
+        removed one, we are done.
+        """
         if ADDRESS in matcher:
             self.address[matcher[ADDRESS]].remove(matcher)
             return
