@@ -97,7 +97,7 @@ class LockSwitchEntityDescription(LektricoSwitchEntityDescription):
 SENSORS: tuple[LektricoSwitchEntityDescription, ...] = (
     RequireAuthSwitchEntityDescription(
         key="require_auth",
-        name="Require Auth",
+        name="Require auth",
     ),
     LockSwitchEntityDescription(
         key="locked",

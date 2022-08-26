@@ -81,23 +81,23 @@ class ChargerResumeButtonEntityDescription(LektricoButtonEntityDescription):
 SENSORS: tuple[LektricoButtonEntityDescription, ...] = (
     ChargeStartButtonEntityDescription(
         key="charge_start",
-        name="Charger Start",
+        name="Charger start",
     ),
     ChargeStopButtonEntityDescription(
         key="charge_stop",
-        name="Charge Stop",
+        name="Charge stop",
     ),
     ChargerRestartButtonEntityDescription(
         key="charger_restart",
-        name="Charger Restart",
+        name="Charger restart",
     ),
     ChargerPauseButtonEntityDescription(
         key="charge_pause",
-        name="Charge Pause",
+        name="Charge pause",
     ),
     ChargerResumeButtonEntityDescription(
         key="charge_resume",
-        name="Charge Resume",
+        name="Charge resume",
     ),
 )
 

@@ -107,7 +107,7 @@ class UserCurrentNumberEntityDescription(LektricoNumberEntityDescription):
 SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
     LedBrightnessNumberEntityDescription(
         key="led_max_brightness",
-        name="Led Brightness",
+        name="Led brightness",
         native_min_value=20,
         native_max_value=100,
         native_step=5,
@@ -115,7 +115,7 @@ SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
     ),
     DynamicCurrentNumberEntityDescription(
         key="dynamic_current",
-        name="Dynamic Current",
+        name="Dynamic current",
         native_min_value=0,
         native_max_value=32,
         native_step=1,
@@ -123,7 +123,7 @@ SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
     ),
     UserCurrentNumberEntityDescription(
         key="user_current",
-        name="User Current",
+        name="User current",
         native_min_value=6,
         native_max_value=32,
         native_step=1,

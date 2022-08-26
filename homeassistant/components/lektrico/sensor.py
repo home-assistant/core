@@ -152,11 +152,11 @@ class LedMaxBrightnessSensorEntityDescription(LektricoSensorEntityDescription):
 SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ChargerStateSensorEntityDescription(
         key="charger_state",
-        name="Charger State",
+        name="Charger state",
     ),
     ChargingTimeSensorEntityDescription(
         key="charging_time",
-        name="Charging Time",
+        name="Charging time",
         native_unit_of_measurement=TIME_SECONDS,
     ),
     CurrentSensorEntityDescription(
@@ -168,14 +168,14 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     InstantPowerSensorEntityDescription(
         key="instant_power",
-        name="Instant Power",
+        name="Instant power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
     ),
     SessionEnergySensorEntityDescription(
         key="session_energy",
-        name="Session Energy",
+        name="Session energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
@@ -188,7 +188,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     TotalChargedEnergySensorEntityDescription(
         key="total_charged_energy",
-        name="Total Charged Energy",
+        name="Total charged energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -201,7 +201,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     InstallCurrentSensorEntityDescription(
         key="install_current",
-        name="Install Current",
+        name="Install current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
