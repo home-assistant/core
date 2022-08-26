@@ -51,7 +51,7 @@
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
           "override_connection_host": "Override Connection Host",
           "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
-          "ignored_devices": "Comma list of MAC addresses of devices to ignore"
+          "ignored_devices": "Comma separated list of MAC addresses of devices to ignore"
         }
       }
     },
