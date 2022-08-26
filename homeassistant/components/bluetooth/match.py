@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from fnmatch import translate
 from functools import lru_cache
 import re
-from typing import TYPE_CHECKING, Final, TypedDict, Union, cast
+from typing import TYPE_CHECKING, Final, Generic, TypedDict, TypeVar
 
 from lru import LRU  # pylint: disable=no-name-in-module
 
@@ -130,7 +130,7 @@ class IntegrationMatcher:
             # We have seen all fields so we can skip the rest of the matchers
             return matched_domains
         matched_domains = {
-            matcher[DOMAIN] for matcher in self._index.match_domains(service_info)
+            matcher[DOMAIN] for matcher in self._index.match(service_info)
         }
         if not matched_domains:
             return matched_domains
@@ -149,11 +149,11 @@ class IntegrationMatcher:
         return matched_domains
 
 
-_MatcherTypes = Union[BluetoothMatcher, BluetoothCallbackMatcherWithCallback]
+_T = TypeVar("_T", BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
 
 
-class BluetoothMatcherIndex:
-    """Bluetooth matcher for the bluetooth integration.
+class BluetoothMatcherIndexBase(Generic[_T]):
+    """Bluetooth matcher base for the bluetooth integration.
 
     The indexer puts each matcher in the bucket that it is most
     likely to match. This allows us to only check the service infos
@@ -165,15 +165,15 @@ class BluetoothMatcherIndex:
 
     def __init__(self) -> None:
         """Initialize the matcher index."""
-        self.local_name: dict[str, list[_MatcherTypes]] = {}
-        self.service_uuid: dict[str, list[_MatcherTypes]] = {}
-        self.service_data_uuid: dict[str, list[_MatcherTypes]] = {}
-        self.manufacturer_id: dict[int, list[_MatcherTypes]] = {}
+        self.local_name: dict[str, list[_T]] = {}
+        self.service_uuid: dict[str, list[_T]] = {}
+        self.service_data_uuid: dict[str, list[_T]] = {}
+        self.manufacturer_id: dict[int, list[_T]] = {}
         self.service_uuid_set: set[str] = set()
         self.service_data_uuid_set: set[str] = set()
         self.manufacturer_id_set: set[int] = set()
 
-    def add(self, matcher: _MatcherTypes) -> None:
+    def add(self, matcher: _T) -> None:
         """Add a matcher to the index.
 
         Matchers must end up only in one bucket.
@@ -202,7 +202,7 @@ class BluetoothMatcherIndex:
             )
             return
 
-    def remove(self, matcher: _MatcherTypes) -> None:
+    def remove(self, matcher: _T) -> None:
         """Remove a matcher from the index.
 
         Matchers only end up in one bucket, so once we have
@@ -232,7 +232,7 @@ class BluetoothMatcherIndex:
         self.service_data_uuid_set = set(self.service_data_uuid)
         self.manufacturer_id_set = set(self.manufacturer_id)
 
-    def _match(self, service_info: BluetoothServiceInfoBleak) -> list[_MatcherTypes]:
+    def match(self, service_info: BluetoothServiceInfoBleak) -> list[_T]:
         """Check for a match."""
         matches = []
         if len(service_info.name) >= LOCAL_NAME_MIN_MATCH_LENGTH:
@@ -265,14 +265,14 @@ class BluetoothMatcherIndex:
 
         return matches
 
-    def match_domains(
-        self, service_info: BluetoothServiceInfoBleak
-    ) -> list[BluetoothMatcher]:
-        """Check for a match."""
-        return cast(list[BluetoothMatcher], self._match(service_info))
+
+class BluetoothMatcherIndex(BluetoothMatcherIndexBase[BluetoothMatcher]):
+    """Bluetooth matcher for the bluetooth integration."""
 
 
-class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
+class BluetoothCallbackMatcherIndex(
+    BluetoothMatcherIndexBase[BluetoothCallbackMatcherWithCallback]
+):
     """Bluetooth matcher for the bluetooth integration that supports matching on addresses."""
 
     def __init__(self) -> None:
@@ -311,11 +311,11 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
         self, service_info: BluetoothServiceInfoBleak
     ) -> list[BluetoothCallbackMatcherWithCallback]:
         """Check for a match."""
-        matches = self._match(service_info)
+        matches = self.match(service_info)
         for matcher in self.address.get(service_info.address, []):
             if ble_device_matches(matcher, service_info):
                 matches.append(matcher)
-        return cast(list[BluetoothCallbackMatcherWithCallback], matches)
+        return matches
 
 
 def _local_name_to_index_key(local_name: str) -> str:
@@ -341,7 +341,7 @@ def _local_name_to_index_key(local_name: str) -> str:
 
 
 def ble_device_matches(
-    matcher: BluetoothMatcher | BluetoothCallbackMatcherWithCallback,
+    matcher: BluetoothMatcherOptional,
     service_info: BluetoothServiceInfoBleak,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
