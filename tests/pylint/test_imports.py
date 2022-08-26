@@ -12,16 +12,24 @@ from . import assert_adds_messages, assert_no_messages
 
 
 @pytest.mark.parametrize(
-    ("module_name", "import_from"),
+    ("module_name", "import_from", "import_what"),
     [
-        ("homeassistant.components.pylint_test.sensor", "homeassistant.const"),
-        ("homeassistant.components.pylint_test.sensor", ".const"),
-        ("homeassistant.components.pylint_test.sensor", "."),
-        ("homeassistant.components.pylint_test.sensor", "..pylint_test"),
-        ("homeassistant.components.pylint_test.api.hub", "homeassistant.const"),
-        ("homeassistant.components.pylint_test.api.hub", "..const"),
-        ("homeassistant.components.pylint_test.api.hub", ".."),
-        ("homeassistant.components.pylint_test.api.hub", "...pylint_test"),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "homeassistant.const",
+            "CONSTANT",
+        ),
+        ("homeassistant.components.pylint_test.sensor", ".const", "CONSTANT"),
+        ("homeassistant.components.pylint_test.sensor", ".", "CONSTANT"),
+        ("homeassistant.components.pylint_test.sensor", "..", "pylint_test"),
+        (
+            "homeassistant.components.pylint_test.api.hub",
+            "homeassistant.const",
+            "CONSTANT",
+        ),
+        ("homeassistant.components.pylint_test.api.hub", "..const", "CONSTANT"),
+        ("homeassistant.components.pylint_test.api.hub", "..", "CONSTANT"),
+        ("homeassistant.components.pylint_test.api.hub", "...", "pylint_test"),
     ],
 )
 def test_good_import(
@@ -29,11 +37,12 @@ def test_good_import(
     imports_checker: BaseChecker,
     module_name: str,
     import_from: str,
+    import_what: str,
 ) -> None:
     """Ensure good imports pass through ok."""
 
     import_node = astroid.extract_node(
-        f"from {import_from} import CONSTANT #@",
+        f"from {import_from} import {import_what} #@",
         module_name,
     )
     imports_checker.visit_module(import_node.parent)
@@ -43,31 +52,36 @@ def test_good_import(
 
 
 @pytest.mark.parametrize(
-    ("module_name", "import_from", "error_code"),
+    ("module_name", "import_from", "import_what", "error_code"),
     [
         (
             "homeassistant.components.pylint_test.sensor",
             "homeassistant.components.pylint_test.const",
+            "CONSTANT",
             "hass-relative-import",
         ),
         (
             "homeassistant.components.pylint_test.sensor",
             "..const",
+            "CONSTANT",
             "hass-absolute-import",
         ),
         (
             "homeassistant.components.pylint_test.sensor",
             "...const",
+            "CONSTANT",
             "hass-absolute-import",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "homeassistant.components.pylint_test.api.const",
+            "CONSTANT",
             "hass-relative-import",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "...const",
+            "CONSTANT",
             "hass-absolute-import",
         ),
     ],
@@ -77,12 +91,13 @@ def test_bad_import(
     imports_checker: BaseChecker,
     module_name: str,
     import_from: str,
+    import_what: str,
     error_code: str,
 ) -> None:
     """Ensure bad imports are rejected."""
 
     import_node = astroid.extract_node(
-        f"from {import_from} import CONSTANT #@",
+        f"from {import_from} import {import_what} #@",
         module_name,
     )
     imports_checker.visit_module(import_node.parent)

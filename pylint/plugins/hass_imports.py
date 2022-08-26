@@ -308,9 +308,15 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         if node.level <= 1 or not current_package.startswith("homeassistant.components"):
             return
         split_package = current_package.split(".")
-        if len(split_package) == node.level + 1 and node.modname == split_package[2]:
-            # Allow relative import to component root
+        if not node.modname and len(split_package) == node.level + 1:
+            for name in node.names:
+                # Allow relative import to component root
+                if name[0] != split_package[2]:
+                    print(f"{name[0]} != {split_package[2]}")
+                    self.add_message("hass-absolute-import", node=node)
+                    return
             return
+        print(f"Modname:{node.modname}")
         if len(split_package) < node.level + 2:
             self.add_message("hass-absolute-import", node=node)
 
