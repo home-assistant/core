@@ -312,11 +312,9 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             for name in node.names:
                 # Allow relative import to component root
                 if name[0] != split_package[2]:
-                    print(f"{name[0]} != {split_package[2]}")
                     self.add_message("hass-absolute-import", node=node)
                     return
             return
-        print(f"Modname:{node.modname}")
         if len(split_package) < node.level + 2:
             self.add_message("hass-absolute-import", node=node)
 
