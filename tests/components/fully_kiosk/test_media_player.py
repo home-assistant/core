@@ -19,10 +19,10 @@ async def test_buttons(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("media_player.amazon_fire_media_player")
+    state = hass.states.get("media_player.amazon_fire")
     assert state
 
-    entry = entity_registry.async_get("media_player.amazon_fire_media_player")
+    entry = entity_registry.async_get("media_player.amazon_fire")
     assert entry
     assert entry.unique_id == "abcdef-123456-mediaplayer"
     assert entry.supported_features == MEDIA_SUPPORT_FULLYKIOSK
@@ -31,7 +31,7 @@ async def test_buttons(
         media_player.DOMAIN,
         "play_media",
         {
-            ATTR_ENTITY_ID: "media_player.amazon_fire_media_player",
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
             "media_content_type": "music",
             "media_content_id": "test.mp3",
         },
@@ -43,7 +43,7 @@ async def test_buttons(
         media_player.DOMAIN,
         "media_stop",
         {
-            ATTR_ENTITY_ID: "media_player.amazon_fire_media_player",
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
         },
         blocking=True,
     )
@@ -53,7 +53,7 @@ async def test_buttons(
         media_player.DOMAIN,
         "volume_set",
         {
-            ATTR_ENTITY_ID: "media_player.amazon_fire_media_player",
+            ATTR_ENTITY_ID: "media_player.amazon_fire",
             "volume_level": 0.5,
         },
         blocking=True,
