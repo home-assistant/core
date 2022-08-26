@@ -247,7 +247,6 @@ async def test_sensor(hass):
     assert state
     assert state.state == "19"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.AQI
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sds011_caqi_level")
     assert entry
