@@ -148,7 +148,7 @@ async def async_setup_entry(
     )
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass, _ufpd(entry, DISPATCH_ADD), _add_unadopted_device
+            hass, _ufpd(entry, DISPATCH_ADD), _async_add_unadopted_device
         )
     )
 
