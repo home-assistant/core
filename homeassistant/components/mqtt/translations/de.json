@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" dreifach geklickt"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Manuell konfigurierte MQTT-{platform}(en) gefunden unter Plattformschl\u00fcssel `{platform}`. \n\nBitte verschiebe die Konfiguration auf den \u201emqtt\u201c-Integrationsschl\u00fcssel und starte Home Assistant neu, um dieses Problem zu beheben. Weitere Informationen findest du in der [Dokumentation]({more_info_url}).",
+            "title": "Deine manuell konfigurierte(n) MQTT-{platform}(en) erfordert Aufmerksamkeit"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Ung\u00fcltiges Birth Thema.",

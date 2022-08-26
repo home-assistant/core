@@ -10,6 +10,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mutable": "Consenti da remoto l'avvio / il blocco / ecc.",
                     "password": "Password",
                     "region": "Regione",
                     "scandinavian_miles": "Usa le miglia scandinave",
