@@ -10,6 +10,13 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u8acb\u66f4\u65b0 {email} \u5bc6\u78bc",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "email": "\u96fb\u5b50\u90f5\u4ef6",
