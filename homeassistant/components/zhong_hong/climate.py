@@ -124,6 +124,7 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -159,11 +160,6 @@ class ZhongHongClimate(ClimateEntity):
         if self._device.target_temperature:
             self._target_temperature = self._device.target_temperature
         self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def name(self):
