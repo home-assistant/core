@@ -1,6 +1,5 @@
 """Test the BThome config flow."""
 
-import logging
 from unittest.mock import patch
 
 from bthome_ble import BThomeBluetoothDeviceData as DeviceData
@@ -18,8 +17,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_async_step_bluetooth_valid_device(hass):
