@@ -117,17 +117,12 @@ class IntegrationMatcher:
         self._matched.pop(address, None)
         self._matched_connectable.pop(address, None)
 
-    def _get_matched_by_type(
-        self, connectable: bool
-    ) -> MutableMapping[str, IntegrationMatchHistory]:
-        """Return the matches by type."""
-        return self._matched_connectable if connectable else self._matched
-
     def match_domains(self, service_info: BluetoothServiceInfoBleak) -> set[str]:
         """Return the domains that are matched."""
         device = service_info.device
         advertisement_data = service_info.advertisement
-        matched = self._get_matched_by_type(service_info.connectable)
+        connectable = service_info.connectable
+        matched = self._matched_connectable if connectable else self._matched
         matched_domains: set[str] = set()
         if (previous_match := matched.get(device.address)) and seen_all_fields(
             previous_match, advertisement_data
