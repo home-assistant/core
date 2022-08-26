@@ -56,8 +56,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
         name="time remaining",
-        # device_class=SensorDeviceClass.DURATION,
-        # native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
         icon=ICON_W,
