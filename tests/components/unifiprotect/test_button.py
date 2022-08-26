@@ -28,7 +28,7 @@ async def test_button_chime_remove(
 
     await init_entry(hass, ufp, [chime])
     assert_entity_counts(hass, Platform.BUTTON, 4, 2)
-    await remove_entities(hass, [chime])
+    await remove_entities(hass, ufp, [chime])
     assert_entity_counts(hass, Platform.BUTTON, 0, 0)
     await adopt_devices(hass, ufp, [chime])
     assert_entity_counts(hass, Platform.BUTTON, 4, 2)
