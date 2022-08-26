@@ -17,9 +17,11 @@ from . import assert_adds_messages, assert_no_messages
         ("homeassistant.components.pylint_test.sensor", "homeassistant.const"),
         ("homeassistant.components.pylint_test.sensor", ".const"),
         ("homeassistant.components.pylint_test.sensor", "."),
+        ("homeassistant.components.pylint_test.sensor", "..pylint_test"),
         ("homeassistant.components.pylint_test.api.hub", "homeassistant.const"),
         ("homeassistant.components.pylint_test.api.hub", "..const"),
         ("homeassistant.components.pylint_test.api.hub", ".."),
+        ("homeassistant.components.pylint_test.api.hub", "...pylint_test"),
     ],
 )
 def test_good_import(
