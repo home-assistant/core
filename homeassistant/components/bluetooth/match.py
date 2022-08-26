@@ -319,10 +319,7 @@ class BluetoothCallbackMatcherIndex(BluetoothMatcherIndex):
         return [
             matcher
             for matcher in self.address.get(service_info.address, [])
-            # Shortcut the match if the matcher is only looking for a specific address
-            # and connectable
-            if set(matcher) == {ADDRESS, CONNECTABLE}
-            or ble_device_matches(matcher, service_info)
+            if ble_device_matches(matcher, service_info)
         ]
 
     def match_callbacks(
