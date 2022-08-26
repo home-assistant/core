@@ -16,6 +16,7 @@ class RingEntityMixin(Entity):
         super().__init__()
         self._config_entry_id = config_entry_id
         self._device = device
+        self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
