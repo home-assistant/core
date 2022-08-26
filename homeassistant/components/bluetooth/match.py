@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fnmatch import translate
 from functools import lru_cache
-import logging
 import re
 from typing import TYPE_CHECKING, Final, TypedDict, Union, cast
 
@@ -34,8 +33,6 @@ MANUFACTURER_ID: Final = "manufacturer_id"
 MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
 LOCAL_NAME_MIN_MATCH_LENGTH = 3
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
@@ -303,12 +300,15 @@ def _local_name_to_index_key(local_name: str) -> str:
     """
     if len(local_name) < LOCAL_NAME_MIN_MATCH_LENGTH:
         raise ValueError(
-            f"Local name matchers must be at least {LOCAL_NAME_MIN_MATCH_LENGTH} characters long ({local_name})"
+            "Local name matchers must be at least "
+            f"{LOCAL_NAME_MIN_MATCH_LENGTH} characters long ({local_name})"
         )
     match_part = local_name[:LOCAL_NAME_MIN_MATCH_LENGTH]
     if "*" in match_part or "[" in match_part:
         raise ValueError(
-            f"Local name matchers may not have wildcards in the first {LOCAL_NAME_MIN_MATCH_LENGTH} characters because they would match too broadly ({local_name})"
+            "Local name matchers may not have patterns in the first "
+            f"{LOCAL_NAME_MIN_MATCH_LENGTH} characters because they "
+            f"would match too broadly ({local_name})"
         )
     return match_part
 
