@@ -129,7 +129,8 @@ async def async_setup_entry(
         async_add_entities(entities)
         _async_remove_adopt_button(hass, device)
 
-    async def _add_unadopted_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_unadopted_device(device: ProtectAdoptableDeviceModel) -> None:
         if not device.can_adopt or not device.can_create(data.api.bootstrap.auth_user):
             _LOGGER.debug("Device is not adoptable: %s", device.id)
             return
