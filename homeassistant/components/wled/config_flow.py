@@ -114,7 +114,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get device information from WLED device."""
         session = async_get_clientsession(self.hass)
         wled = WLED(host, session=session)
-        return await wled.update()  # type: ignore[no-any-return]
+        return await wled.update()
 
 
 class WLEDOptionsFlowHandler(OptionsFlow):
