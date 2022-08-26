@@ -9,7 +9,6 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -54,6 +53,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
