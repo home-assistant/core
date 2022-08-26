@@ -10,12 +10,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_buttons(
+async def test_media_player(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test standard Fully Kiosk buttons."""
+    """Test standard Fully Kiosk media player."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
