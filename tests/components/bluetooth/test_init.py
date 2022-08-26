@@ -28,6 +28,7 @@ from homeassistant.components.bluetooth.const import (
 )
 from homeassistant.components.bluetooth.match import (
     ADDRESS,
+    CONNECTABLE,
     LOCAL_NAME,
     MANUFACTURER_ID,
     SERVICE_DATA_UUID,
@@ -1195,6 +1196,74 @@ async def test_register_callback_by_address(
         assert service_info.name == "wohand"
         assert service_info.manufacturer == "Nordic Semiconductor ASA"
         assert service_info.manufacturer_id == 89
+
+
+async def test_register_callback_by_address_connectable_only(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test registering a callback by address connectable only."""
+    mock_bt = []
+    connectable_callbacks = []
+    non_connectable_callbacks = []
+
+    def _fake_connectable_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        connectable_callbacks.append((service_info, change))
+
+    def _fake_non_connectable_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        non_connectable_callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_connectable_subscriber,
+            {ADDRESS: "44:44:33:11:23:45", CONNECTABLE: True},
+            BluetoothScanningMode.ACTIVE,
+        )
+        cancel2 = bluetooth.async_register_callback(
+            hass,
+            _fake_non_connectable_subscriber,
+            {ADDRESS: "44:44:33:11:23:45", CONNECTABLE: False},
+            BluetoothScanningMode.ACTIVE,
+        )
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, switchbot_device, switchbot_adv, time.monotonic(), "test", False
+        )
+        inject_advertisement_with_time_and_source_connectable(
+            hass, switchbot_device, switchbot_adv, time.monotonic(), "test", True
+        )
+
+        cancel()
+        cancel2()
+
+    assert len(connectable_callbacks) == 1
+    # Non connectable will take either a connectable
+    # or non-connectable device
+    assert len(non_connectable_callbacks) == 2
 
 
 async def test_register_callback_by_manufacturer_id(
