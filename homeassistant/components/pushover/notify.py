@@ -18,11 +18,11 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ...exceptions import HomeAssistantError
 from .const import (
     ATTR_ATTACHMENT,
     ATTR_CALLBACK_URL,
