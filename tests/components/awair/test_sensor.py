@@ -209,7 +209,7 @@ async def test_local_awair_sensors(hass: HomeAssistant, local_devices, local_dat
     assert_expected_properties(
         hass,
         registry,
-        "sensor.awair_score",
+        "sensor.mock_title_awair_score",
         f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "94",
         {},
