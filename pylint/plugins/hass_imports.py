@@ -303,17 +303,23 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
 
+    def _visit_importfrom_relative(self, current_package: str, node: nodes.ImportFrom) -> None:
+        """Called when a ImportFrom node is visited."""
+        if node.level <= 1 or not current_package.startswith("homeassistant.components"):
+            return
+        split_package = current_package.split(".")
+        if len(split_package) == node.level + 1 and node.modname == split_package[2]:
+            # Allow relative import to component root
+            return
+        if len(split_package) < node.level + 2:
+            self.add_message("hass-absolute-import", node=node)
+
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Called when a ImportFrom node is visited."""
         if not self.current_package:
             return
         if node.level is not None:
-            if (
-                node.level > 1
-                and self.current_package.startswith("homeassistant.components")
-                and len(self.current_package.split(".")) < node.level + 2
-            ):
-                self.add_message("hass-absolute-import", node=node)
+            self._visit_importfrom_relative(self.current_package, node)
             return
         if node.modname == self.current_package or node.modname.startswith(
             f"{self.current_package}."
