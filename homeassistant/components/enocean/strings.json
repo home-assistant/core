@@ -46,24 +46,30 @@
         },
         "description": "To add an EnOcean device you need at least its type and its ID. The EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7')."
       },
-      "manage_devices": {
-        "title": "Manage existing devices",
+      "select_device": {
+        "title": "Select EnOcean device for editing",
         "data": {
-          "device": "Device",
-          "manage_device_command": "Action"
+          "device": "Device"
         },
-        "description": "Edit or delete an existing device"
+        "description": "Select the EnOcean device whose settings you want to change."
       },
       "edit_device": {
-        "title": "Edit device",
+        "title": "Edit EnOcean device",
         "data": {
           "id": "EnOcean ID",
-          "eep": "Device type or EnOcean Equipment Profile (EEP)",
+          "eep": "Model or EnOcean Equipment Profile (EEP)",
           "name": "Name",
-          "sender_id": "Sender EnOcean ID",
-          "device_class": "Device class"
+          "sender_id": "Sender EnOcean ID"
         },
-        "description": "Edit device"
+        "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean id which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities."
+      },
+
+      "delete_device": {
+        "title": "Delete EnOcean device",
+        "data": {
+          "id": "EnOcean ID"
+        },
+        "description": "Select an EnOcean device to delete. The corresponding Home Assistant device and all its entities will also be deleted."
       }
     }
   }

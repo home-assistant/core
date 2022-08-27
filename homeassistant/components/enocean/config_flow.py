@@ -220,7 +220,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             menu_options={
                 "add_device": "Add new device",
                 "select_device": "Edit configured device",
-                "delete_devices": "Delete configured device(s)",
+                "delete_device": "Delete configured device",
             },
         )
 
@@ -345,8 +345,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=edit_device_schema,
         )
 
-    async def async_step_delete_devices(self, user_input=None) -> FlowResult:
-        """Delete one or multiple EnOcean devices."""
+    async def async_step_delete_device(self, user_input=None) -> FlowResult:
+        """Delete an EnOcean device."""
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
             selector.SelectOptionDict(
@@ -371,7 +371,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 title="", data={CONF_ENOCEAN_DEVICES: devices}
             )
 
-        delete_devices_schema = vol.Schema(
+        delete_device_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_ENOCEAN_DEVICE_ID, default="none"
@@ -382,6 +382,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="delete_devices",
-            data_schema=delete_devices_schema,
+            step_id="delete_device",
+            data_schema=delete_device_schema,
         )
