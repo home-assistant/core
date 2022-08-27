@@ -26,13 +26,13 @@ CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
 # step ids
 ENOCEAN_STEP_ID_INIT = "init"
 ENOCEAN_STEP_ID_ADD_DEVICE = "add_device"
-ENOCEAN_STEP_ID_SELECT_DEVICE = "select_device"
+ENOCEAN_STEP_ID_SELECT_DEVICE = "select_device_to_edit"
 ENOCEAN_STEP_ID_EDIT_DEVICE = "edit_device"
 ENOCEAN_STEP_ID_DELETE_DEVICE = "delete_device"
 
 # menu options
 ENOCEAN_MENU_OPTION_ADD_DEVICE = "add_device"
-ENOCEAN_MENU_OPTION_SELECT_DEVICE = "select_device"
+ENOCEAN_MENU_OPTION_SELECT_DEVICE = "select_device_to_edit"
 ENOCEAN_MENU_OPTION_DELETE_DEVICE = "delete_device"
 
 # errors
@@ -246,8 +246,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    async def async_step_select_device(self, user_input=None) -> FlowResult:
-        """Select a configured EnOcean device."""
+    async def async_step_select_device_to_edit(self, user_input=None) -> FlowResult:
+        """Select a configured EnOcean device to edit."""
 
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
@@ -274,7 +274,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return await self.async_step_edit_device(None, device)
 
-        select_device_schema = vol.Schema(
+        select_device_to_edit_schema = vol.Schema(
             {
                 vol.Required(CONF_DEVICE, default="none"): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=device_list)
@@ -284,11 +284,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id=ENOCEAN_STEP_ID_SELECT_DEVICE,
-            data_schema=select_device_schema,
+            data_schema=select_device_to_edit_schema,
         )
 
     async def async_step_edit_device(self, user_input=None, device=None) -> FlowResult:
         """Edit an EnOcean device."""
+        errors: dict[str, str] = {}
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+
         default_device_id = "none"
         default_device_name = "none"
         default_eep = "none"
@@ -299,6 +302,39 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             default_device_name = device[CONF_ENOCEAN_DEVICE_NAME]
             default_eep = device[CONF_ENOCEAN_EEP]
             default_sender_id = device[CONF_ENOCEAN_SENDER_ID]
+
+        if user_input is not None:
+            sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
+            if sender_id != "":
+                if self.validate_enocean_id_string(sender_id):
+                    sender_id = self.normalize_enocean_id_string(sender_id)
+                else:
+                    errors["base"] = ENOCEAN_ERROR_INVALID_SENDER_ID
+
+            device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
+            if device_name == "":
+                errors["base"] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
+
+            if not errors:
+                for dev in devices:
+                    if (
+                        dev[CONF_ENOCEAN_DEVICE_ID]
+                        == user_input[CONF_ENOCEAN_DEVICE_ID]
+                    ):
+                        dev[CONF_ENOCEAN_EEP] = user_input[CONF_ENOCEAN_EEP]
+                        dev[CONF_ENOCEAN_DEVICE_NAME] = user_input[
+                            CONF_ENOCEAN_DEVICE_NAME
+                        ]
+                        dev[CONF_ENOCEAN_SENDER_ID] = user_input[CONF_ENOCEAN_SENDER_ID]
+
+                return self.async_create_entry(
+                    title="", data={CONF_ENOCEAN_DEVICES: devices}
+                )
+
+            default_device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+            default_device_name = user_input[CONF_ENOCEAN_DEVICE_NAME]
+            default_eep = user_input[CONF_ENOCEAN_EEP]
+            default_sender_id = user_input[CONF_ENOCEAN_SENDER_ID]
 
         edit_device_schema = vol.Schema(
             {

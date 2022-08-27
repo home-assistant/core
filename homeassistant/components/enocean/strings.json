@@ -32,7 +32,7 @@
       "init": {
         "menu_options": {
           "add_device": "Add new device",
-          "select_device": "Edit configured device",
+          "select_device_to_edit": "Edit configured device",
           "delete_device": "Delete configured device"
         },
         "description": "Configuration of the EnOcean integration"
@@ -48,7 +48,7 @@
         },
         "description": "To add an EnOcean device you need at least its type and its ID. A valid EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7')."
       },
-      "select_device": {
+      "select_device_to_edit": {
         "title": "Select EnOcean device for editing",
         "data": {
           "device": "Device"
