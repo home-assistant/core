@@ -172,7 +172,7 @@ class ZHAGateway:
                 self.application_controller = await app_controller_cls.new(
                     app_config, auto_form=True, start_radio=True
                 )
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.warning(
                     "Couldn't start %s coordinator (attempt %s of %s)",
                     self.radio_description,
