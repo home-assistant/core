@@ -87,8 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id] = data_service
 
     # Forward the config entries to the supported platforms.
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
