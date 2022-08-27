@@ -153,7 +153,6 @@ class HaScanner(BaseHaScanner):
             "adapter": self.adapter,
             "source": self.source,
             "name": self.name,
-            "discovered_devices": self.discovered_devices,
             "last_detection": self._last_detection,
             "start_time": self._start_time,
         }
