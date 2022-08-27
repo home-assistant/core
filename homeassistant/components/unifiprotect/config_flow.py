@@ -373,23 +373,31 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_DISABLE_RTSP,
-                    default=values.get(CONF_DISABLE_RTSP, False),
+                    description={
+                        "suggested_value": values.get(CONF_DISABLE_RTSP, False)
+                    },
                 ): bool,
                 vol.Optional(
                     CONF_ALL_UPDATES,
-                    default=values.get(CONF_ALL_UPDATES, False),
+                    description={
+                        "suggested_value": values.get(CONF_ALL_UPDATES, False)
+                    },
                 ): bool,
                 vol.Optional(
                     CONF_OVERRIDE_CHOST,
-                    default=values.get(CONF_OVERRIDE_CHOST, False),
+                    description={
+                        "suggested_value": values.get(CONF_OVERRIDE_CHOST, False)
+                    },
                 ): bool,
                 vol.Optional(
                     CONF_MAX_MEDIA,
-                    default=values.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA),
+                    description={
+                        "suggested_value": values.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
+                    },
                 ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
                 vol.Optional(
                     CONF_IGNORED,
-                    default=values.get(CONF_IGNORED, ""),
+                    description={"suggested_value": values.get(CONF_IGNORED, "")},
                 ): str,
             }
         )
