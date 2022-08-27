@@ -42,7 +42,11 @@ def one_adapter_fixture():
                     "Address": "00:00:00:00:00:01",
                     "Name": "BlueZ 4.63",
                     "Modalias": "usbid:1234",
-                }
+                },
+                "org.bluez.AdvertisementMonitorManager1": {
+                    "SupportedMonitorTypes": ["or_patterns"],
+                    "SupportedFeatures": [],
+                },
             },
         },
     ):
@@ -74,7 +78,11 @@ def two_adapters_fixture():
                     "Address": "00:00:00:00:00:02",
                     "Name": "BlueZ 4.63",
                     "Modalias": "usbid:1234",
-                }
+                },
+                "org.bluez.AdvertisementMonitorManager1": {
+                    "SupportedMonitorTypes": ["or_patterns"],
+                    "SupportedFeatures": [],
+                },
             },
         },
     ):

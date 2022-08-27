@@ -24,6 +24,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             WINDOWS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
+                passive_scan=False,
             )
         }
     if platform.system() == "Darwin":
@@ -31,6 +32,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             MACOS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
+                passive_scan=False,
             )
         }
     from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
@@ -45,6 +47,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             address=adapter1["Address"],
             sw_version=adapter1["Name"],  # This is actually the BlueZ version
             hw_version=adapter1["Modalias"],
+            passive_scan="org.bluez.AdvertisementMonitorManager1" in details,
         )
     return adapters
 

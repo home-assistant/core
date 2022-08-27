@@ -23,6 +23,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ADAPTER_ADDRESS,
+    ADAPTER_PASSIVE_SCAN,
     STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
@@ -146,6 +147,11 @@ class BluetoothManager:
         self._scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
+
+    @property
+    def supports_passive_scan(self) -> bool:
+        """Return if passive scan is supported."""
+        return any(adapter[ADAPTER_PASSIVE_SCAN] for adapter in self._adapters.values())
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Diagnostics for the manager."""
