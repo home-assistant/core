@@ -8,17 +8,17 @@ from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
     CONF_OVERRIDE_TYPE_CONSTANT,
     CONF_OVERRIDE_TYPE_NOW,
     CONF_SERIAL,
-    CONF_WEEK_PROFILE_NONE,
     DOMAIN,
 )
 
@@ -34,69 +34,79 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self._discovered_hubs = None
+        self._hub = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         if self._discovered_hubs is None:
-            self._discovered_hubs = [
-                {"ip": ip, "serial_prefix": serial_prefix}
-                for ip, serial_prefix in await nobo.async_discover_hubs(
-                    loop=self.hass.loop
-                )
-            ]
+            self._discovered_hubs = dict(
+                await nobo.async_discover_hubs(loop=self.hass.loop)
+            )
 
         if not self._discovered_hubs:
             # No hubs auto discovered
             return await self.async_step_manual()
 
-        errors = {}
-        serial_suffix = ""
         if user_input is not None:
-            if "manual" in user_input:
+            if user_input["device"] == "manual":
                 return await self.async_step_manual()
-            serial, ip_address = None, None
-            if "serial_suffix" not in user_input or user_input["serial_suffix"] == "":
-                errors["base"] = "missing_serial_suffix"
-            else:
-                hub = self._discovered_hubs[user_input["device"]]
-                serial_prefix = hub["serial_prefix"]
-                serial_suffix = user_input["serial_suffix"]
-                serial = f"{serial_prefix}{serial_suffix}"
-                if "store_ip" in user_input and user_input["store_ip"]:
-                    ip_address = hub["ip"]
+            self._hub = user_input["device"]
+            return await self.async_step_selected()
 
-            if not errors:
-                try:
-                    return await self._create_configuration(serial, ip_address)
-                except NoboHubConnectError as error:
-                    errors["base"] = error.msg
-
+        hubs = self._hubs()
+        hubs["manual"] = "Manual"
         data_schema = vol.Schema(
             {
-                vol.Optional("manual"): bool,
-                vol.Required("device"): vol.In(self._hubs()),
-                vol.Optional("serial_suffix", default=serial_suffix): str,
-                vol.Optional("store_ip"): bool,
+                vol.Required("device"): vol.In(hubs),
             }
         )
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
+        )
+
+    async def async_step_selected(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle configuration of a selected discovered device."""
+        errors = {}
+        if user_input is not None:
+            serial_prefix = self._discovered_hubs[self._hub]
+            serial_suffix = user_input["serial_suffix"]
+            serial = f"{serial_prefix}{serial_suffix}"
+            try:
+                return await self._create_configuration(serial, self._hub, True)
+            except NoboHubConnectError as error:
+                errors["base"] = error.msg
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="selected",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "serial_suffix", default=user_input.get("serial_suffix")
+                    ): str,
+                }
+            ),
             errors=errors,
+            description_placeholders={
+                "hub": self._format_hub(self._hub, self._discovered_hubs[self._hub])
+            },
         )
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle manual configuration. Triggered if no devices are discovered or by user."""
+        """Handle configuration of an undiscovered device."""
         errors = {}
         if user_input is not None:
             serial = user_input[CONF_SERIAL]
             ip_address = user_input[CONF_IP_ADDRESS]
             try:
-                return await self._create_configuration(serial, ip_address)
+                return await self._create_configuration(serial, ip_address, False)
             except NoboHubConnectError as error:
                 errors["base"] = error.msg
 
@@ -114,40 +124,43 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _create_configuration(self, serial, ip_address) -> FlowResult:
+    async def _create_configuration(
+        self, serial: str, ip_address: str, auto_discovered: bool
+    ) -> FlowResult:
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
         name = await self._test_connection(serial, ip_address)
         return self.async_create_entry(
-            title=name, data={"serial": serial, "ip_address": ip_address}
+            title=name,
+            data={
+                CONF_SERIAL: serial,
+                CONF_IP_ADDRESS: ip_address,
+                CONF_AUTO_DISCOVERED: auto_discovered,
+            },
         )
 
-    async def _test_connection(self, serial, ip_address):
-        if serial is None or not len(serial) == 12 or not serial.isdigit():
+    async def _test_connection(self, serial: str, ip_address: str):
+        if not len(serial) == 12 or not serial.isdigit():
             raise NoboHubConnectError("invalid_serial")
-        if ip_address is not None:
-            try:
-                socket.inet_aton(ip_address)
-            except OSError:
-                raise NoboHubConnectError("invalid_ip") from OSError
-        else:
-            for hub in self._discovered_hubs:
-                if serial.startswith(hub["serial_prefix"]):
-                    ip_address = hub["ip"]
-                    break
-
+        try:
+            socket.inet_aton(ip_address)
+        except OSError:
+            raise NoboHubConnectError("invalid_ip") from OSError
         hub = nobo(serial=serial, ip=ip_address, discover=False, loop=self.hass.loop)
         if not await hub.async_connect_hub(ip_address, serial):
             raise NoboHubConnectError("cannot_connect")
-
         name = hub.hub_info["name"]
         await hub.close()
         return name
 
+    @staticmethod
+    def _format_hub(ip, serial_prefix):
+        return f"{serial_prefix}XXX ({ip})"
+
     def _hubs(self):
         return {
-            i: f"{hub['serial_prefix']}XXX ({hub['ip']})"
-            for (i, hub) in enumerate(self._discovered_hubs)
+            ip: self._format_hub(ip, serial_prefix)
+            for ip, serial_prefix in self._discovered_hubs.items()
         }
 
     @staticmethod
@@ -178,75 +191,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
 
-        hub: nobo = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        profile_names = sorted(
-            k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
-        )
-
         if user_input is not None:
-            off_command = user_input.get(CONF_COMMAND_OFF)
-            if off_command not in profile_names:
-                off_command = None
-            on_commands = {}
-            for key, on_command in user_input.items():
-                if key.startswith(CONF_COMMAND_ON + "_zone_"):
-                    zone = key[16:]
-                    if on_command not in profile_names:
-                        on_command = None
-                    on_commands[
-                        hub.zones[zone]["name"].replace("\xa0", " ")
-                    ] = on_command
-
             data = {
                 CONF_OVERRIDE_TYPE: user_input.get(CONF_OVERRIDE_TYPE),
-                CONF_COMMAND_OFF: off_command,
-                CONF_COMMAND_ON: on_commands,
             }
-
             return self.async_create_entry(title="", data=data)
 
         override_type = self.config_entry.options.get(CONF_OVERRIDE_TYPE)
         if override_type != CONF_OVERRIDE_TYPE_NOW:
             override_type = CONF_OVERRIDE_TYPE_CONSTANT
 
-        profile_names.insert(0, CONF_WEEK_PROFILE_NONE)
-        profiles = vol.Schema(vol.In(profile_names))
-
-        off_command = self.config_entry.options.get(CONF_COMMAND_OFF)
-        if off_command not in profile_names:
-            off_command = CONF_WEEK_PROFILE_NONE
         schema = vol.Schema(
             {
                 vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
                     [CONF_OVERRIDE_TYPE_CONSTANT, CONF_OVERRIDE_TYPE_NOW]
                 ),
-                # Ideally we should use vol.Optional, but resetting the field in the UI
-                # will default to the old value instead of setting to None.
-                vol.Required(CONF_COMMAND_OFF, default=off_command): profiles,
             }
         )
 
-        placeholder = ""
-        on_commands = self.config_entry.options.get(CONF_COMMAND_ON)  # type: ignore[assignment]
-        if on_commands is None:
-            on_commands = {}
-        for zone in hub.zones:
-            name = hub.zones[zone]["name"].replace("\xa0", " ")
-            if name in on_commands and on_commands[name] in profile_names:
-                on_command = on_commands[name]
-            else:
-                on_command = CONF_WEEK_PROFILE_NONE
-            schema = schema.extend(
-                {
-                    vol.Required(
-                        f"{CONF_COMMAND_ON}_zone_{zone}", default=on_command
-                    ): profiles
-                }
-            )
-            placeholder += zone + ": " + name + "\r"
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=schema,
-            description_placeholders={"zones": placeholder},
-        )
+        return self.async_show_form(step_id="init", data_schema=schema)

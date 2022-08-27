@@ -1,7 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -20,14 +19,7 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    ATTR_NAME,
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import ATTR_MODE, ATTR_NAME, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,90 +65,11 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
-    # Find OFF command (week profile) to use for all zones:
-    command_off_name = config_entry.options.get(CONF_COMMAND_OFF)
-    command_on_by_id: dict[str, str] = {}  # By default, nothing can be turned on
-    if not command_off_name:
-        _LOGGER.debug(
-            "Not possible to turn off (or on) any zone, because OFF week profile was not specified"
-        )
-        command_off_id = None
-    else:
-        command_off_id = _get_id_from_name(command_off_name, hub.week_profiles)
-        if not command_off_id:
-            _LOGGER.warning(
-                "Can not turn off (or on) any zone, because week profile '%s' was not found",
-                command_off_name,
-            )
-        else:
-            _LOGGER.debug(
-                "To turn off any heater, week profile %s '%s' will be used",
-                command_off_id,
-                command_off_name,
-            )
-
-            # Find ON command (week profile) for the different zones:
-            command_on_dict = config_entry.options.get(CONF_COMMAND_ON)
-            if not command_on_dict:
-                _LOGGER.warning(
-                    "Not possible to turn on any zone, because ON week profile was not specified"
-                )
-            else:
-                _set_on_commands(command_on_by_id, command_on_dict, hub)
-
     # Add zones as entities
     async_add_entities(
-        [
-            NoboZone(
-                zone_id,
-                hub,
-                command_off_id,
-                command_on_by_id.get(zone_id),
-                override_type,
-            )
-            for zone_id in hub.zones
-        ],
+        [NoboZone(zone_id, hub, override_type) for zone_id in hub.zones],
         True,
     )
-
-
-def _set_on_commands(command_on_by_id, command_on_dict, hub):
-    for zone_id, zone in hub.zones.items():
-        # Replace unicode non-breaking space (used in Nobø Ecohub) with space
-        zone_name = zone[ATTR_NAME].replace("\xa0", " ")
-        if zone_name not in command_on_dict:
-            continue
-        command_on_name = command_on_dict[zone_name]
-        if not command_on_name:
-            _LOGGER.warning(
-                "Can not turn on (or off) zone '%s', because ON week profile was not specified",
-                zone_name,
-            )
-            continue
-        command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
-        if not command_on_id:
-            _LOGGER.warning(
-                "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
-                zone_name,
-                command_on_name,
-            )
-        else:
-            _LOGGER.debug(
-                "To turn on heater %s '%s', week profile %s '%s' will be used",
-                zone_id,
-                zone_name,
-                command_on_id,
-                command_on_name,
-            )
-            command_on_by_id[zone_id] = command_on_id
-
-
-def _get_id_from_name(name, dictionary):
-    for key in dictionary.keys():
-        # Replace unicode non-breaking space (used in Nobø Ecohub) with space
-        if dictionary[key][ATTR_NAME].replace("\xa0", " ") == name:
-            return key
-    return None
 
 
 class NoboZone(ClimateEntity):
@@ -175,9 +88,7 @@ class NoboZone(ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = TEMP_CELSIUS
 
-    def __init__(
-        self, zone_id, hub: nobo, command_off_id, command_on_id, override_type
-    ):
+    def __init__(self, zone_id, hub: nobo, override_type):
         """Initialize the climate device."""
         self._id = zone_id
         self._nobo = hub
@@ -185,12 +96,6 @@ class NoboZone(ClimateEntity):
         self._attr_name = hub.zones[self._id][ATTR_NAME]
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
-        self._command_off_id = command_off_id
-        self._command_on_id = command_on_id
-
-        # Only enable HVACMode.OFF if on- and off-command exists for this zone:
-        if self._command_on_id is not None and self._command_off_id is not None:
-            self._attr_hvac_modes.append(HVACMode.OFF)
         self._override_type = override_type
 
     async def async_added_to_hass(self) -> None:
@@ -211,32 +116,11 @@ class NoboZone(ClimateEntity):
                 hvac_mode,
             )
             return
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode == HVACMode.AUTO:
             await self.async_set_preset_mode(PRESET_NONE)
-            # Turn off by switching to configured "off" profile
-            await self._switch_profile(self._command_off_id)
-        else:
-            if hvac_mode == HVACMode.AUTO:
-                await self.async_set_preset_mode(PRESET_NONE)
-            elif hvac_mode == HVACMode.HEAT:
-                await self.async_set_preset_mode(PRESET_COMFORT)
-            if self._attr_hvac_mode == HVACMode.OFF:
-                # Turn on by switching to configured "on" profile
-                await self._switch_profile(self._command_on_id)
+        elif hvac_mode == HVACMode.HEAT:
+            await self.async_set_preset_mode(PRESET_COMFORT)
         self._attr_hvac_mode = hvac_mode
-
-    async def _switch_profile(self, week_profile_id):
-        """Switch week profile. Used to switch heaters on and off."""
-        await self._nobo.async_update_zone(self._id, week_profile_id=week_profile_id)
-        _LOGGER.debug(
-            "Turned %s heater %s '%s' by switching to week profile %s",
-            "off" if week_profile_id == self._command_off_id else "on",
-            self._id,
-            self._attr_name,
-            self._command_off_id,
-        )
-        # When switching between AUTO and OFF an immediate update does not work (the Nobø API seems to answer with old values), but it works if we add a short delay:
-        await asyncio.sleep(0.5)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""

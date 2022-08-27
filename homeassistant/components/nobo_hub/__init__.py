@@ -9,8 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERIAL, DOMAIN
-from .models import NoboHubData
+from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -21,8 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nobø Ecohub from a config entry."""
 
     serial = entry.data.get(CONF_SERIAL)
-    ip_address = entry.data.get(CONF_IP_ADDRESS)
-    discover = ip_address is None
+    discover = entry.data.get(CONF_AUTO_DISCOVERED)
+    ip_address = None if discover else entry.data.get(CONF_IP_ADDRESS)
     hub = nobo(serial=serial, ip=ip_address, discover=discover, loop=hass.loop)
     await hub.start()
 
