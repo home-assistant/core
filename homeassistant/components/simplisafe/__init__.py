@@ -45,7 +45,6 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CODE,
@@ -72,6 +71,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
