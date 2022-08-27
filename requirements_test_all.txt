@@ -358,6 +358,9 @@ brunt==1.2.0
 # homeassistant.components.bsblan
 bsblan==0.5.0
 
+# homeassistant.components.bthome
+bthome-ble==0.4.0
+
 # homeassistant.components.buienradar
 buienradar==1.0.5
 
