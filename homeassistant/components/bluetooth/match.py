@@ -159,7 +159,7 @@ class BluetoothMatcherIndexBase(Generic[_T]):
     likely to match. This allows us to only check the service infos
     against each bucket to see if we should match against the data.
 
-    This is optimized for cases were no service infos will be matched in
+    This is optimized for cases when no service infos will be matched in
     any bucket and we can quickly reject the service info as not matching.
     """
 
@@ -292,6 +292,7 @@ class BluetoothCallbackMatcherIndex(
             return
 
         super().add(matcher)
+        self.build()
 
     def remove_with_address(
         self, matcher: BluetoothCallbackMatcherWithCallback
@@ -306,6 +307,7 @@ class BluetoothCallbackMatcherIndex(
             return
 
         super().remove(matcher)
+        self.build()
 
     def match_callbacks(
         self, service_info: BluetoothServiceInfoBleak
@@ -347,7 +349,7 @@ def ble_device_matches(
     """Check if a ble device and advertisement_data matches the matcher."""
     device = service_info.device
 
-    # Do don't check address here since all callers already
+    # Don't check address here since all callers already
     # check the address and we don't want to double check
     # since it would result in an unreachable reject case.
 

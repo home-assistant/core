@@ -352,12 +352,10 @@ class BluetoothManager:
 
         connectable = callback_matcher[CONNECTABLE]
         self._callback_index.add_with_address(callback_matcher)
-        self._callback_index.build()
 
         @hass_callback
         def _async_remove_callback() -> None:
             self._callback_index.remove_with_address(callback_matcher)
-            self._callback_index.build()
 
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
