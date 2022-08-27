@@ -385,7 +385,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | NVR,
+        device: ProtectAdoptableDeviceModel,
         description: ProtectSwitchEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect Switch."""
@@ -411,6 +411,18 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
 
 class ProtectNVRSwitch(ProtectSwitch, ProtectNVREntity):
     """A UniFi Protect NVR Switch."""
+
+    # separate subclass on purpose
+    device: NVR
+
+    def __init__(
+        self,
+        entry: ProtectData,
+        device: NVR,
+        description: ProtectSwitchEntityDescription | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(entry, device, description)  # type: ignore[arg-type]
 
 
 class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
