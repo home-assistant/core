@@ -1640,7 +1640,7 @@ async def test_fan_speed_without_percentage_step(hass):
     # If a fan state has (temporary) no percentage_step attribute return 1 available
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 0,
-        "currentFanSpeedSetting": "1/1",
+        "currentFanSpeedSetting": "1/5",
     }
 
 
