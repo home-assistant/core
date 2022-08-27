@@ -162,13 +162,13 @@ class BluetoothManager:
         return {
             "adapters": self._adapters,
             "scanners": scanner_diagnostics,
-            "connectable_history": {
+            "connectable_history": [
                 asdict(service_info)
                 for service_info in self._connectable_history.values()
-            },
-            "history": {
+            ],
+            "history": [
                 asdict(service_info) for service_info in self._history.values()
-            },
+            ],
         }
 
     def _find_adapter_by_address(self, address: str) -> str | None:
