@@ -24,6 +24,7 @@
     },
     "options": {
         "error": {
+            "device_name_empty": "Device name is empty",
             "invalid_device_id": "Device ID is not a valid EnOcean ID.",
             "invalid_sender_id": "Sender ID is not a valid EnOcean ID.",
             "no_configured_device": "No EnOcean devices are configured."
@@ -58,11 +59,12 @@
                 "title": "Edit EnOcean device"
             },
             "init": {
-                "data": {
-                    "add_device": "Name",
-                    "manage_devices": "EnOcean ID"
-                },
-                "description": "Configuration of the EnOcean integration"
+                "description": "Configuration of the EnOcean integration",
+                "menu_options": {
+                    "add_device": "Add new device",
+                    "delete_device": "Delete configured device",
+                    "select_device": "Edit configured device"
+                }
             },
             "select_device": {
                 "data": {
