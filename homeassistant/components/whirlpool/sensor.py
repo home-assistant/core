@@ -131,14 +131,15 @@ class WasherDryerClass(SensorEntity):
         await self._wd.connect()
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._wd.get_online()
+
+    @property
     def native_value(self) -> StateType | str:
         """Return native value of sensor."""
         if self.entity_description.key == "timeremaining":
-            value = int(self.entity_description.value_fn(self._wd))
-
-            if value == 3540:
-                value = 0
-            washertime = time.gmtime(value)
+            washertime = time.gmtime(int(self.entity_description.value_fn(self._wd)))
             return time.strftime("%H:%M:%S", washertime)
 
         return self.entity_description.value_fn(self._wd)
