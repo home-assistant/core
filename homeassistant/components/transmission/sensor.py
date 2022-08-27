@@ -77,13 +77,6 @@ TORRENTS_SENSOR_DESCRIPTIONS = [
 ]
 
 
-def get_unique_id(
-    config_entry: ConfigEntry, entity_description: SensorEntityDescription
-) -> str:
-    """Generate a unique id for entity."""
-    return f"{config_entry.entry_id}-{entity_description.key}"
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
