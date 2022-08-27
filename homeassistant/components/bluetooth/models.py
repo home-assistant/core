@@ -70,6 +70,9 @@ class BaseHaScanner:
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
 
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the scanner."""
+
 
 class HaBleakScannerWrapper(BaseBleakScanner):
     """A wrapper that uses the single instance."""

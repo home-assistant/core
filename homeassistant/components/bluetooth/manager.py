@@ -1,11 +1,12 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 import itertools
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
 
@@ -146,6 +147,18 @@ class BluetoothManager:
         self._scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
+
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Diagnostics for the manager."""
+        scanner_diagnostics = await asyncio.gather(
+            *[scanner.async_diagnostics() for scanner in self._scanners]
+        )
+        return {
+            "adapters": self._adapters,
+            "scanners": scanner_diagnostics,
+            "connectable_history": self._connectable_history,
+            "history": self._history,
+        }
 
     def _find_adapter_by_address(self, address: str) -> str | None:
         for adapter, details in self._adapters.items():
