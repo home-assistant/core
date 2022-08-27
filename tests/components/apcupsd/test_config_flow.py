@@ -56,12 +56,12 @@ async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry):
 async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry, caplog):
     """Test successful creation of config entries via YAML import."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
-        "apcaccess.status.get"
+        "apcaccess.status.get",
     ) as mock_get:
         mock_get.return_value = b""
 
-        # We will create a CONF_RESOURCES field when importing from YAML to be filled in options, so here we test
-        # if the options are set up properly.
+        # We will create a CONF_RESOURCES field when importing from YAML to only enable
+        # the specified sensors, so here we test if it is properly stored.
         resources = ["MODEL"]
         for status in (MOCK_STATUS, MOCK_MINIMAL_STATUS):
             mock_parse.return_value = status
@@ -83,8 +83,8 @@ async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry, c
             assert result["options"][CONF_RESOURCES] == resources
             assert result["description"] == "APCUPSd"
 
-        # Now give an unavailable but valid resource "REG1" to options, HA should report a warning and ignore this
-        # resource when importing it to options.
+        # Now give an unavailable but valid resource "REG1" to options, HA should report
+        # a warning and ignore this resource when importing it to options.
         with caplog.at_level(logging.WARNING):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -166,37 +166,3 @@ async def test_config_flow_duplicate(
         assert result["data"] == config_entry.data
         assert result["title"] == MOCK_STATUS["MODEL"]
         assert result["description"] == "APCUPSd"
-
-
-async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry, caplog):
-    """Test options flow."""
-    with patch("apcaccess.status.parse") as mock_parse, patch(
-        "apcaccess.status.get"
-    ) as mock_get:
-        mock_get.return_value = b""
-        mock_parse.return_value = MOCK_STATUS
-        config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert CONF_RESOURCES in result["data_schema"]({})
-        resources = result["data_schema"]({})[CONF_RESOURCES]
-
-        # The underlying library apcaccess would report undocumented extra fields that are not supported by HA
-        # for some model, so the available resources are actually a subset of the reported MOCK_STATUS.
-        assert all(resource in MOCK_STATUS for resource in resources)
-
-        # Now deselect one resource and submit.
-        resources.remove("LOADPCT")
-        result = await hass.config_entries.options.async_init(
-            config_entry.entry_id, data={CONF_RESOURCES: resources}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert (
-            hass.config_entries.async_get_entry(config_entry.entry_id).options[
-                CONF_RESOURCES
-            ]
-            == resources
-        )

@@ -3,13 +3,16 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_RESOURCES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, KEY_STATUS, VALUE_ONLINE
+from . import DOMAIN, VALUE_ONLINE, APCUPSdData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,24 +25,44 @@ async def async_setup_entry(
     """Set up an APCUPSd Online Status binary sensor."""
     data_service = hass.data[DOMAIN][config_entry.entry_id]
 
-    # If key status is hidden by user, we do not create the binary sensor.
-    if (
-        CONF_RESOURCES in config_entry.options
-        and KEY_STATUS not in config_entry.options[CONF_RESOURCES]
-    ):
-        return
+    description = BinarySensorEntityDescription(
+        key="STATFLAG",
+        name="UPS Online Status",
+        icon="mdi:heart",
+    )
 
-    async_add_entities([OnlineStatus(data_service)], update_before_add=True)
+    # If key is not in the "resources" YAML config specified by the user, we set the
+    # binary sensor to be disabled by default.
+    if (
+        CONF_RESOURCES in config_entry.data
+        and description.key not in config_entry.data[CONF_RESOURCES]
+    ):
+        description.entity_registry_enabled_default = False
+
+    async_add_entities(
+        [OnlineStatus(data_service, description)], update_before_add=True
+    )
 
 
 class OnlineStatus(BinarySensorEntity):
     """Representation of a UPS online status."""
 
-    def __init__(self, data):
+    def __init__(
+        self,
+        data_service: APCUPSdData,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialize the APCUPSd binary device."""
-        self._data = data
-        self._attr_name = "UPS Online Status"
+        self.entity_description = description
+        self._data_service = data_service
 
     def update(self) -> None:
         """Get the status report from APCUPSd and set this entity's state."""
-        self._attr_is_on = int(self._data.status[KEY_STATUS], 16) & VALUE_ONLINE > 0
+        self._data_service.update()
+
+        key = self.entity_description.key.upper()
+        if key not in self._data_service.status:
+            self._attr_is_on = None
+            return
+
+        self._attr_is_on = int(self._data_service.status[key], 16) & VALUE_ONLINE > 0
