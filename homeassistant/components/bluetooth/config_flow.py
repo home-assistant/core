@@ -1,7 +1,6 @@
 """Config flow to configure the Bluetooth integration."""
 from __future__ import annotations
 
-import platform
 from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
@@ -11,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+from . import models
 from .const import (
     ADAPTER_ADDRESS,
     CONF_ADAPTER,
@@ -134,7 +134,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return platform.system() == "Linux"
+        return bool(models.MANAGER and models.MANAGER.supports_passive_scan)
 
 
 class OptionsFlowHandler(OptionsFlow):
