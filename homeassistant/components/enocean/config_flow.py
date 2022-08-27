@@ -50,24 +50,6 @@ MOCKUP_DEVICES = [
     ),
 ]
 
-MOCKUP_SENDER_IDS = [
-    selector.SelectOptionDict(
-        value="5E:53:AB:92", label="(Mock-up) Chip ID (5E:53:AB:92)"
-    ),
-    selector.SelectOptionDict(
-        value="FF:FF:46:80", label="(Mock-up) Base ID (FF:FF:46:80)"
-    ),
-    selector.SelectOptionDict(
-        value="FF:FF:46:81", label="(Mock-up) Base ID + 1 (FF:FF:46:81)"
-    ),
-    selector.SelectOptionDict(
-        value="FF:FF:46:82", label="(Mock-up) Base ID + 2 (FF:FF:46:82)"
-    ),
-    selector.SelectOptionDict(
-        value="FF:FF:46:83", label="(Mock-up) Base ID + 3 (FF:FF:46:83)"
-    ),
-]
-
 ADD_DEVICE_SCHEMA = vol.Schema(
     {
         vol.Required(
@@ -87,11 +69,11 @@ ADD_DEVICE_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
         vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): selector.SelectSelector(
-            # For now, the list of sender_ids will always be empty. For a
+            # For now, the list of sender_ids will be empty. For a
             # later version, it shall be pre-filled with the dongles chip ID
-            # and its based IDs. (FUTURE WORK)
+            # and its base IDs. (FUTURE WORK, requires update of enocean lib)
             # Hence the use of a SelectSelector.
-            selector.SelectSelectorConfig(options=MOCKUP_SENDER_IDS, custom_value=True)
+            selector.SelectSelectorConfig(options=[], custom_value=True)
         ),
     }
 )
@@ -329,13 +311,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_ENOCEAN_SENDER_ID, default=default_sender_id
                 ): selector.SelectSelector(
-                    # For now, the list of sender_ids will always be empty. For a
-                    # later version, it shall be pre-filled with the dongles chip ID
-                    # and its based IDs. (FUTURE WORK)
+                    # For now, the list of sender_ids will be empty. For a
+                    # later version, it shall be pre-filled with the dongle's
+                    # chip ID and its base IDs. (FUTURE WORK, requires update
+                    # of enocean lib).
                     # Hence the use of a SelectSelector.
-                    selector.SelectSelectorConfig(
-                        options=MOCKUP_SENDER_IDS, custom_value=True
-                    )
+                    selector.SelectSelectorConfig(options=[], custom_value=True)
                 ),
             }
         )
