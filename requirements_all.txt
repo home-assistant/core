@@ -427,7 +427,7 @@ blockchain==1.4.4
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.2.0
+bluetooth-adapters==0.3.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.2.2
@@ -2022,7 +2022,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.7
+pyunifiprotect==4.1.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

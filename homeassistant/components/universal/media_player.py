@@ -152,6 +152,8 @@ async def async_setup_platform(
 class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -273,11 +275,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self) -> str | None:
