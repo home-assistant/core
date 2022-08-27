@@ -42,21 +42,21 @@ from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 class ONVIFDevice:
     """Manages an ONVIF device."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
+    device: ONVIFCamera
+    events: EventManager
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
         self.available: bool = True
-
-        self.device: ONVIFCamera = None
-        self.events: EventManager = None
 
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
         self.profiles: list[Profile] = []
         self.max_resolution: int = 0
 
-        self._dt_diff_seconds: int = 0
+        self._dt_diff_seconds: float = 0
 
     @property
     def name(self) -> str:
@@ -99,6 +99,7 @@ class ONVIFDevice:
             await self.async_check_date_and_time()
 
             # Create event manager
+            assert self.config_entry.unique_id
             self.events = EventManager(
                 self.hass, self.device, self.config_entry.unique_id
             )
@@ -297,7 +298,7 @@ class ONVIFDevice:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
-        profiles = []
+        profiles: list[Profile] = []
 
         if not isinstance(result, list):
             return profiles
@@ -396,7 +397,7 @@ class ONVIFDevice:
             req.ProfileToken = profile.token
             if move_mode == CONTINUOUS_MOVE:
                 # Guard against unsupported operation
-                if not profile.ptz.continuous:
+                if not profile.ptz or not profile.ptz.continuous:
                     LOGGER.warning(
                         "ContinuousMove not supported on device '%s'", self.name
                     )
@@ -419,7 +420,7 @@ class ONVIFDevice:
                 )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
-                if not profile.ptz.relative:
+                if not profile.ptz or not profile.ptz.relative:
                     LOGGER.warning(
                         "RelativeMove not supported on device '%s'", self.name
                     )
@@ -436,7 +437,7 @@ class ONVIFDevice:
                 await ptz_service.RelativeMove(req)
             elif move_mode == ABSOLUTE_MOVE:
                 # Guard against unsupported operation
-                if not profile.ptz.absolute:
+                if not profile.ptz or not profile.ptz.absolute:
                     LOGGER.warning(
                         "AbsoluteMove not supported on device '%s'", self.name
                     )
@@ -453,6 +454,11 @@ class ONVIFDevice:
                 await ptz_service.AbsoluteMove(req)
             elif move_mode == GOTOPRESET_MOVE:
                 # Guard against unsupported operation
+                if not profile.ptz or not profile.ptz.presets:
+                    LOGGER.warning(
+                        "Absolute Presets not supported on device '%s'", self.name
+                    )
+                    return
                 if preset_val not in profile.ptz.presets:
                     LOGGER.warning(
                         "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",

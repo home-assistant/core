@@ -14,6 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -52,10 +53,11 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_max_value=200,
         native_step=1,
         icon="mdi:speedometer",
-        name="Effect Speed",
+        name="Effect speed",
         value_fn=lambda device: cast(Optional[int], device.state.get_speed()),
         set_value_fn=_async_set_speed,
         required_feature="effect",
+        entity_category=EntityCategory.CONFIG,
     ),
     WizNumberEntityDescription(
         key="dual_head_ratio",
@@ -63,10 +65,11 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_max_value=100,
         native_step=1,
         icon="mdi:floor-lamp-dual",
-        name="Dual Head Ratio",
+        name="Dual head ratio",
         value_fn=lambda device: cast(Optional[int], device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -98,7 +101,6 @@ class WizSpeedNumber(WizEntity, NumberEntity):
         super().__init__(wiz_data, name)
         self.entity_description = description
         self._attr_unique_id = f"{self._device.mac}_{description.key}"
-        self._attr_name = f"{name} {description.name}"
         self._async_update_attrs()
 
     @property

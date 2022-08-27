@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import random
+from typing import Any
 
 from lightify import Lightify
 import voluptuous as vol
@@ -306,7 +307,7 @@ class Luminary(LightEntity):
 
         return False
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = int(kwargs.get(ATTR_TRANSITION, 0) * 10)
         if ATTR_EFFECT in kwargs:
@@ -331,7 +332,7 @@ class Luminary(LightEntity):
         else:
             self._luminary.set_onoff(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._is_on = False
         if ATTR_TRANSITION in kwargs:
@@ -374,7 +375,7 @@ class Luminary(LightEntity):
         if self._supported_features & SUPPORT_COLOR:
             self._rgb_color = self._luminary.rgb()
 
-    def update(self):
+    def update(self) -> None:
         """Synchronize state with bridge."""
         changed = self.update_func()
         if changed > self._changed:

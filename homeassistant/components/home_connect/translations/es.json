@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "El componente no est\u00e1 configurado. Mira su documentaci\u00f3n.",
-            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})"
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [revisa la secci\u00f3n de ayuda]({docs_url})"
         },
         "create_entry": {
             "default": "Autenticado correctamente"

@@ -69,11 +69,13 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -101,8 +103,10 @@ STATES_ORDER = [
     STATE_UNAVAILABLE,
     STATE_OFF,
     STATE_IDLE,
+    STATE_STANDBY,
     STATE_ON,
     STATE_PAUSED,
+    STATE_BUFFERING,
     STATE_PLAYING,
 ]
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
@@ -147,6 +151,8 @@ async def async_setup_platform(
 
 class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -269,11 +275,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self) -> str | None:

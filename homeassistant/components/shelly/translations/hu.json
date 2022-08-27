@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "firmware_not_fully_provisioned": "Az eszk\u00f6z nincs teljesen be\u00fczemelve. K\u00e9rj\u00fck, vegye fel a kapcsolatot a Shelly \u00fcgyf\u00e9lszolg\u00e1lat\u00e1val",
+            "firmware_not_fully_provisioned": "Az eszk\u00f6z be\u00fczemel\u00e9se nem teljes. K\u00e9rem, vegye fel a kapcsolatot a Shelly \u00fcgyf\u00e9lszolg\u00e1lat\u00e1val",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },

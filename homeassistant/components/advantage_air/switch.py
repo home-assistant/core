@@ -1,4 +1,6 @@
 """Switch platform for Advantage Air integration."""
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -9,7 +11,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity
 
 
 async def async_setup_entry(
@@ -17,7 +19,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AdvantageAir toggle platform."""
+    """Set up AdvantageAir switch platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
@@ -28,31 +30,29 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
+class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
     """Representation of Advantage Air fresh air control."""
 
     _attr_icon = "mdi:air-filter"
+    _attr_name = "Fresh air"
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
-        self._attr_name = f'{self._ac["name"]} Fresh Air'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
-        )
+        self._attr_unique_id += "-freshair"
 
     @property
     def is_on(self):
         """Return the fresh air status."""
         return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn fresh air on."""
         await self.async_change(
             {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_ON}}}
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fresh air off."""
         await self.async_change(
             {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}}

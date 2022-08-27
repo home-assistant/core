@@ -182,7 +182,13 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
             "event": "notification",
             "nodeId": 32,
             "ccId": 111,
-            "args": {"eventType": 5, "dataType": 2, "eventData": "555"},
+            "args": {
+                "eventType": 5,
+                "eventTypeLabel": "test1",
+                "dataType": 2,
+                "dataTypeLabel": "test2",
+                "eventData": "555",
+            },
         },
     )
 
@@ -193,7 +199,9 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[1].data["home_id"] == client.driver.controller.home_id
     assert events[1].data["node_id"] == 32
     assert events[1].data["event_type"] == 5
+    assert events[1].data["event_type_label"] == "test1"
     assert events[1].data["data_type"] == 2
+    assert events[1].data["data_type_label"] == "test2"
     assert events[1].data["event_data"] == "555"
     assert events[1].data["command_class"] == CommandClass.ENTRY_CONTROL
     assert events[1].data["command_class_name"] == "Entry Control"
@@ -206,7 +214,7 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
             "event": "notification",
             "nodeId": 32,
             "ccId": 38,
-            "args": {"eventType": 4, "direction": "up"},
+            "args": {"eventType": 4, "eventTypeLabel": "test1", "direction": "up"},
         },
     )
 
@@ -217,6 +225,7 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[2].data["home_id"] == client.driver.controller.home_id
     assert events[2].data["node_id"] == 32
     assert events[2].data["event_type"] == 4
+    assert events[2].data["event_type_label"] == "test1"
     assert events[2].data["direction"] == "up"
     assert events[2].data["command_class"] == CommandClass.SWITCH_MULTILEVEL
     assert events[2].data["command_class_name"] == "Multilevel Switch"

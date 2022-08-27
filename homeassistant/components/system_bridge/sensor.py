@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SystemBridgeDeviceEntity
+from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
 
@@ -512,7 +512,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
+class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
     """Define a System Bridge sensor."""
 
     entity_description: SystemBridgeSensorEntityDescription

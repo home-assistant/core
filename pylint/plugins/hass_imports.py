@@ -38,7 +38,21 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^FORMAT_(\w*)$"),
         ),
     ],
-    "homeassistant.components.binarysensor": [
+    "homeassistant.components.automation": [
+        ObsoleteImportMatch(
+            reason="replaced by TriggerActionType from helpers.trigger",
+            constant=re.compile(r"^AutomationActionType$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by TriggerData from helpers.trigger",
+            constant=re.compile(r"^AutomationTriggerData$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by TriggerInfo from helpers.trigger",
+            constant=re.compile(r"^AutomationTriggerInfo$"),
+        ),
+    ],
+    "homeassistant.components.binary_sensor": [
         ObsoleteImportMatch(
             reason="replaced by BinarySensorDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
@@ -92,6 +106,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by CoverEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.device_tracker": [
+        ObsoleteImportMatch(
+            reason="replaced by SourceType enum",
+            constant=re.compile(r"^SOURCE_TYPE_\w+$"),
+        ),
+    ],
+    "homeassistant.components.device_tracker.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SourceType enum",
+            constant=re.compile(r"^SOURCE_TYPE_\w+$"),
         ),
     ],
     "homeassistant.components.fan": [
@@ -251,6 +277,11 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             "hass-deprecated-import",
             "Used when import is deprecated",
         ),
+        "W7423": (
+            "Absolute import should be used",
+            "hass-absolute-import",
+            "Used when relative import should be replaced with absolute import",
+        ),
     }
     options = ()
 
@@ -272,9 +303,27 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
 
+    def _visit_importfrom_relative(self, current_package: str, node: nodes.ImportFrom) -> None:
+        """Called when a ImportFrom node is visited."""
+        if node.level <= 1 or not current_package.startswith("homeassistant.components"):
+            return
+        split_package = current_package.split(".")
+        if not node.modname and len(split_package) == node.level + 1:
+            for name in node.names:
+                # Allow relative import to component root
+                if name[0] != split_package[2]:
+                    self.add_message("hass-absolute-import", node=node)
+                    return
+            return
+        if len(split_package) < node.level + 2:
+            self.add_message("hass-absolute-import", node=node)
+
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Called when a ImportFrom node is visited."""
+        if not self.current_package:
+            return
         if node.level is not None:
+            self._visit_importfrom_relative(self.current_package, node)
             return
         if node.modname == self.current_package or node.modname.startswith(
             f"{self.current_package}."

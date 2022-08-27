@@ -145,12 +145,17 @@ async def test_manual_config_starts_discovery_flow(
 
 
 async def test_manual_config_set(
-    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+    hass,
+    mock_try_connection,
+    mock_finish_setup,
+    mqtt_client_mock,
 ):
     """Test manual config does not create an entry, and entry can be setup late."""
     # MQTT config present in yaml config
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
     await hass.async_block_till_done()
+    # do not try to reload
+    del hass.data["mqtt_reload_needed"]
     assert len(mock_finish_setup.mock_calls) == 0
 
     mock_try_connection.return_value = True

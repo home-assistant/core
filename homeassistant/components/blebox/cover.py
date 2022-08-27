@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -14,7 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
+
+BLEBOX_TO_COVER_DEVICE_CLASSES = {
+    "gate": CoverDeviceClass.GATE,
+    "gatebox": CoverDeviceClass.DOOR,
+    "shutter": CoverDeviceClass.SHUTTER,
+}
+
 
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
@@ -49,7 +56,7 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
     def __init__(self, feature):
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
+        self._attr_device_class = BLEBOX_TO_COVER_DEVICE_CLASSES[feature.device_class]
         position = CoverEntityFeature.SET_POSITION if feature.is_slider else 0
         stop = CoverEntityFeature.STOP if feature.has_stop else 0
         self._attr_supported_features = (

@@ -223,10 +223,22 @@ HARDWARE_INTEGRATIONS = {
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
+    The add-on must be installed.
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     return await hassio.get_addon_info(slug)
+
+
+@api_data
+async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
+    """Return add-on store info.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    command = f"/store/addons/{slug}"
+    return await hassio.send_command(command, method="get")
 
 
 @bind_hass
@@ -533,11 +545,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     if not await hassio.is_connected():
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
-
-    assert isinstance(data, dict)
 
     refresh_token = None
     if "hassio_user" in data:
@@ -758,7 +768,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_config_entry_first_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

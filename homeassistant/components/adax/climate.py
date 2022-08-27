@@ -80,7 +80,7 @@ class AdaxDevice(ClimateEntity):
             manufacturer="Adax",
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
@@ -140,7 +140,7 @@ class LocalAdaxDevice(ClimateEntity):
             manufacturer="Adax",
         )
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return

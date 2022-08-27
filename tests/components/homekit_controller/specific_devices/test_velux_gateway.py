@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
 )
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -75,6 +76,7 @@ async def test_velux_cover_setup(hass):
                         EntityTestInfo(
                             entity_id="sensor.velux_sensor_temperature_sensor",
                             friendly_name="VELUX Sensor Temperature sensor",
+                            capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             unique_id="homekit-a11b111-8",
                             unit_of_measurement=TEMP_CELSIUS,
                             state="18.9",
@@ -82,6 +84,7 @@ async def test_velux_cover_setup(hass):
                         EntityTestInfo(
                             entity_id="sensor.velux_sensor_humidity_sensor",
                             friendly_name="VELUX Sensor Humidity sensor",
+                            capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             unique_id="homekit-a11b111-11",
                             unit_of_measurement=PERCENTAGE,
                             state="58",
@@ -89,6 +92,7 @@ async def test_velux_cover_setup(hass):
                         EntityTestInfo(
                             entity_id="sensor.velux_sensor_carbon_dioxide_sensor",
                             friendly_name="VELUX Sensor Carbon Dioxide sensor",
+                            capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             unique_id="homekit-a11b111-14",
                             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             state="400",

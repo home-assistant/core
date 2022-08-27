@@ -117,6 +117,8 @@ def log_command_error(
 class HeosMediaPlayer(MediaPlayerEntity):
     """The HEOS player."""
 
+    _attr_should_poll = False
+
     def __init__(self, player):
         """Initialize."""
         self._media_position_updated_at = None
@@ -401,11 +403,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._player.name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for this device."""
-        return False
 
     @property
     def shuffle(self) -> bool:

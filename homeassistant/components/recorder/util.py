@@ -80,7 +80,7 @@ def session_scope(
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
-        session = hass.data[DATA_INSTANCE].get_session()
+        session = get_instance(hass).get_session()
 
     if session is None:
         raise RuntimeError("Session required")
@@ -552,7 +552,19 @@ def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
+    """Determine if a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    instance = get_instance(hass)
+    return instance.migration_in_progress
+
+
+def async_migration_is_live(hass: HomeAssistant) -> bool:
+    """Determine if a migration is live.
 
     This is a thin wrapper that allows us to change
     out the implementation later.
@@ -560,7 +572,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     if DATA_INSTANCE not in hass.data:
         return False
     instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_in_progress
+    return instance.migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -577,3 +589,9 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
+
+
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance

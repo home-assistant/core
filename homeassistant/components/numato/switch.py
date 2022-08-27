@@ -67,6 +67,8 @@ def setup_platform(
 class NumatoGpioSwitch(SwitchEntity):
     """Representation of a Numato USB GPIO switch port."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the port."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -80,11 +82,6 @@ class NumatoGpioSwitch(SwitchEntity):
     def name(self):
         """Return the name of the switch."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def is_on(self):

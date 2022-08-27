@@ -1,7 +1,7 @@
 """Test the Litter-Robot select entity."""
 from datetime import timedelta
 
-from pylitterbot.robot import VALID_WAIT_TIMES
+from pylitterbot import LitterRobot3
 import pytest
 
 from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
@@ -38,7 +38,7 @@ async def test_wait_time_select(hass: HomeAssistant, mock_account):
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID}
 
     count = 0
-    for wait_time in VALID_WAIT_TIMES:
+    for wait_time in LitterRobot3.VALID_WAIT_TIMES:
         count += 1
         data[ATTR_OPTION] = wait_time
 

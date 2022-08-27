@@ -24,7 +24,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
@@ -160,7 +159,7 @@ ENTITY_DESCRIPTIONS = {
     ],
 }
 
-BINARY_SENSOR_DESCRIPTIONS = [
+COMMON_BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tampered",
         value_fn=lambda device: device.tampered,
@@ -215,11 +214,9 @@ async def async_setup_entry(
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors[sensor_id]
 
-        if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
-            return
-
         for description in (
-            ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
+            ENTITY_DESCRIPTIONS.get(type(sensor), [])
+            + COMMON_BINARY_SENSOR_DESCRIPTIONS
         ):
             if (
                 not hasattr(sensor, description.key)
@@ -236,27 +233,11 @@ async def async_setup_entry(
         gateway.api.sensors,
     )
 
-    @callback
-    def async_reload_clip_sensors() -> None:
-        """Load clip sensor sensors from deCONZ."""
-        for sensor_id, sensor in gateway.api.sensors.items():
-            if sensor.type.startswith("CLIP"):
-                async_add_sensor(EventType.ADDED, sensor_id)
 
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_reload_clip_sensors,
-            async_reload_clip_sensors,
-        )
-    )
-
-
-class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
+class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
     TYPE = DOMAIN
-    _device: SensorResources
     entity_description: DeconzBinarySensorDescription
 
     def __init__(
@@ -303,8 +284,8 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
 
-        if self._device.secondary_temperature is not None:
-            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
+        if self._device.internal_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Presence):
 

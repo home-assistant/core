@@ -402,3 +402,32 @@ async def test_not_schedule_refresh_if_system_option_disable_polling(hass):
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL)
     crd.async_add_listener(lambda: None)
     assert crd._unsub_refresh is None
+
+
+async def test_async_set_update_error(crd, caplog):
+    """Test manually setting an update failure."""
+    update_callback = Mock()
+    crd.async_add_listener(update_callback)
+
+    crd.async_set_update_error(aiohttp.ClientError("Client Failure #1"))
+    assert crd.last_update_success is False
+    assert "Client Failure #1" in caplog.text
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    # Additional failure does not log or change state
+    crd.async_set_update_error(aiohttp.ClientError("Client Failure #2"))
+    assert crd.last_update_success is False
+    assert "Client Failure #2" not in caplog.text
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    crd.async_set_updated_data(200)
+    assert crd.last_update_success is True
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    crd.async_set_update_error(aiohttp.ClientError("Client Failure #3"))
+    assert crd.last_update_success is False
+    assert "Client Failure #2" not in caplog.text
+    update_callback.assert_called_once()

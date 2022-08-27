@@ -61,11 +61,6 @@ class ProliphixThermostat(ClimateEntity):
         self._pdp = pdp
         self._name = None
 
-    @property
-    def should_poll(self):
-        """Set up polling needed for thermostat."""
-        return True
-
     def update(self):
         """Update the data from the thermostat."""
         self._pdp.update()

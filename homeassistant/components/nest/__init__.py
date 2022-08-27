@@ -52,6 +52,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
@@ -187,6 +192,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=entry.data[CONF_PROJECT_ID]
         )
 
+    async_delete_issue(hass, DOMAIN, "removed_app_auth")
+
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
         return False
@@ -227,7 +234,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_DEVICE_MANAGER: device_manager,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -255,6 +262,18 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
         # App Auth credentials have been deprecated and must be re-created
         # by the user in the config flow
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_app_auth",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="removed_app_auth",
+            translation_placeholders={
+                "more_info_url": "https://www.home-assistant.io/more-info/nest-auth-deprecation",
+                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
+            },
+        )
         raise ConfigEntryAuthFailed(
             "Google has deprecated App Auth credentials, and the integration "
             "must be reconfigured in the UI to restore access to Nest Devices."
@@ -271,12 +290,14 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
             WEB_AUTH_DOMAIN,
         )
 
-    _LOGGER.warning(
-        "Configuration of Nest integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
-        "(including OAuth Application Credentials) has been imported into "
-        "the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
 
 
