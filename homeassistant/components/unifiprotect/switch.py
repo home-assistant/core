@@ -385,7 +385,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | NVR,
+        device: ProtectAdoptableDeviceModel,
         description: ProtectSwitchEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect Switch."""
