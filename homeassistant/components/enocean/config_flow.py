@@ -166,36 +166,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         add_device_schema = None
 
-        if user_input is None:
-            add_device_schema = vol.Schema(
-                {
-                    vol.Required(CONF_ENOCEAN_EEP, default=""): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=ENOCEAN_EQUIPMENT_PROFILES
-                        )
-                    ),
-                    vol.Required(
-                        CONF_ENOCEAN_DEVICE_ID, default="00:00:00:00"
-                    ): selector.SelectSelector(
-                        # For now, the list of devices will be empty. For a
-                        # later version, it shall be pre-filled with all those
-                        # devices, from which the dongle has received telegrams.
-                        # (FUTURE WORK)
-                        # Hence the use of a SelectSelector.
-                        selector.SelectSelectorConfig(options=[], custom_value=True)
-                    ),
-                    vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
-                    vol.Optional(
-                        CONF_ENOCEAN_SENDER_ID, default=""
-                    ): selector.SelectSelector(
-                        # For now, the list of sender_ids will be empty. For a
-                        # later version, it shall be pre-filled with the dongles chip ID
-                        # and its base IDs. (FUTURE WORK, requires update of enocean lib)
-                        # Hence the use of a SelectSelector.
-                        selector.SelectSelectorConfig(options=[], custom_value=True)
-                    ),
-                }
-            )
+        default_eep = ""
+        default_device_id = "00:00:00:00"
+        default_device_name = ""
+        default_sender_id = ""
 
         if user_input is not None:
             device_id = user_input[CONF_ENOCEAN_DEVICE_ID].strip()
@@ -231,43 +205,40 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     title="", data={CONF_ENOCEAN_DEVICES: devices}
                 )
 
-            add_device_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ENOCEAN_EEP,
-                        default=user_input[CONF_ENOCEAN_EEP],
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=ENOCEAN_EQUIPMENT_PROFILES
-                        )
-                    ),
-                    vol.Required(
-                        CONF_ENOCEAN_DEVICE_ID,
-                        default=user_input[CONF_ENOCEAN_DEVICE_ID],
-                    ): selector.SelectSelector(
-                        # For now, the list of devices will be empty. For a
-                        # later version, it shall be pre-filled with all those
-                        # devices, from which the dongle has received telegrams.
-                        # (FUTURE WORK)
-                        # Hence the use of a SelectSelector.
-                        selector.SelectSelectorConfig(options=[], custom_value=True)
-                    ),
-                    vol.Required(
-                        CONF_ENOCEAN_DEVICE_NAME,
-                        default=user_input[CONF_ENOCEAN_DEVICE_NAME],
-                    ): str,
-                    vol.Optional(
-                        CONF_ENOCEAN_SENDER_ID,
-                        default=user_input[CONF_ENOCEAN_SENDER_ID],
-                    ): selector.SelectSelector(
-                        # For now, the list of sender_ids will be empty. For a
-                        # later version, it shall be pre-filled with the dongles chip ID
-                        # and its base IDs. (FUTURE WORK, requires update of enocean lib)
-                        # Hence the use of a SelectSelector.
-                        selector.SelectSelectorConfig(options=[], custom_value=True)
-                    ),
-                }
-            )
+        add_device_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ENOCEAN_EEP,
+                    default=default_eep,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=ENOCEAN_EQUIPMENT_PROFILES)
+                ),
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_ID,
+                    default=default_device_id,
+                ): selector.SelectSelector(
+                    # For now, the list of devices will be empty. For a
+                    # later version, it shall be pre-filled with all those
+                    # devices, from which the dongle has received telegrams.
+                    # (FUTURE WORK)
+                    # Hence the use of a SelectSelector.
+                    selector.SelectSelectorConfig(options=[], custom_value=True)
+                ),
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_NAME,
+                    default=default_device_name,
+                ): str,
+                vol.Optional(
+                    CONF_ENOCEAN_SENDER_ID,
+                    default=default_sender_id,
+                ): selector.SelectSelector(
+                    # For now, the list of sender_ids will be empty. For a
+                    # later version, it shall be pre-filled with the dongles # chip ID and its base IDs. (FUTURE WORK, requires update # of enocean lib)
+                    # Hence the use of a SelectSelector.
+                    selector.SelectSelectorConfig(options=[], custom_value=True)
+                ),
+            }
+        )
 
         return self.async_show_form(
             step_id=ENOCEAN_STEP_ID_ADD_DEVICE,
@@ -319,19 +290,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_edit_device(self, user_input=None, device=None) -> FlowResult:
         """Edit an EnOcean device."""
         default_device_id = "none"
+        default_device_name = "none"
+        default_eep = "none"
+        default_sender_id = "none"
+
         if device is not None:
             default_device_id = device[CONF_ENOCEAN_DEVICE_ID]
-
-        default_device_name = "none"
-        if device is not None:
             default_device_name = device[CONF_ENOCEAN_DEVICE_NAME]
-
-        default_eep = "none"
-        if device is not None:
             default_eep = device[CONF_ENOCEAN_EEP]
-
-        default_sender_id = "none"
-        if device is not None:
             default_sender_id = device[CONF_ENOCEAN_SENDER_ID]
 
         edit_device_schema = vol.Schema(
