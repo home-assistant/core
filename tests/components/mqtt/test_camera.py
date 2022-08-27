@@ -43,7 +43,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message
 
-DEFAULT_CONFIG = {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}
+DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 
 DEFAULT_CONFIG_LEGACY = {
     camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}

@@ -56,9 +56,11 @@ from tests.common import (
 )
 
 DEFAULT_CONFIG = {
-    binary_sensor.DOMAIN: {
-        "name": "test",
-        "state_topic": "test-topic",
+    mqtt.DOMAIN: {
+        binary_sensor.DOMAIN: {
+            "name": "test",
+            "state_topic": "test-topic",
+        }
     }
 }
 
@@ -1103,7 +1105,7 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
 
     freezer.move_to("2022-02-02 12:02:00+01:00")
     domain = binary_sensor.DOMAIN
-    config3 = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config3 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config3["name"] = "test3"
     config3["expire_after"] = 10
     config3["state_topic"] = "test-topic3"

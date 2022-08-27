@@ -42,7 +42,9 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-DEFAULT_CONFIG = {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+DEFAULT_CONFIG = {
+    mqtt.DOMAIN: {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+}
 
 DEFAULT_CONFIG_LEGACY = {
     button.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
