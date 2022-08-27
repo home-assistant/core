@@ -270,8 +270,6 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
         "all_updates": True,
         "disable_rtsp": True,
         "override_connection_host": True,
-        "max_media": 1000,
-        "ignored_devices": "",
     }
 
 
