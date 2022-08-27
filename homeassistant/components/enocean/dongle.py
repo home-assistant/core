@@ -50,6 +50,11 @@ class EnOceanDongle:
         """Get the dongle's base id."""
         return self._communicator.base_id
 
+    @property
+    def chip_id(self):
+        """Get the dongle's chip id (REQUIRES UPDATE OF ENOCEAN LIBRARY)."""
+        return None
+
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
         self._communicator.send(command)
