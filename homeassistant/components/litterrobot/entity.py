@@ -67,6 +67,8 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
 class LitterRobotControlEntity(LitterRobotEntity):
     """A Litter-Robot entity that can control the unit."""
 
+    robot: LitterRobot
+
     def __init__(
         self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
     ) -> None:
@@ -136,6 +138,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
 class LitterRobotConfigEntity(LitterRobotControlEntity):
     """A Litter-Robot entity that can control configuration of the unit."""
 
+    robot: LitterRobot
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
