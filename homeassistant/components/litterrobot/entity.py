@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, RobotTypes
 from .hub import LitterRobotHub
 
 _P = ParamSpec("_P")
@@ -33,7 +33,7 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
     """Generic Litter-Robot entity representing common data and methods."""
 
     def __init__(
-        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
+        self, robot: RobotTypes, entity_type: str, hub: LitterRobotHub
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
@@ -60,6 +60,7 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
             manufacturer="Litter-Robot",
             model=self.robot.model,
             name=self.robot.name,
+            sw_version=getattr(self.robot, "firmware", None),
         )
 
 
