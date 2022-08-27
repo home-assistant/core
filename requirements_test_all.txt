@@ -564,7 +564,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.16.0
+govee-ble==0.16.1
 
 # homeassistant.components.gree
 greeclimate==1.3.0
@@ -1382,7 +1382,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.5
+pyunifiprotect==4.1.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1586,6 +1586,9 @@ tesla-powerwall==0.3.18
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.1
+
+# homeassistant.components.thermobeacon
+thermobeacon-ble==0.3.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.0

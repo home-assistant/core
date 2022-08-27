@@ -37,6 +37,8 @@ async def async_setup_entry(
 class KonnectedBinarySensor(BinarySensorEntity):
     """Representation of a Konnected binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, device_id, zone_num, data):
         """Initialize the Konnected binary sensor."""
         self._data = data
@@ -61,11 +63,6 @@ class KonnectedBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self):
