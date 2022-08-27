@@ -45,6 +45,11 @@ class EnOceanDongle:
             self.dispatcher_disconnect_handle()
             self.dispatcher_disconnect_handle = None
 
+    @property
+    def base_id(self):
+        """Get the dongle's base id."""
+        return self._communicator.base_id
+
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
         self._communicator.send(command)
