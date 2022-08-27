@@ -457,6 +457,9 @@ bsblan==0.5.0
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1
 
+# homeassistant.components.bthome
+bthome-ble==0.4.0
+
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
 
