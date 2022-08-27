@@ -332,10 +332,14 @@ class FlowManager(abc.ABC):
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
-        handler = flow.handler
-        self._handler_progress_index[handler].remove(flow.flow_id)
-        if not self._handler_progress_index[handler]:
-            del self._handler_progress_index[handler]
+
+        try:
+            flow.async_remove()
+        finally:
+            handler = flow.handler
+            self._handler_progress_index[handler].remove(flow.flow_id)
+            if not self._handler_progress_index[handler]:
+                del self._handler_progress_index[handler]
 
     async def _async_handle_step(
         self,
@@ -567,6 +571,10 @@ class FlowHandler:
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
+
+    @callback
+    def async_remove(self) -> None:
+        """Notification that the config flow has been removed."""
 
 
 @callback
