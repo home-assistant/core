@@ -29,8 +29,11 @@ from .const import (
 )
 from .match import (
     ADDRESS,
+    CALLBACK,
     CONNECTABLE,
     BluetoothCallbackMatcher,
+    BluetoothCallbackMatcherIndex,
+    BluetoothCallbackMatcherWithCallback,
     IntegrationMatcher,
     ble_device_matches,
 )
@@ -134,12 +137,7 @@ class BluetoothManager:
         self._connectable_unavailable_callbacks: dict[
             str, list[Callable[[str], None]]
         ] = {}
-        self._callbacks: list[
-            tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
-        ] = []
-        self._connectable_callbacks: list[
-            tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
-        ] = []
+        self._callback_index = BluetoothCallbackMatcherIndex()
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
@@ -279,7 +277,7 @@ class BluetoothManager:
         device = service_info.device
         connectable = service_info.connectable
         address = device.address
-        all_history = self._get_history_by_type(connectable)
+        all_history = self._connectable_history if connectable else self._history
         old_service_info = all_history.get(address)
         if old_service_info and _prefer_previous_adv(old_service_info, service_info):
             return
@@ -305,24 +303,13 @@ class BluetoothManager:
             matched_domains,
         )
 
-        if (
-            not matched_domains
-            and not self._callbacks
-            and not self._connectable_callbacks
-        ):
-            return
+        for match in self._callback_index.match_callbacks(service_info):
+            callback = match[CALLBACK]
+            try:
+                callback(service_info, BluetoothChange.ADVERTISEMENT)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error in bluetooth callback")
 
-        for connectable_callback in (True, False):
-            for callback, matcher in self._get_callbacks_by_type(connectable_callback):
-                if matcher and not ble_device_matches(matcher, service_info):
-                    continue
-                try:
-                    callback(service_info, BluetoothChange.ADVERTISEMENT)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Error in bluetooth callback")
-
-        if not matched_domains:
-            return
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
@@ -354,28 +341,30 @@ class BluetoothManager:
         matcher: BluetoothCallbackMatcher | None,
     ) -> Callable[[], None]:
         """Register a callback."""
+        callback_matcher = BluetoothCallbackMatcherWithCallback(callback=callback)
         if not matcher:
-            matcher = BluetoothCallbackMatcher(connectable=True)
-        if CONNECTABLE not in matcher:
-            matcher[CONNECTABLE] = True
-        connectable = matcher[CONNECTABLE]
+            callback_matcher[CONNECTABLE] = True
+        else:
+            # We could write out every item in the typed dict here
+            # but that would be a bit inefficient and verbose.
+            callback_matcher.update(matcher)  # type: ignore[typeddict-item]
+            callback_matcher[CONNECTABLE] = matcher.get(CONNECTABLE, True)
 
-        callback_entry = (callback, matcher)
-        callbacks = self._get_callbacks_by_type(connectable)
-        callbacks.append(callback_entry)
+        connectable = callback_matcher[CONNECTABLE]
+        self._callback_index.add_with_address(callback_matcher)
 
         @hass_callback
         def _async_remove_callback() -> None:
-            callbacks.remove(callback_entry)
+            self._callback_index.remove_with_address(callback_matcher)
 
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
         # device.
         all_history = self._get_history_by_type(connectable)
         if (
-            (address := matcher.get(ADDRESS))
+            (address := callback_matcher.get(ADDRESS))
             and (service_info := all_history.get(address))
-            and ble_device_matches(matcher, service_info)
+            and ble_device_matches(callback_matcher, service_info)
         ):
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -430,12 +419,6 @@ class BluetoothManager:
     ) -> dict[str, BluetoothServiceInfoBleak]:
         """Return the history by type."""
         return self._connectable_history if connectable else self._history
-
-    def _get_callbacks_by_type(
-        self, connectable: bool
-    ) -> list[tuple[BluetoothCallback, BluetoothCallbackMatcher | None]]:
-        """Return the callbacks by type."""
-        return self._connectable_callbacks if connectable else self._callbacks
 
     def async_register_scanner(
         self, scanner: BaseHaScanner, connectable: bool
