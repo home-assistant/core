@@ -457,6 +457,9 @@ bsblan==0.5.0
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1
 
+# homeassistant.components.bthome
+bthome-ble==0.4.0
+
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
 
@@ -1796,7 +1799,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.2
+pyrisco==0.5.3
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2306,7 +2309,7 @@ systembridgeconnector==3.4.4
 tailscale==0.2.0
 
 # homeassistant.components.tank_utility
-tank_utility==1.4.0
+tank_utility==1.4.1
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
