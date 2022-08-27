@@ -198,26 +198,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         if user_input is not None:
-            # validate input (not yet finished)
             device_id = user_input[CONF_ENOCEAN_DEVICE_ID].strip()
-
-            if not self.validate_enocean_id_string(device_id):
-                errors["base"] = ENOCEAN_ERROR_INVALID_DEVICE_ID
+            if self.validate_enocean_id_string(device_id):
+                device_id = self.normalize_enocean_id_string(device_id)
             else:
-                # normalize device_id string
-                device_id = to_hex_string(from_hex_string(device_id))
-                user_input[CONF_ENOCEAN_DEVICE_ID] = device_id
+                errors["base"] = ENOCEAN_ERROR_INVALID_DEVICE_ID
 
             eep = user_input[CONF_ENOCEAN_EEP]
 
             sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
             if sender_id != "":
-                if not self.validate_enocean_id_string(sender_id):
-                    errors["base"] = ENOCEAN_ERROR_INVALID_SENDER_ID
+                if self.validate_enocean_id_string(sender_id):
+                    sender_id = self.normalize_enocean_id_string(sender_id)
                 else:
-                    # normalize sender_id string
-                    sender_id = to_hex_string(from_hex_string(sender_id))
-                    user_input[CONF_ENOCEAN_SENDER_ID] = sender_id
+                    errors["base"] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
@@ -436,3 +430,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return False
 
         return True
+
+    def normalize_enocean_id_string(self, id_string: str) -> str:
+        """Normalize the supplied EnOcean ID string."""
+        return to_hex_string(from_hex_string(id_string))
