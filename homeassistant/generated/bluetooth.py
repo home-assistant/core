@@ -144,6 +144,38 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "thermobeacon",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        "manufacturer_id": 16,
+        "manufacturer_data_start": [
+            0
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        "manufacturer_id": 17,
+        "manufacturer_data_start": [
+            0
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        "manufacturer_id": 21,
+        "manufacturer_data_start": [
+            0
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "local_name": "ThermoBeacon",
+        "connectable": False
+    },
+    {
         "domain": "thermopro",
         "local_name": "TP35*",
         "connectable": False
