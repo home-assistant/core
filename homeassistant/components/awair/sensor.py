@@ -8,7 +8,7 @@ from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_CONNECTIONS, ATTR_SW_VERSION
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -76,6 +76,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
 
     entity_description: AwairSensorEntityDescription
     _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -177,7 +178,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         sensor_type = self.entity_description.key
-        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict = {}
         if not self._air_data:
             return attrs
         if sensor_type in self._air_data.indices:
