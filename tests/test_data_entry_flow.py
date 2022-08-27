@@ -1,6 +1,6 @@
 """Test the flow classes."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -157,30 +157,11 @@ async def test_abort_calls_async_remove(manager):
         async def async_step_init(self, user_input=None):
             return self.async_abort(reason="reason")
 
-    with patch.object(TestFlow, "async_remove") as mock_async_remove:
-        await manager.async_init("test")
+        async_remove = Mock()
 
-    mock_async_remove.assert_called_once()
+    await manager.async_init("test")
 
-    assert len(manager.async_progress()) == 0
-    assert len(manager.mock_created_entries) == 0
-
-
-async def test_async_remove_with_failure_still_cleans_up(manager):
-    """Test that async_remove throwing an error still lets the manager clean up progress."""
-
-    @manager.mock_reg_handler("test")
-    class TestFlow(data_entry_flow.FlowHandler):
-        async def async_step_init(self, user_input=None):
-            return self.async_abort(reason="reason")
-
-    with patch.object(
-        TestFlow, "async_remove", side_effect=RuntimeError()
-    ) as mock_async_remove:
-        with pytest.raises(RuntimeError):
-            await manager.async_init("test")
-
-    mock_async_remove.assert_called_once()
+    TestFlow.async_remove.assert_called_once()
 
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
