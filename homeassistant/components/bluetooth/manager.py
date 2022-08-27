@@ -151,7 +151,12 @@ class BluetoothManager:
     async def async_diagnostics(self) -> dict[str, Any]:
         """Diagnostics for the manager."""
         scanner_diagnostics = await asyncio.gather(
-            *[scanner.async_diagnostics() for scanner in self._scanners]
+            *[
+                scanner.async_diagnostics()
+                for scanner in itertools.chain(
+                    self._scanners, self._connectable_scanners
+                )
+            ]
         )
         return {
             "adapters": self._adapters,

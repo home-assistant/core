@@ -20,10 +20,6 @@ async def async_get_config_entry_diagnostics(
     manager_diagnostics = await manager.async_diagnostics()
     adapters = await manager.async_get_bluetooth_adapters()
     diagnostics = {
-        "entry": {
-            "title": entry.title,
-            "unique_id": entry.unique_id,
-        },
         "manager": manager_diagnostics,
         "adapters": adapters,
     }
