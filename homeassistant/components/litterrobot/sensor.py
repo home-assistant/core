@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Union, cast
 
-from pylitterbot import FeederRobot, LitterRobot
+from pylitterbot import FeederRobot, LitterRobot, Robot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RobotTypes
+from .const import DOMAIN
 from .entity import LitterRobotEntity
 from .hub import LitterRobotHub
 
@@ -40,7 +40,7 @@ class RobotSensorEntityDescription(SensorEntityDescription):
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
-    should_report: Callable[[RobotTypes], bool] = lambda _: True
+    should_report: Callable[[Robot], bool] = lambda _: True
 
 
 @dataclass
@@ -50,13 +50,6 @@ class LitterRobotSensorEntityDescription(RobotSensorEntityDescription):
     should_report: Callable[[LitterRobot], bool] = lambda _: True
 
 
-@dataclass
-class FeederRobotSensorEntityDescription(RobotSensorEntityDescription):
-    """A class that describes Feeder-Robot sensor entities."""
-
-    should_report: Callable[[FeederRobot], bool] = lambda _: True
-
-
 class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
     """Litter-Robot sensor entity."""
 
@@ -64,7 +57,7 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
 
     def __init__(
         self,
-        robot: RobotTypes,
+        robot: LitterRobot | FeederRobot,
         hub: LitterRobotHub,
         description: RobotSensorEntityDescription,
     ) -> None:
@@ -123,7 +116,7 @@ LITTER_ROBOT_SENSORS = [
     ),
 ]
 
-FEEDER_ROBOT_SENSOR = FeederRobotSensorEntityDescription(
+FEEDER_ROBOT_SENSOR = RobotSensorEntityDescription(
     name="Food Level",
     key="food_level",
     native_unit_of_measurement=PERCENTAGE,
