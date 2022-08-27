@@ -276,6 +276,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/econet/ @vangorra @w1ll1am23
 /tests/components/econet/ @vangorra @w1ll1am23
 /homeassistant/components/ecovacs/ @OverloadUT
+/homeassistant/components/ecowitt/ @pvizeli
 /homeassistant/components/edl21/ @mtdcr
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
