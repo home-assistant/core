@@ -28,6 +28,7 @@ DATA_TARIFF_SENSORS = "utility_meter_sensors"
 
 CONF_METER = "meter"
 CONF_SOURCE_SENSOR = "source"
+CONF_PRICE_SENSOR = "price"
 CONF_METER_TYPE = "cycle"
 CONF_METER_OFFSET = "offset"
 CONF_METER_DELTA_VALUES = "delta_values"

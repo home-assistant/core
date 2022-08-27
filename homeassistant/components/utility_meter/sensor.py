@@ -52,6 +52,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_TYPE,
     CONF_SOURCE_SENSOR,
+    CONF_PRICE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
@@ -82,6 +83,7 @@ PERIOD2CRON = {
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = "source"
+ATTR_PRICE_ID = "price"
 ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
@@ -119,6 +121,12 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
+    price_entity_id = None
+    if config_entry.options[CONF_PRICE_SENSOR]:
+        price_entity_id = er.async_validate_entity_id(
+            registry, config_entry.options[CONF_PRICE_SENSOR]
+        )
+
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
@@ -143,6 +151,7 @@ async def async_setup_entry(
             net_consumption=net_consumption,
             parent_meter=entry_id,
             source_entity=source_entity_id,
+            price_entity=price_entity_id,
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
@@ -161,6 +170,7 @@ async def async_setup_entry(
                 net_consumption=net_consumption,
                 parent_meter=entry_id,
                 source_entity=source_entity_id,
+                price_entity=price_entity_id,
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
@@ -197,6 +207,7 @@ async def async_setup_platform(
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+        conf_meter_price = hass.data[DATA_UTILITY][meter][CONF_PRICE_SENSOR]
         conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
         conf_sensor_unique_id = (
@@ -236,6 +247,7 @@ async def async_setup_platform(
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
             source_entity=conf_meter_source,
+            price_entity=conf_meter_price,
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
@@ -317,6 +329,7 @@ class UtilityMeterSensor(RestoreSensor):
         net_consumption,
         parent_meter,
         source_entity,
+        price_entity,
         tariff_entity,
         tariff,
         unique_id,
@@ -327,7 +340,9 @@ class UtilityMeterSensor(RestoreSensor):
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
+        self._sensor_price_id = price_entity
         self._state = None
+        self._price = None
         self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._collecting = None
@@ -349,6 +364,17 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
 
+    def combine_units(self, source_unit, price_unit):
+        """Combine source (utility) unit with the price unit."""
+        if price_unit is None:
+            return source_unit
+        # Assumes price unit is given in <currency>/<utility>, e.g. "EUR/kWh" returns "EUR".
+        currency, _, per_utility_unit = price_unit.partition('/')
+        if per_utility_unit == source_unit:
+            return currency
+        _LOGGER.warning("Incompatible units, source: %s, price: %s", source_unit, price_unit)
+        return None
+
     def start(self, unit):
         """Initialize unit and state upon source initial update."""
         self._unit_of_measurement = unit
@@ -361,13 +387,23 @@ class UtilityMeterSensor(RestoreSensor):
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
 
+        price_state = None
+        if self._sensor_price_id:
+            price_state = self.hass.states.get(self._sensor_price_id)
+            if price_state is None or price_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+                return
+
         if self._state is None and new_state.state:
             # First state update initializes the utility_meter sensors
             source_state = self.hass.states.get(self._sensor_source_id)
+            source_unit = self.combine_units(
+                source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if price_state is not None else None
+            )
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
             ]:
-                sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                sensor.start(source_unit)
 
         if (
             new_state is None
@@ -382,9 +418,14 @@ class UtilityMeterSensor(RestoreSensor):
         ):
             return
 
-        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._unit_of_measurement = self.combine_units(
+            new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+            price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if price_state is not None else None
+        )
 
         try:
+            self._price = Decimal(price_state.state) if price_state is not None else None
+
             if self._sensor_delta_values:
                 adjustment = Decimal(new_state.state)
             else:
@@ -393,7 +434,11 @@ class UtilityMeterSensor(RestoreSensor):
             if (not self._sensor_net_consumption) and adjustment < 0:
                 # Source sensor just rolled over for unknown reasons,
                 return
-            self._state += adjustment
+
+            if self._price is None:
+                self._state += adjustment
+            else:
+                self._state += adjustment * self._price
 
         except DecimalException as err:
             if self._sensor_delta_values:
@@ -567,7 +612,7 @@ class UtilityMeterSensor(RestoreSensor):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
+        return SensorDeviceClass.MONETARY if self._sensor_price_id else DEVICE_CLASS_MAP.get(self._unit_of_measurement)
 
     @property
     def state_class(self):
@@ -591,6 +636,8 @@ class UtilityMeterSensor(RestoreSensor):
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: str(self._last_period),
         }
+        if self._sensor_price_id is not None:
+            state_attr[ATTR_PRICE_ID] = self._sensor_price_id
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
         if self._cron_pattern is not None:

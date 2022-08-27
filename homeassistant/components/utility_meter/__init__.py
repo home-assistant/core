@@ -23,6 +23,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_TYPE,
     CONF_SOURCE_SENSOR,
+    CONF_PRICE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
@@ -75,6 +76,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
     vol.All(
         {
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            vol.Optional(CONF_PRICE_SENSOR): cv.entity_id,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
