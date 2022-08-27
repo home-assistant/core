@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+from dataclasses import asdict
 from datetime import datetime, timedelta
 import itertools
 import logging
@@ -159,8 +160,13 @@ class BluetoothManager:
         return {
             "adapters": self._adapters,
             "scanners": scanner_diagnostics,
-            "connectable_history": self._connectable_history,
-            "history": self._history,
+            "connectable_history": {
+                asdict(service_info)
+                for service_info in self._connectable_history.values()
+            },
+            "history": {
+                asdict(service_info) for service_info in self._history.values()
+            },
         }
 
     def _find_adapter_by_address(self, address: str) -> str | None:
