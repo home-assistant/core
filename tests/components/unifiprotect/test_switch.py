@@ -70,6 +70,31 @@ async def test_switch_light_remove(
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
 
+async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture):
+    """Test switch entity setup for light devices."""
+
+    await init_entry(hass, ufp, [])
+
+    assert_entity_counts(hass, Platform.SWITCH, 2, 2)
+
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["set_insights"] = Mock()
+    nvr.set_insights = AsyncMock()
+    entity_id = "switch.unifiprotect_insights_enabled"
+
+    await hass.services.async_call(
+        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    nvr.set_insights.assert_called_once_with(True)
+
+    await hass.services.async_call(
+        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    nvr.set_insights.assert_called_with(False)
+
+
 async def test_switch_setup_no_perm(
     hass: HomeAssistant,
     ufp: MockUFPFixture,

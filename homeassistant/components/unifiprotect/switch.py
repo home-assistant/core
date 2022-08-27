@@ -385,7 +385,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel,
+        device: ProtectAdoptableDeviceModel | NVR,
         description: ProtectSwitchEntityDescription,
     ) -> None:
         """Initialize an UniFi Protect Switch."""
@@ -409,20 +409,35 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         await self.entity_description.ufp_set(self.device, False)
 
 
-class ProtectNVRSwitch(ProtectSwitch, ProtectNVREntity):
+class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):
     """A UniFi Protect NVR Switch."""
 
-    # separate subclass on purpose
-    device: NVR
+    entity_description: ProtectSwitchEntityDescription
 
     def __init__(
         self,
-        entry: ProtectData,
+        data: ProtectData,
         device: NVR,
-        description: ProtectSwitchEntityDescription | None = None,
+        description: ProtectSwitchEntityDescription,
     ) -> None:
-        """Initialize the entity."""
-        super().__init__(entry, device, description)  # type: ignore[arg-type]
+        """Initialize an UniFi Protect Switch."""
+        super().__init__(data, device, description)
+        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return self.entity_description.get_ufp_value(self.device) is True
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+
+        await self.entity_description.ufp_set(self.device, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+
+        await self.entity_description.ufp_set(self.device, False)
 
 
 class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
