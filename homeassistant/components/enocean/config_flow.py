@@ -28,28 +28,6 @@ CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
 ENOCEAN_EDIT_DEVICE_COMMAND = "edit"
 ENOCEAN_DELETE_DEVICE_COMMAND = "delete"
 
-
-MOCKUP_DEVICES = [
-    selector.SelectOptionDict(
-        value="12:34:56:78", label="12:34:56:78 [last seen on YYYY-MM-DD HH:MM]"
-    ),
-    selector.SelectOptionDict(
-        value="12:53:14:78", label="12:53:14:78 [last seen on YYYY-MM-DD HH:MM]"
-    ),
-    selector.SelectOptionDict(
-        value="12:53:56:78", label="12:53:56:78 [last seen on YYYY-MM-DD HH:MM]"
-    ),
-    selector.SelectOptionDict(
-        value="11:22:33:44", label="11:22:33:44 [last seen on YYYY-MM-DD HH:MM]"
-    ),
-    selector.SelectOptionDict(
-        value="AB:CE:DE:F0", label="AB:CE:DE:F0 [last seen on YYYY-MM-DD HH:MM]"
-    ),
-    selector.SelectOptionDict(
-        value="AB:CE:DE:F1", label="AB:CE:DE:F1 [last seen on YYYY-MM-DD HH:MM]"
-    ),
-]
-
 ADD_DEVICE_SCHEMA = vol.Schema(
     {
         vol.Required(
@@ -60,12 +38,12 @@ ADD_DEVICE_SCHEMA = vol.Schema(
         vol.Required(
             CONF_ENOCEAN_DEVICE_ID, default="00:00:00:00"
         ): selector.SelectSelector(
-            # For now, the list of devices will always be empty. For a
+            # For now, the list of devices will be empty. For a
             # later version, it shall be pre-filled with all those
             # devices, from which the dongle has received telegrams.
             # (FUTURE WORK)
             # Hence the use of a SelectSelector.
-            selector.SelectSelectorConfig(options=MOCKUP_DEVICES, custom_value=True)
+            selector.SelectSelectorConfig(options=[], custom_value=True)
         ),
         vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
         vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): selector.SelectSelector(
