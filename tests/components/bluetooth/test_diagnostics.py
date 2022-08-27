@@ -31,7 +31,16 @@ async def test_diagnostics(
         return_value={
             "org.bluez": {
                 "/org/bluez/hci0": {
-                    "Interfaces": {"org.bluez.Adapter1": {"Discovering": False}}
+                    "org.bluez.Adapter1": {
+                        "Name": "BlueZ 5.63",
+                        "Alias": "BlueZ 5.63",
+                        "Modalias": "usb:v1D6Bp0246d0540",
+                        "Discovering": False,
+                    },
+                    "org.bluez.AdvertisementMonitorManager1": {
+                        "SupportedMonitorTypes": ["or_patterns"],
+                        "SupportedFeatures": [],
+                    },
                 }
             }
         },
@@ -57,18 +66,29 @@ async def test_diagnostics(
                 "hci0": {
                     "address": "00:00:00:00:00:01",
                     "hw_version": "usbid:1234",
+                    "passive_scan": False,
                     "sw_version": "BlueZ 4.63",
                 },
                 "hci1": {
                     "address": "00:00:00:00:00:02",
                     "hw_version": "usbid:1234",
+                    "passive_scan": True,
                     "sw_version": "BlueZ 4.63",
                 },
             },
             "dbus": {
                 "org.bluez": {
                     "/org/bluez/hci0": {
-                        "Interfaces": {"org.bluez.Adapter1": {"Discovering": False}}
+                        "org.bluez.Adapter1": {
+                            "Alias": "BlueZ " "5.63",
+                            "Discovering": False,
+                            "Modalias": "usb:v1D6Bp0246d0540",
+                            "Name": "BlueZ " "5.63",
+                        },
+                        "org.bluez.AdvertisementMonitorManager1": {
+                            "SupportedFeatures": [],
+                            "SupportedMonitorTypes": ["or_patterns"],
+                        },
                     }
                 }
             },
@@ -77,11 +97,13 @@ async def test_diagnostics(
                     "hci0": {
                         "address": "00:00:00:00:00:01",
                         "hw_version": "usbid:1234",
+                        "passive_scan": False,
                         "sw_version": "BlueZ 4.63",
                     },
                     "hci1": {
                         "address": "00:00:00:00:00:02",
                         "hw_version": "usbid:1234",
+                        "passive_scan": True,
                         "sw_version": "BlueZ 4.63",
                     },
                 },
