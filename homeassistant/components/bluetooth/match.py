@@ -292,6 +292,7 @@ class BluetoothCallbackMatcherIndex(
             return
 
         super().add(matcher)
+        self.build()
 
     def remove_with_address(
         self, matcher: BluetoothCallbackMatcherWithCallback
@@ -306,6 +307,7 @@ class BluetoothCallbackMatcherIndex(
             return
 
         super().remove(matcher)
+        self.build()
 
     def match_callbacks(
         self, service_info: BluetoothServiceInfoBleak
