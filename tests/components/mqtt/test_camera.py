@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import camera
+from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
 from homeassistant.const import Platform
 from homeassistant.setup import async_setup_component
@@ -43,7 +43,9 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message
 
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG = {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}
+
+DEFAULT_CONFIG_LEGACY = {
     camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
 }
 
@@ -62,8 +64,8 @@ async def test_run_camera_setup(
     topic = "test/camera"
     await async_setup_component(
         hass,
-        "camera",
-        {"camera": {"platform": "mqtt", "topic": topic, "name": "Test Camera"}},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {camera.DOMAIN: {"topic": topic, "name": "Test Camera"}}},
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
@@ -86,13 +88,14 @@ async def test_run_camera_b64_encoded(
     topic = "test/camera"
     await async_setup_component(
         hass,
-        "camera",
+        mqtt.DOMAIN,
         {
-            "camera": {
-                "platform": "mqtt",
-                "topic": topic,
-                "name": "Test Camera",
-                "encoding": "b64",
+            mqtt.DOMAIN: {
+                camera.DOMAIN: {
+                    "topic": topic,
+                    "name": "Test Camera",
+                    "encoding": "b64",
+                }
             }
         },
     )
@@ -110,7 +113,7 @@ async def test_run_camera_b64_encoded(
     assert body == "grass"
 
 
-# Using CONF_ENCODING to set b64 encoding for images is deprecated Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
+# Using CONF_ENCODING to set b64 encoding for images is deprecated in Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
 async def test_legacy_camera_b64_encoded_with_availability(
     hass, hass_client_no_auth, mqtt_mock_entry_with_yaml_config
 ):
@@ -119,14 +122,15 @@ async def test_legacy_camera_b64_encoded_with_availability(
     topic_availability = "test/camera_availability"
     await async_setup_component(
         hass,
-        "camera",
+        mqtt.DOMAIN,
         {
-            "camera": {
-                "platform": "mqtt",
-                "topic": topic,
-                "name": "Test Camera",
-                "encoding": "b64",
-                "availability": {"topic": topic_availability},
+            mqtt.DOMAIN: {
+                camera.DOMAIN: {
+                    "topic": topic,
+                    "name": "Test Camera",
+                    "encoding": "b64",
+                    "availability": {"topic": topic_availability},
+                }
             }
         },
     )
@@ -155,15 +159,16 @@ async def test_camera_b64_encoded_with_availability(
     topic_availability = "test/camera_availability"
     await async_setup_component(
         hass,
-        "camera",
+        mqtt.DOMAIN,
         {
-            "camera": {
-                "platform": "mqtt",
-                "topic": topic,
-                "name": "Test Camera",
-                "encoding": "utf-8",
-                "image_encoding": "b64",
-                "availability": {"topic": topic_availability},
+            mqtt.DOMAIN: {
+                "camera": {
+                    "topic": topic,
+                    "name": "Test Camera",
+                    "encoding": "utf-8",
+                    "image_encoding": "b64",
+                    "availability": {"topic": topic_availability},
+                }
             }
         },
     )
@@ -189,28 +194,28 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -219,7 +224,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -231,7 +236,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         camera.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         MQTT_CAMERA_ATTRIBUTES_BLOCKED,
     )
 
@@ -239,7 +244,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -248,7 +253,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, camera.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        camera.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -257,14 +266,22 @@ async def test_update_with_json_attrs_bad_JSON(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, camera.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        camera.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, camera.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        camera.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -293,7 +310,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_camera(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered camera."""
-    data = json.dumps(DEFAULT_CONFIG[camera.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG_LEGACY[camera.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, camera.DOMAIN, data
     )
@@ -341,28 +358,28 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT camera device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT camera device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -372,7 +389,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
         hass,
         mqtt_mock_entry_with_yaml_config,
         camera.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         ["test_topic"],
     )
 
@@ -380,7 +397,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, camera.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -390,7 +407,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         camera.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         None,
         state_topic="test_topic",
         state_payload=b"ON",
@@ -400,7 +417,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = camera.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
@@ -409,14 +426,14 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = camera.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = camera.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
     config["name"] = "test"
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
@@ -426,7 +443,20 @@ async def test_setup_manual_entity_from_yaml(hass):
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = camera.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = camera.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None
