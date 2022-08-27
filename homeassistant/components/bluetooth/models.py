@@ -74,14 +74,14 @@ class BaseHaScanner:
         """Return diagnostic information about the scanner."""
         return {
             "type": self.__class__.__name__,
-            "discovered_devices": {
+            "discovered_devices": [
                 {
                     "name": device.name,
                     "address": device.address,
                     "rssi": device.rssi,
                 }
                 for device in self.discovered_devices
-            },
+            ],
         }
 
 
