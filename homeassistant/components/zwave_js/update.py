@@ -1,0 +1,197 @@
+"""Representation of Z-Wave updates."""
+from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import datetime, timedelta
+from typing import Any
+
+from awesomeversion import AwesomeVersion
+from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.exceptions import BaseZwaveJSServerError
+from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.firmware import FirmwareUpdateInfo
+from zwave_js_server.model.node import Node as ZwaveNode
+
+from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
+from homeassistant.components.update.const import UpdateEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
+
+from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
+from .helpers import get_device_id, get_valueless_base_unique_id
+
+PARALLEL_UPDATES = 0
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Z-Wave button from config entry."""
+    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+
+    @callback
+    def async_add_firmware_update_entity(node: ZwaveNode) -> None:
+        """Add ping button entity."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node)])
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_firmware_update_entity",
+            async_add_firmware_update_entity,
+        )
+    )
+
+
+def get_latest_firmware(
+    firmwares: list[FirmwareUpdateInfo],
+) -> FirmwareUpdateInfo:
+    """Get the latest firmware from the available updates."""
+    latest_firmware = FirmwareUpdateInfo("0.0.0", "", [])
+    for firmware in firmwares:
+        if AwesomeVersion(firmware.version) > AwesomeVersion(latest_firmware.version):
+            latest_firmware = firmware
+    return latest_firmware
+
+
+class ZWaveNodeFirmwareUpdate(UpdateEntity):
+    """Representation of a firmware update entity."""
+
+    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    )
+
+    def __init__(self, driver: Driver, node: ZwaveNode) -> None:
+        """Initialize a Z-Wave device firmware update entity."""
+        self.driver = driver
+        self.node = node
+        self.available_firmware_updates: list[FirmwareUpdateInfo] = []
+        self._latest_version_firmware: FirmwareUpdateInfo | None = None
+
+        name: str = (
+            node.name or node.device_config.description or f"Node {node.node_id}"
+        )
+        # Entity class attributes
+        self._attr_name = f"{name}: Firmware"
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
+        # device is precreated in main handler
+        self._attr_device_info = DeviceInfo(
+            identifiers={get_device_id(driver, node)},
+        )
+
+        self._attr_installed_version = node.firmware_version
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+
+        return {
+            "available_firmware_updates": [
+                {
+                    "version": firmware.version,
+                    "release_notes": firmware.changelog,
+                }
+                for firmware in self.available_firmware_updates
+            ]
+        }
+
+    async def async_check_for_updates(self, _: datetime) -> None:
+        """Update the entity."""
+        self.available_firmware_updates = (
+            await self.driver.controller.async_get_available_firmware_updates(
+                self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+            )
+        )
+        self._async_process_updates()
+
+    @callback
+    def _async_process_updates(self) -> None:
+        """Process updates."""
+        if self.available_firmware_updates:
+            self._latest_version_firmware = firmware = get_latest_firmware(
+                self.available_firmware_updates
+            )
+            self._attr_latest_version = firmware.version
+            self._attr_release_summary = firmware.changelog
+        else:
+            self._latest_version_firmware = None
+            self._attr_latest_version = None
+            self._attr_release_summary = None
+        self._async_write_ha_state()
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        if not self._latest_version_firmware:
+            raise HomeAssistantError("No firmware update available")
+
+        firmware = None
+        if version is None:
+            firmware = self._latest_version_firmware
+        else:
+            for firmware_ in self.available_firmware_updates:
+                if firmware_.version == version:
+                    firmware = firmware_
+                    break
+        if firmware is None:
+            raise HomeAssistantError(f"Version {version} not found")
+        self._attr_in_progress = True
+        try:
+            for file in firmware.files:
+                await self.driver.controller.async_begin_ota_firmware_update(
+                    self.node, file
+                )
+        except BaseZwaveJSServerError as err:
+            raise HomeAssistantError(err) from err
+        else:
+            self._attr_installed_version = firmware.version
+            self.available_firmware_updates.remove(firmware)
+        finally:
+            self._attr_in_progress = False
+            self._async_process_updates()
+
+    async def async_poll_value(self, _: bool) -> None:
+        """Poll a value."""
+        LOGGER.error(
+            "There is no value to refresh for this entity so the zwave_js.refresh_value "
+            "service won't work for it"
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        # Check for updates every day
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self.async_check_for_updates, timedelta(days=1)
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
+                self.async_remove,
+            )
+        )
