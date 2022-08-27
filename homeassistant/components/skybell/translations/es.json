@@ -10,6 +10,13 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Por favor, actualiza tu contrase\u00f1a para {email}",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
             "user": {
                 "data": {
                     "email": "Correo electr\u00f3nico",

@@ -10,6 +10,13 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Vennligst oppdater passordet ditt for {email}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "email": "E-post",

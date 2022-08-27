@@ -1618,6 +1618,32 @@ async def test_fan_speed(hass):
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
 
 
+async def test_fan_speed_without_percentage_step(hass):
+    """Test FanSpeed trait speed control percentage step for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "fan.living_room_fan",
+            STATE_ON,
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "reversible": False,
+        "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
+    }
+    # If a fan state has (temporary) no percentage_step attribute return 1 available
+    assert trt.query_attributes() == {
+        "currentFanSpeedPercent": 0,
+        "currentFanSpeedSetting": "1/5",
+    }
+
+
 @pytest.mark.parametrize(
     "percentage,percentage_step, speed, speeds, percentage_result",
     [

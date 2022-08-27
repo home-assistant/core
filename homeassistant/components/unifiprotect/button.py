@@ -100,10 +100,8 @@ def _async_remove_adopt_button(
 ) -> None:
 
     entity_registry = er.async_get(hass)
-    if device.is_adopted_by_us and (
-        entity_id := entity_registry.async_get_entity_id(
-            Platform.BUTTON, DOMAIN, f"{device.mac}_adopt"
-        )
+    if entity_id := entity_registry.async_get_entity_id(
+        Platform.BUTTON, DOMAIN, f"{device.mac}_adopt"
     ):
         entity_registry.async_remove(entity_id)
 
@@ -129,7 +127,8 @@ async def async_setup_entry(
         async_add_entities(entities)
         _async_remove_adopt_button(hass, device)
 
-    async def _add_unadopted_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _async_add_unadopted_device(device: ProtectAdoptableDeviceModel) -> None:
         if not device.can_adopt or not device.can_create(data.api.bootstrap.auth_user):
             _LOGGER.debug("Device is not adoptable: %s", device.id)
             return
@@ -147,7 +146,7 @@ async def async_setup_entry(
     )
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass, _ufpd(entry, DISPATCH_ADD), _add_unadopted_device
+            hass, _ufpd(entry, DISPATCH_ADD), _async_add_unadopted_device
         )
     )
 

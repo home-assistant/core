@@ -427,7 +427,7 @@ blockchain==1.4.4
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.2.0
+bluetooth-adapters==0.3.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.2.2
@@ -459,6 +459,9 @@ bsblan==0.5.0
 
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1
+
+# homeassistant.components.bthome
+bthome-ble==0.4.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1799,7 +1802,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.2
+pyrisco==0.5.3
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2022,7 +2025,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.7
+pyunifiprotect==4.1.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2309,7 +2312,7 @@ systembridgeconnector==3.4.4
 tailscale==0.2.0
 
 # homeassistant.components.tank_utility
-tank_utility==1.4.0
+tank_utility==1.4.1
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
@@ -2340,6 +2343,9 @@ tesla-wall-connector==1.0.1
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.5.0
+
+# homeassistant.components.thermobeacon
+thermobeacon-ble==0.3.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.0

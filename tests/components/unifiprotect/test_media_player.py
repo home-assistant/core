@@ -41,7 +41,7 @@ async def test_media_player_camera_remove(
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
-    await remove_entities(hass, [doorbell])
+    await remove_entities(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 0, 0)
     await adopt_devices(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)

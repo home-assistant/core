@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" diklik tiga kali"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "MQTT {platform}(s) yang dikonfigurasi secara manual ditemukan di bawah kunci platform `{platform}`.\n\nPindahkan konfigurasi ke kunci integrasi `mqtt` dan mulai ulang Home Assistant untuk memperbaiki masalah ini. Lihat [dokumentasi]({more_info_url}), untuk informasi lebih lanjut.",
+            "title": "Entitas MQTT {platform} yang dikonfigurasi secara manual membutuhkan perhatian"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Topik birth tidak valid",

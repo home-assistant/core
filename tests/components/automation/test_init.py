@@ -1,9 +1,11 @@
 """The tests for the automation component."""
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from unittest.mock import Mock, patch
 
+from aiohttp import ClientWebSocketResponse
 import pytest
 
 import homeassistant.components.automation as automation
@@ -53,6 +55,7 @@ from tests.common import (
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
+from tests.components.repairs import get_repairs
 
 
 @pytest.fixture
@@ -983,7 +986,11 @@ async def test_automation_bad_trigger(hass, caplog):
     assert "Integration 'automation' does not provide trigger support." in caplog.text
 
 
-async def test_automation_with_error_in_script(hass, caplog):
+async def test_automation_with_error_in_script(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(
         hass,
@@ -1001,6 +1008,10 @@ async def test_automation_with_error_in_script(hass, caplog):
     await hass.async_block_till_done()
     assert "Service not found" in caplog.text
     assert "Traceback" not in caplog.text
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
 
 
 async def test_automation_with_error_in_script_2(hass, caplog):
