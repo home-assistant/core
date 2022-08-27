@@ -1341,6 +1341,11 @@ async def test_ezsp_restore_without_settings_change_ieee(
     mock_app.state.network_info = copy.deepcopy(backup.network_info)
     mock_app.state.network_info.network_key.tx_counter += 10000
 
+    # Include the overwrite option, just in case someone uploads a backup with it
+    backup.network_info.metadata["ezsp"] = {
+        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
+    }
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},

@@ -20,6 +20,7 @@ from homeassistant import config_entries
 from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 
@@ -116,10 +117,8 @@ def _prevent_overwrite_ezsp_ieee(
     )
 
 
-class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow."""
-
-    VERSION = 3
+class ZhaFlowMixin:
+    """Mixin for common ZHA flow steps and forms."""
 
     def __init__(self):
         """Initialize flow instance."""
@@ -131,13 +130,14 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._backups: list[zigpy.backups.NetworkBackup] | None = None
         self._chosen_backup: zigpy.backups.NetworkBackup | None = None
 
+        self.hass: HomeAssistant
+
     @contextlib.asynccontextmanager
     async def _connect_zigpy_app(self) -> ControllerApplication:
         """Connect to the radio with the current config and then clean up."""
-        config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
-
         assert self._radio_type is not None
 
+        config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         database_path = config.get(
@@ -212,13 +212,6 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None):
-        """Handle a zha config flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        return await self.async_step_choose_serial_port(user_input=user_input)
-
     async def async_step_choose_serial_port(self, user_input=None):
         """Choose a serial port."""
 
@@ -256,7 +249,24 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_choose_formation_strategy()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
+        # Pre-select the currently configured port
+        default_port = vol.UNDEFINED
+
+        if self._device_path is not None:
+            for description, port in zip(list_of_ports, ports):
+                if port.device == self._device_path:
+                    default_port = description
+                    break
+            else:
+                default_port = CONF_MANUAL_PATH
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_PATH, default=default_port): vol.In(
+                    list_of_ports
+                )
+            }
+        )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
 
     async def async_step_manual_pick_radio_type(self, user_input=None):
@@ -266,7 +276,16 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._radio_type = RadioType.get_by_description(user_input[CONF_RADIO_TYPE])
             return await self.async_step_manual_port_config()
 
-        schema = {vol.Required(CONF_RADIO_TYPE): vol.In(RadioType.list())}
+        # Pre-select the current radio type
+        default = vol.UNDEFINED
+
+        if self._radio_type is not None:
+            default = self._radio_type.description
+
+        schema = {
+            vol.Required(CONF_RADIO_TYPE, default=default): vol.In(RadioType.list())
+        }
+
         return self.async_show_form(
             step_id="manual_pick_radio_type",
             data_schema=vol.Schema(schema),
@@ -300,6 +319,9 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if source == config_entries.SOURCE_ZEROCONF and param == CONF_BAUDRATE:
                 value = 115200
                 param = vol.Required(CONF_BAUDRATE, default=value)
+            elif self._device_settings is not None and param in self._device_settings:
+                value = self._device_settings[param]
+                param = vol.Required(str(param), default=value)
 
             schema[param] = value
 
@@ -483,6 +505,27 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
+
+class ZhaConfigFlowHandler(ZhaFlowMixin, config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow."""
+
+    VERSION = 3
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return ZhaOptionsFlowHandler(config_entry)
+
+    async def async_step_user(self, user_input=None):
+        """Handle a zha config flow start."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        return await self.async_step_choose_serial_port(user_input=user_input)
+
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
@@ -629,3 +672,68 @@ class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm_hardware",
             description_placeholders={CONF_NAME: self._title},
         )
+
+
+class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
+    """Handle an options flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        super().__init__()
+        self.config_entry = config_entry
+
+        self._device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        self._device_settings = config_entry.data[CONF_DEVICE]
+        self._radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+        self._title = config_entry.title
+
+        self._must_reload_entry = False
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+
+        if user_input is not None:
+            try:
+                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
+            except config_entries.OperationNotAllowed:
+                # ZHA is not running
+                pass
+
+            self._must_reload_entry = True
+
+            return await self.async_step_choose_serial_port()
+
+        return self.async_show_form(step_id="init")
+
+    async def _async_create_radio_entity(self):
+        device_settings = self._device_settings.copy()
+        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, self._device_path
+        )
+
+        # Avoid creating both `.options` and `.data` by directly writing `data` here
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                CONF_DEVICE: device_settings,
+                CONF_RADIO_TYPE: self._radio_type.name,
+            },
+            options=self.config_entry.options,
+        )
+
+        # Reload ZHA after we finish
+        self._must_reload_entry = False
+        await self.hass.config_entries.async_setup(self.config_entry.entry_id)
+
+        # Intentionally do not set `data` to avoid creating `options`, we set it above
+        return self.async_create_entry(title=self._title, data={})
+
+    def __del__(self):
+        """Destructor to reload ZHA if the flow is cancelled."""
+        # FIXME: massive hack to reset ZHA if the flow is cancelled
+        if self._must_reload_entry:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_setup(self.config_entry.entry_id)
+            )

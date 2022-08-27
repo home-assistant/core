@@ -69,6 +69,74 @@
       "usb_probe_failed": "Failed to probe the usb device"
     }
   },
+  "options": {
+    "flow_title": "{name}",
+    "step": {
+      "init": {
+        "title": "Reconfigure ZHA",
+        "description": "ZHA will be stopped.  Do you wish to continue?"
+      },
+      "choose_serial_port": {
+        "title": "Select a Serial Port",
+        "data": { "path": "Serial Device Path" },
+        "description": "Select the serial port for your Zigbee radio"
+      },
+      "manual_pick_radio_type": {
+        "data": { "radio_type": "Radio Type" },
+        "title": "Radio Type",
+        "description": "Pick your Zigbee radio type"
+      },
+      "manual_port_config": {
+        "title": "Serial Port Settings",
+        "description": "Enter the serial port settings",
+        "data": {
+          "path": "Serial device path",
+          "baudrate": "port speed",
+          "flow_control": "data flow control"
+        }
+      },
+      "choose_formation_strategy": {
+        "title": "Network Formation",
+        "description": "Choose the network settings for your radio.",
+        "menu_options": {
+          "form_new_network": "Erase network settings and form a new network",
+          "reuse_settings": "Keep radio network settings",
+          "choose_automatic_backup": "Restore an automatic backup",
+          "upload_manual_backup": "Upload a manual backup"
+        }
+      },
+      "choose_automatic_backup": {
+        "title": "Restore Automatic Backup",
+        "description": "Restore your network settings from an automatic backup",
+        "data": {
+          "choose_automatic_backup": "Choose an automatic backup"
+        }
+      },
+      "upload_manual_backup": {
+        "title": "Upload a Manual Backup",
+        "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from **Network Settings**, or use a Zigbee2MQTT `coordinator_backup.json` file.",
+        "data": {
+          "uploaded_backup_file": "Upload a file"
+        }
+      },
+      "maybe_confirm_ezsp_restore": {
+        "title": "Overwrite Radio IEEE Address",
+        "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
+        "data": {
+          "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_backup_json": "Invalid backup JSON"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "not_zha_device": "This device is not a zha device",
+      "usb_probe_failed": "Failed to probe the usb device"
+    }
+  },
   "config_panel": {
     "zha_options": {
       "title": "Global Options",
