@@ -5,7 +5,7 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "invalid_dongle_path": "No valid dongle found for this path"
+            "invalid_device_id": "No valid dongle found for this path"
         },
         "step": {
             "detect": {
@@ -24,19 +24,20 @@
     },
     "options": {
         "error": {
-            "invalid_id": "The EnOcean ID provided is not valid.",
+            "invalid_device_id": "Device ID is not a valid EnOcean ID.",
+            "invalid_sender_id": "Sender ID is not a valid EnOcean ID.",
             "no_configured_device": "No EnOcean devices are configured."
         },
         "step": {
             "add_device": {
                 "data": {
                     "device_class": "Device class",
-                    "eep": "Device type or EnOcean Equipment Profile (EEP)",
-                    "id": "EnOcean ID",
+                    "eep": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+                    "id": "Device ID",
                     "name": "Name",
-                    "sender_id": "Sender EnOcean ID"
+                    "sender_id": "Sender ID (can be left empty for sensors)"
                 },
-                "description": "To add an EnOcean device you need at least its type and its ID. The EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
+                "description": "To add an EnOcean device you need at least its type and its ID. A valid EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
                 "title": "Add new EnOcean device"
             },
             "delete_device": {
@@ -48,10 +49,10 @@
             },
             "edit_device": {
                 "data": {
-                    "eep": "Model or EnOcean Equipment Profile (EEP)",
-                    "id": "EnOcean ID",
+                    "eep": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+                    "id": "Device ID",
                     "name": "Name",
-                    "sender_id": "Sender EnOcean ID"
+                    "sender_id": "Sender ID (can be left empty for sensors)"
                 },
                 "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean id which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities.",
                 "title": "Edit EnOcean device"

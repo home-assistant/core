@@ -3,6 +3,7 @@
 from copy import deepcopy
 import logging
 
+from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,34 +28,6 @@ CONF_ENOCEAN_MAX_TEMP = "max_temp"
 CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
 ENOCEAN_EDIT_DEVICE_COMMAND = "edit"
 ENOCEAN_DELETE_DEVICE_COMMAND = "delete"
-
-ADD_DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_ENOCEAN_EQUIPMENT_PROFILE, default=""
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=ENOCEAN_EQUIPMENT_PROFILES)
-        ),
-        vol.Required(
-            CONF_ENOCEAN_DEVICE_ID, default="00:00:00:00"
-        ): selector.SelectSelector(
-            # For now, the list of devices will be empty. For a
-            # later version, it shall be pre-filled with all those
-            # devices, from which the dongle has received telegrams.
-            # (FUTURE WORK)
-            # Hence the use of a SelectSelector.
-            selector.SelectSelectorConfig(options=[], custom_value=True)
-        ),
-        vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=""): str,
-        vol.Optional(CONF_ENOCEAN_SENDER_ID, default=""): selector.SelectSelector(
-            # For now, the list of sender_ids will be empty. For a
-            # later version, it shall be pre-filled with the dongles chip ID
-            # and its base IDs. (FUTURE WORK, requires update of enocean lib)
-            # Hence the use of a SelectSelector.
-            selector.SelectSelectorConfig(options=[], custom_value=True)
-        ),
-    }
-)
 
 
 ENOCEAN_MANAGE_DEVICE_COMMANDS = [
@@ -186,34 +159,126 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_device(self, user_input=None) -> FlowResult:
         """Add an EnOcean device."""
+        errors: dict[str, str] = {}
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+
+        add_device_schema = None
+
+        if user_input is None:
+            add_device_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENOCEAN_EQUIPMENT_PROFILE, default=""
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=ENOCEAN_EQUIPMENT_PROFILES
+                        )
+                    ),
+                    vol.Required(
+                        CONF_ENOCEAN_DEVICE_ID, default="00:00:00:00"
+                    ): selector.SelectSelector(
+                        # For now, the list of devices will be empty. For a
+                        # later version, it shall be pre-filled with all those
+                        # devices, from which the dongle has received telegrams.
+                        # (FUTURE WORK)
+                        # Hence the use of a SelectSelector.
+                        selector.SelectSelectorConfig(options=[], custom_value=True)
+                    ),
+                    vol.Required(
+                        CONF_ENOCEAN_DEVICE_NAME, default="EnOcean device"
+                    ): str,
+                    vol.Optional(
+                        CONF_ENOCEAN_SENDER_ID, default=""
+                    ): selector.SelectSelector(
+                        # For now, the list of sender_ids will be empty. For a
+                        # later version, it shall be pre-filled with the dongles chip ID
+                        # and its base IDs. (FUTURE WORK, requires update of enocean lib)
+                        # Hence the use of a SelectSelector.
+                        selector.SelectSelectorConfig(options=[], custom_value=True)
+                    ),
+                }
+            )
 
         if user_input is not None:
             # validate input (not yet finished)
-            # e.g. to check that device_id is indeed a valid id
-            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID].strip()
+
+            if not self.validate_enocean_id_string(device_id):
+                errors["base"] = "invalid_device_id"
+            else:
+                # normalize device_id string
+                device_id = to_hex_string(from_hex_string(device_id))
+                user_input[CONF_ENOCEAN_DEVICE_ID] = device_id
+
             eep = user_input[CONF_ENOCEAN_EQUIPMENT_PROFILE]
-            sender_id = user_input[CONF_ENOCEAN_SENDER_ID]
+
+            sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
+            if sender_id != "":
+                if not self.validate_enocean_id_string(sender_id):
+                    errors["base"] = "invalid_sender_id"
+                else:
+                    # normalize sender_id string
+                    sender_id = to_hex_string(from_hex_string(sender_id))
+                    user_input[CONF_ENOCEAN_SENDER_ID] = sender_id
+
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
                 device_name = "EnOcean device " + device_id
 
-            devices.append(
+            if not errors:
+                devices.append(
+                    {
+                        CONF_ENOCEAN_DEVICE_ID: device_id,
+                        CONF_ENOCEAN_EQUIPMENT_PROFILE: eep,
+                        CONF_ENOCEAN_DEVICE_NAME: device_name,
+                        CONF_ENOCEAN_SENDER_ID: sender_id,
+                    }
+                )
+
+                return self.async_create_entry(
+                    title="", data={CONF_ENOCEAN_DEVICES: devices}
+                )
+
+            add_device_schema = vol.Schema(
                 {
-                    CONF_ENOCEAN_DEVICE_ID: device_id,
-                    CONF_ENOCEAN_EQUIPMENT_PROFILE: eep,
-                    CONF_ENOCEAN_DEVICE_NAME: device_name,
-                    CONF_ENOCEAN_SENDER_ID: sender_id,
+                    vol.Required(
+                        CONF_ENOCEAN_EQUIPMENT_PROFILE,
+                        default=user_input[CONF_ENOCEAN_EQUIPMENT_PROFILE],
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=ENOCEAN_EQUIPMENT_PROFILES
+                        )
+                    ),
+                    vol.Required(
+                        CONF_ENOCEAN_DEVICE_ID,
+                        default=user_input[CONF_ENOCEAN_DEVICE_ID],
+                    ): selector.SelectSelector(
+                        # For now, the list of devices will be empty. For a
+                        # later version, it shall be pre-filled with all those
+                        # devices, from which the dongle has received telegrams.
+                        # (FUTURE WORK)
+                        # Hence the use of a SelectSelector.
+                        selector.SelectSelectorConfig(options=[], custom_value=True)
+                    ),
+                    vol.Required(
+                        CONF_ENOCEAN_DEVICE_NAME,
+                        default=user_input[CONF_ENOCEAN_DEVICE_NAME],
+                    ): str,
+                    vol.Optional(
+                        CONF_ENOCEAN_SENDER_ID,
+                        default=user_input[CONF_ENOCEAN_SENDER_ID],
+                    ): selector.SelectSelector(
+                        # For now, the list of sender_ids will be empty. For a
+                        # later version, it shall be pre-filled with the dongles chip ID
+                        # and its base IDs. (FUTURE WORK, requires update of enocean lib)
+                        # Hence the use of a SelectSelector.
+                        selector.SelectSelectorConfig(options=[], custom_value=True)
+                    ),
                 }
             )
 
-            return self.async_create_entry(
-                title="", data={CONF_ENOCEAN_DEVICES: devices}
-            )
-
         return self.async_show_form(
-            step_id="add_device",
-            data_schema=ADD_DEVICE_SCHEMA,
+            step_id="add_device", data_schema=add_device_schema, errors=errors
         )
 
     async def async_step_select_device(self, user_input=None) -> FlowResult:
@@ -222,7 +287,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
             selector.SelectOptionDict(
-                value=device["id"], label=device["name"] + " [" + device["id"] + "]"
+                value=device[CONF_ENOCEAN_DEVICE_ID],
+                label=device["name"] + " [" + device[CONF_ENOCEAN_DEVICE_ID] + "]",
             )
             for device in devices
         ]
@@ -234,7 +300,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             # find the device belonging to the device_id
             device = None
             for dev in devices:
-                if dev["id"] == device_id:
+                if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
                     device = dev
                     break
 
@@ -257,7 +323,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Edit an EnOcean device."""
         default_device_id = "none"
         if device is not None:
-            default_device_id = device["id"]
+            default_device_id = device[CONF_ENOCEAN_DEVICE_ID]
 
         default_device_name = "none"
         if device is not None:
@@ -309,7 +375,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
         device_list = [
             selector.SelectOptionDict(
-                value=device["id"], label=device["name"] + " [" + device["id"] + "]"
+                value=device[CONF_ENOCEAN_DEVICE_ID],
+                label=device["name"] + " [" + device[CONF_ENOCEAN_DEVICE_ID] + "]",
             )
             for device in devices
         ]
@@ -321,7 +388,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             # find the device belonging to the device_id
             device = None
             for dev in devices:
-                if dev["id"] == device_id:
+                if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
                     device = dev
                     break
 
@@ -344,3 +411,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="delete_device",
             data_schema=delete_device_schema,
         )
+
+    def validate_enocean_id_string(self, id_string: str) -> bool:
+        """Check that the supplied string is a valid EnOcean id."""
+        parts = id_string.split(":")
+
+        if len(parts) < 3:
+            return False
+        try:
+            for part in parts:
+                if len(part) > 2:
+                    return False
+
+                if int(part, 16) > 255:
+                    return False
+
+        except ValueError:
+            return False
+
+        return True
