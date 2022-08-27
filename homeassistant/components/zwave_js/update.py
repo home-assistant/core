@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -20,12 +20,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_id, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(days=1)
 
 
 async def async_setup_entry(
@@ -66,7 +66,6 @@ def get_latest_firmware(
 class ZWaveNodeFirmwareUpdate(UpdateEntity):
     """Representation of a firmware update entity."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
@@ -108,17 +107,17 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             ]
         }
 
-    async def async_check_for_updates(self, _: datetime) -> None:
+    async def async_update(self) -> None:
         """Update the entity."""
         self.available_firmware_updates = (
             await self.driver.controller.async_get_available_firmware_updates(
                 self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
             )
         )
-        self._async_process_updates()
+        self._async_process_updates(False)
 
     @callback
-    def _async_process_updates(self) -> None:
+    def _async_process_updates(self, write_state: bool = True) -> None:
         """Process updates."""
         if self.available_firmware_updates:
             self._latest_version_firmware = firmware = get_latest_firmware(
@@ -130,7 +129,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._latest_version_firmware = None
             self._attr_latest_version = None
             self._attr_release_summary = None
-        self._async_write_ha_state()
+        if write_state:
+            self._async_write_ha_state()
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -173,13 +173,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        # Check for updates every day
-        self.async_on_remove(
-            async_track_time_interval(
-                self.hass, self.async_check_for_updates, timedelta(days=1)
-            )
-        )
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
