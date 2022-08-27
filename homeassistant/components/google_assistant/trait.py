@@ -1397,7 +1397,7 @@ class FanSpeedTrait(_Trait):
         if state.domain == fan.DOMAIN:
             speed_count = min(
                 FAN_SPEED_MAX_SPEED_COUNT,
-                round(100 / self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP, 100)),
+                round(100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)),
             )
             self._ordered_speed = [
                 f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
