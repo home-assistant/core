@@ -72,6 +72,10 @@ class BaseHaScanner:
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
+        return {
+            "type": self.__class__.__name__,
+            "discovered_devices": self.discovered_devices,
+        }
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):

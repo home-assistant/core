@@ -148,7 +148,7 @@ class HaScanner(BaseHaScanner):
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
-        return {
+        return await super().async_diagnostics() | {
             "adapter": self.adapter,
             "source": self.source,
             "name": self.name,
