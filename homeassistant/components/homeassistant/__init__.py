@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
@@ -37,11 +38,13 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
+SERVICE_ENABLE_CONFIG_ENTRY = "enable_config_entry"
+SERVICE_DISABLE_CONFIG_ENTRY = "disable_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
-SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
+SCHEMA_RELOAD_ENABLE_DISABLE_CONFIG_ENTRY = vol.All(
     vol.Schema(
         {
             vol.Optional(ATTR_ENTRY_ID): str,
@@ -252,12 +255,16 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
-    async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
-        """Service handler for reloading a config entry."""
+    async def async_get_entries_ids_set(call: ha.ServiceCall) -> set:
         reload_entries = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
         reload_entries.update(await async_extract_config_entry_ids(hass, call))
+        return reload_entries
+
+    async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
+        """Service handler for reloading a config entry."""
+        reload_entries = await async_get_entries_ids_set(call)
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
@@ -272,7 +279,50 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ha.DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
-        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
+        schema=SCHEMA_RELOAD_ENABLE_DISABLE_CONFIG_ENTRY,
+    )
+
+    async def async_handle_enable_config_entry(call: ha.ServiceCall) -> None:
+        """Service handler for enabling a config entry."""
+        enable_entries = await async_get_entries_ids_set(call)
+        if not enable_entries:
+            raise ValueError("There were no matching config entries to enable")
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_set_disabled_by(config_entry_id, None)
+                for config_entry_id in enable_entries
+            )
+        )
+
+    async_register_admin_service(
+        hass,
+        ha.DOMAIN,
+        SERVICE_ENABLE_CONFIG_ENTRY,
+        async_handle_enable_config_entry,
+        schema=SCHEMA_RELOAD_ENABLE_DISABLE_CONFIG_ENTRY,
+    )
+
+    async def async_handle_disable_config_entry(call: ha.ServiceCall) -> None:
+        """Service handler for disabling a config entry."""
+        disable_entries = await async_get_entries_ids_set(call)
+        if not disable_entries:
+            raise ValueError("There were no matching config entries to disable")
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_set_disabled_by(
+                    config_entry_id,
+                    ConfigEntryDisabler.USER,
+                )
+                for config_entry_id in disable_entries
+            )
+        )
+
+    async_register_admin_service(
+        hass,
+        ha.DOMAIN,
+        SERVICE_DISABLE_CONFIG_ENTRY,
+        async_handle_disable_config_entry,
+        schema=SCHEMA_RELOAD_ENABLE_DISABLE_CONFIG_ENTRY,
     )
 
     return True
