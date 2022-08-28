@@ -79,12 +79,12 @@ def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
     return detect
 
 
-def com_port():
+def com_port(device="/dev/ttyUSB1234"):
     """Mock of a serial port."""
     port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
-    port.device = "/dev/ttyUSB1234"
+    port.device = device
     port.description = "Some serial port"
 
     return port
@@ -976,6 +976,20 @@ def test_allow_overwrite_ezsp_ieee():
     )
 
 
+def test_prevent_overwrite_ezsp_ieee():
+    """Test modifying the backup to prevent bellows from overriding the IEEE address."""
+    backup = zigpy.backups.NetworkBackup()
+    backup.network_info.stack_specific["ezsp"] = {
+        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
+    }
+    new_backup = config_flow._prevent_overwrite_ezsp_ieee(backup)
+
+    assert backup != new_backup
+    assert not new_backup.network_info.stack_specific.get("ezsp", {}).get(
+        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+    )
+
+
 @pytest.fixture
 def pick_radio(hass):
     """Fixture for the first step of the config flow (where a radio is picked)."""
@@ -1370,3 +1384,285 @@ async def test_ezsp_restore_without_settings_change_ieee(
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+
+
+@pytest.mark.parametrize(
+    "async_unload_effect", [True, config_entries.OperationNotAllowed()]
+)
+@patch(
+    "serial.tools.list_ports.comports",
+    MagicMock(
+        return_value=[
+            com_port("/dev/SomePort"),
+            com_port("/dev/ttyUSB0"),
+            com_port("/dev/SomeOtherPort"),
+        ]
+    ),
+)
+@patch("homeassistant.components.zha.async_setup_entry", return_value=True)
+async def test_options_flow_defaults(async_setup_entry, async_unload_effect, hass):
+    """Test options flow defaults match radio defaults."""
+
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/ttyUSB0",
+                CONF_BAUDRATE: 12345,
+                CONF_FLOWCONTROL: None,
+            },
+            CONF_RADIO_TYPE: "znp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+
+    async_setup_entry.reset_mock()
+
+    # ZHA gets unloaded
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload",
+        side_effect=[async_unload_effect],
+    ) as mock_async_unload:
+        result1 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    mock_async_unload.assert_called_once_with(entry.entry_id)
+
+    # Unload it ourselves
+    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+
+    # Current path is the default
+    assert result1["step_id"] == "choose_serial_port"
+    assert "/dev/ttyUSB0" in result1["data_schema"]({})[CONF_DEVICE_PATH]
+
+    # Autoprobing fails, we have to manually choose the radio type
+    result2 = await hass.config_entries.options.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    # Current radio type is the default
+    assert result2["step_id"] == "manual_pick_radio_type"
+    assert result2["data_schema"]({})[CONF_RADIO_TYPE] == RadioType.znp.description
+
+    # Continue on to port settings
+    result3 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={
+            CONF_RADIO_TYPE: RadioType.znp.description,
+        },
+    )
+
+    # The defaults match our current settings
+    assert result3["step_id"] == "manual_port_config"
+    assert result3["data_schema"]({}) == entry.data[CONF_DEVICE]
+
+    with patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True)):
+        # Change the serial port path
+        result4 = await hass.config_entries.options.async_configure(
+            flow["flow_id"],
+            user_input={
+                # Change everything
+                CONF_DEVICE_PATH: "/dev/new_serial_port",
+                CONF_BAUDRATE: 54321,
+                CONF_FLOWCONTROL: "software",
+            },
+        )
+
+    # The radio has been detected, we can move on to creating the config entry
+    assert result4["step_id"] == "choose_formation_strategy"
+
+    async_setup_entry.assert_not_called()
+
+    result5 = await hass.config_entries.options.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
+    )
+    await hass.async_block_till_done()
+
+    assert result5["type"] == FlowResultType.CREATE_ENTRY
+    assert result5["data"] == {}
+
+    # The updated entry contains correct settings
+    assert entry.data == {
+        CONF_DEVICE: {
+            CONF_DEVICE_PATH: "/dev/new_serial_port",
+            CONF_BAUDRATE: 54321,
+            CONF_FLOWCONTROL: "software",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+    # ZHA was started again
+    assert async_setup_entry.call_count == 1
+
+
+@patch(
+    "serial.tools.list_ports.comports",
+    MagicMock(
+        return_value=[
+            com_port("/dev/SomePort"),
+            com_port("/dev/SomeOtherPort"),
+        ]
+    ),
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_options_flow_defaults_socket(hass):
+    """Test options flow defaults work even for serial ports that can't be listed."""
+
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "socket://localhost:5678",
+                CONF_BAUDRATE: 12345,
+                CONF_FLOWCONTROL: None,
+            },
+            CONF_RADIO_TYPE: "znp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+
+    # ZHA gets unloaded
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload", return_value=True
+    ):
+        result1 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    # Radio path must be manually entered
+    assert result1["step_id"] == "choose_serial_port"
+    assert result1["data_schema"]({})[CONF_DEVICE_PATH] == config_flow.CONF_MANUAL_PATH
+
+    result2 = await hass.config_entries.options.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    # Current radio type is the default
+    assert result2["step_id"] == "manual_pick_radio_type"
+    assert result2["data_schema"]({})[CONF_RADIO_TYPE] == RadioType.znp.description
+
+    # Continue on to port settings
+    result3 = await hass.config_entries.options.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    # The defaults match our current settings
+    assert result3["step_id"] == "manual_port_config"
+    assert result3["data_schema"]({}) == entry.data[CONF_DEVICE]
+
+    with patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True)):
+        result4 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    assert result4["step_id"] == "choose_formation_strategy"
+
+
+@patch("homeassistant.components.zha.async_setup_entry", return_value=True)
+async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry, hass):
+    """Test options flow restarts a previously-running ZHA if it's cancelled."""
+
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "socket://localhost:5678",
+                CONF_BAUDRATE: 12345,
+                CONF_FLOWCONTROL: None,
+            },
+            CONF_RADIO_TYPE: "znp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+
+    # ZHA gets unloaded
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload", return_value=True
+    ):
+        result1 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+
+    # Radio path must be manually entered
+    assert result1["step_id"] == "choose_serial_port"
+
+    async_setup_entry.reset_mock()
+
+    # Abort the flow
+    hass.config_entries.options.async_abort(result1["flow_id"])
+    await hass.async_block_till_done()
+
+    # ZHA was set up once more
+    async_setup_entry.assert_called_once_with(hass, entry)
+
+
+@patch("homeassistant.components.zha.async_setup_entry", return_value=True)
+async def test_options_flow_does_not_restart_dead_zha_if_cancelled(
+    async_setup_entry, hass
+):
+    """Test options flow does not restart ZHA if it's cancelled and ZHA wasn't running."""
+
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "socket://localhost:5678",
+                CONF_BAUDRATE: 12345,
+                CONF_FLOWCONTROL: None,
+            },
+            CONF_RADIO_TYPE: "znp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+
+    # ZHA fails to unload
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload",
+        side_effect=[config_entries.OperationNotAllowed()],
+    ):
+        result1 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+
+    # Radio path must be manually entered
+    assert result1["step_id"] == "choose_serial_port"
+
+    async_setup_entry.reset_mock()
+
+    # Abort the flow
+    hass.config_entries.options.async_abort(result1["flow_id"])
+    await hass.async_block_till_done()
+
+    # ZHA was not set up again
+    async_setup_entry.assert_not_called()
+    await hass.async_block_till_done()

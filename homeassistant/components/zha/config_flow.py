@@ -320,8 +320,7 @@ class ZhaFlowMixin:
                 value = 115200
                 param = vol.Required(CONF_BAUDRATE, default=value)
             elif self._device_settings is not None and param in self._device_settings:
-                value = self._device_settings[param]
-                param = vol.Required(str(param), default=value)
+                param = vol.Required(str(param), default=self._device_settings[param])
 
             schema[param] = value
 
@@ -732,8 +731,11 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
 
     def __del__(self):
         """Destructor to reload ZHA if the flow is cancelled."""
-        # FIXME: massive hack to reset ZHA if the flow is cancelled
         if self._must_reload_entry:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_setup(self.config_entry.entry_id)
-            )
+            setup = self.hass.config_entries.async_setup(self.config_entry.entry_id)
+
+            try:
+                self.hass.async_create_task(setup)
+            except RuntimeError:
+                # ZHA cannot be restarted if the event loop is closing
+                pass
