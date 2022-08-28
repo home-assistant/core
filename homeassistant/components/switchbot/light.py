@@ -69,9 +69,7 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = max(
-            0, min(100, round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100))
-        )
+        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
