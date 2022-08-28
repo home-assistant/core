@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_adapters": "Bluetooth adapt\u00f6r\u00fc bulunamad\u0131"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
+            "enable_bluetooth": {
+                "description": "Bluetooth'u kurmak istiyor musunuz?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapt\u00f6r"
+                },
+                "description": "Kurulum i\u00e7in bir Bluetooth adapt\u00f6r\u00fc se\u00e7in"
+            },
+            "single_adapter": {
+                "description": "{name} Bluetooth adapt\u00f6r\u00fcn\u00fc kurmak istiyor musunuz?"
+            },
+            "user": {
+                "data": {
+                    "address": "Cihaz"
+                },
+                "description": "Kurulum i\u00e7in bir cihaz se\u00e7in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "Tarama i\u00e7in kullan\u0131lacak Bluetooth Adapt\u00f6r\u00fc"
+                }
+            }
+        }
+    }
+}

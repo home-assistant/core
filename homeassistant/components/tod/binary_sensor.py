@@ -98,6 +98,8 @@ def _is_sun_event(sun_event):
 class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, after, after_offset, before, before_offset, unique_id):
         """Init the ToD Sensor..."""
         self._attr_unique_id = unique_id
@@ -108,11 +110,6 @@ class TodSensor(BinarySensorEntity):
         self._before = before
         self._after = after
         self._unsub_update: Callable[[], None] = None
-
-    @property
-    def should_poll(self):
-        """Sensor does not need to be polled."""
-        return False
 
     @property
     def name(self):

@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_MAC,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
     Platform,
@@ -18,37 +19,40 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
-    ATTR_BOT,
-    ATTR_CONTACT,
-    ATTR_CURTAIN,
-    ATTR_HYGROMETER,
-    ATTR_MOTION,
-    ATTR_PLUG,
     CONF_RETRY_COUNT,
+    CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
+    SupportedModels,
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
-    ATTR_PLUG: [Platform.SWITCH, Platform.SENSOR],
-    ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
-    ATTR_HYGROMETER: [Platform.SENSOR],
-    ATTR_CONTACT: [Platform.BINARY_SENSOR, Platform.SENSOR],
-    ATTR_MOTION: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.BULB.value: [Platform.SENSOR],
+    SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.CURTAIN.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
-    ATTR_CURTAIN: switchbot.SwitchbotCurtain,
-    ATTR_BOT: switchbot.Switchbot,
-    ATTR_PLUG: switchbot.SwitchbotPlugMini,
+    SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
+    SupportedModels.BOT.value: switchbot.Switchbot,
+    SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
 }
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
+    assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are are actually
@@ -68,8 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
+    # connectable means we can make connections to the device
+    connectable = sensor_type in CONNECTABLE_SUPPORTED_MODEL_TYPES.values()
     address: str = entry.data[CONF_ADDRESS]
-    ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
+    ble_device = bluetooth.async_ble_device_from_address(
+        hass, address.upper(), connectable
+    )
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
@@ -80,8 +88,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data.get(CONF_PASSWORD),
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
+
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
-        hass, _LOGGER, ble_device, device
+        hass,
+        _LOGGER,
+        ble_device,
+        device,
+        entry.unique_id,
+        entry.data.get(CONF_NAME, entry.title),
+        connectable,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():

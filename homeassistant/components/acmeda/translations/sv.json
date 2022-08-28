@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket"
+        },
         "step": {
             "user": {
                 "data": {

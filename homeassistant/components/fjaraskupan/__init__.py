@@ -1,7 +1,8 @@
 """The Fjäråskupan integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -14,11 +15,14 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_address_present,
+    async_ble_device_from_address,
+    async_rediscover_address,
     async_register_callback,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -82,7 +86,18 @@ class Coordinator(DataUpdateCoordinator[State]):
 
     def detection_callback(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new announcement of data."""
+        self.device.device = service_info.device
         self.device.detection_callback(service_info.device, service_info.advertisement)
+        self.async_set_updated_data(self.device.state)
+
+    @asynccontextmanager
+    async def async_connect_and_update(self) -> AsyncIterator[Device]:
+        """Provide an up to date device for use during connections."""
+        if ble_device := async_ble_device_from_address(self.hass, self.device.address):
+            self.device.device = ble_device
+        async with self.device:
+            yield self.device
+
         self.async_set_updated_data(self.device.state)
 
 
@@ -113,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             device = Device(service_info.device)
             device_info = DeviceInfo(
+                connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
                 identifiers={(DOMAIN, service_info.address)},
                 manufacturer="Fjäråskupan",
                 name="Fjäråskupan",
@@ -174,5 +190,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+        for device_entry in dr.async_entries_for_config_entry(
+            dr.async_get(hass), entry.entry_id
+        ):
+            for conn in device_entry.connections:
+                if conn[0] == dr.CONNECTION_BLUETOOTH:
+                    async_rediscover_address(hass, conn[1])
 
     return unload_ok

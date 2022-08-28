@@ -2,22 +2,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyunifiprotect.data import (
     Camera,
     ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
     RecordingMode,
     VideoMode,
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
@@ -25,7 +26,8 @@ from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
-_LOGGER = logging.getLogger(__name__)
+ATTR_PREV_MIC = "prev_mic_level"
+ATTR_PREV_RECORD = "prev_record_mode"
 
 
 @dataclass
@@ -33,9 +35,6 @@ class ProtectSwitchEntityDescription(
     ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
     """Describes UniFi Protect Switch entity."""
-
-
-_KEY_PRIVACY_MODE = "privacy_mode"
 
 
 async def _set_highfps(obj: Camera, value: bool) -> None:
@@ -84,15 +83,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_highfps",
         ufp_value="is_high_fps_enabled",
         ufp_set_method_fn=_set_highfps,
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSwitchEntityDescription(
-        key=_KEY_PRIVACY_MODE,
-        name="Privacy Mode",
-        icon="mdi:eye-settings",
-        entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_privacy_mask",
-        ufp_value="is_privacy_on",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
@@ -190,6 +180,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_set_method="set_package_detection",
         ufp_perm=PermRequired.WRITE,
     ),
+)
+
+PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription[Camera](
+    key="privacy_mode",
+    name="Privacy Mode",
+    icon="mdi:eye-settings",
+    entity_category=EntityCategory.CONFIG,
+    ufp_required_field="feature_flags.has_privacy_mask",
+    ufp_value="is_privacy_on",
+    ufp_perm=PermRequired.WRITE,
 )
 
 SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
@@ -316,6 +316,12 @@ async def async_setup_entry(
             viewer_descs=VIEWER_SWITCHES,
             ufp_device=device,
         )
+        entities += async_all_device_entities(
+            data,
+            ProtectPrivacyModeSwitch,
+            camera_descs=[PRIVACY_MODE_SWITCH],
+            ufp_device=device,
+        )
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -330,6 +336,11 @@ async def async_setup_entry(
         sense_descs=SENSE_SWITCHES,
         lock_descs=DOORLOCK_SWITCHES,
         viewer_descs=VIEWER_SWITCHES,
+    )
+    entities += async_all_device_entities(
+        data,
+        ProtectPrivacyModeSwitch,
+        camera_descs=[PRIVACY_MODE_SWITCH],
     )
     async_add_entities(entities)
 
@@ -350,17 +361,6 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
         self._switch_type = self.entity_description.key
 
-        if not isinstance(self.device, Camera):
-            return
-
-        if self.entity_description.key == _KEY_PRIVACY_MODE:
-            if self.device.is_privacy_on:
-                self._previous_mic_level = 100
-                self._previous_record_mode = RecordingMode.ALWAYS
-            else:
-                self._previous_mic_level = self.device.mic_volume
-                self._previous_record_mode = self.device.recording_settings.mode
-
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
@@ -368,24 +368,83 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self._switch_type == _KEY_PRIVACY_MODE:
-            assert isinstance(self.device, Camera)
-            self._previous_mic_level = self.device.mic_volume
-            self._previous_record_mode = self.device.recording_settings.mode
-            await self.device.set_privacy(True, 0, RecordingMode.NEVER)
-        else:
-            await self.entity_description.ufp_set(self.device, True)
+
+        await self.entity_description.ufp_set(self.device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
 
-        if self._switch_type == _KEY_PRIVACY_MODE:
-            assert isinstance(self.device, Camera)
-            _LOGGER.debug(
-                "Setting Privacy Mode to false for %s", self.device.display_name
-            )
-            await self.device.set_privacy(
-                False, self._previous_mic_level, self._previous_record_mode
+        await self.entity_description.ufp_set(self.device, False)
+
+
+class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
+    """A UniFi Protect Switch."""
+
+    device: Camera
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: ProtectAdoptableDeviceModel,
+        description: ProtectSwitchEntityDescription,
+    ) -> None:
+        """Initialize an UniFi Protect Switch."""
+        super().__init__(data, device, description)
+
+        if self.device.is_privacy_on:
+            extra_state = self.extra_state_attributes or {}
+            self._previous_mic_level = extra_state.get(ATTR_PREV_MIC, 100)
+            self._previous_record_mode = extra_state.get(
+                ATTR_PREV_RECORD, RecordingMode.ALWAYS
             )
         else:
-            await self.entity_description.ufp_set(self.device, False)
+            self._previous_mic_level = self.device.mic_volume
+            self._previous_record_mode = self.device.recording_settings.mode
+
+    @callback
+    def _update_previous_attr(self) -> None:
+        if self.is_on:
+            self._attr_extra_state_attributes = {
+                ATTR_PREV_MIC: self._previous_mic_level,
+                ATTR_PREV_RECORD: self._previous_record_mode,
+            }
+        else:
+            self._attr_extra_state_attributes = {}
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+
+        # do not add extra state attribute on initialize
+        if self.entity_id:
+            self._update_previous_attr()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+
+        self._previous_mic_level = self.device.mic_volume
+        self._previous_record_mode = self.device.recording_settings.mode
+        await self.device.set_privacy(True, 0, RecordingMode.NEVER)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+
+        extra_state = self.extra_state_attributes or {}
+        prev_mic = extra_state.get(ATTR_PREV_MIC, self._previous_mic_level)
+        prev_record = extra_state.get(ATTR_PREV_RECORD, self._previous_record_mode)
+        await self.device.set_privacy(False, prev_mic, prev_record)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore extra state attributes on startp up."""
+        await super().async_added_to_hass()
+
+        if not (last_state := await self.async_get_last_state()):
+            return
+
+        self._previous_mic_level = last_state.attributes.get(
+            ATTR_PREV_MIC, self._previous_mic_level
+        )
+        self._previous_record_mode = last_state.attributes.get(
+            ATTR_PREV_RECORD, self._previous_record_mode
+        )
+        self._update_previous_attr()

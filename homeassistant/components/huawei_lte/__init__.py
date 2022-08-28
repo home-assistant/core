@@ -279,11 +279,12 @@ class Router:
         self._get_data(
             KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
             lambda: next(
-                filter(
-                    lambda ssid: ssid.get("wifiisguestnetwork") == "1",
-                    self.client.wlan.multi_basic_settings()
+                (
+                    ssid
+                    for ssid in self.client.wlan.multi_basic_settings()
                     .get("Ssids", {})
-                    .get("Ssid", []),
+                    .get("Ssid", [])
+                    if isinstance(ssid, dict) and ssid.get("wifiisguestnetwork") == "1"
                 ),
                 {},
             ),
@@ -587,6 +588,7 @@ class HuaweiLteBaseEntity(Entity):
     _available: bool = field(default=True, init=False)
     _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
     _attr_has_entity_name: bool = field(default=True, init=False)
+    _attr_should_poll = False
 
     @property
     def _device_unique_id(self) -> str:
@@ -602,11 +604,6 @@ class HuaweiLteBaseEntity(Entity):
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._available
-
-    @property
-    def should_poll(self) -> bool:
-        """Huawei LTE entities report their state without polling."""
-        return False
 
     async def async_update(self) -> None:
         """Update state."""

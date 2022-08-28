@@ -13,6 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
 
 
@@ -20,8 +21,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro lock."""
-    api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    api_key: str = entry.data[CONF_API_KEY]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
@@ -29,10 +30,16 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, LockEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
     """Representation of an Freedompro lock."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        device: dict[str, Any],
+        coordinator: FreedomproDataUpdateCoordinator,
+    ) -> None:
         """Initialize the Freedompro lock."""
         super().__init__(coordinator)
         self._hass = hass
@@ -44,7 +51,7 @@ class Device(CoordinatorEntity, LockEntity):
         self._characteristics = device["characteristics"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=self._type,
@@ -78,24 +85,22 @@ class Device(CoordinatorEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Async function to lock the lock."""
-        payload_dict = {"lock": 1}
-        payload = json.dumps(payload_dict)
+        payload = {"lock": 1}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Async function to unlock the lock."""
-        payload_dict = {"lock": 0}
-        payload = json.dumps(payload_dict)
+        payload = {"lock": 0}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()

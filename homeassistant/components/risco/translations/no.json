@@ -9,11 +9,29 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Passord",
+                    "pin": "PIN kode",
+                    "username": "Brukernavn"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Vert",
+                    "pin": "PIN kode",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passord",
                     "pin": "PIN kode",
                     "username": "Brukernavn"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (anbefalt)",
+                    "local": "Lokalt Risco-panel (avansert)"
                 }
             }
         }

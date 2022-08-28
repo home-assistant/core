@@ -138,6 +138,8 @@ class WiffiIntegrationApi:
 class WiffiEntity(Entity):
     """Common functionality for all wiffi entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
@@ -169,11 +171,6 @@ class WiffiEntity(Entity):
                 self.hass, CHECK_ENTITIES_SIGNAL, self._check_expiration_date
             )
         )
-
-    @property
-    def should_poll(self):
-        """Disable polling because data driven ."""
-        return False
 
     @property
     def device_info(self):

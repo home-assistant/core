@@ -36,7 +36,7 @@ async def test_number_sensor_camera_remove(
 
     await init_entry(hass, ufp, [camera, unadopted_camera])
     assert_entity_counts(hass, Platform.NUMBER, 3, 3)
-    await remove_entities(hass, [camera, unadopted_camera])
+    await remove_entities(hass, ufp, [camera, unadopted_camera])
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
     await adopt_devices(hass, ufp, [camera, unadopted_camera])
     assert_entity_counts(hass, Platform.NUMBER, 3, 3)
@@ -49,7 +49,7 @@ async def test_number_sensor_light_remove(
 
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
-    await remove_entities(hass, [light])
+    await remove_entities(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
     await adopt_devices(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
@@ -62,7 +62,7 @@ async def test_number_lock_remove(
 
     await init_entry(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.NUMBER, 1, 1)
-    await remove_entities(hass, [doorlock])
+    await remove_entities(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
     await adopt_devices(hass, ufp, [doorlock])
     assert_entity_counts(hass, Platform.NUMBER, 1, 1)

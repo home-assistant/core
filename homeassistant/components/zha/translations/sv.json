@@ -47,6 +47,8 @@
         },
         "zha_options": {
             "always_prefer_xy_color_mode": "F\u00f6redrar alltid XY-f\u00e4rgl\u00e4ge",
+            "consider_unavailable_battery": "\u00d6verv\u00e4g att batteridrivna enheter inte \u00e4r tillg\u00e4ngliga efter (sekunder)",
+            "consider_unavailable_mains": "Anse att n\u00e4tdrivna enheter inte \u00e4r tillg\u00e4ngliga efter (sekunder)",
             "default_light_transition": "Standard ljus\u00f6verg\u00e5ngstid (sekunder)",
             "enable_identify_on_join": "Aktivera identifieringseffekt n\u00e4r enheter ansluter till n\u00e4tverket",
             "enhanced_light_transition": "Aktivera f\u00f6rb\u00e4ttrad ljusf\u00e4rg/temperatur\u00f6verg\u00e5ng fr\u00e5n ett avst\u00e4ngt l\u00e4ge",

@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Ingin menyiapkan {name}?"
             },
+            "confirm_hardware": {
+                "description": "Ingin menyiapkan {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Jenis Radio"
