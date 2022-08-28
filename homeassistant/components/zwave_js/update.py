@@ -27,6 +27,8 @@ from .helpers import get_device_id, get_valueless_base_unique_id
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(days=1)
 
+ATTR_AVAILABLE_FIRMWARE_UPDATES = "available_firmware_updates"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -69,7 +71,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.RELEASE_NOTES
+        | UpdateEntityFeature.SPECIFIC_VERSION
     )
     _attr_has_entity_name = True
 
@@ -89,19 +93,22 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             identifiers={get_device_id(driver, node)},
         )
 
-        self._attr_installed_version = node.firmware_version
+        self._attr_installed_version = self._attr_latest_version = node.firmware_version
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
 
         return {
-            "available_firmware_updates": [
+            ATTR_AVAILABLE_FIRMWARE_UPDATES: [
                 {
                     "version": firmware.version,
                     "release_notes": firmware.changelog,
                 }
-                for firmware in self.available_firmware_updates
+                for firmware in sorted(
+                    self.available_firmware_updates,
+                    key=lambda f: AwesomeVersion(f.version),
+                )
             ]
         }
 
@@ -125,7 +132,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._attr_release_summary = firmware.changelog
         else:
             self._latest_version_firmware = None
-            self._attr_latest_version = None
+            self._attr_latest_version = self._attr_installed_version
             self._attr_release_summary = None
         if write_state:
             self.async_write_ha_state()
@@ -134,20 +141,19 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if not self._latest_version_firmware:
-            raise HomeAssistantError("No firmware update available")
-
-        firmware = None
         if version is None:
             firmware = self._latest_version_firmware
         else:
-            for firmware_ in self.available_firmware_updates:
-                if firmware_.version == version:
-                    firmware = firmware_
-                    break
-        if firmware is None:
-            raise HomeAssistantError(f"Version {version} not found")
+            try:
+                firmware = next(
+                    firmware
+                    for firmware in self.available_firmware_updates
+                    if firmware.version == version
+                )
+            except StopIteration as err:
+                raise HomeAssistantError(f"Version {version} not found") from err
         self._attr_in_progress = True
+        assert firmware
         try:
             for file in firmware.files:
                 await self.driver.controller.async_begin_ota_firmware_update(
