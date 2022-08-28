@@ -3,14 +3,12 @@ from unittest.mock import patch
 
 from airthings_ble import AirthingsDevice
 from bleak import BleakError
-import pytest
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import (
     UNKNOWN_SERVICE_INFO,
@@ -28,7 +26,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant):
     """Test discovery via bluetooth with a valid device."""
     with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
         with patch_airthings_ble(
-            AirthingsDevice(name="Airthings Wave+", identifier="CCCCCC")
+            AirthingsDevice(name="Airthings Wave+", identifier="123456")
         ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -38,7 +36,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant):
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    assert result["description_placeholders"] == {"name": "Airthings Wave+ CCCCCC"}
+    assert result["description_placeholders"] == {"name": "Airthings Wave+ (123456)"}
 
     with patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
@@ -46,7 +44,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant):
         )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airthings Wave+ CCCCCC"
+    assert result["title"] == "Airthings Wave+ (123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 
@@ -66,14 +64,18 @@ async def test_bluetooth_discovery_airthings_ble_update_failed(
     hass: HomeAssistant,
 ):
     """Test discovery via bluetooth but there's an exception from airthings-ble."""
-    with pytest.raises(UpdateFailed):
+    for loop in [(Exception(), "unknown"), (BleakError(), "cannot_connect")]:
+        exc, reason = loop
         with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
-            with patch_airthings_ble(side_effect=UpdateFailed("fail!")):
-                await hass.config_entries.flow.async_init(
+            with patch_airthings_ble(side_effect=exc):
+                result = await hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": SOURCE_BLUETOOTH},
                     data=WAVE_SERVICE_INFO,
                 )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == reason
 
 
 async def test_bluetooth_discovery_already_setup(hass: HomeAssistant):
@@ -100,7 +102,7 @@ async def test_user_setup(hass: HomeAssistant):
     ):
         with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
             with patch_airthings_ble(
-                AirthingsDevice(name="Airthings Wave+", identifier="CCCCCC")
+                AirthingsDevice(name="Airthings Wave+", identifier="123456")
             ):
                 result = await hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_USER}
@@ -112,7 +114,7 @@ async def test_user_setup(hass: HomeAssistant):
     schema = result["data_schema"].schema
 
     assert schema.get(CONF_ADDRESS).container == {
-        "cc:cc:cc:cc:cc:cc": "Airthings Wave+ CCCCCC"
+        "cc:cc:cc:cc:cc:cc": "Airthings Wave+ (123456)"
     }
 
     with patch(
@@ -125,7 +127,7 @@ async def test_user_setup(hass: HomeAssistant):
 
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airthings Wave+ CCCCCC"
+    assert result["title"] == "Airthings Wave+ (123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 
@@ -158,6 +160,22 @@ async def test_user_setup_existing_and_unknown_device(hass: HomeAssistant):
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_user_setup_unknown_error(hass: HomeAssistant):
+    """Test the user initiated form with an unknown error."""
+    with patch(
+        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        return_value=[WAVE_SERVICE_INFO],
+    ):
+        with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
+            with patch_airthings_ble(None, Exception()):
+                result = await hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_USER}
+                )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_user_setup_unable_to_connect(hass: HomeAssistant):

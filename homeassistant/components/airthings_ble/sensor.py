@@ -119,7 +119,7 @@ async def async_setup_entry(
     # we need to change some units
     sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
     if not is_metric:
-        for _, val in sensors_mapping.items():
+        for val in sensors_mapping.values():
             if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
                 continue
             val.native_unit_of_measurement = VOLUME_PICOCURIE

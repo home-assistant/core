@@ -35,7 +35,7 @@ class Discovery:
 
 def get_name(device: AirthingsDevice) -> str:
     """Generate name with identifier for device."""
-    return f"{device.name} {device.identifier}"
+    return f"{device.name} ({device.identifier})"
 
 
 class AirthingsDeviceUpdateError(Exception):
@@ -73,7 +73,11 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 err,
             )
             raise AirthingsDeviceUpdateError("Failed getting device data") from err
-
+        except Exception as err:
+            _LOGGER.error(
+                "Unknown error occurred from %s: %s", discovery_info.address, err
+            )
+            raise err
         return data
 
     async def async_step_bluetooth(
@@ -88,6 +92,8 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             device = await self._get_device_data(discovery_info)
         except AirthingsDeviceUpdateError:
             return self.async_abort(reason="cannot_connect")
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="unknown")
 
         name = get_name(device)
         self.context["title_placeholders"] = {"name": name}
@@ -141,6 +147,8 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._get_device_data(discovery_info)
             except AirthingsDeviceUpdateError:
                 return self.async_abort(reason="cannot_connect")
+            except Exception:  # pylint: disable=broad-except
+                return self.async_abort(reason="unknown")
             name = get_name(device)
             self._discovered_devices[address] = Discovery(name, discovery_info, device)
 

@@ -81,7 +81,7 @@ WAVE_DEVICE_INFO = AirthingsDevice(
     hw_version="REV A",
     sw_version="G-BLE-1.5.3-master+0",
     name="Airthings Wave+",
-    identifier="CCCCCC",
+    identifier="123456",
     sensors={
         "illuminance": 25,
         "battery": 85,
