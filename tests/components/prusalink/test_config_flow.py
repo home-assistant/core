@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
+                "host": "http://1.1.1.1",
                 "api_key": "abcdefg",
             },
         )
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "PrusaMINI"
     assert result2["data"] == {
-        "host": "1.1.1.1",
+        "host": "http://1.1.1.1",
         "api_key": "abcdefg",
     }
     assert len(mock_setup_entry.mock_calls) == 1

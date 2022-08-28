@@ -20,9 +20,18 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def add_protocol(value: str) -> str:
+    """Validate URL has a scheme."""
+    if value.startswith(("http://", "https://")):
+        return value
+
+    return f"http://{value}"
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
+        vol.Required("host"): vol.All(str, add_protocol),
         vol.Required("api_key"): str,
     }
 )
