@@ -83,17 +83,17 @@ class BMWLock(BMWBaseEntity, LockEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating lock data of %s", self.vehicle.name)
+        # Set default attributes
+        self._attr_extra_state_attributes = self._attrs
+
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
             self._attr_is_locked = self.vehicle.doors_and_windows.door_lock_state in {
                 LockState.LOCKED,
                 LockState.SECURED,
             }
-            self._attr_extra_state_attributes = dict(
-                self._attrs,
-                **{
-                    "door_lock_state": self.vehicle.doors_and_windows.door_lock_state.value,
-                },
-            )
+            self._attr_extra_state_attributes[
+                "door_lock_state"
+            ] = self.vehicle.doors_and_windows.door_lock_state.value
 
         super()._handle_coordinator_update()
