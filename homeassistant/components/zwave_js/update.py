@@ -71,6 +71,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
     )
+    _attr_has_entity_name = True
 
     def __init__(self, driver: Driver, node: ZwaveNode) -> None:
         """Initialize a Z-Wave device firmware update entity."""
@@ -79,11 +80,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.available_firmware_updates: list[FirmwareUpdateInfo] = []
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
 
-        name: str = (
-            node.name or node.device_config.description or f"Node {node.node_id}"
-        )
         # Entity class attributes
-        self._attr_name = f"{name}: Firmware"
+        self._attr_name = "Firmware"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
         # device is precreated in main handler
