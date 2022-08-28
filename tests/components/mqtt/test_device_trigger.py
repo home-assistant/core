@@ -696,6 +696,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 ):
     """Test triggers not firing after removal."""
     assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
     await mqtt_mock_entry_no_yaml_config()
 

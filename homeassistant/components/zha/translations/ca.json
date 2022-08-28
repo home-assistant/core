@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Vols configurar {name}?"
             },
+            "confirm_hardware": {
+                "description": "Vols configurar {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Tipus de r\u00e0dio"

@@ -60,6 +60,7 @@ from .entry_data import RuntimeEntryData
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
+_R = TypeVar("_R")
 _DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
 
 STORAGE_VERSION = 1
@@ -599,20 +600,18 @@ async def platform_async_setup_entry(
     )
 
 
-_PropT = TypeVar("_PropT", bound=Callable[..., Any])
-
-
-def esphome_state_property(func: _PropT) -> _PropT:
+def esphome_state_property(
+    func: Callable[[_EntityT], _R]
+) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
 
     This checks if the state object in the entity is set, and
     prevents writing NAN values to the Home Assistant state machine.
     """
 
-    @property  # type: ignore[misc]
     @functools.wraps(func)
-    def _wrapper(self):  # type: ignore[no-untyped-def]
-        # pylint: disable=protected-access
+    def _wrapper(self: _EntityT) -> _R | None:
+        # pylint: disable-next=protected-access
         if not self._has_state:
             return None
         val = func(self)
@@ -622,7 +621,7 @@ def esphome_state_property(func: _PropT) -> _PropT:
             return None
         return val
 
-    return cast(_PropT, _wrapper)
+    return _wrapper
 
 
 _EnumT = TypeVar("_EnumT", bound=APIIntEnum)
@@ -674,6 +673,8 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[
 
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -803,11 +804,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             return None
 
         return cast(str, ICON_SCHEMA(self._static_info.icon))
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:

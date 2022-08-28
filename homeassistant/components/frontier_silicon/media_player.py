@@ -125,7 +125,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self._supports_sound_mode: bool = True
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest date and update device state."""
         afsapi = self.fs_device
         try:
@@ -291,11 +291,19 @@ class AFSAPIDevice(MediaPlayerEntity):
             volume = int(volume * self._max_volume)
             await self.fs_device.set_volume(volume)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.fs_device.set_power(True)
-        await self.fs_device.set_mode(self.__modes_by_label.get(source))
+        if (
+            self.__modes_by_label
+            and (mode := self.__modes_by_label.get(source)) is not None
+        ):
+            await self.fs_device.set_mode(mode)
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select EQ Preset."""
-        await self.fs_device.set_eq_preset(self.__sound_modes_by_label[sound_mode])
+        if (
+            self.__sound_modes_by_label
+            and (mode := self.__sound_modes_by_label.get(sound_mode)) is not None
+        ):
+            await self.fs_device.set_eq_preset(mode)

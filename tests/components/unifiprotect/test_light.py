@@ -33,7 +33,7 @@ async def test_light_remove(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
 
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
-    await remove_entities(hass, [light])
+    await remove_entities(hass, ufp, [light])
     assert_entity_counts(hass, Platform.LIGHT, 0, 0)
     await adopt_devices(hass, ufp, [light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)

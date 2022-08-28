@@ -159,6 +159,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
 /homeassistant/components/bt_smarthub/ @jxwolstenholme
+/homeassistant/components/bthome/ @Ernst79
+/tests/components/bthome/ @Ernst79
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221
 /homeassistant/components/button/ @home-assistant/core
@@ -1107,6 +1109,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tesla_wall_connector/ @einarhauks
 /tests/components/tesla_wall_connector/ @einarhauks
 /homeassistant/components/tfiac/ @fredrike @mellado
+/homeassistant/components/thermobeacon/ @bdraco
+/tests/components/thermobeacon/ @bdraco
 /homeassistant/components/thermopro/ @bdraco
 /tests/components/thermopro/ @bdraco
 /homeassistant/components/thethingsnetwork/ @fabaff

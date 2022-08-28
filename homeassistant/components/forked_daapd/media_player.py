@@ -130,6 +130,8 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class ForkedDaapdZone(MediaPlayerEntity):
     """Representation of a forked-daapd output."""
 
+    _attr_should_poll = False
+
     def __init__(self, api, output, entry_id):
         """Initialize the ForkedDaapd Zone."""
         self._api = api
@@ -163,11 +165,6 @@ class ForkedDaapdZone(MediaPlayerEntity):
     def unique_id(self):
         """Return unique ID."""
         return f"{self._entry_id}-{self._output_id}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity pushes its state to HA."""
-        return False
 
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
@@ -234,6 +231,8 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
 class ForkedDaapdMaster(MediaPlayerEntity):
     """Representation of the main forked-daapd device."""
+
+    _attr_should_poll = False
 
     def __init__(
         self, clientsession, api, ip_address, api_port, api_password, config_entry
@@ -411,11 +410,6 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     def unique_id(self):
         """Return unique ID."""
         return self._config_entry.entry_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity pushes its state to HA."""
-        return False
 
     @property
     def available(self) -> bool:

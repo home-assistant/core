@@ -116,6 +116,7 @@ async def handle_set_latency(entity, service_call):
 class SnapcastGroupDevice(MediaPlayerEntity):
     """Representation of a Snapcast group device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -173,11 +174,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
 
-    @property
-    def should_poll(self):
-        """Do not poll for state."""
-        return False
-
     async def async_select_source(self, source):
         """Set input source."""
         streams = self._group.streams_by_name()
@@ -208,6 +204,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 class SnapcastClientDevice(MediaPlayerEntity):
     """Representation of a Snapcast client device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -275,11 +272,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
         name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
         state_attrs["friendly_name"] = name
         return state_attrs
-
-    @property
-    def should_poll(self):
-        """Do not poll for state."""
-        return False
 
     @property
     def latency(self):

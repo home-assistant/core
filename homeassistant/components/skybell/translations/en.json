@@ -10,16 +10,16 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Please update your password for {email}",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Password"
-                }
-            },
-            "reauth_confirm": {
-                "description": "Please update your password for {email}",
-                "title": "Reauthenticate Integration",
-                "data": {
                     "password": "Password"
                 }
             }
