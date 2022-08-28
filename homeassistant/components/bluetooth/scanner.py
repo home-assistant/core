@@ -7,10 +7,14 @@ from datetime import datetime
 import logging
 import platform
 import time
+from typing import Any
 
 import async_timeout
 import bleak
 from bleak import BleakError
+from bleak.assigned_numbers import AdvertisementDataType
+from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
+from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from dbus_next import InvalidMessageError
@@ -32,13 +36,21 @@ from .const import (
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
-from .models import BluetoothScanningMode
+from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
 MONOTONIC_TIME = time.monotonic
 
-
+# or_patterns is a workaround for the fact that passive scanning
+# needs at least one matcher to be set. The below matcher
+# will match all devices.
+PASSIVE_SCANNER_ARGS = BlueZScannerArgs(
+    or_patterns=[
+        OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
+        OrPattern(0, AdvertisementDataType.FLAGS, b"\x1a"),
+    ]
+)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -81,18 +93,24 @@ def create_bleak_scanner(
     scanning_mode: BluetoothScanningMode, adapter: str | None
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
-    scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
-    # Only Linux supports multiple adapters
-    if adapter and platform.system() == "Linux":
-        scanner_kwargs["adapter"] = adapter
+    scanner_kwargs: dict[str, Any] = {
+        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
+    }
+    if platform.system() == "Linux":
+        # Only Linux supports multiple adapters
+        if adapter:
+            scanner_kwargs["adapter"] = adapter
+        if scanning_mode == BluetoothScanningMode.PASSIVE:
+            scanner_kwargs["bluez"] = PASSIVE_SCANNER_ARGS
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
+
     try:
-        return OriginalBleakScanner(**scanner_kwargs)  # type: ignore[arg-type]
+        return OriginalBleakScanner(**scanner_kwargs)
     except (FileNotFoundError, BleakError) as ex:
         raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
 
 
-class HaScanner:
+class HaScanner(BaseHaScanner):
     """Operate and automatically recover a BleakScanner.
 
     Multiple BleakScanner can be used at the same time
@@ -119,9 +137,7 @@ class HaScanner:
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
-        self._callbacks: list[
-            Callable[[BLEDevice, AdvertisementData, float, str], None]
-        ] = []
+        self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
         self.source = self.adapter or SOURCE_LOCAL
 
@@ -130,9 +146,20 @@ class HaScanner:
         """Return a list of discovered devices."""
         return self.scanner.discovered_devices
 
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the scanner."""
+        base_diag = await super().async_diagnostics()
+        return base_diag | {
+            "adapter": self.adapter,
+            "source": self.source,
+            "name": self.name,
+            "last_detection": self._last_detection,
+            "start_time": self._start_time,
+        }
+
     @hass_callback
     def async_register_callback(
-        self, callback: Callable[[BLEDevice, AdvertisementData, float, str], None]
+        self, callback: Callable[[BluetoothServiceInfoBleak], None]
     ) -> CALLBACK_TYPE:
         """Register a callback.
 
@@ -149,7 +176,7 @@ class HaScanner:
     @hass_callback
     def _async_detection_callback(
         self,
-        ble_device: BLEDevice,
+        device: BLEDevice,
         advertisement_data: AdvertisementData,
     ) -> None:
         """Call the callback when an advertisement is received.
@@ -168,8 +195,21 @@ class HaScanner:
             # as the adapter is in a failure
             # state if all the data is empty.
             self._last_detection = callback_time
+        service_info = BluetoothServiceInfoBleak(
+            name=advertisement_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=advertisement_data.manufacturer_data,
+            service_data=advertisement_data.service_data,
+            service_uuids=advertisement_data.service_uuids,
+            source=self.source,
+            device=device,
+            advertisement=advertisement_data,
+            connectable=True,
+            time=callback_time,
+        )
         for callback in self._callbacks:
-            callback(ble_device, advertisement_data, callback_time, self.source)
+            callback(service_info)
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""

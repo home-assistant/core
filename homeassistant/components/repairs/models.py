@@ -4,16 +4,12 @@ from __future__ import annotations
 from typing import Protocol
 
 from homeassistant import data_entry_flow
-from homeassistant.backports.enum import StrEnum
 from homeassistant.core import HomeAssistant
 
-
-class IssueSeverity(StrEnum):
-    """Issue severity."""
-
-    CRITICAL = "critical"
-    ERROR = "error"
-    WARNING = "warning"
+# pylint: disable-next=unused-import
+from homeassistant.helpers.issue_registry import (  # noqa: F401; Remove when integrations have been updated
+    IssueSeverity,
+)
 
 
 class RepairsFlow(data_entry_flow.FlowHandler):

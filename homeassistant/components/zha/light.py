@@ -605,7 +605,10 @@ class Light(BaseLight, ZhaEntity):
                 and not self._zha_config_always_prefer_xy_color_mode
             ):
                 self._attr_supported_color_modes.add(ColorMode.HS)
-                if self._color_channel.enhanced_hue_supported:
+                if (
+                    self._color_channel.enhanced_hue_supported
+                    and self._color_channel.enhanced_current_hue is not None
+                ):
                     curr_hue = self._color_channel.enhanced_current_hue * 65535 / 360
                 else:
                     curr_hue = self._color_channel.current_hue * 254 / 360

@@ -206,10 +206,11 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-class AttributeSelectorConfig(TypedDict):
+class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
     entity_id: str
+    hide_attributes: list[str]
 
 
 @SELECTORS.register("attribute")
@@ -218,7 +219,14 @@ class AttributeSelector(Selector):
 
     selector_type = "attribute"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            # hide_attributes is used to hide attributes in the frontend.
+            # A hidden attribute can still be provided manually.
+            vol.Optional("hide_attributes"): [str],
+        }
+    )
 
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
@@ -308,6 +316,34 @@ class ColorTempSelector(Selector):
             ),
         )(data)
         return value
+
+
+class ConfigEntrySelectorConfig(TypedDict, total=False):
+    """Class to represent a config entry selector config."""
+
+    integration: str
+
+
+@SELECTORS.register("config_entry")
+class ConfigEntrySelector(Selector):
+    """Selector of a config entry."""
+
+    selector_type = "config_entry"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("integration"): str,
+        }
+    )
+
+    def __init__(self, config: ConfigEntrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        config: str = vol.Schema(str)(data)
+        return config
 
 
 class DateSelectorConfig(TypedDict):
@@ -745,7 +781,6 @@ class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
     entity_id: str
-    attribute: str
 
 
 @SELECTORS.register("state")
@@ -757,7 +792,11 @@ class StateSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("entity_id"): cv.entity_id,
-            vol.Optional("attribute"): str,
+            # The attribute to filter on, is currently deliberately not
+            # configurable/exposed. We are considering separating state
+            # selectors into two types: one for state and one for attribute.
+            # Limiting the public use, prevents breaking changes in the future.
+            # vol.Optional("attribute"): str,
         }
     )
 

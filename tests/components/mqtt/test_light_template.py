@@ -74,7 +74,11 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import assert_setup_component, async_fire_mqtt_message
+from tests.common import (
+    assert_setup_component,
+    async_fire_mqtt_message,
+    mock_restore_cache,
+)
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -334,11 +338,9 @@ async def test_sending_mqtt_commands_and_optimistic(
             "color_temp": 100,
         },
     )
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ), assert_setup_component(1, light.DOMAIN):
+    with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
             hass,
             light.DOMAIN,
