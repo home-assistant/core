@@ -70,6 +70,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             model=device[CONF_ENOCEAN_MODEL],
                             eep=device[CONF_ENOCEAN_EEP],
                         ),
+                        None,
                     )
                 ]
             )
@@ -89,9 +90,10 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         dev_name,
         device_class,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        name=None,
     ):
         """Initialize the EnOcean binary sensor."""
-        super().__init__(dev_id, dev_name, dev_type)
+        super().__init__(dev_id, dev_name, dev_type, name)
         self._device_class = device_class
         self.which = -1
         self.onoff = -1

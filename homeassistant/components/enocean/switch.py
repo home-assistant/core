@@ -103,6 +103,7 @@ async def async_setup_entry(
                             model=device[CONF_ENOCEAN_MODEL],
                             eep=device[CONF_ENOCEAN_EEP],
                         ),
+                        "Switch 1",
                     ),
                     EnOceanSwitch(
                         device_id,
@@ -113,6 +114,7 @@ async def async_setup_entry(
                             model=device[CONF_ENOCEAN_MODEL],
                             eep=device[CONF_ENOCEAN_EEP],
                         ),
+                        "Switch 2",
                     ),
                 ]
             )
@@ -127,9 +129,10 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         dev_name,
         channel,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        name=None,
     ):
         """Initialize the EnOcean switch device."""
-        super().__init__(dev_id, dev_name, dev_type)
+        super().__init__(dev_id, dev_name, dev_type, name)
         self._light = None
         self._on_state = False
         self._on_state2 = False
@@ -140,11 +143,6 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def is_on(self):
         """Return whether the switch is on or off."""
         return self._on_state
-
-    @property
-    def name(self):
-        """Return the entity name."""
-        return self.dev_name + " Channel " + str(self.channel)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

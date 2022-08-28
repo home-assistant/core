@@ -198,13 +198,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             model=device[CONF_ENOCEAN_MODEL],
                             eep=device[CONF_ENOCEAN_EEP],
                         ),
+                        name=None,
                     )
                 ]
             )
 
         if eep == "A5-12-01":
             async_add_entities(
-                [EnOceanPowerSensor(device_id, device_name, SENSOR_DESC_POWER)]
+                [
+                    EnOceanPowerSensor(
+                        device_id,
+                        device_name,
+                        SENSOR_DESC_POWER,
+                        dev_type=EnOceanSupportedDeviceType(
+                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                            model=device[CONF_ENOCEAN_MODEL],
+                            eep=device[CONF_ENOCEAN_EEP],
+                        ),
+                        name="Power usage",
+                    )
+                ]
             )
 
 
@@ -217,11 +230,11 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         dev_name,
         description: EnOceanSensorEntityDescription,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        name=None,
     ):
         """Initialize the EnOcean sensor device."""
-        super().__init__(dev_id, dev_name, dev_type)
+        super().__init__(dev_id, dev_name, dev_type, name)
         self.entity_description = description
-        self._attr_name = f"{dev_name} {description.name}"
         self._attr_unique_id = description.unique_id(dev_id)
 
     async def async_added_to_hass(self) -> None:
@@ -288,9 +301,10 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         range_from,
         range_to,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        name=None,
     ):
         """Initialize the EnOcean temperature sensor device."""
-        super().__init__(dev_id, dev_name, description, dev_type)
+        super().__init__(dev_id, dev_name, description, dev_type, name)
         self._scale_min = scale_min
         self._scale_max = scale_max
         self.range_from = range_from

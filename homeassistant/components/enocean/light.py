@@ -60,7 +60,7 @@ def setup_platform(
     dev_name = config.get(CONF_NAME)
     dev_id = config.get(CONF_ID)
 
-    add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
+    add_entities([EnOceanLight(sender_id, dev_id, dev_name, name=dev_name)])
 
 
 async def async_setup_entry(
@@ -81,10 +81,10 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanLight(
-                        sender_id,
-                        device_id,
-                        device["name"],
-                        EnOceanSupportedDeviceType(
+                        sender_id=sender_id,
+                        dev_id=device_id,
+                        dev_name=device["name"],
+                        dev_type=EnOceanSupportedDeviceType(
                             manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
                             model=device[CONF_ENOCEAN_MODEL],
                             eep=device[CONF_ENOCEAN_EEP],
@@ -106,18 +106,14 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         dev_id,
         dev_name,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        name=None,
     ):
         """Initialize the EnOcean light source."""
-        super().__init__(dev_id, dev_name, dev_type)
+        super().__init__(dev_id, dev_name, dev_type, name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
         self._attr_unique_id = f"{combine_hex(dev_id)}"
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self.dev_name
 
     @property
     def brightness(self):

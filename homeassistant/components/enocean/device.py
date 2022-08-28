@@ -17,11 +17,14 @@ class EnOceanEntity(Entity):
         dev_id,
         dev_name="EnOcean device",
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+        name=None,
     ):
         """Initialize the device."""
         self.dev_id = dev_id
         self.dev_name = dev_name
         self.dev_type = dev_type
+        self._attr_name = name
+        self._attr_has_entity_name = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
