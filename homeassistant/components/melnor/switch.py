@@ -9,10 +9,9 @@ from melnor_bluetooth.device import Valve
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_CONNECTION_TIMEOUT, DOMAIN
+from .const import DOMAIN
 from .models import MelnorBluetoothBaseEntity, MelnorDataUpdateCoordinator
 
 
@@ -25,10 +24,6 @@ async def async_setup_entry(
     switches = []
 
     coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    await coordinator.data.connect(timeout=DEFAULT_CONNECTION_TIMEOUT)
-    if not coordinator.data.is_connected:
-        raise PlatformNotReady(f"Failed to connect to: {coordinator.data.mac}")
 
     # This device may not have 4 valves total, but the library will only expose the right number of valves
     for i in range(1, 5):
