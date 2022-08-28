@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -132,6 +133,8 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
+        if self.is_volume_muted:
+            return MediaPlayerState.IDLE
         return {
             "idle": MediaPlayerState.IDLE,
             "playing": MediaPlayerState.PLAYING,
@@ -267,8 +270,14 @@ class SnapcastClientDevice(MediaPlayerEntity):
     def state(self) -> MediaPlayerState:
         """Return the state of the player."""
         if self._client.connected:
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+            if self.is_volume_muted or self._client.group.muted:
+                return MediaPlayerState.IDLE
+            return {
+                "idle": MediaPlayerState.IDLE,
+                "playing": MediaPlayerState.PLAYING,
+                "unknown": None
+            }.get(self._client.group.stream_status)
+        return MediaPlayerState.STANDBY
 
     @property
     def extra_state_attributes(self):
