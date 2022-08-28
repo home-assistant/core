@@ -23,7 +23,7 @@ async def async_get_device_diagnostics(
 
     data = {
         "device": {
-            "name": station.name,
+            "name": station.station,
             "model": station.model,
             "frequency": station.frequency,
             "version": station.version,
