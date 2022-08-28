@@ -3,10 +3,10 @@
 from unittest.mock import patch
 
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import NOT_MICROBOT_INFO, SERVICE_INFO, USER_INPUT, patch_async_setup_entry
+from . import SERVICE_INFO, USER_INPUT, patch_async_setup_entry
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,6 @@ async def test_bluetooth_discovery(hass):
     assert result["title"] == "mibp AABB"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        CONF_ACCESS_TOKEN: "test-token",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -46,7 +45,6 @@ async def test_bluetooth_discovery_already_setup(hass):
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            CONF_ACCESS_TOKEN: "test-token",
         },
         unique_id="aa:bb:cc:dd:ee:ff",
     )
@@ -58,17 +56,6 @@ async def test_bluetooth_discovery_already_setup(hass):
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_async_step_bluetooth_not_microbot(hass):
-    """Test discovery via bluetooth not microbot."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=NOT_MICROBOT_INFO,
-    )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
 
 
 async def test_user_setup(hass):
@@ -96,7 +83,6 @@ async def test_user_setup(hass):
     assert result["title"] == "mibp"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        CONF_ACCESS_TOKEN: "test-token",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -108,7 +94,6 @@ async def test_user_setup_already_configured(hass):
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            CONF_ACCESS_TOKEN: "test-token",
         },
         unique_id="aa:bb:cc:dd:ee:ff",
     )
@@ -167,7 +152,6 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert result2["title"] == "mibp AABB"
     assert result2["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        CONF_ACCESS_TOKEN: "test-token",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
