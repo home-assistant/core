@@ -4,6 +4,9 @@ import asyncio
 
 from homeassistant.core import HomeAssistant, callback
 
+from .const import DOMAIN
+from .models import RecorderData
+
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """Check to see if a recorder migration is in progress."""
@@ -18,10 +21,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
 @callback
 def async_initialize_recorder(hass: HomeAssistant) -> None:
     """Initialize recorder data."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder import const, models
-
-    hass.data[const.DOMAIN] = models.RecorderData()
+    hass.data[DOMAIN] = RecorderData()
 
 
 async def async_wait_recorder(hass: HomeAssistant) -> bool:
@@ -30,9 +30,7 @@ async def async_wait_recorder(hass: HomeAssistant) -> bool:
     Returns False immediately if the recorder is not enabled.
     """
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder import const
-
-    if const.DOMAIN not in hass.data:
+    if DOMAIN not in hass.data:
         return False
-    db_connected: asyncio.Future[bool] = hass.data[const.DOMAIN].db_connected
+    db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
     return await db_connected
