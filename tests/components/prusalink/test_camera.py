@@ -10,8 +10,8 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def setup_sensor_platform_only():
-    """Only setup sensor platform."""
+def setup_camera_platform_only():
+    """Only setup camera platform."""
     with patch("homeassistant.components.prusalink.PLATFORMS", [Platform.CAMERA]):
         yield
 
@@ -20,7 +20,7 @@ async def test_camera_no_job(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-):
+) -> None:
     """Test sensors while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
     state = hass.states.get("camera.mock_title_job_preview")
