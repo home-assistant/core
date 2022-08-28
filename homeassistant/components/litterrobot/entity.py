@@ -6,7 +6,7 @@ from datetime import time
 import logging
 from typing import Any
 
-from pylitterbot import Robot
+from pylitterbot import LitterRobot, Robot
 from pylitterbot.exceptions import InvalidCommandException
 from typing_extensions import ParamSpec
 
@@ -63,6 +63,8 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
 
 class LitterRobotControlEntity(LitterRobotEntity):
     """A Litter-Robot entity that can control the unit."""
+
+    robot: LitterRobot
 
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
@@ -131,6 +133,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
 class LitterRobotConfigEntity(LitterRobotControlEntity):
     """A Litter-Robot entity that can control configuration of the unit."""
 
+    robot: LitterRobot
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
