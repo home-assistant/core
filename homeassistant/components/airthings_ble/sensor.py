@@ -117,15 +117,15 @@ async def async_setup_entry(
     ]
 
     # we need to change some units
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE
+    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
     if not is_metric:
-        for key, val in sensors_mapping.items():
+        for _, val in sensors_mapping.items():
             if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
                 continue
-            sensors_mapping[key].native_unit_of_measurement = VOLUME_PICOCURIE
+            val.native_unit_of_measurement = VOLUME_PICOCURIE
 
     entities = []
-    _LOGGER.debug("got sensors: %s", coordinator.data.sensors.keys())
+    _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
     for sensor_type, sensor_value in coordinator.data.sensors.items():
         if sensor_type not in sensors_mapping:
             _LOGGER.debug(
@@ -165,7 +165,7 @@ class AirthingsSensor(
 
         self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
-            identifiers={
+            connections={
                 (
                     CONNECTION_BLUETOOTH,
                     airthings_device.address,
