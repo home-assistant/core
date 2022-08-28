@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_SET_LOCATION,
 )
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -415,6 +416,92 @@ async def test_reload_config_entry_by_entity_id(hass):
         )
 
 
+async def test_enable_config_entry_by_entity_id(hass):
+    """Test being able to enable a config entry by entity_id."""
+    await async_setup_component(hass, "homeassistant", {})
+    entity_reg = mock_registry(hass)
+    entry1 = MockConfigEntry(domain="mockdomain")
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(domain="mockdomain")
+    entry2.add_to_hass(hass)
+    reg_entity1 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_charging", config_entry=entry1
+    )
+    reg_entity2 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_status", config_entry=entry2
+    )
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_set_disabled_by",
+        return_value=None,
+    ) as mock_enable:
+        await hass.services.async_call(
+            "homeassistant",
+            "enable_config_entry",
+            {"entity_id": f"{reg_entity1.entity_id},{reg_entity2.entity_id}"},
+            blocking=True,
+        )
+
+    assert len(mock_enable.mock_calls) == 2
+    assert {
+        mock_enable.mock_calls[0][1][0],
+        mock_enable.mock_calls[1][1][0],
+    } == {entry1.entry_id, entry2.entry_id}
+    assert mock_enable.mock_calls[0][1][1] is None
+    assert mock_enable.mock_calls[1][1][1] is None
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "enable_config_entry",
+            {"entity_id": "unknown.entity_id"},
+            blocking=True,
+        )
+
+
+async def test_disable_config_entry_by_entity_id(hass):
+    """Test being able to disable a config entry by entity_id."""
+    await async_setup_component(hass, "homeassistant", {})
+    entity_reg = mock_registry(hass)
+    entry1 = MockConfigEntry(domain="mockdomain")
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(domain="mockdomain")
+    entry2.add_to_hass(hass)
+    reg_entity1 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_charging", config_entry=entry1
+    )
+    reg_entity2 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_status", config_entry=entry2
+    )
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_set_disabled_by",
+        return_value=None,
+    ) as mock_disable:
+        await hass.services.async_call(
+            "homeassistant",
+            "disable_config_entry",
+            {"entity_id": f"{reg_entity1.entity_id},{reg_entity2.entity_id}"},
+            blocking=True,
+        )
+
+    assert len(mock_disable.mock_calls) == 2
+    assert {
+        mock_disable.mock_calls[0][1][0],
+        mock_disable.mock_calls[1][1][0],
+    } == {entry1.entry_id, entry2.entry_id}
+    assert mock_disable.mock_calls[0][1][1] is ConfigEntryDisabler.USER
+    assert mock_disable.mock_calls[1][1][1] is ConfigEntryDisabler.USER
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "disable_config_entry",
+            {"entity_id": "unknown.entity_id"},
+            blocking=True,
+        )
+
+
 async def test_reload_config_entry_by_entry_id(hass):
     """Test being able to reload a config entry by config entry id."""
     await async_setup_component(hass, "homeassistant", {})
@@ -429,9 +516,69 @@ async def test_reload_config_entry_by_entry_id(hass):
             {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
             blocking=True,
         )
-
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+
+
+async def test_enable_config_entry_by_entry_id(hass):
+    """Test being able to enable a config entry by config entry id."""
+    await async_setup_component(hass, "homeassistant", {})
+    entry = MockConfigEntry(domain="mockdomain")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_set_disabled_by",
+        return_value=None,
+    ) as mock_enable:
+        await hass.services.async_call(
+            "homeassistant",
+            "enable_config_entry",
+            {ATTR_ENTRY_ID: entry.entry_id},
+            blocking=True,
+        )
+
+    assert len(mock_enable.mock_calls) == 1
+    assert mock_enable.mock_calls[0][1][0] == entry.entry_id
+    assert mock_enable.mock_calls[0][1][1] is None
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "enable_config_entry",
+            {"entity_id": "unknown.entity_id"},
+            blocking=True,
+        )
+
+
+async def test_disable_config_entry_by_entry_id(hass):
+    """Test being able to disable a config entry by config entry id."""
+    await async_setup_component(hass, "homeassistant", {})
+    entry = MockConfigEntry(domain="mockdomain")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_set_disabled_by",
+        return_value=None,
+    ) as mock_disable:
+        await hass.services.async_call(
+            "homeassistant",
+            "disable_config_entry",
+            {ATTR_ENTRY_ID: entry.entry_id},
+            blocking=True,
+        )
+
+    # print(mock_enable_disable.mock_calls[0])
+    assert len(mock_disable.mock_calls) == 1
+    assert mock_disable.mock_calls[0][1][0] == entry.entry_id
+    assert mock_disable.mock_calls[0][1][1] == ConfigEntryDisabler.USER
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "disable_config_entry",
+            {"entity_id": "unknown.entity_id"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(

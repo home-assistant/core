@@ -255,7 +255,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
-    async def async_get_entries_ids_set(call: ha.ServiceCall) -> set:
+    async def _async_get_entries_ids_set(call: ha.ServiceCall) -> set:
         reload_entries = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
@@ -264,7 +264,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for reloading a config entry."""
-        reload_entries = await async_get_entries_ids_set(call)
+        reload_entries = await _async_get_entries_ids_set(call)
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
@@ -284,7 +284,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_enable_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for enabling a config entry."""
-        enable_entries = await async_get_entries_ids_set(call)
+        enable_entries = await _async_get_entries_ids_set(call)
         if not enable_entries:
             raise ValueError("There were no matching config entries to enable")
         await asyncio.gather(
@@ -304,7 +304,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_disable_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for disabling a config entry."""
-        disable_entries = await async_get_entries_ids_set(call)
+        disable_entries = await _async_get_entries_ids_set(call)
         if not disable_entries:
             raise ValueError("There were no matching config entries to disable")
         await asyncio.gather(
