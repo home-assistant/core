@@ -89,9 +89,15 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
         """Instruct the light to turn off."""
         await self._device.turn_off()
 
+    @callback
+    def _async_handle_update(self) -> None:
+        """Handle data update."""
+        self._async_update_attrs()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(self._device.subscribe(self.async_write_ha_state))
+        self.async_on_remove(self._device.subscribe(self._async_handle_update))
         return await super().async_added_to_hass()
 
     async def async_update(self) -> None:
