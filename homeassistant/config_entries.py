@@ -141,6 +141,7 @@ class ConfigEntryDisabler(StrEnum):
     """What disabled a config entry."""
 
     USER = "user"
+    SERVICE = "service"
 
 
 # DISABLED_* is deprecated, to be removed in 2022.3

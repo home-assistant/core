@@ -311,7 +311,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             *(
                 hass.config_entries.async_set_disabled_by(
                     config_entry_id,
-                    ConfigEntryDisabler.USER,
+                    ConfigEntryDisabler.SERVICE,
                 )
                 for config_entry_id in disable_entries
             )
