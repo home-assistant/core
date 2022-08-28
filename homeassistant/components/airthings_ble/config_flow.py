@@ -50,7 +50,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _get_device_data(self, discovery_info: BluetoothServiceInfo):
         ble_device = bluetooth.async_ble_device_from_address(
-            self.hass, discovery_info.address.upper()
+            self.hass, discovery_info.address
         )
         if ble_device is None:
             raise UpdateFailed(f"No device for {discovery_info.address} found")
@@ -117,15 +117,17 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
-            if address in current_addresses or address in self._discovered_devices:
-                continue
-
-            if 820 not in discovery_info.manufacturer_data:
+            if (
+                address in current_addresses
+                or address in self._discovered_devices
+            ):
                 continue
 
             device = await self._get_device_data(discovery_info)
             name = get_name(device)
-            self._discovered_devices[address] = Discovery(name, discovery_info, device)
+            self._discovered_devices[address] = Discovery(
+                name, discovery_info, device
+            )
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")

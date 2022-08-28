@@ -11,7 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -29,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     is_metric = hass.config.units.is_metric
     assert address is not None
 
-    ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
+    ble_device = bluetooth.async_ble_device_from_address(hass, address)
 
     if not ble_device:
         raise ConfigEntryNotReady(
@@ -39,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # airthings_ble = AirthingsBluetoothDeviceData(_LOGGER)
     async def _update_method():
         """Get data from Airthings BLE."""
-        ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
+        ble_device = bluetooth.async_ble_device_from_address(hass, address)
         airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
 
         try:
@@ -68,7 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS
+    ):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
