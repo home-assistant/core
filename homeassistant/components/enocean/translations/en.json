@@ -24,11 +24,11 @@
     },
     "options": {
         "error": {
-            "device_already_configured": "An EnOcean device with this device ID is already configured.",
+            "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",
             "device_name_empty": "Device name is empty.",
-            "invalid_device_id": "Device ID is not a valid EnOcean ID.",
+            "invalid_device_id": "Device ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
             "invalid_device_type": "Invalid device type.",
-            "invalid_sender_id": "Sender ID is not a valid EnOcean ID."
+            "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7')."
         },
         "step": {
             "add_device": {
@@ -39,7 +39,7 @@
                     "name": "Name",
                     "sender_id": "Sender ID (can be left empty for sensors)"
                 },
-                "description": "To add an EnOcean device you need at least its type and its ID. A valid EnOcean ID consists of four parts separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
+                "description": "To add an EnOcean device you need to specify at least its device type and its ID.",
                 "title": "Add new EnOcean device"
             },
             "delete_device": {

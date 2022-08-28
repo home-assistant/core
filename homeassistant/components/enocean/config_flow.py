@@ -223,6 +223,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     title="", data={CONF_ENOCEAN_DEVICES: devices}
                 )
 
+            default_device_type = device_type_id
+            default_device_id = device_id
+            default_device_name = device_name
+            default_sender_id = sender_id
+
         add_device_schema = vol.Schema(
             {
                 vol.Required(
