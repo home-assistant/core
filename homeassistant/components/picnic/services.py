@@ -29,38 +29,34 @@ class PicnicServiceException(Exception):
 async def async_register_services(hass: HomeAssistant) -> None:
     """Register services for the Picnic integration, if not registered yet."""
 
-    # Register the add_product service
-    if not hass.services.has_service(DOMAIN, SERVICE_ADD_PRODUCT_TO_CART):
+    if hass.services.has_service(DOMAIN, SERVICE_ADD_PRODUCT_TO_CART):
+        return
 
-        async def async_add_product_service(call: ServiceCall):
-            # Get the picnic API client and call the handler with api client and hass
-            api_client: PicnicAPI = await get_api_client(
-                hass, call.data.get("device_id")
-            )
-            await handle_add_product(hass, api_client, call)
+    async def async_add_product_service(call: ServiceCall):
+        # Get the picnic API client and call the handler with api client and hass
+        api_client = await get_api_client(hass, call.data.get("device_id"))
+        await handle_add_product(hass, api_client, call)
 
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
-            async_add_product_service,
-            schema=vol.Schema(
-                {
-                    vol.Optional(ATTR_DEVICE_ID): cv.string,
-                    vol.Exclusive(
-                        ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
-                    ): cv.positive_int,
-                    vol.Exclusive(
-                        ATTR_PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS
-                    ): cv.string,
-                    vol.Optional(ATTR_AMOUNT): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
-            ),
-        )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_PRODUCT_TO_CART,
+        async_add_product_service,
+        schema=vol.Schema(
+            {
+                vol.Optional(ATTR_DEVICE_ID): cv.string,
+                vol.Exclusive(
+                    ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
+                ): cv.positive_int,
+                vol.Exclusive(ATTR_PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS): cv.string,
+                vol.Optional(ATTR_AMOUNT): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            }
+        ),
+    )
 
 
-async def get_api_client(hass: HomeAssistant, device_id: Any | None = None):
+async def get_api_client(
+    hass: HomeAssistant, device_id: str | None = None
+) -> PicnicAPI:
     """Get the right Picnic API client based on the device id, else get the default one."""
     if device_id is None:
         default_config_id = list(hass.data[DOMAIN].keys())[0]
@@ -68,16 +64,14 @@ async def get_api_client(hass: HomeAssistant, device_id: Any | None = None):
 
     # Get device from registry
     registry = device_registry.async_get(hass)
-    device = registry.async_get(device_id)
-
-    if device is None:
+    if not (device := registry.async_get(device_id)):
         raise PicnicServiceException(f"Device with id {device_id} not found!")
 
     # Get Picnic API client for the config entry id
     try:
         config_entry_id = next(iter(device.config_entries))
         return hass.data[DOMAIN][config_entry_id][CONF_API]
-    except (AttributeError, StopIteration, KeyError) as error:
+    except StopIteration as error:
         raise PicnicServiceException(
             f"Device with id {device_id} not found!"
         ) from error
@@ -89,13 +83,9 @@ async def handle_add_product(
     """Handle the call for the add_product service."""
     product_id = call.data.get("product_id")
     if not product_id:
-        search_results = await hass.async_add_executor_job(
+        product_id = await hass.async_add_executor_job(
             _product_search, api_client, call.data.get("product_name")
         )
-        try:
-            product_id = search_results[0]["id"]
-        except (IndexError, KeyError, TypeError):
-            product_id = None
 
     if not product_id:
         raise PicnicServiceException("No product found or no product ID given!")
@@ -105,27 +95,17 @@ async def handle_add_product(
     )
 
 
-def _product_search(api_client: PicnicAPI, product_name: str):
+def _product_search(api_client: PicnicAPI, product_name: str) -> None | str:
     """Query the api client for the product name."""
-    # Get the search result
     search_result = api_client.search(product_name)
 
     # Return empty list if the result doesn't contain items
     if not search_result or "items" not in search_result[0]:
-        return []
+        return None
 
-    # Curate a list of Product objects
-    products = []
+    # Return the first valid result
     for item in search_result[0]["items"]:
         if "name" in item:
-            # Set the base values
-            products += [
-                {
-                    "id": item["id"],
-                    "name": item["name"],
-                    "price": item["display_price"] / 100,
-                    "quantity": item["unit_quantity"],
-                }
-            ]
+            return str(item["id"])
 
-    return products
+    return None

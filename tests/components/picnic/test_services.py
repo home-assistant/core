@@ -42,7 +42,7 @@ def picnic_api_client():
 
 
 @pytest.fixture
-def generate_config_entry(hass: HomeAssistant, picnic_api_client):
+def generate_config_entry(hass: HomeAssistant, picnic_api_client: MagicMock):
     """Generate Picnic config entries."""
 
     async def config_entry_generator(unique_id="295-6y3-1nf4"):
@@ -69,12 +69,13 @@ def _get_picnic_api_mock(hass: HomeAssistant, entry: MockConfigEntry):
     return hass.data[DOMAIN][entry.entry_id][CONF_API]
 
 
-async def test_add_product_using_id(hass: HomeAssistant, generate_config_entry):
+async def test_add_product_using_id(
+    hass: HomeAssistant, generate_config_entry: MagicMock
+):
     """Test adding a product by id."""
     config_entry = await generate_config_entry()
     picnic_api = _get_picnic_api_mock(hass, config_entry)
 
-    # Call the add_product service
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
@@ -86,7 +87,9 @@ async def test_add_product_using_id(hass: HomeAssistant, generate_config_entry):
     picnic_api.add_product.assert_called_with("5109348572", 3)
 
 
-async def test_add_product_using_name(hass: HomeAssistant, generate_config_entry):
+async def test_add_product_using_name(
+    hass: HomeAssistant, generate_config_entry: MagicMock
+):
     """Test adding a product by name."""
     config_entry = await generate_config_entry()
     picnic_api = _get_picnic_api_mock(hass, config_entry)
@@ -111,7 +114,6 @@ async def test_add_product_using_name(hass: HomeAssistant, generate_config_entry
         }
     ]
 
-    # Call the add_product service
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
@@ -124,16 +126,14 @@ async def test_add_product_using_name(hass: HomeAssistant, generate_config_entry
 
 
 async def test_add_product_using_name_no_results(
-    hass: HomeAssistant, generate_config_entry
+    hass: HomeAssistant, generate_config_entry: MagicMock
 ):
     """Test adding a product by name that can't be found."""
     config_entry = await generate_config_entry()
     picnic_api = _get_picnic_api_mock(hass, config_entry)
 
-    # Set the return value of the search api endpoint
+    # Set the search return value and check that the right exception is raised during the service call
     picnic_api.search.return_value = []
-
-    # Call the add_product service
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
             DOMAIN,
@@ -144,7 +144,7 @@ async def test_add_product_using_name_no_results(
 
 
 async def test_add_product_multiple_config_entries(
-    hass: HomeAssistant, generate_config_entry
+    hass: HomeAssistant, generate_config_entry: MagicMock
 ):
     """Test adding a product for a specific Picnic service while multiple are configured."""
     config_entry_1 = await generate_config_entry("158g-ahf7-aks")
@@ -155,7 +155,6 @@ async def test_add_product_multiple_config_entries(
         identifiers={(DOMAIN, "3fj9-9gju-236")}
     )
 
-    # Call the add_product service
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
@@ -171,7 +170,7 @@ async def test_add_product_multiple_config_entries(
 
 
 async def test_add_product_config_entry_doesnt_exist(
-    hass: HomeAssistant, generate_config_entry
+    hass: HomeAssistant, generate_config_entry: MagicMock
 ):
     """Test adding a product for a specific Picnic service, which doesn't exist."""
     config_entry = await generate_config_entry("158g-ahf7-aks")
@@ -186,24 +185,3 @@ async def test_add_product_config_entry_doesnt_exist(
 
     # Check that the right method is called on the api
     _get_picnic_api_mock(hass, config_entry).add_product.assert_not_called()
-
-
-async def test_add_product_config_entry_malformed(
-    hass: HomeAssistant, generate_config_entry
-):
-    """Test adding a product for a specific Picnic service, which has no data set."""
-    config_entry = await generate_config_entry("158g-ahf7-aks")
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    picnic_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.unique_id)}
-    )
-
-    hass.data[DOMAIN][config_entry.entry_id] = {}
-
-    with pytest.raises(PicnicServiceException):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
-            {"product_id": "5109348572", "device_id": picnic_service.id},
-            blocking=True,
-        )
