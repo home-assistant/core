@@ -320,6 +320,7 @@ class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
         self, coordinator: _DataUpdateCoordinatorT, context: Any = None
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
+        super().__init__()
         self.coordinator = coordinator
         self.coordinator_context = context
 

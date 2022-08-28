@@ -1777,6 +1777,9 @@ pyprof2calltree==1.4.5
 # homeassistant.components.prosegur
 pyprosegur==0.0.5
 
+# homeassistant.components.prusalink
+pyprusalink==1.0.0
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
 
