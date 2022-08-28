@@ -12,7 +12,8 @@
                 "data": {
                     "host": "V\u00e4rd",
                     "name": "Namn"
-                }
+                },
+                "description": "Se dokumentationen f\u00f6r att s\u00e4kerst\u00e4lla att alla krav \u00e4r uppfyllda."
             }
         }
     }

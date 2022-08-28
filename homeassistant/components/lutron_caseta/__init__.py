@@ -46,6 +46,7 @@ from .const import (
 from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+    _lutron_model_to_device_type,
 )
 from .models import LutronCasetaData
 from .util import serial_to_unique_id
@@ -281,7 +282,7 @@ def _async_subscribe_pico_remote_events(
         else:
             action = ACTION_RELEASE
 
-        type_ = device["type"]
+        type_ = _lutron_model_to_device_type(device["model"], device["type"])
         area, name = _area_and_name_from_name(device["name"])
         leap_button_number = device["button_number"]
         lip_button_number = async_get_lip_button(type_, leap_button_number)
@@ -385,6 +386,13 @@ class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier if serial number is None."""
+        if self.serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return super().unique_id
 
 
 def _id_to_identifier(lutron_id: str) -> tuple[str, str]:

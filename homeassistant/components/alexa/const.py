@@ -73,11 +73,14 @@ API_THERMOSTAT_MODES = OrderedDict(
         (climate.HVACMode.HEAT_COOL, "AUTO"),
         (climate.HVACMode.AUTO, "AUTO"),
         (climate.HVACMode.OFF, "OFF"),
-        (climate.HVACMode.FAN_ONLY, "OFF"),
+        (climate.HVACMode.FAN_ONLY, "CUSTOM"),
         (climate.HVACMode.DRY, "CUSTOM"),
     ]
 )
-API_THERMOSTAT_MODES_CUSTOM = {climate.HVACMode.DRY: "DEHUMIDIFY"}
+API_THERMOSTAT_MODES_CUSTOM = {
+    climate.HVACMode.DRY: "DEHUMIDIFY",
+    climate.HVACMode.FAN_ONLY: "FAN",
+}
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
 # AlexaModeController does not like a single mode for the fan preset, we add PRESET_MODE_NA if a fan has only one preset_mode

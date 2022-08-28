@@ -126,6 +126,8 @@ def _return_on_connection_error(ret=None):
 class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
+    _attr_should_poll = False
+
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
@@ -216,7 +218,7 @@ class ControllerDevice(ClimateEntity):
         return self._available
 
     @callback
-    def set_available(self, available: bool, ex: Exception = None) -> None:
+    def set_available(self, available: bool, ex: Exception | None = None) -> None:
         """
         Set availability for the controller.
 
@@ -249,14 +251,6 @@ class ControllerDevice(ClimateEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return f"iZone Controller {self._controller.device_uid}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
 
     @property
     def temperature_unit(self) -> str:
@@ -448,6 +442,8 @@ class ControllerDevice(ClimateEntity):
 class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
 
+    _attr_should_poll = False
+
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""
         self._controller = controller
@@ -524,14 +520,6 @@ class ZoneDevice(ClimateEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
 
     @property  # type: ignore[misc]
     @_return_on_connection_error(0)

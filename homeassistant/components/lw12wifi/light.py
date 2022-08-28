@@ -59,6 +59,7 @@ class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
@@ -114,11 +115,6 @@ class LW12WiFi(LightEntity):
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return True
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False to not poll the state of this entity."""
-        return False
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""

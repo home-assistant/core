@@ -277,7 +277,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_seek(self, position: int) -> None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SEEK],

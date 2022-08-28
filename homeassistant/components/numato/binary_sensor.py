@@ -81,6 +81,8 @@ def setup_platform(
 class NumatoGpioBinarySensor(BinarySensorEntity):
     """Represents a binary sensor (input) port of a Numato GPIO expander."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the Numato GPIO based binary sensor object."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -105,11 +107,6 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         """Update entity state."""
         self._state = level
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

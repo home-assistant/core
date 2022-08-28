@@ -1,7 +1,7 @@
 """Define tests for the Bravia TV config flow."""
 from unittest.mock import patch
 
-from bravia_tv.braviarc import NoIPControl
+from pybravia import BraviaTVConnectionError, BraviaTVNotSupported
 
 from homeassistant import data_entry_flow
 from homeassistant.components.braviatv.const import CONF_IGNORED_SOURCES, DOMAIN
@@ -23,13 +23,13 @@ BRAVIA_SYSTEM_INFO = {
     "cid": "very_unique_string",
 }
 
-BRAVIA_SOURCE_LIST = {
-    "HDMI 1": "extInput:hdmi?port=1",
-    "HDMI 2": "extInput:hdmi?port=2",
-    "HDMI 3/ARC": "extInput:hdmi?port=3",
-    "HDMI 4": "extInput:hdmi?port=4",
-    "AV/Component": "extInput:component?port=1",
-}
+BRAVIA_SOURCES = [
+    {"title": "HDMI 1", "uri": "extInput:hdmi?port=1"},
+    {"title": "HDMI 2", "uri": "extInput:hdmi?port=2"},
+    {"title": "HDMI 3/ARC", "uri": "extInput:hdmi?port=3"},
+    {"title": "HDMI 4", "uri": "extInput:hdmi?port=4"},
+    {"title": "AV/Component", "uri": "extInput:component?port=1"},
+]
 
 
 async def test_show_form(hass):
@@ -53,9 +53,10 @@ async def test_user_invalid_host(hass):
 
 async def test_authorize_cannot_connect(hass):
     """Test that errors are shown when cannot connect to host at the authorize step."""
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=False
-    ):
+    with patch(
+        "pybravia.BraviaTV.connect",
+        side_effect=BraviaTVConnectionError,
+    ), patch("pybravia.BraviaTV.pair"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
@@ -68,12 +69,14 @@ async def test_authorize_cannot_connect(hass):
 
 async def test_authorize_model_unsupported(hass):
     """Test that errors are shown when the TV is not supported at the authorize step."""
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", return_value={}):
+    with patch(
+        "pybravia.BraviaTV.connect",
+        side_effect=BraviaTVNotSupported,
+    ), patch("pybravia.BraviaTV.pair"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "10.10.10.12"}
         )
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
@@ -83,13 +86,12 @@ async def test_authorize_model_unsupported(hass):
 
 async def test_authorize_no_ip_control(hass):
     """Test that errors are shown when IP Control is disabled on the TV."""
-    with patch("bravia_tv.BraviaRC.connect", side_effect=NoIPControl("No IP Control")):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
+    )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "no_ip_control"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_ip_control"
 
 
 async def test_duplicate_error(hass):
@@ -106,9 +108,12 @@ async def test_duplicate_error(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
+    with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
+        "pybravia.BraviaTV.set_wol_mode"
+    ), patch(
+        "pybravia.BraviaTV.get_system_info",
+        return_value=BRAVIA_SYSTEM_INFO,
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
@@ -123,10 +128,11 @@ async def test_duplicate_error(hass):
 
 async def test_create_entry(hass):
     """Test that the user step works."""
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=True
+    with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
+        "pybravia.BraviaTV.set_wol_mode"
     ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+        "pybravia.BraviaTV.get_system_info",
+        return_value=BRAVIA_SYSTEM_INFO,
     ), patch(
         "homeassistant.components.braviatv.async_setup_entry", return_value=True
     ):
@@ -154,10 +160,11 @@ async def test_create_entry(hass):
 
 async def test_create_entry_with_ipv6_address(hass):
     """Test that the user step works with device IPv6 address."""
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=True
+    with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
+        "pybravia.BraviaTV.set_wol_mode"
     ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+        "pybravia.BraviaTV.get_system_info",
+        return_value=BRAVIA_SYSTEM_INFO,
     ), patch(
         "homeassistant.components.braviatv.async_setup_entry", return_value=True
     ):
@@ -199,19 +206,19 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_power_status"), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    with patch("pybravia.BraviaTV.connect"), patch(
+        "pybravia.BraviaTV.get_power_status",
+        return_value="active",
+    ), patch(
+        "pybravia.BraviaTV.get_external_status",
+        return_value=BRAVIA_SOURCES,
+    ), patch(
+        "pybravia.BraviaTV.send_rest_req",
+        return_value={},
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "bravia_tv.BraviaRC.is_connected", return_value=False
-    ), patch("bravia_tv.BraviaRC.get_power_status"), patch(
-        "bravia_tv.BraviaRC.load_source_list", return_value=BRAVIA_SOURCE_LIST
-    ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM

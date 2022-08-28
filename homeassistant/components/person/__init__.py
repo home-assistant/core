@@ -356,6 +356,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Person(RestoreEntity):
     """Represent a tracked person."""
 
+    _attr_should_poll = False
+
     def __init__(self, config):
         """Set up person."""
         self._config = config
@@ -383,14 +385,6 @@ class Person(RestoreEntity):
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         return self._config.get(CONF_PICTURE)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
 
     @property
     def state(self):

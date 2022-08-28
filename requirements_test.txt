@@ -8,12 +8,12 @@
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
 codecov==2.1.12
-coverage==6.4.2
+coverage==6.4.4
 freezegun==1.2.1
 mock-open==1.4.0
 mypy==0.971
 pre-commit==2.20.0
-pylint==2.14.4
+pylint==2.15.0
 pipdeptree==2.2.1
 pytest-aiohttp==0.3.0
 pytest-cov==3.0.0

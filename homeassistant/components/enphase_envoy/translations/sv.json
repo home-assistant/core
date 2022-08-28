@@ -16,7 +16,8 @@
                     "host": "V\u00e4rd",
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "description": "F\u00f6r nyare modeller, ange anv\u00e4ndarnamnet \"envoy\" utan l\u00f6senord. F\u00f6r \u00e4ldre modeller, ange anv\u00e4ndarnamnet `installer` utan l\u00f6senord. F\u00f6r alla andra modeller, ange ett giltigt anv\u00e4ndarnamn och l\u00f6senord."
             }
         }
     }

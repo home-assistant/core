@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "Timeout vid generering av en auktoriserings-URL.",
             "missing_configuration": "Komponenten har inte konfigurerats. F\u00f6lj dokumentationen.",
             "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
         },

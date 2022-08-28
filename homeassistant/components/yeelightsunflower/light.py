@@ -49,42 +49,23 @@ class SunflowerBulb(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light):
+    def __init__(self, light: yeelightsunflower.Bulb) -> None:
         """Initialize a Yeelight Sunflower bulb."""
         self._light = light
-        self._available = light.available
+        self._attr_available = light.available
         self._brightness = light.brightness
-        self._is_on = light.is_on
+        self._attr_is_on = light.is_on
         self._rgb_color = light.rgb_color
-        self._unique_id = light.zid
+        self._attr_unique_id = light.zid
+        self._attr_name = f"sunflower_{self._light.zid}"
 
     @property
-    def name(self):
-        """Return the display name of this light."""
-        return f"sunflower_{self._light.zid}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this light."""
-        return self._unique_id
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._is_on
-
-    @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness is 0-255; Yeelight's brightness is 0-100."""
         return int(self._brightness / 100 * 255)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the color property."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
@@ -112,7 +93,7 @@ class SunflowerBulb(LightEntity):
     def update(self) -> None:
         """Fetch new state data for this light and update local values."""
         self._light.update()
-        self._available = self._light.available
+        self._attr_available = self._light.available
         self._brightness = self._light.brightness
-        self._is_on = self._light.is_on
+        self._attr_is_on = self._light.is_on
         self._rgb_color = self._light.rgb_color

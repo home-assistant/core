@@ -1,23 +1,44 @@
 """Constants for the switchbot integration."""
+from switchbot import SwitchbotModel
+
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"
 
 # Config Attributes
-ATTR_BOT = "bot"
-ATTR_CURTAIN = "curtain"
-ATTR_HYGROMETER = "hygrometer"
-ATTR_CONTACT = "contact"
-ATTR_PLUG = "plug"
-ATTR_MOTION = "motion"
+
 DEFAULT_NAME = "Switchbot"
 
+
+class SupportedModels(StrEnum):
+    """Supported Switchbot models."""
+
+    BOT = "bot"
+    BULB = "bulb"
+    CURTAIN = "curtain"
+    HYGROMETER = "hygrometer"
+    CONTACT = "contact"
+    PLUG = "plug"
+    MOTION = "motion"
+
+
+CONNECTABLE_SUPPORTED_MODEL_TYPES = {
+    SwitchbotModel.BOT: SupportedModels.BOT,
+    SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
+    SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
+    SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
+}
+
+NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
+    SwitchbotModel.METER: SupportedModels.HYGROMETER,
+    SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
+    SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+}
+
 SUPPORTED_MODEL_TYPES = {
-    "WoHand": ATTR_BOT,
-    "WoCurtain": ATTR_CURTAIN,
-    "WoSensorTH": ATTR_HYGROMETER,
-    "WoContact": ATTR_CONTACT,
-    "WoPlug": ATTR_PLUG,
-    "WoPresence": ATTR_MOTION,
+    **CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    **NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
 }
 
 # Config Defaults

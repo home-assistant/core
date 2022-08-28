@@ -19,8 +19,7 @@ from aiopvapi.resources.shade import (
     MAX_POSITION,
     MIN_POSITION,
     BaseShade,
-    ShadeTdbu,
-    Silhouette,
+    ShadeTopDownBottomUp,
     factory as PvShade,
 )
 import async_timeout
@@ -116,17 +115,18 @@ def create_powerview_shade_entity(
     name_before_refresh: str,
 ) -> Iterable[ShadeEntity]:
     """Create a PowerViewShade entity."""
+
     classes: list[BaseShade] = []
-    # order here is important as both ShadeTDBU are listed in aiovapi as can_tilt
-    # and both require their own class here to work
-    if isinstance(shade, ShadeTdbu):
+    if isinstance(shade, ShadeTopDownBottomUp):
         classes.extend([PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom])
-    elif isinstance(shade, Silhouette):
-        classes.append(PowerViewShadeSilhouette)
-    elif shade.can_tilt:
+    elif (  # this will be extended further in next release for more defined control
+        shade.capability.capabilities.tiltOnClosed
+        or shade.capability.capabilities.tiltAnywhere
+    ):
         classes.append(PowerViewShadeWithTilt)
     else:
         classes.append(PowerViewShade)
+    _LOGGER.debug("%s (%s) detected as %a", shade.name, shade.capability.type, classes)
     return [
         cls(coordinator, device_info, room_name, shade, name_before_refresh)
         for cls in classes
@@ -392,8 +392,13 @@ class PowerViewShade(PowerViewShadeBase):
         )
 
 
-class PowerViewShadeTDBU(PowerViewShade):
-    """Representation of a PowerView shade with top/down bottom/up capabilities."""
+class PowerViewShadeDualRailBase(PowerViewShade):
+    """Representation of a shade with top/down bottom/up capabilities.
+
+    Base methods shared between the two shades created
+    Child Classes: PowerViewShadeTDBUBottom / PowerViewShadeTDBUTop
+    API Class: ShadeTopDownBottomUp
+    """
 
     @property
     def transition_steps(self) -> int:
@@ -403,8 +408,13 @@ class PowerViewShadeTDBU(PowerViewShade):
         ) + hd_position_to_hass(self.positions.secondary, MAX_POSITION)
 
 
-class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
-    """Representation of a top down bottom up powerview shade."""
+class PowerViewShadeTDBUBottom(PowerViewShadeDualRailBase):
+    """Representation of the bottom PowerViewShadeDualRailBase shade.
+
+    These shades have top/down bottom up functionality and two entiites.
+    Sibling Class: PowerViewShadeTDBUTop
+    API Class: ShadeTopDownBottomUp
+    """
 
     def __init__(
         self,
@@ -440,8 +450,13 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
         )
 
 
-class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
-    """Representation of a top down bottom up powerview shade."""
+class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
+    """Representation of the top PowerViewShadeDualRailBase shade.
+
+    These shades have top/down bottom up functionality and two entiites.
+    Sibling Class: PowerViewShadeTDBUBottom
+    API Class: ShadeTopDownBottomUp
+    """
 
     def __init__(
         self,
@@ -516,8 +531,6 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
 class PowerViewShadeWithTilt(PowerViewShade):
     """Representation of a PowerView shade with tilt capabilities."""
 
-    _max_tilt = MAX_POSITION
-
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
@@ -535,6 +548,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
         )
         if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+        self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
     def current_cover_tilt_position(self) -> int:
@@ -628,9 +642,3 @@ class PowerViewShadeWithTilt(PowerViewShade):
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilting."""
         await self.async_stop_cover()
-
-
-class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
-    """Representation of a Silhouette PowerView shade."""
-
-    _max_tilt = 32767

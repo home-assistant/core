@@ -5,15 +5,33 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "pin": "C\u00f3digo PIN",
+                    "username": "Nombre de usuario"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "C\u00f3digo PIN",
+                    "port": "Puerto"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "pin": "C\u00f3digo PIN",
                     "username": "Nombre de usuario"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (recomendado)",
+                    "local": "Panel Risco local (avanzado)"
                 }
             }
         }
@@ -28,12 +46,12 @@
                     "armed_night": "Armada Noche"
                 },
                 "description": "Selecciona en qu\u00e9 estado quieres configurar la alarma Risco cuando armes la alarma de Home Assistant",
-                "title": "Mapear estados de Home Assistant a estados Risco"
+                "title": "Mapear estados de Home Assistant a estados de Risco"
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Requiere un c\u00f3digo PIN para armar",
-                    "code_disarm_required": "Requiere un c\u00f3digo PIN para desactivar",
+                    "code_arm_required": "Requerir C\u00f3digo PIN para armar",
+                    "code_disarm_required": "Requerir C\u00f3digo PIN para desarmar",
                     "scan_interval": "Con qu\u00e9 frecuencia sondear Risco (en segundos)"
                 },
                 "title": "Configurar opciones"
@@ -48,7 +66,7 @@
                     "partial_arm": "Parcialmente Armada (EN CASA)"
                 },
                 "description": "Selecciona qu\u00e9 estado reportar\u00e1 la alarma de tu Home Assistant para cada estado reportado por Risco",
-                "title": "Asignar estados de Risco a estados de Home Assistant"
+                "title": "Mapear estados de Risco a estados de Home Assistant"
             }
         }
     }

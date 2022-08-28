@@ -70,7 +70,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._ads_type = ads_type
         self._factor = factor
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(
             self._ads_var,

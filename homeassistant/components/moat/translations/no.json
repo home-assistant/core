@@ -5,6 +5,17 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vil du konfigurere {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhet"
+                },
+                "description": "Velg en enhet du vil konfigurere"
+            }
+        }
     }
 }

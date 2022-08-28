@@ -11,8 +11,8 @@
                 "data": {
                     "port": "Puerto"
                 },
-                "description": "Conecte el puerto RS232-2 del LiteJet a su computadora e ingrese la ruta al dispositivo del puerto serial. \n\nEl LiteJet MCP debe configurarse para 19,2 K baudios, 8 bits de datos, 1 bit de parada, sin paridad y para transmitir un 'CR' despu\u00e9s de cada respuesta.",
-                "title": "Conectarse a LiteJet"
+                "description": "Conecta el puerto RS232-2 del LiteJet a tu ordenador e introduce la ruta al dispositivo del puerto serie. \n\nEl LiteJet MCP debe configurarse para 19,2 K baudios, 8 bits de datos, 1 bit de parada, sin paridad y para transmitir un 'CR' despu\u00e9s de cada respuesta.",
+                "title": "Conectar a LiteJet"
             }
         }
     },
