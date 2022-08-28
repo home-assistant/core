@@ -24,6 +24,7 @@ class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -126,18 +127,14 @@ class ZWaveBaseEntity(Entity):
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
         additional_info: list[str] | None = None,
-        name_suffix: str | None = None,
+        name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
             additional_info = []
-        name: str = (
-            self.info.node.name
-            or self.info.node.device_config.description
-            or f"Node {self.info.node.node_id}"
-        )
-        if name_suffix:
-            name = f"{name} {name_suffix}"
+        name = ""
+        if name_prefix:
+            name = name_prefix
         if include_value_name:
             value_name = (
                 alternate_value_name
@@ -145,7 +142,10 @@ class ZWaveBaseEntity(Entity):
                 or self.info.primary_value.property_key_name
                 or self.info.primary_value.property_name
             )
-            name = f"{name}: {value_name}"
+            if name:
+                name = f"{name}: {value_name}"
+            else:
+                name = value_name or ""
         for item in additional_info:
             if item:
                 name += f" - {item}"

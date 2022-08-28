@@ -350,7 +350,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+    assert state.name == "4-in-1 Sensor Home Security - Motion detection"
 
     dev_reg.async_update_device(
         device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
@@ -1182,7 +1182,7 @@ async def test_node_model_change(hass, zp3111, client, integration):
     motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+    assert state.name == "4-in-1 Sensor Home Security - Motion detection"
 
     # Customize device and entity names/ids
     dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")

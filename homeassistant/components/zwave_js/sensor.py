@@ -440,7 +440,7 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[property_key_name] if property_key_name else None,
-            name_suffix="Config Parameter",
+            name_prefix="Config parameter",
         )
 
     @property
@@ -477,6 +477,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
@@ -484,18 +485,13 @@ class ZWaveNodeStatusSensor(SensorEntity):
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
         self.node = node
-        name: str = (
-            self.node.name
-            or self.node.device_config.description
-            or f"Node {self.node.node_id}"
-        )
+
         # Entity class attributes
-        self._attr_name = f"{name}: Node Status"
+        self._attr_name = "Node status"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
         # device may not be precreated in main handler yet
         self._attr_device_info = get_device_info(driver, node)
-        self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
@@ -534,4 +530,5 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.async_remove,
             )
         )
+        self._attr_native_value: str = self.node.status.name.lower()
         self.async_write_ha_state()
