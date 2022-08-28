@@ -22,7 +22,7 @@ from homeassistant.util.color import (
 
 from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotSubscribeEntity
 
 PARALLEL_UPDATES = 1
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities([SwitchbotBulbEntity(coordinator)])
 
 
-class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
+class SwitchbotBulbEntity(SwitchbotSubscribeEntity, LightEntity):
     """Representation of switchbot Light bulb."""
 
     _device: SwitchbotBulb
@@ -85,21 +85,3 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._device.turn_off()
-
-    @callback
-    def _async_handle_update(self) -> None:
-        """Handle data update."""
-        self._async_update_attrs()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(self._device.subscribe(self._async_handle_update))
-        return await super().async_added_to_hass()
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._device.update()
