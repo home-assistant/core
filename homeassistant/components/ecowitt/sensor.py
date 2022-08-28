@@ -105,7 +105,7 @@ ECOWITT_SENSORS_MAPPING = {
     EcoWittSensorTypes.LIGHTNING_COUNT: (
         None,
         "strikes",
-        SensorStateClass.TOTAL_INCREASING,
+        SensorStateClass.TOTAL,
         None,
     ),
     EcoWittSensorTypes.TEMPERATURE_C: (
