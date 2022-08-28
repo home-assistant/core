@@ -7,6 +7,7 @@ from typing import Any
 
 from aiohttp import ClientError
 import async_timeout
+from awesomeversion import AwesomeVersion, AwesomeVersionException
 from pyprusalink import InvalidAuth, PrusaLink
 import voluptuous as vol
 
@@ -23,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def add_protocol(value: str) -> str:
     """Validate URL has a scheme."""
+    value = value.rstrip("/")
     if value.startswith(("http://", "https://")):
         return value
 
@@ -52,6 +54,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         _LOGGER.error("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 
+    try:
+        if AwesomeVersion(version["api"]) < AwesomeVersion("2.0.0"):
+            raise NotSupported
+    except AwesomeVersionException as err:
+        raise NotSupported from err
+
     return {"title": version["hostname"]}
 
 
@@ -75,6 +83,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
+        except NotSupported:
+            errors["base"] = "not_supported"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
@@ -89,4 +99,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class NotSupported(HomeAssistantError):
     """Error to indicate we cannot connect."""

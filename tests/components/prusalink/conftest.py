@@ -20,16 +20,17 @@ def mock_config_entry(hass):
 @pytest.fixture
 def mock_version_api(hass):
     """Mock PrusaLink version API."""
+    resp = {
+        "api": "2.0.0",
+        "server": "2.1.2",
+        "text": "PrusaLink MINI",
+        "hostname": "PrusaMINI",
+    }
     with patch(
         "pyprusalink.PrusaLink.get_version",
-        return_value={
-            "api": "2.0.0",
-            "server": "2.1.2",
-            "text": "PrusaLink MINI",
-            "hostname": "PrusaMINI",
-        },
+        return_value=resp,
     ):
-        yield
+        yield resp
 
 
 @pytest.fixture

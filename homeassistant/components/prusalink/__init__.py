@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Generic, TypeVar, cast
 
 import async_timeout
-from pyprusalink import InvalidAuth, PrusaLink, PrusaLinkError
+from pyprusalink import InvalidAuth, JobInfo, PrinterInfo, PrusaLink, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -55,7 +55,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator):
+T = TypeVar("T", PrinterInfo, JobInfo)
+
+
+class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
@@ -69,7 +72,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> T:
         """Update the data."""
         try:
             with async_timeout.timeout(5):
@@ -80,13 +83,13 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(str(err)) from err
 
 
-class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator):
+class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     """Printer update coordinator."""
 
     api_method = "get_printer"
 
 
-class JobUpdateCoordinator(PrusaLinkUpdateCoordinator):
+class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
     """Job update coordinator."""
 
     api_method = "get_job"
