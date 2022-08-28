@@ -26,13 +26,14 @@
         "error": {
             "device_name_empty": "Device name is empty.",
             "invalid_device_id": "Device ID is not a valid EnOcean ID.",
+            "invalid_device_type": "Invalid device type.",
             "invalid_sender_id": "Sender ID is not a valid EnOcean ID."
         },
         "step": {
             "add_device": {
                 "data": {
                     "device_class": "Device class",
-                    "eep": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+                    "device_type": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
                     "id": "Device ID",
                     "name": "Name",
                     "sender_id": "Sender ID (can be left empty for sensors)"
@@ -49,7 +50,7 @@
             },
             "edit_device": {
                 "data": {
-                    "eep": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+                    "device_type": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
                     "id": "Device ID",
                     "name": "Name",
                     "sender_id": "Sender ID (can be left empty for sensors)"
