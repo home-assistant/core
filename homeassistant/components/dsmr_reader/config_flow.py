@@ -35,9 +35,6 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
         if user_input is None:
             return self.async_show_form(
                 step_id="confirm",
-                description_placeholders={
-                    "documentation_link": "https://www.home-assistant.io/integrations/dsmr_reader#setup"
-                },
             )
 
         return await super().async_step_confirm(user_input)

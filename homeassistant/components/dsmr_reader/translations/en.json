@@ -5,7 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Make sure to configure the 'split topic' data sources in DSMR Reader, as described [in the documentation]({documentation_link})."
+                "description": "Make sure to configure the 'split topic' data sources in DSMR Reader."
             }
         }
     }
