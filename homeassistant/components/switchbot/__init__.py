@@ -29,6 +29,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.LIGHT_STRIP.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.CURTAIN.value: [
@@ -45,6 +46,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.BOT.value: switchbot.Switchbot,
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
     SupportedModels.BULB.value: switchbot.SwitchbotBulb,
+    SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
 }
 
 

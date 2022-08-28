@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBulb
+from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBaseLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,6 +24,11 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotSubscribeEntity
 
+SWITCHBOT_COLOR_MODE_TO_HASS = {
+    SwitchBotColorMode.RGB: ColorMode.RGB,
+    SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+}
+
 PARALLEL_UPDATES = 1
 
 
@@ -34,21 +39,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switchbot light."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SwitchbotBulbEntity(coordinator)])
+    async_add_entities([SwitchbotLightEntity(coordinator)])
 
 
-class SwitchbotBulbEntity(SwitchbotSubscribeEntity, LightEntity):
-    """Representation of switchbot Light bulb."""
+class SwitchbotLightEntity(SwitchbotSubscribeEntity, LightEntity):
+    """Representation of switchbot light bulb."""
 
-    _device: SwitchbotBulb
-    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.RGB}
+    _device: SwitchbotBaseLight
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the Switchbot."""
+        """Initialize the Switchbot light."""
         super().__init__(coordinator)
         device = self._device
         self._attr_min_mireds = color_temperature_kelvin_to_mired(device.max_temp)
         self._attr_max_mireds = color_temperature_kelvin_to_mired(device.min_temp)
+        self._attr_supported_color_modes = {
+            SWITCHBOT_COLOR_MODE_TO_HASS[mode] for mode in device.color_modes
+        }
         self._async_update_attrs()
 
     @callback
@@ -68,7 +75,11 @@ class SwitchbotBulbEntity(SwitchbotSubscribeEntity, LightEntity):
         """Instruct the light to turn on."""
         brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
 
-        if ATTR_COLOR_TEMP in kwargs:
+        if (
+            self.supported_color_modes
+            and ColorMode.COLOR_TEMP in self.supported_color_modes
+            and ATTR_COLOR_TEMP in kwargs
+        ):
             color_temp = kwargs[ATTR_COLOR_TEMP]
             kelvin = max(2700, min(6500, color_temperature_mired_to_kelvin(color_temp)))
             await self._device.set_color_temp(brightness, kelvin)

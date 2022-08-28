@@ -5,6 +5,8 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from typing import Any
 
+from switchbot import SwitchbotDevice
+
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )
@@ -21,6 +23,7 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity encapsulating common features of Switchbot device."""
 
     coordinator: SwitchbotDataUpdateCoordinator
+    _device: SwitchbotDevice
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
