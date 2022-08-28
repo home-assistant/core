@@ -400,7 +400,7 @@ class KeyFrameConverter:
     If unsuccessful, get_image will return the previous image
     """
 
-    def __init__(self, hass: HomeAssistant, orientation: int) -> None:
+    def __init__(self, hass: HomeAssistant, stream_settings: StreamSettings) -> None:
         """Initialize."""
 
         # Keep import here so that we can import stream integration without installing reqs
@@ -413,7 +413,7 @@ class KeyFrameConverter:
         self._turbojpeg = TurboJPEGSingleton.instance()
         self._lock = asyncio.Lock()
         self._codec_context: CodecContext | None = None
-        self._orientation = orientation
+        self._stream_settings = stream_settings
 
     def create_codec_context(self, codec_context: CodecContext) -> None:
         """
@@ -488,12 +488,12 @@ class KeyFrameConverter:
         if frames:
             frame = frames[0]
             if width and height:
-                if self._orientation >= 5:
+                if self._stream_settings.orientation >= 5:
                     frame = frame.reformat(width=height, height=width)
                 else:
                     frame = frame.reformat(width=width, height=height)
             bgr_array = self.transform_image(
-                frame.to_ndarray(format="bgr24"), self._orientation
+                frame.to_ndarray(format="bgr24"), self._stream_settings.orientation
             )
             self._image = bytes(self._turbojpeg.encode(bgr_array))
 

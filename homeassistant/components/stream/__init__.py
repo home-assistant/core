@@ -41,7 +41,6 @@ from .const import (
     ATTR_STREAMS,
     CONF_EXTRA_PART_WAIT_TIME,
     CONF_LL_HLS,
-    CONF_ORIENTATION,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
@@ -125,7 +124,6 @@ def create_stream(
         except vol.Invalid as exc:
             raise HomeAssistantError("Invalid stream options") from exc
 
-        stream_settings.orientation = stream_options.get(CONF_ORIENTATION, 1)
         if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
             stream_settings.hls_part_timeout += extra_wait_time
         if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
@@ -283,7 +281,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._keyframe_converter = KeyFrameConverter(hass, stream_settings.orientation)
+        self._keyframe_converter = KeyFrameConverter(hass, stream_settings)
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -292,6 +290,15 @@ class Stream:
             else _LOGGER
         )
         self._diagnostics = Diagnostics()
+
+    @property
+    def orientation(self) -> int:
+        """Return the current orientation setting."""
+        return self._stream_settings.orientation
+
+    @orientation.setter
+    def orientation(self, value: int) -> None:
+        self._stream_settings.orientation = value
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -404,6 +411,7 @@ class Stream:
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
             self._diagnostics.set_value("keepalive", self.keepalive)
+            self._diagnostics.set_value("orientation", self.orientation)
             self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
@@ -552,8 +560,5 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
         vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
-        # See EXIF orientations:
-        # https://www.cipa.jp/std/documents/e/DC-X008-Translation-2019-E.pdf
-        vol.Optional(CONF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
     }
 )

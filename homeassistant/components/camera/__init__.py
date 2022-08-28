@@ -65,6 +65,8 @@ from .const import (  # noqa: F401
     DATA_CAMERA_PREFS,
     DATA_RTSP_TO_WEB_RTC,
     DOMAIN,
+    PREF_ORIENTATION,
+    PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
@@ -874,7 +876,8 @@ async def websocket_get_prefs(
     {
         vol.Required("type"): "camera/update_prefs",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Optional("preload_stream"): bool,
+        vol.Optional(PREF_PRELOAD_STREAM): bool,
+        vol.Optional(PREF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
     }
 )
 @websocket_api.async_response
@@ -959,6 +962,7 @@ async def _async_stream_endpoint_url(
     # Update keepalive setting which manages idle shutdown
     camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
     stream.keepalive = camera_prefs.preload_stream
+    stream.orientation = camera_prefs.orientation
 
     stream.add_provider(fmt)
     await stream.start()

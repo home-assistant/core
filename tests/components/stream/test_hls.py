@@ -180,6 +180,7 @@ async def test_hls_stream(
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
+        "orientation": 1,
         "start_worker": 1,
         "video_codec": "h264",
         "worker_error": 1,

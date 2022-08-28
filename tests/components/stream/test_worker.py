@@ -29,7 +29,6 @@ from homeassistant.components.stream import KeyFrameConverter, Stream, create_st
 from homeassistant.components.stream.const import (
     ATTR_SETTINGS,
     CONF_LL_HLS,
-    CONF_ORIENTATION,
     CONF_PART_DURATION,
     CONF_SEGMENT_DURATION,
     DOMAIN,
@@ -905,6 +904,7 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
+        "orientation": 1,
         "start_worker": 1,
         "video_codec": "hevc",
         "worker_error": 1,
@@ -973,9 +973,8 @@ async def test_rotate_init(hass, h264_video, worker_finished_stream):
     worker_finished, mock_stream = worker_finished_stream
 
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
-        stream = create_stream(
-            hass, h264_video, {CONF_ORIENTATION: 2}, stream_label="camera"
-        )
+        stream = create_stream(hass, h264_video, {}, stream_label="camera")
+        stream._stream_settings.orientation = 2
 
     recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
     await stream.start()
@@ -1014,7 +1013,8 @@ async def test_get_image_rotated(hass, h264_video, filename):
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
         for orientation in (1, 8):
-            stream = create_stream(hass, h264_video, {CONF_ORIENTATION: orientation})
+            stream = create_stream(hass, h264_video, {})
+            stream._stream_settings.orientation = orientation
 
             with patch.object(hass.config, "is_allowed_path", return_value=True):
                 make_recording = hass.async_create_task(stream.async_record(filename))

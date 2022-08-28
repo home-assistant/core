@@ -7,7 +7,11 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
+from homeassistant.components.camera.const import (
+    DOMAIN,
+    PREF_ORIENTATION,
+    PREF_PRELOAD_STREAM,
+)
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
@@ -300,6 +304,7 @@ async def test_websocket_update_prefs(
     """Test updating preference."""
     await async_setup_component(hass, "camera", {})
     assert setup_camera_prefs[PREF_PRELOAD_STREAM]
+    assert setup_camera_prefs[PREF_ORIENTATION] == 1
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -307,6 +312,7 @@ async def test_websocket_update_prefs(
             "type": "camera/update_prefs",
             "entity_id": "camera.demo_camera",
             "preload_stream": False,
+            "orientation": 3,
         }
     )
     response = await client.receive_json()
@@ -317,6 +323,8 @@ async def test_websocket_update_prefs(
         response["result"][PREF_PRELOAD_STREAM]
         == setup_camera_prefs[PREF_PRELOAD_STREAM]
     )
+    assert setup_camera_prefs[PREF_ORIENTATION] == 3
+    assert response["result"][PREF_ORIENTATION] == setup_camera_prefs[PREF_ORIENTATION]
 
 
 async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
