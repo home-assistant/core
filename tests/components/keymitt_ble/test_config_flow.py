@@ -31,7 +31,7 @@ async def test_bluetooth_discovery(hass):
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "mibp"
+    assert result["title"] == "mibp AABB"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: "test-token",
@@ -164,7 +164,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
         )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "mibp"
+    assert result2["title"] == "mibp AABB"
     assert result2["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: "test-token",
