@@ -51,6 +51,8 @@ def setup_platform(
 class PilightSensor(SensorEntity):
     """Representation of a sensor that can be updated using Pilight."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, name, variable, payload, unit_of_measurement):
         """Initialize the sensor."""
         self._state = None
@@ -61,11 +63,6 @@ class PilightSensor(SensorEntity):
         self._unit_of_measurement = unit_of_measurement
 
         hass.bus.listen(pilight.EVENT, self._handle_code)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

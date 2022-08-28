@@ -781,7 +781,6 @@ class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
     entity_id: str
-    attribute: str
 
 
 @SELECTORS.register("state")
@@ -793,7 +792,11 @@ class StateSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("entity_id"): cv.entity_id,
-            vol.Optional("attribute"): str,
+            # The attribute to filter on, is currently deliberately not
+            # configurable/exposed. We are considering separating state
+            # selectors into two types: one for state and one for attribute.
+            # Limiting the public use, prevents breaking changes in the future.
+            # vol.Optional("attribute"): str,
         }
     )
 

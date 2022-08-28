@@ -52,6 +52,8 @@ def setup_platform(
 class RemoteRPiGPIOSwitch(SwitchEntity):
     """Representation of a Remote Raspberry Pi GPIO."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, led):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -62,11 +64,6 @@ class RemoteRPiGPIOSwitch(SwitchEntity):
     def name(self):
         """Return the name of the switch."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def assumed_state(self):
