@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
-        """Add ping button entity."""
+        """Add firmware update entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
         async_add_entities([ZWaveNodeFirmwareUpdate(driver, node)])
