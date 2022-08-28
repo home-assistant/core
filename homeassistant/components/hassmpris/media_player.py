@@ -159,11 +159,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
             manufacturer="Freedesktop",
         )
 
-    @property
-    def state(self):
-        """Return the current playback state of the entity."""
-        return self._attr_state
-
     @staticmethod
     def config_schema():
         """Return the discovery schema."""
