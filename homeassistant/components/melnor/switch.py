@@ -24,9 +24,7 @@ async def async_setup_entry(
     """Set up the switch platform."""
     switches = []
 
-    coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     await coordinator.data.connect(timeout=DEFAULT_CONNECTION_TIMEOUT)
     if not coordinator.data.is_connected:
@@ -84,7 +82,7 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique id of the switch."""
-        return super().unique_id + f"-zone{self._valve().id}"
+        return f"{self._attr_unique_id}-zone{self._valve().id}"
 
     def _valve(self) -> Valve:
         return cast(Valve, self.coordinator.data[f"zone{self._valve_index}"])

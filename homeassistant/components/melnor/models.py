@@ -75,6 +75,15 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
 
         self._device = coordinator.data
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.mac)},
+            manufacturer="Melnor",
+            model=self._device.model,
+            name=self._device.name,
+        )
+        self._attr_name = self._device.name
+        self._attr_unique_id = self._device.mac
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -90,18 +99,3 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     def name(self) -> str:
         """Return the name of the device."""
         return self._device.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a base unique ID."""
-        return f"{self._device.mac}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.mac)},
-            manufacturer="Melnor",
-            model=self._device.model,
-            name=self._device.name,
-        )
