@@ -28,6 +28,9 @@ from .const import (
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
+# Requisite for silver quality scale.
+_setup_error_counter: int = 0
+
 
 def _load_cert_chain(chain: bytes) -> list[Certificate]:
     start_line = b"-----BEGIN CERTIFICATE-----"
@@ -41,6 +44,8 @@ def _load_cert_chain(chain: bytes) -> list[Certificate]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MPRIS media playback remote control from a config entry."""
+    global _setup_error_counter
+
     client_cert = x509.load_pem_x509_certificate(
         entry.data[CONF_CLIENT_CERT].encode("ascii"),
     )
@@ -60,14 +65,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         trust_chain,
     )
     try:
-        _LOGGER.debug("Pinging the server")
+        _LOGGER.debug("Pinging the MPRIS agent")
         await clnt.ping()
-        _LOGGER.debug("Successfully pinged the server")
+        _LOGGER.info("Successfully pinged the MPRIS agent")
+        _setup_error_counter = 0
 
     except hassmpris_client.Unauthenticated as exc:
         raise ConfigEntryAuthFailed(exc) from exc
     except Exception as exc:
-        _LOGGER.exception("Cannot ping the server")
+        if _setup_error_counter == 0:
+            _LOGGER.warning("Cannot ping the MPRIS agent: %s", exc)
+            _setup_error_counter += 1
         raise ConfigEntryNotReady(str(exc)) from exc
 
     hass.data.setdefault(DOMAIN, {})
@@ -85,7 +93,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data = hass.data[DOMAIN].pop(entry.entry_id)
-        _LOGGER.debug("Closing client connection")
+        _LOGGER.debug("Closing connection to agent")
         await data[ENTRY_CLIENT].close()
         _LOGGER.debug("Connection closed -- running unloaders")
         unloaders = data[ENTRY_UNLOADERS]
