@@ -243,7 +243,7 @@ async def setup_driver(  # noqa: C901
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
     discovered_value_ids: dict[str, set[str]] = defaultdict(set)
 
-    async def async_setup_platform(platform: str) -> None:
+    async def async_setup_platform(platform: Platform) -> None:
         """Set up platform if needed."""
         if platform not in platform_setup_tasks:
             platform_setup_tasks[platform] = hass.async_create_task(
