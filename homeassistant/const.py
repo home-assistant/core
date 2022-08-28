@@ -470,6 +470,11 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 
+# Media URLs
+ATTR_AUDIO_URLS: Final = "audio_urls"
+ATTR_IMAGE_URLS: Final = "image_urls"
+ATTR_VIDEO_URLS: Final = "video_urls"
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
 POWER_VOLT_AMPERE: Final = "VA"

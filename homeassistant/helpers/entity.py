@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -21,12 +21,15 @@ from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
+    ATTR_AUDIO_URLS,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_IMAGE_URLS,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_VIDEO_URLS,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
     STATE_ON,
@@ -43,6 +46,9 @@ from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
+
+if TYPE_CHECKING:
+    from homeassistant.components.media_source.models import BrowseMediaSource
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -156,6 +162,57 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.unit_of_measurement
+
+
+@callback
+def async_get_media(
+    hass: HomeAssistant,
+    entity_id: str,
+    *,
+    media_type: Literal["audio", "image", "video"] | None = None,
+    media_content_types: set[str] | None = None,
+) -> list[BrowseMediaSource] | None:
+    """Resolve media items for entity.
+
+    media_type and media_content_types act as filters to only fetch a specific subset
+    of media items.
+    """
+
+    from homeassistant.components.media_source.const import MEDIA_CLASS_MAP
+
+    entity = _get_entity_from_entity_id(hass, entity_id)
+    media_items = entity.async_get_media()
+    media_items = media_items or []
+
+    if not media_type and not media_content_types:
+        return media_items
+
+    return_items: list[BrowseMediaSource] = []
+    media_class = MEDIA_CLASS_MAP.get(media_type)
+    for item in media_items:
+        if media_class and item.media_class != media_class:
+            continue
+        if media_content_types and item.media_content_type not in media_content_types:
+            continue
+        return_items.append(item)
+
+    return return_items
+
+
+def _get_entity_from_entity_id(hass: HomeAssistant, entity_id: str) -> Entity:
+    """Get entity object from entity_id."""
+
+    entity_registry = er.async_get(hass)
+    if not (entry := entity_registry.async_get(entity_id)):
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    if (component := hass.data.get(entry.domain.value)) is None:
+        raise HomeAssistantError(f"{entry.domain} integration not set up")
+
+    if (entity := component.get_entity(entity_id)) is None:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entity
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -292,6 +349,9 @@ class Entity(ABC):
     _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
+    _attr_audio_urls: Mapping[str, list[str]] | None = None
+    _attr_image_urls: Mapping[str, list[str]] | None = None
+    _attr_video_urls: Mapping[str, list[str]] | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -463,7 +523,22 @@ class Entity(ABC):
     @property
     def attribution(self) -> str | None:
         """Return the attribution."""
-        return self._attr_attribution
+        return self._attr_audio_urls
+
+    @property
+    def audio_urls(self) -> str | None:
+        """Return the audio URLs."""
+        return self._attr_audio_urls
+
+    @property
+    def image_urls(self) -> str | None:
+        """Return the image URLs."""
+        return self._attr_image_urls
+
+    @property
+    def video_urls(self) -> str | None:
+        """Return the video URLs."""
+        return self._attr_video_urls
 
     @property
     def entity_category(self) -> EntityCategory | None:
@@ -595,6 +670,15 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
+        if (audio_urls := self.audio_urls) is not None:
+            attr[ATTR_AUDIO_URLS] = audio_urls
+
+        if (image_urls := self.image_urls) is not None:
+            attr[ATTR_IMAGE_URLS] = image_urls
+
+        if (video_urls := self.video_urls) is not None:
+            attr[ATTR_VIDEO_URLS] = video_urls
+
         def friendly_name() -> str | None:
             """Return the friendly name.
 
@@ -677,6 +761,58 @@ class Entity(ABC):
         else:
             self.async_write_ha_state()
 
+    async def async_update_media_urls(self) -> None:
+        """Return entity specific media attributes.
+
+        Should not be extended. Instead extend `async_get_media`.
+        """
+
+        from homeassistant.components.media_source.const import (
+            MEDIA_MIME_TYPE_MAP,
+            MEDIA_MIME_TYPES,
+        )
+        from homeassistant.components.media_source.models import MediaSourceItem
+
+        media_items = self.async_get_media()
+        media_items = media_items or []
+
+        url_resolvers = []
+        for item in media_items:
+            if (
+                not item.domain
+                or not item.can_play
+                or not MEDIA_MIME_TYPE_MAP.get(item.media_class)
+            ):
+                continue
+            url_resolvers.append(
+                MediaSourceItem(
+                    self.hass,
+                    domain=item.domain,
+                    identifier=item.identifier,
+                    target_media_player=None,
+                ).async_resolve()
+            )
+
+        if not url_resolvers:
+            return
+
+        attrs = {}
+        for media in await asyncio.gather(*url_resolvers):
+            media_type = media.mime_type.split("/")[0]
+            if media_type not in MEDIA_MIME_TYPES:
+                continue
+
+            attr_name = f"{media_type}_urls"
+            attr = attrs.get(attr_name, {})
+            urls = attr.get(media.mime_type, [])
+            urls.append(media.url)
+            attr[media.mime_type] = urls
+            attrs[attr_name] = attr
+
+        self._attr_audio_urls = attrs.get(ATTR_AUDIO_URLS)
+        self._attr_image_urls = attrs.get(ATTR_IMAGE_URLS)
+        self._attr_video_urls = attrs.get(ATTR_VIDEO_URLS)
+
     async def async_device_update(self, warning: bool = True) -> None:
         """Process 'update' or 'async_update' from entity.
 
@@ -716,6 +852,7 @@ class Entity(ABC):
                 SLOW_UPDATE_WARNING,
             )
             await task
+            await self.async_update_media_urls()
         finally:
             self._update_staged = False
             if self.parallel_updates:
@@ -827,6 +964,11 @@ class Entity(ABC):
 
         To be extended by integrations.
         """
+
+    @callback
+    def async_get_media(self) -> list[BrowseMediaSource] | None:
+        """Resolve media items for entity."""
+        return None
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.

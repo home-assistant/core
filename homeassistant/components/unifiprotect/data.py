@@ -1,10 +1,11 @@
 """Base class for protect data."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Union, cast
+from typing import Any, Coroutine, Union, cast
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
@@ -69,7 +70,9 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
+        self._subscriptions: dict[
+            str, list[Callable[[ProtectDeviceType], Coroutine[Any, Any, None]]]
+        ] = {}
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
@@ -292,7 +295,7 @@ class ProtectData:
 
         _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
         for update_callback in self._subscriptions[device.mac]:
-            update_callback(device)
+            asyncio.create_task(update_callback(device))
 
 
 @callback

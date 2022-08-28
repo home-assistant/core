@@ -20,14 +20,18 @@ from pyunifiprotect.data import (
     Viewer,
 )
 
+from homeassistant.components.media_player.const import MEDIA_CLASS_IMAGE
+from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
+from .media_source import THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH
 from .models import PermRequired, ProtectRequiredKeysMixin
 from .utils import get_nested_attr
+from .views import async_generate_thumbnail_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,10 +247,18 @@ class ProtectDeviceEntity(Entity):
             )
         self._attr_available = is_connected
 
-    @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+    async def _async_updated_event(self, device: ProtectModelWithId) -> None:
         """Call back for incoming data."""
-        self._async_update_device_from_protect(device)
+
+        if self._update_staged:
+            return
+        self._update_staged = True
+
+        try:
+            self._async_update_device_from_protect(device)
+            await self.async_update_media_urls()
+        finally:
+            self._update_staged = False
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -333,3 +345,27 @@ class EventThumbnailMixin(ProtectDeviceEntity):
             **attrs,
             **self._async_thumbnail_extra_attrs(),
         }
+
+    def async_get_media(self) -> list[BrowseMediaSource] | None:
+        """Resolve media items for entity."""
+
+        if self._event is None:
+            return None
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{self.data.api.bootstrap.nvr.id}:eventthumb:{self._event.id}",
+                media_class=MEDIA_CLASS_IMAGE,
+                media_content_type="image/jpeg",
+                can_play=True,
+                can_expand=False,
+                title=f"{self.name} Event",
+                thumbnail=async_generate_thumbnail_url(
+                    self._event.id,
+                    self.data.api.bootstrap.nvr.id,
+                    THUMBNAIL_WIDTH,
+                    THUMBNAIL_HEIGHT,
+                ),
+            )
+        ]

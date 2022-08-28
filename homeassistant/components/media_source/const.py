@@ -14,6 +14,11 @@ MEDIA_CLASS_MAP = {
     "video": MEDIA_CLASS_VIDEO,
     "image": MEDIA_CLASS_IMAGE,
 }
+MEDIA_MIME_TYPE_MAP = {
+    MEDIA_CLASS_MUSIC: "audio",
+    MEDIA_CLASS_VIDEO: "video",
+    MEDIA_CLASS_IMAGE: "image",
+}
 URI_SCHEME = "media-source://"
 URI_SCHEME_REGEX = re.compile(
     r"^media-source:\/\/(?:(?P<domain>(?!_)[\da-z_]+(?<!_))(?:\/(?P<identifier>(?!\/).+))?)?$"
