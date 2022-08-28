@@ -36,7 +36,6 @@ async def async_setup_entry(
                 BMWLock(
                     coordinator,
                     vehicle,
-                    LockEntityDescription(key="lock", device_class="lock", name="Lock"),
                 )
             )
     async_add_entities(entities)
@@ -45,17 +44,17 @@ async def async_setup_entry(
 class BMWLock(BMWBaseEntity, LockEntity):
     """Representation of a MyBMW vehicle lock."""
 
+    entity_description = LockEntityDescription(key="lock", name="Lock")
+
     def __init__(
         self,
         coordinator: BMWDataUpdateCoordinator,
         vehicle: MyBMWVehicle,
-        description: LockEntityDescription,
     ) -> None:
         """Initialize the lock."""
         super().__init__(coordinator, vehicle)
 
-        self.entity_description = description
-        self._attr_unique_id = f"{vehicle.vin}-{description.key}"
+        self._attr_unique_id = f"{vehicle.vin}-{self.entity_description.key}"
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
     async def async_lock(self, **kwargs: Any) -> None:
