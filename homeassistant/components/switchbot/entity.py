@@ -60,13 +60,6 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-        return await super().async_added_to_hass()
-
 
 class SwitchbotSubscribeEntity(SwitchbotEntity):
     """Base class for Switchbot entities that use subscribe."""
@@ -76,14 +69,14 @@ class SwitchbotSubscribeEntity(SwitchbotEntity):
         """Update the entity attributes."""
 
     @callback
-    def _async_handle_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._async_update_attrs()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(self._device.subscribe(self._async_handle_update))
+        self.async_on_remove(self._device.subscribe(self._handle_coordinator_update))
         return await super().async_added_to_hass()
 
     async def async_update(self) -> None:
