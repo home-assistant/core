@@ -29,6 +29,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     def __init__(self, coordinator: JobUpdateCoordinator) -> None:
         """Initialize a PrusaLink camera entity."""
         super().__init__(coordinator)
+        Camera.__init__(self)
         self._attr_unique_id = f"{self.coordinator.config_entry.entry_id}_job_preview"
 
     @property

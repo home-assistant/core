@@ -26,48 +26,43 @@ def mock_version_api(hass):
         "text": "PrusaLink MINI",
         "hostname": "PrusaMINI",
     }
-    with patch(
-        "pyprusalink.PrusaLink.get_version",
-        return_value=resp,
-    ):
+    with patch("pyprusalink.PrusaLink.get_version", return_value=resp):
         yield resp
 
 
 @pytest.fixture
 def mock_printer_api(hass):
     """Mock PrusaLink printer API."""
-    with patch(
-        "pyprusalink.PrusaLink.get_printer",
-        return_value={
-            "telemetry": {
-                "temp-bed": 41.9,
-                "temp-nozzle": 47.8,
-                "print-speed": 100,
-                "z-height": 1.8,
-                "material": "PLA",
-            },
-            "temperature": {
-                "tool0": {"actual": 47.8, "target": 0.0, "display": 0.0, "offset": 0},
-                "bed": {"actual": 41.9, "target": 0.0, "offset": 0},
-            },
-            "state": {
-                "text": "Operational",
-                "flags": {
-                    "operational": True,
-                    "paused": False,
-                    "printing": False,
-                    "cancelling": False,
-                    "pausing": False,
-                    "sdReady": False,
-                    "error": False,
-                    "closedOnError": False,
-                    "ready": True,
-                    "busy": False,
-                },
+    resp = {
+        "telemetry": {
+            "temp-bed": 41.9,
+            "temp-nozzle": 47.8,
+            "print-speed": 100,
+            "z-height": 1.8,
+            "material": "PLA",
+        },
+        "temperature": {
+            "tool0": {"actual": 47.8, "target": 0.0, "display": 0.0, "offset": 0},
+            "bed": {"actual": 41.9, "target": 0.0, "offset": 0},
+        },
+        "state": {
+            "text": "Operational",
+            "flags": {
+                "operational": True,
+                "paused": False,
+                "printing": False,
+                "cancelling": False,
+                "pausing": False,
+                "sdReady": False,
+                "error": False,
+                "closedOnError": False,
+                "ready": True,
+                "busy": False,
             },
         },
-    ):
-        yield
+    }
+    with patch("pyprusalink.PrusaLink.get_printer", return_value=resp):
+        yield resp
 
 
 @pytest.fixture

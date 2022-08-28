@@ -38,7 +38,7 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
 
     state = hass.states.get("sensor.mock_title")
     assert state is not None
-    assert state.state == "Idle"
+    assert state.state == "idle"
 
     state = hass.states.get("sensor.mock_title_heatbed")
     assert state is not None
@@ -75,14 +75,24 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
 
 
 async def test_sensors_active_job(
-    hass: HomeAssistant, mock_config_entry, mock_api, mock_job_api_active
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_printer_api,
+    mock_job_api_active,
 ):
-    """Test sensors while no job active."""
+    """Test sensors while active job."""
+    mock_printer_api["state"]["flags"]["printing"] = True
+
     with patch(
         "homeassistant.components.prusalink.sensor.utcnow",
         return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=timezone.utc),
     ):
         assert await async_setup_component(hass, "prusalink", {})
+
+    state = hass.states.get("sensor.mock_title")
+    assert state is not None
+    assert state.state == "printing"
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
