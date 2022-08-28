@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.unique_id,
         entry.data.get(CONF_NAME, entry.title),
         connectable,
-        HASS_MODEL_TO_SWITCHBOT[sensor_type],
+        switchbot_model,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
