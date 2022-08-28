@@ -128,7 +128,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._attr_latest_version = None
             self._attr_release_summary = None
         if write_state:
-            self._async_write_ha_state()
+            self.async_write_ha_state()
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
