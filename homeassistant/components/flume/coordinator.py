@@ -86,7 +86,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.active_notifications_by_device = notifications_by_device
 
     async def _async_update_data(self) -> None:
-        """Update data.."""
+        """Update data."""
         _LOGGER.debug("Updating Flume Notification")
         try:
             await self.hass.async_add_executor_job(self._update_lists)
