@@ -76,7 +76,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         """Update the data."""
         try:
             with async_timeout.timeout(5):
-                return cast(dict, await getattr(self.api, self.api_method)())
+                return cast(T, await getattr(self.api, self.api_method)())
         except InvalidAuth:
             raise UpdateFailed("Invalid authentication") from None
         except PrusaLinkError as err:
