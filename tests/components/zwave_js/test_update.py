@@ -19,7 +19,6 @@ from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALU
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.components.zwave_js.update import ATTR_AVAILABLE_FIRMWARE_UPDATES
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import datetime as dt_util
 
@@ -170,7 +169,7 @@ async def test_update_entity(
     client.async_send_command.reset_mock()
 
     # Test successful install call with an invalid specific version
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -184,7 +183,7 @@ async def test_update_entity(
     # Test failed installation by driver
     client.async_send_command.side_effect = FailedZWaveCommand("test", 12, "test")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(FailedZWaveCommand):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
