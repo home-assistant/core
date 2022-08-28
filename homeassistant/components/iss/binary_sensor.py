@@ -9,7 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import IssData
 from .const import DOMAIN
@@ -39,7 +42,7 @@ async def async_setup_entry(
 
 class IssBinarySensor(
     CoordinatorEntity[DataUpdateCoordinator[IssData]], BinarySensorEntity
-    ):
+):
     """Implementation of the ISS binary sensor."""
 
     _attr_device_class = DEFAULT_DEVICE_CLASS
@@ -56,7 +59,7 @@ class IssBinarySensor(
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator["is_above"] is True
+        return self.coordinator.data["is_above"] is True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
