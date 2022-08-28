@@ -47,10 +47,10 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        super()._async_handle_bluetooth_event(service_info, change)
         if adv := parse_advertisement_data(
             service_info.device, service_info.advertisement
         ):
             self.data = adv.data
             _LOGGER.debug("%s: MicroBot data: %s", self.ble_device.address, self.data)
             self.api.update_from_advertisement(adv)
+        super()._async_handle_bluetooth_event(service_info, change)
