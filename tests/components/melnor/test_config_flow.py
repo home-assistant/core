@@ -3,30 +3,31 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.melnor.const import DOMAIN
-from homeassistant.const import CONF_MAC
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ADDRESS, CONF_MAC
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import FAKE_DEVICE, FAKE_DEVICE_2, FAKE_MAC, _patch_device, _patch_scanner
+from . import FAKE_ADDRESS, FAKE_SERVICE_INFO
 
-INTEGRATION_DISCOVERY = {CONF_MAC: FAKE_MAC}
+INTEGRATION_DISCOVERY = {CONF_MAC: FAKE_ADDRESS}
 
 
-async def test_none_discovered(hass):
+async def test_bluetooth_discovered(hass):
     """Test we short circuit to config entry creation."""
 
-    with _patch_scanner(devices=[]), _patch_device(), patch(
+    with patch(
         "homeassistant.components.melnor.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=FAKE_SERVICE_INFO,
         )
 
-        print(result)
-
-        assert result["type"] == "abort"
-        assert result["reason"] == "no_devices_found"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "bluetooth_confirm"
+        assert result["description_placeholders"] == {"name": FAKE_ADDRESS}
 
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -34,36 +35,29 @@ async def test_none_discovered(hass):
 async def test_single_discovered(hass):
     """Test we short circuit to config entry creation."""
 
-    with _patch_scanner(devices=[FAKE_DEVICE]), _patch_device(), patch(
+    with patch(
         "homeassistant.components.melnor.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
 
+        # Create the config flow
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_BLUETOOTH,
+                "step_id": "bluetooth_confirm",
+                "user_input": {CONF_MAC: FAKE_ADDRESS},
+            },
+            data=FAKE_SERVICE_INFO,
         )
 
-        assert result["type"] == "create_entry"
-        assert result["title"] == FAKE_MAC
-        assert result["data"] == {CONF_MAC: FAKE_MAC}
+        # Interact with it like a user would
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == FAKE_ADDRESS
+        assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS}
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_multiple_discovered(hass: HomeAssistant):
-    """Test we get the device picker."""
-
-    with _patch_scanner([FAKE_DEVICE, FAKE_DEVICE_2]), _patch_device(), patch(
-        "homeassistant.components.melnor.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        assert result["type"] == "form"
-        assert result["step_id"] == "pick_device"
-        assert result["data_schema"] is not None
-
-    assert len(mock_setup_entry.mock_calls) == 0

@@ -1,12 +1,10 @@
 {
   "config": {
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "bluetooth_confirm": {
+        "description": "Do you want to add the Melnor Bluetooth valve `{name}` to Home Assistant?",
+        "title": "Discovered Melnor Bluetooth valve"
       }
-    },
-    "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DEFAULT_CONNECTION_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             await self._device.fetch_state()
 
         # The melnor-bluetooth library handles exceptions for us.
-        # We just need to check the connection state and attempt to self-heal the connection if it drops.
+        # We just need to check the connection state and attempt to create a new connection if it drops.
         else:
 
             if self._has_active_connection:
@@ -56,7 +56,7 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
                 # We update frequently and we'll start attempting to reconnect on the next pass in a few seconds.
                 return self._device
 
-            await self._device.connect(timeout=10)
+            await self._device.connect(timeout=DEFAULT_CONNECTION_TIMEOUT)
 
         return self._device
 

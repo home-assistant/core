@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DEFAULT_CONNECTION_TIMEOUT, DOMAIN
 from .models import MelnorBluetoothBaseEntity, MelnorDataUpdateCoordinator
 
 
@@ -28,6 +28,7 @@ async def async_setup_entry(
         "coordinator"
     ]
 
+    await coordinator.data.connect(timeout=DEFAULT_CONNECTION_TIMEOUT)
     if not coordinator.data.is_connected:
         raise PlatformNotReady(f"Failed to connect to: {coordinator.data.mac}")
 

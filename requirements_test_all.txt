@@ -736,7 +736,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.9
+melnor-bluetooth==0.0.12
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
