@@ -83,7 +83,7 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.set_brightness(brightness)
             return
-        self._device.turn_on()
+        await self._device.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
