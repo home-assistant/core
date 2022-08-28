@@ -153,6 +153,12 @@ class BluetoothManager:
         """Return if passive scan is supported."""
         return any(adapter[ADAPTER_PASSIVE_SCAN] for adapter in self._adapters.values())
 
+    def async_scanner_count(self, connectable: bool = True) -> int:
+        """Return the number of scanners."""
+        if connectable:
+            return len(self._connectable_scanners)
+        return len(self._connectable_scanners) + len(self._scanners)
+
     async def async_diagnostics(self) -> dict[str, Any]:
         """Diagnostics for the manager."""
         scanner_diagnostics = await asyncio.gather(
