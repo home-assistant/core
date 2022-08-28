@@ -57,7 +57,7 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_on = self._device.is_on
-        self._attr_brightness = max(0, min(255, self._device.brightness))
+        self._attr_brightness = max(0, min(255, self._device.brightness * 2.55))
         if self._device.color_mode == SwitchBotColorMode.COLOR_TEMP:
             self._attr_color_temp = color_temperature_kelvin_to_mired(
                 self._device.color_temp
@@ -69,7 +69,9 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
+        brightness = max(
+            0, min(100, round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100))
+        )
 
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
