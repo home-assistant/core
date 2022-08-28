@@ -146,7 +146,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if version is None:
+        if version is None and self._latest_version_firmware:
             firmware = self._latest_version_firmware
         else:
             try:
@@ -157,7 +157,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 )
             except StopIteration as err:
                 raise HomeAssistantError(f"Version {version} not found") from err
-        assert firmware
         self._attr_in_progress = True
         try:
             for file in firmware.files:
