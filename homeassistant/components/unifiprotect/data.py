@@ -111,14 +111,9 @@ class ProtectData:
     def async_get_changed_options(self, entry: ConfigEntry) -> dict[str, Any]:
         """Get changed options for when entry is updated."""
 
-        changed: dict[str, Any] = {}
-        for key in entry.options:
-            if key not in self._existing_options:
-                changed[key] = entry.options[key]
-            elif self._existing_options[key] != entry.options[key]:
-                changed[key] = entry.options[key]
-
-        return changed
+        return dict(
+            set(self._entry.options.items()) - set(self._existing_options.items())
+        )
 
     @callback
     def async_ignore_mac(self, mac: str) -> None:
@@ -140,6 +135,7 @@ class ProtectData:
             if device is not None:
                 self._async_remove_device(device)
         self._ignored_macs = None
+        self._existing_options = dict(self._entry.options)
 
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True

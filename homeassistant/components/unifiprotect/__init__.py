@@ -111,7 +111,7 @@ async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> Non
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
     changed = data.async_get_changed_options(entry)
 
-    if len(changed.keys()) == 1 and CONF_IGNORED in changed:
+    if len(changed) == 1 and CONF_IGNORED in changed:
         new_macs = convert_mac_list(entry.options.get(CONF_IGNORED, ""))
         added_macs = new_macs - data.ignored_macs
         removed_macs = data.ignored_macs - new_macs
