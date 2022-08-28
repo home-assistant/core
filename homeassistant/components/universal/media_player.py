@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -120,6 +121,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ATTRS, default={}): vol.Or(
             cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     },
@@ -142,6 +144,7 @@ async def async_setup_platform(
         config.get(CONF_CHILDREN),
         config.get(CONF_COMMANDS),
         config.get(CONF_ATTRS),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_DEVICE_CLASS),
         config.get(CONF_STATE_TEMPLATE),
     )
@@ -161,6 +164,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         children,
         commands,
         attributes,
+        unique_id=None,
         device_class=None,
         state_template=None,
     ):
@@ -179,6 +183,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._state_template_result = None
         self._state_template = state_template
         self._device_class = device_class
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Subscribe to children and template state changes."""
@@ -298,6 +303,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def name(self):
         """Return the name of universal player."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of universal player."""
+        return self._unique_id
 
     @property
     def state(self):
