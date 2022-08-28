@@ -88,9 +88,14 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._attr_name = "Firmware"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
-        # device is precreated in main handler
+        # device may not be precreated in main handler yet
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, node)},
+            sw_version=node.firmware_version,
+            name=node.name or node.device_config.description or f"Node {node.node_id}",
+            model=node.device_config.label,
+            manufacturer=node.device_config.manufacturer,
+            suggested_area=node.location if node.location else None,
         )
 
         self._attr_installed_version = self._attr_latest_version = node.firmware_version
