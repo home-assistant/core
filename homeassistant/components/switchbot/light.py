@@ -1,7 +1,6 @@
 """Switchbot integration light platform."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBulb
@@ -25,7 +24,6 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
@@ -56,15 +54,14 @@ class SwitchbotBulbEntity(SwitchbotEntity, LightEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        self._attr_is_on = self._device.is_on
-        self._attr_brightness = max(0, min(255, self._device.brightness * 2.55))
-        if self._device.color_mode == SwitchBotColorMode.COLOR_TEMP:
-            self._attr_color_temp = color_temperature_kelvin_to_mired(
-                self._device.color_temp
-            )
+        device = self._device
+        self._attr_is_on = self._device.on
+        self._attr_brightness = max(0, min(255, round(device.brightness * 2.55)))
+        if device.color_mode == SwitchBotColorMode.COLOR_TEMP:
+            self._attr_color_temp = color_temperature_kelvin_to_mired(device.color_temp)
             self._attr_color_mode = ColorMode.COLOR_TEMP
             return
-        self._attr_color_rgb = self._device.rgb
+        self._attr_rgb_color = device.rgb
         self._attr_color_mode = ColorMode.RGB
 
     async def async_turn_on(self, **kwargs: Any) -> None:
