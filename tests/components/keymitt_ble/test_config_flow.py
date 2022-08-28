@@ -30,7 +30,7 @@ async def test_bluetooth_discovery(hass):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] == FlowResultType.FORM
     assert result["title"] == "mibp AABB"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
@@ -79,7 +79,7 @@ async def test_user_setup(hass):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] == FlowResultType.FORM
     assert result["title"] == "mibp"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
