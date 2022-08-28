@@ -24,12 +24,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from ...helpers.typing import StateType
-from ...helpers.update_coordinator import (
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,12 +90,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "voc": SensorEntityDescription(
         key="voc",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="VOC",
         icon="mdi:cloud",
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         name="Illuminance",
     ),
@@ -115,17 +117,17 @@ async def async_setup_entry(
     ]
 
     # we need to change some units
-    SENSORS_MAPPING = SENSORS_MAPPING_TEMPLATE
+    sensors_mapping = SENSORS_MAPPING_TEMPLATE
     if not is_metric:
-        for key, val in SENSORS_MAPPING.items():
+        for key, val in sensors_mapping.items():
             if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
                 continue
-            SENSORS_MAPPING[key].native_unit_of_measurement = VOLUME_PICOCURIE
+            sensors_mapping[key].native_unit_of_measurement = VOLUME_PICOCURIE
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors.keys())
     for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in SENSORS_MAPPING:
+        if sensor_type not in sensors_mapping:
             _LOGGER.debug(
                 "Unknown sensor type detected: %s, %s",
                 sensor_type,
@@ -133,9 +135,7 @@ async def async_setup_entry(
             )
             continue
         entities.append(
-            AirthingsSensor(
-                coordinator, coordinator.data, SENSORS_MAPPING[sensor_type]
-            )
+            AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
         )
 
     async_add_entities(entities)

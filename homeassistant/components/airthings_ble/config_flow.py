@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from bleak import BleakError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -17,7 +18,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 
@@ -38,6 +38,10 @@ def get_name(device: AirthingsDevice) -> str:
     return f"{device.name} {device.identifier}"
 
 
+class AirthingsDeviceUpdateError(Exception):
+    """Custom error class for device updates."""
+
+
 class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Airthings BLE."""
 
@@ -48,19 +52,27 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: Discovery | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
-    async def _get_device_data(self, discovery_info: BluetoothServiceInfo):
+    async def _get_device_data(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> AirthingsDevice:
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, discovery_info.address
         )
         if ble_device is None:
-            raise UpdateFailed(f"No device for {discovery_info.address} found")
+            _LOGGER.debug("no ble_device in _get_device_data")
+            raise AirthingsDeviceUpdateError("No ble_device")
 
         airthings = AirthingsBluetoothDeviceData(_LOGGER)
 
         try:
             data = await airthings.update_device(ble_device)
-        except Exception as err:
-            raise UpdateFailed(f"Unable to fetch data: {err}") from err
+        except BleakError as err:
+            _LOGGER.error(
+                "Error connecting to and getting data from %s: %s",
+                discovery_info.address,
+                err,
+            )
+            raise AirthingsDeviceUpdateError("Failed getting device data") from err
 
         return data
 
@@ -72,9 +84,11 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        if 820 not in discovery_info.manufacturer_data:
-            return self.async_abort(reason="not_supported")
-        device = await self._get_device_data(discovery_info)
+        try:
+            device = await self._get_device_data(discovery_info)
+        except AirthingsDeviceUpdateError:
+            return self.async_abort(reason="cannot_connect")
+
         name = get_name(device)
         self.context["title_placeholders"] = {"name": name}
         self._discovered_device = Discovery(name, discovery_info, device)
@@ -117,23 +131,24 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
-            if (
-                address in current_addresses
-                or address in self._discovered_devices
-            ):
+            if address in current_addresses or address in self._discovered_devices:
                 continue
 
-            device = await self._get_device_data(discovery_info)
+            if 820 not in discovery_info.manufacturer_data:
+                continue
+
+            try:
+                device = await self._get_device_data(discovery_info)
+            except AirthingsDeviceUpdateError:
+                return self.async_abort(reason="cannot_connect")
             name = get_name(device)
-            self._discovered_devices[address] = Discovery(
-                name, discovery_info, device
-            )
+            self._discovered_devices[address] = Discovery(name, discovery_info, device)
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
         titles = {
-            address: discovery.discovery_info.address
+            address: get_name(discovery.device)
             for (address, discovery) in self._discovered_devices.items()
         }
         return self.async_show_form(
