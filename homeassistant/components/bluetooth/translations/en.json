@@ -34,7 +34,7 @@
             "init": {
                 "data": {
                     "adapter": "The Bluetooth Adapter to use for scanning",
-                    "passive": "Passive listening"
+                    "passive": "Passive scanning"
                 },
                 "description": "Passive listening requires BlueZ 5.63 or later with experimental features enabled."
             }
