@@ -42,6 +42,7 @@ ENOCEAN_MENU_OPTION_DELETE_DEVICE = "delete_device"
 ENOCEAN_ERROR_INVALID_DEVICE_ID = "invalid_device_id"
 ENOCEAN_ERROR_INVALID_SENDER_ID = "invalid_sender_id"
 ENOCEAN_ERROR_DEVICE_NAME_EMPTY = "device_name_empty"
+ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED = "device_already_configured"
 
 # others
 ENOCEAN_DEVICE_DEFAULT_NAME = "EnOcean device"
@@ -179,6 +180,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             device_id = user_input[CONF_ENOCEAN_DEVICE_ID].strip()
             if self.validate_enocean_id_string(device_id):
                 device_id = self.normalize_enocean_id_string(device_id)
+
+                for dev in devices:
+                    if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
+                        errors["base"] = ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
             else:
                 errors["base"] = ENOCEAN_ERROR_INVALID_DEVICE_ID
 

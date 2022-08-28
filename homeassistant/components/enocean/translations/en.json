@@ -24,6 +24,7 @@
     },
     "options": {
         "error": {
+            "device_already_configured": "An EnOcean device with this device ID is already configured.",
             "device_name_empty": "Device name is empty.",
             "invalid_device_id": "Device ID is not a valid EnOcean ID.",
             "invalid_device_type": "Invalid device type.",
