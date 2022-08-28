@@ -37,6 +37,7 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
     """A switch implementation for a melnor device."""
 
     _valve_index: int
+    _attr_icon = "mdi:sprinkler"
 
     def __init__(
         self,
@@ -46,6 +47,11 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
         """Initialize a switch for a melnor device."""
         super().__init__(coordinator)
         self._valve_index = valve_index
+
+        self._attr_unique_id = (
+            f"switch-{self._attr_unique_id}-zone{self._valve().id}-manual"
+        )
+        self._attr_name = f"{self._device.name} Zone {self._valve().id+1}"
 
     @property
     def is_on(self) -> bool:
@@ -63,21 +69,6 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
         self._valve().is_watering = False
         await self._device.push_state()
         self.async_write_ha_state()
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return "mdi:sprinkler"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._device.name} Zone {self._valve().id+1}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the switch."""
-        return f"{self._attr_unique_id}-zone{self._valve().id}"
 
     def _valve(self) -> Valve:
         return cast(Valve, self._device[f"zone{self._valve_index}"])
