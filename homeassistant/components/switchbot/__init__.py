@@ -28,7 +28,7 @@ from .const import (
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    SupportedModels.BULB.value: [Platform.SENSOR],
+    SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.CURTAIN.value: [
