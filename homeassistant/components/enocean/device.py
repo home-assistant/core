@@ -5,16 +5,23 @@ from enocean.utils import combine_hex
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 
 class EnOceanEntity(Entity):
     """Parent class for all entities associated with the EnOcean component."""
 
-    def __init__(self, dev_id: list[int], dev_name: str) -> None:
+    def __init__(
+        self,
+        dev_id,
+        dev_name="EnOcean device",
+        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+    ):
         """Initialize the device."""
         self.dev_id = dev_id
         self.dev_name = dev_name
+        self.dev_type = dev_type
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -47,3 +54,15 @@ class EnOceanEntity(Entity):
         """Return the EnOcean id as colon-separated hex string."""
         value = hex(self.dev_id_number())[2:].rjust(8, "0").upper()
         return ":".join(value[i : i + 2] for i in range(0, len(value), 2))
+
+    @property
+    def device_info(self):
+        """Get device info."""
+        return {
+            "identifiers": {(DOMAIN, self.dev_id_string())},
+            "name": self.dev_name,
+            "manufacturer": self.dev_type.manufacturer,
+            "model": self.dev_type.model,
+            "sw_version": "",
+            "via_device": (DOMAIN, "not yet set"),
+        }

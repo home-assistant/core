@@ -16,9 +16,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DOMAIN
+from .config_flow import (
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_EEP,
+    CONF_ENOCEAN_MANUFACTURER,
+    CONF_ENOCEAN_MODEL,
+)
 from .device import EnOceanEntity
+from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]
@@ -54,7 +59,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in devices:
         if device["eep"] in ["F6-02-01", "F6-02-02"]:
             device_id = from_hex_string(device["id"])
-            async_add_entities([EnOceanBinarySensor(device_id, device["name"], None)])
+            async_add_entities(
+                [
+                    EnOceanBinarySensor(
+                        device_id,
+                        device["name"],
+                        None,
+                        EnOceanSupportedDeviceType(
+                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                            model=device[CONF_ENOCEAN_MODEL],
+                            eep=device[CONF_ENOCEAN_EEP],
+                        ),
+                    )
+                ]
+            )
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
@@ -67,12 +85,13 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        dev_id: list[int],
-        dev_name: str,
-        device_class: BinarySensorDeviceClass | None,
-    ) -> None:
+        dev_id,
+        dev_name,
+        device_class,
+        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+    ):
         """Initialize the EnOcean binary sensor."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id, dev_name, dev_type)
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
@@ -138,15 +157,3 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
                 "onoff": self.onoff,
             },
         )
-
-    @property
-    def device_info(self):
-        """Get device info."""
-        return {
-            "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.name,
-            "manufacturer": "",
-            "model": "",
-            "sw_version": "",
-            "via_device": (DOMAIN, "not yet set"),
-        }

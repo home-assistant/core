@@ -20,9 +20,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DOMAIN, LOGGER
+from .config_flow import (
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_EEP,
+    CONF_ENOCEAN_MANUFACTURER,
+    CONF_ENOCEAN_MODEL,
+)
+from .const import LOGGER
 from .device import EnOceanEntity
+from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONF_SENDER_ID = "sender_id"
 
@@ -72,7 +78,20 @@ async def async_setup_entry(
             if not device["sender_id"] == "":
                 sender_id = from_hex_string(device["sender_id"])
 
-            async_add_entities([EnOceanLight(sender_id, device_id, device["name"])])
+            async_add_entities(
+                [
+                    EnOceanLight(
+                        sender_id,
+                        device_id,
+                        device["name"],
+                        EnOceanSupportedDeviceType(
+                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                            model=device[CONF_ENOCEAN_MODEL],
+                            eep=device[CONF_ENOCEAN_EEP],
+                        ),
+                    )
+                ]
+            )
 
 
 class EnOceanLight(EnOceanEntity, LightEntity):
@@ -81,9 +100,15 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, sender_id: list[int], dev_id: list[int], dev_name: str) -> None:
+    def __init__(
+        self,
+        sender_id,
+        dev_id,
+        dev_name,
+        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+    ):
         """Initialize the EnOcean light source."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id, dev_name, dev_type)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
@@ -141,15 +166,3 @@ class EnOceanLight(EnOceanEntity, LightEntity):
             self._brightness = math.floor(val / 100.0 * 256.0)
             self._on_state = bool(val != 0)
             self.schedule_update_ha_state()
-
-    @property
-    def device_info(self):
-        """Get device info."""
-        return {
-            "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.dev_name,
-            "manufacturer": "Eltako",
-            "model": "FUD61NPN",
-            "sw_version": "",
-            "via_device": (DOMAIN, "not yet set"),
-        }

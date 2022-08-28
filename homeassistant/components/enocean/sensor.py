@@ -30,9 +30,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .config_flow import CONF_ENOCEAN_DEVICES
-from .const import DOMAIN
+from .config_flow import (
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_EEP,
+    CONF_ENOCEAN_MANUFACTURER,
+    CONF_ENOCEAN_MODEL,
+)
 from .device import EnOceanEntity
+from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -188,6 +193,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         scale_max=max_temp,
                         range_from=255,
                         range_to=0,
+                        dev_type=EnOceanSupportedDeviceType(
+                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                            model=device[CONF_ENOCEAN_MODEL],
+                            eep=device[CONF_ENOCEAN_EEP],
+                        ),
                     )
                 ]
             )
@@ -203,12 +213,13 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
 
     def __init__(
         self,
-        dev_id: list[int],
-        dev_name: str,
+        dev_id,
+        dev_name,
         description: EnOceanSensorEntityDescription,
-    ) -> None:
+        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+    ):
         """Initialize the EnOcean sensor device."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id, dev_name, dev_type)
         self.entity_description = description
         self._attr_name = f"{dev_name} {description.name}"
         self._attr_unique_id = description.unique_id(dev_id)
@@ -247,20 +258,7 @@ class EnOceanPowerSensor(EnOceanSensor):
             self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 
-    @property
-    def device_info(self):
-        """Get device info."""
-        return {
-            "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.dev_name,
-            "manufacturer": "",
-            "model": "",
-            "sw_version": "",
-            "via_device": (DOMAIN, "not yet set"),
-        }
 
-
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanTemperatureSensor(EnOceanSensor):
     """Representation of an EnOcean temperature sensor device.
 
@@ -285,13 +283,14 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         dev_name: str,
         description: EnOceanSensorEntityDescription,
         *,
-        scale_min: int,
-        scale_max: int,
-        range_from: int,
-        range_to: int,
-    ) -> None:
+        scale_min,
+        scale_max,
+        range_from,
+        range_to,
+        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+    ):
         """Initialize the EnOcean temperature sensor device."""
-        super().__init__(dev_id, dev_name, description)
+        super().__init__(dev_id, dev_name, description, dev_type)
         self._scale_min = scale_min
         self._scale_max = scale_max
         self.range_from = range_from
@@ -309,20 +308,6 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self._attr_native_value = round(temperature, 1)
         self.schedule_update_ha_state()
 
-    @property
-    def device_info(self):
-        """Get device info."""
-        return {
-            "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.dev_name,
-            "manufacturer": "",
-            "model": "",
-            "sw_version": "",
-            "via_device": (DOMAIN, "not yet set"),
-        }
-
-
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.
 

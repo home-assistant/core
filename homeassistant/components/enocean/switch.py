@@ -14,9 +14,15 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .config_flow import CONF_ENOCEAN_DEVICES
+from .config_flow import (
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_EEP,
+    CONF_ENOCEAN_MANUFACTURER,
+    CONF_ENOCEAN_MODEL,
+)
 from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
+from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"
@@ -88,8 +94,26 @@ async def async_setup_entry(
             device_id = from_hex_string(device["id"])
             async_add_entities(
                 [
-                    EnOceanSwitch(device_id, device["name"], 0),
-                    EnOceanSwitch(device_id, device["name"], 1),
+                    EnOceanSwitch(
+                        device_id,
+                        device["name"],
+                        0,
+                        EnOceanSupportedDeviceType(
+                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                            model=device[CONF_ENOCEAN_MODEL],
+                            eep=device[CONF_ENOCEAN_EEP],
+                        ),
+                    ),
+                    EnOceanSwitch(
+                        device_id,
+                        device["name"],
+                        1,
+                        EnOceanSupportedDeviceType(
+                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                            model=device[CONF_ENOCEAN_MODEL],
+                            eep=device[CONF_ENOCEAN_EEP],
+                        ),
+                    ),
                 ]
             )
 
@@ -97,9 +121,15 @@ async def async_setup_entry(
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     """Representation of an EnOcean switch device."""
 
-    def __init__(self, dev_id: list[int], dev_name: str, channel: int) -> None:
+    def __init__(
+        self,
+        dev_id,
+        dev_name,
+        channel,
+        dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
+    ):
         """Initialize the EnOcean switch device."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id, dev_name, dev_type)
         self._light = None
         self._on_state = False
         self._on_state2 = False
@@ -161,15 +191,3 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 if channel == self.channel:
                     self._on_state = output > 0
                     self.schedule_update_ha_state()
-
-    @property
-    def device_info(self):
-        """Get device info."""
-        return {
-            "identifiers": {(DOMAIN, self.dev_id_string())},
-            "name": self.dev_name,
-            "manufacturer": "",
-            "model": "",
-            "sw_version": "",
-            "via_device": (DOMAIN, "not yet set"),
-        }
