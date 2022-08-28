@@ -429,6 +429,8 @@ class EntityManager:
         This is necessary so that Home Assistant can later request the agent
         turn on (spawn) a known player that is currently off.
         """
+        # It is probably best to investigate using entity lifecycle hooks:
+        # https://developers.home-assistant.io/docs/core/entity/#lifecycle-hooks
 
         def get_player_id(
             entity: er.RegistryEntry | HASSMPRISEntity,
