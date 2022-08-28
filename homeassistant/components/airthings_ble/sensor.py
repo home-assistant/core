@@ -167,7 +167,7 @@ class AirthingsSensor(
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (
-                    DOMAIN,
+                    CONNECTION_BLUETOOTH,
                     airthings_device.address,
                 )
             },
