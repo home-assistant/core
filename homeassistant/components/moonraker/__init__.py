@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up moonraker from a config entry."""
     session = async_get_clientsession(hass)
     connector = APIConnector(hass, session, entry)
-    hass.data[DOMAIN][entry.entry_id] = {DATA_CONNECTOR: connector}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_CONNECTOR: connector}
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     await connector.start()
