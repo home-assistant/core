@@ -2,10 +2,8 @@
   "after_dependencies": ["bluetooth"],
   "bluetooth": [
     {
-      "local_name": "YM*"
-    },
-    {
-      "manufacturer_data_start": [89]
+      "manufacturer_data_start": [89],
+      "manufacturer_id": 13
     }
   ],
   "codeowners": ["@vanstinator"],
