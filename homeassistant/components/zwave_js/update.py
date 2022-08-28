@@ -41,7 +41,7 @@ async def async_setup_entry(
         """Add firmware update entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node)])
+        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node)], True)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
