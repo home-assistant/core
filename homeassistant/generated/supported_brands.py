@@ -9,6 +9,7 @@ HAS_SUPPORTED_BRANDS = (
     "denonavr",
     "hunterdouglas_powerview",
     "lutron_caseta",
+    "lutron",
     "motion_blinds",
     "overkiz",
     "renault",
