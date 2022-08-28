@@ -122,7 +122,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         ):
             _LOGGER.debug("Stopping playback for %s Speaker", self.device.display_name)
             await self.device.stop_audio()
-            self._async_updated_event(self.device)
+            await self._async_updated_event(self.device)
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
@@ -148,11 +148,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             raise HomeAssistantError(err) from err
         else:
             # update state after starting player
-            self._async_updated_event(self.device)
+            await self._async_updated_event(self.device)
             # wait until player finishes to update state again
             await self.device.wait_until_audio_completes()
 
-        self._async_updated_event(self.device)
+        await self._async_updated_event(self.device)
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None

@@ -260,7 +260,9 @@ class ProtectData:
 
     @callback
     def async_subscribe_device_id(
-        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
+        self,
+        mac: str,
+        update_callback: Callable[[ProtectDeviceType], Coroutine[Any, Any, None]],
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
@@ -276,7 +278,9 @@ class ProtectData:
 
     @callback
     def async_unsubscribe_device_id(
-        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
+        self,
+        mac: str,
+        update_callback: Callable[[ProtectDeviceType], Coroutine[Any, Any, None]],
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[mac].remove(update_callback)

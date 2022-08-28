@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, cast, final
 
 import voluptuous as vol
 
@@ -188,7 +188,7 @@ def async_get_media(
         return media_items
 
     return_items: list[BrowseMediaSource] = []
-    media_class = MEDIA_CLASS_MAP.get(media_type)
+    media_class = MEDIA_CLASS_MAP.get(media_type)  # type: ignore[arg-type]
     for item in media_items:
         if media_class and item.media_class != media_class:
             continue
@@ -206,13 +206,13 @@ def _get_entity_from_entity_id(hass: HomeAssistant, entity_id: str) -> Entity:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    if (component := hass.data.get(entry.domain.value)) is None:
+    if (component := hass.data.get(entry.domain)) is None:
         raise HomeAssistantError(f"{entry.domain} integration not set up")
 
     if (entity := component.get_entity(entity_id)) is None:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entity
+    return cast(Entity, entity)
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -523,20 +523,20 @@ class Entity(ABC):
     @property
     def attribution(self) -> str | None:
         """Return the attribution."""
-        return self._attr_audio_urls
+        return self._attr_attribution
 
     @property
-    def audio_urls(self) -> str | None:
+    def audio_urls(self) -> Mapping[str, list[str]] | None:
         """Return the audio URLs."""
         return self._attr_audio_urls
 
     @property
-    def image_urls(self) -> str | None:
+    def image_urls(self) -> Mapping[str, list[str]] | None:
         """Return the image URLs."""
         return self._attr_image_urls
 
     @property
-    def video_urls(self) -> str | None:
+    def video_urls(self) -> Mapping[str, list[str]] | None:
         """Return the video URLs."""
         return self._attr_video_urls
 
@@ -781,6 +781,7 @@ class Entity(ABC):
             if (
                 not item.domain
                 or not item.can_play
+                or not item.identifier
                 or not MEDIA_MIME_TYPE_MAP.get(item.media_class)
             ):
                 continue
@@ -796,7 +797,7 @@ class Entity(ABC):
         if not url_resolvers:
             return
 
-        attrs = {}
+        attrs: dict[str, dict[str, list[str]]] = {}
         for media in await asyncio.gather(*url_resolvers):
             media_type = media.mime_type.split("/")[0]
             if media_type not in MEDIA_MIME_TYPES:
