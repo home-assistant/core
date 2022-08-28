@@ -18,9 +18,6 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up moonraker from a config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     session = async_get_clientsession(hass)
     connector = APIConnector(hass, session, entry)
     hass.data[DOMAIN][entry.entry_id] = {DATA_CONNECTOR: connector}
