@@ -152,8 +152,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 )
             except StopIteration as err:
                 raise HomeAssistantError(f"Version {version} not found") from err
-        self._attr_in_progress = True
         assert firmware
+        self._attr_in_progress = True
         try:
             for file in firmware.files:
                 await self.driver.controller.async_begin_ota_firmware_update(
@@ -164,9 +164,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         else:
             self._attr_installed_version = firmware.version
             self.available_firmware_updates.remove(firmware)
+            self._async_process_updates()
         finally:
             self._attr_in_progress = False
-            self._async_process_updates()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
