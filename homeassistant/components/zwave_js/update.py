@@ -16,6 +16,7 @@ from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.components.update.const import UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -163,7 +164,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, file
                 )
         except BaseZwaveJSServerError as err:
-            raise err
+            raise HomeAssistantError from err
         else:
             self._attr_installed_version = firmware.version
             self.available_firmware_updates.remove(firmware)
