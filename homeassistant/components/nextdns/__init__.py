@@ -46,10 +46,10 @@ from .const import (
     UPDATE_INTERVAL_SETTINGS,
 )
 
-TCoordinatorData = TypeVar("TCoordinatorData", bound=NextDnsData)
+CoordinatorDataT = TypeVar("CoordinatorDataT", bound=NextDnsData)
 
 
-class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
+class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
     """Class to manage fetching NextDNS data API."""
 
     def __init__(
@@ -73,7 +73,7 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self) -> TCoordinatorData:
+    async def _async_update_data(self) -> CoordinatorDataT:
         """Update data via internal method."""
         try:
             async with timeout(10):
@@ -81,7 +81,7 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
 
-    async def _async_update_data_internal(self) -> TCoordinatorData:
+    async def _async_update_data_internal(self) -> CoordinatorDataT:
         """Update data via library."""
         raise NotImplementedError("Update method not implemented")
 
