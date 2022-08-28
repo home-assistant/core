@@ -23,7 +23,7 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
-    HASS_MODEL_TO_SWITCHBOT,
+    HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
     # connectable means we can make connections to the device
-    switchbot_model = HASS_MODEL_TO_SWITCHBOT[sensor_type]
+    switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
     connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(
