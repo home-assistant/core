@@ -55,7 +55,7 @@ class KaiterraApiData:
         try:
             async with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
-        except (ClientResponseError, asyncio.TimeoutError):
+        except (ClientResponseError, ClientConnectorError, asyncio.TimeoutError):
             _LOGGER.debug("Couldn't fetch data from Kaiterra API")
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
