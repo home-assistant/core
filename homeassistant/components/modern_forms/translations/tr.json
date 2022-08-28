@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
-            },
             "user": {
                 "data": {
                     "host": "Sunucu"
@@ -23,6 +20,5 @@
                 "title": "Ke\u015ffedilen Modern Formlar fan cihaz\u0131"
             }
         }
-    },
-    "title": "Modern Formlar"
+    }
 }

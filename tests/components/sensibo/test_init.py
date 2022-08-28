@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from pysensibo.model import SensiboData
+
 from homeassistant import config_entries
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
@@ -10,12 +12,11 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
-from .response import DATA_FROM_API
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
     """Test setup entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -29,7 +30,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
+        return_value=get_data,
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
         return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
@@ -43,7 +44,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_migrate_entry(hass: HomeAssistant) -> None:
+async def test_migrate_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -57,7 +58,7 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
+        return_value=get_data,
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
         return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
@@ -73,7 +74,7 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
     assert entry.unique_id == "username"
 
 
-async def test_migrate_entry_fails(hass: HomeAssistant) -> None:
+async def test_migrate_entry_fails(hass: HomeAssistant, get_data: SensiboData) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -101,7 +102,7 @@ async def test_migrate_entry_fails(hass: HomeAssistant) -> None:
     assert entry.unique_id == "12"
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
     """Test unload an entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -115,7 +116,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
+        return_value=get_data,
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
         return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},

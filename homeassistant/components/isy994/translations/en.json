@@ -17,7 +17,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "The credentials for {host} is no longer valid.",
+                "description": "The credentials for {host} are no longer valid.",
                 "title": "Reauthenticate your ISY"
             },
             "user": {

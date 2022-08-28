@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<nowPlaying deviceID="020000000001" source="TUNEIN" sourceAccount="">
+    <ContentItem source="TUNEIN" type="stationurl" location="/v1/playback/station/sXXXXX" sourceAccount="" isPresetable="true">
+        <itemName>MockStation</itemName>
+        <containerArt>http://cdn-profiles.tunein.com/sXXXXX/images/logoq.png</containerArt>
+    </ContentItem>
+    <track>MockTrack</track>
+    <artist>MockArtist</artist>
+    <album>MockAlbum</album>
+    <stationName>MockStation</stationName>
+    <art artImageStatus="IMAGE_PRESENT">http://cdn-profiles.tunein.com/sXXXXX/images/logoq.png</art>
+    <favoriteEnabled />
+    <playStatus>PLAY_STATE</playStatus>
+    <streamType>RADIO_STREAMING</streamType>
+    <isFavorite />
+</nowPlaying>

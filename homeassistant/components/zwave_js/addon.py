@@ -14,6 +14,7 @@ from homeassistant.components.hassio import (
     async_create_backup,
     async_get_addon_discovery_info,
     async_get_addon_info,
+    async_get_addon_store_info,
     async_install_addon,
     async_restart_addon,
     async_set_addon_options,
@@ -136,7 +137,17 @@ class AddonManager:
     @api_error("Failed to get the Z-Wave JS add-on info")
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache Z-Wave JS add-on info."""
-        addon_info: dict = await async_get_addon_info(self._hass, ADDON_SLUG)
+        addon_store_info = await async_get_addon_store_info(self._hass, ADDON_SLUG)
+        LOGGER.debug("Add-on store info: %s", addon_store_info)
+        if not addon_store_info["installed"]:
+            return AddonInfo(
+                options={},
+                state=AddonState.NOT_INSTALLED,
+                update_available=False,
+                version=None,
+            )
+
+        addon_info = await async_get_addon_info(self._hass, ADDON_SLUG)
         addon_state = self.async_get_addon_state(addon_info)
         return AddonInfo(
             options=addon_info["options"],
@@ -148,10 +159,8 @@ class AddonManager:
     @callback
     def async_get_addon_state(self, addon_info: dict[str, Any]) -> AddonState:
         """Return the current state of the Z-Wave JS add-on."""
-        addon_state = AddonState.NOT_INSTALLED
+        addon_state = AddonState.NOT_RUNNING
 
-        if addon_info["version"] is not None:
-            addon_state = AddonState.NOT_RUNNING
         if addon_info["state"] == "started":
             addon_state = AddonState.RUNNING
         if self._install_task and not self._install_task.done():
@@ -226,7 +235,7 @@ class AddonManager:
         """Update the Z-Wave JS add-on if needed."""
         addon_info = await self.async_get_addon_info()
 
-        if addon_info.version is None:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             raise AddonError("Z-Wave JS add-on is not installed")
 
         if not addon_info.update_available:
@@ -300,6 +309,9 @@ class AddonManager:
     ) -> None:
         """Configure and start Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
+
+        if addon_info.state is AddonState.NOT_INSTALLED:
+            raise AddonError("Z-Wave JS add-on is not installed")
 
         new_addon_options = {
             CONF_ADDON_DEVICE: usb_path,

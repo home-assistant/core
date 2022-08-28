@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "A Radio Thermostat kl\u00edmaplatform YAML haszn\u00e1lat\u00e1val t\u00f6rt\u00e9n\u0151 konfigur\u00e1l\u00e1sa a Home Assistant 2022.9-ben megsz\u0171nik. \n\nMegl\u00e9v\u0151 konfigur\u00e1ci\u00f3ja automatikusan import\u00e1l\u00e1sra ker\u00fclt a felhaszn\u00e1l\u00f3i fel\u00fcletre. T\u00e1vol\u00edtsa el a YAML-konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistant alkalmaz\u00e1st a probl\u00e9ma megold\u00e1s\u00e1hoz.",
+            "title": "A Radio Thermostat YAML konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "\u00c1ll\u00edtson be \u00e1lland\u00f3 tart\u00e1st a h\u0151m\u00e9rs\u00e9klet be\u00e1ll\u00edt\u00e1sakor."
+                }
+            }
+        }
+    }
+}

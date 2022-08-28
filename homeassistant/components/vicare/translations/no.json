@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API-n\u00f8kkel",
                     "heating_type": "Oppvarmingstype",
-                    "name": "Navn",
                     "password": "Passord",
-                    "scan_interval": "Skanneintervall (sekunder)",
                     "username": "E-post"
                 },
-                "description": "Sett opp ViCare-integrasjon. Hvis du vil generere API-n\u00f8kkel, g\u00e5r du til https://developer.viessmann.com",
-                "title": ""
+                "description": "Sett opp ViCare-integrasjon. Hvis du vil generere API-n\u00f8kkel, g\u00e5r du til https://developer.viessmann.com"
             }
         }
     }

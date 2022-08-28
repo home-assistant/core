@@ -162,7 +162,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             params[API_ON] = 1
         await self._async_update_hvac_params(params)
 
-    async def async_set_temperature(self, **kwargs: dict[str, Any]) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         params = {
             API_SET_POINT: kwargs.get(ATTR_TEMPERATURE),

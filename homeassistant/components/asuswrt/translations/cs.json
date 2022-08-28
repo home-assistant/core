@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
-        },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa",

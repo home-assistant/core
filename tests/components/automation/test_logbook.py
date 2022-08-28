@@ -37,13 +37,13 @@ async def test_humanify_automation_trigger_event(hass):
     )
 
     assert event1["name"] == "Bla"
-    assert event1["message"] == "has been triggered by state change of input_boolean.yo"
+    assert event1["message"] == "triggered by state change of input_boolean.yo"
     assert event1["source"] == "state change of input_boolean.yo"
     assert event1["context_id"] == context.id
     assert event1["entity_id"] == "automation.bla"
 
     assert event2["name"] == "Bla"
-    assert event2["message"] == "has been triggered"
+    assert event2["message"] == "triggered"
     assert event2["source"] is None
     assert event2["context_id"] == context.id
     assert event2["entity_id"] == "automation.bla"

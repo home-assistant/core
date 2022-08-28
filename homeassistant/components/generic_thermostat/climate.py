@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+from typing import Any
 
 import voluptuous as vol
 
@@ -165,6 +166,8 @@ async def async_setup_platform(
 class GenericThermostat(ClimateEntity, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -301,11 +304,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             self._hvac_mode = HVACMode.OFF
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the thermostat."""
         return self._name
@@ -369,7 +367,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """List of available operation modes."""
         return self._hvac_list
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
             self._hvac_mode = HVACMode.HEAT
@@ -387,7 +385,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Ensure we update the current operation after changing the mode
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -540,7 +538,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             HA_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )
 
-    async def async_set_preset_mode(self, preset_mode: str):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in (self._attr_preset_modes or []):
             raise ValueError(

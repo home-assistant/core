@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await setup_hass_events(hass)
     await hass.async_add_executor_job(setup_hass_services, hass)
@@ -248,6 +248,7 @@ class AbodeEntity(entity.Entity):
     """Representation of an Abode entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, data: AbodeSystem) -> None:
         """Initialize Abode entity."""
@@ -283,7 +284,6 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.device_uuid
 
     async def async_added_to_hass(self) -> None:

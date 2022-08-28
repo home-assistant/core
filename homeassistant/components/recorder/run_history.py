@@ -9,7 +9,8 @@ from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
 
-from .models import RecorderRuns, process_timestamp
+from .db_schema import RecorderRuns
+from .models import process_timestamp
 
 
 def _find_recorder_run_for_start_time(

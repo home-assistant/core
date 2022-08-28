@@ -1,6 +1,7 @@
 """Diagnostics support for P1 Monitor."""
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -21,10 +22,10 @@ async def async_get_config_entry_diagnostics(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     meter_data = {
-        "device": coordinator.api.device.todict(),
-        "data": coordinator.api.data.todict(),
-        "state": coordinator.api.state.todict()
-        if coordinator.api.state is not None
+        "device": asdict(coordinator.data["device"]),
+        "data": asdict(coordinator.data["data"]),
+        "state": asdict(coordinator.data["state"])
+        if coordinator.data["state"] is not None
         else None,
     }
 

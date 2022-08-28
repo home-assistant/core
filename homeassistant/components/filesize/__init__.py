@@ -1,7 +1,6 @@
 """The filesize component."""
 from __future__ import annotations
 
-import logging
 import pathlib
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,22 +10,26 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import PLATFORMS
 
-_LOGGER = logging.getLogger(__name__)
+
+def check_path(path: pathlib.Path) -> bool:
+    """Check path."""
+    return path.exists() and path.is_file()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
     path = entry.data[CONF_FILE_PATH]
-    get_path = await hass.async_add_executor_job(pathlib.Path, path)
+    get_path = pathlib.Path(path)
 
-    if not get_path.exists() and not get_path.is_file():
+    check_file = await hass.async_add_executor_job(check_path, get_path)
+    if not check_file:
         raise ConfigEntryNotReady(f"Can not access file {path}")
 
     if not hass.config.is_allowed_path(path):
         raise ConfigEntryNotReady(f"Filepath {path} is not valid or allowed")
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

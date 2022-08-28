@@ -7,8 +7,7 @@
             "invalid_auth": "Invalid authentication"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "Account ID",
-                    "connection_type": "Select connection type",
-                    "host": "Host",
-                    "password": "Password"
+                    "connection_type": "Select connection type"
                 },
                 "description": "Select connection type. Local requires heaters with bluetooth"
             }

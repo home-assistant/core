@@ -2,7 +2,7 @@
   "domain": "stream",
   "name": "Stream",
   "documentation": "https://www.home-assistant.io/integrations/stream",
-  "requirements": ["PyTurboJPEG==1.6.6", "av==9.2.0"],
+  "requirements": ["PyTurboJPEG==1.6.7", "ha-av==10.0.0b4"],
   "dependencies": ["http"],
   "codeowners": ["@hunterjm", "@uvjustin", "@allenporter"],
   "quality_scale": "internal",

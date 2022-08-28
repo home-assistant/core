@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
+            "unknown": "Error inesperado",
+            "unsupported": "Dispositivo no compatible"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unsupported": "Dispositivo no compatible"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres configurar el reproductor {model} llamado {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

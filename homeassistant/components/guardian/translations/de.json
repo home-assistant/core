@@ -15,10 +15,20 @@
                     "port": "Port"
                 },
                 "description": "Konfiguriere ein lokales Elexa Guardian Ger\u00e4t."
-            },
-            "zeroconf_confirm": {
-                "description": "M\u00f6chtest du dieses Guardian-Ger\u00e4t einrichten?"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, um stattdessen den Dienst `{alternate_service}` mit einer Zielentit\u00e4ts-ID von `{alternate_target}` zu verwenden. Klicke dann unten auf SUBMIT, um dieses Problem als behoben zu markieren.",
+                        "title": "Der Dienst {deprecated_service} wird entfernt"
+                    }
+                }
+            },
+            "title": "Der Dienst {deprecated_service} wird entfernt"
         }
     }
 }

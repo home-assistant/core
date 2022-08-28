@@ -4,10 +4,10 @@
             "already_configured": "Account is al geconfigureerd",
             "external_error": "Uitzondering opgetreden uit een andere stroom.",
             "external_setup": "Logi Circle is met succes geconfigureerd vanuit een andere stroom.",
-            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen."
+            "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie."
         },
         "error": {
-            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
             "follow_link": "Volg de link en authenticeer voordat u op Verzenden drukt.",
             "invalid_auth": "Ongeldige authenticatie"
         },

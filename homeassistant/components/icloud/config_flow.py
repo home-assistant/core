@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.storage import Store
 
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -113,7 +114,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 PyiCloudService,
                 self._username,
                 self._password,
-                self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path,
+                Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
                 True,
                 None,
                 self._with_family,
@@ -162,7 +163,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        icloud_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        icloud_dir = Store(self.hass, STORAGE_VERSION, STORAGE_KEY)
 
         if not os.path.exists(icloud_dir.path):
             await self.hass.async_add_executor_job(os.makedirs, icloud_dir.path)
@@ -276,9 +277,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         PyiCloudService,
                         self._username,
                         self._password,
-                        self.hass.helpers.storage.Store(
-                            STORAGE_VERSION, STORAGE_KEY
-                        ).path,
+                        Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
                         True,
                         None,
                         self._with_family,

@@ -14,7 +14,6 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} a \u00e9t\u00e9 allum\u00e9e ou \u00e9teinte",
-            "toggled": "{entity_name} a \u00e9t\u00e9 allum\u00e9e ou \u00e9teinte",
             "turned_off": "{entity_name} a \u00e9t\u00e9 \u00e9teinte",
             "turned_on": "{entity_name} a \u00e9t\u00e9 allum\u00e9e"
         }

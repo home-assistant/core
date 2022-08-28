@@ -10,10 +10,8 @@ from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
+from homeassistant.const import CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,24 +40,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    httpsession = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(httpsession, entry.data[CONF_API_KEY])
-
-    try:
-        to_station = await train_api.async_get_train_station(entry.data[CONF_TO])
-        from_station = await train_api.async_get_train_station(entry.data[CONF_FROM])
-    except ValueError as error:
-        if "Invalid authentication" in error.args[0]:
-            raise ConfigEntryAuthFailed from error
-        raise ConfigEntryNotReady(
-            f"Problem when trying station {entry.data[CONF_FROM]} to {entry.data[CONF_TO]}. Error: {error} "
-        ) from error
-
-    train_time = (
-        dt.parse_time(entry.data.get(CONF_TIME, ""))
-        if entry.data.get(CONF_TIME)
-        else None
-    )
+    train_api = hass.data[DOMAIN][entry.entry_id]["train_api"]
+    to_station = hass.data[DOMAIN][entry.entry_id][CONF_TO]
+    from_station = hass.data[DOMAIN][entry.entry_id][CONF_FROM]
+    get_time: str | None = entry.data.get(CONF_TIME)
+    train_time = dt.parse_time(get_time) if get_time else None
 
     async_add_entities(
         [
@@ -157,8 +142,8 @@ class TrainSensor(SensorEntity):
                 _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
-        except ValueError as output_error:
-            _LOGGER.error("Departure %s encountered a problem: %s", when, output_error)
+        except ValueError as error:
+            _LOGGER.error("Departure %s encountered a problem: %s", when, error)
 
         if not _state:
             self._attr_available = False

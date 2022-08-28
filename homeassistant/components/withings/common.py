@@ -10,7 +10,7 @@ from enum import Enum, IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, Union
 
 from aiohttp.web import Response
 import requests
@@ -28,10 +28,11 @@ from withings_api.common import (
 )
 
 from homeassistant.components import webhook
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     MASS_KILOGRAMS,
@@ -41,15 +42,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AUTH_CALLBACK_PATH,
     AbstractOAuth2Implementation,
-    LocalOAuth2Implementation,
     OAuth2Session,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
@@ -58,6 +57,7 @@ from . import const
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
+_RETRY_COEFFICIENT = 0.5
 NOT_AUTHENTICATED_ERROR = re.compile(
     f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
@@ -485,7 +485,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> None:
         """Initialize object."""
         self._hass = hass
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._implementation = implementation
         self.session = OAuth2Session(hass, config_entry, implementation)
 
@@ -497,12 +497,13 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             self.session.async_ensure_token_valid(), self._hass.loop
         ).result()
 
-        access_token = self._config_entry.data["token"]["access_token"]
+        access_token = self.config_entry.data["token"]["access_token"]
         response = requests.request(
             method,
             f"{self.URL}/{path}",
             params=params,
             headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
         )
         return response.json()
 
@@ -589,7 +590,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            dict[MeasureType, Any]
+            Union[dict[MeasureType, Any], None]
         ](
             hass,
             _LOGGER,
@@ -652,7 +653,7 @@ class DataManager:
                     "Failed attempt %s of %s (%s)", attempt, attempts, exception1
                 )
                 # Make each backoff pause a little bit longer
-                await asyncio.sleep(0.5 * attempt)
+                await asyncio.sleep(_RETRY_COEFFICIENT * attempt)
                 exception = exception1
                 continue
 
@@ -739,32 +740,8 @@ class DataManager:
             if isinstance(
                 exception, (UnauthorizedException, AuthFailedException)
             ) or NOT_AUTHENTICATED_ERROR.match(str(exception)):
-                context = {
-                    const.PROFILE: self._profile,
-                    "userid": self._user_id,
-                    "source": SOURCE_REAUTH,
-                }
-
-                # Check if reauth flow already exists.
-                flow = next(
-                    iter(
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress_by_handler(
-                            const.DOMAIN
-                        )
-                        if flow.context == context
-                    ),
-                    None,
-                )
-                if flow:
-                    return
-
-                # Start a reauth flow.
-                await self._hass.config_entries.flow.async_init(
-                    const.DOMAIN,
-                    context=context,
-                )
-                return
+                self._api.config_entry.async_start_reauth(self._hass)
+                return None
 
             raise exception
 
@@ -918,9 +895,7 @@ async def async_get_entity_id(
     hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
 ) -> str | None:
     """Get an entity id for a user's attribute."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry = er.async_get(hass)
     unique_id = get_attribute_unique_id(attribute, user_id)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -937,6 +912,8 @@ async def async_get_entity_id(
 class BaseWithingsSensor(Entity):
     """Base class for withings sensors."""
 
+    _attr_should_poll = False
+
     def __init__(self, data_manager: DataManager, attribute: WithingsAttribute) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
@@ -946,11 +923,6 @@ class BaseWithingsSensor(Entity):
         self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
         self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
         self._state_data: Any | None = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False to indicate HA should not poll for changes."""
-        return False
 
     @property
     def name(self) -> str:
@@ -977,7 +949,7 @@ class BaseWithingsSensor(Entity):
         return self._unique_id
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._attribute.icon
 
@@ -1031,7 +1003,7 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        profile = config_entry.data.get(const.PROFILE)
+        profile: str = config_entry.data[const.PROFILE]
 
         _LOGGER.debug("Creating withings data manager for profile: %s", profile)
         config_entry_data[const.DATA_MANAGER] = DataManager(
@@ -1109,7 +1081,7 @@ def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
     )
 
 
-class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
+class WithingsLocalOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
 
     @property

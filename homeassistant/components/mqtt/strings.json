@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "deprecated_yaml": {
+      "title": "Your manually configured MQTT {platform}(s) needs attention",
+      "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the `mqtt` integration key and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
+    }
+  },
   "config": {
     "step": {
       "broker": {

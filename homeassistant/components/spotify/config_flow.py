@@ -1,12 +1,12 @@
 """Config flow for Spotify."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from spotipy import Spotify
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -56,17 +56,10 @@ class SpotifyFlowHandler(
 
         return self.async_create_entry(title=name, data=data)
 
-    async def async_step_reauth(self, entry: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon migration of old entries."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
-        )
-
-        persistent_notification.async_create(
-            self.hass,
-            f"Spotify integration for account {entry['id']} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
-            "Spotify re-authentication",
-            "spotify_reauth",
         )
 
         return await self.async_step_reauth_confirm()
@@ -85,7 +78,6 @@ class SpotifyFlowHandler(
                 errors={},
             )
 
-        persistent_notification.async_dismiss(self.hass, "spotify_reauth")
         return await self.async_step_pick_implementation(
             user_input={"implementation": self.reauth_entry.data["auth_implementation"]}
         )

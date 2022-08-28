@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Atribut",
+                    "authentication": "Autenticaci\u00f3",
+                    "device_class": "Classe de dispositiu",
+                    "headers": "Cap\u00e7aleres",
+                    "index": "\u00cdndex",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "resource": "Recurs",
+                    "select": "Selecciona",
+                    "state_class": "Classe d'estat",
+                    "unit_of_measurement": "Unitat de mesura",
+                    "username": "Nom d'usuari",
+                    "value_template": "Plantilla de valor",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "data_description": {
+                    "attribute": "Obt\u00e9 el valor d'un atribut de l'etiqueta seleccionada",
+                    "authentication": "Tipus d'autenticaci\u00f3 HTTP. O b\u00e0sica o 'digest'",
+                    "device_class": "Tipus/classe del sensor per configurar-ne la icona a la interf\u00edcie",
+                    "headers": "Cap\u00e7aleres a utilitzar per a la sol\u00b7licitud web",
+                    "index": "Defineix quins dels elements retornats pel selector CSS utilitzar",
+                    "resource": "URL del lloc web que cont\u00e9 el valor",
+                    "select": "Defineix quina etiqueta s'ha de buscar. Consulta els selectors CSS de Beautifulsoup per m\u00e9s informaci\u00f3",
+                    "state_class": "La state_class del sensor",
+                    "value_template": "Defineix una plantilla per obtenir l'estat del sensor",
+                    "verify_ssl": "Activa/desactiva la verificaci\u00f3 del certificat SSL/TLS, per exemple, si est\u00e0 autosignat"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Atribut",
+                    "authentication": "Autenticaci\u00f3",
+                    "device_class": "Classe de dispositiu",
+                    "headers": "Cap\u00e7aleres",
+                    "index": "\u00cdndex",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "resource": "Recurs",
+                    "select": "Selecciona",
+                    "state_class": "Classe d'estat",
+                    "unit_of_measurement": "Unitat de mesura",
+                    "username": "Nom d'usuari",
+                    "value_template": "Plantilla de valor",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "data_description": {
+                    "attribute": "Obt\u00e9 el valor d'un atribut de l'etiqueta seleccionada",
+                    "authentication": "Tipus d'autenticaci\u00f3 HTTP. O b\u00e0sica o 'digest'",
+                    "device_class": "Tipus/classe del sensor per configurar-ne la icona a la interf\u00edcie",
+                    "headers": "Cap\u00e7aleres a utilitzar per a la sol\u00b7licitud web",
+                    "index": "Defineix quins dels elements retornats pel selector CSS utilitzar",
+                    "resource": "URL del lloc web que cont\u00e9 el valor",
+                    "select": "Defineix quina etiqueta s'ha de buscar. Consulta els selectors CSS de Beautifulsoup per m\u00e9s informaci\u00f3",
+                    "state_class": "La state_class del sensor",
+                    "value_template": "Defineix una plantilla per obtenir l'estat del sensor",
+                    "verify_ssl": "Activa/desactiva la verificaci\u00f3 del certificat SSL/TLS, per exemple, si est\u00e0 autosignat"
+                }
+            }
+        }
+    }
+}

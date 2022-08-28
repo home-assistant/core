@@ -17,8 +17,7 @@
                     "mode": "M\u00f3d",
                     "name": "Elnevez\u00e9s"
                 },
-                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://openweathermap.org/appid webhelyet",
-                "title": "OpenWeatherMap"
+                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://openweathermap.org/appid webhelyet"
             }
         }
     },

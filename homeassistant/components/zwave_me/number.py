@@ -40,13 +40,13 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     """Representation of a ZWaveMe Multilevel Switch."""
 
     @property
-    def value(self):
+    def native_value(self) -> float:
         """Return the unit of measurement."""
         if self.device.level == 99:  # Scale max value
             return 100
         return self.device.level
 
-    def set_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
             self.device.id, f"exact?level={str(round(value))}"

@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
-                    "latitude": "Breddegrad",
                     "location": "Plassering",
-                    "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
                 "description": "For \u00e5 f\u00e5 en API-n\u00f8kkel, registrer deg p\u00e5 [Tomorrow.io](https://app.tomorrow.io/signup)."

@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Location is already configured"
+            "already_configured": "Location is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
             "no_stations": "Could not find any station in range."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "Stations"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Update Interval",
-                    "show_on_map": "Show stations on map"
+                    "show_on_map": "Show stations on map",
+                    "stations": "Stations"
                 },
                 "title": "Tankerkoenig options"
             }

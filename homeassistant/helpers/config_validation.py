@@ -758,7 +758,7 @@ def ensure_list_csv(value: Any) -> list:
 class multi_select:
     """Multi select validator returning list of selected values."""
 
-    def __init__(self, options: dict) -> None:
+    def __init__(self, options: dict | list) -> None:
         """Initialize multi select."""
         self.options = options
 
@@ -1425,6 +1425,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): str,
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,

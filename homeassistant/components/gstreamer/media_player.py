@@ -2,14 +2,20 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from gsp import GstreamerPlayer
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
@@ -58,6 +64,7 @@ class GstreamerDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
     def __init__(self, player, name):
@@ -72,7 +79,7 @@ class GstreamerDevice(MediaPlayerEntity):
         self._artist = None
         self._album = None
 
-    def update(self):
+    def update(self) -> None:
         """Update properties."""
         self._state = self._player.state
         self._volume = self._player.volume
@@ -82,26 +89,38 @@ class GstreamerDevice(MediaPlayerEntity):
         self._album = self._player.album
         self._artist = self._player.artist
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         self._player.volume = volume
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
-        if media_type != MEDIA_TYPE_MUSIC:
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = sourced_media.url
+
+        elif media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error("Invalid media type")
             return
-        self._player.queue(media_id)
 
-    def media_play(self):
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        await self.hass.async_add_executor_job(self._player.queue, media_id)
+
+    def media_play(self) -> None:
         """Play."""
         self._player.play()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause."""
         self._player.pause()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Next track."""
         self._player.next()
 
@@ -149,3 +168,13 @@ class GstreamerDevice(MediaPlayerEntity):
     def media_album_name(self):
         """Media album."""
         return self._album
+
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

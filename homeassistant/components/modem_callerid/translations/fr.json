@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Il s'agit d'une int\u00e9gration pour les appels fixes utilisant un modem vocal CX93001. Cela peut r\u00e9cup\u00e9rer les informations d'identification de l'appelant avec une option pour rejeter un appel entrant.",
-                "title": "Modem t\u00e9l\u00e9phonique"
+                "description": "Il s'agit d'une int\u00e9gration pour les appels fixes utilisant un modem vocal CX93001. Cela peut r\u00e9cup\u00e9rer les informations d'identification de l'appelant avec une option pour rejeter un appel entrant."
             },
             "user": {
                 "data": {
                     "name": "Nom",
                     "port": "Port"
                 },
-                "description": "Il s'agit d'une int\u00e9gration pour les appels fixes utilisant un modem vocal CX93001. Cela peut r\u00e9cup\u00e9rer les informations d'identification de l'appelant avec une option pour rejeter un appel entrant.",
-                "title": "Modem t\u00e9l\u00e9phonique"
+                "description": "Il s'agit d'une int\u00e9gration pour les appels fixes utilisant un modem vocal CX93001. Cela peut r\u00e9cup\u00e9rer les informations d'identification de l'appelant avec une option pour rejeter un appel entrant."
             }
         }
     }

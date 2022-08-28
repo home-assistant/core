@@ -1,4 +1,4 @@
-"""The tests for the Fritzbox update entity."""
+"""Tests for Fritz!Tools update platform."""
 
 from unittest.mock import patch
 

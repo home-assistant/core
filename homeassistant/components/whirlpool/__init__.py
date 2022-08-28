@@ -1,15 +1,18 @@
 """The Whirlpool Sixth Sense integration."""
+from dataclasses import dataclass
 import logging
 
 import aiohttp
+from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
+from whirlpool.backendselector import BackendSelector, Brand, Region
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import AUTH_INSTANCE_KEY, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Whirlpool Sixth Sense from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    auth = Auth(entry.data["username"], entry.data["password"])
+    backend_selector = BackendSelector(Brand.Whirlpool, Region.EU)
+    auth = Auth(backend_selector, entry.data["username"], entry.data["password"])
     try:
         await auth.do_auth(store=False)
     except aiohttp.ClientError as ex:
@@ -30,9 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Authentication failed")
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = {AUTH_INSTANCE_KEY: auth}
+    appliances_manager = AppliancesManager(backend_selector, auth)
+    if not await appliances_manager.fetch_appliances():
+        _LOGGER.error("Cannot fetch appliances")
+        return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.data[DOMAIN][entry.entry_id] = WhirlpoolData(
+        appliances_manager,
+        auth,
+        backend_selector,
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -44,3 +57,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+@dataclass
+class WhirlpoolData:
+    """Whirlpool integaration shared data."""
+
+    appliances_manager: AppliancesManager
+    auth: Auth
+    backend_selector: BackendSelector

@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Propre",
             "dirty": "Sale"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Ferm\u00e9e",
+            "open": "Ouverte",
+            "tilt": "Inclin\u00e9e"
         }
     }
 }

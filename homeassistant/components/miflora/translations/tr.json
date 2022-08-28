@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "replaced": {
+            "description": "Mi Flora entegrasyonu Home Assistant 2022.7'de \u00e7al\u0131\u015fmay\u0131 durdurdu ve 2022.8 s\u00fcr\u00fcm\u00fcnde Xiaomi BLE entegrasyonu ile de\u011fi\u015ftirildi.\n\nGe\u00e7i\u015f yolu m\u00fcmk\u00fcn de\u011fildir, bu nedenle Mi Flora cihaz\u0131n\u0131z\u0131 yeni entegrasyonu kullanarak manuel olarak eklemeniz gerekir.\n\nMevcut Mi Flora YAML yap\u0131land\u0131rman\u0131z art\u0131k Home Assistant taraf\u0131ndan kullan\u0131lm\u0131yor. Bu sorunu gidermek i\u00e7in YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Mi Flora entegrasyonu de\u011fi\u015ftirildi"
+        }
+    }
+}

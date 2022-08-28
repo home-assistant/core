@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import os
 
+from file_read_backwards import FileReadBackwards
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -74,12 +75,13 @@ class FileSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest entry from a file and updates the state."""
         try:
-            with open(self._file_path, encoding="utf-8") as file_data:
+            with FileReadBackwards(self._file_path, encoding="utf-8") as file_data:
                 for line in file_data:
                     data = line
+                    break
                 data = data.strip()
         except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):
             _LOGGER.warning(

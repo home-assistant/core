@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Kontroluje liczb\u0119 cyfr dziesi\u0119tnych w danych wyj\u015bciowych."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Precyzja"
-                },
-                "description": "Precyzja kontroluje liczb\u0119 cyfr dziesi\u0119tnych w danych wyj\u015bciowych."
             }
         }
     },

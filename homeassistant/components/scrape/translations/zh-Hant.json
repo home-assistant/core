@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "\u5c6c\u6027",
+                    "authentication": "\u9a57\u8b49",
+                    "device_class": "\u88dd\u7f6e\u985e\u5225",
+                    "headers": "Headers",
+                    "index": "\u6307\u6578",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "resource": "\u4f86\u6e90",
+                    "select": "\u9078\u64c7",
+                    "state_class": "\u72c0\u614b\u985e\u5225",
+                    "unit_of_measurement": "\u6e2c\u91cf\u55ae\u4f4d",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "value_template": "\u6578\u503c\u6a21\u677f",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                },
+                "data_description": {
+                    "attribute": "\u7372\u53d6\u6240\u9078\u6a19\u7c64\u5c6c\u6027\u6578\u503c",
+                    "authentication": "HTTP \u9a57\u8b49\u985e\u578b\u3002\u57fa\u672c\u6216\u6458\u8981",
+                    "device_class": "\u65bc Frontend \u4e2d\u8a2d\u5b9a\u4e4b\u50b3\u611f\u5668\u985e\u578b/\u985e\u5225\u5716\u793a",
+                    "headers": "\u7528\u65bc Web \u8acb\u6c42\u4e4b Headers",
+                    "index": "\u5b9a\u7fa9\u4f7f\u7528 CSS selector \u56de\u8986\u5143\u7d20",
+                    "resource": "\u5305\u542b\u6578\u503c\u7684\u7db2\u7ad9 URL",
+                    "select": "\u5b9a\u7fa9\u8981\u7d22\u7684\u6a19\u7c64\u3002\u53c3\u95b1 Beautifulsoup CSS selector \u4ee5\u7372\u5f97\u8a73\u7d30\u8cc7\u8a0a",
+                    "state_class": "\u611f\u6e2c\u5668 state_class",
+                    "value_template": "\u5b9a\u7fa9\u6a21\u677f\u4ee5\u53d6\u5f97\u611f\u6e2c\u5668\u72c0\u614b",
+                    "verify_ssl": "\u958b\u555f/\u95dc\u9589 SSL/TLS \u9a57\u8b49\u8a8d\u8b49\uff0c\u4f8b\u5982\u81ea\u7c3d\u7ae0\u6191\u8b49"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "\u5c6c\u6027",
+                    "authentication": "\u9a57\u8b49",
+                    "device_class": "\u88dd\u7f6e\u985e\u5225",
+                    "headers": "Headers",
+                    "index": "\u6307\u6578",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "resource": "\u4f86\u6e90",
+                    "select": "\u9078\u64c7",
+                    "state_class": "\u72c0\u614b\u985e\u5225",
+                    "unit_of_measurement": "\u6e2c\u91cf\u55ae\u4f4d",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "value_template": "\u6578\u503c\u6a21\u677f",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                },
+                "data_description": {
+                    "attribute": "\u7372\u53d6\u6240\u9078\u6a19\u7c64\u5c6c\u6027\u6578\u503c",
+                    "authentication": "HTTP \u9a57\u8b49\u985e\u578b\u3002\u57fa\u672c\u6216\u6458\u8981",
+                    "device_class": "\u65bc Frontend \u4e2d\u8a2d\u5b9a\u4e4b\u50b3\u611f\u5668\u985e\u578b/\u985e\u5225\u5716\u793a",
+                    "headers": "\u7528\u65bc Web \u8acb\u6c42\u4e4b Headers",
+                    "index": "\u5b9a\u7fa9\u4f7f\u7528 CSS selector \u56de\u8986\u5143\u7d20",
+                    "resource": "\u5305\u542b\u6578\u503c\u7684\u7db2\u7ad9 URL",
+                    "select": "\u5b9a\u7fa9\u8981\u7d22\u7684\u6a19\u7c64\u3002\u53c3\u95b1 Beautifulsoup CSS selector \u4ee5\u7372\u5f97\u8a73\u7d30\u8cc7\u8a0a",
+                    "state_class": "\u611f\u6e2c\u5668 state_class",
+                    "value_template": "\u5b9a\u7fa9\u6a21\u677f\u4ee5\u53d6\u5f97\u611f\u6e2c\u5668\u72c0\u614b",
+                    "verify_ssl": "\u958b\u555f/\u95dc\u9589 SSL/TLS \u9a57\u8b49\u8a8d\u8b49\uff0c\u4f8b\u5982\u81ea\u7c3d\u7ae0\u6191\u8b49"
+                }
+            }
+        }
+    }
+}

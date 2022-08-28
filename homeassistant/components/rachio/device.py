@@ -3,11 +3,14 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
+from rachiopy import Rachio
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
@@ -26,12 +29,13 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
     KEY_ZONES,
+    LISTEN_EVENT_TYPES,
     MODEL_GENERATION_1,
     SERVICE_PAUSE_WATERING,
     SERVICE_RESUME_WATERING,
     SERVICE_STOP_WATERING,
+    WEBHOOK_CONST_ID,
 )
-from .webhooks import LISTEN_EVENT_TYPES, WEBHOOK_CONST_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,16 +58,16 @@ STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
 class RachioPerson:
     """Represent a Rachio user."""
 
-    def __init__(self, rachio, config_entry):
+    def __init__(self, rachio: Rachio, config_entry: ConfigEntry) -> None:
         """Create an object from the provided API instance."""
         # Use API token to get user ID
         self.rachio = rachio
         self.config_entry = config_entry
         self.username = None
-        self._id = None
-        self._controllers = []
+        self._id: str | None = None
+        self._controllers: list[RachioIro] = []
 
-    async def async_setup(self, hass):
+    async def async_setup(self, hass: HomeAssistant) -> None:
         """Create rachio devices and services."""
         await hass.async_add_executor_job(self._setup, hass)
         can_pause = False
@@ -121,7 +125,7 @@ class RachioPerson:
             schema=RESUME_SERVICE_SCHEMA,
         )
 
-    def _setup(self, hass):
+    def _setup(self, hass: HomeAssistant) -> None:
         """Rachio device setup."""
         rachio = self.rachio
 
@@ -139,7 +143,7 @@ class RachioPerson:
         if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
             raise ConfigEntryNotReady(f"API Error: {data}")
         self.username = data[1][KEY_USERNAME]
-        devices = data[1][KEY_DEVICES]
+        devices: list[dict[str, Any]] = data[1][KEY_DEVICES]
         for controller in devices:
             webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
@@ -169,12 +173,12 @@ class RachioPerson:
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
 
     @property
-    def user_id(self) -> str:
+    def user_id(self) -> str | None:
         """Get the user ID as defined by the Rachio API."""
         return self._id
 
     @property
-    def controllers(self) -> list:
+    def controllers(self) -> list[RachioIro]:
         """Get a list of controllers managed by this account."""
         return self._controllers
 
@@ -186,7 +190,13 @@ class RachioPerson:
 class RachioIro:
     """Represent a Rachio Iro."""
 
-    def __init__(self, hass, rachio, data, webhooks):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        rachio: Rachio,
+        data: dict[str, Any],
+        webhooks: list[dict[str, Any]],
+    ) -> None:
         """Initialize a Rachio device."""
         self.hass = hass
         self.rachio = rachio
@@ -199,10 +209,10 @@ class RachioIro:
         self._schedules = data[KEY_SCHEDULES]
         self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
-        self._webhooks = webhooks
+        self._webhooks: list[dict[str, Any]] = webhooks
         _LOGGER.debug('%s has ID "%s"', self, self.controller_id)
 
-    def setup(self):
+    def setup(self) -> None:
         """Rachio Iro setup for webhooks."""
         # Listen for all updates
         self._init_webhooks()
@@ -226,7 +236,7 @@ class RachioIro:
                     or webhook[KEY_ID] == current_webhook_id
                 ):
                     self.rachio.notification.delete(webhook[KEY_ID])
-            self._webhooks = None
+            self._webhooks = []
 
         _deinit_webhooks(None)
 
@@ -306,9 +316,6 @@ class RachioIro:
         _LOGGER.debug("Resuming watering on %s", self)
 
 
-def is_invalid_auth_code(http_status_code):
+def is_invalid_auth_code(http_status_code: int) -> bool:
     """HTTP status codes that mean invalid auth."""
-    if http_status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-        return True
-
-    return False
+    return http_status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN)

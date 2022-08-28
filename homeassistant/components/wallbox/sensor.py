@@ -25,6 +25,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import WallboxCoordinator, WallboxEntity
 from .const import (
+    CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
     CHARGER_ADDED_ENERGY_KEY,
     CHARGER_ADDED_RANGE_KEY,
     CHARGER_CHARGING_POWER_KEY,
@@ -89,6 +90,14 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_ENERGY_KEY,
         name="Added Energy",
+        precision=2,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    CHARGER_ADDED_DISCHARGED_ENERGY_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
+        name="Discharged Energy",
         precision=2,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -167,8 +176,12 @@ class WallboxSensor(WallboxEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if (sensor_round := self.entity_description.precision) is not None:
+        """Return the state of the sensor. Round the value when it, and the precision property are not None."""
+        if (
+            sensor_round := self.entity_description.precision
+        ) is not None and self.coordinator.data[
+            self.entity_description.key
+        ] is not None:
             return cast(
                 StateType,
                 round(self.coordinator.data[self.entity_description.key], sensor_round),

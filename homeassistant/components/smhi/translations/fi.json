@@ -1,15 +1,13 @@
 {
     "config": {
         "error": {
-            "name_exists": "Nimi on jo olemassa",
             "wrong_location": "Sijainti vain Ruotsi"
         },
         "step": {
             "user": {
                 "data": {
                     "latitude": "Leveysaste",
-                    "longitude": "Pituusaste",
-                    "name": "Nimi"
+                    "longitude": "Pituusaste"
                 },
                 "title": "Sijainti Ruotsissa"
             }

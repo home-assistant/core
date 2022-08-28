@@ -120,6 +120,12 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     entity_description: AirzoneBinarySensorEntityDescription
 
     @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
     def _async_update_attrs(self) -> None:
         """Update binary sensor attributes."""
         self._attr_is_on = self.get_airzone_value(self.entity_description.key)

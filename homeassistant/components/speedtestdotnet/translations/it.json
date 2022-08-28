@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
-            "wrong_server_id": "L'ID Server non \u00e8 valido"
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "step": {
             "user": {

@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "Provincia"
-                },
-                "description": "Scegli la tua provincia qui sotto.",
-                "title": "Contatore interruzioni PECO"
+                }
             }
         }
     }

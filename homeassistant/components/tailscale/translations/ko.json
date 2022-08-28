@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "description": "Tailscale API \ud1a0\ud070\uc740 90\uc77c \ub3d9\uc548 \uc720\ud6a8\ud569\ub2c8\ub2e4. https://login.tailscale.com/admin/settings/authkeys\uc5d0\uc11c \uc0c8\ub85c\uc6b4 Tailscale API \ud0a4\ub97c \uc0dd\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+            },
+            "user": {
+                "data": {
+                    "tailnet": "\ud14c\uc77c\ub137"
+                }
+            }
+        }
+    }
+}

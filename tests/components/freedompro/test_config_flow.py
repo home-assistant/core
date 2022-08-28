@@ -19,7 +19,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
 
@@ -77,6 +77,6 @@ async def test_create_entry(hass):
             data=VALID_CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "Freedompro"
         assert result["data"][CONF_API_KEY] == "ksdjfgslkjdfksjdfksjgfksjd"

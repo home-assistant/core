@@ -1,4 +1,5 @@
 """Helpers to generate ulids."""
+from __future__ import annotations
 
 from random import getrandbits
 import time
@@ -17,7 +18,7 @@ def ulid_hex() -> str:
     return f"{int(time.time()*1000):012x}{getrandbits(80):020x}"
 
 
-def ulid() -> str:
+def ulid(timestamp: float | None = None) -> str:
     """Generate a ULID.
 
     This ulid should not be used for cryptographically secure
@@ -34,9 +35,9 @@ def ulid() -> str:
     import ulid
     ulid.parse(ulid_util.ulid())
     """
-    ulid_bytes = int(time.time() * 1000).to_bytes(6, byteorder="big") + int(
-        getrandbits(80)
-    ).to_bytes(10, byteorder="big")
+    ulid_bytes = int((timestamp or time.time()) * 1000).to_bytes(
+        6, byteorder="big"
+    ) + int(getrandbits(80)).to_bytes(10, byteorder="big")
 
     # This is base32 crockford encoding with the loop unrolled for performance
     #

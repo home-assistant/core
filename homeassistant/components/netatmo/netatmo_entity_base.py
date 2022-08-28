@@ -1,8 +1,11 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -22,7 +25,7 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._data_classes: list[dict] = []
+        self._publishers: list[dict[str, Any]] = []
 
         self._device_name: str = ""
         self._id: str = ""
@@ -34,11 +37,11 @@ class NetatmoBase(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        for data_class in self._data_classes:
+        for data_class in self._publishers:
             signal_name = data_class[SIGNAL_NAME]
 
             if "home_id" in data_class:
-                await self.data_handler.register_data_class(
+                await self.data_handler.subscribe(
                     data_class["name"],
                     signal_name,
                     self.async_update_callback,
@@ -46,7 +49,7 @@ class NetatmoBase(Entity):
                 )
 
             elif data_class["name"] == PUBLICDATA_DATA_CLASS_NAME:
-                await self.data_handler.register_data_class(
+                await self.data_handler.subscribe(
                     data_class["name"],
                     signal_name,
                     self.async_update_callback,
@@ -57,17 +60,17 @@ class NetatmoBase(Entity):
                 )
 
             else:
-                await self.data_handler.register_data_class(
+                await self.data_handler.subscribe(
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
-            for sub in self.data_handler.data_classes[signal_name].subscriptions:
+            for sub in self.data_handler.publisher[signal_name].subscriptions:
                 if sub is None:
-                    await self.data_handler.unregister_data_class(signal_name, None)
+                    await self.data_handler.unsubscribe(signal_name, None)
 
-        registry = await self.hass.helpers.device_registry.async_get_registry()
-        device = registry.async_get_device({(DOMAIN, self._id)})
-        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
+        registry = dr.async_get(self.hass)
+        if device := registry.async_get_device({(DOMAIN, self._id)}):
+            self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()
 
@@ -75,8 +78,8 @@ class NetatmoBase(Entity):
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
 
-        for data_class in self._data_classes:
-            await self.data_handler.unregister_data_class(
+        for data_class in self._publishers:
+            await self.data_handler.unsubscribe(
                 data_class[SIGNAL_NAME], self.async_update_callback
             )
 

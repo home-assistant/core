@@ -17,8 +17,7 @@
                     "mode": "Modus",
                     "name": "Numm vun der Integratioun"
                 },
-                "description": "OpenWeatherMap Integratioun ariichten. Fir een API Schl\u00ebssel z'erstelle g\u00e9i op https://openweathermap.org/appid",
-                "title": "OpenWeatherMap API Schl\u00ebssel"
+                "description": "OpenWeatherMap Integratioun ariichten. Fir een API Schl\u00ebssel z'erstelle g\u00e9i op https://openweathermap.org/appid"
             }
         }
     },

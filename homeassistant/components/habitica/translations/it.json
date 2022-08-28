@@ -15,6 +15,5 @@
                 "description": "Collega il tuo profilo Habitica per consentire il monitoraggio del profilo e delle attivit\u00e0 dell'utente. Nota che api_id e api_key devono essere ottenuti da https://habitica.com/user/settings/api"
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

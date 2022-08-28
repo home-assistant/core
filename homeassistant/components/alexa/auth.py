@@ -11,6 +11,7 @@ import async_timeout
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class Auth:
         self.client_secret = client_secret
 
         self._prefs = None
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
         self._get_token_lock = asyncio.Lock()
 

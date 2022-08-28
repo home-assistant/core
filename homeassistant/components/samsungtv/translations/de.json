@@ -6,7 +6,6 @@
             "auth_missing": "Home Assistant ist nicht berechtigt, eine Verbindung zu diesem Samsung TV herzustellen. \u00dcberpr\u00fcfe den Ger\u00e4teverbindungsmanager in den Einstellungen deines Fernsehger\u00e4ts, um Home Assistant zu autorisieren.",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "id_missing": "Dieses Samsung-Ger\u00e4t hat keine Seriennummer.",
-            "missing_config_entry": "Dieses Samsung-Ger\u00e4t hat keinen Konfigurationseintrag.",
             "not_supported": "Dieses Samsung TV-Ger\u00e4t wird derzeit nicht unterst\u00fctzt.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "unknown": "Unerwarteter Fehler"
@@ -18,8 +17,7 @@
         "flow_title": "{device}",
         "step": {
             "confirm": {
-                "description": "M\u00f6chtest du Samsung TV {device} einrichten? Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du eine Meldung auf deinem Fernseher sehen, die nach einer Autorisierung fragt. Manuelle Konfigurationen f\u00fcr dieses Fernsehger\u00e4t werden \u00fcberschrieben.",
-                "title": "Samsung TV"
+                "description": "M\u00f6chtest du Samsung TV {device} einrichten? Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du eine Meldung auf deinem Fernseher sehen, die nach einer Autorisierung fragt. Manuelle Konfigurationen f\u00fcr dieses Fernsehger\u00e4t werden \u00fcberschrieben."
             },
             "encrypted_pairing": {
                 "description": "Bitte gib die PIN ein, die auf {device} angezeigt wird."

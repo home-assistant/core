@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Is al geconfigureerd. Er is maar een configuratie mogelijk"
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "invalid_discovery_topic": "Invalid discovery topic prefix."
@@ -10,9 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Discovery-onderwerpvoorvoegsel"
-                },
-                "description": "Vul de Tasmota gegevens in",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Wil je Tasmota instellen?"

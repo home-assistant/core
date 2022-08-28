@@ -28,16 +28,7 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
-                "description": "Vil du konfigurere {name} ({host})?",
-                "title": ""
-            },
-            "reauth": {
-                "data": {
-                    "password": "Passord",
-                    "username": "Brukernavn"
-                },
-                "description": "\u00c5rsak: {details}",
-                "title": "Synology DSM Godkjenne integrering p\u00e5 nytt"
+                "description": "Vil du konfigurere {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
-                },
-                "title": ""
+                }
             }
         }
     },

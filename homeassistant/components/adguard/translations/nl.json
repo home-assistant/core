@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd",
+            "already_configured": "Dienst is al geconfigureerd",
             "existing_instance_updated": "Bestaande configuratie bijgewerkt."
         },
         "error": {
@@ -17,9 +17,9 @@
                     "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort",
-                    "ssl": "AdGuard Home maakt gebruik van een SSL certificaat",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "AdGuard Home maakt gebruik van een goed certificaat"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "description": "Stel uw AdGuard Home-instantie in om toezicht en controle mogelijk te maken."
             }

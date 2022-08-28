@@ -1,22 +1,22 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Time-out genereren autorisatie-URL.",
-            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie.",
-            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
-            "reauth_successful": "Herauthenticatie was succesvol",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
+            "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})",
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "create_entry": {
-            "default": "Succesvol geauthenticeerd"
+            "default": "Authenticatie geslaagd"
         },
         "step": {
             "pick_implementation": {
-                "title": "Kies de verificatiemethode"
+                "title": "Kies een authenticatie methode"
             },
             "reauth_confirm": {
                 "description": "De Netatmo-integratie moet uw account opnieuw verifi\u00ebren",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthenticeren"
             }
         }
     },
@@ -59,7 +59,7 @@
             },
             "public_weather_areas": {
                 "data": {
-                    "new_area": "Naam van het gebied",
+                    "new_area": "Naam van ruimte",
                     "weather_areas": "Weersgebieden"
                 },
                 "description": "Configureer openbare weersensoren.",

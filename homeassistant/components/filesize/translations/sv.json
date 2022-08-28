@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "not_allowed": "S\u00f6kv\u00e4gen \u00e4r inte till\u00e5ten",
+            "not_valid": "S\u00f6kv\u00e4gen \u00e4r inte giltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "S\u00f6kv\u00e4g till filen"
+                }
+            }
+        }
+    },
+    "title": "Filstorlek"
+}

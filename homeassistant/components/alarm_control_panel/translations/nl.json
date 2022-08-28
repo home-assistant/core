@@ -28,15 +28,15 @@
     "state": {
         "_": {
             "armed": "Ingeschakeld",
-            "armed_away": "Ingeschakeld voor vertrek",
+            "armed_away": "Ingeschakeld afwezig",
             "armed_custom_bypass": "Ingeschakeld met overbrugging",
-            "armed_home": "Ingeschakeld voor thuis",
-            "armed_night": "Ingeschakeld voor 's nachts",
+            "armed_home": "Ingeschakeld thuis",
+            "armed_night": "Ingeschakeld nacht",
             "armed_vacation": "Vakantie ingeschakeld",
             "arming": "Schakelt in",
             "disarmed": "Uitgeschakeld",
             "disarming": "Schakelt uit",
-            "pending": "In wacht",
+            "pending": "In afwachting",
             "triggered": "Gaat af"
         }
     },

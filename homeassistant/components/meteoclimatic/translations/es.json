@@ -11,6 +11,9 @@
             "user": {
                 "data": {
                     "code": "C\u00f3digo de la estaci\u00f3n"
+                },
+                "data_description": {
+                    "code": "Parece ESCAT4300000043206B"
                 }
             }
         }

@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -15,24 +15,27 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import ciso8601
 from sqlalchemy import text
 from sqlalchemy.engine.cursor import CursorFetchStrategy
+from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
-from .models import (
+from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLES_TO_CHECK,
     RecorderRuns,
-    process_timestamp,
 )
+from .models import UnsupportedDialect, process_timestamp
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -45,14 +48,20 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+DEFAULT_YIELD_STATES_ROWS = 32768
 
-MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_MARIA_DB = AwesomeVersion(
+    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_MYSQL = AwesomeVersion(
+    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_PGSQL = AwesomeVersion(
+    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_SQLITE = AwesomeVersion(
+    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -79,7 +88,7 @@ def session_scope(
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
-        session = hass.data[DATA_INSTANCE].get_session()
+        session = get_instance(hass).get_session()
 
     if session is None:
         raise RuntimeError("Session required")
@@ -119,7 +128,7 @@ def commit(session: Session, work: Any) -> bool:
 
 def execute(
     qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list:
+) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -162,7 +171,39 @@ def execute(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreachable
+    assert False  # unreachable # pragma: no cover
+
+
+def execute_stmt_lambda_element(
+    session: Session,
+    stmt: StatementLambdaElement,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+    yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
+) -> Iterable[Row]:
+    """Execute a StatementLambdaElement.
+
+    If the time window passed is greater than one day
+    the execution method will switch to yield_per to
+    reduce memory pressure.
+
+    It is not recommended to pass a time window
+    when selecting non-ranged rows (ie selecting
+    specific entities) since they are usually faster
+    with .all().
+    """
+    executed = session.execute(stmt)
+    use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
+    for tryno in range(0, RETRIES):
+        try:
+            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+            if tryno == RETRIES - 1:
+                raise
+            time.sleep(QUERY_RETRY_WAIT)
+
+    assert False  # unreachable # pragma: no cover
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
@@ -292,29 +333,31 @@ def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
     return result
 
 
-def _warn_unsupported_dialect(dialect_name: str) -> None:
+def _fail_unsupported_dialect(dialect_name: str) -> None:
     """Warn about unsupported database version."""
-    _LOGGER.warning(
+    _LOGGER.error(
         "Database %s is not supported; Home Assistant supports %s. "
-        "Starting with Home Assistant 2022.2 this will prevent the recorder from "
-        "starting. Please migrate your database to a supported software before then",
+        "Starting with Home Assistant 2022.6 this prevents the recorder from "
+        "starting. Please migrate your database to a supported software",
         dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
+    raise UnsupportedDialect
 
 
-def _warn_unsupported_version(
+def _fail_unsupported_version(
     server_version: str, dialect_name: str, minimum_version: str
 ) -> None:
     """Warn about unsupported database version."""
-    _LOGGER.warning(
+    _LOGGER.error(
         "Version %s of %s is not supported; minimum supported version is %s. "
-        "Starting with Home Assistant 2022.2 this will prevent the recorder from "
-        "starting. Please upgrade your database software before then",
+        "Starting with Home Assistant 2022.6 this prevents the recorder from "
+        "starting. Please upgrade your database software",
         server_version,
         dialect_name,
         minimum_version,
     )
+    raise UnsupportedDialect
 
 
 def _extract_version_from_server_response(
@@ -331,16 +374,38 @@ def _extract_version_from_server_response(
         return None
 
 
+def _datetime_or_none(value: str) -> datetime | None:
+    """Fast version of mysqldb DateTime_or_None.
+
+    https://github.com/PyMySQL/mysqlclient/blob/v2.1.0/MySQLdb/times.py#L66
+    """
+    try:
+        return ciso8601.parse_datetime(value)
+    except ValueError:
+        return None
+
+
+def build_mysqldb_conv() -> dict:
+    """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
+    # Late imports since we only call this if they are using mysqldb
+    from MySQLdb.constants import (  # pylint: disable=import-outside-toplevel,import-error
+        FIELD_TYPE,
+    )
+    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel,import-error
+        conversions,
+    )
+
+    return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
+
+
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
     dbapi_connection: Any,
     first_connection: bool,
-) -> None:
+) -> AwesomeVersion | None:
     """Execute statements needed for dialect connection."""
-    # Returns False if the the connection needs to be setup
-    # on the next connection, returns True if the connection
-    # never needs to be setup again.
+    version: AwesomeVersion | None = None
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
@@ -354,17 +419,23 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
 
-            if version and version < MIN_VERSION_SQLITE_ROWNUM:
-                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                    False
-                )
             if not version or version < MIN_VERSION_SQLITE:
-                _warn_unsupported_version(
+                _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
 
-        # approximately 8MiB of memory
-        execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
+        # The upper bound on the cache size is approximately 16MiB of memory
+        execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
+
+        #
+        # Enable FULL synchronous if they have a commit interval of 0
+        # or NORMAL if they do not.
+        #
+        # https://sqlite.org/pragma.html#pragma_synchronous
+        # The synchronous=NORMAL setting is a good choice for most applications running in WAL mode.
+        #
+        synchronous = "NORMAL" if instance.commit_interval else "FULL"
+        execute_on_connection(dbapi_connection, f"PRAGMA synchronous={synchronous}")
 
         # enable support for foreign keys
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
@@ -378,21 +449,13 @@ def setup_connection_for_dialect(
             is_maria_db = "mariadb" in version_string.lower()
 
             if is_maria_db:
-                if version and version < MIN_VERSION_MARIA_DB_ROWNUM:
-                    instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                        False
-                    )
                 if not version or version < MIN_VERSION_MARIA_DB:
-                    _warn_unsupported_version(
+                    _fail_unsupported_version(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
             else:
-                if version and version < MIN_VERSION_MYSQL_ROWNUM:
-                    instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                        False
-                    )
                 if not version or version < MIN_VERSION_MYSQL:
-                    _warn_unsupported_version(
+                    _fail_unsupported_version(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
@@ -403,12 +466,14 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
             if not version or version < MIN_VERSION_PGSQL:
-                _warn_unsupported_version(
+                _fail_unsupported_version(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
 
     else:
-        _warn_unsupported_dialect(dialect_name)
+        _fail_unsupported_dialect(dialect_name)
+
+    return version
 
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
@@ -495,7 +560,19 @@ def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
+    """Determine if a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    instance = get_instance(hass)
+    return instance.migration_in_progress
+
+
+def async_migration_is_live(hass: HomeAssistant) -> bool:
+    """Determine if a migration is live.
 
     This is a thin wrapper that allows us to change
     out the implementation later.
@@ -503,7 +580,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     if DATA_INSTANCE not in hass.data:
         return False
     instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_in_progress
+    return instance.migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -520,3 +597,9 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
+
+
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance

@@ -7,8 +7,7 @@
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_auth": "Niepoprawne uwierzytelnienie"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "Identyfikator konta",
-                    "connection_type": "Wybierz typ po\u0142\u0105czenia",
-                    "host": "Nazwa hosta lub adres IP",
-                    "password": "Has\u0142o"
+                    "connection_type": "Wybierz typ po\u0142\u0105czenia"
                 },
                 "description": "Wybierz typ po\u0142\u0105czenia. \"Lokalny\" wymaga grzejnik\u00f3w z bluetooth."
             }

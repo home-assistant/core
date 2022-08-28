@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "db_url_invalid": "\ub370\uc774\ud130\ubca0\uc774\uc2a4 URL\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "query_invalid": "SQL \ucffc\ub9ac\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "\uc5f4",
+                    "db_url": "\ub370\uc774\ud130\ubca0\uc774\uc2a4 URL",
+                    "name": "\uc774\ub984",
+                    "query": "\ucffc\ub9ac \uc120\ud0dd",
+                    "unit_of_measurement": "\uce21\uc815 \ub2e8\uc704",
+                    "value_template": "\uac12 \ud15c\ud50c\ub9bf"
+                },
+                "data_description": {
+                    "column": "\ubc18\ud658\ub41c \ucffc\ub9ac\uac00 \uc0c1\ud0dc\ub85c \ud45c\uc2dc\ub418\ub3c4\ub85d \ud558\ub294 \uc5f4",
+                    "db_url": "\ub370\uc774\ud130\ubca0\uc774\uc2a4 URL, \uae30\ubcf8 HA \ub370\uc774\ud130\ubca0\uc774\uc2a4\ub97c \uc0ac\uc6a9\ud558\ub824\uba74 \ube44\uc6cc \ub461\ub2c8\ub2e4.",
+                    "name": "\ud1b5\ud569\uad6c\uc131\uc694\uc18c \ubc0f \uc13c\uc11c\uc5d0 \uc0ac\uc6a9\ub420 \uc774\ub984",
+                    "query": "\uc2e4\ud589\ud560 \ucffc\ub9ac\ub294 'SELECT'\ub85c \uc2dc\uc791\ud574\uc57c \ud569\ub2c8\ub2e4.",
+                    "unit_of_measurement": "\uce21\uc815 \ub2e8\uc704(\uc120\ud0dd \uc0ac\ud56d)",
+                    "value_template": "\uac12 \ud15c\ud50c\ub9bf(\uc120\ud0dd \uc0ac\ud56d)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "\ub370\uc774\ud130\ubca0\uc774\uc2a4 URL\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "name": "\uc774\ub984"
+                },
+                "data_description": {
+                    "column": "\ubc18\ud658\ub41c \ucffc\ub9ac\uac00 \uc0c1\ud0dc\ub85c \ud45c\uc2dc\ub418\ub3c4\ub85d \ud558\ub294 \uc5f4",
+                    "db_url": "\ub370\uc774\ud130\ubca0\uc774\uc2a4 URL, \uae30\ubcf8 HA \ub370\uc774\ud130\ubca0\uc774\uc2a4\ub97c \uc0ac\uc6a9\ud558\ub824\uba74 \ube44\uc6cc \ub461\ub2c8\ub2e4.",
+                    "name": "\ud1b5\ud569\uad6c\uc131\uc694\uc18c \ubc0f \uc13c\uc11c\uc5d0 \uc0ac\uc6a9\ub420 \uc774\ub984",
+                    "query": "\uc2e4\ud589\ud560 \ucffc\ub9ac\ub294 'SELECT'\ub85c \uc2dc\uc791\ud574\uc57c \ud569\ub2c8\ub2e4.",
+                    "unit_of_measurement": "\uce21\uc815 \ub2e8\uc704(\uc120\ud0dd \uc0ac\ud56d)",
+                    "value_template": "\uac12 \ud15c\ud50c\ub9bf(\uc120\ud0dd \uc0ac\ud56d)"
+                }
+            }
+        }
+    }
+}

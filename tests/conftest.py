@@ -2,14 +2,25 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import asynccontextmanager
 import functools
+from json import JSONDecoder, loads
 import logging
 import ssl
 import threading
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp.test_utils import make_mocked_request
+from aiohttp import client
+from aiohttp.pytest_plugin import AiohttpClient
+from aiohttp.test_utils import (
+    BaseTestServer,
+    TestClient,
+    TestServer,
+    make_mocked_request,
+)
+from aiohttp.web import Application
 import freezegun
 import multidict
 import pytest
@@ -21,6 +32,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt, recorder
+from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -29,7 +41,7 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
@@ -54,6 +66,7 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 from tests.components.recorder.common import (  # noqa: E402, isort:skip
     async_recorder_block_till_done,
 )
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,7 +178,8 @@ def verify_cleanup():
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
     threads = frozenset(threading.enumerate()) - threads_before
-    assert not threads
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread)
 
 
 @pytest.fixture(autouse=True)
@@ -200,6 +214,97 @@ def load_registries():
     return True
 
 
+class CoalescingResponse(client.ClientWebSocketResponse):
+    """ClientWebSocketResponse client that mimics the websocket js code."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Init the ClientWebSocketResponse."""
+        super().__init__(*args, **kwargs)
+        self._recv_buffer: list[Any] = []
+
+    async def receive_json(
+        self,
+        *,
+        loads: JSONDecoder = loads,
+        timeout: float | None = None,
+    ) -> Any:
+        """receive_json or from buffer."""
+        if self._recv_buffer:
+            return self._recv_buffer.pop(0)
+        data = await self.receive_str(timeout=timeout)
+        decoded = loads(data)
+        if isinstance(decoded, list):
+            self._recv_buffer = decoded
+            return self._recv_buffer.pop(0)
+        return decoded
+
+
+class CoalescingClient(TestClient):
+    """Client that mimics the websocket js code."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Init TestClient."""
+        super().__init__(*args, ws_response_class=CoalescingResponse, **kwargs)
+
+
+@pytest.fixture
+def aiohttp_client_cls():
+    """Override the test class for aiohttp."""
+    return CoalescingClient
+
+
+@pytest.fixture
+def aiohttp_client(
+    loop: asyncio.AbstractEventLoop,
+) -> Generator[AiohttpClient, None, None]:
+    """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
+
+    Remove this when upgrading to 4.x as aiohttp_client_cls
+    will do the same thing
+
+    aiohttp_client(app, **kwargs)
+    aiohttp_client(server, **kwargs)
+    aiohttp_client(raw_server, **kwargs)
+    """
+    clients = []
+
+    async def go(
+        __param: Application | BaseTestServer,
+        *args: Any,
+        server_kwargs: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> TestClient:
+
+        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
+            __param, (Application, BaseTestServer)
+        ):
+            __param = __param(loop, *args, **kwargs)
+            kwargs = {}
+        else:
+            assert not args, "args should be empty"
+
+        if isinstance(__param, Application):
+            server_kwargs = server_kwargs or {}
+            server = TestServer(__param, loop=loop, **server_kwargs)
+            client = CoalescingClient(server, loop=loop, **kwargs)
+        elif isinstance(__param, BaseTestServer):
+            client = TestClient(__param, loop=loop, **kwargs)
+        else:
+            raise ValueError("Unknown argument type: %r" % type(__param))
+
+        await client.start_server()
+        clients.append(client)
+        return client
+
+    yield go
+
+    async def finalize() -> None:
+        while clients:
+            await clients.pop().close()
+
+    loop.run_until_complete(finalize())
+
+
 @pytest.fixture
 def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
@@ -224,6 +329,8 @@ def hass(loop, load_registries, hass_storage, request):
 
     exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
+    ha._cv_hass.set(hass)
+
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -498,7 +605,7 @@ def fail_on_log_exception(request, monkeypatch):
 
 
 @pytest.fixture
-def mqtt_config():
+def mqtt_config_entry_data():
     """Fixture to allow overriding MQTT config."""
     return None
 
@@ -547,38 +654,130 @@ def mqtt_client_mock(hass):
 
 
 @pytest.fixture
-async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
+async def mqtt_mock(
+    hass,
+    mqtt_client_mock,
+    mqtt_config_entry_data,
+    mqtt_mock_entry_no_yaml_config,
+):
     """Fixture to mock MQTT component."""
-    if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
+    return await mqtt_mock_entry_no_yaml_config()
+
+
+@asynccontextmanager
+async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
+    """Fixture to mock a delayed setup of the MQTT config entry."""
+    if mqtt_config_entry_data is None:
+        mqtt_config_entry_data = {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {},
+        }
 
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        data=mqtt_config,
+        data=mqtt_config_entry_data,
         domain=mqtt.DOMAIN,
-        title="Tasmota",
+        title="MQTT",
     )
-
     entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    real_mqtt = mqtt.MQTT
+    real_mqtt_instance = None
+    mock_mqtt_instance = None
 
-    mqtt_component_mock = MagicMock(
-        return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
-        wraps=hass.data["mqtt"],
+    async def _setup_mqtt_entry(setup_entry):
+        """Set up the MQTT config entry."""
+        assert await setup_entry(hass, entry)
+
+        # Assert that MQTT is setup
+        assert real_mqtt_instance is not None, "MQTT was not setup correctly"
+        mock_mqtt_instance.conf = real_mqtt_instance.conf  # For diagnostics
+        mock_mqtt_instance._mqttc = mqtt_client_mock
+
+        # connected set to True to get a more realistic behavior when subscribing
+        mock_mqtt_instance.connected = True
+
+        hass.helpers.dispatcher.async_dispatcher_send(mqtt.MQTT_CONNECTED)
+        await hass.async_block_till_done()
+
+        return mock_mqtt_instance
+
+    def create_mock_mqtt(*args, **kwargs):
+        """Create a mock based on mqtt.MQTT."""
+        nonlocal mock_mqtt_instance
+        nonlocal real_mqtt_instance
+        real_mqtt_instance = real_mqtt(*args, **kwargs)
+        mock_mqtt_instance = MagicMock(
+            return_value=real_mqtt_instance,
+            spec_set=real_mqtt_instance,
+            wraps=real_mqtt_instance,
+        )
+        return mock_mqtt_instance
+
+    with patch("homeassistant.components.mqtt.MQTT", side_effect=create_mock_mqtt):
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture
+async def mqtt_mock_entry_no_yaml_config(
+    hass, mqtt_client_mock, mqtt_config_entry_data
+):
+    """Set up an MQTT config entry without MQTT yaml config."""
+
+    async def _async_setup_config_entry(hass, entry):
+        """Help set up the config entry."""
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        return True
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        return await mqtt_mock_entry(_async_setup_config_entry)
+
+    async with _mqtt_mock_entry(
+        hass, mqtt_client_mock, mqtt_config_entry_data
+    ) as mqtt_mock_entry:
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture
+async def mqtt_mock_entry_with_yaml_config(
+    hass, mqtt_client_mock, mqtt_config_entry_data
+):
+    """Set up an MQTT config entry with MQTT yaml config."""
+
+    async def _async_do_not_setup_config_entry(hass, entry):
+        """Do nothing."""
+        return True
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        return await mqtt_mock_entry(_async_do_not_setup_config_entry)
+
+    async with _mqtt_mock_entry(
+        hass, mqtt_client_mock, mqtt_config_entry_data
+    ) as mqtt_mock_entry:
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_network():
+    """Mock network."""
+    mock_adapter = Adapter(
+        name="eth0",
+        index=0,
+        enabled=True,
+        auto=True,
+        default=True,
+        ipv4=[IPv4ConfiguredAddress(address="10.10.10.10", network_prefix=24)],
+        ipv6=[],
     )
-    mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
-    mqtt_component_mock._mqttc = mqtt_client_mock
-    # connected set to True to get a more realistics behavior when subscribing
-    hass.data["mqtt"].connected = True
-
-    hass.data["mqtt"] = mqtt_component_mock
-    component = hass.data["mqtt"]
-    component.reset_mock()
-    return component
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=[mock_adapter],
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -695,6 +894,8 @@ async def _async_init_recorder_component(hass, add_config=None):
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.migration.migrate_schema"
     ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
         assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
@@ -772,3 +973,59 @@ def mock_integration_frame():
         ],
     ):
         yield correct_frame
+
+
+@pytest.fixture(name="enable_bluetooth")
+async def mock_enable_bluetooth(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
+    """Fixture to mock starting the bleak scanner."""
+    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture(name="mock_bluetooth_adapters")
+def mock_bluetooth_adapters():
+    """Fixture to mock bluetooth adapters."""
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ):
+        yield
+
+
+@pytest.fixture(name="mock_bleak_scanner_start")
+def mock_bleak_scanner_start():
+    """Fixture to mock starting the bleak scanner."""
+
+    # Late imports to avoid loading bleak unless we need it
+
+    from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
+        scanner as bluetooth_scanner,
+    )
+
+    # We need to drop the stop method from the object since we patched
+    # out start and this fixture will expire before the stop method is called
+    # when EVENT_HOMEASSISTANT_STOP is fired.
+    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
+    ) as mock_bleak_scanner_start:
+        yield mock_bleak_scanner_start
+
+
+@pytest.fixture(name="mock_bluetooth")
+def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
+    """Mock out bluetooth from starting."""

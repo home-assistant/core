@@ -8,7 +8,6 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
-        "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {

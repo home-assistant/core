@@ -1,11 +1,13 @@
 """Config flow to configure the Meteo-France integration."""
+from __future__ import annotations
+
 import logging
 
 from meteofrance_api.client import MeteoFranceClient
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import callback
 
@@ -25,7 +27,9 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> MeteoFranceOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MeteoFranceOptionsFlowHandler(config_entry)
 

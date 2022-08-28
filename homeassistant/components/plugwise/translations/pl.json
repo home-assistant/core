@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "anna_with_adam": "Wykryto zar\u00f3wno Ann\u0119, jak i Adama. Dodaj Adama zamiast Anny."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -13,10 +14,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Typ po\u0142\u0105czenia"
+                    "flow_type": "Typ po\u0142\u0105czenia",
+                    "host": "Adres IP",
+                    "password": "Identyfikator Smile",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika Smile"
                 },
-                "description": "Wybierz produkt:",
-                "title": "Wybierz typ Plugwise"
+                "description": "Wprowad\u017a:",
+                "title": "Po\u0142\u0105czenie ze Smile"
             },
             "user_gateway": {
                 "data": {

@@ -20,10 +20,7 @@
                 "title": "Roon\u3067HomeAssistant\u3092\u8a8d\u8a3c\u3059\u308b"
             },
             "user": {
-                "data": {
-                    "host": "\u30db\u30b9\u30c8"
-                },
-                "description": "Roon server\u3092\u691c\u51fa\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3001 \u30db\u30b9\u30c8\u540d\u307e\u305f\u306f\u3001IP\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+                "other": "\u7a7a"
             }
         }
     }

@@ -24,7 +24,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     _LOGGER,
@@ -383,7 +383,7 @@ async def migrate_old_unique_ids(
     hass: HomeAssistant, platform: str, entities: Sequence[ISYEntity]
 ) -> None:
     """Migrate to new controller-specific unique ids."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     for entity in entities:
         if entity.old_unique_id is None or entity.unique_id is None:

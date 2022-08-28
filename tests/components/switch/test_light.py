@@ -32,7 +32,6 @@ async def test_default_state(hass):
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("color_temp") is None
-    assert state.attributes.get("white_value") is None
     assert state.attributes.get("effect_list") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]

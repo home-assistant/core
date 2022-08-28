@@ -21,6 +21,7 @@ import yarl
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
@@ -224,6 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         str(yarl.URL.build(path=p_type, query=params)),
                     ),
                     ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                    ATTR_MEDIA_ANNOUNCE: True,
                 },
                 blocking=True,
                 context=service.context,

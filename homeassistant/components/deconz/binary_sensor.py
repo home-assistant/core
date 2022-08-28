@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydeconz.interfaces.sensors import SensorResources
+from pydeconz.models.event import EventType
 from pydeconz.models.sensor.alarm import Alarm
 from pydeconz.models.sensor.carbon_monoxide import CarbonMonoxide
 from pydeconz.models.sensor.fire import Fire
@@ -23,11 +24,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
-from .const import ATTR_DARK, ATTR_ON
+from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
@@ -158,7 +159,7 @@ ENTITY_DESCRIPTIONS = {
     ],
 }
 
-BINARY_SENSOR_DESCRIPTIONS = [
+COMMON_BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tampered",
         value_fn=lambda device: device.tampered,
@@ -178,6 +179,27 @@ BINARY_SENSOR_DESCRIPTIONS = [
 ]
 
 
+@callback
+def async_update_unique_id(
+    hass: HomeAssistant, unique_id: str, description: DeconzBinarySensorDescription
+) -> None:
+    """Update unique ID to always have a suffix.
+
+    Introduced with release 2022.7.
+    """
+    ent_reg = er.async_get(hass)
+
+    new_unique_id = f"{unique_id}-{description.key}"
+    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
+        return
+
+    if description.suffix:
+        unique_id = f'{unique_id.split("-", 1)[0]}-{description.suffix.lower()}'
+
+    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -188,54 +210,34 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors: list[SensorResources] | None = None) -> None:
-        """Add binary sensor from deCONZ."""
-        entities: list[DeconzBinarySensor] = []
+    def async_add_sensor(_: EventType, sensor_id: str) -> None:
+        """Add sensor from deCONZ."""
+        sensor = gateway.api.sensors[sensor_id]
 
-        if sensors is None:
-            sensors = gateway.api.sensors.values()
-
-        for sensor in sensors:
-
-            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+        for description in (
+            ENTITY_DESCRIPTIONS.get(type(sensor), [])
+            + COMMON_BINARY_SENSOR_DESCRIPTIONS
+        ):
+            if (
+                not hasattr(sensor, description.key)
+                or description.value_fn(sensor) is None
+            ):
                 continue
 
-            known_entities = set(gateway.entities[DOMAIN])
-            for description in (
-                ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
-            ):
+            async_update_unique_id(hass, sensor.unique_id, description)
 
-                if (
-                    not hasattr(sensor, description.key)
-                    or description.value_fn(sensor) is None
-                ):
-                    continue
+            async_add_entities([DeconzBinarySensor(sensor, gateway, description)])
 
-                new_sensor = DeconzBinarySensor(sensor, gateway, description)
-                if new_sensor.unique_id not in known_entities:
-                    entities.append(new_sensor)
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_sensor,
-            async_add_sensor,
-        )
-    )
-
-    async_add_sensor(
-        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors,
     )
 
 
-class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
+class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
     TYPE = DOMAIN
-    _device: SensorResources
     entity_description: DeconzBinarySensorDescription
 
     def __init__(
@@ -258,9 +260,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        if self.entity_description.suffix:
-            return f"{self.serial}-{self.entity_description.suffix.lower()}"
-        return super().unique_id
+        return f"{super().unique_id}-{self.entity_description.key}"
 
     @callback
     def async_update_callback(self) -> None:
@@ -284,8 +284,8 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
 
-        if self._device.secondary_temperature is not None:
-            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
+        if self._device.internal_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Presence):
 

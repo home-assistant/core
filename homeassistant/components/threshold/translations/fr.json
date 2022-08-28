@@ -9,7 +9,6 @@
                     "entity_id": "Capteur d'entr\u00e9e",
                     "hysteresis": "Hyst\u00e9r\u00e9sis",
                     "lower": "Limite inf\u00e9rieure",
-                    "mode": "Mode de seuil",
                     "name": "Nom",
                     "upper": "Limite sup\u00e9rieure"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Capteur d'entr\u00e9e",
                     "hysteresis": "Hyst\u00e9r\u00e9sis",
                     "lower": "Limite inf\u00e9rieure",
-                    "mode": "Mode de seuil",
                     "name": "Nom",
                     "upper": "Limite sup\u00e9rieure"
                 },

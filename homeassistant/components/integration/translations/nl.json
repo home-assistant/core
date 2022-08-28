@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Regelt het aantal decimale cijfers in de uitvoer."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Precisie"
-                },
-                "description": "Precisie bepaalt het aantal decimale cijfers in de uitvoer."
             }
         }
     },

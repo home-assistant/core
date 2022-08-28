@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "IoTawatt-enheten kr\u00e4ver autentisering. Ange anv\u00e4ndarnamn och l\u00f6senord och klicka p\u00e5 knappen Skicka."
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            }
+        }
+    }
+}

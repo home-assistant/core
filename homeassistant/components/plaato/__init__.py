@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         await async_setup_coordinator(hass, entry)
 
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
     )
 

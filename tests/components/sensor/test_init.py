@@ -107,7 +107,7 @@ async def test_deprecated_last_reset(
         f"with state_class {state_class} has set last_reset. Setting last_reset for "
         "entities with state_class other than 'total' is not supported. Please update "
         "your configuration if state_class is manually configured, otherwise report it "
-        "to the custom component author."
+        "to the custom integration author."
     ) in caplog.text
 
     state = hass.states.get("sensor.test")
@@ -183,8 +183,8 @@ async def test_deprecated_datetime_str(
     await hass.async_block_till_done()
 
     assert (
-        f"Invalid {provides}: sensor.test has a {device_class} device class "
-        f"but does not provide a {provides} state but {type(state_value)}"
+        f"Invalid {provides}: sensor.test has {device_class} device class "
+        f"but provides state {state_value}:{type(state_value)}"
     ) in caplog.text
 
 

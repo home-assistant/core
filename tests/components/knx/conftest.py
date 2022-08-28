@@ -55,19 +55,28 @@ class KNXTestKit:
     async def setup_integration(self, config):
         """Create the KNX integration."""
 
+        async def patch_xknx_start():
+            """Patch `xknx.start` for unittests."""
+            # after XKNX.__init__() to not overwrite it by the config entry again
+            # before StateUpdater starts to avoid slow down of tests
+            self.xknx.rate_limit = 0
+            # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
+            # and start StateUpdater. This would be awaited on normal startup too.
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTED
+            )
+
         def knx_ip_interface_mock():
             """Create a xknx knx ip interface mock."""
             mock = Mock()
-            mock.start = AsyncMock()
+            mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
             mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = kwargs["xknx"]
-            # disable rate limiter for tests (before StateUpdater starts)
-            self.xknx.rate_limit = 0
+            self.xknx = args[0]
             return DEFAULT
 
         with patch(
@@ -77,9 +86,6 @@ class KNXTestKit:
         ):
             self.mock_config_entry.add_to_hass(self.hass)
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
-            await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
-            )
             await self.hass.async_block_till_done()
 
     ########################

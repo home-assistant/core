@@ -6,16 +6,14 @@
                     "site_name": "Saidi nimi",
                     "site_nmi": "Saidi NMI"
                 },
-                "description": "Vali lisatava saidi NMI",
-                "title": "Amber Electric"
+                "description": "Vali lisatava saidi NMI"
             },
             "user": {
                 "data": {
                     "api_token": "API v\u00f5ti",
                     "site_id": "Saidi ID"
                 },
-                "description": "API-v\u00f5tme saamiseks ava {api_url}.",
-                "title": "Amber Electric"
+                "description": "API-v\u00f5tme saamiseks ava {api_url}."
             }
         }
     }

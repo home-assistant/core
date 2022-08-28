@@ -26,7 +26,7 @@
                     "additional_account": "Extra accounts",
                     "encryption_key": "Encryptiesleutel",
                     "ping_interval": "Ping Interval (min)",
-                    "port": "Port",
+                    "port": "Poort",
                     "protocol": "Protocol",
                     "zones": "Aantal zones voor het account"
                 },
@@ -45,6 +45,5 @@
                 "title": "Opties voor de SIA Setup."
             }
         }
-    },
-    "title": "SIA Alarm Systems"
+    }
 }

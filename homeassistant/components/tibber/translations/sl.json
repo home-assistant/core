@@ -12,8 +12,7 @@
                 "data": {
                     "access_token": "Dostopni \u017eeton"
                 },
-                "description": "Vnesite svoj dostopni \u017eeton s strani https://developer.tibber.com/settings/accesstoken",
-                "title": "Tibber"
+                "description": "Vnesite svoj dostopni \u017eeton s strani https://developer.tibber.com/settings/accesstoken"
             }
         }
     }

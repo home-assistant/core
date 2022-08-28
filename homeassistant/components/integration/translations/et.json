@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "T\u00e4psus"
-                },
-                "description": "T\u00e4psus reguleerib k\u00fcmnendkohtade arvu v\u00e4ljundis."
             }
         }
     },

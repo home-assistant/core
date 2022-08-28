@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Integrasi ini adalah integrasi untuk panggilan darat menggunakan modem suara CX93001. Integrasi dapat mengambil informasi ID pemanggil dengan opsi untuk menolak panggilan masuk.",
-                "title": "Modem Telepon"
+                "description": "Integrasi ini adalah integrasi untuk panggilan darat menggunakan modem suara CX93001. Integrasi dapat mengambil informasi ID pemanggil dengan opsi untuk menolak panggilan masuk."
             },
             "user": {
                 "data": {
                     "name": "Nama",
                     "port": "Port"
                 },
-                "description": "Integrasi ini adalah integrasi untuk panggilan darat menggunakan modem suara CX93001. Integrasi dapat mengambil informasi ID pemanggil dengan opsi untuk menolak panggilan masuk.",
-                "title": "Modem Telepon"
+                "description": "Integrasi ini adalah integrasi untuk panggilan darat menggunakan modem suara CX93001. Integrasi dapat mengambil informasi ID pemanggil dengan opsi untuk menolak panggilan masuk."
             }
         }
     }

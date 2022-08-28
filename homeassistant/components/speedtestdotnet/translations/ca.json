@@ -1,13 +1,24 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
-            "wrong_server_id": "L'identificador del servidor no \u00e9s v\u00e0lid"
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "step": {
             "user": {
                 "description": "Vols comen\u00e7ar la configuraci\u00f3?"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "El servei speedtest est\u00e0 sent eliminat"
+                    }
+                }
+            },
+            "title": "El servei speedtest est\u00e0 sent eliminat"
         }
     },
     "options": {

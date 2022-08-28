@@ -35,14 +35,12 @@
                 "title": "Velg Plex-server"
             },
             "user": {
-                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server.",
-                "title": ""
+                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Oppsettmetode"
-                },
-                "title": ""
+                }
             }
         }
     },

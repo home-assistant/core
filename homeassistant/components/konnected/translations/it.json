@@ -41,7 +41,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Invertire lo stato di apertura/chiusura",
-                    "name": "Nome (opzionale)",
+                    "name": "Nome",
                     "type": "Tipo di sensore binario"
                 },
                 "description": "Opzioni {zone}",
@@ -49,8 +49,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nome (opzionale)",
-                    "poll_interval": "Intervallo di sondaggio (minuti) (opzionale)",
+                    "name": "Nome",
+                    "poll_interval": "Intervallo di sondaggio (minuti)",
                     "type": "Tipo di sensore"
                 },
                 "description": "Opzioni {zone}",
@@ -97,11 +97,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Uscita quando acceso",
-                    "momentary": "Durata impulso (ms) (opzionale)",
+                    "momentary": "Durata impulso (ms)",
                     "more_states": "Configura stati aggiuntivi per questa zona",
-                    "name": "Nome (opzionale)",
-                    "pause": "Pausa tra gli impulsi (ms) (opzionale)",
-                    "repeat": "Numero di volte da ripetere (-1 = infinito) (opzionale)"
+                    "name": "Nome",
+                    "pause": "Pausa tra gli impulsi (ms)",
+                    "repeat": "Numero di volte da ripetere (-1 = infinito)"
                 },
                 "description": "Opzioni {zone}: stato {state}",
                 "title": "Configurare l'uscita commutabile"

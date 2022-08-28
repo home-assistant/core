@@ -1,7 +1,7 @@
 """The tests for the MQTT discovery."""
 import copy
 import json
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
@@ -19,9 +19,7 @@ async def test_subscribing_config_topic(hass, mqtt_mock, setup_tasmota):
     discovery_topic = DEFAULT_PREFIX
 
     assert mqtt_mock.async_subscribe.called
-    call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
-    assert call_args[0] == discovery_topic + "/#"
-    assert call_args[2] == 0
+    mqtt_mock.async_subscribe.assert_any_call(discovery_topic + "/#", ANY, 0, "utf-8")
 
 
 async def test_future_discovery_message(hass, mqtt_mock, caplog):

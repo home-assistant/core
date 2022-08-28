@@ -15,8 +15,7 @@
                     "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",
                     "name": "Jm\u00e9no"
                 },
-                "description": "Nastavte integraci kvality vzduchu Airly. Chcete-li vygenerovat kl\u00ed\u010d rozhran\u00ed API, p\u0159ejd\u011bte na https://developer.airly.eu/register",
-                "title": "Airly"
+                "description": "Nastavte integraci kvality vzduchu Airly. Chcete-li vygenerovat kl\u00ed\u010d rozhran\u00ed API, p\u0159ejd\u011bte na https://developer.airly.eu/register"
             }
         }
     },

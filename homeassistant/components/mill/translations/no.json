@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Velg tilkoblingstype",
-                    "password": "Passord",
-                    "username": "Brukernavn"
+                    "connection_type": "Velg tilkoblingstype"
                 },
                 "description": "Velg tilkoblingstype. Lokal krever generasjon 3 varmeovner"
             }

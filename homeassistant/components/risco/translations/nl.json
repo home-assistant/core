@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "pin": "PIN-code",
+                    "pin": "Pincode",
                     "username": "Gebruikersnaam"
                 }
             }
@@ -32,8 +32,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "PIN-code vereist om in te schakelen",
-                    "code_disarm_required": "PIN-code vereist om uit te schakelen",
+                    "code_arm_required": "Pincode vereist om in te schakelen",
+                    "code_disarm_required": "Pincode vereist om uit te schakelen",
                     "scan_interval": "Hoe vaak moet Risco worden ververst (in seconden)"
                 },
                 "title": "Configureer opties"

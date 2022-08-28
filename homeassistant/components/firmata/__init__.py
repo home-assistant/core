@@ -197,11 +197,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         sw_version=board.firmware_version,
     )
 
-    for (conf, platform) in CONF_PLATFORM_MAP.items():
-        if conf in config_entry.data:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, platform)
-            )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry,
+        [
+            platform
+            for conf, platform in CONF_PLATFORM_MAP.items()
+            if conf in config_entry.data
+        ],
+    )
     return True
 
 

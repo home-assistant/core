@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from functools import lru_cache
-import json
 import logging
 import os
 import pathlib
@@ -22,6 +21,8 @@ from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import json_dumps_sorted
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
@@ -134,7 +135,7 @@ class Manifest:
         return self._serialized
 
     def _serialize(self) -> None:
-        self._serialized = json.dumps(self.manifest, sort_keys=True)
+        self._serialized = json_dumps_sorted(self.manifest)
 
     def update_key(self, key: str, val: str) -> None:
         """Add a keyval to the manifest.json."""
@@ -389,11 +390,12 @@ async def _async_setup_themes(
     """Set up themes data and services."""
     hass.data[DATA_THEMES] = themes or {}
 
-    store = hass.data[DATA_THEMES_STORE] = hass.helpers.storage.Store(
-        THEMES_STORAGE_VERSION, THEMES_STORAGE_KEY
+    store = hass.data[DATA_THEMES_STORE] = Store(
+        hass, THEMES_STORAGE_VERSION, THEMES_STORAGE_KEY
     )
 
-    theme_data = await store.async_load() or {}
+    if not (theme_data := await store.async_load()) or not isinstance(theme_data, dict):
+        theme_data = {}
     theme_name = theme_data.get(DATA_DEFAULT_THEME, DEFAULT_THEME)
     dark_theme_name = theme_data.get(DATA_DEFAULT_DARK_THEME)
 
@@ -458,7 +460,7 @@ async def _async_setup_themes(
     async def reload_themes(_: ServiceCall) -> None:
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
-        new_themes = config[DOMAIN].get(CONF_THEMES, {})
+        new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
@@ -667,7 +669,7 @@ def websocket_get_themes(
         "type": "frontend/get_translations",
         vol.Required("language"): str,
         vol.Required("category"): str,
-        vol.Optional("integration"): str,
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
         vol.Optional("config_flow"): bool,
     }
 )
