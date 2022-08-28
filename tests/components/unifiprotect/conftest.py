@@ -209,6 +209,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
         SmartDetectObjectType.PERSON,
         SmartDetectObjectType.VEHICLE,
     ]
+    doorbell.has_speaker = True
     doorbell.feature_flags.has_hdr = True
     doorbell.feature_flags.has_lcd_screen = True
     doorbell.feature_flags.has_speaker = True
