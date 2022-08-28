@@ -9,8 +9,10 @@ from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
     AirVisualError,
     InvalidKeyError,
+    KeyExpiredError,
     NodeProError,
     NotFoundError,
+    UnauthorizedError,
 )
 import voluptuous as vol
 
@@ -119,7 +121,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_API_KEY] not in valid_keys:
                 try:
                     await coro
-                except InvalidKeyError:
+                except (InvalidKeyError, KeyExpiredError, UnauthorizedError):
                     errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
                     errors[CONF_CITY] = "location_not_found"
@@ -221,10 +223,10 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._entry_data_for_reauth = data
-        self._geo_id = async_get_geography_id(data)
+        self._entry_data_for_reauth = entry_data
+        self._geo_id = async_get_geography_id(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

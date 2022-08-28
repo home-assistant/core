@@ -66,16 +66,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities: list[AtaDeviceClimate | AtwDeviceZoneClimate] = [
+        AtaDeviceClimate(mel_device, mel_device.device)
+        for mel_device in mel_devices[DEVICE_TYPE_ATA]
+    ]
+    entities.extend(
         [
-            AtaDeviceClimate(mel_device, mel_device.device)
-            for mel_device in mel_devices[DEVICE_TYPE_ATA]
-        ]
-        + [
             AtwDeviceZoneClimate(mel_device, mel_device.device, zone)
             for mel_device in mel_devices[DEVICE_TYPE_ATW]
             for zone in mel_device.device.zones
-        ],
+        ]
+    )
+    async_add_entities(
+        entities,
         True,
     )
 
@@ -157,14 +160,16 @@ class AtaDeviceClimate(MelCloudClimate):
         return attr
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         mode = self._device.operation_mode
         if not self._device.power or mode is None:
             return HVACMode.OFF
         return ATA_HVAC_MODE_LOOKUP.get(mode)
 
-    def _apply_set_hvac_mode(self, hvac_mode: str, set_dict: dict[str, Any]) -> None:
+    def _apply_set_hvac_mode(
+        self, hvac_mode: HVACMode, set_dict: dict[str, Any]
+    ) -> None:
         """Apply hvac mode changes to a dict used to call _device.set."""
         if hvac_mode == HVACMode.OFF:
             set_dict["power"] = False
@@ -180,7 +185,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        set_dict = {}
+        set_dict: dict[str, Any] = {}
         self._apply_set_hvac_mode(hvac_mode, set_dict)
         await self._device.set(set_dict)
 
@@ -188,7 +193,9 @@ class AtaDeviceClimate(MelCloudClimate):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return [HVACMode.OFF] + [
-            ATA_HVAC_MODE_LOOKUP.get(mode) for mode in self._device.operation_modes
+            ATA_HVAC_MODE_LOOKUP[mode]
+            for mode in self._device.operation_modes
+            if mode in ATA_HVAC_MODE_LOOKUP
         ]
 
     @property
@@ -201,9 +208,9 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return the temperature we try to reach."""
         return self._device.target_temperature
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        set_dict = {}
+        set_dict: dict[str, Any] = {}
         if ATTR_HVAC_MODE in kwargs:
             self._apply_set_hvac_mode(
                 kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
@@ -255,7 +262,7 @@ class AtaDeviceClimate(MelCloudClimate):
         await self.async_set_vane_vertical(swing_mode)
 
     @property
-    def swing_modes(self) -> str | None:
+    def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
 

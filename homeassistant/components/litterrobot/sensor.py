@@ -4,15 +4,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Union, cast
 
-from pylitterbot.robot import Robot
+from pylitterbot import LitterRobot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    StateType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -41,7 +40,7 @@ class LitterRobotSensorEntityDescription(SensorEntityDescription):
     """A class that describes Litter-Robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
-    should_report: Callable[[Robot], bool] = lambda _: True
+    should_report: Callable[[LitterRobot], bool] = lambda _: True
 
 
 class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
@@ -51,7 +50,7 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
 
     def __init__(
         self,
-        robot: Robot,
+        robot: LitterRobot,
         hub: LitterRobotHub,
         description: LitterRobotSensorEntityDescription,
     ) -> None:
@@ -61,12 +60,12 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> float | datetime | str | None:
         """Return the state."""
         if self.entity_description.should_report(self.robot):
             if isinstance(val := getattr(self.robot, self.entity_description.key), str):
                 return val.lower()
-            return val
+            return cast(Union[float, datetime, None], val)
         return None
 
     @property
@@ -121,5 +120,5 @@ async def async_setup_entry(
     async_add_entities(
         LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SENSORS
-        for robot in hub.account.robots
+        for robot in hub.litter_robots()
     )

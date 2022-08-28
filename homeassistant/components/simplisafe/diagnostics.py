@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_LOCATION
+from homeassistant.const import CONF_ADDRESS, CONF_CODE, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 
 from . import SimpliSafe
@@ -23,6 +23,7 @@ CONF_WIFI_SSID = "wifi_ssid"
 
 TO_REDACT = {
     CONF_ADDRESS,
+    CONF_CODE,
     CONF_CREDIT_CARD,
     CONF_EXPIRES,
     CONF_LOCATION,

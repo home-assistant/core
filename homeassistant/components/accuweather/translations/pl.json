@@ -34,7 +34,7 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Dost\u0119p do serwera AccuWeather",
+            "can_reach_server": "Dost\u0119p do serwera",
             "remaining_requests": "Pozosta\u0142o dozwolonych \u017c\u0105da\u0144"
         }
     }

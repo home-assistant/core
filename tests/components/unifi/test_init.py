@@ -1,10 +1,10 @@
 """Test UniFi Network integration setup process."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi import async_flatten_entry_data
 from homeassistant.components.unifi.const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
-from homeassistant.helpers import device_registry as dr
+from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.setup import async_setup_component
 
 from .test_controller import (
@@ -29,40 +29,27 @@ async def test_successful_config_entry(hass, aioclient_mock):
     assert hass.data[UNIFI_DOMAIN]
 
 
-async def test_controller_fail_setup(hass):
-    """Test that a failed setup still stores controller."""
-    with patch("homeassistant.components.unifi.UniFiController") as mock_controller:
-        mock_controller.return_value.async_setup = AsyncMock(return_value=False)
+async def test_setup_entry_fails_config_entry_not_ready(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.unifi.get_unifi_controller",
+        side_effect=CannotConnect,
+    ):
         await setup_unifi_integration(hass)
 
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_controller_mac(hass):
-    """Test that configured options for a host are loaded via config entry."""
-    entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data=ENTRY_CONFIG, unique_id="1", entry_id=1
-    )
-    entry.add_to_hass(hass)
+async def test_setup_entry_fails_trigger_reauth_flow(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.unifi.get_unifi_controller",
+        side_effect=AuthenticationRequired,
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_unifi_integration(hass)
+        mock_flow_init.assert_called_once()
 
-    with patch("homeassistant.components.unifi.UniFiController") as mock_controller:
-        mock_controller.return_value.async_setup = AsyncMock(return_value=True)
-        mock_controller.return_value.mac = "mac1"
-        mock_controller.return_value.api.url = "https://123:443"
-        assert await unifi.async_setup_entry(hass, entry) is True
-
-    assert len(mock_controller.mock_calls) == 2
-
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "mac1")},
-    )
-    assert device.configuration_url == "https://123:443"
-    assert device.manufacturer == "Ubiquiti Networks"
-    assert device.model == "UniFi Network"
-    assert device.name == "UniFi Network"
-    assert device.sw_version is None
+    assert hass.data[UNIFI_DOMAIN] == {}
 
 
 async def test_flatten_entry_data(hass):

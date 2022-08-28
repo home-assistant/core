@@ -196,7 +196,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True
 
@@ -224,6 +224,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
+
+    _attr_should_poll = False
 
     def __init__(self, device, device_type, xiaomi_hub, config_entry):
         """Initialize the Xiaomi device."""
@@ -308,11 +310,6 @@ class XiaomiDevice(Entity):
     def available(self):
         """Return True if entity is available."""
         return self._is_available
-
-    @property
-    def should_poll(self):
-        """Return the polling state. No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

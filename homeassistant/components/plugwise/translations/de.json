@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Der Dienst ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "anna_with_adam": "Sowohl Anna als auch Adam entdeckt. F\u00fcge deinen Adam anstelle deiner Anna hinzu"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

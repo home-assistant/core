@@ -78,13 +78,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_link()
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle Nanoleaf reauth flow if token is invalid."""
         self.reauth_entry = cast(
             config_entries.ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
-        self.nanoleaf = Nanoleaf(async_get_clientsession(self.hass), data[CONF_HOST])
+        self.nanoleaf = Nanoleaf(
+            async_get_clientsession(self.hass), entry_data[CONF_HOST]
+        )
         self.context["title_placeholders"] = {"name": self.reauth_entry.title}
         return await self.async_step_link()
 

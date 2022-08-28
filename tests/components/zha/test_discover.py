@@ -439,8 +439,8 @@ def test_single_input_cluster_device_class_by_cluster_class():
 @pytest.mark.parametrize(
     "override, entity_id",
     [
-        (None, "light.manufacturer_model_77665544_level_light_color_on_off"),
-        ("switch", "switch.manufacturer_model_77665544_on_off"),
+        (None, "light.manufacturer_model_light"),
+        ("switch", "switch.manufacturer_model_switch"),
     ],
 )
 async def test_device_override(

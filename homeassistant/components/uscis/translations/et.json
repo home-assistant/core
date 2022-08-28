@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "USA kodakondsus- ja immigratsiooniteenistuse (USCIS) integratsioon ootab eemaldamist Home Assistantist ja ei ole enam k\u00e4ttesaadav alates Home Assistant 2022.10.\n\nIntegratsioon eemaldatakse, sest see p\u00f5hineb veebiotsingul, mis ei ole lubatud.\n\nProbleemi lahendamiseks eemaldage YAML-konfiguratsioon failist configuration.yaml ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "USCIS-i sidumine eemaldatakse"
+        }
+    }
+}

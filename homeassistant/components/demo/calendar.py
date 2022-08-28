@@ -72,7 +72,12 @@ class DemoCalendar(CalendarEntity):
         """Return the name of the entity."""
         return self._name
 
-    async def async_get_events(self, hass, start_date, end_date) -> list[CalendarEvent]:
+    async def async_get_events(
+        self,
+        hass: HomeAssistant,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         return [self._event]
 
@@ -80,15 +85,15 @@ class DemoCalendar(CalendarEntity):
 class LegacyDemoCalendar(CalendarEventDevice):
     """Calendar for exercising shim API."""
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         """Initialize demo calendar."""
         self._name = name
-        one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
+        one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
         self._event = {
             "start": {"dateTime": one_hour_from_now.isoformat()},
             "end": {
                 "dateTime": (
-                    one_hour_from_now + dt_util.dt.timedelta(minutes=60)
+                    one_hour_from_now + datetime.timedelta(minutes=60)
                 ).isoformat()
             },
             "summary": "Future Event",
@@ -102,7 +107,7 @@ class LegacyDemoCalendar(CalendarEventDevice):
         return self._event
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return self._name
 

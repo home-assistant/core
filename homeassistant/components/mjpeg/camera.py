@@ -85,7 +85,7 @@ class MjpegCamera(Camera):
     def __init__(
         self,
         *,
-        name: str,
+        name: str | None = None,
         mjpeg_url: str,
         still_image_url: str | None,
         authentication: str | None = None,

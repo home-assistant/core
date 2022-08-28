@@ -18,7 +18,7 @@
                 "title": "deCONZ Zigbee Gateway \u00fcber das Supervisor Add-on"
             },
             "link": {
-                "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
+                "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \u2192 Gateway \u2192 Erweitert\n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
                 "title": "Mit deCONZ verbinden"
             },
             "manual_input": {

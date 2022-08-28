@@ -11,9 +11,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -34,12 +32,10 @@ async def async_setup_entry(
     """Set up Abode light devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
-        entities.append(AbodeLight(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeLight(data, device)
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT)
+    )
 
 
 class AbodeLight(AbodeDevice, LightEntity):
@@ -102,10 +98,26 @@ class AbodeLight(AbodeDevice, LightEntity):
         return _hs
 
     @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        if self._device.is_dimmable and self._device.is_color_capable:
+            if self.hs_color is not None:
+                return ColorMode.HS
+            return ColorMode.COLOR_TEMP
+        if self._device.is_dimmable:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        if self._device.is_dimmable and self._device.is_color_capable:
+            return {ColorMode.COLOR_TEMP, ColorMode.HS}
+        if self._device.is_dimmable:
+            return {ColorMode.BRIGHTNESS}
+        return {ColorMode.ONOFF}
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        if self._device.is_dimmable and self._device.is_color_capable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-        if self._device.is_dimmable:
-            return SUPPORT_BRIGHTNESS
         return 0

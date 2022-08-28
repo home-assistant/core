@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -107,18 +108,18 @@ class DemoLight(LightEntity):
 
     def __init__(
         self,
-        unique_id,
-        name,
+        unique_id: str,
+        name: str,
         state,
         available=False,
         brightness=180,
         ct=None,  # pylint: disable=invalid-name
-        effect_list=None,
+        effect_list: list[str] | None = None,
         effect=None,
         hs_color=None,
         rgbw_color=None,
         rgbww_color=None,
-        supported_color_modes=None,
+        supported_color_modes: set[ColorMode] | None = None,
     ):
         """Initialize the light."""
         self._available = True
@@ -169,7 +170,7 @@ class DemoLight(LightEntity):
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for light."""
         return self._unique_id
 
@@ -211,7 +212,7 @@ class DemoLight(LightEntity):
         return self._ct
 
     @property
-    def effect_list(self) -> list:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
 
@@ -231,11 +232,11 @@ class DemoLight(LightEntity):
         return self._features
 
     @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return self._color_modes
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         self._state = True
 
@@ -269,7 +270,7 @@ class DemoLight(LightEntity):
         # Home Assistant about updates in our state ourselves.
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._state = False
 

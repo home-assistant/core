@@ -16,7 +16,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirZoneEntity
 
 PARALLEL_UPDATES = 0
 
@@ -39,8 +39,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
-    """Advantage Air Cover Class."""
+class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
+    """Advantage Air Zone Vent."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = (
@@ -50,12 +50,9 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     )
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Cover Class."""
+        """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]}'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
-        )
+        self._attr_name = self._zone["name"]
 
     @property
     def is_closed(self) -> bool:

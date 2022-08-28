@@ -1,4 +1,9 @@
 """Sensor for Risco Events."""
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -8,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import RiscoEventsDataUpdateCoordinator, is_local
 from .const import DOMAIN, EVENTS_COORDINATOR
 from .entity import binary_sensor_unique_id
 
@@ -38,7 +44,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][EVENTS_COORDINATOR]
+    if is_local(config_entry):
+        # no events in local comm
+        return
+
+    coordinator: RiscoEventsDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][EVENTS_COORDINATOR]
     sensors = [
         RiscoSensor(coordinator, id, [], name, config_entry.entry_id)
         for id, name in CATEGORIES.items()
@@ -62,19 +74,12 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
         self._excludes = excludes
         self._name = name
         self._entry_id = entry_id
-        self._entity_registry = None
+        self._entity_registry: er.EntityRegistry | None = None
+        self._attr_unique_id = f"events_{name}_{self.coordinator.risco.site_uuid}"
+        self._attr_name = f"Risco {self.coordinator.risco.site_name} {name} Events"
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Risco {self.coordinator.risco.site_name} {self._name} Events"
-
-    @property
-    def unique_id(self):
-        """Return a unique id for this sensor."""
-        return f"events_{self._name}_{self.coordinator.risco.site_uuid}"
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self._entity_registry = er.async_get(self.hass)
         self.async_on_remove(
@@ -103,7 +108,7 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """State attributes."""
         if self._event is None:
             return None
@@ -120,8 +125,3 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
                 attrs["zone_entity_id"] = zone_entity_id
 
         return attrs
-
-    @property
-    def device_class(self):
-        """Device class of sensor."""
-        return SensorDeviceClass.TIMESTAMP

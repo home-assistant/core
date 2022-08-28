@@ -1,6 +1,7 @@
 """Support for the demo image processing."""
 from __future__ import annotations
 
+from homeassistant.components.camera import Image
 from homeassistant.components.image_processing import (
     ATTR_AGE,
     ATTR_CONFIDENCE,
@@ -34,7 +35,7 @@ def setup_platform(
 class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
     """Demo ALPR image processing entity."""
 
-    def __init__(self, camera_entity, name):
+    def __init__(self, camera_entity: str, name: str) -> None:
         """Initialize demo ALPR image processing entity."""
         super().__init__()
 
@@ -42,21 +43,21 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
         self._camera = camera_entity
 
     @property
-    def camera_entity(self):
+    def camera_entity(self) -> str:
         """Return camera entity id from process pictures."""
         return self._camera
 
     @property
-    def confidence(self):
+    def confidence(self) -> int:
         """Return minimum confidence for send events."""
         return 80
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return self._name
 
-    def process_image(self, image):
+    def process_image(self, image: Image) -> None:
         """Process image."""
         demo_data = {
             "AC3829": 98.3,
@@ -71,7 +72,7 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
 class DemoImageProcessingFace(ImageProcessingFaceEntity):
     """Demo face identify image processing entity."""
 
-    def __init__(self, camera_entity, name):
+    def __init__(self, camera_entity: str, name: str) -> None:
         """Initialize demo face image processing entity."""
         super().__init__()
 
@@ -79,21 +80,21 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
         self._camera = camera_entity
 
     @property
-    def camera_entity(self):
+    def camera_entity(self) -> str:
         """Return camera entity id from process pictures."""
         return self._camera
 
     @property
-    def confidence(self):
+    def confidence(self) -> int:
         """Return minimum confidence for send events."""
         return 80
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return self._name
 
-    def process_image(self, image):
+    def process_image(self, image: Image) -> None:
         """Process image."""
         demo_data = [
             {

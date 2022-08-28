@@ -8,7 +8,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisa
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "options": {},
+            "options": {
+                "code": REDACTED,
+            },
         },
         "subscription_data": {
             "system_123": {

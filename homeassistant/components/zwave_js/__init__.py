@@ -43,12 +43,14 @@ from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
+    ATTR_DATA_TYPE_LABEL,
     ATTR_DIRECTION,
     ATTR_ENDPOINT,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
     ATTR_EVENT_LABEL,
     ATTR_EVENT_TYPE,
+    ATTR_EVENT_TYPE_LABEL,
     ATTR_HOME_ID,
     ATTR_LABEL,
     ATTR_NODE_ID,
@@ -476,7 +478,9 @@ async def setup_driver(  # noqa: C901
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",
                     ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_EVENT_TYPE_LABEL: notification.event_type_label,
                     ATTR_DATA_TYPE: notification.data_type,
+                    ATTR_DATA_TYPE_LABEL: notification.data_type_label,
                     ATTR_EVENT_DATA: notification.event_data,
                 }
             )
@@ -505,6 +509,7 @@ async def setup_driver(  # noqa: C901
                 {
                     ATTR_COMMAND_CLASS_NAME: "Multilevel Switch",
                     ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_EVENT_TYPE_LABEL: notification.event_type_label,
                     ATTR_DIRECTION: notification.direction,
                 }
             )

@@ -28,6 +28,8 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from . import common
+
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -35,7 +37,6 @@ from tests.common import (
     mock_restore_cache,
     patch_yaml_files,
 )
-from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}
 
@@ -161,10 +162,11 @@ async def test_duplicate_mac_dev_id(mock_warning, hass):
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-async def test_setup_without_yaml_file(hass, enable_custom_integrations):
+async def test_setup_without_yaml_file(hass, yaml_devices, enable_custom_integrations):
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+        await hass.async_block_till_done()
 
 
 async def test_gravatar(hass):
@@ -210,10 +212,11 @@ async def test_gravatar_and_picture(hass):
 @patch("homeassistant.components.demo.device_tracker.setup_scanner", autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
-    await discovery.async_load_platform(
-        hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        await discovery.async_load_platform(
+            hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
+        )
+        await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
     assert mock_demo_setup_scanner.called
     assert mock_demo_setup_scanner.call_args[0] == (

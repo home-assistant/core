@@ -40,13 +40,14 @@ _LOGGER = logging.getLogger(__name__)
 
 IH_DEVICE_INTESISHOME = "IntesisHome"
 IH_DEVICE_AIRCONWITHME = "airconwithme"
+IH_DEVICE_ANYWAIR = "anywair"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): vol.In(
-            [IH_DEVICE_AIRCONWITHME, IH_DEVICE_INTESISHOME]
+            [IH_DEVICE_AIRCONWITHME, IH_DEVICE_ANYWAIR, IH_DEVICE_INTESISHOME]
         ),
     }
 )
@@ -141,6 +142,8 @@ async def async_setup_platform(
 
 class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
+
+    _attr_should_poll = False
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
@@ -408,11 +411,6 @@ class IntesisAC(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature for the current mode of operation."""
         return self._max_temp
-
-    @property
-    def should_poll(self):
-        """Poll for updates if pyIntesisHome doesn't have a socket open."""
-        return False
 
     @property
     def fan_mode(self):

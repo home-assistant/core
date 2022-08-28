@@ -19,6 +19,7 @@ ATTR_ANONYMIZE = "anonymize"
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
 CONF_OVERRIDE_CHOST = "override_connection_host"
+CONF_MAX_MEDIA = "max_media"
 
 CONFIG_OPTIONS = [
     CONF_ALL_UPDATES,
@@ -31,6 +32,7 @@ DEFAULT_ATTRIBUTION = "Powered by UniFi Protect Server"
 DEFAULT_BRAND = "Ubiquiti"
 DEFAULT_SCAN_INTERVAL = 5
 DEFAULT_VERIFY_SSL = False
+DEFAULT_MAX_MEDIA = 1000
 
 DEVICES_THAT_ADOPT = {
     ModelType.CAMERA,
@@ -61,5 +63,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"

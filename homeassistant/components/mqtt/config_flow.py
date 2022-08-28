@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 import queue
+from typing import Any
 
 import voluptuous as vol
 
@@ -55,14 +56,18 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_broker()
 
-    async def async_step_broker(self, user_input=None):
+    async def async_step_broker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm the setup."""
         errors = {}
 
@@ -102,9 +107,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_hassio_confirm()
 
-    async def async_step_hassio_confirm(self, user_input=None):
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a Hass.io discovery."""
         errors = {}
+        assert self._hassio_discovery
 
         if user_input is not None:
             data = self._hassio_discovery
@@ -148,11 +156,13 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self.broker_config: dict[str, str | int] = {}
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: None = None) -> FlowResult:
         """Manage the MQTT options."""
         return await self.async_step_broker()
 
-    async def async_step_broker(self, user_input=None):
+    async def async_step_broker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the MQTT broker configuration."""
         errors = {}
         current_config = self.config_entry.data
@@ -200,12 +210,14 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             last_step=False,
         )
 
-    async def async_step_options(self, user_input=None):
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
         yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
-        options_config = {}
+        options_config: dict[str, Any] = {}
         if user_input is not None:
             bad_birth = False
             bad_will = False
@@ -251,7 +263,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=updated_config
                 )
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data={})
 
         birth = {
             **DEFAULT_BIRTH,
@@ -269,7 +281,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         )
 
-        fields = OrderedDict()
+        fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}

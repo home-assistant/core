@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -105,7 +106,10 @@ async def async_start(  # noqa: C901
         if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
-                    "Received message on illegal discovery topic '%s'", topic
+                    "Received message on illegal discovery topic '%s'. The topic contains "
+                    "not allowed characters. For more information see "
+                    "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic",
+                    topic,
                 )
             return
 
@@ -234,8 +238,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-
+    hass.data.setdefault(DATA_CONFIG_FLOW_LOCK, asyncio.Lock())
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}
 
@@ -268,7 +271,7 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = mqtt.MqttServiceInfo(
+                data = MqttServiceInfo(
                     topic=msg.topic,
                     payload=msg.payload,
                     qos=msg.qos,
