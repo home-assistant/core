@@ -50,7 +50,7 @@ async def test_update_entity(
     client.async_send_command.return_value = {
         "updates": [
             {
-                "version": "11.2.3",
+                "version": "10.11.1",
                 "changelog": "blah 1",
                 "files": [
                     {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
@@ -64,7 +64,7 @@ async def test_update_entity(
                 ],
             },
             {
-                "version": "11.2.1",
+                "version": "11.1.5",
                 "changelog": "blah 3",
                 "files": [
                     {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
@@ -87,8 +87,8 @@ async def test_update_entity(
     assert attrs[ATTR_RELEASE_SUMMARY] == "blah 2"
     assert attrs[ATTR_RELEASE_URL] is None
     assert attrs[ATTR_AVAILABLE_FIRMWARE_UPDATES] == [
-        {"version": "11.2.1", "release_notes": "blah 3"},
-        {"version": "11.2.3", "release_notes": "blah 1"},
+        {"version": "10.11.1", "release_notes": "blah 1"},
+        {"version": "11.1.5", "release_notes": "blah 3"},
         {"version": "11.2.4", "release_notes": "blah 2"},
     ]
 
@@ -149,7 +149,7 @@ async def test_update_entity(
         SERVICE_INSTALL,
         {
             ATTR_ENTITY_ID: UPDATE_ENTITY,
-            ATTR_VERSION: "11.2.1",
+            ATTR_VERSION: "11.1.5",
         },
         blocking=True,
     )
