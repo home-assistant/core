@@ -1522,7 +1522,7 @@ async def test_attributes(hass, mqtt_mock_entry_with_yaml_config, caplog):
                 "percentage_command_topic": "percentage-command-topic",
             },
             True,
-            fan.SUPPORT_OSCILLATE | fan.SUPPORT_PRESET_MODE,
+            fan.SUPPORT_OSCILLATE | fan.SUPPORT_SET_SPEED,
         ),
         (
             "test9",
@@ -1608,14 +1608,14 @@ async def test_attributes(hass, mqtt_mock_entry_with_yaml_config, caplog):
         (
             "test16",
             {
-                "name": "test7reset_payload_in_preset_modes_b",
+                "name": "test16",
                 "command_topic": "command-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
                 "preset_modes": ["whoosh", "silent", "auto", "None"],
                 "payload_reset_preset_mode": "normal",
             },
             True,
-            fan.SUPPORT_SET_SPEED,
+            fan.SUPPORT_PRESET_MODE,
         ),
     ],
 )
@@ -1625,7 +1625,10 @@ async def test_supported_features(
     """Test optimistic mode without state topic."""
 
     assert (
-        await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config}) is success
+        await async_setup_component(
+            hass, mqtt.DOMAIN, {mqtt.DOMAIN: {fan.DOMAIN: config}}
+        )
+        is success
     )
     if success:
         await hass.async_block_till_done()
@@ -1633,11 +1636,6 @@ async def test_supported_features(
 
         state = hass.states.get(f"fan.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
-
-    state = hass.states.get("fan.test7reset_payload_in_preset_modes_a")
-    assert state is None
-    state = hass.states.get("fan.test7reset_payload_in_preset_modes_b")
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_PRESET_MODE
 
 
 async def test_availability_when_connection_lost(
