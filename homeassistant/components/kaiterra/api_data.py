@@ -2,7 +2,7 @@
 import asyncio
 from logging import getLogger
 
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.client_exceptions import ClientResponseError, ClientConnectorError
 import async_timeout
 from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
 
