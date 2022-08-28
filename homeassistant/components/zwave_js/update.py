@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_id, get_valueless_base_unique_id
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(days=1)
 
 ATTR_AVAILABLE_FIRMWARE_UPDATES = "available_firmware_updates"
