@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "no_devices_found": "Required integration MQTT is missing",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {

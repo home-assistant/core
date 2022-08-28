@@ -2,11 +2,7 @@
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_import_step(hass: HomeAssistant):
@@ -15,14 +11,14 @@ async def test_import_step(hass: HomeAssistant):
         DOMAIN,
         context={"source": SOURCE_IMPORT},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "DSMR Reader"
 
     second_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
     )
-    assert second_result["type"] == RESULT_TYPE_ABORT
+    assert second_result["type"] == FlowResultType.ABORT
     assert second_result["reason"] == "single_instance_allowed"
 
 
@@ -32,7 +28,7 @@ async def test_user_step_with_mqtt(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] is None
 
@@ -40,12 +36,12 @@ async def test_user_step_with_mqtt(hass: HomeAssistant):
         result["flow_id"], user_input={}
     )
 
-    assert config_result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert config_result["type"] == FlowResultType.CREATE_ENTRY
     assert config_result["title"] == "DSMR Reader"
 
     duplicate_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert duplicate_result["type"] == RESULT_TYPE_ABORT
+    assert duplicate_result["type"] == FlowResultType.ABORT
     assert duplicate_result["reason"] == "single_instance_allowed"

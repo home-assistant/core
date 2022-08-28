@@ -14,9 +14,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_has_devices(_: HomeAssistant) -> bool:
-    """Return true as this integration doesn't support any real devices."""
-    return True
+async def _async_has_devices(hass: HomeAssistant) -> bool:
+    """Verify MQTT availability."""
+    return hass.services.has_service(domain="mqtt", service="publish")
 
 
 class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
