@@ -87,6 +87,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORTED_MINIMAL
     _attr_playback_rate: float = 1.0
+    _attr_should_poll: bool = False
 
     def __init__(
         self,
@@ -157,11 +158,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
             name="MPRIS agent at %s" % self._client_host,
             manufacturer="Freedesktop",
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
 
     @property
     def state(self):
