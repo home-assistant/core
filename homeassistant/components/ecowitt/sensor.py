@@ -123,13 +123,13 @@ ECOWITT_SENSORS_MAPPING = {
     EcoWittSensorTypes.RAIN_COUNT_MM: (
         None,
         LENGTH_MILLIMETERS,
-        SensorStateClass.TOTAL_INCREASING,
+        SensorStateClass.TOTAL,
         _METRIC,
     ),
     EcoWittSensorTypes.RAIN_COUNT_INCHES: (
         None,
         LENGTH_INCHES,
-        SensorStateClass.TOTAL_INCREASING,
+        SensorStateClass.TOTAL,
         _IMPERIAL,
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: (
