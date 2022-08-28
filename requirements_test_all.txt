@@ -1588,7 +1588,7 @@ temescal==0.5
 tesla-powerwall==0.3.18
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.1
+tesla-wall-connector==1.0.2
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.3.1
