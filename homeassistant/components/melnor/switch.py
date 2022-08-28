@@ -56,13 +56,13 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
         """Turn the device on."""
         self._valve().is_watering = True
         await self._device.push_state()
-        await self.coordinator.async_refresh()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._valve().is_watering = False
         await self._device.push_state()
-        await self.coordinator.async_refresh()
+        self.async_write_ha_state()
 
     @property
     def icon(self) -> str | None:
@@ -80,4 +80,4 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
         return f"{self._attr_unique_id}-zone{self._valve().id}"
 
     def _valve(self) -> Valve:
-        return cast(Valve, self.coordinator.data[f"zone{self._valve_index}"])
+        return cast(Valve, self._device[f"zone{self._valve_index}"])
