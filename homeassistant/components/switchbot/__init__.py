@@ -44,6 +44,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
     SupportedModels.BOT.value: switchbot.Switchbot,
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
+    SupportedModels.BULB.value: switchbot.SwitchbotBulb,
 }
 
 
