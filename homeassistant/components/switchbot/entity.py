@@ -36,7 +36,7 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
-            model=self.data["modelName"],
+            model=coordinator.model,  # Sometimes the modelName is missing from the advertisement data
             name=coordinator.device_name,
         )
         if ":" not in self._address:
