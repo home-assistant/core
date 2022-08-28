@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from melnor_bluetooth.device import Device
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.const import CONF_MAC
+from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DISCOVER_SCAN_TIMEOUT, DOMAIN
-from .discovery import async_discover_devices
+from .const import DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -22,53 +19,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_device: Device
-        self._discovered_devices: dict[str, Device]
+        self._discovered_address: str
 
-    async def async_step_pick_device(
+    async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the step to pick discovered device."""
+        """Handle user-confirmation of discovered device."""
 
         if user_input is not None:
-            device = self._discovered_devices[user_input[CONF_MAC]]
-
-            await self.async_set_unique_id(device.mac, raise_on_progress=False)
             return self.async_create_entry(
-                title=device.mac,
+                title=self._discovered_address,
                 data={
-                    CONF_MAC: device.mac,
+                    CONF_ADDRESS: self._discovered_address,
                 },
             )
 
-        current_unique_ids = self._async_current_ids()
-        current_devices = {
-            entry.data[CONF_MAC]
-            for entry in self._async_current_entries(include_ignore=False)
-        }
-
-        self._discovered_devices = await async_discover_devices(DISCOVER_SCAN_TIMEOUT)
-
-        device_macs = {
-            mac
-            for mac in self._discovered_devices.keys()
-            if mac not in current_unique_ids and mac not in current_devices
-        }
-
-        if len(device_macs) == 1:
-            mac = next(iter(device_macs))
-            return await self.async_step_pick_device({CONF_MAC: mac})
-
-        # Check if there is at least one device
-        if not device_macs:
-            return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
-            step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_MAC): vol.In(device_macs)}),
+            step_id="bluetooth_confirm",
+            description_placeholders={"name": self._discovered_address},
         )
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        return await self.async_step_pick_device()
+        """Handle a flow initialized by Bluetooth discovery."""
+
+        address = discovery_info.address
+
+        self._async_abort_entries_match({CONF_ADDRESS: address})
+
+        await self.async_set_unique_id(address)
+
+        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: address})
+
+        self._discovered_address = address
+
+        self.context["title_placeholders"] = {"name": address}
+        return await self.async_step_bluetooth_confirm()
