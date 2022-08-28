@@ -46,8 +46,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         address = discovery_info.address
 
-        self._async_abort_entries_match({CONF_ADDRESS: address})
-
         await self.async_set_unique_id(address)
 
         self._abort_if_unique_id_configured(updates={CONF_ADDRESS: address})
