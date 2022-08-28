@@ -265,7 +265,7 @@ class StreamMuxer:
         self._segment = Segment(
             sequence=self._stream_state.sequence,
             stream_id=self._stream_state.stream_id,
-            init=read_init(self._memory_file),
+            init=read_init(self._memory_file, self._stream_settings.orientation),
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
             stream_outputs=self._stream_state.outputs,

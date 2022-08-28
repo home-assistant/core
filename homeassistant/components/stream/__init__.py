@@ -41,6 +41,7 @@ from .const import (
     ATTR_STREAMS,
     CONF_EXTRA_PART_WAIT_TIME,
     CONF_LL_HLS,
+    CONF_ORIENTATION,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
@@ -124,6 +125,7 @@ def create_stream(
         except vol.Invalid as exc:
             raise HomeAssistantError("Invalid stream options") from exc
 
+        stream_settings.orientation = stream_options.get(CONF_ORIENTATION, 1)
         if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
             stream_settings.hls_part_timeout += extra_wait_time
         if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
@@ -229,6 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
+            orientation=1,
         )
     else:
         hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
@@ -280,7 +283,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._keyframe_converter = KeyFrameConverter(hass)
+        self._keyframe_converter = KeyFrameConverter(hass, stream_settings.orientation)
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -549,5 +552,8 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
         vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        # See EXIF orientations:
+        # https://www.cipa.jp/std/documents/e/DC-X008-Translation-2019-E.pdf
+        vol.Optional(CONF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
     }
 )
