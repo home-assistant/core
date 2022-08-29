@@ -6,12 +6,8 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    SOURCE_IMPORT,
-    ConfigFlow,
-)
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
@@ -50,46 +46,42 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=schema)
 
-        # Test if connection to the host is ok and get the current status for later
-        # configurations.
+        # Test the connection to the hostand get the current status for serial number.
         data_service = APCUPSdData(user_input[CONF_HOST], user_input[CONF_PORT])
         try:
             await self.hass.async_add_executor_job(data_service.update)
-            status = data_service.status
         except OSError:
             errors = {"base": "cannot_connect"}
             return self.async_show_form(
                 step_id="user", data_schema=schema, errors=errors
             )
 
-        if status is None or len(status) == 0:
+        if len(data_service.status) == 0:
             return self.async_abort(reason="no_status")
 
         # We _try_ to use the serial number of the UPS as the unique id since
         # this field is not guaranteed to exist on all APC UPS models.
-        if "SERIALNO" in status:
-            await self.async_set_unique_id(status["SERIALNO"])
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(data_service.serial_no)
+        self._abort_if_unique_id_configured()
 
-        data = {
-            CONF_HOST: user_input[CONF_HOST],
-            CONF_PORT: user_input[CONF_PORT],
-        }
-
-        # If we are importing from YAML configuration, user_input may contain a
-        # CONF_RESOURCES with a list of resources (sensors) to be enabled.
-        if self.source == SOURCE_IMPORT and CONF_RESOURCES in user_input:
-            data[CONF_RESOURCES] = user_input[CONF_RESOURCES]
+        # APCNAME or MODEL fields are not always available on all UPS models, here we
+        # try to assign a friendly title for the integration using those fields, but
+        # default to a generic "APC UPS" name.
+        if (name := data_service.name) is not None:
+            title = name
+        elif (model := data_service.model) is not None:
+            title = model
+        else:
+            title = "APC UPS"
 
         return self.async_create_entry(
-            # Since the MODEL field is not always available on all models, we
-            # try to set a friendly name for the integration, otherwise default
-            # to "APC UPS".
-            title=status.get("MODEL", "APC UPS"),
+            title=title,
             description="APCUPSd",
-            data=data,
+            data=user_input,
         )
 
     async def async_step_import(self, conf: dict[str, Any]) -> FlowResult:
         """Import a configuration from yaml configuration."""
+        # If we are importing from YAML configuration, user_input could contain a
+        # CONF_RESOURCES with a list of resources (sensors) to be enabled.
         return await self.async_step_user(user_input=conf)
