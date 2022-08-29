@@ -705,9 +705,9 @@ class Entity(ABC):
         try:
             task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())  # type: ignore[attr-defined]
+                task = self.hass.async_create_task(self.async_update())
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)  # type: ignore[attr-defined]
+                task = self.hass.async_add_executor_job(self.update)
             else:
                 return
 
