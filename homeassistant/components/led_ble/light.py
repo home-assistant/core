@@ -8,6 +8,7 @@ from led_ble import LEDBLE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
+    ATTR_WHITE,
     ColorMode,
     LightEntity,
 )
@@ -38,8 +39,7 @@ async def async_setup_entry(
 class LEDBLEEntity(CoordinatorEntity, LightEntity):
     """Representation of LEDBLE device."""
 
-    _attr_supported_color_modes = {ColorMode.RGB}
-    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB, ColorMode.WHITE}
     _attr_has_entity_name = True
 
     def __init__(
@@ -59,6 +59,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         device = self._device
+        self._attr_color_mode = ColorMode.WHITE if device.w else ColorMode.RGB
         if (brightness := device.brightness) is not None:
             self._attr_brightness = max(0, min(255, brightness))
         self._attr_rgb_color = device.rgb_unscaled
@@ -73,6 +74,9 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
             return
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.set_brightness(brightness)
+            return
+        if ATTR_WHITE in kwargs:
+            await self._device.set_white(kwargs[ATTR_WHITE])
             return
         await self._device.turn_on()
 
