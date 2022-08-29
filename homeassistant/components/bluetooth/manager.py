@@ -144,7 +144,7 @@ class BluetoothManager:
         ] = []
         self._history: dict[str, BluetoothServiceInfoBleak] = {}
         self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
-        self._scanners: list[BaseHaScanner] = []
+        self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
 
@@ -157,7 +157,7 @@ class BluetoothManager:
         """Return the number of scanners."""
         if connectable:
             return len(self._connectable_scanners)
-        return len(self._connectable_scanners) + len(self._scanners)
+        return len(self._connectable_scanners) + len(self._non_connectable_scanners)
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Diagnostics for the manager."""
@@ -165,7 +165,7 @@ class BluetoothManager:
             *[
                 scanner.async_diagnostics()
                 for scanner in itertools.chain(
-                    self._scanners, self._connectable_scanners
+                    self._non_connectable_scanners, self._connectable_scanners
                 )
             ]
         )
@@ -414,7 +414,11 @@ class BluetoothManager:
 
     def _get_scanners_by_type(self, connectable: bool) -> list[BaseHaScanner]:
         """Return the scanners by type."""
-        return self._connectable_scanners if connectable else self._scanners
+        return (
+            self._connectable_scanners
+            if connectable
+            else self._non_connectable_scanners
+        )
 
     def _get_unavailable_callbacks_by_type(
         self, connectable: bool
