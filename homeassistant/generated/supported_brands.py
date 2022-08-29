@@ -8,8 +8,8 @@ To update, run python3 -m script.hassfest
 HAS_SUPPORTED_BRANDS = (
     "denonavr",
     "hunterdouglas_powerview",
-    "lutron_caseta",
     "lutron",
+    "lutron_caseta",
     "motion_blinds",
     "overkiz",
     "renault",

@@ -1036,6 +1036,9 @@ mcstatus==6.0.0
 # homeassistant.components.meater
 meater-python==0.0.8
 
+# homeassistant.components.melnor
+melnor-bluetooth==0.0.13
+
 # homeassistant.components.message_bird
 messagebird==1.2.0
 
