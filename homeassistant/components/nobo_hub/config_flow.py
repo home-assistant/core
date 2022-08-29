@@ -139,13 +139,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _test_connection(self, serial: str, ip_address: str):
+    async def _test_connection(self, serial: str, ip_address: str) -> str:
         if not len(serial) == 12 or not serial.isdigit():
             raise NoboHubConnectError("invalid_serial")
         try:
             socket.inet_aton(ip_address)
-        except OSError:
-            raise NoboHubConnectError("invalid_ip") from OSError
+        except OSError as err:
+            raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, loop=self.hass.loop)
         if not await hub.async_connect_hub(ip_address, serial):
             raise NoboHubConnectError("cannot_connect")

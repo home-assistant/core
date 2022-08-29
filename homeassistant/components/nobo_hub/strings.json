@@ -14,7 +14,7 @@
         }
       },
       "manual": {
-        "description": "Configre a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address.",
+        "description": "Configure a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address.",
         "data": {
           "serial": "Serial number (12 digits)",
           "ip_address": "[%key:common::config_flow::data::ip%]"

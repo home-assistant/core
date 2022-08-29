@@ -20,8 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nobø Ecohub from a config entry."""
 
     serial = entry.data[CONF_SERIAL]
-    discover = entry.data.get(CONF_AUTO_DISCOVERED)
-    ip_address = None if discover else entry.data.get(CONF_IP_ADDRESS)
+    discover = entry.data[CONF_AUTO_DISCOVERED]
+    ip_address = None if discover else entry.data[CONF_IP_ADDRESS]
     hub = nobo(serial=serial, ip=ip_address, discover=discover, loop=hass.loop)
     await hub.start()
 
