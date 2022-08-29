@@ -1649,7 +1649,7 @@ def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
     return pass_environment(wrapper)
 
 
-def average(*args: Any) -> float:
+def average(*args: Any) -> float | None:
     """
     Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
 
@@ -1660,7 +1660,10 @@ def average(*args: Any) -> float:
 
     if len(args) == 1:
         if isinstance(args[0], Iterable):
-            return statistics.fmean(args[0])
+            try:
+                return statistics.fmean(args[0])
+            except statistics.StatisticsError:
+                return None
 
         raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
 

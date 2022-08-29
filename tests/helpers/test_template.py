@@ -972,6 +972,7 @@ def test_average(hass):
     assert template.Template("{{ [1, 2, 3] | average }}", hass).async_render() == 2
     assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
     assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
+    assert template.Template("{{ [] | average }}", hass).async_render() is None
 
     with pytest.raises(TemplateError):
         template.Template("{{ 1 | average }}", hass).async_render()
