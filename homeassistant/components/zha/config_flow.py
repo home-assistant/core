@@ -166,6 +166,7 @@ class ZhaFlowMixin:
     async def _restore_backup(
         self, backup: zigpy.backups.NetworkBackup, **kwargs: dict[str, Any]
     ) -> None:
+        """Restore the provided network backup, passing through kwargs."""
         if self._current_settings is not None and self._current_settings.supersedes(
             self._chosen_backup
         ):
@@ -199,6 +200,7 @@ class ZhaFlowMixin:
         return False
 
     async def _async_create_radio_entity(self):
+        """Create a config entity with the current flow state."""
         device_settings = self._device_settings.copy()
         device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, self._device_path
@@ -214,7 +216,6 @@ class ZhaFlowMixin:
 
     async def async_step_choose_serial_port(self, user_input=None):
         """Choose a serial port."""
-
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = [
             f"{p}, s/n: {p.serial_number or 'n/a'}"
@@ -270,8 +271,7 @@ class ZhaFlowMixin:
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
 
     async def async_step_manual_pick_radio_type(self, user_input=None):
-        """Manually select radio type."""
-
+        """Manually select the radio type."""
         if user_input is not None:
             self._radio_type = RadioType.get_by_description(user_input[CONF_RADIO_TYPE])
             return await self.async_step_manual_port_config()
@@ -422,8 +422,7 @@ class ZhaFlowMixin:
         )
 
     async def async_step_choose_automatic_backup(self, user_input=None):
-        """Select an automatic backup."""
-
+        """Choose an automatic backup."""
         if self.show_advanced_options:
             # Always show the PAN IDs when in advanced mode
             choices = [
@@ -691,8 +690,7 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options."""
-
+        """Launch the options flow."""
         if user_input is not None:
             try:
                 await self.hass.config_entries.async_unload(self.config_entry.entry_id)
@@ -707,6 +705,7 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
         return self.async_show_form(step_id="init")
 
     async def _async_create_radio_entity(self):
+        """Re-implementation of the base flow's final step to update the config."""
         device_settings = self._device_settings.copy()
         device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, self._device_path
