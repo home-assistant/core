@@ -82,6 +82,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
@@ -99,11 +100,6 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     def name(self):
         """Return the name of the thermostat."""
         return self.coordinator.data[self._serial_number].name
-
-    @property
-    def temperature_unit(self):
-        """Schluter API always uses celsius."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
