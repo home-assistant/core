@@ -23,8 +23,6 @@ class DiscoveryService(pizone.Listener):
         """Initialise discovery service."""
         super().__init__()
         self.hass = hass
-        hass.data[DATA_DISCOVERY_SERVICE] = self
-
         session = aiohttp_client.async_get_clientsession(hass)
         self.pi_disco = pizone.discovery(self, session=session)
 
@@ -63,6 +61,7 @@ async def async_start_discovery_service(hass: HomeAssistant):
 
     # discovery local services
     disco = DiscoveryService(hass)
+    hass.data[DATA_DISCOVERY_SERVICE] = disco
     await disco.pi_disco.start_discovery()
 
     async def shutdown_event(event):
