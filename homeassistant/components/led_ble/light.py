@@ -62,8 +62,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         """Handle updating _attr values."""
         device = self._device
         self._attr_color_mode = ColorMode.WHITE if device.w else ColorMode.RGB
-        if (brightness := device.brightness) is not None:
-            self._attr_brightness = max(0, min(255, brightness))
+        self._attr_brightness = device.brightness
         self._attr_rgb_color = device.rgb_unscaled
         self._attr_is_on = device.on
 
