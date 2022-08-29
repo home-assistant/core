@@ -11,7 +11,6 @@ from homeassistant.components.awair.const import (
     API_SPL_A,
     API_TEMP,
     API_VOC,
-    DOMAIN,
     SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
     SENSOR_TYPES_DUST,
@@ -30,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
+from . import setup_awair
 from .const import (
     AWAIR_UUID,
     CLOUD_CONFIG,
@@ -38,21 +38,9 @@ from .const import (
     LOCAL_UNIQUE_ID,
 )
 
-from tests.common import MockConfigEntry
-
 SENSOR_TYPES_MAP = {
     desc.key: desc for desc in (SENSOR_TYPE_SCORE, *SENSOR_TYPES, *SENSOR_TYPES_DUST)
 }
-
-
-async def setup_awair(hass: HomeAssistant, fixtures, unique_id, data):
-    """Add Awair devices to hass, using specified fixtures for data."""
-
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=data)
-    with patch("python_awair.AwairClient.query", side_effect=fixtures):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
 
 def assert_expected_properties(
