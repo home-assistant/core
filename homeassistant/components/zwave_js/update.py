@@ -132,6 +132,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
         self._async_process_updates(write_state)
+        if self._status_unsub:
+            self._status_unsub = None
 
     @callback
     def _async_process_updates(self, write_state: bool = True) -> None:
