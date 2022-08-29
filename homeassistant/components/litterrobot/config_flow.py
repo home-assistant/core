@@ -5,15 +5,16 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pylitterbot import Account
+from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .hub import LitterRobotHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,12 +81,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_input(self, user_input: Mapping[str, Any]) -> str:
         """Validate login credentials."""
-        hub = LitterRobotHub(self.hass, user_input)
+        account = Account(websession=async_get_clientsession(self.hass))
         try:
-            await hub.login()
-        except ConfigEntryAuthFailed:
+            await account.connect(
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+            )
+            await account.disconnect()
+        except LitterRobotLoginException:
             return "invalid_auth"
-        except ConfigEntryNotReady:
+        except LitterRobotException:
             return "cannot_connect"
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception: %s", ex)
