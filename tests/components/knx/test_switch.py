@@ -1,6 +1,4 @@
 """Test KNX switch."""
-from unittest.mock import patch
-
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -11,6 +9,8 @@ from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import KNXTestKit
+
+from tests.common import mock_restore_cache
 
 
 async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
@@ -115,20 +115,17 @@ async def test_switch_restore_and_respond(hass, knx):
     """Test restoring KNX switch state and respond to read."""
     _ADDRESS = "1/1/1"
     fake_state = State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                SwitchSchema.PLATFORM: {
-                    CONF_NAME: "test",
-                    KNX_ADDRESS: _ADDRESS,
-                    CONF_RESPOND_TO_READ: True,
-                },
-            }
-        )
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: _ADDRESS,
+                CONF_RESPOND_TO_READ: True,
+            },
+        }
+    )
 
     # restored state - doesn't send telegram
     state = hass.states.get("switch.test")

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, cast
 
 import async_timeout
 
-from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -25,6 +25,7 @@ from .const import (
     ADAPTER_SW_VERSION,
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_PASSIVE,
     DATA_MANAGER,
     DEFAULT_ADDRESS,
     DOMAIN,
@@ -50,7 +51,6 @@ if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
     from homeassistant.helpers.typing import ConfigType
-
 
 __all__ = [
     "async_ble_device_from_address",
@@ -209,11 +209,11 @@ async def async_get_adapter_from_address(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
+    integration_matcher.async_setup()
     manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
-
     adapters = await manager.async_get_bluetooth_adapters()
 
     async_migrate_entries(hass, adapters)
@@ -249,8 +249,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @hass_callback
 def async_migrate_entries(
-    hass: HomeAssistant,
-    adapters: dict[str, AdapterDetails],
+    hass: HomeAssistant, adapters: dict[str, AdapterDetails]
 ) -> None:
     """Migrate config entries to support multiple."""
     current_entries = hass.config_entries.async_entries(DOMAIN)
@@ -284,15 +283,13 @@ async def async_discover_adapters(
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: adapter, CONF_DETAILS: details},
         )
 
 
 async def async_update_device(
-    hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    adapter: str,
+    hass: HomeAssistant, entry: ConfigEntry, adapter: str
 ) -> None:
     """Update device registry entry.
 
@@ -314,9 +311,7 @@ async def async_update_device(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
     address = entry.unique_id
     assert address is not None
@@ -326,8 +321,10 @@ async def async_setup_entry(
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
 
+    passive = entry.options.get(CONF_PASSIVE)
+    mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
     try:
-        bleak_scanner = create_bleak_scanner(BluetoothScanningMode.ACTIVE, adapter)
+        bleak_scanner = create_bleak_scanner(mode, adapter)
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
@@ -342,12 +339,16 @@ async def async_setup_entry(
     entry.async_on_unload(async_register_scanner(hass, scanner, True))
     await async_update_device(hass, entry, adapter)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     scanner: HaScanner = hass.data[DOMAIN].pop(entry.entry_id)
     await scanner.async_stop()

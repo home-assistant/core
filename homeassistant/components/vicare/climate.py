@@ -145,6 +145,7 @@ class ViCareClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the climate device."""
@@ -248,11 +249,6 @@ class ViCareClimate(ClimateEntity):
     def name(self):
         """Return the name of the climate device."""
         return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

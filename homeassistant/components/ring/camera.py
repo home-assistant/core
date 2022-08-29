@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ATTRIBUTION, DOMAIN
+from . import DOMAIN
 from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
@@ -47,8 +47,6 @@ async def async_setup_entry(
 
 class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
-
-    _attr_attribution = ATTRIBUTION
 
     def __init__(self, config_entry_id, ffmpeg_manager, device):
         """Initialize a Ring Door Bell camera."""

@@ -10,6 +10,13 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "K\u00e9rj\u00fck, friss\u00edtse jelszav\u00e1t a k\u00f6vetkez\u0151h\u00f6z: {email}",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
             "user": {
                 "data": {
                     "email": "E-mail",
