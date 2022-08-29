@@ -106,10 +106,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         return {
             ATTR_AVAILABLE_FIRMWARE_UPDATES: [
-                {
-                    "version": firmware.version,
-                    "release_notes": firmware.changelog,
-                }
+                firmware.version
                 for firmware in sorted(
                     self.available_firmware_updates,
                     key=lambda f: AwesomeVersion(f.version),

@@ -87,11 +87,7 @@ async def test_update_entity(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_SUMMARY] == "blah 2"
     assert attrs[ATTR_RELEASE_URL] is None
-    assert attrs[ATTR_AVAILABLE_FIRMWARE_UPDATES] == [
-        {"version": "10.11.1", "release_notes": "blah 1"},
-        {"version": "11.1.5", "release_notes": "blah 3"},
-        {"version": "11.2.4", "release_notes": "blah 2"},
-    ]
+    assert attrs[ATTR_AVAILABLE_FIRMWARE_UPDATES] == ["10.11.1", "11.1.5", "11.2.4"]
 
     # Refresh value should not be supported by this entity
     await hass.services.async_call(
