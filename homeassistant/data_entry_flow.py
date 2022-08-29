@@ -5,6 +5,7 @@ import abc
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
@@ -15,6 +16,8 @@ from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report
 from .util import uuid as uuid_util
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class FlowResultType(StrEnum):
@@ -336,7 +339,11 @@ class FlowManager(abc.ABC):
         self._handler_progress_index[handler].remove(flow.flow_id)
         if not self._handler_progress_index[handler]:
             del self._handler_progress_index[handler]
-        flow.async_remove()
+
+        try:
+            flow.async_remove()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning("Error removing %s config flow: %r", flow.handler, err)
 
     async def _async_handle_step(
         self,

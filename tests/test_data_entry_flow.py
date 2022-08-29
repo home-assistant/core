@@ -1,5 +1,6 @@
 """Test the flow classes."""
 import asyncio
+import logging
 from unittest.mock import Mock, patch
 
 import pytest
@@ -150,7 +151,7 @@ async def test_abort_removes_instance(manager):
 
 
 async def test_abort_calls_async_remove(manager):
-    """Test that abort calls the async_remove FlowHandler method."""
+    """Test abort calling the async_remove FlowHandler method."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -160,6 +161,27 @@ async def test_abort_calls_async_remove(manager):
         async_remove = Mock()
 
     await manager.async_init("test")
+
+    TestFlow.async_remove.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
+async def test_abort_calls_async_remove_with_exception(manager, caplog):
+    """Test abort calling the async_remove FlowHandler method, with an exception."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(reason="reason")
+
+        async_remove = Mock(side_effect=[RuntimeError("error")])
+
+    with caplog.at_level(logging.WARNING):
+        await manager.async_init("test")
+
+    assert "Error removing test config flow: RuntimeError('error')" in caplog.text
 
     TestFlow.async_remove.assert_called_once()
 
