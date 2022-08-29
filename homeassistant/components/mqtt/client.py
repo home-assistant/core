@@ -309,7 +309,7 @@ class MQTT:
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        hass,
         config_entry,
         conf,
     ) -> None:
@@ -662,8 +662,6 @@ class MQTT:
         async with self._pending_operations_condition:
             if mid not in self._pending_operations:
                 self._pending_operations[mid] = asyncio.Event()
-                # Late ACK registrations might come while unloading the integration.
-                self._pending_operations_condition.notify_all()
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
