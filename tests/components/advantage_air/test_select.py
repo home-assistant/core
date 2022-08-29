@@ -40,7 +40,7 @@ async def test_select_async_setup_entry(hass, aioclient_mock):
     entity_id = "select.myzone_myzone"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "Zone A"
+    assert state.state == "Zone open with Sensor"
 
     entry = registry.async_get(entity_id)
     assert entry
