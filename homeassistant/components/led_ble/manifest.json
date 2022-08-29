@@ -3,7 +3,7 @@
   "name": "LED BLE",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ble_ble",
-  "requirements": ["led-ble==0.5.2"],
+  "requirements": ["led-ble==0.5.3"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "bluetooth": [

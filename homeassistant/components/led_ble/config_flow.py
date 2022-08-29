@@ -15,7 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, LOCAL_NAMES, UNSUPPORTED_TRAILER
+from .const import DOMAIN, LOCAL_NAMES, UNSUPPORTED_SUB_MODEL
 from .util import human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        if discovery_info.name.startswith(UNSUPPORTED_TRAILER):
+        if discovery_info.name.startswith(UNSUPPORTED_SUB_MODEL):
             # These versions speak a different protocol
             # that we do not support yet.
             return self.async_abort(reason="not_supported")

@@ -31,7 +31,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the light platform from config_flow."""
+    """Set up the light platform for LEDBLE."""
     data: LEDBLEData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
@@ -45,13 +45,14 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: LEDBLE, name: str
     ) -> None:
-        """Initialize an ledble."""
+        """Initialize an ledble light."""
         super().__init__(coordinator)
         self._device = device
         self._attr_unique_id = device._address
         self._attr_device_info = DeviceInfo(
             name=name,
             model=hex(device.model_num),
+            sw_version=hex(device.version_num),
             connections={(dr.CONNECTION_BLUETOOTH, device._address)},
         )
         self._async_update_attrs()
