@@ -110,7 +110,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
                 SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
             )
-            and isinstance(state, str)
+            and isinstance(state, str)  # If the sensor state is restored, the state is a native date or datetime, not str
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
             if self.device_class == SensorDeviceClass.DATE:
