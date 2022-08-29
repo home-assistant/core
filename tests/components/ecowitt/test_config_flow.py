@@ -62,3 +62,74 @@ async def test_form_invalid_port(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_port"}
+
+
+async def test_form_invalid_second(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
+        AsyncMock(),
+    ), patch(
+        "homeassistant.components.ecowitt.config_flow.EcoWittListener.stop", AsyncMock()
+    ), patch(
+        "homeassistant.components.ecowitt.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "port": 49911,
+                "path": "/ecowitt-station",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
+        AsyncMock(side_effect=OSError),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "port": 49911,
+                "path": "/ecowitt-station",
+            },
+        )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {"base": "invalid_port"}
+
+
+async def test_form_unknown(hass: HomeAssistant) -> None:
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
+        AsyncMock(side_effect=TypeError),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "port": 49911,
+                "path": "/ecowitt-station",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
