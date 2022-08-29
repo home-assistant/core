@@ -1,9 +1,10 @@
 """The PrusaLink integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from datetime import timedelta
 import logging
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar
 
 import async_timeout
 from pyprusalink import InvalidAuth, JobInfo, PrinterInfo, PrusaLink, PrusaLinkError
@@ -62,7 +63,6 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
-    api_method: str
 
     def __init__(self, hass: HomeAssistant, api: PrusaLink) -> None:
         """Initialize the update coordinator."""
@@ -76,23 +76,32 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         """Update the data."""
         try:
             with async_timeout.timeout(5):
-                return cast(T, await getattr(self.api, self.api_method)())
+                return await self._fetch_data()
         except InvalidAuth:
             raise UpdateFailed("Invalid authentication") from None
         except PrusaLinkError as err:
             raise UpdateFailed(str(err)) from err
 
+    @abstractmethod
+    async def _fetch_data(self) -> T:
+        """Fetch the actual data."""
+        raise NotImplementedError
+
 
 class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     """Printer update coordinator."""
 
-    api_method = "get_printer"
+    async def _fetch_data(self) -> PrinterInfo:
+        """Fetch the printer data."""
+        return await self.api.get_printer()
 
 
 class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
     """Job update coordinator."""
 
-    api_method = "get_job"
+    async def _fetch_data(self) -> JobInfo:
+        """Fetch the printer data."""
+        return await self.api.get_job()
 
 
 class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
