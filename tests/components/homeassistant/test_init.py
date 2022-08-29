@@ -568,7 +568,6 @@ async def test_disable_config_entry_by_entry_id(hass):
             blocking=True,
         )
 
-    # print(mock_enable_disable.mock_calls[0])
     assert len(mock_disable.mock_calls) == 1
     assert mock_disable.mock_calls[0][1][0] == entry.entry_id
     assert mock_disable.mock_calls[0][1][1] == ConfigEntryDisabler.SERVICE
