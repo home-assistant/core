@@ -685,8 +685,6 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
         self._radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
         self._title = config_entry.title
 
-        self._must_reload_entry = False
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -697,8 +695,6 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
             except config_entries.OperationNotAllowed:
                 # ZHA is not running
                 pass
-
-            self._must_reload_entry = True
 
             return await self.async_step_choose_serial_port()
 
@@ -722,7 +718,6 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
         )
 
         # Reload ZHA after we finish
-        self._must_reload_entry = False
         await self.hass.config_entries.async_setup(self.config_entry.entry_id)
 
         # Intentionally do not set `data` to avoid creating `options`, we set it above
@@ -730,11 +725,16 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
 
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""
-        if self._must_reload_entry:
-            setup = self.hass.config_entries.async_setup(self.config_entry.entry_id)
+        if self.config_entry.state not in (
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            config_entries.ConfigEntryState.NOT_LOADED,
+        ):
+            return
 
-            try:
-                self.hass.async_create_task(setup)
-            except RuntimeError:
-                # ZHA cannot be restarted if the event loop is closing
-                pass
+        setup = self.hass.config_entries.async_setup(self.config_entry.entry_id)
+
+        try:
+            self.hass.async_create_task(setup)
+        except RuntimeError:
+            # ZHA cannot be restarted if the event loop is closing
+            pass
