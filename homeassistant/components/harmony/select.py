@@ -31,6 +31,8 @@ async def async_setup_entry(
 class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
     """Select representation of a Harmony activities."""
 
+    _attr_device_class = f"{DOMAIN}__activities"
+
     def __init__(self, name: str, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySelect class."""
         super().__init__(data=data)
