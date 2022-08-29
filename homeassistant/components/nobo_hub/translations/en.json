@@ -15,7 +15,7 @@
                     "ip_address": "IP Address",
                     "serial": "Serial number (12 digits)"
                 },
-                "description": "Configre a Nob\u00f8 Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address."
+                "description": "Configure a Nob\u00f8 Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address."
             },
             "selected": {
                 "data": {
