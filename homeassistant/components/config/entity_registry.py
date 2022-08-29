@@ -240,6 +240,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
+        "unique_id": entry.unique_id,
     }
 
 

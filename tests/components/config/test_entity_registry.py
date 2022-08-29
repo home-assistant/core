@@ -69,6 +69,7 @@ async def test_list_entities(hass, client):
             "name": "Hello World",
             "original_name": None,
             "platform": "test_platform",
+            "unique_id": "1234",
         },
         {
             "area_id": None,
@@ -83,6 +84,7 @@ async def test_list_entities(hass, client):
             "name": None,
             "original_name": None,
             "platform": "test_platform",
+            "unique_id": "6789",
         },
     ]
 
@@ -119,6 +121,7 @@ async def test_list_entities(hass, client):
             "name": "Hello World",
             "original_name": None,
             "platform": "test_platform",
+            "unique_id": "1234",
         },
     ]
 
