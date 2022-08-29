@@ -516,6 +516,7 @@ async def test_reload_config_entry_by_entry_id(hass):
             {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
             blocking=True,
         )
+
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
 
