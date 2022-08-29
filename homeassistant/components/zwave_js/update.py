@@ -55,17 +55,6 @@ async def async_setup_entry(
     )
 
 
-def get_latest_firmware(
-    firmwares: list[FirmwareUpdateInfo],
-) -> FirmwareUpdateInfo:
-    """Get the latest firmware from the available updates."""
-    latest_firmware = FirmwareUpdateInfo("0.0.0", "", [])
-    for firmware in firmwares:
-        if AwesomeVersion(firmware.version) > AwesomeVersion(latest_firmware.version):
-            latest_firmware = firmware
-    return latest_firmware
-
-
 class ZWaveNodeFirmwareUpdate(UpdateEntity):
     """Representation of a firmware update entity."""
 
@@ -138,8 +127,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     def _async_process_updates(self, write_state: bool = True) -> None:
         """Process updates."""
         if self.available_firmware_updates:
-            self._latest_version_firmware = firmware = get_latest_firmware(
-                self.available_firmware_updates
+            self._latest_version_firmware = firmware = max(
+                self.available_firmware_updates, key=lambda x: AwesomeVersion(x.version)
             )
             self._attr_latest_version = firmware.version
         else:
