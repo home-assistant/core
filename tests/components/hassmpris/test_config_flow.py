@@ -1,8 +1,6 @@
 """Test the MPRIS media playback remote control config flow."""
 from unittest.mock import patch
 
-import contextlib
-
 import hassmpris_client
 import pskca
 
@@ -28,9 +26,11 @@ class MockCakesClient:
     """Mock CAKES client."""
 
     def __init__(self, exc=None):
+        """Initialize the mock."""
         self.exc = exc
 
     def __call__(self, *unused_args, **unused_kw):
+        """Return self to keep it going across the call chain."""
         return self
 
     async def obtain_verifier(self):
@@ -52,6 +52,7 @@ class MockMprisClient:
     """Mock MPRIS client."""
 
     def __init__(self, *unused_a, **unused_kw):
+        """Initialize the mock."""
         pass
 
     async def ping(self):

@@ -165,9 +165,11 @@ class HASSMPRISEntity(MediaPlayerEntity):
         return DISCOVERY_SCHEMA
 
     async def async_added_to_hass(self):
+        """Entity has been added to HASS."""
         _LOGGER.debug("Added to hass: %s", self)
 
     async def async_will_remove_from_hass(self):
+        """Entity is about to be removed from HASS."""
         _LOGGER.debug("Will remove from hass: %s", self)
         await self.set_unavailable()
 
