@@ -435,7 +435,7 @@ class MQTT:
             """Return False if there are unprocessed ACKs."""
             return not bool(self._pending_operations)
 
-        # wait for ACK-s to be processesed
+        # wait for ACK-s to be processed
         async with self._pending_operations_condition:
             await self._pending_operations_condition.wait_for(no_more_acks)
 
