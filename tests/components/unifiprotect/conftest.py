@@ -68,6 +68,7 @@ def mock_ufp_config_entry():
             "port": 443,
             "verify_ssl": False,
         },
+        options={"ignored_devices": "FFFFFFFFFFFF,test"},
         version=2,
     )
 
