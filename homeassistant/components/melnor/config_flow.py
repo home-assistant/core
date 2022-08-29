@@ -72,20 +72,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._create_entry(user_input[CONF_ADDRESS])
 
         current_addresses = self._async_current_ids()
-        for connectable in (True, False):
-            for discovery_info in async_discovered_service_info(self.hass, connectable):
-                if discovery_info.manufacturer_id == MANUFACTURER_ID and any(
-                    manufacturer_data.startswith(MANUFACTURER_DATA_START)
-                    for manufacturer_data in discovery_info.manufacturer_data.values()
+        for discovery_info in async_discovered_service_info(
+            self.hass, connectable=True
+        ):
+
+            if discovery_info.manufacturer_id == MANUFACTURER_ID and any(
+                manufacturer_data.startswith(MANUFACTURER_DATA_START)
+                for manufacturer_data in discovery_info.manufacturer_data.values()
+            ):
+
+                address = discovery_info.address
+                if (
+                    address not in current_addresses
+                    and address not in self._discovered_addresses
                 ):
-
-                    address = discovery_info.address
-                    if (
-                        address in current_addresses
-                        or address in self._discovered_addresses
-                    ):
-                        continue
-
                     self._discovered_addresses.append(address)
 
         addresses = {
@@ -95,7 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         # Check if there is at least one device
-        if not addresses:
+        if len(addresses) == 0:
             return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
@@ -107,8 +107,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-
-        if self._discovered_addresses is None:
-            return self.async_abort(reason="no_devices_found")
 
         return await self.async_step_pick_device()

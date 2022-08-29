@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Yale Access Bluetooth from a config entry."""
+    """Set up LED BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await startup_event.wait()
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
-            "Update sent, but not state received; "
+            "Unable to communicate with the device; "
             f"Try moving the Bluetooth adapter closer to {led_ble.name}"
         ) from ex
     finally:
