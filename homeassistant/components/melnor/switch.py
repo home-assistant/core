@@ -51,6 +51,7 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
         self._attr_unique_id = (
             f"switch-{self._attr_unique_id}-zone{self._valve().id}-manual"
         )
+
         self._attr_name = f"{self._device.name} Zone {self._valve().id+1}"
 
     @property

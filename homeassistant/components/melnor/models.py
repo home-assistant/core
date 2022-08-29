@@ -94,8 +94,3 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.is_connected
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._device.name
