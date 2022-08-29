@@ -120,6 +120,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "led_ble",
+        "local_name": "BLE-LED*"
+    },
+    {
+        "domain": "led_ble",
         "local_name": "LEDBLE*"
     },
     {

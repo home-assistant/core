@@ -3,4 +3,4 @@
 DOMAIN = "led_ble"
 
 DEVICE_TIMEOUT = 55
-LOCAL_NAMES = {"LEDBLE", "Triones", "LEDBlue"}
+LOCAL_NAMES = {"BLE-BLE", "LEDBLE", "Triones", "LEDBlue"}
