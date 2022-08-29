@@ -21,7 +21,6 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Melnor data update coordinator."""
 
     _device: Device
-    _has_active_connection: bool = False
 
     def __init__(self, hass: HomeAssistant, device: Device) -> None:
         """Initialize my coordinator."""
