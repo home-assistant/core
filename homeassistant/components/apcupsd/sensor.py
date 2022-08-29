@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -52,11 +53,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="apc",
         name="UPS Status Data",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "apcmodel": SensorEntityDescription(
         key="apcmodel",
         name="UPS Model",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "badbatts": SensorEntityDescription(
         key="badbatts",
@@ -89,6 +92,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="cable",
         name="UPS Cable Type",
         icon="mdi:ethernet-cable",
+        entity_registry_enabled_default=False,
     ),
     "cumonbatt": SensorEntityDescription(
         key="cumonbatt",
@@ -99,6 +103,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="date",
         name="UPS Status Date",
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     "dipsw": SensorEntityDescription(
         key="dipsw",
@@ -114,6 +119,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="driver",
         name="UPS Driver",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "dshutd": SensorEntityDescription(
         key="dshutd",
@@ -129,6 +135,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="end apc",
         name="UPS Date and Time",
         icon="mdi:calendar-clock",
+        entity_registry_enabled_default=False,
     ),
     "extbatts": SensorEntityDescription(
         key="extbatts",
@@ -139,6 +146,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="firmware",
         name="UPS Firmware Version",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "hitrans": SensorEntityDescription(
         key="hitrans",
@@ -150,6 +158,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="hostname",
         name="UPS Hostname",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
@@ -167,6 +176,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="lastxfer",
         name="UPS Last Transfer",
         icon="mdi:transfer",
+        entity_registry_enabled_default=False,
     ),
     "linefail": SensorEntityDescription(
         key="linefail",
@@ -207,6 +217,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="mandate",
         name="UPS Manufacture Date",
         icon="mdi:calendar",
+        entity_registry_enabled_default=False,
     ),
     "masterupd": SensorEntityDescription(
         key="masterupd",
@@ -245,6 +256,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="model",
         name="UPS Model",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "nombattv": SensorEntityDescription(
         key="nombattv",
@@ -297,16 +309,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="reg1",
         name="UPS Register 1 Fault",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "reg2": SensorEntityDescription(
         key="reg2",
         name="UPS Register 2 Fault",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "reg3": SensorEntityDescription(
         key="reg3",
         name="UPS Register 3 Fault",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "retpct": SensorEntityDescription(
         key="retpct",
@@ -323,11 +338,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="sense",
         name="UPS Sensitivity",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "serialno": SensorEntityDescription(
         key="serialno",
         name="UPS Serial Number",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "starttime": SensorEntityDescription(
         key="starttime",
@@ -338,11 +355,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="statflag",
         name="UPS Status Flag",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "status": SensorEntityDescription(
         key="status",
         name="UPS Status",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "stesti": SensorEntityDescription(
         key="stesti",
@@ -368,11 +387,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="upsname",
         name="UPS Name",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "version": SensorEntityDescription(
         key="version",
         name="UPS Daemon Info",
         icon="mdi:information-outline",
+        entity_registry_enabled_default=False,
     ),
     "xoffbat": SensorEntityDescription(
         key="xoffbat",
@@ -442,7 +463,7 @@ async def async_setup_platform(
 
     # Our config flow allows an extra field CONF_RESOURCES and will import properly as
     # options (although not shown in UI during config setup).
-    conf[CONF_RESOURCES] = [res.upper() for res in config[CONF_RESOURCES]]
+    conf[CONF_RESOURCES] = config[CONF_RESOURCES]
 
     _LOGGER.warning(
         "YAML configurations loaded with host %s, port %s and resources %s ",
@@ -466,32 +487,31 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the APCUPSd sensors from config entries."""
-    data_service = hass.data[DOMAIN][config_entry.entry_id]
+    data_service: APCUPSdData = hass.data[DOMAIN][config_entry.entry_id]
 
-    available_resources: set[str] = set(data_service.status)
+    # The resources from data service are in upper-case by default, but we use
+    # lower cases throughout this integration.
+    available_resources: set[str] = {k.lower() for k, _ in data_service.status.items()}
 
-    # We use user-specified resources from imported YAML config (if available).
-    specified_resources = available_resources
-    if CONF_RESOURCES in config_entry.data:
-        resources = config_entry.data.get(CONF_RESOURCES)
+    # We use user-specified resources from imported YAML config (if available) to
+    # determine whether to enable the entity by default.
+    specified_resources = None
+    if (resources := config_entry.data.get(CONF_RESOURCES)) is not None:
         assert isinstance(resources, list)
         specified_resources = set(resources)
 
     entities = []
-    for resource in specified_resources:
-        # The resource from data service are in upper-case by default, but we use
-        # lower cases inside this integration.
-        resource = resource.lower()
+    for resource in available_resources:
         if resource not in SENSORS:
-            _LOGGER.warning("Invalid resource from APCUPSd: %s", resource)
-            continue
-        if resource not in available_resources:
-            _LOGGER.warning("Resource %s not available", resource)
+            _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
 
         description = copy.copy(SENSORS[resource])
         # To avoid breaking changes, we disable sensors not specified in resources.
-        description.entity_registry_enabled_default = resource in specified_resources
+        if specified_resources is not None:
+            description.entity_registry_enabled_default = (
+                resource in specified_resources
+            )
         entities.append(APCUPSdSensor(data_service, description))
 
     async_add_entities(entities, update_before_add=True)
@@ -514,11 +534,29 @@ class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
     def __init__(
-        self, data_service: APCUPSdData, description: SensorEntityDescription
+        self,
+        data_service: APCUPSdData,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        if (serial_no := data_service.serial_no) is not None:
+            self._attr_unique_id = f"{serial_no}_{description.key}"
         self.entity_description = description
         self._data_service = data_service
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info of the sensor."""
+        if self._data_service.model is None:
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, self._data_service.model)},
+            "model": self._data_service.model,
+            "manufacturer": "APC",
+            "hw_version": self._data_service.hw_version,
+            "sw_version": self._data_service.sw_version,
+        }
 
     def update(self) -> None:
         """Get the latest status and use it to update our sensor state."""
