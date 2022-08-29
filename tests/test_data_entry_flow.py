@@ -181,7 +181,7 @@ async def test_abort_calls_async_remove_with_exception(manager, caplog):
     with caplog.at_level(logging.ERROR):
         await manager.async_init("test")
 
-    assert "Error removing test config flow: RuntimeError('error')" in caplog.text
+    assert "Error removing test config flow: error" in caplog.text
 
     TestFlow.async_remove.assert_called_once()
 
