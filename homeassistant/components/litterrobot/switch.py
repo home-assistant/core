@@ -1,11 +1,13 @@
 """Support for Litter-Robot switches."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any
 
-from pylitterbot import LitterRobot
+from pylitterbot import FeederRobot, LitterRobot, Robot
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,62 +17,70 @@ from .entity import LitterRobotConfigEntity
 from .hub import LitterRobotHub
 
 
-class LitterRobotNightLightModeSwitch(
-    LitterRobotConfigEntity[LitterRobot], SwitchEntity
-):
-    """Litter-Robot Night Light Mode Switch."""
+@dataclass
+class RobotSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes robot switch entities."""
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if switch is on."""
-        if self._refresh_callback is not None:
-            return self._assumed_state
-        return self.robot.night_light_mode_enabled
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:lightbulb-on" if self.is_on else "mdi:lightbulb-off"
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        await self.perform_action_and_assume_state(self.robot.set_night_light, True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self.perform_action_and_assume_state(self.robot.set_night_light, False)
+    icons: tuple[str | None, str | None] = (None, None)
+    set_fn: Callable[
+        [LitterRobot | FeederRobot], Callable[[bool], Coroutine[Any, Any, bool]]
+    ] | None = None
 
 
-class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity[LitterRobot], SwitchEntity):
-    """Litter-Robot Panel Lockout Switch."""
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if switch is on."""
-        if self._refresh_callback is not None:
-            return self._assumed_state
-        return self.robot.panel_lock_enabled
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:lock" if self.is_on else "mdi:lock-open"
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        await self.perform_action_and_assume_state(self.robot.set_panel_lockout, True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self.perform_action_and_assume_state(self.robot.set_panel_lockout, False)
-
-
-ROBOT_SWITCHES: list[
-    tuple[type[LitterRobotNightLightModeSwitch | LitterRobotPanelLockoutSwitch], str]
-] = [
-    (LitterRobotNightLightModeSwitch, "Night Light Mode"),
-    (LitterRobotPanelLockoutSwitch, "Panel Lockout"),
+ROBOT_SWITCHES = [
+    RobotSwitchEntityDescription(
+        key="night_light_mode_enabled",
+        name="Night light mode",
+        icons=("mdi:lightbulb-on", "mdi:lightbulb-off"),
+        set_fn=lambda robot: robot.set_night_light,
+    ),
+    RobotSwitchEntityDescription(
+        key="panel_lock_enabled",
+        name="Panel lockout",
+        icons=("mdi:lock", "mdi:lock-open"),
+        set_fn=lambda robot: robot.set_panel_lockout,
+    ),
 ]
+
+
+class RobotSwitchEntity(LitterRobotConfigEntity, SwitchEntity):
+    """Litter-Robot switch entity."""
+
+    entity_description: RobotSwitchEntityDescription
+
+    def __init__(
+        self,
+        robot: Robot,
+        hub: LitterRobotHub,
+        description: RobotSwitchEntityDescription,
+    ) -> None:
+        """Initialize a Litter-Robot switch entity."""
+        assert description.name
+        super().__init__(robot, description.name, hub)
+        self.entity_description = description
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        if self._refresh_callback is not None:
+            return self._assumed_state
+        return bool(getattr(self.robot, self.entity_description.key))
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        icon_on, icon_off = self.entity_description.icons
+        return icon_on if self.is_on else icon_off
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        if set_fn := self.entity_description.set_fn:
+            await self.perform_action_and_assume_state(set_fn(self.robot), True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        if set_fn := self.entity_description.set_fn:
+            await self.perform_action_and_assume_state(set_fn(self.robot), False)
 
 
 async def async_setup_entry(
@@ -81,7 +91,8 @@ async def async_setup_entry(
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        switch_class(robot=robot, entity_type=switch_type, hub=hub)
-        for switch_class, switch_type in ROBOT_SWITCHES
-        for robot in hub.litter_robots()
+        RobotSwitchEntity(robot=robot, hub=hub, description=description)
+        for description in ROBOT_SWITCHES
+        for robot in hub.account.robots
+        if isinstance(robot, (LitterRobot, FeederRobot))
     )
