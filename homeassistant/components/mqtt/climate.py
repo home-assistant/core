@@ -286,13 +286,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    _PLATFORM_SCHEMA_BASE,
-    valid_preset_mode_configuration,
-)
-
-# Configuring MQTT Climate under the climate platform key is deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     # Support CONF_SEND_IF_OFF is removed with release 2022.9
     cv.removed(CONF_SEND_IF_OFF),
     # AWAY and HOLD mode topics and templates are no longer supported, support was removed with release 2022.9
@@ -304,6 +297,13 @@ PLATFORM_SCHEMA = vol.All(
     cv.removed(CONF_HOLD_STATE_TEMPLATE),
     cv.removed(CONF_HOLD_STATE_TOPIC),
     cv.removed(CONF_HOLD_LIST),
+    _PLATFORM_SCHEMA_BASE,
+    valid_preset_mode_configuration,
+)
+
+# Configuring MQTT Climate under the climate platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_preset_mode_configuration,
     warn_for_legacy_schema(climate.DOMAIN),
 )

@@ -225,6 +225,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, device_type, xiaomi_hub, config_entry):
         """Initialize the Xiaomi device."""
         self._state = None
@@ -308,11 +310,6 @@ class XiaomiDevice(Entity):
     def available(self):
         """Return True if entity is available."""
         return self._is_available
-
-    @property
-    def should_poll(self):
-        """Return the polling state. No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

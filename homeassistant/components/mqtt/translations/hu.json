@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" tripla kattint\u00e1s"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "A manu\u00e1lisan konfigur\u00e1lt MQTT {platform} a `{platform}` platformkulcs alatt tal\u00e1lhat\u00f3. \n\n A probl\u00e9ma megold\u00e1s\u00e1hoz helyezze \u00e1t a konfigur\u00e1ci\u00f3t az \"mqtt\" integr\u00e1ci\u00f3s kulcsra, \u00e9s ind\u00edtsa \u00fajra a Home Assistant alkalmaz\u00e1st. Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse meg a [dokument\u00e1ci\u00f3t]({more_info_url}).",
+            "title": "A manu\u00e1lisan konfigur\u00e1lt MQTT {platform} figyelmet ig\u00e9nyel"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "\u00c9rv\u00e9nytelen 'birth' topik.",

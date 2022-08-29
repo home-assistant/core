@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -38,7 +39,7 @@ ADVANTAGE_AIR_HVAC_MODES = {
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
 ADVANTAGE_AIR_FAN_MODES = {
-    "auto": FAN_AUTO,
+    "autoAA": FAN_AUTO,
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
     "high": FAN_HIGH,
@@ -192,7 +193,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         """Return the temperature heat mode is enabled."""
         return self._ac.get(ADVANTAGE_AIR_HEAT_TARGET, 20)
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
             await self.async_change(
@@ -216,7 +217,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             {self.ac_key: {"info": {"fan": HASS_FAN_MODES.get(fan_mode)}}}
         )
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
         if ATTR_TEMPERATURE in kwargs:
             await self.async_change(
@@ -279,7 +280,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         """Return the target temperature."""
         return self._zone["setTemp"]
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         await self.async_change(
             {
@@ -295,7 +296,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
             }
         )
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(

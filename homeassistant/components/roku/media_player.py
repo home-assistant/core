@@ -30,7 +30,6 @@ from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
-    STATE_HOME,
     STATE_IDLE,
     STATE_ON,
     STATE_PAUSED,
@@ -161,12 +160,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if (
             self.coordinator.data.app.name == "Power Saver"
+            or self.coordinator.data.app.name == "Roku"
             or self.coordinator.data.app.screensaver
         ):
             return STATE_IDLE
-
-        if self.coordinator.data.app.name == "Roku":
-            return STATE_HOME
 
         if self.coordinator.data.media:
             if self.coordinator.data.media.paused:
