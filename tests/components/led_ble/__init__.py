@@ -18,6 +18,20 @@ LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     connectable=True,
 )
 
+UNSUPPORTED_LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name="LEDnetWFF30200000152C",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    manufacturer_data={},
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="LEDnetWFF30200000152C"),
+    advertisement=AdvertisementData(),
+    time=0,
+    connectable=True,
+)
+
 
 NOT_LED_BLEDISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Not",

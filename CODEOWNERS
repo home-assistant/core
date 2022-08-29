@@ -602,6 +602,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lcn/ @alengwenus
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/led_ble/ @bdraco
+/tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner

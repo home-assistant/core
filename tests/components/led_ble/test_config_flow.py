@@ -9,7 +9,11 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import LED_BLE_DISCOVERY_INFO, NOT_LED_BLEDISCOVERY_INFO
+from . import (
+    LED_BLE_DISCOVERY_INFO,
+    NOT_LED_BLEDISCOVERY_INFO,
+    UNSUPPORTED_LED_BLE_DISCOVERY_INFO,
+)
 
 from tests.common import MockConfigEntry
 
@@ -212,3 +216,14 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     }
     assert result2["result"].unique_id == LED_BLE_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_unsupported_model(hass: HomeAssistant) -> None:
+    """Test bluetooth step with an unsupported model path."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=UNSUPPORTED_LED_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
