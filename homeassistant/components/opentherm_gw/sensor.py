@@ -86,6 +86,8 @@ async def async_setup_entry(
 class OpenThermSensor(SensorEntity):
     """Representation of an OpenTherm Gateway sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
         """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = async_generate_entity_id(
@@ -170,11 +172,6 @@ class OpenThermSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
-
-    @property
-    def should_poll(self):
-        """Return False because entity pushes its state."""
-        return False
 
 
 class DeprecatedOpenThermSensor(OpenThermSensor):

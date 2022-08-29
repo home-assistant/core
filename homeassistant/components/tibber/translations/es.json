@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_access_token": "Token de acceso inv\u00e1lido",
+            "invalid_access_token": "Token de acceso no v\u00e1lido",
             "timeout": "Tiempo de espera para conectarse a Tibber"
         },
         "step": {

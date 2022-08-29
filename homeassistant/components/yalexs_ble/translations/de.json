@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
             "no_unconfigured_devices": "Keine unkonfigurierten Ger\u00e4te gefunden."
         },
@@ -23,7 +24,7 @@
                     "key": "Offline-Schl\u00fcssel (32-Byte-Hex-String)",
                     "slot": "Offline-Schl\u00fcssel-Slot (Ganzzahl zwischen 0 und 255)"
                 },
-                "description": "Lies in der Dokumentation unter {docs_url} nach, wie du den Offline-Schl\u00fcssel finden kannst."
+                "description": "Lies in der Dokumentation nach, wie du den Offline-Schl\u00fcssel finden kannst."
             }
         }
     }

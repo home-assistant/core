@@ -23,12 +23,12 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio para usar en su lugar el servicio `{alternate_service}` con una ID de entidad de destino de `{alternate_target}`. Luego, haz clic en ENVIAR a continuaci\u00f3n para marcar este problema como resuelto.",
-                        "title": "El servicio {deprecated_service} ser\u00e1 eliminado"
+                        "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio para usar en su lugar el servicio `{alternate_service}` con un ID de entidad de destino de `{alternate_target}`. Luego, haz clic en ENVIAR a continuaci\u00f3n para marcar este problema como resuelto.",
+                        "title": "Se va a eliminar el servicio {deprecated_service}"
                     }
                 }
             },
-            "title": "El servicio {deprecated_service} ser\u00e1 eliminado"
+            "title": "Se va a eliminar el servicio {deprecated_service}"
         }
     }
 }

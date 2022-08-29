@@ -159,7 +159,7 @@ class ArestSensor(SensorEntity):
             if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from aREST API."""
         self.arest.update()
         self._attr_available = self.arest.available

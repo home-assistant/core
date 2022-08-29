@@ -1,4 +1,5 @@
 """The tests for the Demo component."""
+import datetime
 from http import HTTPStatus
 import json
 from unittest.mock import ANY, patch
@@ -7,9 +8,15 @@ import pytest
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.statistics import list_statistic_ids
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+    list_statistic_ids,
+)
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -57,7 +64,7 @@ async def test_demo_statistics(hass, recorder_mock):
     assert {
         "has_mean": True,
         "has_sum": False,
-        "name": None,
+        "name": "Outdoor temperature",
         "source": "demo",
         "statistic_id": "demo:temperature_outdoor",
         "unit_of_measurement": "°C",
@@ -65,15 +72,51 @@ async def test_demo_statistics(hass, recorder_mock):
     assert {
         "has_mean": False,
         "has_sum": True,
-        "name": None,
+        "name": "Energy consumption 1",
         "source": "demo",
-        "statistic_id": "demo:energy_consumption",
+        "statistic_id": "demo:energy_consumption_kwh",
         "unit_of_measurement": "kWh",
     } in statistic_ids
 
 
+async def test_demo_statistics_growth(hass, recorder_mock):
+    """Test that the demo sum statistics adds to the previous state."""
+    now = dt_util.now()
+    last_week = now - datetime.timedelta(days=7)
+    last_week_midnight = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    statistic_id = f"{DOMAIN}:energy_consumption_kwh"
+    metadata = {
+        "source": DOMAIN,
+        "name": "Energy consumption 1",
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "kWh",
+        "has_mean": False,
+        "has_sum": True,
+    }
+    statistics = [
+        {
+            "start": last_week_midnight,
+            "sum": 2**20,
+        }
+    ]
+    async_add_external_statistics(hass, metadata, statistics)
+    await async_wait_recording_done(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done(hass)
+
+    statistics = await get_instance(hass).async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, False
+    )
+    assert statistics[statistic_id][0]["sum"] > 2**20
+
+
 async def test_issues_created(hass, hass_client, hass_ws_client):
     """Test issues are created and can be fixed."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     await hass.async_start()

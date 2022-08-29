@@ -16,7 +16,14 @@ from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SUPPORTED_MODEL_TYPES
+from .const import (
+    CONF_RETRY_COUNT,
+    CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_RETRY_COUNT,
+    DOMAIN,
+    NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    SUPPORTED_MODEL_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +74,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
+        model_name = parsed.data.get("modelName")
+        if (
+            not discovery_info.connectable
+            and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+        ):
+            # Source is not connectable but the model is connectable
+            return self.async_abort(reason="not_supported")
         self._discovered_adv = parsed
         data = parsed.data
         self.context["title_placeholders"] = {
@@ -94,7 +108,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_confirm(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a single device."""
         assert self._discovered_adv is not None
         if user_input is not None:
@@ -131,18 +147,25 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_discover_devices(self) -> None:
         current_addresses = self._async_current_ids()
-        for discovery_info in async_discovered_service_info(self.hass):
-            address = discovery_info.address
-            if (
-                format_unique_id(address) in current_addresses
-                or address in self._discovered_advs
-            ):
-                continue
-            parsed = parse_advertisement_data(
-                discovery_info.device, discovery_info.advertisement
-            )
-            if parsed and parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
-                self._discovered_advs[address] = parsed
+        for connectable in (True, False):
+            for discovery_info in async_discovered_service_info(self.hass, connectable):
+                address = discovery_info.address
+                if (
+                    format_unique_id(address) in current_addresses
+                    or address in self._discovered_advs
+                ):
+                    continue
+                parsed = parse_advertisement_data(
+                    discovery_info.device, discovery_info.advertisement
+                )
+                if not parsed:
+                    continue
+                model_name = parsed.data.get("modelName")
+                if (
+                    discovery_info.connectable
+                    and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+                ) or model_name in NON_CONNECTABLE_SUPPORTED_MODEL_TYPES:
+                    self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
             raise AbortFlow("no_unconfigured_devices")
