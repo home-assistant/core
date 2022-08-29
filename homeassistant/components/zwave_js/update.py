@@ -159,6 +159,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             except StopIteration as err:
                 raise ValueError(f"Version {version} not found") from err
         self._attr_in_progress = True
+        self.async_write_ha_state()
         try:
             for file in firmware.files:
                 await self.driver.controller.async_begin_ota_firmware_update(
