@@ -1,9 +1,9 @@
 """The iss component."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TypedDict
 
 import pyiss
 import requests
@@ -21,13 +21,24 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR]
 
 
-class IssData(TypedDict):
-    """Typed dict representation of data returned from pyiss."""
+@dataclass
+class IssData:
+    """Dataclass representation of data returned from pyiss."""
 
     number_of_people_in_space: int
     current_location: dict[str, str]
     is_above: bool
     next_rise: datetime
+
+
+def update(iss: pyiss.ISS, latitude: float, longitude: float) -> IssData:
+    """Retrieve data from the pyiss API."""
+    return IssData(
+        number_of_people_in_space=iss.number_of_people_in_space(),
+        current_location=iss.current_location(),
+        is_above=iss.is_ISS_above(latitude, longitude),
+        next_rise=iss.next_rise(latitude, longitude),
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,16 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update() -> IssData:
         try:
-
-            def update(latitude: float, longitude: float) -> IssData:
-                return IssData(
-                    number_of_people_in_space=iss.number_of_people_in_space(),
-                    current_location=iss.current_location(),
-                    is_above=iss.is_ISS_above(latitude, longitude),
-                    next_rise=iss.next_rise(latitude, longitude),
-                )
-
-            return await hass.async_add_executor_job(update, latitude, longitude)
+            return await hass.async_add_executor_job(update, iss, latitude, longitude)
         except (HTTPError, requests.exceptions.ConnectionError) as ex:
             raise UpdateFailed("Unable to retrieve data") from ex
 

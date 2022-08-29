@@ -37,7 +37,7 @@ async def async_setup_entry(
     name = entry.title
     show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
-    async_add_entities([IssBinarySensor(coordinator, name, show_on_map)], True)
+    async_add_entities([IssBinarySensor(coordinator, name, show_on_map)])
 
 
 class IssBinarySensor(
@@ -59,26 +59,24 @@ class IssBinarySensor(
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data["is_above"] is True
+        return self.coordinator.data.is_above is True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = {
-            ATTR_ISS_NUMBER_PEOPLE_SPACE: self.coordinator.data[
-                "number_of_people_in_space"
-            ],
-            ATTR_ISS_NEXT_RISE: self.coordinator.data["next_rise"],
+            ATTR_ISS_NUMBER_PEOPLE_SPACE: self.coordinator.data.number_of_people_in_space,
+            ATTR_ISS_NEXT_RISE: self.coordinator.data.next_rise,
         }
         if self._show_on_map:
-            attrs[ATTR_LONGITUDE] = self.coordinator.data["current_location"].get(
+            attrs[ATTR_LONGITUDE] = self.coordinator.data.current_location.get(
                 "longitude"
             )
-            attrs[ATTR_LATITUDE] = self.coordinator.data["current_location"].get(
+            attrs[ATTR_LATITUDE] = self.coordinator.data.current_location.get(
                 "latitude"
             )
         else:
-            attrs["long"] = self.coordinator.data["current_location"].get("longitude")
-            attrs["lat"] = self.coordinator.data["current_location"].get("latitude")
+            attrs["long"] = self.coordinator.data.current_location.get("longitude")
+            attrs["lat"] = self.coordinator.data.current_location.get("latitude")
 
         return attrs
