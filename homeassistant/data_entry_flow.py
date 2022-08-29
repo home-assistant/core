@@ -343,7 +343,7 @@ class FlowManager(abc.ABC):
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.warning("Error removing %s config flow: %r", flow.handler, err)
+            _LOGGER.exception("Error removing %s config flow: %s", flow.handler, err)
 
     async def _async_handle_step(
         self,

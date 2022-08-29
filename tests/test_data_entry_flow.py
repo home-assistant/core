@@ -178,7 +178,7 @@ async def test_abort_calls_async_remove_with_exception(manager, caplog):
 
         async_remove = Mock(side_effect=[RuntimeError("error")])
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.ERROR):
         await manager.async_init("test")
 
     assert "Error removing test config flow: RuntimeError('error')" in caplog.text
