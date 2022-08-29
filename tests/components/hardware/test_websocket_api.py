@@ -3,6 +3,8 @@ from collections import namedtuple
 import datetime
 from unittest.mock import patch
 
+import psutil_home_assistant as ha_psutil
+
 from homeassistant.components.hardware.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -28,7 +30,20 @@ TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
 
 async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, freezer):
     """Test websocket system status subscription."""
-    assert await async_setup_component(hass, DOMAIN, {})
+
+    mock_psutil = None
+    orig_psutil_wrapper = ha_psutil.PsutilWrapper
+
+    def create_mock_psutil():
+        nonlocal mock_psutil
+        mock_psutil = orig_psutil_wrapper()
+        return mock_psutil
+
+    with patch(
+        "homeassistant.components.hardware.websocket_api.ha_psutil.PsutilWrapper",
+        wraps=create_mock_psutil,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 
@@ -40,11 +55,11 @@ async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, f
     vmem = VirtualMem(10 * 1024**2, 50, 30 * 1024**2)
 
     with patch.object(
-        hass.data[DOMAIN]["system_status"].ha_psutil.psutil,
+        mock_psutil.psutil,
         "cpu_percent",
         return_value=123,
     ), patch.object(
-        hass.data[DOMAIN]["system_status"].ha_psutil.psutil,
+        mock_psutil.psutil,
         "virtual_memory",
         return_value=vmem,
     ):
@@ -65,10 +80,8 @@ async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, f
     response = await client.receive_json()
     assert response["success"]
 
-    with patch.object(
-        hass.data[DOMAIN]["system_status"].ha_psutil.psutil, "cpu_percent"
-    ) as cpu_mock, patch.object(
-        hass.data[DOMAIN]["system_status"].ha_psutil.psutil, "virtual_memory"
+    with patch.object(mock_psutil.psutil, "cpu_percent") as cpu_mock, patch.object(
+        mock_psutil.psutil, "virtual_memory"
     ) as vmem_mock:
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
         await hass.async_block_till_done()
