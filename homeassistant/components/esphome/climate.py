@@ -136,6 +136,8 @@ _PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
 class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):
     """A climate implementation for ESPHome."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     @property
     def precision(self) -> float:
         """Return the precision of the climate device."""
@@ -145,11 +147,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                 return prec
         # Fall back to highest precision, tenths
         return PRECISION_TENTHS
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:

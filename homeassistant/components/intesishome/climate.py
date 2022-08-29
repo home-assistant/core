@@ -144,6 +144,7 @@ class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
     _attr_should_poll = False
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
@@ -217,11 +218,6 @@ class IntesisAC(ClimateEntity):
     def name(self):
         """Return the name of the AC device."""
         return self._device_name
-
-    @property
-    def temperature_unit(self):
-        """Intesishome API uses celsius on the backend."""
-        return TEMP_CELSIUS
 
     @property
     def extra_state_attributes(self):

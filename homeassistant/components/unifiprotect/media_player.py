@@ -9,6 +9,7 @@ from pyunifiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
+    StateType,
 )
 from pyunifiprotect.exceptions import StreamError
 
@@ -48,7 +49,9 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if isinstance(device, Camera) and device.feature_flags.has_speaker:
+        if isinstance(device, Camera) and (
+            device.has_speaker or device.has_removable_speaker
+        ):
             async_add_entities([ProtectMediaPlayer(data, device)])
 
     entry.async_on_unload(
@@ -58,7 +61,7 @@ async def async_setup_entry(
     entities = []
     for device in data.get_by_types({ModelType.CAMERA}):
         device = cast(Camera, device)
-        if device.feature_flags.has_speaker:
+        if device.has_speaker or device.has_removable_speaker:
             entities.append(ProtectMediaPlayer(data, device))
 
     async_add_entities(entities)
@@ -106,6 +109,12 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self._attr_state = STATE_PLAYING
         else:
             self._attr_state = STATE_IDLE
+
+        is_connected = self.data.last_update_success and (
+            self.device.state == StateType.CONNECTED
+            or (not self.device.is_adopted_by_us and self.device.can_adopt)
+        )
+        self._attr_available = is_connected and self.device.feature_flags.has_speaker
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

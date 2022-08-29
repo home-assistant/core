@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-# pylint: disable=import-error
 from switchmate import Switchmate
 import voluptuous as vol
 

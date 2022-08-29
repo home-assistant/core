@@ -55,6 +55,7 @@ class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = TEMP_FAHRENHEIT
 
     def __init__(self, pdp):
         """Initialize the thermostat."""
@@ -84,11 +85,6 @@ class ProliphixThermostat(ClimateEntity):
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {ATTR_FAN: self._pdp.fan_state}
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
