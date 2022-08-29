@@ -189,7 +189,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         unique_id,
     ):
         """Initialize the thermostat."""
-        self._name = name
+        self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
         self.ac_mode = ac_mode
@@ -305,11 +305,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Set default state to off
         if not self._hvac_mode:
             self._hvac_mode = HVACMode.OFF
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._name
 
     @property
     def unique_id(self):
