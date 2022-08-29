@@ -1,12 +1,9 @@
 """The Litter-Robot integration."""
 from __future__ import annotations
 
-from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .hub import LitterRobotHub
@@ -24,12 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
-    try:
-        await hub.login(load_robots=True)
-    except LitterRobotLoginException:
-        return False
-    except LitterRobotException as ex:
-        raise ConfigEntryNotReady from ex
+    await hub.login(load_robots=True)
 
     if any(hub.litter_robots()):
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
