@@ -16,7 +16,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_TIMEOUT, DOMAIN
+from .const import DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
 from .models import LEDBLEData
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=led_ble.name,
         update_method=_async_update,
-        update_interval=timedelta(seconds=90),
+        update_interval=timedelta(seconds=UPDATE_SECONDS),
     )
 
     try:

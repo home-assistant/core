@@ -13,5 +13,5 @@
     { "local_name": "Triones*" },
     { "local_name": "LEDBlue*" }
   ],
-  "iot_class": "local_push"
+  "iot_class": "local_polling"
 }
