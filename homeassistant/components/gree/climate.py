@@ -113,6 +113,7 @@ async def async_setup_entry(
 class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -151,11 +152,6 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         """Return the temperature units for the device."""
         units = self.coordinator.device.temperature_units
         return TEMP_CELSIUS if units == TemperatureUnits.C else TEMP_FAHRENHEIT
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of temperature for the device."""
-        return PRECISION_WHOLE
 
     @property
     def current_temperature(self) -> float:
