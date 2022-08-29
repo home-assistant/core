@@ -164,7 +164,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, file
                 )
         except BaseZwaveJSServerError as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(err) from err
         else:
             self._attr_installed_version = firmware.version
             self.available_firmware_updates.remove(firmware)
