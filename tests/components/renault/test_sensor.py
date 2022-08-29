@@ -1,11 +1,19 @@
 """Tests for Renault sensors."""
+from copy import deepcopy
 from types import MappingProxyType
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_STATE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_MILES,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
@@ -61,6 +69,37 @@ async def test_sensors(
 
     _check_and_enable_disabled_entities(entity_registry, expected_entities)
     await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    check_entities(hass, entity_registry, expected_entities)
+
+
+@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_miles_sensor(
+    hass: HomeAssistant, miles_config_entry: ConfigEntry, vehicle_type: str
+):
+    """Test for Renault sensors."""
+    entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
+    await hass.config_entries.async_setup(miles_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
+
+    expected_entities = deepcopy(mock_vehicle[Platform.SENSOR])
+    # sensor.reg_number_battery_autonomy
+    expected_entities[0][ATTR_STATE] = "88"
+    expected_entities[0][ATTR_UNIT_OF_MEASUREMENT] = LENGTH_MILES
+    # sensor.reg_number_mileage
+    expected_entities[8][ATTR_STATE] = "30518"
+    expected_entities[8][ATTR_UNIT_OF_MEASUREMENT] = LENGTH_MILES
+    assert len(entity_registry.entities) == len(expected_entities)
+
+    _check_and_enable_disabled_entities(entity_registry, expected_entities)
+    await hass.config_entries.async_reload(miles_config_entry.entry_id)
     await hass.async_block_till_done()
 
     check_entities(hass, entity_registry, expected_entities)
