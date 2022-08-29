@@ -9,6 +9,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
@@ -73,6 +74,7 @@ async def test_options(mock_hc, hass, mock_write_config):
         "Play Music",
         "Watch TV",
     ]
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "harmony__activities"
 
 
 async def test_select_option(mock_hc, hass, mock_write_config):
