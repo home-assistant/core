@@ -43,6 +43,4 @@ class EcowittEntity(Entity):
     @property
     def available(self) -> bool:
         """Return whether the state is based on actual reading from device."""
-        if (self.ecowitt.last_update_m + 5 * 60) > time.monotonic():
-            return True
-        return False
+        return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()
