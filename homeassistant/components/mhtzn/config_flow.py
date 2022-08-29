@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_scan()
 
         fields = OrderedDict()
-        fields[vol.Required(CONF_LIGHT_DEVICE_TYPE)] = vol.In(["单灯", "灯组"])
+        fields[vol.Required(CONF_LIGHT_DEVICE_TYPE, default="灯组")] = vol.In(["单灯", "灯组"])
 
         return self.async_show_form(
             step_id="option",

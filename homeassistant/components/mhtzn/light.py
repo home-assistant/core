@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, MQTT_CLIENT_INSTANCE, \
     EVENT_ENTITY_REGISTER, EVENT_ENTITY_STATE_UPDATE, CACHE_ENTITY_STATE_UPDATE_KEY_DICT
+from .util import color_temp_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +58,6 @@ class CustomLight(LightEntity):
     def __init__(self, hass: HomeAssistant, config: dict, config_entry: ConfigEntry) -> None:
         self._attr_unique_id = config["unique_id"]
 
-        self._attr_entity_id = config["unique_id"]
-
         self._attr_name = config["name"]
 
         self._attr_max_mireds = LIGHT_MAX_KELVIN
@@ -69,22 +68,24 @@ class CustomLight(LightEntity):
 
         self.is_group = config["is_group"]
 
+        self._attr_color_mode = ColorMode.COLOR_TEMP
+
         self._attr_supported_color_modes: set[ColorMode] = set()
+
+        self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
         if self.is_group:
             self.room = int(config["room"])
             self.subgroup = int(config["subgroup"])
-            self._attr_color_mode = ColorMode.RGB
             self._attr_supported_color_modes.add(ColorMode.RGB)
+            self._attr_color_mode = ColorMode.RGB
         else:
             self.sn = config["sn"]
-            if "rgb" in config:
-                self._attr_color_mode = ColorMode.RGB
+            if ColorMode.RGB in config:
                 self._attr_supported_color_modes.add(ColorMode.RGB)
-
-        self._attr_color_mode = ColorMode.COLOR_TEMP
+                self._attr_color_mode = ColorMode.RGB
 
         self.hass = hass
 
@@ -121,6 +122,14 @@ class CustomLight(LightEntity):
     def is_on(self) -> bool | None:
         return self.on_off
 
+    @property
+    def color_temp(self) -> int | None:
+        return self._attr_color_temp
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        return self._attr_rgb_color
+
     def update_state(self, data):
         """Light event reporting changes the light state in HA"""
         if "on" in data:
@@ -128,6 +137,15 @@ class CustomLight(LightEntity):
                 self.on_off = False
             else:
                 self.on_off = True
+
+        if "kelvin" in data:
+            kelvin = int(data["kelvin"])
+            if kelvin > LIGHT_MAX_KELVIN:
+                kelvin = LIGHT_MAX_KELVIN
+            if kelvin < LIGHT_MIN_KELVIN:
+                kelvin = LIGHT_MIN_KELVIN
+            kelvin = LIGHT_MAX_KELVIN - (kelvin - LIGHT_MIN_KELVIN)
+            self._attr_color_temp = kelvin
 
         if "rgb" in data:
             rgb = data["rgb"]
@@ -138,15 +156,6 @@ class CustomLight(LightEntity):
 
         if "level" in data:
             self._attr_brightness = int(data["level"] * 255)
-
-        if "kelvin" in data:
-            kelvin = int(data["kelvin"])
-            if kelvin > LIGHT_MAX_KELVIN:
-                kelvin = LIGHT_MAX_KELVIN
-            if kelvin < LIGHT_MIN_KELVIN:
-                kelvin = LIGHT_MIN_KELVIN
-            kelvin = LIGHT_MAX_KELVIN - (kelvin - LIGHT_MIN_KELVIN)
-            self._attr_color_temp = kelvin
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light, switch color temperature, switch brightness, switch color operations"""
@@ -167,6 +176,9 @@ class CustomLight(LightEntity):
                 kelvin = LIGHT_MIN_KELVIN
             on = None
             self._attr_color_temp = kwargs["color_temp"]
+            self._attr_rgb_color = color_temp_to_rgb(kelvin)
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+
         if "brightness" in kwargs:
             brightness_normalized = kwargs["brightness"] / 255
             level = round(brightness_normalized, 6)
@@ -180,6 +192,7 @@ class CustomLight(LightEntity):
 
             on = None
             self._attr_rgb_color = kwargs["rgb_color"]
+            self._attr_color_mode = ColorMode.RGB
 
         await self.exec_command(on=on, level=level, kelvin=kelvin, rgb=rgb)
 

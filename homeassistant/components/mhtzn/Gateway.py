@@ -10,7 +10,8 @@ from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, Event
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import MQTT_CLIENT_INSTANCE, CONF_LIGHT_DEVICE_TYPE, EVENT_ENTITY_REGISTER, MQTT_TOPIC_PREFIX
+from .const import MQTT_CLIENT_INSTANCE, CONF_LIGHT_DEVICE_TYPE, EVENT_ENTITY_REGISTER, MQTT_TOPIC_PREFIX, \
+    EVENT_ENTITY_STATE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class Gateway:
             stats_list = payload["data"]
             for state in stats_list:
                 async_dispatcher_send(
-                    self._hass, "mhtzn_device_state_{}".format(state["sn"]), state
+                    self._hass, EVENT_ENTITY_STATE_UPDATE.format(state["sn"]), state
                 )
         elif topic.endswith("p33"):
             """Basic data, including room information, light group information, curtain group information"""
