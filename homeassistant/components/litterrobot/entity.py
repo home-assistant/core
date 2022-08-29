@@ -42,7 +42,7 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
         self.robot = robot
         self.entity_type = entity_type
         self.hub = hub
-        self._attr_name = entity_type
+        self._attr_name = entity_type.capitalize()
 
     @property
     def unique_id(self) -> str:
