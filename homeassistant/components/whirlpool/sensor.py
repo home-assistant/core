@@ -4,13 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-import time
 
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 from whirlpool.washerdryer import WasherDryer
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -56,7 +56,9 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
         name="time remaining",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="s",
         entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
@@ -138,8 +140,4 @@ class WasherDryerClass(SensorEntity):
     @property
     def native_value(self) -> StateType | str:
         """Return native value of sensor."""
-        if self.entity_description.key == "timeremaining":
-            washertime = time.gmtime(int(self.entity_description.value_fn(self._wd)))
-            return time.strftime("%H:%M:%S", washertime)
-
         return self.entity_description.value_fn(self._wd)
