@@ -1,6 +1,7 @@
 """Config flow for MPRIS media playback remote control integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import hassmpris_client
@@ -144,8 +145,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self._unique_id
 
     def _get_any_unique_id(self):
-        if x := self._get_unique_id_by_zeroconf():
-            return x
+        if id_ := self._get_unique_id_by_zeroconf():
+            return id_
         return self._get_unique_id_by_connection_data()
 
     def _update_server_data(self, host: str, cakes_port: int, mpris_port: int):
@@ -280,7 +281,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_pairing()
 
-    async def async_step_reauth(self, entry_data: dict[str, Any] | None = None):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the reauth step."""
         assert entry_data, "Impossible entry data empty"
         self._set_data(
@@ -293,7 +296,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._get_any_unique_id())
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None):
+    async def async_step_reauth_confirm(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the confirmation of reauth."""
         if not user_input:
             return self.async_show_form(
@@ -316,7 +321,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(
         self,
         user_input: dict[str, Any] | None = None,
-    ):
+    ) -> FlowResult:
         """Handle the pairing step of auth."""
         assert self._client_cert is None
         (
@@ -351,7 +356,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(
         self,
         user_input: dict[str, Any] | None = None,
-    ):
+    ) -> FlowResult:
         """Handle the confirmation that pairing went well."""
         assert self._cakes_client
         try:
