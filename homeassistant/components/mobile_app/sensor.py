@@ -110,6 +110,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
                 SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
             )
+            and isinstance(state, str)
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
             if self.device_class == SensorDeviceClass.DATE:
