@@ -287,13 +287,15 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     ) -> None:
         """Initialize deCONZ sensor."""
         self.entity_description = description
+        self._update_key = description.update_key
+        if description.suffix:
+            self._name_suffix = description.suffix
         super().__init__(device, gateway)
 
-        if description.suffix:
-            self._attr_name = f"{device.name} {description.suffix}"
-
-        self._update_keys = {description.update_key, "reachable"}
-        if self.entity_description.key in PROVIDES_EXTRA_ATTRIBUTES:
+        if (
+            self.entity_description.key in PROVIDES_EXTRA_ATTRIBUTES
+            and self._update_keys is not None
+        ):
             self._update_keys.update({"on", "state"})
 
     @property
@@ -314,12 +316,6 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
         if self.entity_description.suffix:
             return f"{self.serial}-{self.entity_description.suffix.lower()}"
         return super().unique_id
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the sensor's state."""
-        if self._device.changed_keys.intersection(self._update_keys):
-            super().async_update_callback()
 
     @property
     def native_value(self) -> StateType | datetime:
