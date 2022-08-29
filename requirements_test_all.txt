@@ -366,9 +366,6 @@ brother==2.0.0
 # homeassistant.components.brunt
 brunt==1.2.0
 
-# homeassistant.components.bsblan
-bsblan==0.5.0
-
 # homeassistant.components.bthome
 bthome-ble==1.2.2
 
