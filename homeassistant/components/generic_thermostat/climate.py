@@ -213,7 +213,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._attr_preset_mode = PRESET_NONE
         self._target_temp = target_temp
         self._attr_temperature_unit = unit
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if len(presets):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -305,11 +305,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Set default state to off
         if not self._hvac_mode:
             self._hvac_mode = HVACMode.OFF
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this thermostat."""
-        return self._unique_id
 
     @property
     def precision(self):
