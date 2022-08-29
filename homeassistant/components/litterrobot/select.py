@@ -22,6 +22,7 @@ from .hub import LitterRobotHub
 class RobotSelectEntityDescription(SelectEntityDescription):
     """A class that describes robot select entities."""
 
+    current_fn: Callable[[Robot], int | float | None] = lambda _: None
     options_fn: Callable[[Robot], list] = lambda _: []
     select_fn: Callable[
         [Robot], Callable[..., Coroutine[Any, Any, bool]] | None
@@ -33,6 +34,7 @@ class RobotSelectEntityDescription(SelectEntityDescription):
 class LitterRobotSelectEntityDescription(RobotSelectEntityDescription):
     """A class that describes Litter-Robot select entities."""
 
+    current_fn: Callable[[LitterRobot], int | None] = lambda _: None
     options_fn: Callable[[LitterRobot], list] = lambda _: []
     select_fn: Callable[
         [LitterRobot], Callable[..., Coroutine[Any, Any, bool]] | None
@@ -43,6 +45,7 @@ class LitterRobotSelectEntityDescription(RobotSelectEntityDescription):
 class FeederRobotSelectEntityDescription(RobotSelectEntityDescription):
     """A class that describes Feeder-Robot select entities."""
 
+    current_fn: Callable[[FeederRobot], float | None] = lambda _: None
     options_fn: Callable[[FeederRobot], list] = lambda _: []
     select_fn: Callable[
         [FeederRobot], Callable[..., Coroutine[Any, Any, bool]] | None
@@ -54,6 +57,7 @@ LITTER_ROBOT_SELECT = LitterRobotSelectEntityDescription(
     key="clean_cycle_wait_time_minutes",
     name="Clean Cycle Wait Time Minutes",
     icon="mdi:timer-outline",
+    current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
     select_fn=lambda robot: robot.set_wait_time,
 )
@@ -62,6 +66,7 @@ FEEDER_ROBOT_SELECT = FeederRobotSelectEntityDescription(
     name="Meal insert size",
     icon="mdi:scale",
     unit_of_measurement="cups",
+    current_fn=lambda robot: robot.meal_insert_size,
     options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
     select_fn=lambda robot: robot.set_meal_insert_size,
 )
@@ -107,7 +112,8 @@ class LitterRobotSelect(LitterRobotConfigEntity[LitterRobot], SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(getattr(self.robot, self.entity_description.key))
+        current_value = self.entity_description.current_fn(self.robot)
+        return None if current_value is None else str(current_value)
 
     @property
     def options(self) -> list[str]:
