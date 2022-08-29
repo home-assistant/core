@@ -43,6 +43,7 @@ class LEDBLEEntity(LightEntity):
         """Initialize an ledble."""
         self._device = device
         self._attr_name = name
+        self._attr_unique_id = device._address
         self._async_update_attrs()
 
     @callback
