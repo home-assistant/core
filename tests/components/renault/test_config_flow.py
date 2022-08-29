@@ -8,6 +8,7 @@ from renault_api.renault_account import RenaultAccount
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.renault.const import (
+    CONF_DISTANCES_IN_MILES,
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
     DOMAIN,
@@ -247,3 +248,18 @@ async def test_reauth(hass: HomeAssistant, config_entry: ConfigEntry):
 
     assert result3["type"] == data_entry_flow.FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+async def test_options_flow(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Test config flow options."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_DISTANCES_IN_MILES: True}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_DISTANCES_IN_MILES: True}
