@@ -78,15 +78,16 @@ async def ws_subscribe_system_status(
 
     system_status: SystemStatus = hass.data[DOMAIN]["system_status"]
 
-    async def async_update_status(now: datetime) -> None:
+    @callback
+    def async_update_status(now: datetime) -> None:
+        # Although cpu_percent and virtual_memory access files in the /proc vfs, those
+        # accesses do not block and we don't need to wrap the calls in an executor.
+        # https://elixir.bootlin.com/linux/v5.19.4/source/fs/proc/stat.c
+        # https://elixir.bootlin.com/linux/v5.19.4/source/fs/proc/meminfo.c#L32
         cpu_percentage = round(
-            await hass.async_add_executor_job(
-                system_status.ha_psutil.psutil.cpu_percent
-            )
+            system_status.ha_psutil.psutil.cpu_percent(interval=None)
         )
-        virtual_memory = await hass.async_add_executor_job(
-            system_status.ha_psutil.psutil.virtual_memory
-        )
+        virtual_memory = system_status.ha_psutil.psutil.virtual_memory()
         json_msg = {
             "cpu_percent": cpu_percentage,
             "memory_used_percent": virtual_memory.percent,
