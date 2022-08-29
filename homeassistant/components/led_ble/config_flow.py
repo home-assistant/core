@@ -38,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.name.startswith(UNSUPPORTED_SUB_MODEL):
             # These versions speak a different protocol
             # that we do not support yet.
-            return self.async_abort(reason="no_devices_found")
+            return self.async_abort(reason="not_supported")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         self._discovery_info = discovery_info
@@ -90,6 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     or discovery.address in self._discovered_devices
                     or not any(
                         discovery.name.startswith(local_name)
+                        and not discovery.name.startswith(UNSUPPORTED_SUB_MODEL)
                         for local_name in LOCAL_NAMES
                     )
                 ):
