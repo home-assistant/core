@@ -12,14 +12,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    BROKER,
-    BROKER_CONFIG,
-    COORDINATOR_LIST,
-    DOMAIN,
-    LOGGER,
-    STARTUP_MESSAGE,
-)
+from .const import BROKER, BROKER_CONFIG, COORDINATOR_LIST, DOMAIN, LOGGER
 from .coordinator import InelsDeviceUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -43,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_HOST not in entry.data:
         LOGGER.error("MQTT broker is not configured")
         return False
-
-    LOGGER.info(STARTUP_MESSAGE)
 
     inels_data: dict[str, Any] = {
         BROKER_CONFIG: entry.data,

@@ -1,47 +1,47 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "already_configured": "Integrace je již nakonfigurována",
+            "single_instance_allowed": "Již nakonfigurováno. Poze jedna integrace iNELS je možná."
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Nelze se připojit"
         },
         "step": {
             "setup": {
                 "data": {
-                    "discovery": "Enable discovery",
+                    "discovery": "Zapnout vyhledávání",
                     "host": "Broker",
                     "port": "Port",
-                    "username": "User name",
-                    "password": "Password"
+                    "username": "Uživatelské jméno",
+                    "password": "Heslo"
                 },
                 "title": "iNELS MQTT broker",
-                "description": "Please connect your MQTT broker to load iNELS components."
+                "description": "Prosím připojte se k MQTT brokeru pro načtení iNELS komponent."
             },
             "confirm": {
                 "data": {
-                    "discovery": "Enable discovery"
+                    "discovery": "Zapnout vyhledávání"
                 },
-                "title": "MQTT broker via add-on",
-                "description": "Do you want to configure Home Assistant to connec to the MQTT broker by the add-on {addon}?"
+                "title": "MQTT broker jako add-on",
+                "description": "Přejete si připojit MQTT broker k Home Assistant jako add-on {addon}?"
             }
         }
     },
     "options": {
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Nelze se připojit"
         },
         "step": {
             "setup": {
                 "data": {
                     "host": "Broker",
                     "port": "Port",
-                    "username": "User name",
-                    "password": "Password"
+                    "username": "Uživatelské jméno",
+                    "password": "Heslo"
                 },
-                "title": "iNELS MQTT broker options",
-                "description": "Please enter MQTT broker connection information."
+                "title": "iNELS MQTT broker nastavení",
+                "description": "Prosím vyplňte údaje pro připojení k MQTT brokeru."
             }
         }
     }

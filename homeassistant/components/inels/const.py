@@ -29,11 +29,3 @@ ICONS = {
 }
 
 MANUAL_SETUP = "manual"
-
-STARTUP_MESSAGE = f"""
--------------------------------------------------------------------
-{TITLE}
-Version: {INELS_VERSION}
-This is a core integration of iNELS system!
--------------------------------------------------------------------
-"""
