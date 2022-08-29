@@ -23,6 +23,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
+from homeassistant.util import dt
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -72,9 +73,8 @@ def _format_backup_choice(
     backup: zigpy.backups.NetworkBackup, *, pan_ids: bool = True
 ) -> str:
     """Format network backup info into a short piece of text."""
-
     if not pan_ids:
-        return backup.backup_time.strftime("%c")
+        return dt.as_local(backup.backup_time).strftime("%c")
 
     identifier = (
         # PAN ID
@@ -83,7 +83,7 @@ def _format_backup_choice(
         f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
     ).lower()
 
-    return f"{backup.backup_time.strftime('%c')} ({identifier})"
+    return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
 def _allow_overwrite_ezsp_ieee(
