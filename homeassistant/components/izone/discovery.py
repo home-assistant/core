@@ -19,12 +19,11 @@ from .const import (
 class DiscoveryService(pizone.Listener):
     """Discovery data and interfacing with pizone library."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass):
         """Initialise discovery service."""
         super().__init__()
         self.hass = hass
-        session = aiohttp_client.async_get_clientsession(hass)
-        self.pi_disco = pizone.discovery(self, session=session)
+        self.pi_disco = None
 
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
@@ -47,11 +46,6 @@ class DiscoveryService(pizone.Listener):
         """Zone update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
-    async def unload(self) -> None:
-        """Unload the discovery service."""
-        await self.pi_disco.close()
-        del self.hass.data[DATA_DISCOVERY_SERVICE]
-
 
 async def async_start_discovery_service(hass: HomeAssistant):
     """Set up the pizone internal discovery."""
@@ -62,6 +56,10 @@ async def async_start_discovery_service(hass: HomeAssistant):
     # discovery local services
     disco = DiscoveryService(hass)
     hass.data[DATA_DISCOVERY_SERVICE] = disco
+
+    # Start the pizone discovery service, disco is the listener
+    session = aiohttp_client.async_get_clientsession(hass)
+    disco.pi_disco = pizone.discovery(disco, session=session)
     await disco.pi_disco.start_discovery()
 
     async def shutdown_event(event):
@@ -77,4 +75,5 @@ async def async_stop_discovery_service(hass: HomeAssistant):
     if not (disco := hass.data.get(DATA_DISCOVERY_SERVICE)):
         return
 
-    await disco.unload()
+    await disco.pi_disco.close()
+    del hass.data[DATA_DISCOVERY_SERVICE]
