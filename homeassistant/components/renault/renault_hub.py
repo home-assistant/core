@@ -22,7 +22,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
+from .const import (
+    CONF_DISTANCES_IN_MILES,
+    CONF_KAMEREON_ACCOUNT_ID,
+    DEFAULT_SCAN_INTERVAL,
+)
 from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
@@ -54,6 +58,9 @@ class RenaultHub:
         """Set up proxy."""
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
         scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        distances_in_miles: bool = config_entry.options.get(
+            CONF_DISTANCES_IN_MILES, False
+        )
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
@@ -65,6 +72,7 @@ class RenaultHub:
                         vehicle_link,
                         self._account,
                         scan_interval,
+                        distances_in_miles,
                         config_entry,
                         device_registry,
                     )
@@ -77,6 +85,7 @@ class RenaultHub:
         vehicle_link: KamereonVehiclesLink,
         renault_account: RenaultAccount,
         scan_interval: timedelta,
+        distances_in_miles: bool,
         config_entry: ConfigEntry,
         device_registry: dr.DeviceRegistry,
     ) -> None:
@@ -89,6 +98,7 @@ class RenaultHub:
             vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
             details=vehicle_link.vehicleDetails,
             scan_interval=scan_interval,
+            distances_in_miles=distances_in_miles,
         )
         await vehicle.async_initialise()
         device_registry.async_get_or_create(

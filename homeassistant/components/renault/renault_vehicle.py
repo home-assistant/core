@@ -43,6 +43,7 @@ class RenaultVehicleProxy:
         vehicle: RenaultVehicle,
         details: models.KamereonVehicleDetails,
         scan_interval: timedelta,
+        distances_in_miles: bool,
     ) -> None:
         """Initialise vehicle proxy."""
         self.hass = hass
@@ -58,6 +59,7 @@ class RenaultVehicleProxy:
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
+        self.distances_in_miles = distances_in_miles
 
     @property
     def details(self) -> models.KamereonVehicleDetails:

@@ -3,6 +3,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "renault"
 
+CONF_DISTANCES_IN_MILES = "distances_in_miles"
 CONF_LOCALE = "locale"
 CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
 
