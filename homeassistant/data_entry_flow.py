@@ -484,6 +484,7 @@ class FlowHandler:
             data=data,
             description=description,
             description_placeholders=description_placeholders,
+            context=self.context,
         )
 
     @callback
