@@ -61,6 +61,4 @@ class EcowittBinarySensorEntity(EcowittEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        if self.ecowitt.value > 0:
-            return True
-        return False
+        return self.ecowitt.value > 0
