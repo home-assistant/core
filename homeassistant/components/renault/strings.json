@@ -31,5 +31,14 @@
         "title": "Set Renault credentials"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "distances_in_miles": "Display distances in miles"
+        }
+      }
+    }
   }
 }
