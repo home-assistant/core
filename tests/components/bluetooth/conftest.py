@@ -42,7 +42,11 @@ def one_adapter_fixture():
                     "Address": "00:00:00:00:00:01",
                     "Name": "BlueZ 4.63",
                     "Modalias": "usbid:1234",
-                }
+                },
+                "org.bluez.AdvertisementMonitorManager1": {
+                    "SupportedMonitorTypes": ["or_patterns"],
+                    "SupportedFeatures": [],
+                },
             },
         },
     ):
@@ -53,6 +57,11 @@ def one_adapter_fixture():
 def two_adapters_fixture():
     """Fixture that mocks two adapters on Linux."""
     with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.platform.system",
+        return_value="Linux",
+    ), patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
@@ -69,7 +78,11 @@ def two_adapters_fixture():
                     "Address": "00:00:00:00:00:02",
                     "Name": "BlueZ 4.63",
                     "Modalias": "usbid:1234",
-                }
+                },
+                "org.bluez.AdvertisementMonitorManager1": {
+                    "SupportedMonitorTypes": ["or_patterns"],
+                    "SupportedFeatures": [],
+                },
             },
         },
     ):
