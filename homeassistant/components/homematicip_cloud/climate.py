@@ -66,6 +66,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
@@ -85,11 +86,6 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             name=self._device.label,
             via_device=(HMIPC_DOMAIN, self._device.homeId),
         )
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def target_temperature(self) -> float:

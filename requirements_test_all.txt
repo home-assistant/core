@@ -1335,7 +1335,7 @@ python-fullykiosk==0.0.11
 python-homewizard-energy==1.1.0
 
 # homeassistant.components.izone
-python-izone==1.2.3
+python-izone==1.2.9
 
 # homeassistant.components.juicenet
 python-juicenet==1.1.0
