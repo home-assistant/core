@@ -17,6 +17,7 @@ import attr
 import certifi
 from paho.mqtt.client import MQTTMessage
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -310,8 +311,8 @@ class MQTT:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry,
-        conf,
+        config_entry: ConfigEntry,
+        conf: ConfigType,
     ) -> None:
         """Initialize Home Assistant MQTT client."""
         # We don't import on the top because some integrations
@@ -348,14 +349,11 @@ class MQTT:
             """Stop MQTT component."""
             await self.async_disconnect()
 
-        self._cleanup_on_unload.append(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
-    def cleanup(self):
-        """Clean up listeners."""
-        while self._cleanup_on_unload:
-            self._cleanup_on_unload.pop()()
+    def update_config(self, conf: ConfigType) -> None:
+        """Update the config if changed after a reload."""
+        self.conf = conf
 
     def init_client(self):
         """Initialize paho client."""
@@ -632,9 +630,9 @@ class MQTT:
                         subscription.job,
                     )
                     continue
-
+            job: HassJob[Any, Any] = subscription.job
             self.hass.async_run_hass_job(
-                subscription.job,
+                job,
                 ReceiveMessage(
                     msg.topic,
                     payload,

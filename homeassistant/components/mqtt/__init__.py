@@ -313,11 +313,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (conf := await async_fetch_config(hass, entry)) is None:
         # Bail out
         return False
+    client: MQTT = hass.data.setdefault(DATA_MQTT, MQTT(hass, entry, conf))
+    if client.conf != conf:
+        client.update_config(conf)
 
-    hass.data[DATA_MQTT] = MQTT(hass, entry, conf)
     entry.add_update_listener(_async_config_entry_updated)
 
-    await hass.data[DATA_MQTT].async_connect()
+    await client.async_connect()
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
@@ -366,7 +368,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 return
 
-        await hass.data[DATA_MQTT].async_publish(msg_topic, payload, qos, retain)
+        await client.async_publish(str(msg_topic), payload, qos, retain)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
@@ -609,8 +611,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     while reload_dispatchers := hass.data.setdefault(DATA_MQTT_RELOAD_DISPATCHERS, []):
         reload_dispatchers.pop()()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-    # Cleanup listeners
-    mqtt_client.cleanup()
 
     # Trigger reload manual MQTT items at entry setup
     # Reload the legacy yaml platform
