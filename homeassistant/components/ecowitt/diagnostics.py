@@ -17,7 +17,7 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     ecowitt: EcoWittListener = hass.data[DOMAIN][entry.entry_id]
-    station_id = min(device.identifiers)[1]
+    station_id = next(item[1] for item in device.identifiers if item[0] == DOMAIN)
 
     station = ecowitt.stations[station_id]
 
