@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Any, Final
 
 from apcaccess import status
 import voluptuous as vol
@@ -109,18 +109,48 @@ class APCUPSdData:
         """Initialize the data object."""
         self._host = host
         self._port = port
-        self._status = None
+        self.status: dict[str, Any] = {}
 
     @property
-    def status(self) -> dict[str, str] | None:
-        """Return the status dict.
+    def name(self) -> str | None:
+        """Return the name of the UPS, if available."""
+        return self.status.get("UPSNAME")
+
+    @property
+    def model(self) -> str | None:
+        """Return the model of the UPS, if available."""
+        # Different UPS models may report slightly different keys for model, here we
+        # try them all.
+        for model_key in ("APCMODEL", "MODEL"):
+            if model_key in self.status:
+                return self.status[model_key]
+        return None
+
+    @property
+    def sw_version(self) -> str | None:
+        """Return the software version of the APCUPSd, if available."""
+        return self.status.get("VERSION")
+
+    @property
+    def hw_version(self) -> str | None:
+        """Return the firmware version of the UPS, if available."""
+        return self.status.get("FIRMWARE")
+
+    @property
+    def serial_no(self) -> str | None:
+        """Return the unique serial number of the UPS, if available."""
+        return self.status.get("SERIALNO")
+
+    @property
+    def statflag(self) -> str | None:
+        """Return the STATFLAG indicating the status of the UPS, if available."""
+        return self.status.get("STATFLAG")
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self, **kwargs):
+        """Fetch the latest status from APCUPSd.
 
         Note that the result dict uses upper case for each resource, where our
         integration uses lower cases as keys internally.
         """
-        return self._status
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
-        """Fetch the latest status from APCUPSd."""
-        self._status = status.parse(status.get(host=self._host, port=self._port))
+        self.status = status.parse(status.get(host=self._host, port=self._port))
