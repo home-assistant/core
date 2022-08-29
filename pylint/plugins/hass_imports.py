@@ -329,7 +329,13 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             f"{self.current_package}."
         ):
             self.add_message("hass-relative-import", node=node)
-        elif obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
+            return
+        if self.current_package.startswith("homeassistant.components") and node.modname == "homeassistant.components":
+            for name in node.names:
+                if name[0] == self.current_package.split(".")[2]:
+                    self.add_message("hass-relative-import", node=node)
+            return
+        if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
             for name_tuple in node.names:
                 for obsolete_import in obsolete_imports:
                     if import_match := obsolete_import.constant.match(name_tuple[0]):
