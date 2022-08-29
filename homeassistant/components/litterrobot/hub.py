@@ -11,6 +11,7 @@ from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginExcepti
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -52,11 +53,9 @@ class LitterRobotHub:
             )
             return
         except LitterRobotLoginException as ex:
-            _LOGGER.error("Invalid credentials")
-            raise ex
+            raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:
-            _LOGGER.error("Unable to connect to Litter-Robot API")
-            raise ex
+            raise ConfigEntryNotReady("Unable to connect to Litter-Robot API") from ex
 
     def litter_robots(self) -> Generator[LitterRobot, Any, Any]:
         """Get Litter-Robots from the account."""
