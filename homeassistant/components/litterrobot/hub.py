@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pylitterbot import Account, LitterRobot
+from pylitterbot import Account, LitterRobot, LitterRobot3
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -62,3 +62,11 @@ class LitterRobotHub:
         return (
             robot for robot in self.account.robots if isinstance(robot, LitterRobot)
         )
+
+    @property
+    def litter_robot_3(self) -> bool:
+        """Return True if 3rd edition Litter-Robot exists."""
+        for robot in self.account.robots:
+            if isinstance(robot, LitterRobot3):
+                return True
+        return False
