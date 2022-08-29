@@ -58,6 +58,7 @@ class MelissaClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, api, serial_number, init_data):
         """Initialize the climate device."""
@@ -123,11 +124,6 @@ class MelissaClimate(ClimateEntity):
         if self._cur_settings is None:
             return None
         return self._cur_settings[self._api.TEMP]
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
 
     @property
     def min_temp(self):
