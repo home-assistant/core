@@ -141,7 +141,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._client.is_connected():
             errors["base"] = "linking"
         else:
-            self._client.disconnect()
+            await self._client.disconnect()
 
         if errors:
             return self.async_show_form(step_id="link", errors=errors)

@@ -47,3 +47,20 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
     time=0,
     connectable=True,
 )
+
+
+class MockMicroBotApiClient:
+    """Mock MicroBotApiClient."""
+
+    def __init__(self, device, token):
+        """Mock init."""
+
+    async def connect(self, init):
+        """Mock connect."""
+
+    async def disconnect(self):
+        """Mock disconnect."""
+
+    def is_connected(self):
+        """Mock connected."""
+        return True

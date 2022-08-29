@@ -1,12 +1,12 @@
 """Test the MicroBot config flow."""
 
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import SERVICE_INFO, USER_INPUT, patch_async_setup_entry
+from . import SERVICE_INFO, USER_INPUT, MockMicroBotApiClient, patch_async_setup_entry
 
 from tests.common import MockConfigEntry
 
@@ -68,15 +68,31 @@ async def test_user_setup(hass):
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
-    with patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            USER_INPUT,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "link"
+    assert result2["errors"] is None
 
+    with patch(
+        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
+        MockMicroBotApiClient,
+    ), patch_async_setup_entry() as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["result"].data == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ACCESS_TOKEN: ANY,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
