@@ -253,5 +253,4 @@ def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
-    data["unique_id"] = entry.unique_id
     return data
