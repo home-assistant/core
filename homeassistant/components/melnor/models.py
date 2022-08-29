@@ -1,4 +1,4 @@
-"""melnor integration models."""
+"""Melnor integration models."""
 
 from datetime import timedelta
 import logging
@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DEFAULT_CONNECTION_TIMEOUT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,30 +34,9 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self._device = device
 
     async def _async_update_data(self):
-        """Update data."""
+        """Update the device state."""
 
-        if self._device.is_connected:
-
-            if not self._has_active_connection:
-                _LOGGER.debug("%s has re-connected", self._device.mac)
-
-            self._has_active_connection = True
-            await self._device.fetch_state()
-
-        # The melnor-bluetooth library handles exceptions for us.
-        # We just need to check the connection state and attempt to create a new connection if it drops.
-        else:
-
-            if self._has_active_connection:
-                self._has_active_connection = False
-                _LOGGER.warning("%s has disconnected", self._device.mac)
-
-                # Since we just became disconnected we'll return early to trigger an entity update ASAP to show the entities as unavailable.
-                # We update frequently and we'll start attempting to reconnect on the next pass in a few seconds.
-                return self._device
-
-            await self._device.connect(timeout=DEFAULT_CONNECTION_TIMEOUT)
-
+        await self._device.fetch_state()
         return self._device
 
 
