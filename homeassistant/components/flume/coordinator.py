@@ -73,8 +73,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             extra = notification["extra"]
             rule = notification["extra"]["event_rule_name"]
 
-            if device_id not in notifications_by_device:
-                notifications_by_device[device_id] = {}
+            device_notifications = notifications_by_device.setdefault(device_id, {})
             if rule == NOTIFICATION_BRIDGE_DISCONNECT:
                 # Bridge notifications are a special case
                 # both connect and disconnect register as notifications
