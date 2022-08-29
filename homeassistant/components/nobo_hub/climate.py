@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from pynobo import nobo
-import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -21,7 +20,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, ATTR_NAME, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -31,8 +29,8 @@ from .const import (
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
     CONF_OVERRIDE_TYPE,
-    CONF_OVERRIDE_TYPE_NOW,
     DOMAIN,
+    OVERRIDE_TYPE_NOW,
 )
 
 SUPPORT_FLAGS = (
@@ -47,7 +45,6 @@ MAX_TEMPERATURE = 40
 _LOGGER = logging.getLogger(__name__)
 
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -60,7 +57,7 @@ async def async_setup_entry(
 
     override_type = (
         nobo.API.OVERRIDE_TYPE_NOW
-        if config_entry.options.get(CONF_OVERRIDE_TYPE) == CONF_OVERRIDE_TYPE_NOW
+        if config_entry.options.get(CONF_OVERRIDE_TYPE) == OVERRIDE_TYPE_NOW
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
@@ -90,8 +87,9 @@ class NoboZone(ClimateEntity):
         """Initialize the climate device."""
         self._id = zone_id
         self._nobo = hub
-        self._attr_unique_id = hub.hub_serial + ":" + zone_id
+        self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._attr_name = hub.zones[self._id][ATTR_NAME]
+        self._attr_has_entity_name = True
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type
@@ -107,13 +105,9 @@ class NoboZone(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode, if it's supported."""
         if hvac_mode not in self.hvac_modes:
-            _LOGGER.warning(
-                "Zone %s '%s' called with unsupported HVAC mode '%s'",
-                self._id,
-                self._attr_name,
-                hvac_mode,
+            raise ValueError(
+                f"Zone {self._id} '{self._attr_name}' called with unsupported HVAC mode '{hvac_mode}'"
             )
-            return
         if hvac_mode == HVACMode.AUTO:
             await self.async_set_preset_mode(PRESET_NONE)
         elif hvac_mode == HVACMode.HEAT:

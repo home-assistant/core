@@ -1,7 +1,7 @@
 """Test the Nobø Ecohub config flow."""
 from unittest.mock import PropertyMock, patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -10,8 +10,6 @@ from tests.common import MockConfigEntry
 
 async def test_configure_with_discover(hass: HomeAssistant) -> None:
     """Test configure with discover."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
@@ -64,8 +62,6 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
 
 async def test_configure_show_manual(hass: HomeAssistant) -> None:
     """Test configuration when no hubs are discovered."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[],
@@ -80,8 +76,6 @@ async def test_configure_show_manual(hass: HomeAssistant) -> None:
 
 async def test_configure_user_show_manual(hass: HomeAssistant) -> None:
     """Test configuration when user selects manual."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
@@ -103,8 +97,6 @@ async def test_configure_user_show_manual(hass: HomeAssistant) -> None:
 
 async def test_configure_manual(hass: HomeAssistant) -> None:
     """Test undiscovered configuration with IP address and full serial number."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     with patch(
         "pynobo.nobo.async_discover_hubs",
         return_value=[],
@@ -241,14 +233,18 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test the options flow."""
-    entry = MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain="nobo_hub",
         unique_id="123456789012",
-        data={"serial": "123456789012"},
+        data={"serial": "123456789012", "ip_address": "1.1.1.1", "auto_discover": True},
     )
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.nobo_hub.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
@@ -261,9 +257,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_OVERRIDE_TYPE] == "Constant"
+    assert config_entry.options == {CONF_OVERRIDE_TYPE: "Constant"}
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -272,4 +268,4 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_OVERRIDE_TYPE] == "Now"
+    assert config_entry.options == {CONF_OVERRIDE_TYPE: "Now"}

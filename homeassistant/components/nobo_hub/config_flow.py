@@ -16,10 +16,10 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import (
     CONF_AUTO_DISCOVERED,
     CONF_OVERRIDE_TYPE,
-    CONF_OVERRIDE_TYPE_CONSTANT,
-    CONF_OVERRIDE_TYPE_NOW,
     CONF_SERIAL,
     DOMAIN,
+    OVERRIDE_TYPE_CONSTANT,
+    OVERRIDE_TYPE_NOW,
 )
 
 DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
@@ -197,14 +197,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
             return self.async_create_entry(title="", data=data)
 
-        override_type = self.config_entry.options.get(CONF_OVERRIDE_TYPE, CONF_OVERRIDE_TYPE_CONSTANT)
-        if override_type != CONF_OVERRIDE_TYPE_NOW:
-            override_type = CONF_OVERRIDE_TYPE_CONSTANT
+        override_type = self.config_entry.options.get(
+            CONF_OVERRIDE_TYPE, OVERRIDE_TYPE_CONSTANT
+        )
 
         schema = vol.Schema(
             {
                 vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
-                    [CONF_OVERRIDE_TYPE_CONSTANT, CONF_OVERRIDE_TYPE_NOW]
+                    [OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW]
                 ),
             }
         )
