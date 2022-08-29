@@ -86,7 +86,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.3.1
+advantage_air==0.4.1
 
 # homeassistant.components.frontier_silicon
 afsapi==0.2.7
@@ -963,6 +963,9 @@ lakeside==0.12
 
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
+
+# homeassistant.components.led_ble
+led-ble==0.2.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1876,7 +1879,7 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.5
+pysqueezebox==0.6.0
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2339,7 +2342,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.18
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.1
+tesla-wall-connector==1.0.2
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.5.0

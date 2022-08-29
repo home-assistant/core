@@ -76,7 +76,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.3.1
+advantage_air==0.4.1
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -1311,7 +1311,7 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.5
+pysqueezebox==0.6.0
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -1591,7 +1591,7 @@ temescal==0.5
 tesla-powerwall==0.3.18
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.1
+tesla-wall-connector==1.0.2
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.3.1
