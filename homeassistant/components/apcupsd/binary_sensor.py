@@ -8,8 +8,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_RESOURCES
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, VALUE_ONLINE, APCUPSdData
@@ -23,24 +23,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an APCUPSd Online Status binary sensor."""
-    data_service = hass.data[DOMAIN][config_entry.entry_id]
+    data_service: APCUPSdData = hass.data[DOMAIN][config_entry.entry_id]
 
     description = BinarySensorEntityDescription(
-        key="STATFLAG",
+        key="statflag",
         name="UPS Online Status",
         icon="mdi:heart",
     )
 
-    # If key is not in the "resources" YAML config specified by the user, we set the
-    # binary sensor to be disabled by default.
-    if (
-        CONF_RESOURCES in config_entry.data
-        and description.key not in config_entry.data[CONF_RESOURCES]
-    ):
-        description.entity_registry_enabled_default = False
+    # Do not create the binary sensor if APCUPSd does not provide STATFLAG field for us
+    # to determine the online status.
+    if data_service.statflag is None:
+        return
 
     async_add_entities(
-        [OnlineStatus(data_service, description)], update_before_add=True
+        [OnlineStatus(data_service, description)],
+        update_before_add=True,
     )
 
 
@@ -53,8 +51,24 @@ class OnlineStatus(BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the APCUPSd binary device."""
+        if (serial_no := data_service.serial_no) is not None:
+            self._attr_unique_id = f"{serial_no}_{description.key}"
         self.entity_description = description
         self._data_service = data_service
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info of the sensor."""
+        if self._data_service.model is None:
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, self._data_service.model)},
+            "model": self._data_service.model,
+            "manufacturer": "APC",
+            "hw_version": self._data_service.hw_version,
+            "sw_version": self._data_service.sw_version,
+        }
 
     def update(self) -> None:
         """Get the status report from APCUPSd and set this entity's state."""
