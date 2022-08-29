@@ -24,10 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hub.login(load_robots=True)
 
     if any(hub.litter_robots()):
-        platforms = [platform for platform in PLATFORMS if platform != Platform.BUTTON]
-        if hub.litter_robot_3:
-            platforms = PLATFORMS
-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+        await hass.config_entries.async_forward_entry_setups(
+            entry,
+            PLATFORMS
+            if hub.supports_button
+            else [platform for platform in PLATFORMS if platform != Platform.BUTTON],
+        )
 
     return True
 

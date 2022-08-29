@@ -63,16 +63,16 @@ class LitterRobotHub:
             robot for robot in self.account.robots if isinstance(robot, LitterRobot)
         )
 
-    @property
-    def litter_robot_3(self) -> bool:
-        """Return True if 3rd edition Litter-Robot exists."""
-        for robot in self.account.robots:
-            if isinstance(robot, LitterRobot3):
-                return True
-        return False
-
     def feeder_robots(self) -> Generator[FeederRobot, Any, Any]:
         """Get Feeder-Robots from the account."""
         return (
             robot for robot in self.account.robots if isinstance(robot, FeederRobot)
+        )
+
+    @property
+    def supports_button(self) -> bool:
+        """Return True if 3rd edition Litter-Robot or Feed Robot exists."""
+        return any(
+            isinstance(robot, (LitterRobot3, FeederRobot))
+            for robot in self.account.robots
         )
