@@ -61,7 +61,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         device = self._device
         if (brightness := device.brightness) is not None:
             self._attr_brightness = max(0, min(255, brightness))
-        self._attr_rgb_color = device.rgb
+        self._attr_rgb_color = device.rgb_unscaled
         self._attr_is_on = device.on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
