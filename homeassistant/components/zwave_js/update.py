@@ -84,7 +84,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.node = node
         self.available_firmware_updates: list[FirmwareUpdateInfo] = []
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
-        self._status_unsub: Callable | None = None
+        self._status_unsub: Callable[[], None] | None = None
 
         # Entity class attributes
         self._attr_name = "Firmware"
