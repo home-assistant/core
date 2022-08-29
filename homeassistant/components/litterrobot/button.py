@@ -71,7 +71,7 @@ class FeederRobotButtonEntityDescription(RobotButtonEntityDescription):
 
 LITTER_ROBOT_BUTTON = LitterRobotButtonEntityDescription(
     key="reset_waste_drawer",
-    name="Reset waste drawer",
+    name="Reset Waste Drawer",
     icon="mdi:delete-variant",
     entity_category=EntityCategory.CONFIG,
     press_fn=lambda robot: robot.reset_waste_drawer(),
