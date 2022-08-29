@@ -2,5 +2,5 @@
 
 DOMAIN = "led_ble"
 
-DEVICE_TIMEOUT = 55
+DEVICE_TIMEOUT = 30
 LOCAL_NAMES = {"LEDnet", "BLE-LED", "LEDBLE", "Triones", "LEDBlue"}
