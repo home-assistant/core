@@ -121,11 +121,15 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
             )
         )
-        self._async_process_updates(write_state)
+        self._async_process_available_updates(write_state)
 
     @callback
-    def _async_process_updates(self, write_state: bool = True) -> None:
-        """Process updates."""
+    def _async_process_available_updates(self, write_state: bool = True) -> None:
+        """
+        Process available firmware updates.
+
+        Sets latest version attribute and FirmwareUpdateInfo instance.
+        """
         if self.available_firmware_updates:
             self._latest_version_firmware = firmware = max(
                 self.available_firmware_updates, key=lambda x: AwesomeVersion(x.version)
@@ -170,7 +174,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         else:
             self._attr_installed_version = firmware.version
             self.available_firmware_updates.remove(firmware)
-            self._async_process_updates()
+            self._async_process_available_updates()
         finally:
             self._attr_in_progress = False
 
