@@ -56,6 +56,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_should_poll = False
 
     def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
@@ -101,11 +102,6 @@ class IcloudDeviceBatterySensor(SensorEntity):
             model=self._device.device_model,
             name=self._device.name,
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     async def async_added_to_hass(self):
         """Register state update callback."""

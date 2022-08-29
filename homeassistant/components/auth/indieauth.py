@@ -1,18 +1,24 @@
 """Helpers to resolve client ID/secret."""
+from __future__ import annotations
+
 import asyncio
 from html.parser import HTMLParser
 from ipaddress import ip_address
 import logging
-from urllib.parse import urljoin, urlparse
+from urllib.parse import ParseResult, urljoin, urlparse
 
 import aiohttp
+import aiohttp.client_exceptions
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def verify_redirect_uri(hass, client_id, redirect_uri):
+async def verify_redirect_uri(
+    hass: HomeAssistant, client_id: str, redirect_uri: str
+) -> bool:
     """Verify that the client and redirect uri match."""
     try:
         client_id_parts = _parse_client_id(client_id)
@@ -47,24 +53,24 @@ async def verify_redirect_uri(hass, client_id, redirect_uri):
 class LinkTagParser(HTMLParser):
     """Parser to find link tags."""
 
-    def __init__(self, rel):
+    def __init__(self, rel: str) -> None:
         """Initialize a link tag parser."""
         super().__init__()
         self.rel = rel
-        self.found = []
+        self.found: list[str | None] = []
 
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Handle finding a start tag."""
         if tag != "link":
             return
 
-        attrs = dict(attrs)
+        attributes: dict[str, str | None] = dict(attrs)
 
-        if attrs.get("rel") == self.rel:
-            self.found.append(attrs.get("href"))
+        if attributes.get("rel") == self.rel:
+            self.found.append(attributes.get("href"))
 
 
-async def fetch_redirect_uris(hass, url):
+async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     """Find link tag with redirect_uri values.
 
     IndieAuth 4.2.2
@@ -108,7 +114,7 @@ async def fetch_redirect_uris(hass, url):
     return [urljoin(url, found) for found in parser.found]
 
 
-def verify_client_id(client_id):
+def verify_client_id(client_id: str) -> bool:
     """Verify that the client id is valid."""
     try:
         _parse_client_id(client_id)
@@ -117,7 +123,7 @@ def verify_client_id(client_id):
         return False
 
 
-def _parse_url(url):
+def _parse_url(url: str) -> ParseResult:
     """Parse a url in parts and canonicalize according to IndieAuth."""
     parts = urlparse(url)
 
@@ -134,7 +140,7 @@ def _parse_url(url):
     return parts
 
 
-def _parse_client_id(client_id):
+def _parse_client_id(client_id: str) -> ParseResult:
     """Test if client id is a valid URL according to IndieAuth section 3.2.
 
     https://indieauth.spec.indieweb.org/#client-identifier

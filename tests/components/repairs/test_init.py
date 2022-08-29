@@ -6,20 +6,20 @@ from aiohttp import ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.repairs import (
+from homeassistant.components.repairs.const import DOMAIN
+from homeassistant.components.repairs.issue_handler import (
+    async_process_repairs_platforms,
+)
+from homeassistant.const import __version__ as ha_version
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
     async_create_issue,
     async_delete_issue,
+    async_ignore_issue,
     create_issue,
     delete_issue,
 )
-from homeassistant.components.repairs.const import DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_ignore_issue,
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.models import IssueSeverity
-from homeassistant.const import __version__ as ha_version
-from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
