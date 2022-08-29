@@ -453,7 +453,7 @@ class Integration:
             try:
                 AwesomeVersion(
                     integration.version,
-                    [
+                    ensure_strategy=[
                         AwesomeVersionStrategy.CALVER,
                         AwesomeVersionStrategy.SEMVER,
                         AwesomeVersionStrategy.SIMPLEVER,

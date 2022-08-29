@@ -1,7 +1,7 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 from __future__ import annotations
 
-from homeassistant.components import sensor, tellduslive
+from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import tellduslive
 from .entry import TelldusLiveEntity
 
 SENSOR_TYPE_TEMPERATURE = "temp"

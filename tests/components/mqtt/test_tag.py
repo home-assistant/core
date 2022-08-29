@@ -437,6 +437,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
+                "hw_version": "rev1",
                 "sw_version": "0.1-beta",
             },
         }
@@ -452,6 +453,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
 
 
@@ -468,6 +470,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
+                "hw_version": "rev1",
                 "sw_version": "0.1-beta",
             },
         }
@@ -481,6 +484,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
 
 

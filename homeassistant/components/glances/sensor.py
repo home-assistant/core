@@ -20,7 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -330,7 +330,7 @@ class GlancesSensor(SensorEntity):
         self.glances_data = glances_data
         self._sensor_name_prefix = sensor_name_prefix
         self._state = None
-        self.unsub_update = None
+        self.unsub_update: CALLBACK_TYPE | None = None
 
         self.entity_description = description
         self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
@@ -342,7 +342,7 @@ class GlancesSensor(SensorEntity):
         self._attr_unique_id = f"{self.glances_data.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.glances_data.available
 
@@ -351,7 +351,7 @@ class GlancesSensor(SensorEntity):
         """Return the state of the resources."""
         return self._state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.unsub_update = async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update

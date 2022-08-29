@@ -6,7 +6,7 @@ from datetime import time
 import logging
 from typing import Any
 
-from pylitterbot import Robot
+from pylitterbot import LitterRobot
 from pylitterbot.exceptions import InvalidCommandException
 from typing_extensions import ParamSpec
 
@@ -32,7 +32,9 @@ REFRESH_WAIT_TIME_SECONDS = 8
 class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
     """Generic Litter-Robot entity representing common data and methods."""
 
-    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
+    def __init__(
+        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
@@ -52,6 +54,7 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information for a Litter-Robot."""
+        assert self.robot.serial
         return DeviceInfo(
             identifiers={(DOMAIN, self.robot.serial)},
             manufacturer="Litter-Robot",
@@ -63,7 +66,9 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
 class LitterRobotControlEntity(LitterRobotEntity):
     """A Litter-Robot entity that can control the unit."""
 
-    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
+    def __init__(
+        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
+    ) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
         self._refresh_callback: CALLBACK_TYPE | None = None
@@ -113,7 +118,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
         if time_str is None:
             return None
 
-        if (parsed_time := dt_util.parse_time(time_str)) is None:
+        if (parsed_time := dt_util.parse_time(time_str)) is None:  # pragma: no cover
             return None
 
         return (
@@ -132,7 +137,9 @@ class LitterRobotConfigEntity(LitterRobotControlEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
+    def __init__(
+        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
+    ) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
         self._assumed_state: bool | None = None
