@@ -2707,6 +2707,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             )
 
         # Check the return type.
+        if (
+            match.return_type == "FlowResult"
+            or match.return_type == "float"
+            or isinstance(match.return_type, list)
+        ):
+            return
         if not _is_valid_return_type(match, node.returns):
             self.add_message(
                 "hass-return-type",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
@@ -167,7 +168,7 @@ class ClimateAehW4a1(ClimateEntity):
         self._preset_mode = None
         self._previous_state = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Pull state from AEH-W4A1."""
         try:
             status = await self._device.command("status_102_0")
@@ -304,7 +305,7 @@ class ClimateAehW4a1(ClimateEntity):
         """Return the supported step of target temperature."""
         return 1
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if self._on != "1":
             _LOGGER.warning(
@@ -320,7 +321,7 @@ class ClimateAehW4a1(ClimateEntity):
             else:
                 await self._device.command(f"temp_{int(temp)}_F")
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if self._on != "1":
             _LOGGER.warning("AC at %s is off, could not set fan mode", self._unique_id)
@@ -331,7 +332,7 @@ class ClimateAehW4a1(ClimateEntity):
             _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
             await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if self._on != "1":
             _LOGGER.warning(
@@ -366,7 +367,7 @@ class ClimateAehW4a1(ClimateEntity):
             if swing_act in (SWING_OFF, SWING_VERTICAL):
                 await self._device.command("hor_swing")
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._on != "1":
             if preset_mode == PRESET_NONE:
@@ -412,12 +413,12 @@ class ClimateAehW4a1(ClimateEntity):
             if self._on != "1":
                 await self.async_turn_on()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self._unique_id)
         await self._device.command("on")
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self._unique_id)
         await self._device.command("off")

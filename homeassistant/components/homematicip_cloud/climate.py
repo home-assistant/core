@@ -198,7 +198,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         """Return the maximum temperature."""
         return self._device.maxTemperature
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return

@@ -1,6 +1,8 @@
 """Support for Harmony Hub devices."""
+from collections.abc import Iterable
 import json
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -122,7 +124,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self._activity_starting = None
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Complete the initialization."""
         await super().async_added_to_hass()
 
@@ -203,7 +205,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self.async_new_activity(self._data.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Start an activity from the Harmony device."""
         _LOGGER.debug("%s: Turn On", self.name)
 
@@ -221,11 +223,11 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         else:
             _LOGGER.error("%s: No activity specified with turn_on service", self.name)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Start the PowerOff activity."""
         await self._data.async_power_off()
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)
         if (device := kwargs.get(ATTR_DEVICE)) is None:
