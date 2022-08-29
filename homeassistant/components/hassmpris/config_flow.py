@@ -282,7 +282,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_pairing()
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> FlowResult:
         """Handle the reauth step."""
         assert entry_data, "Impossible entry data empty"
