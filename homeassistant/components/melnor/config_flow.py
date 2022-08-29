@@ -69,7 +69,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the step to pick discovered device."""
 
         if user_input is not None:
-            return self._create_entry(user_input[CONF_ADDRESS])
+            address = user_input[CONF_ADDRESS]
+
+            await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+
+            return self._create_entry(address)
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(
