@@ -31,9 +31,6 @@ async def test_bluetooth_discovery(hass):
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
-    assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-    }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -79,9 +76,6 @@ async def test_user_setup(hass):
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
-    assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-    }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -147,9 +141,6 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-    }
 
     assert len(mock_setup_entry.mock_calls) == 1
     # Verify the original one was aborted
