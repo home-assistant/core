@@ -3,10 +3,11 @@
   "name": "LED BLE",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ble_ble",
-  "requirements": ["led-ble==0.5.1"],
+  "requirements": ["led-ble==0.5.2"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "bluetooth": [
+    { "local_name": "LEDnet*" },
     { "local_name": "BLE-LED*" },
     { "local_name": "LEDBLE*" },
     { "local_name": "Triones*" },
