@@ -611,8 +611,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
-/homeassistant/components/litterrobot/ @natekspencer
-/tests/components/litterrobot/ @natekspencer
+/homeassistant/components/litterrobot/ @natekspencer @tkdrob
+/tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
 /homeassistant/components/lock/ @home-assistant/core
