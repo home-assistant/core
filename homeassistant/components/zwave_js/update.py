@@ -1,12 +1,13 @@
 """Representation of Z-Wave updates."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import timedelta
 from typing import Any
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import FirmwareUpdateInfo
@@ -83,6 +84,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.node = node
         self.available_firmware_updates: list[FirmwareUpdateInfo] = []
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
+        self._status_unsub: Callable | None = None
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -114,14 +116,22 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             ]
         }
 
-    async def async_update(self) -> None:
+    def _update(self) -> None:
         """Update the entity."""
+        self.hass.async_create_task(self.async_update(True))
+
+    async def async_update(self, write_state: bool = False) -> None:
+        """Update the entity."""
+        if self.node.status == NodeStatus.ASLEEP:
+            if not self._status_unsub:
+                self._status_unsub = self.node.once("wake up", self._update)
+            return
         self.available_firmware_updates = (
             await self.driver.controller.async_get_available_firmware_updates(
                 self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
             )
         )
-        self._async_process_updates(False)
+        self._async_process_updates(write_state)
 
     @callback
     def _async_process_updates(self, write_state: bool = True) -> None:
@@ -198,3 +208,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 self.async_remove,
             )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed."""
+        if self._status_unsub:
+            self._status_unsub()
+            self._status_unsub = None
