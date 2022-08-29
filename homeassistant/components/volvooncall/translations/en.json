@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mutable": "Allow Remote Start / Lock / etc.",
+                    "password": "Password",
+                    "region": "Region",
+                    "scandinavian_miles": "Use Scandinavian Miles",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring the Volvo On Call platform using YAML is being removed in a future release of Home Assistant.\n\nYour existing configuration has been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Volvo On Call YAML configuration is being removed"
+        }
+    }
+}
