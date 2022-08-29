@@ -28,13 +28,12 @@ class SystemStatus:
     subscribers: set[tuple[websocket_api.ActiveConnection, int]]
 
 
-@callback
-def async_setup(hass: HomeAssistant) -> None:
+async def async_setup(hass: HomeAssistant) -> None:
     """Set up the hardware websocket API."""
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_subscribe_system_status)
     hass.data[DOMAIN]["system_status"] = SystemStatus(
-        ha_psutil=ha_psutil.PsutilWrapper(),
+        ha_psutil=await hass.async_add_executor_job(ha_psutil.PsutilWrapper),
         remove_periodic_timer=None,
         subscribers=set(),
     )
@@ -79,12 +78,15 @@ async def ws_subscribe_system_status(
 
     system_status: SystemStatus = hass.data[DOMAIN]["system_status"]
 
-    @callback
-    def async_update_status(now: datetime) -> None:
+    async def async_update_status(now: datetime) -> None:
         cpu_percentage = round(
-            system_status.ha_psutil.psutil.cpu_percent(interval=None)
+            await hass.async_add_executor_job(
+                system_status.ha_psutil.psutil.cpu_percent
+            )
         )
-        virtual_memory = system_status.ha_psutil.psutil.virtual_memory()
+        virtual_memory = await hass.async_add_executor_job(
+            system_status.ha_psutil.psutil.virtual_memory
+        )
         json_msg = {
             "cpu_percent": cpu_percentage,
             "memory_used_percent": virtual_memory.percent,
