@@ -212,7 +212,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._max_temp = max_temp
         self._attr_preset_mode = PRESET_NONE
         self._target_temp = target_temp
-        self._unit = unit
+        self._attr_temperature_unit = unit
         self._unique_id = unique_id
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if len(presets):
@@ -222,7 +222,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
 
@@ -283,7 +283,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                 else:
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
-            if old_state.attributes.get(ATTR_PRESET_MODE) in self._attr_preset_modes:
+            if (
+                self.preset_modes
+                and old_state.attributes.get(ATTR_PRESET_MODE) in self.preset_modes
+            ):
                 self._attr_preset_mode = old_state.attributes.get(ATTR_PRESET_MODE)
             if not self._hvac_mode and old_state.state:
                 self._hvac_mode = old_state.state
@@ -327,11 +330,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             return self._temp_target_temperature_step
         # if a target_temperature_step is not defined, fallback to equal the precision
         return self.precision
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._unit
 
     @property
     def current_temperature(self):
@@ -540,9 +538,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in (self._attr_preset_modes or []):
+        if preset_mode not in (self.preset_modes or []):
             raise ValueError(
-                f"Got unsupported preset_mode {preset_mode}. Must be one of {self._attr_preset_modes}"
+                f"Got unsupported preset_mode {preset_mode}. Must be one of {self.preset_modes}"
             )
         if preset_mode == self._attr_preset_mode:
             # I don't think we need to call async_write_ha_state if we didn't change the state
