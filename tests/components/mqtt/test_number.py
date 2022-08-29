@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
     TEMP_FAHRENHEIT,
     Platform,
@@ -700,6 +701,75 @@ async def test_invalid_min_max_attributes(hass, caplog, mqtt_mock_entry_no_yaml_
     await mqtt_mock_entry_no_yaml_config()
 
     assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
+
+
+async def test_default_mode(hass, mqtt_mock_entry_with_yaml_config):
+    """Test default mode."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("number.test_number")
+    assert state.attributes.get(ATTR_MODE) == "auto"
+
+
+@pytest.mark.parametrize("mode", ("auto", "box", "slider"))
+async def test_mode(hass, mqtt_mock_entry_with_yaml_config, mode):
+    """Test mode."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+                "mode": mode,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("number.test_number")
+    assert state.attributes.get(ATTR_MODE) == mode
+
+
+@pytest.mark.parametrize("mode", ("bleh",))
+async def test_invalid_mode(hass, mqtt_mock_entry_no_yaml_config, mode):
+    """Test invalid mode."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+                "mode": mode,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_no_yaml_config()
+
+    assert not hass.states.get("number.test_number")
 
 
 async def test_mqtt_payload_not_a_number_warning(
