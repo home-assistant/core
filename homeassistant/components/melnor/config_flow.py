@@ -100,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         # Check if there is at least one device
-        if len(addresses) == 0:
+        if not addresses:
             return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
