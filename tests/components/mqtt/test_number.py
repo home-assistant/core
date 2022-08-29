@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import number
+from homeassistant.components import mqtt, number
 from homeassistant.components.mqtt.number import (
     CONF_MAX,
     CONF_MIN,
@@ -708,13 +708,14 @@ async def test_default_mode(hass, mqtt_mock_entry_with_yaml_config):
     topic = "test/number"
     await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                }
             }
         },
     )
@@ -731,14 +732,15 @@ async def test_mode(hass, mqtt_mock_entry_with_yaml_config, mode):
     topic = "test/number"
     await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "mode": mode,
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "mode": mode,
+                }
             }
         },
     )
@@ -749,27 +751,27 @@ async def test_mode(hass, mqtt_mock_entry_with_yaml_config, mode):
     assert state.attributes.get(ATTR_MODE) == mode
 
 
-@pytest.mark.parametrize("mode", ("bleh",))
-async def test_invalid_mode(hass, mqtt_mock_entry_no_yaml_config, mode):
+@pytest.mark.parametrize("mode,valid", [("bleh", False), ("auto", True)])
+async def test_invalid_mode(hass, mode, valid):
     """Test invalid mode."""
     topic = "test/number"
-    await async_setup_component(
-        hass,
-        "number",
-        {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "mode": mode,
-            }
-        },
+    assert (
+        await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": topic,
+                        "command_topic": topic,
+                        "name": "Test Number",
+                        "mode": mode,
+                    }
+                }
+            },
+        )
+        is valid
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-
-    assert not hass.states.get("number.test_number")
 
 
 async def test_mqtt_payload_not_a_number_warning(
