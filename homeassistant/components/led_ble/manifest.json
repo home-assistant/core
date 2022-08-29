@@ -7,6 +7,7 @@
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "bluetooth": [
+    { "local_name": "BLE-LED*" },
     { "local_name": "LEDBLE*" },
     { "local_name": "Triones*" },
     { "local_name": "LEDBlue*" }
