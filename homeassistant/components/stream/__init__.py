@@ -298,6 +298,7 @@ class Stream:
 
     @orientation.setter
     def orientation(self, value: int) -> None:
+        """Set the stream orientation setting."""
         self._stream_settings.orientation = value
 
     def endpoint_url(self, fmt: str) -> str:
