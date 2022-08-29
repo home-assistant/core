@@ -78,9 +78,9 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # Bridge notifications are a special case
                 # both connect and disconnect register as notifications
                 # the last one (by time) will indicate connection state
-                notifications_by_device[device_id][rule] = extra["connected"]
+                device_notifications[rule] = extra["connected"]
             else:
-                notifications_by_device[device_id][rule] = True
+                device_notifications[rule] = True
 
         self.active_notifications_by_device = notifications_by_device
 
