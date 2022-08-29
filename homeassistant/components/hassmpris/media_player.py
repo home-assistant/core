@@ -555,7 +555,7 @@ class EntityManager:
                 self._remove_player(player_id)
 
     async def _monitor_updates(self):
-        """Obtain a real-time eed of player updates."""
+        """Obtain a real-time feed of player updates."""
         try:
             started_syncing = False
             finished_syncing = False
