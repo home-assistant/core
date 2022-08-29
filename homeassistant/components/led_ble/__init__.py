@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEVICE_TIMEOUT, DOMAIN
 from .models import LEDBLEData
@@ -35,8 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     led_ble = LEDBLE(ble_device)
 
-    startup_event = asyncio.Event()
-
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -44,12 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Update from a ble callback."""
         led_ble.set_ble_device(service_info.device)
-
-    cancel_first_update = led_ble.register_callback(lambda *_: startup_event.set())
-    try:
-        await led_ble.update()
-    except BLEAK_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady from ex
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -60,24 +52,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    async def _async_update():
+        """Update the device state."""
+        try:
+            await led_ble.update()
+        except BLEAK_EXCEPTIONS as ex:
+            raise UpdateFailed(str(ex)) from ex
+
+    startup_event = asyncio.Event()
+    cancel_first_update = led_ble.register_callback(lambda *_: startup_event.set())
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=led_ble.name,
+        update_method=_async_update,
+        update_interval=timedelta(seconds=90),
+    )
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        cancel_first_update()
+        raise
+
     try:
         async with async_timeout.timeout(DEVICE_TIMEOUT):
             await startup_event.wait()
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
-            "Could not update; "
+            "Update sent, but not state received; "
             f"Try moving the Bluetooth adapter closer to {led_ble.name}"
         ) from ex
     finally:
         cancel_first_update()
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=led_ble.name,
-        update_method=led_ble.update,
-        update_interval=timedelta(seconds=90),
-    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LEDBLEData(
         entry.title, led_ble, coordinator
