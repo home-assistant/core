@@ -1,11 +1,11 @@
 """Tests for the config flow."""
-from unittest.mock import MagicMock
-
 from homeassistant.components.dsmr_reader.const import DOMAIN
-from homeassistant.components.mqtt import DATA_MQTT
+from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_import_step(hass: HomeAssistant):
@@ -53,9 +53,8 @@ async def test_user_step_with_mqtt(hass: HomeAssistant):
     assert result["step_id"] == "confirm"
     assert result["errors"] is None
 
-    # configure bogus mqtt service to pass flow
-    hass.services.async_register("mqtt", "publish", None)
-    hass.data[DATA_MQTT] = {"async_subscribe": MagicMock()}
+    # configure mqtt config entry to pass flow
+    MockConfigEntry(domain=MQTT_DOMAIN).add_to_hass(hass)
 
     config_result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

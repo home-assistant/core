@@ -5,6 +5,7 @@ from collections.abc import Awaitable
 import logging
 from typing import Any
 
+from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Verify MQTT availability."""
-    return hass.services.has_service(domain="mqtt", service="publish")
+    return MQTT_DOMAIN in hass.config_entries.async_domains()
 
 
 class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):

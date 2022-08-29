@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "Required integration MQTT is missing",
+      "no_devices_found": "Required integration MQTT is not configured.",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
