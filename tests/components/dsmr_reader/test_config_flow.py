@@ -1,11 +1,8 @@
 """Tests for the config flow."""
 from homeassistant.components.dsmr_reader.const import DOMAIN
-from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_import_step(hass: HomeAssistant):
@@ -25,8 +22,8 @@ async def test_import_step(hass: HomeAssistant):
     assert second_result["reason"] == "single_instance_allowed"
 
 
-async def test_user_step_without_mqtt(hass: HomeAssistant):
-    """Test the user step call without mqtt."""
+async def test_user_step(hass: HomeAssistant):
+    """Test the user step call."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -34,27 +31,6 @@ async def test_user_step_without_mqtt(hass: HomeAssistant):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] is None
-
-    config_result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert config_result["type"] == FlowResultType.ABORT
-    assert config_result["reason"] == "no_devices_found"
-
-
-async def test_user_step_with_mqtt(hass: HomeAssistant):
-    """Test the user step call with mqtt available."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-    assert result["errors"] is None
-
-    # configure mqtt config entry to pass flow
-    MockConfigEntry(domain=MQTT_DOMAIN).add_to_hass(hass)
 
     config_result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
