@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .cert_data import load_cert_data
+from .cert_data import CertStore
 from .const import (
     CONF_HOST,
     CONF_MPRIS_PORT,
@@ -31,9 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert entry.unique_id is not None
 
     try:
-        client_cert, client_key, trust_chain = await load_cert_data(
+        client_cert, client_key, trust_chain = await CertStore(
             hass, entry.unique_id
-        )
+        ).load_cert_data()
     except KeyError as exc:
         raise ConfigEntryAuthFailed(
             "Authentication data is missing -- must reauth"
@@ -80,3 +80,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Unloaders complete")
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    # This would be an error, and the type checker knows it.
+    assert entry.unique_id
+    await CertStore(hass, entry.unique_id).remove_cert_data()

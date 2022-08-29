@@ -14,7 +14,7 @@ from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .cert_data import PRIVATE_KEY_TYPES, Certificate, save_cert_data
+from .cert_data import PRIVATE_KEY_TYPES, Certificate, CertStore
 from .const import (
     CONF_CAKES_PORT,
     CONF_HOST,
@@ -157,7 +157,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _create_entry(self):
         async def persist_cert_data(unique_id: str):
             """Persist the certificate data just generated in this flow."""
-            await save_cert_data(self.hass, unique_id, *self._get_cert_data())
+            await CertStore(
+                self.hass,
+                unique_id,
+            ).save_cert_data(*self._get_cert_data())
 
         data = self._get_data()
 
@@ -281,9 +284,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_pairing()
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle the reauth step."""
         assert entry_data, "Impossible entry data empty"
         self._set_data(

@@ -165,41 +165,41 @@ class HASSMPRISEntity(MediaPlayerEntity):
         """Return the discovery schema."""
         return DISCOVERY_SCHEMA
 
-    async def async_added_to_hass(self) ->None:
+    async def async_added_to_hass(self) -> None:
         """Entity has been added to HASS."""
         _LOGGER.debug("Added to hass: %s", self)
 
-    async def async_will_remove_from_hass(self) ->None:
+    async def async_will_remove_from_hass(self) -> None:
         """Entity is about to be removed from HASS."""
         _LOGGER.debug("Will remove from hass: %s", self)
         await self.set_unavailable()
 
-    async def async_media_play(self) ->None:
+    async def async_media_play(self) -> None:
         """Begin playback."""
         if self.client:
             await self.client.play(self.player_id)
 
-    async def async_media_pause(self) ->None:
+    async def async_media_pause(self) -> None:
         """Pause playback."""
         if self.client:
             await self.client.pause(self.player_id)
 
-    async def async_media_stop(self) ->None:
+    async def async_media_stop(self) -> None:
         """Stop playback."""
         if self.client:
             await self.client.stop(self.player_id)
 
-    async def async_media_next_track(self) ->None:
+    async def async_media_next_track(self) -> None:
         """Skip to next track."""
         if self.client:
             await self.client.next(self.player_id)
 
-    async def async_media_previous_track(self) ->None:
+    async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         if self.client:
             await self.client.previous(self.player_id)
 
-    async def async_media_seek(self, position: float) ->None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         if self.client:
             trackid = self._metadata.get("mpris:trackid")
@@ -636,7 +636,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up all the media players for the MPRIS integration."""
     component_data = hass.data[DOMAIN][config_entry.entry_id]
     mpris_client = cast(
