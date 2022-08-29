@@ -41,6 +41,9 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image from the camera."""
+        if not self.available:
+            return None
+
         path = self.coordinator.data["job"]["file"]["path"]
 
         if self.last_path == path:
