@@ -64,15 +64,11 @@ async def async_setup_entry(
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
+    _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = TEMP_CELSIUS
-
-    @property
-    def precision(self) -> float:
-        """Return precision 0.5."""
-        return PRECISION_HALVES
 
     @property
     def current_temperature(self) -> float:
