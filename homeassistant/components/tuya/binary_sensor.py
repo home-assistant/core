@@ -1,6 +1,7 @@
 """Support for Tuya binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -28,8 +29,8 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     # DPCode, to use. If None, the key will be used as DPCode
     dpcode: DPCode | None = None
 
-    # Value to consider binary sensor to be "on"
-    on_value: bool | float | int | str = True
+    # Value or values to consider binary sensor to be "on"
+    on_value: bool | float | int | str | Sequence = True
 
 
 # Commonly used sensors
@@ -189,7 +190,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.STATUS,
             device_class=BinarySensorDeviceClass.DOOR,
-            on_value="open",
+            on_value=["open", "opened"],
         ),
     ),
     # Door Window Sensor
@@ -394,4 +395,10 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode = self.entity_description.dpcode or self.entity_description.key
         if dpcode not in self.device.status:
             return False
+
+        if isinstance(self.entity_description.on_value, Sequence) and not isinstance(
+            self.entity_description.on_value, str
+        ):
+            return self.device.status[dpcode] in self.entity_description.on_value
+
         return self.device.status[dpcode] == self.entity_description.on_value
