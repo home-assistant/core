@@ -10,24 +10,22 @@ DONGLE_NAME = "Home Assistant Sky Connect"
 
 
 @callback
-def async_info(hass: HomeAssistant) -> HardwareInfo:
+def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     entries = hass.config_entries.async_entries(DOMAIN)
 
-    dongles = [
-        USBInfo(
-            vid=entry.data["vid"],
-            pid=entry.data["pid"],
-            serial_number=entry.data["serial_number"],
-            manufacturer=entry.data["manufacturer"],
-            description=entry.data["description"],
+    return [
+        HardwareInfo(
+            board=None,
+            dongle=USBInfo(
+                vid=entry.data["vid"],
+                pid=entry.data["pid"],
+                serial_number=entry.data["serial_number"],
+                manufacturer=entry.data["manufacturer"],
+                description=entry.data["description"],
+            ),
+            name=DONGLE_NAME,
+            url=None,
         )
         for entry in entries
     ]
-
-    return HardwareInfo(
-        board=None,
-        dongles=dongles,
-        name=DONGLE_NAME,
-        url=None,
-    )

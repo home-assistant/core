@@ -13,7 +13,7 @@ freezegun==1.2.1
 mock-open==1.4.0
 mypy==0.971
 pre-commit==2.20.0
-pylint==2.14.5
+pylint==2.15.0
 pipdeptree==2.2.1
 pytest-aiohttp==0.3.0
 pytest-cov==3.0.0

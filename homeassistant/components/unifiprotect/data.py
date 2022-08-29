@@ -28,6 +28,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_DISABLE_RTSP,
+    CONF_IGNORED,
     CONF_MAX_MEDIA,
     DEFAULT_MAX_MEDIA,
     DEVICES_THAT_ADOPT,
@@ -36,7 +37,11 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
+from .utils import (
+    async_dispatch_id as _ufpd,
+    async_get_devices_by_type,
+    convert_mac_list,
+)
 
 _LOGGER = logging.getLogger(__name__)
 ProtectDeviceType = Union[ProtectAdoptableDeviceModel, NVR]
@@ -67,6 +72,7 @@ class ProtectData:
 
         self._hass = hass
         self._entry = entry
+        self._existing_options = dict(entry.options)
         self._hass = hass
         self._update_interval = update_interval
         self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
@@ -74,6 +80,8 @@ class ProtectData:
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
         self._auth_failures = 0
+        self._ignored_macs: set[str] | None = None
+        self._ignore_update_cancel: Callable[[], None] | None = None
 
         self.last_update_success = False
         self.api = protect
@@ -88,6 +96,47 @@ class ProtectData:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
 
+    @property
+    def ignored_macs(self) -> set[str]:
+        """Set of ignored MAC addresses."""
+
+        if self._ignored_macs is None:
+            self._ignored_macs = convert_mac_list(
+                self._entry.options.get(CONF_IGNORED, "")
+            )
+
+        return self._ignored_macs
+
+    @callback
+    def async_get_changed_options(self, entry: ConfigEntry) -> dict[str, Any]:
+        """Get changed options for when entry is updated."""
+
+        return dict(
+            set(self._entry.options.items()) - set(self._existing_options.items())
+        )
+
+    @callback
+    def async_ignore_mac(self, mac: str) -> None:
+        """Ignores a MAC address for a UniFi Protect device."""
+
+        new_macs = (self._ignored_macs or set()).copy()
+        new_macs.add(mac)
+        _LOGGER.debug("Updating ignored_devices option: %s", self.ignored_macs)
+        options = dict(self._entry.options)
+        options[CONF_IGNORED] = ",".join(new_macs)
+        self._hass.config_entries.async_update_entry(self._entry, options=options)
+
+    @callback
+    def async_add_new_ignored_macs(self, new_macs: set[str]) -> None:
+        """Add new ignored MAC addresses and ensures the devices are removed."""
+
+        for mac in new_macs:
+            device = self.api.bootstrap.get_device_from_mac(mac)
+            if device is not None:
+                self._async_remove_device(device)
+        self._ignored_macs = None
+        self._existing_options = dict(self._entry.options)
+
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
@@ -99,6 +148,8 @@ class ProtectData:
             for device in devices:
                 if ignore_unadopted and not device.is_adopted_by_us:
                     continue
+                if device.mac in self.ignored_macs:
+                    continue
                 yield device
 
     async def async_setup(self) -> None:
@@ -107,6 +158,11 @@ class ProtectData:
             self._async_process_ws_message
         )
         await self.async_refresh()
+
+        for mac in self.ignored_macs:
+            device = self.api.bootstrap.get_device_from_mac(mac)
+            if device is not None:
+                self._async_remove_device(device)
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
@@ -172,6 +228,7 @@ class ProtectData:
 
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
+
         registry = dr.async_get(self._hass)
         device_entry = registry.async_get_device(
             identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
@@ -296,13 +353,13 @@ class ProtectData:
 
 
 @callback
-def async_ufp_instance_for_config_entry_ids(
+def async_ufp_data_for_config_entry_ids(
     hass: HomeAssistant, config_entry_ids: set[str]
-) -> ProtectApiClient | None:
+) -> ProtectData | None:
     """Find the UFP instance for the config entry ids."""
     domain_data = hass.data[DOMAIN]
     for config_entry_id in config_entry_ids:
         if config_entry_id in domain_data:
             protect_data: ProtectData = domain_data[config_entry_id]
-            return protect_data.api
+            return protect_data
     return None
