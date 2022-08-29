@@ -116,15 +116,15 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             ]
         }
 
-    def _update(self) -> None:
-        """Update the entity."""
+    def _update_on_wake_up(self) -> None:
+        """Update the entity when node is awake."""
         self.hass.async_create_task(self.async_update(True))
 
     async def async_update(self, write_state: bool = False) -> None:
         """Update the entity."""
         if self.node.status == NodeStatus.ASLEEP:
             if not self._status_unsub:
-                self._status_unsub = self.node.once("wake up", self._update)
+                self._status_unsub = self.node.once("wake up", self._update_on_wake_up)
             return
         self.available_firmware_updates = (
             await self.driver.controller.async_get_available_firmware_updates(
