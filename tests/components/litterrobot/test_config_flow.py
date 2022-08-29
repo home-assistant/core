@@ -131,7 +131,10 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("pylitterbot.Account.connect", return_value=mock_account,), patch(
+    with patch(
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
+        return_value=mock_account,
+    ), patch(
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -167,7 +170,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=LitterRobotLoginException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -178,7 +181,10 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch("pylitterbot.Account.connect", return_value=mock_account,), patch(
+    with patch(
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
+        return_value=mock_account,
+    ), patch(
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
