@@ -118,6 +118,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     def _update_on_wake_up(self) -> None:
         """Update the entity when node is awake."""
+        self._status_unsub = None
         self.hass.async_create_task(self.async_update(True))
 
     async def async_update(self, write_state: bool = False) -> None:
@@ -132,8 +133,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
         self._async_process_updates(write_state)
-        if self._status_unsub:
-            self._status_unsub = None
 
     @callback
     def _async_process_updates(self, write_state: bool = True) -> None:
