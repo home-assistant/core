@@ -1,11 +1,13 @@
 """The Litter-Robot integration."""
 from __future__ import annotations
 
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SupportedModels
+from .const import DOMAIN
 from .hub import LitterRobotHub
 
 PLATFORMS = [
@@ -17,31 +19,31 @@ PLATFORMS = [
 ]
 
 PLATFORMS_BY_TYPE = {
-    SupportedModels.LITTER_ROBOT: [
+    LitterRobot: (
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.VACUUM,
-    ],
-    SupportedModels.LITTER_ROBOT_3: [
+    ),
+    LitterRobot3: (
         Platform.BUTTON,
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.VACUUM,
-    ],
-    SupportedModels.LITTER_ROBOT_4: [
+    ),
+    LitterRobot4: (
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
         Platform.VACUUM,
-    ],
-    SupportedModels.FEEDER_ROBOT: [
+    ),
+    FeederRobot: (
         Platform.BUTTON,
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
-    ],
+    ),
 }
 
 
@@ -51,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
     await hub.login(load_robots=True)
 
-    platforms = set()
+    platforms: set[str] = set()
     for robot in hub.account.robots:
         platforms.update(PLATFORMS_BY_TYPE[type(robot)])
     if platforms:
