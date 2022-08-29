@@ -651,11 +651,20 @@ async def async_setup_entry(
     )
 
     await manager.start()
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.stop)
+    managers = [manager]
 
-    async def async_stop_manager():
-        _LOGGER.debug("Stopping entity manager")
-        await manager.stop()
-        _LOGGER.debug("Entity manager stopped")
+    async def async_stop_manager(*unused_args):
+        # The following is a very simple trick to delete the
+        # reference to the manager once the manager is stopped
+        # once via this mechanism.
+        # That way, if the manager is stopped because the entry
+        # was unloaded (e.g. integration deleted), this will
+        # not try to stop the manager again.
+        if managers:
+            manager = managers.pop()
+            _LOGGER.debug("Stopping entity manager")
+            await manager.stop()
+            _LOGGER.debug("Entity manager stopped")
 
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_manager)
     component_data[ENTRY_UNLOADERS].append(async_stop_manager)
