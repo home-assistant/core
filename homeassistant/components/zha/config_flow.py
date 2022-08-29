@@ -729,8 +729,8 @@ class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
         # Intentionally do not set `data` to avoid creating `options`, we set it above
         return self.async_create_entry(title=self._title, data={})
 
-    def __del__(self):
-        """Destructor to reload ZHA if the flow is cancelled."""
+    def async_remove(self):
+        """Maybe reload ZHA if the flow is aborted."""
         if self._must_reload_entry:
             setup = self.hass.config_entries.async_setup(self.config_entry.entry_id)
 
