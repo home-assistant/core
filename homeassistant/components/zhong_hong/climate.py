@@ -128,6 +128,7 @@ class ZhongHongClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
@@ -170,11 +171,6 @@ class ZhongHongClimate(ClimateEntity):
     def unique_id(self):
         """Return the unique ID of the HVAC."""
         return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:

@@ -74,6 +74,7 @@ class StiebelEltron(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, name, ste_data):
         """Initialize the unit."""
@@ -112,10 +113,6 @@ class StiebelEltron(ClimateEntity):
         return self._name
 
     # Handle ClimateEntityFeature.TARGET_TEMPERATURE
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

@@ -6,6 +6,13 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "description": "Please update your password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -14,7 +21,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

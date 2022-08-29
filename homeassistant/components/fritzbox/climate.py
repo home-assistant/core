@@ -67,11 +67,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def precision(self) -> float:

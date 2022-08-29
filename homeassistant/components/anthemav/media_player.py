@@ -91,17 +91,14 @@ async def async_setup_entry(
 
     avr: Connection = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = []
-    for zone_number in avr.protocol.zones:
-        _LOGGER.debug("Initializing Zone %s", zone_number)
-        entity = AnthemAVR(
-            avr.protocol, name, mac_address, model, zone_number, config_entry.entry_id
-        )
-        entities.append(entity)
-
     _LOGGER.debug("Connection data dump: %s", avr.dump_conndata)
 
-    async_add_entities(entities)
+    async_add_entities(
+        AnthemAVR(
+            avr.protocol, name, mac_address, model, zone_number, config_entry.entry_id
+        )
+        for zone_number in avr.protocol.zones
+    )
 
 
 class AnthemAVR(MediaPlayerEntity):

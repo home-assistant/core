@@ -25,7 +25,7 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import ATTR_MESSAGE, DOMAIN
-from .data import async_ufp_instance_for_config_entry_ids
+from .data import async_ufp_data_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -70,8 +70,8 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
     config_entry_ids = device_entry.config_entries
-    if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
-        return ufp_instance
+    if ufp_data := async_ufp_data_for_config_entry_ids(hass, config_entry_ids):
+        return ufp_data.api
 
     raise HomeAssistantError(f"No device found for device id: {device_id}")
 
