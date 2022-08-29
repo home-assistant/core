@@ -202,9 +202,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._temp_precision = precision
         self._temp_target_temperature_step = target_temperature_step
         if self.ac_mode:
-            self._hvac_list = [HVACMode.COOL, HVACMode.OFF]
+            self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
         else:
-            self._hvac_list = [HVACMode.HEAT, HVACMode.OFF]
+            self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
         self._active = False
         self._cur_temp = None
         self._temp_lock = asyncio.Lock()
@@ -359,11 +359,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
-
-    @property
-    def hvac_modes(self):
-        """List of available operation modes."""
-        return self._hvac_list
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
