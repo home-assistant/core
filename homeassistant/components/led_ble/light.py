@@ -1,10 +1,9 @@
 """LED BLE integration light platform."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 
-from led_ble import LEDBLE, LEDBLEState
+from led_ble import LEDBLE
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,11 +16,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 from .models import LEDBLEData
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -29,22 +30,24 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the light Platform from config_flow."""
+    """Set up the light platform from config_flow."""
     data: LEDBLEData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([LEDBLEEntity(data.device, entry.title)])
+    async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
 
-class LEDBLEEntity(LightEntity):
+class LEDBLEEntity(CoordinatorEntity, LightEntity):
     """Representation of LEDBLE device."""
 
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_color_mode = ColorMode.RGB
     _attr_has_entity_name = True
 
-    def __init__(self, device: LEDBLE, name: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: LEDBLE, name: str
+    ) -> None:
         """Initialize an ledble."""
+        super().__init__(coordinator)
         self._device = device
-        self._attr_name = name
         self._attr_unique_id = device._address
         self._attr_device_info = DeviceInfo(
             name=name,
@@ -78,7 +81,7 @@ class LEDBLEEntity(LightEntity):
         await self._device.turn_off()
 
     @callback
-    def _handle_coordinator_update(self, state: LEDBLEState) -> None:
+    def _handle_coordinator_update(self, *args: Any) -> None:
         """Handle data update."""
         self._async_update_attrs()
         self.async_write_ha_state()
@@ -89,10 +92,3 @@ class LEDBLEEntity(LightEntity):
             self._device.register_callback(self._handle_coordinator_update)
         )
         return await super().async_added_to_hass()
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._device.update()
