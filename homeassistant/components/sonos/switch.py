@@ -72,7 +72,7 @@ FRIENDLY_NAMES = {
     ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "Surround music full volume",
     ATTR_NIGHT_SOUND: "Night sound",
     ATTR_SPEECH_ENHANCEMENT: "Speech enhancement",
-    ATTR_STATUS_LIGHT: "Status Light",
+    ATTR_STATUS_LIGHT: "Status light",
     ATTR_SUB_ENABLED: "Subwoofer enabled",
     ATTR_SURROUND_ENABLED: "Surround enabled",
     ATTR_TOUCH_CONTROLS: "Touch controls",

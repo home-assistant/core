@@ -1,16 +1,19 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
+from asyncio import Future
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Final, Union
+import time
+from typing import TYPE_CHECKING, Final
 
+import async_timeout
 from bleak import BleakError
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
+from dbus_next import InvalidMessageError
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -24,8 +27,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_bluetooth
+from homeassistant.util.package import is_docker_env
 
 from . import models
 from .const import CONF_ADAPTER, DEFAULT_ADAPTERS, DOMAIN
@@ -39,12 +42,24 @@ from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 from .util import async_get_bluetooth_adapters
 
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementData
+
+    from homeassistant.helpers.typing import ConfigType
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
+START_TIMEOUT = 9
 
 SOURCE_LOCAL: Final = "local"
+
+SCANNER_WATCHDOG_TIMEOUT: Final = 60 * 5
+SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=SCANNER_WATCHDOG_TIMEOUT)
+MONOTONIC_TIME = time.monotonic
 
 
 @dataclass
@@ -92,9 +107,8 @@ SCANNING_MODE_TO_BLEAK = {
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
-]
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
 @hass_callback
@@ -150,13 +164,45 @@ def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
+    mode: BluetoothScanningMode,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
+
+    mode is currently not used as we only support active scanning.
+    Passive scanning will be available in the future. The flag
+    is required to be present to avoid a future breaking change
+    when we support passive scanning.
 
     Returns a callback that can be used to cancel the registration.
     """
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_register_callback(callback, match_dict)
+
+
+async def async_process_advertisements(
+    hass: HomeAssistant,
+    callback: ProcessAdvertisementCallback,
+    match_dict: BluetoothCallbackMatcher,
+    mode: BluetoothScanningMode,
+    timeout: int,
+) -> BluetoothServiceInfoBleak:
+    """Process advertisements until callback returns true or timeout expires."""
+    done: Future[BluetoothServiceInfoBleak] = Future()
+
+    @hass_callback
+    def _async_discovered_device(
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
+    ) -> None:
+        if not done.done() and callback(service_info):
+            done.set_result(service_info)
+
+    unload = async_register_callback(hass, _async_discovered_device, match_dict, mode)
+
+    try:
+        async with async_timeout.timeout(timeout):
+            return await done
+    finally:
+        unload()
 
 
 @hass_callback
@@ -171,6 +217,13 @@ def async_track_unavailable(
     """
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_track_unavailable(callback, address)
+
+
+@hass_callback
+def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
+    """Trigger discovery of devices which have already been seen."""
+    manager: BluetoothManager = hass.data[DOMAIN]
+    manager.async_rediscover_address(address)
 
 
 async def _async_has_bluetooth_adapter() -> bool:
@@ -196,12 +249,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     elif await _async_has_bluetooth_adapter():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data={},
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={},
         )
     return True
 
@@ -211,9 +263,10 @@ async def async_setup_entry(
 ) -> bool:
     """Set up the bluetooth integration from a config entry."""
     manager: BluetoothManager = hass.data[DOMAIN]
-    await manager.async_start(
-        BluetoothScanningMode.ACTIVE, entry.options.get(CONF_ADAPTER)
-    )
+    async with manager.start_stop_lock:
+        await manager.async_start(
+            BluetoothScanningMode.ACTIVE, entry.options.get(CONF_ADAPTER)
+        )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
@@ -222,8 +275,6 @@ async def _async_update_listener(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Handle options update."""
-    manager: BluetoothManager = hass.data[DOMAIN]
-    manager.async_start_reload()
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -232,7 +283,9 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     manager: BluetoothManager = hass.data[DOMAIN]
-    await manager.async_stop()
+    async with manager.start_stop_lock:
+        manager.async_start_reload()
+        await manager.async_stop()
     return True
 
 
@@ -248,13 +301,19 @@ class BluetoothManager:
         self.hass = hass
         self._integration_matcher = integration_matcher
         self.scanner: HaBleakScanner | None = None
+        self.start_stop_lock = asyncio.Lock()
         self._cancel_device_detected: CALLBACK_TYPE | None = None
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
+        self._cancel_stop: CALLBACK_TYPE | None = None
+        self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._unavailable_callbacks: dict[str, list[Callable[[str], None]]] = {}
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
         ] = []
+        self._last_detection = 0.0
         self._reloading = False
+        self._adapter: str | None = None
+        self._scanning_mode = BluetoothScanningMode.ACTIVE
 
     @hass_callback
     def async_setup(self) -> None:
@@ -276,6 +335,8 @@ class BluetoothManager:
     ) -> None:
         """Set up BT Discovery."""
         assert self.scanner is not None
+        self._adapter = adapter
+        self._scanning_mode = scanning_mode
         if self._reloading:
             # On reload, we need to reset the scanner instance
             # since the devices in its history may not be reachable
@@ -300,12 +361,72 @@ class BluetoothManager:
             self._device_detected, {}
         )
         try:
-            await self.scanner.start()
-        except (FileNotFoundError, BleakError) as ex:
-            self._cancel_device_detected()
+            async with async_timeout.timeout(START_TIMEOUT):
+                await self.scanner.start()  # type: ignore[no-untyped-call]
+        except InvalidMessageError as ex:
+            self._async_cancel_scanner_callback()
+            _LOGGER.debug("Invalid DBus message received: %s", ex, exc_info=True)
+            raise ConfigEntryNotReady(
+                f"Invalid DBus message received: {ex}; try restarting `dbus`"
+            ) from ex
+        except BrokenPipeError as ex:
+            self._async_cancel_scanner_callback()
+            _LOGGER.debug("DBus connection broken: %s", ex, exc_info=True)
+            if is_docker_env():
+                raise ConfigEntryNotReady(
+                    f"DBus connection broken: {ex}; try restarting `bluetooth`, `dbus`, and finally the docker container"
+                ) from ex
+            raise ConfigEntryNotReady(
+                f"DBus connection broken: {ex}; try restarting `bluetooth` and `dbus`"
+            ) from ex
+        except FileNotFoundError as ex:
+            self._async_cancel_scanner_callback()
+            _LOGGER.debug(
+                "FileNotFoundError while starting bluetooth: %s", ex, exc_info=True
+            )
+            if is_docker_env():
+                raise ConfigEntryNotReady(
+                    f"DBus service not found; docker config may be missing `-v /run/dbus:/run/dbus:ro`: {ex}"
+                ) from ex
+            raise ConfigEntryNotReady(
+                f"DBus service not found; make sure the DBus socket is available to Home Assistant: {ex}"
+            ) from ex
+        except asyncio.TimeoutError as ex:
+            self._async_cancel_scanner_callback()
+            raise ConfigEntryNotReady(
+                f"Timed out starting Bluetooth after {START_TIMEOUT} seconds"
+            ) from ex
+        except BleakError as ex:
+            self._async_cancel_scanner_callback()
+            _LOGGER.debug("BleakError while starting bluetooth: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
         self.async_setup_unavailable_tracking()
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        self._async_setup_scanner_watchdog()
+        self._cancel_stop = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_hass_stopping
+        )
+
+    @hass_callback
+    def _async_setup_scanner_watchdog(self) -> None:
+        """If Dbus gets restarted or updated, we need to restart the scanner."""
+        self._last_detection = MONOTONIC_TIME()
+        self._cancel_watchdog = async_track_time_interval(
+            self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
+        )
+
+    async def _async_scanner_watchdog(self, now: datetime) -> None:
+        """Check if the scanner is running."""
+        time_since_last_detection = MONOTONIC_TIME() - self._last_detection
+        if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
+            return
+        _LOGGER.info(
+            "Bluetooth scanner has gone quiet for %s, restarting",
+            SCANNER_WATCHDOG_INTERVAL,
+        )
+        async with self.start_stop_lock:
+            self.async_start_reload()
+            await self.async_stop()
+            await self.async_start(self._scanning_mode, self._adapter)
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -340,6 +461,7 @@ class BluetoothManager:
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
         """Handle a detected device."""
+        self._last_detection = MONOTONIC_TIME()
         matched_domains = self._integration_matcher.match_domains(
             device, advertisement_data
         )
@@ -452,20 +574,42 @@ class BluetoothManager:
             for device_adv in self.scanner.history.values()
         ]
 
-    async def async_stop(self, event: Event | None = None) -> None:
-        """Stop bluetooth discovery."""
+    async def _async_hass_stopping(self, event: Event) -> None:
+        """Stop the Bluetooth integration at shutdown."""
+        self._cancel_stop = None
+        await self.async_stop()
+
+    @hass_callback
+    def _async_cancel_scanner_callback(self) -> None:
+        """Cancel the scanner callback."""
         if self._cancel_device_detected:
             self._cancel_device_detected()
             self._cancel_device_detected = None
+
+    async def async_stop(self) -> None:
+        """Stop bluetooth discovery."""
+        _LOGGER.debug("Stopping bluetooth discovery")
+        if self._cancel_watchdog:
+            self._cancel_watchdog()
+            self._cancel_watchdog = None
+        self._async_cancel_scanner_callback()
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
+        if self._cancel_stop:
+            self._cancel_stop()
+            self._cancel_stop = None
         if self.scanner:
             try:
-                await self.scanner.stop()
+                await self.scanner.stop()  # type: ignore[no-untyped-call]
             except BleakError as ex:
                 # This is not fatal, and they may want to reload
                 # the config entry to restart the scanner if they
                 # change the bluetooth dongle.
                 _LOGGER.error("Error stopping scanner: %s", ex)
         uninstall_multiple_bleak_catcher()
+
+    @hass_callback
+    def async_rediscover_address(self, address: str) -> None:
+        """Trigger discovery of devices which have already been seen."""
+        self._integration_matcher.async_clear_address(address)

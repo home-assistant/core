@@ -46,7 +46,7 @@ async def async_setup_entry(
     for home_id in climate_topology.home_ids:
         signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
 
-        await data_handler.register_data_class(
+        await data_handler.subscribe(
             CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
         )
 
@@ -92,7 +92,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
 
         self._home = self._climate_state.homes[self._home_id]
 
-        self._data_classes.extend(
+        self._publishers.extend(
             [
                 {
                     "name": CLIMATE_TOPOLOGY_CLASS_NAME,

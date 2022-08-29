@@ -30,7 +30,7 @@
                 "title": "Hely kiv\u00e1laszt\u00e1sa"
             },
             "user": {
-                "description": "K\u00e9rem adja meg a SmartThings [Personal Access Tokent]({token_url}), amit az [instrukci\u00f3k]({component_url}) alapj\u00e1n hozott l\u00e9tre.",
+                "description": "A SmartThings \u00fagy lesz be\u00e1ll\u00edtva, hogy push friss\u00edt\u00e9seket k\u00fcldj\u00f6n a Home Assistantnak a k\u00f6vetkez\u0151 c\u00edmen:\n> {webhook_url}\n\nHa ez \u00edgy nem megfelel\u0151, friss\u00edtse a konfigur\u00e1ci\u00f3t, ind\u00edtsa \u00fajra Home Assistantot, \u00e9s pr\u00f3b\u00e1lja meg \u00fajra.",
                 "title": "Callback URL meger\u0151s\u00edt\u00e9se"
             }
         }

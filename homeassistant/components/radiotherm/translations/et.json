@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Raadiotermostaadi kliimaplatvormi konfigureerimine YAML-i abil eemaldatakse rakenduses Home Assistant 2022.9. \n\n Olemasolev konfiguratsioon imporditi kasutajaliidesesse automaatselt. Selle probleemi lahendamiseks eemalda YAML-i konfiguratsioon failist configuration.yaml ja taask\u00e4ivita Home Assistant.",
+            "title": "Raadiotermostaadi YAML-i konfiguratsioon eemaldatakse"
+        }
+    },
     "options": {
         "step": {
             "init": {

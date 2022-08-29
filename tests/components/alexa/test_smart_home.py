@@ -2030,7 +2030,7 @@ async def test_thermostat(hass):
             "current_temperature": 75.0,
             "friendly_name": "Test Thermostat",
             "supported_features": 1 | 2 | 4 | 128,
-            "hvac_modes": ["off", "heat", "cool", "auto", "dry"],
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
             "preset_mode": None,
             "preset_modes": ["eco"],
             "min_temp": 50,
@@ -2220,7 +2220,7 @@ async def test_thermostat(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
 
-    # Assert we can call custom modes
+    # Assert we can call custom modes for dry and fan_only
     call, msg = await assert_request_calls_service(
         "Alexa.ThermostatController",
         "SetThermostatMode",
@@ -2230,6 +2230,18 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "CUSTOM", "customName": "DEHUMIDIFY"}},
     )
     assert call.data["hvac_mode"] == "dry"
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_hvac_mode",
+        hass,
+        payload={"thermostatMode": {"value": "CUSTOM", "customName": "FAN"}},
+    )
+    assert call.data["hvac_mode"] == "fan_only"
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
 

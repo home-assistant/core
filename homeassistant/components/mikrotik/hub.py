@@ -60,9 +60,9 @@ class Device:
         return self._params.get("host-name", self.mac)
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return device primary ip address."""
-        return self._params["address"]
+        return self._params.get("address")
 
     @property
     def mac(self) -> str:

@@ -13,7 +13,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -374,7 +374,7 @@ async def test_no_preload_stream(hass, mock_stream):
     ) as mock_stream_source:
         mock_stream_source.return_value = io.BytesIO()
         await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert not mock_request_stream.called
 
@@ -396,7 +396,7 @@ async def test_preload_stream(hass, mock_stream):
             hass, "camera", {DOMAIN: {"platform": "demo"}}
         )
         await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert mock_create_stream.called
 

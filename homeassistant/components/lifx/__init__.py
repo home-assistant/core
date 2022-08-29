@@ -8,7 +8,7 @@ import socket
 from typing import Any
 
 from aiolifx.aiolifx import Light
-from aiolifx_connection import LIFXConnection
+from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
@@ -173,7 +173,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
-
     if async_entry_is_legacy(entry):
         return True
 

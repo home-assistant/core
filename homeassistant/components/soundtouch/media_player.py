@@ -19,6 +19,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -70,11 +71,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Bose SoundTouch platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
-        "Configuration of the Bose SoundTouch platform in YAML is deprecated and will be "
-        "removed in a future release; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
+        "Configuration of the Bose SoundTouch integration in YAML is "
+        "deprecated and will be removed in Home Assistant 2022.10; Your "
+        "existing configuration has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(

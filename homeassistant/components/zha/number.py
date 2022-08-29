@@ -278,12 +278,18 @@ async def async_setup_entry(
 class ZhaNumber(ZhaEntity, NumberEntity):
     """Representation of a ZHA Number entity."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
         """Init this entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._analog_output_channel = self.cluster_channels.get(CHANNEL_ANALOG_OUTPUT)
+        self._analog_output_channel = self.cluster_channels[CHANNEL_ANALOG_OUTPUT]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -291,12 +297,12 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self._analog_output_channel.present_value
 
     @property
-    def native_min_value(self):
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         min_present_value = self._analog_output_channel.min_present_value
         if min_present_value is not None:
@@ -304,7 +310,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return 0
 
     @property
-    def native_max_value(self):
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         max_present_value = self._analog_output_channel.max_present_value
         if max_present_value is not None:
@@ -312,7 +318,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return 1023
 
     @property
-    def native_step(self):
+    def native_step(self) -> float | None:
         """Return the value step."""
         resolution = self._analog_output_channel.resolution
         if resolution is not None:
@@ -320,7 +326,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().native_step
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the number entity."""
         description = self._analog_output_channel.description
         if description is not None and len(description) > 0:
@@ -328,7 +334,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         application_type = self._analog_output_channel.application_type
         if application_type is not None:
@@ -336,7 +342,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().icon
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         engineering_units = self._analog_output_channel.engineering_units
         return UNITS.get(engineering_units)
@@ -346,13 +352,13 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         """Handle value update from channel."""
         self.async_write_ha_state()
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         num_value = float(value)
         if await self._analog_output_channel.async_set_present_value(num_value):
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
         _LOGGER.debug("polling current state")

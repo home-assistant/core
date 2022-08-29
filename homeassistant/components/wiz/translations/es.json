@@ -1,21 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo ya configurado",
-            "cannot_connect": "Error al conectar",
-            "no_devices_found": "Ning\u00fan dispositivo encontrado en la red."
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "no_devices_found": "No se encontraron dispositivos en la red"
         },
         "error": {
-            "bulb_time_out": "No se puede conectar a la bombilla. Tal vez la bombilla est\u00e1 desconectada o se ingres\u00f3 una IP incorrecta. \u00a1Por favor encienda la luz y vuelve a intentarlo!",
-            "cannot_connect": "Error al conectar",
+            "bulb_time_out": "No se puede conectar a la bombilla. Tal vez la bombilla est\u00e9 sin conexi\u00f3n o se ha introducido una IP incorrecta. \u00a1Por favor, enciende la luz e int\u00e9ntalo de nuevo!",
+            "cannot_connect": "No se pudo conectar",
             "no_ip": "No es una direcci\u00f3n IP v\u00e1lida.",
-            "no_wiz_light": "La bombilla no se puede conectar a trav\u00e9s de la integraci\u00f3n de WiZ Platform.",
+            "no_wiz_light": "La bombilla no se puede conectar a trav\u00e9s de la integraci\u00f3n WiZ Platform.",
             "unknown": "Error inesperado"
         },
         "flow_title": "{name} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "\u00bfDesea configurar {name} ({host})?"
+                "description": "\u00bfQuieres configurar {name} ({host})?"
             },
             "pick_device": {
                 "data": {
@@ -26,7 +26,7 @@
                 "data": {
                     "host": "Direcci\u00f3n IP"
                 },
-                "description": "Si deja la direcci\u00f3n IP vac\u00eda, la detecci\u00f3n se utilizar\u00e1 para buscar dispositivos."
+                "description": "Si dejas la direcci\u00f3n IP vac\u00eda, se usar\u00e1 el descubrimiento para encontrar dispositivos."
             }
         }
     }

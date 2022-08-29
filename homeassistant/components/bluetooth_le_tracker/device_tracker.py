@@ -2,13 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
-from bleak.backends.device import BLEDevice
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -18,10 +16,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH_LE,
+    SourceType,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
+    AsyncSeeCallback,
     async_load_config,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP
@@ -57,7 +56,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 async def async_setup_scanner(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth LE Scanner."""
@@ -107,7 +106,7 @@ async def async_setup_scanner(  # noqa: C901
         await async_see(
             mac=BLE_PREFIX + address,
             host_name=name,
-            source_type=SOURCE_TYPE_BLUETOOTH_LE,
+            source_type=SourceType.BLUETOOTH_LE,
             battery=battery,
         )
 
@@ -136,19 +135,16 @@ async def async_setup_scanner(  # noqa: C901
     async def _async_see_update_ble_battery(
         mac: str,
         now: datetime,
-        service_info: bluetooth.BluetoothServiceInfo,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
     ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
-        ble_device: BLEDevice | str = (
-            bluetooth.async_ble_device_from_address(hass, mac) or mac
-        )
         try:
-            async with BleakClient(ble_device) as client:
+            async with BleakClient(service_info.device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Timeout when trying to get battery status for %s", service_info.name
             )
         # Bleak currently has a few places where checking dbus attributes
@@ -165,7 +161,8 @@ async def async_setup_scanner(  # noqa: C901
 
     @callback
     def _async_update_ble(
-        service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a ble callback."""
         mac = service_info.address
@@ -199,7 +196,9 @@ async def async_setup_scanner(  # noqa: C901
             _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
     cancels = [
-        bluetooth.async_register_callback(hass, _async_update_ble, None),
+        bluetooth.async_register_callback(
+            hass, _async_update_ble, None, bluetooth.BluetoothScanningMode.ACTIVE
+        ),
         async_track_time_interval(hass, _async_refresh_ble, interval),
     ]
 

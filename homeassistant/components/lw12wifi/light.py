@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import lw12
 import voluptuous as vol
@@ -146,7 +147,7 @@ class LW12WiFi(LightEntity):
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()
         self._state = False
