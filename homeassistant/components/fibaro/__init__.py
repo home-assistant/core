@@ -540,6 +540,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FibaroDevice(Entity):
     """Representation of a Fibaro device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, fibaro_device):
         """Initialize the device."""
         self.fibaro_device = fibaro_device
@@ -632,11 +634,6 @@ class FibaroDevice(Entity):
             or int(self.fibaro_device.properties.value) > 0
         ):
             return True
-        return False
-
-    @property
-    def should_poll(self):
-        """Get polling requirement from fibaro device."""
         return False
 
     @property

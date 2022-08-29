@@ -205,6 +205,8 @@ class NumberStorageCollection(collection.StorageCollection):
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
 
+    _attr_should_poll = False
+
     def __init__(self, config: dict) -> None:
         """Initialize an input number."""
         self._config = config
@@ -218,11 +220,6 @@ class InputNumber(RestoreEntity):
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = False
         return input_num
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def _minimum(self) -> float:

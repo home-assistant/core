@@ -20,6 +20,7 @@ CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
 CONF_OVERRIDE_CHOST = "override_connection_host"
 CONF_MAX_MEDIA = "max_media"
+CONF_IGNORED = "ignored_devices"
 
 CONFIG_OPTIONS = [
     CONF_ALL_UPDATES,
@@ -63,5 +64,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"

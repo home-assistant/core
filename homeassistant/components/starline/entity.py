@@ -11,6 +11,8 @@ from .account import StarlineAccount, StarlineDevice
 class StarlineEntity(Entity):
     """StarLine base entity class."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, account: StarlineAccount, device: StarlineDevice, key: str, name: str
     ) -> None:
@@ -20,11 +22,6 @@ class StarlineEntity(Entity):
         self._key = key
         self._name = name
         self._unsubscribe_api: Callable | None = None
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def available(self):

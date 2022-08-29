@@ -1,24 +1,51 @@
 """Support for Volvo On Call sensors."""
 from __future__ import annotations
 
+from volvooncall.dashboard import Instrument
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
+from . import VolvoEntity, VolvoUpdateCoordinator
+from .const import DOMAIN, VOLVO_DISCOVERY_NEW
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Volvo sensors."""
-    if discovery_info is None:
-        return
-    async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
+    """Configure sensors from a config entry created in the integrations UI."""
+    coordinator: VolvoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    volvo_data = coordinator.volvo_data
+
+    @callback
+    def async_discover_device(instruments: list[Instrument]) -> None:
+        """Discover and add a discovered Volvo On Call sensor."""
+        entities: list[VolvoSensor] = []
+
+        for instrument in instruments:
+            if instrument.component == "sensor":
+                entities.append(
+                    VolvoSensor(
+                        coordinator,
+                        instrument.vehicle.vin,
+                        instrument.component,
+                        instrument.attr,
+                        instrument.slug_attr,
+                    )
+                )
+
+        async_add_entities(entities)
+
+    async_discover_device([*volvo_data.instruments])
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VOLVO_DISCOVERY_NEW, async_discover_device)
+    )
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):

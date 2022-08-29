@@ -116,6 +116,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
@@ -134,11 +136,6 @@ class LutronDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return f"{self._area_name} {self._lutron_device.name}"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):
