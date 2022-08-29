@@ -43,13 +43,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Cannot fetch appliances")
         return False
 
+    myplatform: list[Platform] = []
+
     hass.data[DOMAIN][entry.entry_id] = WhirlpoolData(
         appliances_manager,
         auth,
         backend_selector,
+        myplatform,
     )
-
-    myplatform = []
 
     if appliances_manager.washer_dryers:
         myplatform.append(Platform.SENSOR)
@@ -61,13 +62,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.config_entries.async_forward_entry_setups(entry, myplatform)
         return True
 
+    hass.data[DOMAIN][entry.entry_id].update(
+        WhirlpoolData(
+            appliances_manager,
+            auth,
+            backend_selector,
+            myplatform,
+        )
+    )
+
     _LOGGER.debug("No Appliances found")
     return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    whirlpool_data: WhirlpoolData = hass.data[DOMAIN][entry.entry_id]
+    myplatform = whirlpool_data.platform
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, myplatform)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -81,3 +93,4 @@ class WhirlpoolData:
     appliances_manager: AppliancesManager
     auth: Auth
     backend_selector: BackendSelector
+    platform: list[Platform]
