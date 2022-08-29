@@ -30,13 +30,13 @@ class RobotSwitchEntityDescription(SwitchEntityDescription):
 ROBOT_SWITCHES = [
     RobotSwitchEntityDescription(
         key="night_light_mode_enabled",
-        name="Night light mode",
+        name="Night Light Mode",
         icons=("mdi:lightbulb-on", "mdi:lightbulb-off"),
         set_fn=lambda robot: robot.set_night_light,
     ),
     RobotSwitchEntityDescription(
         key="panel_lock_enabled",
-        name="Panel lockout",
+        name="Panel Lockout",
         icons=("mdi:lock", "mdi:lock-open"),
         set_fn=lambda robot: robot.set_panel_lockout,
     ),
