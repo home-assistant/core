@@ -201,6 +201,7 @@ FLOWS = {
         "landisgyr_heat_meter",
         "launch_library",
         "laundrify",
+        "led_ble",
         "lg_soundbar",
         "life360",
         "lifx",
