@@ -61,6 +61,28 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
+async def test_form_unknown(hass: HomeAssistant) -> None:
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.prusalink.config_flow.PrusaLink.get_version",
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "api_key": "abcdefg",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_invalid_version(hass: HomeAssistant, mock_version_api) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
