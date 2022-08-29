@@ -50,13 +50,13 @@ async def test_sensor_values(
         assert entry
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == "Waiting"
+        assert state.state == "RunningMainCycle"
 
         state = await update_sensor_state(
             hass, entity_id, mock_sensor_api_instances, mock_instance_idx
         )
         assert state is not None
-        id = f"{entity_id.split('_')[0]}_time_remaining"
-        state = hass.states.get(id)
+        state_id = f"{entity_id.split('_')[0]}_time_remaining"
+        state = hass.states.get(state_id)
         assert state is not None
-        assert state.state == "00:00:00"
+        assert state.state == "3540"

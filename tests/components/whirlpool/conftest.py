@@ -106,10 +106,10 @@ def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
 
 
 def get_sensor_mock(said):
-    """Get a mock of an sensor."""
+    """Get a mock of a sensor."""
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
-    mock_sensor.get_machine_state.return_value.name = "Waiting"
+    mock_sensor.get_machine_state.return_value.name = "RunningMainCycle"
     mock_sensor.get_attribute.return_value = "3540"
 
     return mock_sensor
