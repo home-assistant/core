@@ -129,6 +129,8 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "keymitt_ble",
         "local_name": "mib*"
+    },
+    {
         "domain": "led_ble",
         "local_name": "LEDnet*"
     },
