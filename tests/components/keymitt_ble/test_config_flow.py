@@ -32,7 +32,7 @@ async def test_bluetooth_discovery(hass):
 
     assert result["type"] == FlowResultType.FORM
 
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_bluetooth_discovery_already_setup(hass):
@@ -142,6 +142,6 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
 
     assert result2["type"] == FlowResultType.FORM
 
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
     # Verify the original one was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
