@@ -33,7 +33,7 @@ UNSUPPORTED_LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
 )
 
 
-NOT_LED_BLEDISCOVERY_INFO = BluetoothServiceInfoBleak(
+NOT_LED_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Not",
     address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
