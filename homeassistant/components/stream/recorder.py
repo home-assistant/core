@@ -16,7 +16,7 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
 )
 from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
-from .fmp4utils import read_init
+from .fmp4utils import read_init, transform_init
 
 if TYPE_CHECKING:
     import deque
@@ -153,7 +153,9 @@ class RecorderOutput(StreamOutput):
             with open(video_path + ".tmp", mode="rb") as in_file, open(
                 video_path, mode="wb"
             ) as out_file:
-                init = read_init(in_file, self.stream_settings.orientation)
+                init = transform_init(
+                    read_init(in_file), self.stream_settings.orientation
+                )
                 out_file.write(init)
                 in_file.seek(len(init))
                 while chunk := in_file.read(DEFAULT_BUFFER_SIZE):

@@ -141,13 +141,11 @@ def get_codec_string(mp4_bytes: bytes) -> str:
     return ",".join(codecs)
 
 
-def read_init(bytes_io: BufferedIOBase, orientation: int) -> bytes:
+def read_init(bytes_io: BufferedIOBase) -> bytes:
     """Read the init from a mp4 file."""
     bytes_io.seek(24)
     moov_len = int.from_bytes(bytes_io.read(4), byteorder="big")
     bytes_io.seek(0)
-    if orientation >= 2:
-        return transform_init(bytes_io.read(24 + moov_len), orientation)
     return bytes_io.read(24 + moov_len)
 
 
@@ -180,6 +178,8 @@ TRANSFORM_MATRIX_TOP = [
 
 def transform_init(init: bytes, orientation: int) -> bytes:
     """Change the transformation matrix in the header."""
+    if orientation == 1:
+        return init
     # Find moov
     moov_location = next(find_box(init, b"moov"))
     mvhd_location = next(find_box(init, b"trak", moov_location))

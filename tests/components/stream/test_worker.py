@@ -40,11 +40,6 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.core import StreamSettings
-from homeassistant.components.stream.fmp4utils import (
-    TRANSFORM_MATRIX_TOP,
-    XYW_ROW,
-    find_box,
-)
 from homeassistant.components.stream.worker import (
     StreamEndedError,
     StreamState,
@@ -952,55 +947,6 @@ async def test_worker_disable_ll_hls(hass):
         stream_settings=stream_settings,
     )
     assert stream_settings.ll_hls is False
-
-
-async def test_rotate_init(hass, h264_video, worker_finished_stream):
-    """Test that the init has the proper rotation applied."""
-    await async_setup_component(
-        hass,
-        "stream",
-        {
-            "stream": {
-                CONF_LL_HLS: True,
-                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                # Our test video has keyframes every second. Use smaller parts so we have more
-                # part boundaries to better test keyframe logic.
-                CONF_PART_DURATION: 0.25,
-            }
-        },
-    )
-
-    worker_finished, mock_stream = worker_finished_stream
-
-    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
-        stream = create_stream(hass, h264_video, {}, stream_label="camera")
-        stream._stream_settings.orientation = 2
-
-    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
-    await stream.start()
-    await worker_finished.wait()
-
-    complete_segments = list(recorder_output.get_segments())[:-1]
-
-    assert len(complete_segments) >= 1
-
-    # check that the init has the proper rotation matrix applied
-    for segment in complete_segments:
-        # Find moov
-        moov_location = next(find_box(segment.init, b"moov"))
-        mvhd_location = next(find_box(segment.init, b"trak", moov_location))
-        tkhd_location = next(find_box(segment.init, b"tkhd", mvhd_location))
-        tkhd_length = int.from_bytes(
-            segment.init[tkhd_location : tkhd_location + 4], byteorder="big"
-        )
-        assert (
-            segment.init[
-                tkhd_location + tkhd_length - 44 : tkhd_location + tkhd_length - 8
-            ]
-            == TRANSFORM_MATRIX_TOP[2] + XYW_ROW
-        )
-
-    await stream.stop()
 
 
 async def test_get_image_rotated(hass, h264_video, filename):
