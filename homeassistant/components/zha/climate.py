@@ -137,6 +137,8 @@ class Thermostat(ZhaEntity, ClimateEntity):
     DEFAULT_MAX_TEMP = 35
     DEFAULT_MIN_TEMP = 7
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
@@ -333,11 +335,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
         if temp is None:
             return temp
         return round(temp / ZCL_TEMP, 1)
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def max_temp(self) -> float:

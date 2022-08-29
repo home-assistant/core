@@ -8,11 +8,7 @@ from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +23,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result.get("step_id") == "user"
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert "flow_id" in result
 
     result = await hass.config_entries.flow.async_configure(
@@ -35,7 +31,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result.get("title") == "WLED RGB Light"
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert "result" in result
@@ -68,7 +64,7 @@ async def test_full_zeroconf_flow_implementation(
     )
     assert result.get("description_placeholders") == {CONF_NAME: "WLED RGB Light"}
     assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -76,7 +72,7 @@ async def test_full_zeroconf_flow_implementation(
     )
 
     assert result2.get("title") == "WLED RGB Light"
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
 
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
@@ -106,7 +102,7 @@ async def test_zeroconf_during_onboarding(
     )
 
     assert result.get("title") == "WLED RGB Light"
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
 
     assert result.get("data") == {CONF_HOST: "192.168.1.123"}
     assert "result" in result
@@ -127,7 +123,7 @@ async def test_connection_error(
         data={CONF_HOST: "example.com"},
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -152,7 +148,7 @@ async def test_zeroconf_connection_error(
         ),
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -169,7 +165,7 @@ async def test_user_device_exists_abort(
         data={CONF_HOST: "192.168.1.123"},
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -186,7 +182,7 @@ async def test_user_with_cct_channel_abort(
         data={CONF_HOST: "192.168.1.123"},
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "cct_unsupported"
 
 
@@ -211,7 +207,7 @@ async def test_zeroconf_without_mac_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -236,7 +232,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -261,7 +257,7 @@ async def test_zeroconf_with_cct_channel_abort(
         ),
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "cct_unsupported"
 
 
@@ -273,7 +269,7 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
     assert "flow_id" in result
 
@@ -282,7 +278,7 @@ async def test_options_flow(
         user_input={CONF_KEEP_MASTER_LIGHT: True},
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
         CONF_KEEP_MASTER_LIGHT: True,
     }

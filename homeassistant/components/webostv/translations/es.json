@@ -6,32 +6,32 @@
             "error_pairing": "Conectado a LG webOS TV pero no emparejado"
         },
         "error": {
-            "cannot_connect": "No se ha podido conectar, por favor, encienda el televisor o compruebe la direcci\u00f3n IP"
+            "cannot_connect": "No se pudo conectar, por favor, enciende tu TV o comprueba la direcci\u00f3n IP"
         },
         "flow_title": "LG webOS Smart TV",
         "step": {
             "pairing": {
-                "description": "Haz clic en enviar y acepta la solicitud de emparejamiento en tu televisor.\n\n![Image](/static/images/config_webos.png)",
+                "description": "Haz clic en enviar y acepta la solicitud de emparejamiento en tu televisor. \n\n ![Image](/static/images/config_webos.png)",
                 "title": "Emparejamiento de webOS TV"
             },
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n",
+                    "host": "Host",
                     "name": "Nombre"
                 },
-                "description": "Encienda la televisi\u00f3n, rellene los siguientes campos y haga clic en enviar",
+                "description": "Enciende la TV, completa los siguientes campos y haz clic en enviar",
                 "title": "Conectarse a webOS TV"
             }
         }
     },
     "device_automation": {
         "trigger_type": {
-            "webostv.turn_on": "Se solicita el encendido del dispositivo"
+            "webostv.turn_on": "Se solicita que el dispositivo se encienda"
         }
     },
     "options": {
         "error": {
-            "cannot_retrieve": "No se puede recuperar la lista de fuentes. Aseg\u00farese de que el dispositivo est\u00e1 encendido",
+            "cannot_retrieve": "No se puede recuperar la lista de fuentes. Aseg\u00farate de que el dispositivo est\u00e9 encendido",
             "script_not_found": "Script no encontrado"
         },
         "step": {
@@ -39,7 +39,7 @@
                 "data": {
                     "sources": "Lista de fuentes"
                 },
-                "description": "Seleccionar fuentes habilitadas",
+                "description": "Selecciona las fuentes habilitadas",
                 "title": "Opciones para webOS Smart TV"
             }
         }

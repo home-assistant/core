@@ -433,7 +433,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=PERCENTAGE,
-        aliases={"pct", "percent"},
+        aliases={"pct", "percent", "% RH"},
         device_classes={
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.HUMIDITY,
@@ -579,7 +579,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=TEMP_CELSIUS,
-        aliases={"°c", "c", "celsius"},
+        aliases={"°c", "c", "celsius", "℃"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(

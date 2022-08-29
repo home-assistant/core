@@ -67,11 +67,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def precision(self) -> float:
@@ -122,7 +118,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)

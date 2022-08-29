@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_FORECAST_TIME,
+    ATTR_API_FORECAST_TIME,
     ATTRIBUTION,
     DOMAIN,
     ENTRY_NAME,
@@ -63,7 +62,7 @@ async def async_setup_entry(
 class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -135,6 +134,6 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
         if forecasts:
             forecast = forecasts[0].get(self.entity_description.key)
-            if self.entity_description.key == ATTR_FORECAST_TIME:
+            if self.entity_description.key == ATTR_API_FORECAST_TIME:
                 forecast = dt_util.parse_datetime(forecast)
         return forecast

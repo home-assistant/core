@@ -70,7 +70,7 @@
             "perms": ["pr", "pw", "ev"],
             "ev": true,
             "format": "bool",
-            "value": false
+            "value": true
           },
           {
             "aid": 1,
@@ -83,7 +83,7 @@
             "minValue": 0,
             "maxValue": 3,
             "minStep": 1,
-            "value": 3
+            "value": 2
           }
         ]
       },

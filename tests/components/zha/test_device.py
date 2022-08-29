@@ -6,7 +6,9 @@ from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
+import zigpy.types
 import zigpy.zcl.clusters.general as general
+import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.zha.core.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
@@ -42,7 +44,7 @@ def required_platforms_only():
 def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
 
-    def _dev(with_basic_channel: bool = True):
+    def _dev(with_basic_channel: bool = True, **kwargs):
         in_clusters = [general.OnOff.cluster_id]
         if with_basic_channel:
             in_clusters.append(general.Basic.cluster_id)
@@ -54,7 +56,7 @@ def zigpy_device(zigpy_device_mock):
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
-        return zigpy_device_mock(endpoints)
+        return zigpy_device_mock(endpoints, **kwargs)
 
     return _dev
 
@@ -311,7 +313,7 @@ async def test_device_restore_availability(
     zha_device = await zha_device_restored(
         zigpy_device, last_seen=time.time() - last_seen_delta
     )
-    entity_id = "switch.fakemanufacturer_fakemodel_e769900a_on_off"
+    entity_id = "switch.fakemanufacturer_fakemodel_switch"
 
     await hass.async_block_till_done()
     # ensure the switch entity was created
@@ -321,3 +323,31 @@ async def test_device_restore_availability(
         assert hass.states.get(entity_id).state == STATE_OFF
     else:
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_device_is_active_coordinator(hass, zha_device_joined, zigpy_device):
+    """Test that the current coordinator is uniquely detected."""
+
+    current_coord_dev = zigpy_device(ieee="aa:bb:cc:dd:ee:ff:00:11", nwk=0x0000)
+    current_coord_dev.node_desc = current_coord_dev.node_desc.replace(
+        logical_type=zdo_t.LogicalType.Coordinator
+    )
+
+    old_coord_dev = zigpy_device(ieee="aa:bb:cc:dd:ee:ff:00:12", nwk=0x0000)
+    old_coord_dev.node_desc = old_coord_dev.node_desc.replace(
+        logical_type=zdo_t.LogicalType.Coordinator
+    )
+
+    # The two coordinators have different IEEE addresses
+    assert current_coord_dev.ieee != old_coord_dev.ieee
+
+    current_coordinator = await zha_device_joined(current_coord_dev)
+    stale_coordinator = await zha_device_joined(old_coord_dev)
+
+    # Ensure the current ApplicationController's IEEE matches our coordinator's
+    current_coordinator.gateway.application_controller.state.node_info.ieee = (
+        current_coord_dev.ieee
+    )
+
+    assert current_coordinator.is_active_coordinator
+    assert not stale_coordinator.is_active_coordinator

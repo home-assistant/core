@@ -8,11 +8,7 @@ from homeassistant.components.ambee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +19,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -42,7 +38,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Name"
     assert result2.get("data") == {
         CONF_API_KEY: "example",
@@ -64,7 +60,7 @@ async def test_full_flow_with_authentication_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -82,7 +78,7 @@ async def test_full_flow_with_authentication_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"base": "invalid_api_key"}
     assert "flow_id" in result2
@@ -102,7 +98,7 @@ async def test_full_flow_with_authentication_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "Name"
     assert result3.get("data") == {
         CONF_API_KEY: "example",
@@ -131,7 +127,7 @@ async def test_api_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
 
 
@@ -150,7 +146,7 @@ async def test_reauth_flow(
         },
         data=mock_config_entry.data,
     )
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
     assert "flow_id" in result
 
@@ -165,7 +161,7 @@ async def test_reauth_flow(
         )
         await hass.async_block_till_done()
 
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_API_KEY: "other_key",
@@ -196,7 +192,7 @@ async def test_reauth_with_authentication_error(
         },
         data=mock_config_entry.data,
     )
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
     assert "flow_id" in result
 
@@ -211,7 +207,7 @@ async def test_reauth_with_authentication_error(
             },
         )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "invalid_api_key"}
     assert "flow_id" in result2
@@ -227,7 +223,7 @@ async def test_reauth_with_authentication_error(
         )
         await hass.async_block_till_done()
 
-    assert result3.get("type") == RESULT_TYPE_ABORT
+    assert result3.get("type") == FlowResultType.ABORT
     assert result3.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_API_KEY: "other_key",
@@ -267,6 +263,6 @@ async def test_reauth_api_error(
             },
         )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "cannot_connect"}

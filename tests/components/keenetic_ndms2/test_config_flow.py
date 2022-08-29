@@ -51,7 +51,7 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -63,7 +63,7 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -98,7 +98,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -106,7 +106,7 @@ async def test_options(hass: HomeAssistant) -> None:
         user_input=MOCK_OPTIONS,
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["data"] == MOCK_OPTIONS
 
 
@@ -126,7 +126,7 @@ async def test_host_already_configured(hass: HomeAssistant, connect) -> None:
         result["flow_id"], user_input=MOCK_DATA
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -139,7 +139,7 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_DATA
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -153,7 +153,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -168,7 +168,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -189,7 +189,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -210,7 +210,7 @@ async def test_ssdp_ignored(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -236,7 +236,7 @@ async def test_ssdp_update_host(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == new_ip
 
@@ -254,7 +254,7 @@ async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_udn"
 
 
@@ -270,5 +270,5 @@ async def test_ssdp_reject_non_keenetic(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_keenetic_ndms2"

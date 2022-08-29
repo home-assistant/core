@@ -13,11 +13,7 @@ from homeassistant.components.sonarr.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.components.sonarr import MOCK_REAUTH_INPUT, MOCK_USER_INPUT
@@ -31,7 +27,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_cannot_connect(
@@ -47,7 +43,7 @@ async def test_cannot_connect(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -67,7 +63,7 @@ async def test_invalid_auth(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -85,7 +81,7 @@ async def test_unknown_error(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -108,14 +104,14 @@ async def test_full_reauth_flow_implementation(
         data=entry.data,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_input = MOCK_REAUTH_INPUT.copy()
@@ -124,7 +120,7 @@ async def test_full_reauth_flow_implementation(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert entry.data[CONF_API_KEY] == "test-api-key-reauth"
@@ -141,7 +137,7 @@ async def test_full_user_flow_implementation(
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
@@ -151,7 +147,7 @@ async def test_full_user_flow_implementation(
         user_input=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.189"
 
     assert result["data"]
@@ -168,7 +164,7 @@ async def test_full_user_flow_advanced_options(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER, "show_advanced_options": True}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_input = {
@@ -181,7 +177,7 @@ async def test_full_user_flow_advanced_options(
         user_input=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.189"
 
     assert result["data"]
@@ -203,7 +199,7 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -212,6 +208,6 @@ async def test_options_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UPCOMING_DAYS] == 2
     assert result["data"][CONF_WANTED_MAX_ITEMS] == 100

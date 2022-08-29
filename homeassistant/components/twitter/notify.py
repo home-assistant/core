@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -63,7 +64,7 @@ class TwitterNotificationService(BaseNotificationService):
         username,
     ):
         """Initialize the service."""
-        self.user = username
+        self.default_user = username
         self.hass = hass
         self.api = TwitterAPI(
             consumer_key, consumer_secret, access_token_key, access_token_secret
@@ -72,6 +73,7 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
+        targets = kwargs.get(ATTR_TARGET)
 
         media = None
         if data:
@@ -80,14 +82,18 @@ class TwitterNotificationService(BaseNotificationService):
                 _LOGGER.warning("'%s' is not a whitelisted directory", media)
                 return
 
-        callback = partial(self.send_message_callback, message)
+        if targets:
+            for target in targets:
+                callback = partial(self.send_message_callback, message, target)
+                self.upload_media_then_callback(callback, media)
+        else:
+            callback = partial(self.send_message_callback, message, self.default_user)
+            self.upload_media_then_callback(callback, media)
 
-        self.upload_media_then_callback(callback, media)
-
-    def send_message_callback(self, message, media_id=None):
+    def send_message_callback(self, message, user, media_id=None):
         """Tweet a message, optionally with media."""
-        if self.user:
-            user_resp = self.api.request("users/lookup", {"screen_name": self.user})
+        if user:
+            user_resp = self.api.request("users/lookup", {"screen_name": user})
             user_id = user_resp.json()[0]["id"]
             if user_resp.status_code != HTTPStatus.OK:
                 self.log_error_resp(user_resp)

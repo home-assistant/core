@@ -85,7 +85,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="plugged_in",
             coordinator="battery",
             device_class=BinarySensorDeviceClass.PLUG,
-            name="Plugged In",
+            name="Plugged in",
             on_key="plugStatus",
             on_value=PlugState.PLUGGED.value,
         ),
@@ -130,7 +130,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             coordinator="lock_status",
             # On means open, Off means closed
             device_class=BinarySensorDeviceClass.DOOR,
-            name=f"{door} Door",
+            name=f"{door.capitalize()} door",
             on_key=f"doorStatus{door.replace(' ','')}",
             on_value="open",
         )

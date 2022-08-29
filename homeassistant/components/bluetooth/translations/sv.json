@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
+            "no_adapters": "Inga Bluetooth-adaptrar hittades"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vill du konfigurera {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Vill du s\u00e4tta upp Bluetooth?"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhet"
+                },
+                "description": "V\u00e4lj en enhet att konfigurera"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "Bluetooth-adaptern som ska anv\u00e4ndas f\u00f6r skanning"
+                }
+            }
+        }
+    }
+}

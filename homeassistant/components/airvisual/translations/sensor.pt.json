@@ -1,0 +1,13 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "Mon\u00f3xido de carbono",
+            "n2": "Di\u00f3xido de nitrog\u00e9nio",
+            "o3": "Ozono",
+            "p1": "PM10"
+        },
+        "airvisual__pollutant_level": {
+            "moderate": "Moderado"
+        }
+    }
+}

@@ -11,7 +11,7 @@
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Introduce tu ubicaci\u00f3n para utilizar los datos meteorol\u00f3gicos de la API p\u00fablica de previsi\u00f3n meteorol\u00f3gica de Met \u00c9ireann",
+                "description": "Introduce tu ubicaci\u00f3n para usar los datos meteorol\u00f3gicos de la API del pron\u00f3stico meteorol\u00f3gico p\u00fablico de Met \u00c9ireann",
                 "title": "Ubicaci\u00f3n"
             }
         }

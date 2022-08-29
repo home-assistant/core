@@ -17,7 +17,7 @@ from homeassistant.components.geocaching.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_EXTERNAL_STEP
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -63,7 +63,7 @@ async def test_full_flow(
         },
     )
 
-    assert result.get("type") == RESULT_TYPE_EXTERNAL_STEP
+    assert result.get("type") == FlowResultType.EXTERNAL_STEP
     assert result.get("step_id") == "auth"
     assert result.get("url") == (
         f"{CURRENT_ENVIRONMENT_URLS['authorize_url']}?response_type=code&client_id={CLIENT_ID}"
@@ -161,7 +161,7 @@ async def test_oauth_error(
             "redirect_uri": REDIRECT_URI,
         },
     )
-    assert result.get("type") == RESULT_TYPE_EXTERNAL_STEP
+    assert result.get("type") == FlowResultType.EXTERNAL_STEP
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -181,7 +181,7 @@ async def test_oauth_error(
     )
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "oauth_error"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0

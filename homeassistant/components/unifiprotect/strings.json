@@ -49,9 +49,14 @@
         "data": {
           "disable_rtsp": "Disable the RTSP stream",
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
-          "override_connection_host": "Override Connection Host"
+          "override_connection_host": "Override Connection Host",
+          "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
+          "ignored_devices": "Comma separated list of MAC addresses of devices to ignore"
         }
       }
+    },
+    "error": {
+      "invalid_mac_list": "Must be a list of MAC addresses seperated by commas"
     }
   }
 }

@@ -71,11 +71,8 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        self._attr_name = (
-            f"{coordinator.data.info.name} Segment {segment} {description.name}"
-        )
-        if segment == 0:
-            self._attr_name = f"{coordinator.data.info.name} {description.name}"
+        if segment != 0:
+            self._attr_name = f"Segment {segment} {description.name}"
 
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_{description.key}_{segment}"
@@ -118,12 +115,12 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
 
-    new_entities = []
+    new_entities: list[WLEDNumber] = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
