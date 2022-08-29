@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, SupportedModels
 from .hub import LitterRobotHub
 
 PLATFORMS = [
@@ -16,6 +16,34 @@ PLATFORMS = [
     Platform.VACUUM,
 ]
 
+PLATFORMS_BY_TYPE = {
+    SupportedModels.LITTER_ROBOT: [
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.VACUUM,
+    ],
+    SupportedModels.LITTER_ROBOT_3: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.VACUUM,
+    ],
+    SupportedModels.LITTER_ROBOT_4: [
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.VACUUM,
+    ],
+    SupportedModels.FEEDER_ROBOT: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+}
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
@@ -23,16 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
     await hub.login(load_robots=True)
 
-    if any(hub.litter_robots()):
-        platforms = [
-            platform
-            for platform in PLATFORMS
-            if platform not in (Platform.BUTTON, Platform.VACUUM)
-        ]
-        if hub.supports_button:
-            platforms.append(Platform.BUTTON)
-        if hub.supports_vacuum:
-            platforms.append(Platform.VACUUM)
+    platforms = set()
+    for robot in hub.account.robots:
+        platforms.update(PLATFORMS_BY_TYPE[type(robot)])
+    if platforms:
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True

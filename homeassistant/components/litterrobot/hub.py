@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pylitterbot import Account, FeederRobot, LitterRobot, LitterRobot3
+from pylitterbot import Account, FeederRobot, LitterRobot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -68,16 +68,3 @@ class LitterRobotHub:
         return (
             robot for robot in self.account.robots if isinstance(robot, FeederRobot)
         )
-
-    @property
-    def supports_button(self) -> bool:
-        """Return True if 3rd edition Litter-Robot or Feed Robot exists."""
-        return any(
-            isinstance(robot, (LitterRobot3, FeederRobot))
-            for robot in self.account.robots
-        )
-
-    @property
-    def supports_vacuum(self) -> bool:
-        """Return False if only the Feeder Robot exists."""
-        return any(not isinstance(robot, FeederRobot) for robot in self.account.robots)
