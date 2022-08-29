@@ -1,6 +1,5 @@
 """Test APCUPSd setup process."""
 from copy import copy
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -47,13 +46,14 @@ async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry):
             )
             await hass.async_block_till_done()
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == status["MODEL"]
+            title = status["UPSNAME"] if "UPSNAME" in status else status["MODEL"]
+            assert result["title"] == title
             assert result["data"][CONF_HOST] == config_entry.data[CONF_HOST]
             assert result["data"][CONF_PORT] == config_entry.data[CONF_PORT]
             assert result["description"] == "APCUPSd"
 
 
-async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry, caplog):
+async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Test successful creation of config entries via YAML import."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get",
@@ -77,28 +77,28 @@ async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry, c
             )
             await hass.async_block_till_done()
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == status["MODEL"]
+            title = status["UPSNAME"] if "UPSNAME" in status else status["MODEL"]
+            assert result["title"] == title
             assert result["data"][CONF_HOST] == config_entry.data[CONF_HOST]
             assert result["data"][CONF_PORT] == config_entry.data[CONF_PORT]
-            assert result["options"][CONF_RESOURCES] == resources
+            assert result["data"][CONF_RESOURCES] == resources
             assert result["description"] == "APCUPSd"
 
-        # Now give an unavailable but valid resource "REG1" to options, HA should report
-        # a warning and ignore this resource when importing it to options.
-        with caplog.at_level(logging.WARNING):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_HOST: config_entry.data[CONF_HOST],
-                    CONF_PORT: config_entry.data[CONF_PORT],
-                    CONF_RESOURCES: resources + ["REG1"],
-                },
-            )
-            await hass.async_block_till_done()
-            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["options"][CONF_RESOURCES] == resources
-        assert "REG1" in caplog.text
+        # Now give an unavailable but valid resource "REG1" to options, HA should simply
+        # ignore this resource during import and not crash.
+        resources.append("REG1")
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: config_entry.data[CONF_HOST],
+                CONF_PORT: config_entry.data[CONF_PORT],
+                CONF_RESOURCES: resources,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_RESOURCES] == resources
 
 
 async def test_config_flow_cannot_connect(hass: HomeAssistant):
@@ -120,7 +120,7 @@ async def test_config_flow_no_status(hass: HomeAssistant):
         "apcaccess.status.get"
     ) as mock_get:
         mock_get.return_value = b""
-        mock_parse.return_value = None
+        mock_parse.return_value = {}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
