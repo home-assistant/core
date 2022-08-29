@@ -131,13 +131,17 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 self.available_firmware_updates
             )
             self._attr_latest_version = firmware.version
-            self._attr_release_summary = firmware.changelog
         else:
             self._latest_version_firmware = None
             self._attr_latest_version = self._attr_installed_version
-            self._attr_release_summary = None
         if write_state:
             self.async_write_ha_state()
+
+    async def async_release_notes(self) -> str | None:
+        """Get release notes."""
+        if self._latest_version_firmware is None:
+            return None
+        return self._latest_version_firmware.changelog
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

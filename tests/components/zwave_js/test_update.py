@@ -9,7 +9,6 @@ from homeassistant.components.update.const import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
@@ -35,6 +34,7 @@ async def test_update_entity(
     controller_node,
     integration,
     caplog,
+    hass_ws_client,
 ):
     """Test update entity."""
     assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
@@ -85,9 +85,21 @@ async def test_update_entity(
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
     assert not attrs[ATTR_IN_PROGRESS]
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
-    assert attrs[ATTR_RELEASE_SUMMARY] == "blah 2"
     assert attrs[ATTR_RELEASE_URL] is None
     assert attrs[ATTR_AVAILABLE_FIRMWARE_UPDATES] == ["10.11.1", "11.1.5", "11.2.4"]
+
+    ws_client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": UPDATE_ENTITY,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == "blah 2"
 
     # Refresh value should not be supported by this entity
     await hass.services.async_call(
