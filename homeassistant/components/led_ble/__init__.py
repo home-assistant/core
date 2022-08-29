@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
+import logging
 
 import async_timeout
 from led_ble import BLEAK_EXCEPTIONS, LEDBLE
@@ -12,11 +14,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEVICE_TIMEOUT, DOMAIN
 from .models import LEDBLEData
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,7 +71,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     finally:
         cancel_first_update()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LEDBLEData(entry.title, led_ble)
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=led_ble.name,
+        update_method=led_ble.update,
+        update_interval=timedelta(seconds=90),
+    )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LEDBLEData(
+        entry.title, led_ble, coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

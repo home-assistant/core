@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 from led_ble import LEDBLE
 
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
 
 @dataclass
 class LEDBLEData:
@@ -12,3 +14,4 @@ class LEDBLEData:
 
     title: str
     device: LEDBLE
+    coordinator: DataUpdateCoordinator
