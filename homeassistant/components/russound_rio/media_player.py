@@ -70,6 +70,7 @@ async def async_setup_platform(
 class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -118,11 +119,6 @@ class RussoundZoneDevice(MediaPlayerEntity):
         """Register callback handlers."""
         self._russ.add_zone_callback(self._zone_callback_handler)
         self._russ.add_source_callback(self._source_callback_handler)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

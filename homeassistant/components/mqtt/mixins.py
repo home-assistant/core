@@ -950,6 +950,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _attr_should_poll = False
     _entity_id_format: str
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -1075,11 +1076,6 @@ class MqttEntity(
     def name(self):
         """Return the name of the device if any."""
         return self._config.get(CONF_NAME)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):
