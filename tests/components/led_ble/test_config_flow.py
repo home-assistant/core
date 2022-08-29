@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     LED_BLE_DISCOVERY_INFO,
-    NOT_LED_BLEDISCOVERY_INFO,
+    NOT_LED_BLE_DISCOVERY_INFO,
     UNSUPPORTED_LED_BLE_DISCOVERY_INFO,
 )
 
@@ -22,7 +22,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     """Test user step success path."""
     with patch(
         "homeassistant.components.led_ble.config_flow.async_discovered_service_info",
-        return_value=[NOT_LED_BLEDISCOVERY_INFO, LED_BLE_DISCOVERY_INFO],
+        return_value=[NOT_LED_BLE_DISCOVERY_INFO, LED_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -56,7 +56,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
     """Test user step with no devices found."""
     with patch(
         "homeassistant.components.led_ble.config_flow.async_discovered_service_info",
-        return_value=[NOT_LED_BLEDISCOVERY_INFO],
+        return_value=[NOT_LED_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -140,7 +140,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     """Test user step with an unknown exception."""
     with patch(
         "homeassistant.components.led_ble.config_flow.async_discovered_service_info",
-        return_value=[NOT_LED_BLEDISCOVERY_INFO, LED_BLE_DISCOVERY_INFO],
+        return_value=[NOT_LED_BLE_DISCOVERY_INFO, LED_BLE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
