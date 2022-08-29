@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import datetime
 
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization
-from cryptography.x509 import Certificate
 import hassmpris_client
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,12 +10,10 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .cert_data import load_cert_data
 from .const import (
-    CONF_CLIENT_CERT,
-    CONF_CLIENT_KEY,
     CONF_HOST,
     CONF_MPRIS_PORT,
-    CONF_TRUST_CHAIN,
     DOMAIN,
     ENTRY_CLIENT,
     ENTRY_UNLOADERS,
@@ -29,28 +24,20 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 
-def _load_cert_chain(chain: bytes) -> list[Certificate]:
-    start_line = b"-----BEGIN CERTIFICATE-----"
-    cert_slots = chain.split(start_line)
-    certificates: list[Certificate] = []
-    for single_pem_cert in cert_slots[1:]:
-        loaded = x509.load_pem_x509_certificate(start_line + single_pem_cert)
-        certificates.append(loaded)
-    return certificates
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MPRIS media playback remote control from a config entry."""
-    client_cert = x509.load_pem_x509_certificate(
-        entry.data[CONF_CLIENT_CERT].encode("ascii"),
-    )
-    client_key = serialization.load_pem_private_key(
-        entry.data[CONF_CLIENT_KEY].encode("ascii"),
-        None,
-    )
-    trust_chain = _load_cert_chain(
-        entry.data[CONF_TRUST_CHAIN].encode("ascii"),
-    )
+
+    # This would be an error, and the type checker knows it.
+    assert entry.unique_id is not None
+
+    try:
+        client_cert, client_key, trust_chain = await load_cert_data(
+            hass, entry.unique_id
+        )
+    except KeyError as exc:
+        raise ConfigEntryAuthFailed(
+            "Authentication data is missing -- must reauth"
+        ) from exc
 
     clnt = hassmpris_client.AsyncMPRISClient(
         entry.data[CONF_HOST],

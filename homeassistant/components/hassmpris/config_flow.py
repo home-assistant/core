@@ -1,10 +1,8 @@
 """Config flow for MPRIS media playback remote control integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
-from cryptography.hazmat.primitives import serialization
 import hassmpris_client
 import pskca
 from shortauthstrings import emoji
@@ -15,13 +13,11 @@ from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
+from .cert_data import PRIVATE_KEY_TYPES, Certificate, save_cert_data
 from .const import (
     CONF_CAKES_PORT,
-    CONF_CLIENT_CERT,
-    CONF_CLIENT_KEY,
     CONF_HOST,
     CONF_MPRIS_PORT,
-    CONF_TRUST_CHAIN,
     CONF_UNIQUE_ID,
     DEF_CAKES_PORT,
     DEF_HOST,
@@ -103,10 +99,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._unique_id: str | None = None
         self._cakes_port: int = DEF_CAKES_PORT
         self._mpris_port: int = DEF_MPRIS_PORT
-        self._client_cert: str | None = None
-        self._client_key: str | None = None
-        self._trust_chain: str | None = None
-        self._confirmed: asyncio.Future[bool] | None = None
+        self._client_cert: Certificate | None = None
+        self._client_key: PRIVATE_KEY_TYPES | None = None
+        self._trust_chain: list[Certificate] | None = None
         self._cakes_client: hassmpris_client.AsyncCAKESClient | None = None
 
     @callback
@@ -116,11 +111,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: self._host,
             CONF_CAKES_PORT: self._cakes_port,
             CONF_MPRIS_PORT: self._mpris_port,
-            CONF_CLIENT_CERT: self._client_cert if self._client_cert else None,
-            CONF_CLIENT_KEY: self._client_key if self._client_key else None,
-            CONF_TRUST_CHAIN: self._trust_chain if self._trust_chain else None,
         }
         return data
+
+    @callback
+    def _get_cert_data(
+        self,
+    ) -> tuple[Certificate, PRIVATE_KEY_TYPES, list[Certificate]]:
+        assert self._client_cert is not None
+        assert self._client_key is not None
+        assert self._trust_chain is not None
+        return self._client_cert, self._client_key, self._trust_chain
 
     def _set_data(
         self,
@@ -153,12 +154,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._mpris_port = mpris_port
 
     async def _create_entry(self):
+        async def persist_cert_data(unique_id: str):
+            """Persist the certificate data just generated in this flow."""
+            await save_cert_data(self.hass, unique_id, *self._get_cert_data())
+
         data = self._get_data()
 
         # Update existing entry that has the same unique ID.
         if zeroconf_uid := self._get_unique_id_by_zeroconf():
             if existing_entry := await self.async_set_unique_id(zeroconf_uid):
-                _LOGGER.debug("Existing entry, unique ID")
+                _LOGGER.debug("Existing entry, unique ID: %s", existing_entry.unique_id)
+                await persist_cert_data(existing_entry.unique_id)
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
@@ -167,7 +173,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if existing_entry := await self.async_set_unique_id(
             self._get_unique_id_by_connection_data()
         ):
-            _LOGGER.debug("Existing entry, generated ID")
+            _LOGGER.debug("Existing entry, generated ID: %s", existing_entry.unique_id)
+            await persist_cert_data(existing_entry.unique_id)
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
@@ -175,12 +182,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # OK, no entries found with those two identifiers.
         # Let's set a unique ID.
         await self.async_set_unique_id(self._get_any_unique_id())
-
         _LOGGER.debug("New entry")
         assert self._title, "Impossible: the title is %r" % self._title
+        await persist_cert_data(self._get_any_unique_id())
         return self.async_create_entry(
             title=self._title,
-            data=self._get_data(),
+            data=data,
         )
 
     async def async_step_user(
@@ -311,16 +318,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ):
         """Handle the pairing step of auth."""
-        assert not self._client_cert
+        assert self._client_cert is None
         (
             csr,
-            key,
+            self._client_key,
         ) = pskca.create_certificate_signing_request()
-        self._client_key = key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
-        ).decode("ascii")
         self._cakes_client = hassmpris_client.AsyncCAKESClient(
             self._host,
             self._cakes_port,
@@ -354,16 +356,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._cakes_client
         try:
             (
-                cert,
-                trust_chain,
+                self._client_cert,
+                self._trust_chain,
             ) = await self._cakes_client.obtain_certificate()
-            self._client_cert = cert.public_bytes(serialization.Encoding.PEM).decode(
-                "ascii"
-            )
-            self._trust_chain = "\n".join(
-                x.public_bytes(serialization.Encoding.PEM).decode("ascii")
-                for x in trust_chain
-            )
         except hassmpris_client.Ignored:
             return self.async_abort(reason="ignored")
         except hassmpris_client.Rejected:
