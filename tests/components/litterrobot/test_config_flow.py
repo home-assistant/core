@@ -24,7 +24,10 @@ async def test_form(hass, mock_account):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("pylitterbot.Account.connect", return_value=mock_account,), patch(
+    with patch(
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
+        return_value=mock_account,
+    ), patch(
         "homeassistant.components.litterrobot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -63,7 +66,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=LitterRobotLoginException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -81,7 +84,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=LitterRobotException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -97,9 +100,8 @@ async def test_form_unknown_error(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
