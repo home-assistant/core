@@ -15,7 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, SERVICE_UUIDS
+from .const import DOMAIN, LOCAL_NAMES
 from .util import human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if (
                     discovery.address in current_addresses
                     or discovery.address in self._discovered_devices
-                    or not SERVICE_UUIDS.intersection(discovery.service_uuids)
+                    or not any(
+                        discovery.name.startswith(local_name)
+                        for local_name in LOCAL_NAMES
+                    )
                 ):
                     continue
                 self._discovered_devices[discovery.address] = discovery
