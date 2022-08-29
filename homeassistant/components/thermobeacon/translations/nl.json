@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratie is momenteel al bezig",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "reauth_successful": "Herauthenticatie geslaagd"
+            "not_supported": "Het apparaat is niet ondersteund"
         },
         "flow_title": "{name}",
         "step": {

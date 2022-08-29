@@ -1,12 +1,7 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie geslaagd"
-        },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
-            "no_locations": "Geen locaties gevonden",
             "unknown": "Onverwachte fout"
         },
         "step": {
