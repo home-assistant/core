@@ -197,7 +197,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
             return self.async_create_entry(title="", data=data)
 
-        override_type = self.config_entry.options.get(CONF_OVERRIDE_TYPE)
+        override_type = self.config_entry.options.get(CONF_OVERRIDE_TYPE, CONF_OVERRIDE_TYPE_CONSTANT)
         if override_type != CONF_OVERRIDE_TYPE_NOW:
             override_type = CONF_OVERRIDE_TYPE_CONSTANT
 

@@ -46,7 +46,6 @@ MAX_TEMPERATURE = 40
 
 _LOGGER = logging.getLogger(__name__)
 
-_ZONE_NORMAL_WEEK_LIST_SCHEMA = vol.Schema({cv.string: cv.string})
 
 
 async def async_setup_entry(
@@ -84,7 +83,6 @@ class NoboZone(ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
     # Need to poll to get preset change when in HVACMode.AUTO.
-    _attr_should_poll = True
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -145,9 +143,9 @@ class NoboZone(ClimateEntity):
         """Set new target temperature."""
         low, high = None, None
         if ATTR_TARGET_TEMP_LOW in kwargs:
-            low = int(kwargs.get(ATTR_TARGET_TEMP_LOW))  # type: ignore[arg-type]  # ATTR_TARGET_TEMP_LOW is float if set
+            low = round(kwargs[ATTR_TARGET_TEMP_LOW])
         if ATTR_TARGET_TEMP_HIGH in kwargs:
-            high = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))  # type: ignore[arg-type]  # ATTR_TARGET_TEMP_HIGH is float if set
+            high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
         if low is not None:
             if high is not None:
                 low = min(low, high)

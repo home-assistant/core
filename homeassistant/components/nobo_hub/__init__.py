@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nobø Ecohub from a config entry."""
 
-    serial = entry.data.get(CONF_SERIAL)
+    serial = entry.data[CONF_SERIAL]
     discover = entry.data.get(CONF_AUTO_DISCOVERED)
     ip_address = None if discover else entry.data.get(CONF_IP_ADDRESS)
     hub = nobo(serial=serial, ip=ip_address, discover=discover, loop=hass.loop)
