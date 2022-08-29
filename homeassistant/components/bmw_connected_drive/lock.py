@@ -7,7 +7,7 @@ from typing import Any
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
 
-from homeassistant.components.lock import LockEntity, LockEntityDescription
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,7 +44,7 @@ async def async_setup_entry(
 class BMWLock(BMWBaseEntity, LockEntity):
     """Representation of a MyBMW vehicle lock."""
 
-    entity_description = LockEntityDescription(key="lock", name="Lock")
+    _attr_name = "Lock"
 
     def __init__(
         self,
@@ -54,7 +54,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
         """Initialize the lock."""
         super().__init__(coordinator, vehicle)
 
-        self._attr_unique_id = f"{vehicle.vin}-{self.entity_description.key}"
+        self._attr_unique_id = f"{vehicle.vin}-lock"
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
     async def async_lock(self, **kwargs: Any) -> None:
