@@ -2333,6 +2333,22 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     assert isinstance(scanner, models.HaBleakScannerWrapper)
 
 
+async def test_scanner_count_connectable(hass, enable_bluetooth):
+    """Test getting the connectable scanner count."""
+    scanner = models.BaseHaScanner()
+    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    assert bluetooth.async_scanner_count(hass, connectable=True) == 1
+    cancel()
+
+
+async def test_scanner_count(hass, enable_bluetooth):
+    """Test getting the connectable and non-connectable scanner count."""
+    scanner = models.BaseHaScanner()
+    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    assert bluetooth.async_scanner_count(hass, connectable=False) == 2
+    cancel()
+
+
 async def test_migrate_single_entry_macos(
     hass, mock_bleak_scanner_start, macos_adapter
 ):
