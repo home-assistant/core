@@ -962,7 +962,7 @@ lakeside==0.12
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.3.0
+led-ble==0.4.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
