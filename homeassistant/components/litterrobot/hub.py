@@ -76,3 +76,8 @@ class LitterRobotHub:
             isinstance(robot, (LitterRobot3, FeederRobot))
             for robot in self.account.robots
         )
+
+    @property
+    def supports_vacuum(self) -> bool:
+        """Return False if only the Feeder Robot exists."""
+        return any(not isinstance(robot, FeederRobot) for robot in self.account.robots)
