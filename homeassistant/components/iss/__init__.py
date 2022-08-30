@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
