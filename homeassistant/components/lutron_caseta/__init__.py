@@ -337,14 +337,13 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
-        self._bridge_serial = bridge_device["serial"]
         self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         if "serial" not in self._device:
             return
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
@@ -359,6 +358,12 @@ class LutronCasetaDevice(Entity):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 
+    def _handle_none_serial(self, serial):
+        """Handle None serial returned by RA3 and QSX processors."""
+        if serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return serial
+
     @property
     def device_id(self):
         """Return the device ID used for calling pylutron_caseta."""
@@ -367,14 +372,12 @@ class LutronCasetaDevice(Entity):
     @property
     def serial(self):
         """Return the serial number of the device."""
-        if self._device["serial"] is None:
-            return f"{self._bridge_serial}_{self.device_id}"
         return self._device["serial"]
 
     @property
     def unique_id(self):
         """Return the unique ID of the device (serial)."""
-        return str(self.serial)
+        return str(self._handle_none_serial(self.serial))
 
     @property
     def extra_state_attributes(self):
