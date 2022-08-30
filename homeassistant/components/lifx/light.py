@@ -28,15 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
-from .const import (
-    _LOGGER,
-    ATTR_DURATION,
-    ATTR_INFRARED,
-    ATTR_POWER,
-    ATTR_ZONES,
-    DATA_LIFX_MANAGER,
-    DOMAIN,
-)
+from .const import ATTR_INFRARED, ATTR_POWER, ATTR_ZONES, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
@@ -57,14 +49,6 @@ LIFX_SET_STATE_SCHEMA = cv.make_entity_service_schema(
         ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
         ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
         ATTR_POWER: cv.boolean,
-    }
-)
-
-SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
-LIFX_SET_HEV_CYCLE_STATE_SCHEMA = cv.make_entity_service_schema(
-    {
-        ATTR_POWER: cv.boolean,
-        ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
     }
 )
 
@@ -89,11 +73,6 @@ async def async_setup_entry(
         SERVICE_LIFX_SET_STATE,
         LIFX_SET_STATE_SCHEMA,
         "set_state",
-    )
-    platform.async_register_entity_service(
-        SERVICE_LIFX_SET_HEV_CYCLE_STATE,
-        LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
-        "set_hev_cycle_state",
     )
     if lifx_features(device)["multizone"]:
         entity: LIFXLight = LIFXStrip(coordinator, manager, entry)
@@ -254,23 +233,6 @@ class LIFXLight(LIFXEntity, LightEntity):
 
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
-
-    async def set_hev_cycle_state(self, **kwargs: Any) -> None:
-        """Set the HEV cycle state on a LIFX Clean bulb."""
-        if lifx_features(self.bulb)["hev"] is False:
-            return
-
-        enable = kwargs.pop(ATTR_POWER, None)
-        duration = kwargs.pop(
-            ATTR_DURATION, self.bulb.hev_cycle_configuration[ATTR_DURATION]
-        )
-
-        if enable is None:
-            return
-
-        _LOGGER.debug("HEV cycle enabled: %s, duration: %s", enable, duration)
-        await self.coordinator.async_set_hev_cycle_state(enable, duration)
-        await self.update_during_transition(duration)
 
     async def set_power(
         self,

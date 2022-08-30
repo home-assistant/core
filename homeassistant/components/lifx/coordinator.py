@@ -151,13 +151,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         if lifx_features(self.device)["hev"]:
             await async_execute_lifx(self.device.get_hev_cycle)
 
-    async def async_set_hev_cycle_state(self, enable: bool, duration: int) -> None:
-        """Start or stop an HEV cycle on a LIFX Clean bulb."""
-        if lifx_features(self.device)["hev"]:
-            await async_execute_lifx(
-                partial(self.device.set_hev_cycle, enable=enable, duration=duration)
-            )
-
     async def async_set_waveform_optional(
         self, value: dict[str, Any], rapid: bool = False
     ) -> None:
