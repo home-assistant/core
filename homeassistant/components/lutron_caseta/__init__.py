@@ -374,8 +374,6 @@ class LutronCasetaDevice(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the device (serial)."""
-        if self._device["serial"] is None:
-            return f"{self._bridge_unique_id}_{self.device_id}"
         return str(self.serial)
 
     @property
