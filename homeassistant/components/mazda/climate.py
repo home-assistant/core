@@ -59,6 +59,10 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         PRESET_DEFROSTER_FRONT_AND_REAR,
     ]
 
+    _hvac_mode: HVACMode
+    _target_temperature: float
+    _preset_mode: str
+
     def __init__(
         self,
         client: MazdaAPIClient,
@@ -72,13 +76,40 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         self.region = region
         self._attr_unique_id = self.vin
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        # Whenever a coordinator update happens, update the state of the climate entity.
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._update_hvac_state)
+        )
+
+        # Perform an initial update of the state.
+        self._update_hvac_state()
+
+    def _update_hvac_state(self):
+        hvac_on = self.client.get_assumed_hvac_mode(self.vehicle_id)
+        self._hvac_mode = HVACMode.HEAT_COOL if hvac_on else HVACMode.OFF
+
+        hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
+        self._target_temperature = hvac_setting.get("temperature")
+
+        front_defroster = hvac_setting.get("frontDefroster")
+        rear_defroster = hvac_setting.get("rearDefroster")
+        if front_defroster and rear_defroster:
+            self._preset_mode = PRESET_DEFROSTER_FRONT_AND_REAR
+        elif front_defroster:
+            self._preset_mode = PRESET_DEFROSTER_FRONT
+        elif rear_defroster:
+            self._preset_mode = PRESET_DEFROSTER_REAR
+        else:
+            self._preset_mode = PRESET_DEFROSTER_OFF
+
+        self.async_write_ha_state()
+
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC setting."""
-        hvac_on = self.client.get_assumed_hvac_mode(self.vehicle_id)
-        if hvac_on:
-            return HVACMode.HEAT_COOL
-        return HVACMode.OFF
+        return self._hvac_mode
 
     @property
     def precision(self) -> float:
@@ -102,9 +133,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
-
-        return hvac_setting.get("temperature")
+        return self._target_temperature
 
     @property
     def temperature_unit(self) -> str:
@@ -134,17 +163,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode based on the state of the defrosters."""
-        hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
-
-        front_defroster = hvac_setting.get("frontDefroster")
-        rear_defroster = hvac_setting.get("rearDefroster")
-        if front_defroster and rear_defroster:
-            return PRESET_DEFROSTER_FRONT_AND_REAR
-        if front_defroster:
-            return PRESET_DEFROSTER_FRONT
-        if rear_defroster:
-            return PRESET_DEFROSTER_REAR
-        return PRESET_DEFROSTER_OFF
+        return self._preset_mode
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new HVAC mode."""
@@ -153,7 +172,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             await self.client.turn_off_hvac(self.vehicle_id)
 
-        self.async_write_ha_state()
+        self._update_hvac_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
@@ -161,17 +180,23 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
             precision = self.precision
             rounded_temperature = round(temperature / precision) * precision
 
-            hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
-
             await self.client.set_hvac_setting(
                 self.vehicle_id,
                 rounded_temperature,
-                hvac_setting.get("temperatureUnit"),
-                hvac_setting.get("frontDefroster"),
-                hvac_setting.get("rearDefroster"),
+                self.data["hvacSetting"]["temperatureUnit"],
+                self._preset_mode
+                in [
+                    PRESET_DEFROSTER_FRONT_AND_REAR,
+                    PRESET_DEFROSTER_FRONT,
+                ],
+                self._preset_mode
+                in [
+                    PRESET_DEFROSTER_FRONT_AND_REAR,
+                    PRESET_DEFROSTER_REAR,
+                ],
             )
 
-            self.async_write_ha_state()
+            self._update_hvac_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Turn on/off the front/rear defrosters according to the chosen preset mode."""
@@ -184,14 +209,12 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
             PRESET_DEFROSTER_REAR,
         ]
 
-        hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
-
         await self.client.set_hvac_setting(
             self.vehicle_id,
-            hvac_setting.get("temperature"),
-            hvac_setting.get("temperatureUnit"),
+            self._target_temperature,
+            self.data["hvacSetting"]["temperatureUnit"],
             front_defroster,
             rear_defroster,
         )
 
-        self.async_write_ha_state()
+        self._update_hvac_state()
