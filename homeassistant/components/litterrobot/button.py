@@ -45,11 +45,15 @@ async def async_setup_entry(
 
 
 @dataclass
-class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_RobotT]):
+class RequiredKeysMixin(Generic[_RobotT]):
+    """A class that describes robot button entity required keys."""
+
+    press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
+
+
+@dataclass
+class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot button entities."""
-
-    press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool] | None] = lambda _: None
-
 
 LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
@@ -84,6 +88,5 @@ class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if action := self.entity_description.press_fn(self.robot):
-            await action
-            self.coordinator.async_set_updated_data(True)
+        await self.entity_description.press_fn(self.robot)
+        self.coordinator.async_set_updated_data(True)
