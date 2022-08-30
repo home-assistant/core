@@ -20,12 +20,17 @@ async def test_camera_no_job(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
+    hass_client,
 ) -> None:
     """Test sensors while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
     state = hass.states.get("camera.mock_title_job_preview")
     assert state is not None
     assert state.state == "unavailable"
+
+    client = await hass_client()
+    resp = await client.get("/api/camera_proxy/camera.mock_title_job_preview")
+    assert resp.status == 500
 
 
 async def test_camera_active_job(
