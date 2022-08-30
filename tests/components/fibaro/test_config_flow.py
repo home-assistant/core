@@ -33,20 +33,27 @@ def fibaro_client_fixture():
     client_mock = Mock()
     client_mock.base_url.return_value = TEST_URL
 
-    with patch("fiblary3.client.v4.client.Client.__init__", return_value=None,), patch(
-        "fiblary3.client.v4.client.Client.info",
+    with patch(
+        "homeassistant.components.fibaro.FibaroClientV4.__init__",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.fibaro.FibaroClientV4.info",
         info_mock,
         create=True,
-    ), patch("fiblary3.client.v4.client.Client.rooms", array_mock, create=True,), patch(
-        "fiblary3.client.v4.client.Client.devices",
+    ), patch(
+        "homeassistant.components.fibaro.FibaroClientV4.rooms",
         array_mock,
         create=True,
     ), patch(
-        "fiblary3.client.v4.client.Client.scenes",
+        "homeassistant.components.fibaro.FibaroClientV4.devices",
         array_mock,
         create=True,
     ), patch(
-        "fiblary3.client.v4.client.Client.client",
+        "homeassistant.components.fibaro.FibaroClientV4.scenes",
+        array_mock,
+        create=True,
+    ), patch(
+        "homeassistant.components.fibaro.FibaroClientV4.client",
         client_mock,
         create=True,
     ):
@@ -66,7 +73,7 @@ async def test_config_flow_user_initiated_success(hass):
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=True)
     with patch(
-        "fiblary3.client.v4.client.Client.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
     ), patch(
         "homeassistant.components.fibaro.async_setup_entry",
         return_value=True,
@@ -102,7 +109,9 @@ async def test_config_flow_user_initiated_connect_failure(hass):
 
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=False)
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -129,7 +138,9 @@ async def test_config_flow_user_initiated_auth_failure(hass):
 
     login_mock = Mock()
     login_mock.get.side_effect = HTTPException(details="Forbidden")
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -156,7 +167,9 @@ async def test_config_flow_user_initiated_unknown_failure_1(hass):
 
     login_mock = Mock()
     login_mock.get.side_effect = HTTPException(details="Any")
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -200,7 +213,7 @@ async def test_config_flow_import(hass):
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=True)
     with patch(
-        "fiblary3.client.v4.client.Client.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
     ), patch(
         "homeassistant.components.fibaro.async_setup_entry",
         return_value=True,
@@ -255,7 +268,7 @@ async def test_reauth_success(hass):
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=True)
     with patch(
-        "fiblary3.client.v4.client.Client.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
     ), patch(
         "homeassistant.components.fibaro.async_setup_entry",
         return_value=True,
@@ -297,7 +310,9 @@ async def test_reauth_connect_failure(hass):
 
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=False)
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: "other_fake_password"},
@@ -336,7 +351,9 @@ async def test_reauth_auth_failure(hass):
 
     login_mock = Mock()
     login_mock.get.side_effect = HTTPException(details="Forbidden")
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: "other_fake_password"},
