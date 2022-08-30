@@ -697,20 +697,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self._device_path = device_settings.pop(CONF_DEVICE_PATH)
         self._device_settings = device_settings
 
-        self._set_confirm_only()
-        return await self.async_step_confirm_hardware()
-
-    async def async_step_confirm_hardware(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm a hardware discovery."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return await self._async_create_radio_entity()
-
-        return self.async_show_form(
-            step_id="confirm_hardware",
-            description_placeholders={CONF_NAME: self._title},
-        )
+        return await self.async_step_choose_formation_strategy()
 
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
