@@ -335,13 +335,15 @@ class EntityRegistry:
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
-        supported_features: int | UndefinedType = UNDEFINED,
+        supported_features: int | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id: UndefinedType | str = UNDEFINED
         if config_entry and config_entry is not UNDEFINED:
             config_entry_id = config_entry.entry_id
+
+        supported_features = supported_features or 0
 
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
