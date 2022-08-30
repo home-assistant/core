@@ -106,11 +106,11 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
         """Return true if switch is on."""
         return self._device.functionalChannels[self._channel].on
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._device.turn_on(self._channel)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._device.turn_off(self._channel)
 
@@ -155,11 +155,11 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
 
         return state_attr
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the group on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the group off."""
         await self._device.turn_off()
 
