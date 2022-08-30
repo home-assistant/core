@@ -93,7 +93,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> bool:
     """Set up an EnOcean dongle for the given entry."""
     enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
@@ -103,6 +106,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     async_cleanup_device_registry(hass=hass, entry=config_entry)
     forward_entry_setup_to_platforms(hass=hass, entry=config_entry)
+
+    enocean_devices_to_add = []
+
+    # get the entity registry
+    ent_reg = entity_registry.async_get(hass)
+
+    # map from dev_id_string to list of (new) unique_ids
+    new_unique_ids: dict[str, list[str]] = {}
+
+    # map from dev_id_string to map from new unique_id to old unique_id
+    old_unique_ids: dict[str, dict[str, str]] = {}
+
+    # map from dev_id_string to map from (new) unique_id to old entity
+    old_entities: dict[str, dict[str, entity_registry.RegistryEntry]] = {}
 
     # upcoming code is part of platform import to be deleted in a future version
     @callback
@@ -129,19 +146,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         config_entry = conf_entries[0]
         configured_enocean_devices = config_entry.options.get("devices", [])
-        enocean_devices_to_add = []
-
-        # get the entity registry
-        ent_reg = entity_registry.async_get(hass)
-
-        # map from dev_id_string to list of (new) unique_ids
-        new_unique_ids: dict[str, list[str]] = {}
-
-        # map from dev_id_string to map from new unique_id to old unique_id
-        old_unique_ids: dict[str, dict[str, str]] = {}
-
-        # map from dev_id_string to map from (new) unique_id to old entity
-        old_entities: dict[str, dict[str, entity_registry.RegistryEntry]] = {}
 
         # process the platform configs
         for platform_config in _enocean_platform_configs:
@@ -231,6 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 }
             )
 
+        # append devices to config_entry and update
         for device in enocean_devices_to_add:
             configured_enocean_devices.append(device)
 
@@ -239,10 +244,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             options={CONF_ENOCEAN_DEVICES: configured_enocean_devices},
         )
 
+        async_call_later(hass, 10, _update_new_entities)
+
+    async def _update_new_entities(self):
         # set values for the new entities:
         for device in enocean_devices_to_add:
             dev_id_string = device[CONF_ENOCEAN_DEVICE_ID]
-            LOGGER.warning("Processing new entities for device %s", dev_id_string)
+            LOGGER.warning("Now processing new entities for device %s", dev_id_string)
 
             for new_unique_id in new_unique_ids[dev_id_string]:
 
