@@ -337,6 +337,7 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
+        self._bridge_serial = bridge_device["serial"]
         self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         if "serial" not in self._device:
             return
@@ -366,11 +367,15 @@ class LutronCasetaDevice(Entity):
     @property
     def serial(self):
         """Return the serial number of the device."""
+        if self._device["serial"] is None:
+            return f"{self._bridge_serial}_{self.device_id}"
         return self._device["serial"]
 
     @property
     def unique_id(self):
         """Return the unique ID of the device (serial)."""
+        if self._device["serial"] is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
         return str(self.serial)
 
     @property
@@ -386,13 +391,6 @@ class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier if serial number is None."""
-        if self.serial is None:
-            return f"{self._bridge_unique_id}_{self.device_id}"
-        return super().unique_id
 
 
 def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
