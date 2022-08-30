@@ -1,5 +1,5 @@
 """Support for EnOcean devices."""
-from enocean.utils import to_hex_string
+from enocean.utils import combine_hex, to_hex_string
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -10,14 +10,25 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import (
+    CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICE_NAME,
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_EEP,
+    CONF_ENOCEAN_MANUFACTURER,
+    CONF_ENOCEAN_MODEL,
+    CONF_ENOCEAN_SENDER_ID,
+)
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
+from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
 
+# upcoming code is part of platform import to be deleted in a future version
 class EnOceanPlatformConfig:
     """An EnOcean platform configuration entry."""
 
@@ -30,7 +41,36 @@ class EnOceanPlatformConfig:
         self.config = config
 
 
-_platform_configs: list[EnOceanPlatformConfig] = []
+# upcoming code is part of platform import to be deleted in a future version
+_enocean_platform_configs: list[EnOceanPlatformConfig] = []
+
+
+# upcoming code is part of platform import to be deleted in a future version
+def register_platform_config_for_migration_to_config_entry(
+    platform_config: EnOceanPlatformConfig,
+):
+    """Register an EnOcean platform configuration for importing it to the config entry."""
+    _enocean_platform_configs.append(platform_config)
+
+
+# upcoming code is part of platform import to be deleted in a future version
+def _get_entity_for_unique_id(ent_reg: entity_registry.EntityRegistry, unique_id):
+    """Obtain an entity id even for those 'enocean' platform entities, which never had a device_class set.
+
+    For some reason, this does not seem to be possible with the built-in async_get_entity_id(...) function.
+    """
+    for key in ent_reg.entities:
+        ent = ent_reg.entities.get(key, None)
+        if not ent:
+            continue
+
+        if ent.platform != "enocean":
+            continue
+
+        if ent.unique_id == unique_id:
+            return ent
+
+    return None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -64,21 +104,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async_cleanup_device_registry(hass=hass, entry=config_entry)
     forward_entry_setup_to_platforms(hass=hass, entry=config_entry)
 
+    # upcoming code is part of platform import to be deleted in a future version
     @callback
     def _schedule_yaml_import(_):
-        """Schedule delayed import after HA is fully started."""
-        if not _platform_configs or len(_platform_configs) < 1:
-            LOGGER.warning("NONE")
+        """Schedule platform configuration import after HA is fully started."""
+        if not _enocean_platform_configs or len(_enocean_platform_configs) < 1:
             return
         async_call_later(hass, 2, _import_yaml)
 
+    # upcoming code is part of platform import to be deleted in a future version
     @callback
     def _import_yaml(_):
+        """Import platform configuration to config entry."""
         LOGGER.warning(
             "EnOcean platform configurations were found in configuration.yaml. Configuring EnOcean via configuration.yaml is deprecated. Now starting automatic import to config entry... "
         )
 
-        # get the unique config_entry
+        # get the unique config_entry and the devices configured in it
         conf_entries = hass.config_entries.async_entries("enocean")
         if not len(conf_entries) == 1:
             LOGGER.warning(
@@ -86,11 +128,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             )
             return
         config_entry = conf_entries[0]
-
         configured_enocean_devices = config_entry.options.get("devices", [])
+        enocean_devices_to_add = []
+
+        # get the entity registry
+        ent_reg = entity_registry.async_get(hass)
+
+        # map from dev_id_string to list of (new) unique_ids
+        new_unique_ids: dict[str, list[str]] = {}
+
+        # map from dev_id_string to map from new unique_id to old unique_id
+        old_unique_ids: dict[str, dict[str, str]] = {}
+
+        # map from dev_id_string to map from (new) unique_id to old entity
+        old_entities: dict[str, dict[str, entity_registry.RegistryEntry]] = {}
 
         # process the platform configs
-        for platform_config in _platform_configs:
+        for platform_config in _enocean_platform_configs:
             dev_id = platform_config.config.get("id", None)
 
             if not dev_id:
@@ -110,55 +164,113 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
             if device_found:
                 LOGGER.warning(
-                    "Skipping import of EnOcean device %s: An EnOcean device with this EnOcean ID already exists in the config entry"
+                    "Skipping import of EnOcean device %s because an EnOcean device with this EnOcean ID already exists in the config entry",
+                    dev_id_string,
                 )
-                break
+                continue
 
             LOGGER.warning("To Import: %s", dev_id_string)
 
-            # old_unique_id = str(combine_hex(dev_id))
-            # if device_class is None:
-            #     old_unique_id = old_unique_id + "-None"
-            # else:
-            #     old_unique_id = old_unique_id + "-" + device_class
+            new_unique_ids[dev_id_string] = []
+            old_unique_ids[dev_id_string] = {}
+            old_entities[dev_id_string] = {}
 
-            # ent_reg = entity_registry.async_get(hass)
-            # old_entity = _get_entity_for_unique_id(ent_reg, old_unique_id)
-            # if old_entity:
-            #     ent_reg.async_remove(old_entity.entity_id)
-            #     LOGGER.warn("removed entity")
+            if platform_config.platform == Platform.BINARY_SENSOR.value:
+                new_unique_id = (
+                    dev_id_string + "-" + Platform.BINARY_SENSOR.value + "-0"
+                )
+                new_unique_ids[dev_id_string].append(new_unique_id)
 
-            # device_type =  EnOceanSupportedDeviceType(
-            #     eep="F6-02-01",
-            #     manufacturer="Generic",
-            #     model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
-            # )
+                device_class = platform_config.config.get("device_class", None)
+                if device_class is None:
+                    old_unique_ids[dev_id_string][new_unique_id] = (
+                        str(combine_hex(dev_id)) + "-None"
+                    )
+                else:
+                    old_unique_ids[dev_id_string][new_unique_id] = (
+                        str(combine_hex(dev_id)) + "-" + device_class
+                    )
 
-            # devices_to_import = deepcopy(config_entry.options.get("devices-to-import", []))
+            if platform_config.platform == Platform.BINARY_SENSOR.value:
+                device_type = EnOceanSupportedDeviceType(
+                    eep="F6-02-01",
+                    manufacturer="Generic",
+                    model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
+                )
 
-            # devices_to_import.append({
-            #     CONF_ENOCEAN_DEVICE_ID: to_hex_string(dev_id).upper(),
-            #     CONF_ENOCEAN_EEP: device_type.eep,
-            #     CONF_ENOCEAN_MANUFACTURER: device_type.manufacturer,
-            #     CONF_ENOCEAN_MODEL: device_type.model,
-            #     CONF_ENOCEAN_DEVICE_NAME: dev_name,
-            #     CONF_ENOCEAN_SENDER_ID: "",
-            # })
+            if device_type is None:
+                LOGGER.warning(
+                    "Could not import EnOcean device %s: unknown device type",
+                    dev_id_string,
+                )
 
-            # hass.config_entries.async_update_entry(entry=config_entry, options={CONF_ENOCEAN_DEVICES: devices, "devices-to-import": devices_to_import})
+            # delete the old entities from entity registry
+            for new_unique_id in new_unique_ids[dev_id_string]:
+                old_entity = _get_entity_for_unique_id(
+                    ent_reg, old_unique_ids[dev_id_string][new_unique_id]
+                )
 
-            # new_unique_id = to_hex_string(dev_id) + "-" + Platform.SWITCH.value
-            # new_entity = _get_entity_for_unique_id(ent_reg, new_unique_id)
+                if old_entity:
+                    old_entities[dev_id_string][new_unique_id] = old_entity
+                    ent_reg.async_remove(old_entity.entity_id)
+                    LOGGER.warning(
+                        "Removed entity '%s' from entity registry", old_entity.entity_id
+                    )
 
-            # LOGGER.warning("updating entity")
-            # LOGGER.warning(
-            #     ent_reg.async_update_entity(
-            #         entity_id=new_entity.entity_id,
-            #         area_id=old_entity.area_id,
-            #         device_class=old_entity.device_class,
-            #         icon = old_entity.icon,
-            #         name = old_entity.name,
-            # ))
+            # append device
+            enocean_devices_to_add.append(
+                {
+                    CONF_ENOCEAN_DEVICE_ID: dev_id_string,
+                    CONF_ENOCEAN_EEP: device_type.eep,
+                    CONF_ENOCEAN_MANUFACTURER: device_type.manufacturer,
+                    CONF_ENOCEAN_MODEL: device_type.model,
+                    CONF_ENOCEAN_DEVICE_NAME: platform_config.config.get(
+                        "name", "Imported EnOcean device " + dev_id_string
+                    ),
+                    CONF_ENOCEAN_SENDER_ID: "",
+                }
+            )
+
+        for device in enocean_devices_to_add:
+            configured_enocean_devices.append(device)
+
+        hass.config_entries.async_update_entry(
+            entry=config_entry,
+            options={CONF_ENOCEAN_DEVICES: configured_enocean_devices},
+        )
+
+        # set values for the new entities:
+        for device in enocean_devices_to_add:
+            dev_id_string = device[CONF_ENOCEAN_DEVICE_ID]
+            LOGGER.warning("Processing new entities for device %s", dev_id_string)
+
+            for new_unique_id in new_unique_ids[dev_id_string]:
+
+                LOGGER.warning("Entity: %s", new_unique_id)
+
+                new_entity = _get_entity_for_unique_id(ent_reg, new_unique_id)
+
+                if new_entity is None:
+                    LOGGER.warning("Entity not found")
+                    continue
+
+                old_entity = old_entities[dev_id_string].get(new_unique_id, None)
+
+                if old_entity is None:
+                    continue
+
+                new_name = None
+                if new_entity.name is not None:
+                    new_name = old_entity.name
+
+                ent_reg.async_update_entity(
+                    entity_id=new_entity.entity_id,
+                    new_entity_id=old_entity.entity_id,
+                    area_id=old_entity.area_id,
+                    device_class=old_entity.device_class,
+                    icon=old_entity.icon,
+                    name=new_name,
+                )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _schedule_yaml_import)
 
@@ -223,29 +335,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.pop(DATA_ENOCEAN)
 
     return unload_platforms
-
-
-def register_platform_config_for_migration_to_config_entry(
-    platform_config: EnOceanPlatformConfig,
-):
-    """Register an EnOcean platform configuration for importing it to the config entry."""
-    _platform_configs.append(platform_config)
-
-
-def _get_entity_for_unique_id(ent_reg: entity_registry.EntityRegistry, unique_id):
-    """Obtain an entity id even for those 'enocean' platform entities, which never had a device_class set.
-
-    For some reason, this does not seem to be possible with the built-in async_get_entity_id(...) function.
-    """
-    for key in ent_reg.entities:
-        ent = ent_reg.entities.get(key, None)
-        if not ent:
-            continue
-
-        if ent.platform != "enocean":
-            continue
-
-        if ent.unique_id == unique_id:
-            return ent
-
-    return None

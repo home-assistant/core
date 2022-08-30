@@ -58,7 +58,17 @@ def setup_platform(
         EnOceanPlatformConfig(platform=Platform.BINARY_SENSOR.value, config=config)
     )
 
-    # add_entities([EnOceanBinarySensor(dev_id=dev_id, dev_name=dev_name, device_class=device_class, name=dev_name, from_platform=True)])
+    # add_entities(
+    #     [
+    #         EnOceanBinarySensor(
+    #             dev_id=config.get(CONF_ID),
+    #             dev_name=config.get(CONF_NAME),
+    #             device_class=config.get(CONF_DEVICE_CLASS),
+    #             name=config.get(CONF_NAME),
+    #             from_platform=True,
+    #         )
+    #     ]
+    # )
 
 
 async def async_setup_entry(
@@ -78,7 +88,7 @@ async def async_setup_entry(
                     EnOceanBinarySensor(
                         device_id,
                         device["name"],
-                        Platform.SWITCH.value,
+                        Platform.BINARY_SENSOR.value + "-0",
                         EnOceanSupportedDeviceType(
                             manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
                             model=device[CONF_ENOCEAN_MODEL],
