@@ -6,10 +6,24 @@ import logging
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    ATTR_NAME,
+    CONF_IP_ADDRESS,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
 
-from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
+from .const import (
+    ATTR_HARDWARE_VERSION,
+    ATTR_SERIAL,
+    ATTR_SOFTWARE_VERSION,
+    CONF_AUTO_DISCOVERED,
+    CONF_SERIAL,
+    DOMAIN,
+    NOBO_MANUFACTURER,
+)
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -26,6 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hub.start()
 
     hass.data.setdefault(DOMAIN, {})
+
+    # Register hub as device
+    dev_reg = device_registry.async_get(hass)
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, hub.hub_info[ATTR_SERIAL])},
+        manufacturer=NOBO_MANUFACTURER,
+        name=hub.hub_info[ATTR_NAME],
+        model=f"Nobø Ecohub ({hub.hub_info[ATTR_HARDWARE_VERSION]})",
+        sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
+    )
 
     async def _async_close(event):
         """Close the Nobø Ecohub socket connection when HA stops."""

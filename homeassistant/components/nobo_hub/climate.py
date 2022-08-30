@@ -28,22 +28,18 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_HARDWARE_VERSION,
     ATTR_OVERRIDE_ALLOWED,
     ATTR_SERIAL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_TARGET_ID,
     ATTR_TARGET_TYPE,
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
     CONF_OVERRIDE_TYPE,
     DOMAIN,
-    NOBO_MANUFACTURER,
     OVERRIDE_TYPE_NOW,
 )
 
@@ -73,17 +69,6 @@ async def async_setup_entry(
         nobo.API.OVERRIDE_TYPE_NOW
         if config_entry.options.get(CONF_OVERRIDE_TYPE) == OVERRIDE_TYPE_NOW
         else nobo.API.OVERRIDE_TYPE_CONSTANT
-    )
-
-    # Register hub as device
-    dev_reg = device_registry.async_get(hass)
-    dev_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, hub.hub_info[ATTR_SERIAL])},
-        manufacturer=NOBO_MANUFACTURER,
-        name=hub.hub_info[ATTR_NAME],
-        model=f"Nobø Ecohub ({hub.hub_info[ATTR_HARDWARE_VERSION]})",
-        sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
     )
 
     # Add zones as entities
