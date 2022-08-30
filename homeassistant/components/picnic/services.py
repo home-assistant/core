@@ -1,8 +1,6 @@
 """Services for the Picnic integration."""
 from __future__ import annotations
 
-from typing import Any
-
 from python_picnic_api import PicnicAPI
 import voluptuous as vol
 
