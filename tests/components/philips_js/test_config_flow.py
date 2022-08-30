@@ -120,6 +120,7 @@ async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
     )
 
     assert result == {
+        "context": {"source": "user", "unique_id": "ABCDEFGHIJKLF"},
         "flow_id": ANY,
         "type": "create_entry",
         "description": None,

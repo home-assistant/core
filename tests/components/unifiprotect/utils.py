@@ -23,7 +23,7 @@ from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
@@ -229,3 +229,13 @@ async def adopt_devices(
         ufp.ws_msg(mock_msg)
 
     await hass.async_block_till_done()
+
+
+def get_device_from_ufp_device(
+    hass: HomeAssistant, device: ProtectAdoptableDeviceModel
+) -> dr.DeviceEntry | None:
+    """Return all device by type."""
+    registry = dr.async_get(hass)
+    return registry.async_get_device(
+        identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+    )

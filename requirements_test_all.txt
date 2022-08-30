@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.43
+AIOAladdinConnect==0.1.44
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.14
+PySwitchbot==0.18.21
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -76,7 +76,7 @@ adext==0.4.2
 adguardhome==0.5.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.3.1
+advantage_air==0.4.1
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -338,7 +338,7 @@ blinkpy==0.19.0
 bluetooth-adapters==0.3.2
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.2.2
+bluetooth-auto-recovery==0.3.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -549,7 +549,7 @@ getmac==0.8.2
 gios==2.1.0
 
 # homeassistant.components.glances
-glances_api==0.3.5
+glances_api==0.4.1
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
@@ -698,6 +698,9 @@ lacrosse-view==0.0.9
 
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
+
+# homeassistant.components.led_ble
+led-ble==0.5.4
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1151,7 +1154,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.8.0
+pylitterbot==2022.8.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1248,6 +1251,9 @@ pyprof2calltree==1.4.5
 # homeassistant.components.prosegur
 pyprosegur==0.0.5
 
+# homeassistant.components.prusalink
+pyprusalink==1.0.1
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
 
@@ -1308,7 +1314,7 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.5
+pysqueezebox==0.6.0
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -1332,7 +1338,7 @@ python-fullykiosk==0.0.11
 python-homewizard-energy==1.1.0
 
 # homeassistant.components.izone
-python-izone==1.2.3
+python-izone==1.2.9
 
 # homeassistant.components.juicenet
 python-juicenet==1.1.0
@@ -1385,7 +1391,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.8
+pyunifiprotect==4.1.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1588,7 +1594,7 @@ temescal==0.5
 tesla-powerwall==0.3.18
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.1
+tesla-wall-connector==1.0.2
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.3.1
@@ -1633,7 +1639,7 @@ uasiren==0.0.1
 ultraheat-api==0.4.1
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.5
+unifi-discovery==1.1.6
 
 # homeassistant.components.upb
 upb_lib==0.4.12
@@ -1743,7 +1749,7 @@ youless-api==0.16
 zeroconf==0.39.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.78
+zha-quirks==0.0.79
 
 # homeassistant.components.zha
 zigpy-deconz==0.18.0

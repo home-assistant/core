@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pylitterbot import LitterRobot
 from pylitterbot.enums import LitterBoxStatus
 import voluptuous as vol
 
@@ -68,7 +69,7 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
+class LitterRobotCleaner(LitterRobotControlEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     _attr_supported_features = (

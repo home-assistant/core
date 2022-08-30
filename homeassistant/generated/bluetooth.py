@@ -119,6 +119,26 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "led_ble",
+        "local_name": "LEDnet*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "BLE-LED*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "LEDBLE*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "Triones*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "LEDBlue*"
+    },
+    {
         "domain": "moat",
         "local_name": "Moat_S*",
         "connectable": False

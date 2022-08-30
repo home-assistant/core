@@ -34,7 +34,7 @@
             "init": {
                 "data": {
                     "adapter": "Der zum Scannen zu verwendende Bluetooth-Adapter",
-                    "passive": "Passives Mith\u00f6ren"
+                    "passive": "Passives Scannen"
                 },
                 "description": "Passives Mith\u00f6ren erfordert BlueZ 5.63 oder h\u00f6her mit aktivierten experimentellen Funktionen."
             }

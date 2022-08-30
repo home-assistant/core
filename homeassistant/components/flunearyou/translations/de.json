@@ -22,7 +22,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Die externe Datenquelle, aus der die Integration von Flu Near You gespeist wird, ist nicht mehr verf\u00fcgbar; daher funktioniert die Integration nicht mehr.\n\nDr\u00fccke SUBMIT, um Flu Near You aus deiner Home Assistant-Instanz zu entfernen.",
+                        "description": "Die externe Datenquelle, aus der die Integration von Flu Near You gespeist wird, ist nicht mehr verf\u00fcgbar; daher funktioniert die Integration nicht mehr.\n\nDr\u00fccke SENDEN, um Flu Near You aus deiner Home Assistant-Instanz zu entfernen.",
                         "title": "Flu Near You entfernen"
                     }
                 }
