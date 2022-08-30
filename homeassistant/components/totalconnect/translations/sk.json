@@ -5,13 +5,6 @@
         },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
-        },
-        "step": {
-            "locations": {
-                "data": {
-                    "location": "Umiestnenie"
-                }
-            }
         }
     }
 }

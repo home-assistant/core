@@ -18,7 +18,7 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 
 from tests.common import MockEntity
 
-ENTITIES = {}
+ENTITIES = []
 
 
 def init(empty=False):

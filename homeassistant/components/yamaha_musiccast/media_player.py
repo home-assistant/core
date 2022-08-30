@@ -79,6 +79,8 @@ async def async_setup_entry(
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     """The musiccast media player."""
 
+    _attr_should_poll = False
+
     def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the musiccast device."""
         self._player_state = STATE_PLAYING
@@ -106,7 +108,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self.coordinator.musiccast.register_group_update_callback(
             self.update_all_mc_entities
         )
-        self.coordinator.async_add_listener(self.async_schedule_check_client_list)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_schedule_check_client_list)
+        )
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
@@ -116,12 +120,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self.coordinator.musiccast.remove_group_update_callback(
             self.update_all_mc_entities
         )
-        self.coordinator.async_remove_listener(self.async_schedule_check_client_list)
-
-    @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return False
 
     @property
     def ip_address(self):
@@ -275,7 +273,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         if self.state == STATE_OFF:

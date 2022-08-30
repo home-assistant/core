@@ -20,9 +20,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "P\u00e4ringute intervall (sekundites, v\u00e4hemalt 30)",
-                    "unique_id": "Seade",
-                    "usn": "Seade"
+                    "unique_id": "Seade"
                 }
             }
         }

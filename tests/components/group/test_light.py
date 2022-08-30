@@ -25,7 +25,6 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TOGGLE,
@@ -78,7 +77,6 @@ async def test_default_state(hass):
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
     assert state.attributes.get(ATTR_HS_COLOR) is None
     assert state.attributes.get(ATTR_COLOR_TEMP) is None
-    assert state.attributes.get(ATTR_WHITE_VALUE) is None
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
 
@@ -88,8 +86,14 @@ async def test_default_state(hass):
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
-    """Test the state reporting."""
+async def test_state_reporting_any(hass):
+    """Test the state reporting in 'any' mode.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if all group members are unknown.
+    Otherwise, the group state is on if at least one group member is on.
+    Otherwise, the group state is off.
+    """
     await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -105,29 +109,79 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.async_set("light.test1", STATE_ON)
-    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
 
-    hass.states.async_set("light.test1", STATE_ON)
-    hass.states.async_set("light.test2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
-
-    hass.states.async_set("light.test1", STATE_OFF)
-    hass.states.async_set("light.test2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_OFF
-
+    # All group members unavailable -> unavailable
     hass.states.async_set("light.test1", STATE_UNAVAILABLE)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
 
+    # All group members unknown -> unknown
+    hass.states.async_set("light.test1", STATE_UNKNOWN)
+    hass.states.async_set("light.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    # Group members unknown or unavailable -> unknown
+    hass.states.async_set("light.test1", STATE_UNKNOWN)
+    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    # At least one member on -> group on
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_ON
+
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_ON
+
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_ON
+
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_ON
+
+    # Otherwise -> off
+    hass.states.async_set("light.test1", STATE_OFF)
+    hass.states.async_set("light.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_OFF
+
+    hass.states.async_set("light.test1", STATE_UNKNOWN)
+    hass.states.async_set("light.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_OFF
+
+    hass.states.async_set("light.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("light.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_OFF
+
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("light.test1")
+    hass.states.async_remove("light.test2")
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
+
 
 async def test_state_reporting_all(hass):
-    """Test the state reporting."""
+    """Test the state reporting in 'all' mode.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
+    Otherwise, the group state is off if at least one group member is off.
+    Otherwise, the group state is on.
+    """
     await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -143,11 +197,47 @@ async def test_state_reporting_all(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
+
+    # All group members unavailable -> unavailable
+    hass.states.async_set("light.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
+
+    # At least one member unknown or unavailable -> group unknown
     hass.states.async_set("light.test1", STATE_ON)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
 
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("light.test1", STATE_UNKNOWN)
+    hass.states.async_set("light.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("light.test1", STATE_OFF)
+    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("light.test1", STATE_OFF)
+    hass.states.async_set("light.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    # At least one member off -> group off
     hass.states.async_set("light.test1", STATE_ON)
     hass.states.async_set("light.test2", STATE_OFF)
     await hass.async_block_till_done()
@@ -158,13 +248,15 @@ async def test_state_reporting_all(hass):
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_OFF
 
+    # Otherwise -> on
     hass.states.async_set("light.test1", STATE_ON)
     hass.states.async_set("light.test2", STATE_ON)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_ON
 
-    hass.states.async_set("light.test1", STATE_UNAVAILABLE)
-    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("light.test1")
+    hass.states.async_remove("light.test2")
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
 
@@ -522,48 +614,6 @@ async def test_color_rgbww(hass, enable_custom_integrations):
     assert state.attributes[ATTR_RGBWW_COLOR] == (255, 128, 64, 32, 0)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgbww"]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-
-
-async def test_white_value(hass):
-    """Test white value reporting."""
-    await async_setup_component(
-        hass,
-        LIGHT_DOMAIN,
-        {
-            LIGHT_DOMAIN: {
-                "platform": DOMAIN,
-                "entities": ["light.test1", "light.test2"],
-                "all": "false",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    hass.states.async_set(
-        "light.test1", STATE_ON, {ATTR_WHITE_VALUE: 255, ATTR_SUPPORTED_FEATURES: 128}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("light.light_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
-    assert state.attributes[ATTR_WHITE_VALUE] == 255
-
-    hass.states.async_set(
-        "light.test2", STATE_ON, {ATTR_WHITE_VALUE: 100, ATTR_SUPPORTED_FEATURES: 128}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("light.light_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
-    assert state.attributes[ATTR_WHITE_VALUE] == 177
-
-    hass.states.async_set(
-        "light.test1", STATE_OFF, {ATTR_WHITE_VALUE: 255, ATTR_SUPPORTED_FEATURES: 128}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("light.light_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
-    assert state.attributes[ATTR_WHITE_VALUE] == 100
 
 
 async def test_white(hass, enable_custom_integrations):
@@ -1399,7 +1449,6 @@ async def test_invalid_service_calls(hass):
             ATTR_XY_COLOR: (0.5, 0.42),
             ATTR_RGB_COLOR: (80, 120, 50),
             ATTR_COLOR_TEMP: 1234,
-            ATTR_WHITE_VALUE: 1,
             ATTR_EFFECT: "Sunshine",
             ATTR_TRANSITION: 4,
             ATTR_FLASH: "long",

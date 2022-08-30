@@ -13,15 +13,6 @@ from tests.common import MockConfigEntry
 CONFIG = TEST_CONFIG_LEGACY.config
 
 
-async def test_abort_if_no_implementation_registered(hass):
-    """Test we abort if no implementation is registered."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
-
-
 async def test_abort_if_single_instance_allowed(hass):
     """Test we abort if Nest is already setup."""
     existing_entry = MockConfigEntry(domain=DOMAIN, data={})
@@ -33,7 +24,7 @@ async def test_abort_if_single_instance_allowed(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -49,14 +40,14 @@ async def test_full_flow_implementation(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"flow_impl": "nest"},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
     assert (
         result["description_placeholders"]
@@ -78,7 +69,7 @@ async def test_full_flow_implementation(hass):
         )
         await hass.async_block_till_done()
         assert len(mock_setup.mock_calls) == 1
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"]["tokens"] == {"access_token": "yoo"}
         assert result["data"]["impl_domain"] == "nest"
         assert result["title"] == "Nest (via configuration.yaml)"
@@ -92,7 +83,7 @@ async def test_not_pick_implementation_if_only_one(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -108,7 +99,7 @@ async def test_abort_if_timeout_generating_auth_url(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "authorize_url_timeout"
 
 
@@ -124,7 +115,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
 
@@ -136,7 +127,7 @@ async def test_verify_code_timeout(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
     with patch(
@@ -146,7 +137,7 @@ async def test_verify_code_timeout(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "123ABC"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {"code": "timeout"}
 
@@ -159,7 +150,7 @@ async def test_verify_code_invalid(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
     with patch(
@@ -169,7 +160,7 @@ async def test_verify_code_invalid(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "123ABC"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {"code": "invalid_pin"}
 
@@ -182,7 +173,7 @@ async def test_verify_code_unknown_error(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
     with patch(
@@ -192,7 +183,7 @@ async def test_verify_code_unknown_error(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "123ABC"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {"code": "unknown"}
 
@@ -205,7 +196,7 @@ async def test_verify_code_exception(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
     with patch(
@@ -215,7 +206,7 @@ async def test_verify_code_exception(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "123ABC"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {"code": "internal_error"}
 
@@ -229,7 +220,7 @@ async def test_step_import(hass):
     flow = hass.config_entries.flow.async_progress()[0]
     result = await hass.config_entries.flow.async_configure(flow["flow_id"])
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
 

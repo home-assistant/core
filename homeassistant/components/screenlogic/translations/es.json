@@ -6,21 +6,21 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "ScreenLogic {name}",
+        "flow_title": "{name}",
         "step": {
             "gateway_entry": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP",
                     "port": "Puerto"
                 },
-                "description": "Introduzca la informaci\u00f3n de su ScreenLogic Gateway.",
+                "description": "Introduce la informaci\u00f3n de tu puerta de enlace ScreenLogic.",
                 "title": "ScreenLogic"
             },
             "gateway_select": {
                 "data": {
                     "selected_gateway": "Puerta de enlace"
                 },
-                "description": "Se han descubierto las siguientes puertas de enlace ScreenLogic. Seleccione una para configurarla o elija configurar manualmente una puerta de enlace ScreenLogic.",
+                "description": "Se han descubierto las siguientes puertas de enlace ScreenLogic. Selecciona una para configurarla o elige configurar manualmente una puerta de enlace ScreenLogic.",
                 "title": "ScreenLogic"
             }
         }
@@ -29,7 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Segundos entre exploraciones"
+                    "scan_interval": "Segundos entre escaneos"
                 },
                 "description": "Especificar la configuraci\u00f3n de {gateway_name}",
                 "title": "ScreenLogic"

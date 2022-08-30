@@ -17,8 +17,7 @@
                     "mode": "Re\u017eim",
                     "name": "N\u00e1zev integrace"
                 },
-                "description": "Nastaven\u00ed integrace OpenWeatherMap. Chcete-li vygenerovat API kl\u00ed\u010d, p\u0159ejd\u011bte na https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Nastaven\u00ed integrace OpenWeatherMap. Chcete-li vygenerovat API kl\u00ed\u010d, p\u0159ejd\u011bte na https://openweathermap.org/appid"
             }
         }
     },

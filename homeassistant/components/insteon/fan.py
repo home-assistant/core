@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -62,14 +63,14 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         await self.async_set_percentage(percentage or 67)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._insteon_device.async_fan_off()
 

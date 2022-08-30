@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
-        },
-        "error": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
             "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_api_key": "Vigane API v\u00f5ti",
-            "timeout": "\u00dchendamise ajal\u00f5pp",
+            "max_regions": "Seadistada saab kuni 5 piirkonda",
+            "rate_limit": "Liiga palju taotlusi",
+            "timeout": "\u00dchenduse ajal\u00f5pp",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
@@ -22,17 +21,11 @@
                 },
                 "description": "Kui soovid j\u00e4lgida mitte ainult oblastit vali konkreetne piirkond"
             },
-            "state": {
+            "user": {
                 "data": {
                     "region": "Piirkond"
                 },
                 "description": "Vali j\u00e4lgitav oblast"
-            },
-            "user": {
-                "data": {
-                    "api_key": "API v\u00f5ti"
-                },
-                "description": "Loo Ukraina h\u00e4ire integreerimine. API-v\u00f5tme loomiseks ava {api_url}"
             }
         }
     }

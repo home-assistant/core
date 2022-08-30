@@ -127,7 +127,7 @@ async def test_all_optional_config(hass):
     _verify(hass, 4, 1, 3, 5)
 
 
-async def test_templates_with_entities(hass):
+async def test_templates_with_entities(hass, calls):
     """Test templates with values from other entities."""
     with assert_setup_component(4, "input_number"):
         assert await setup.async_setup_component(
@@ -173,13 +173,23 @@ async def test_templates_with_entities(hass):
                         "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
                         "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
                         "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
-                        "set_value": {
-                            "service": "input_number.set_value",
-                            "data_template": {
-                                "entity_id": _VALUE_INPUT_NUMBER,
-                                "value": "{{ value }}",
+                        "set_value": [
+                            {
+                                "service": "input_number.set_value",
+                                "data_template": {
+                                    "entity_id": _VALUE_INPUT_NUMBER,
+                                    "value": "{{ value }}",
+                                },
                             },
-                        },
+                            {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "action": "set_value",
+                                    "caller": "{{ this.entity_id }}",
+                                    "value": "{{ value }}",
+                                },
+                            },
+                        ],
                         "optimistic": True,
                         "unique_id": "a",
                     },
@@ -246,6 +256,12 @@ async def test_templates_with_entities(hass):
         blocking=True,
     )
     _verify(hass, 2, 2, 2, 6)
+
+    # Check this variable can be used in set_value script
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "set_value"
+    assert calls[-1].data["caller"] == _TEST_NUMBER
+    assert calls[-1].data["value"] == 2
 
 
 async def test_trigger_number(hass):

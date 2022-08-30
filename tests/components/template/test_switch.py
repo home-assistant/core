@@ -1,53 +1,35 @@
 """The tests for the  Template switch platform."""
 
-import pytest
 
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
-    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_SERVICE_DATA,
-    EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, State, callback
+from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component, mock_restore_cache
 
-
-@pytest.fixture
-def service_calls(hass):
-    """Track service call events for switch.test_state."""
-    events = []
-    entity_id = "switch.test_state"
-
-    @callback
-    def capture_events(event):
-        if event.data[ATTR_DOMAIN] != "switch":
-            return
-        if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
-            return
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, capture_events)
-
-    return events
-
-
 OPTIMISTIC_SWITCH_CONFIG = {
     "turn_on": {
-        "service": "switch.turn_on",
-        "entity_id": "switch.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_on",
+            "caller": "{{ this.entity_id }}",
+        },
     },
     "turn_off": {
-        "service": "switch.turn_off",
-        "entity_id": "switch.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_off",
+            "caller": "{{ this.entity_id }}",
+        },
     },
 }
 
@@ -367,7 +349,7 @@ async def test_missing_off_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_on_action(hass, service_calls):
+async def test_on_action(hass, calls):
     """Test on action."""
     assert await async_setup_component(
         hass,
@@ -402,11 +384,12 @@ async def test_on_action(hass, service_calls):
         blocking=True,
     )
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "turn_on"
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_on_action_optimistic(hass, service_calls):
+async def test_on_action_optimistic(hass, calls):
     """Test on action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -442,11 +425,12 @@ async def test_on_action_optimistic(hass, service_calls):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_ON
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "turn_on"
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_off_action(hass, service_calls):
+async def test_off_action(hass, calls):
     """Test off action."""
     assert await async_setup_component(
         hass,
@@ -481,11 +465,12 @@ async def test_off_action(hass, service_calls):
         blocking=True,
     )
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "turn_off"
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_off_action_optimistic(hass, service_calls):
+async def test_off_action_optimistic(hass, calls):
     """Test off action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -521,8 +506,9 @@ async def test_off_action_optimistic(hass, service_calls):
     state = hass.states.get("switch.test_template_switch")
     assert state.state == STATE_OFF
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "turn_off"
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
 async def test_restore_state(hass):

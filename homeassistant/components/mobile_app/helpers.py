@@ -13,7 +13,7 @@ from nacl.secret import SecretBox
 from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder, json_loads
 
 from .const import (
     ATTR_APP_DATA,
@@ -85,7 +85,7 @@ def _decrypt_payload_helper(
     key_bytes = get_key_bytes(key, keylen)
 
     msg_bytes = decrypt(ciphertext, key_bytes)
-    message = json.loads(msg_bytes.decode("utf-8"))
+    message = json_loads(msg_bytes)
     _LOGGER.debug("Successfully decrypted mobile_app payload")
     return message
 
@@ -117,7 +117,7 @@ def registration_context(registration: dict) -> Context:
 
 
 def empty_okay_response(
-    headers: dict = None, status: HTTPStatus = HTTPStatus.OK
+    headers: dict | None = None, status: HTTPStatus = HTTPStatus.OK
 ) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
@@ -129,7 +129,7 @@ def error_response(
     code: str,
     message: str,
     status: HTTPStatus = HTTPStatus.BAD_REQUEST,
-    headers: dict = None,
+    headers: dict | None = None,
 ) -> Response:
     """Return an error Response."""
     return json_response(
@@ -177,7 +177,7 @@ def webhook_response(
     *,
     registration: dict,
     status: HTTPStatus = HTTPStatus.OK,
-    headers: dict = None,
+    headers: dict | None = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)

@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Vali \u00fchenduse t\u00fc\u00fcp",
-                    "password": "Salas\u00f5na",
-                    "username": "Kasutajanimi"
+                    "connection_type": "Vali \u00fchenduse t\u00fc\u00fcp"
                 },
                 "description": "Vali \u00fchenduse t\u00fc\u00fcp. Kohalik vajab 3. p\u00f5lvkonna k\u00fctteseadmeid"
             }

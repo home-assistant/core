@@ -15,6 +15,5 @@
                 "description": "Csatlakoztassa Habitica-profilj\u00e1t, hogy figyelemmel k\u00eds\u00e9rhesse felhaszn\u00e1l\u00f3i profilj\u00e1t \u00e9s feladatait. Ne feledje, hogy az api_id \u00e9s api_key c\u00edmeket a https://habitica.com/user/settings/api webhelyr\u0151l kell beszerezni"
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

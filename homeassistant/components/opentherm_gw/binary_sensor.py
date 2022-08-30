@@ -6,10 +6,10 @@ from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySenso
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 
 from . import DOMAIN
 from .const import (
@@ -32,7 +32,7 @@ async def async_setup_entry(
     sensors = []
     deprecated_sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
-    ent_reg = await async_get_registry(hass)
+    ent_reg = er.async_get(hass)
     for var, info in BINARY_SENSOR_INFO.items():
         device_class = info[0]
         friendly_name_format = info[1]
@@ -82,6 +82,8 @@ async def async_setup_entry(
 
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
+
+    _attr_should_poll = False
 
     def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
@@ -161,11 +163,6 @@ class OpenThermBinarySensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this device."""
         return self._device_class
-
-    @property
-    def should_poll(self):
-        """Return False because entity pushes its state."""
-        return False
 
 
 class DeprecatedOpenThermBinarySensor(OpenThermBinarySensor):

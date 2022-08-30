@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
@@ -33,8 +37,8 @@ def async_describe_events(
         button_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[device_type]
         button_description = button_map[leap_button_number]
         return {
-            "name": f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
-            "message": f"{data[ATTR_ACTION]} {button_description}",
+            LOGBOOK_ENTRY_NAME: f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
+            LOGBOOK_ENTRY_MESSAGE: f"{data[ATTR_ACTION]} {button_description}",
         }
 
     async_describe_event(

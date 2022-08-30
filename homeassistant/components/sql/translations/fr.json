@@ -5,8 +5,7 @@
         },
         "error": {
             "db_url_invalid": "URL de la base de donn\u00e9es non valide",
-            "query_invalid": "Requ\u00eate SQL non valide",
-            "value_template_invalid": "Mod\u00e8le de valeur non valide"
+            "query_invalid": "Requ\u00eate SQL non valide"
         },
         "step": {
             "user": {
@@ -32,8 +31,7 @@
     "options": {
         "error": {
             "db_url_invalid": "URL de la base de donn\u00e9es non valide",
-            "query_invalid": "Requ\u00eate SQL non valide",
-            "value_template_invalid": "Mod\u00e8le de valeur non valide"
+            "query_invalid": "Requ\u00eate SQL non valide"
         },
         "step": {
             "init": {

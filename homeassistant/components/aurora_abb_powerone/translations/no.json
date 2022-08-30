@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Kan ikke koble til, sjekk seriell port, adresse, elektrisk tilkobling og at omformeren er p\u00e5 (i dagslys)",
             "cannot_open_serial_port": "Kan ikke \u00e5pne serieporten, sjekk og pr\u00f8v igjen",
-            "invalid_serial_port": "Seriell port er ikke en gyldig enhet eller kunne ikke \u00e5pnes",
-            "unknown": "Uventet feil"
+            "invalid_serial_port": "Seriell port er ikke en gyldig enhet eller kunne ikke \u00e5pnes"
         },
         "step": {
             "user": {

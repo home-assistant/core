@@ -5,12 +5,13 @@ from json import JSONEncoder, dumps
 import math
 import os
 from tempfile import mkdtemp
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.json import JSONEncoder as DefaultHASSJSONEncoder
 from homeassistant.util.json import (
     SerializationError,
     find_paths_unserializable_data,
@@ -51,6 +52,14 @@ def test_save_and_load():
     assert data == TEST_JSON_A
 
 
+def test_save_and_load_int_keys():
+    """Test saving and loading back stringifies the keys."""
+    fname = _path_for("test1")
+    save_json(fname, {1: "a", 2: "b"})
+    data = load_json(fname)
+    assert data == {"1": "a", "2": "b"}
+
+
 def test_save_and_load_private():
     """Test we can load private files and that they are protected."""
     fname = _path_for("test2")
@@ -72,13 +81,16 @@ def test_overwrite_and_reload(atomic_writes):
 
 
 def test_save_bad_data():
-    """Test error from trying to save unserialisable data."""
-    with pytest.raises(SerializationError) as excinfo:
-        save_json("test4", {"hello": set()})
+    """Test error from trying to save unserializable data."""
 
-    assert (
-        "Failed to serialize to JSON: test4. Bad data at $.hello=set()(<class 'set'>"
-        in str(excinfo.value)
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+    with pytest.raises(SerializationError) as excinfo:
+        save_json("test4", {"hello": CannotSerializeMe()})
+
+    assert "Failed to serialize to JSON: test4. Bad data at $.hello=" in str(
+        excinfo.value
     )
 
 
@@ -105,6 +117,21 @@ def test_custom_encoder():
     save_json(fname, Mock(), encoder=MockJSONEncoder)
     data = load_json(fname)
     assert data == "9"
+
+
+def test_default_encoder_is_passed():
+    """Test we use orjson if they pass in the default encoder."""
+    fname = _path_for("test6")
+    with patch(
+        "homeassistant.util.json.orjson.dumps", return_value=b"{}"
+    ) as mock_orjson_dumps:
+        save_json(fname, {"any": 1}, encoder=DefaultHASSJSONEncoder)
+    assert len(mock_orjson_dumps.mock_calls) == 1
+    # Patch json.dumps to make sure we are using the orjson path
+    with patch("homeassistant.util.json.json.dumps", side_effect=Exception):
+        save_json(fname, {"any": {1}}, encoder=DefaultHASSJSONEncoder)
+    data = load_json(fname)
+    assert data == {"any": [1]}
 
 
 def test_find_unserializable_data():

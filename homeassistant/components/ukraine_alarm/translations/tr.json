@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "max_regions": "En fazla 5 b\u00f6lge yap\u0131land\u0131r\u0131labilir",
+            "rate_limit": "\u00c7ok fazla istek",
+            "timeout": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "B\u00f6lge"
+                },
+                "description": "Yaln\u0131zca eyalet ve il\u00e7eyi izlemek istemiyorsan\u0131z, belirli toplulu\u011funu se\u00e7in"
+            },
+            "district": {
+                "data": {
+                    "region": "B\u00f6lge"
+                },
+                "description": "Sadece eyaleti izlemek istemiyorsan\u0131z, belirli bir b\u00f6lgeyi se\u00e7in"
+            },
+            "user": {
+                "data": {
+                    "region": "B\u00f6lge"
+                },
+                "description": "\u0130zlenecek durumu se\u00e7in"
+            }
+        }
+    }
+}

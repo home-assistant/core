@@ -10,8 +10,7 @@
                 "data": {
                     "show_on_map": "Kuva kaardil",
                     "station_id": "Anduri ID"
-                },
-                "title": "M\u00e4\u00e4ratle Luftdaten"
+                }
             }
         }
     }

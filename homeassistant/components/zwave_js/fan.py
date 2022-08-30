@@ -10,6 +10,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_FAN_OFF_PROPERTY,
     THERMOSTAT_FAN_STATE_PROPERTY,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.fan import (
@@ -53,13 +54,15 @@ async def async_setup_entry(
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave fan."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "has_fan_value_mapping":
-            entities.append(ValueMappingZwaveFan(config_entry, client, info))
+            entities.append(ValueMappingZwaveFan(config_entry, driver, info))
         elif info.platform_hint == "thermostat_fan":
-            entities.append(ZwaveThermostatFan(config_entry, client, info))
+            entities.append(ZwaveThermostatFan(config_entry, driver, info))
         else:
-            entities.append(ZwaveFan(config_entry, client, info))
+            entities.append(ZwaveFan(config_entry, driver, info))
 
         async_add_entities(entities)
 
@@ -78,10 +81,10 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the fan."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -93,7 +96,9 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
                 percentage_to_ranged_value(DEFAULT_SPEED_RANGE, percentage)
             )
 
-        await self.info.node.async_set_value(self._target_value, zwave_speed)
+        if (target_value := self._target_value) is None:
+            raise HomeAssistantError("Missing target value on device.")
+        await self.info.node.async_set_value(target_value, zwave_speed)
 
     async def async_turn_on(
         self,
@@ -107,12 +112,16 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         elif preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
         else:
+            if (target_value := self._target_value) is None:
+                raise HomeAssistantError("Missing target value on device.")
             # Value 255 tells device to return to previous value
-            await self.info.node.async_set_value(self._target_value, 255)
+            await self.info.node.async_set_value(target_value, 255)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.info.node.async_set_value(self._target_value, 0)
+        if (target_value := self._target_value) is None:
+            raise HomeAssistantError("Missing target value on device.")
+        await self.info.node.async_set_value(target_value, 0)
 
     @property
     def is_on(self) -> bool | None:
@@ -147,24 +156,28 @@ class ValueMappingZwaveFan(ZwaveFan):
     """A Zwave fan with a value mapping data (e.g., 1-24 is low)."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the fan."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.data_template = cast(
             FanValueMappingDataTemplate, self.info.platform_data_template
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        if (target_value := self._target_value) is None:
+            raise HomeAssistantError("Missing target value on device.")
         zwave_speed = self.percentage_to_zwave_speed(percentage)
-        await self.info.node.async_set_value(self._target_value, zwave_speed)
+        await self.info.node.async_set_value(target_value, zwave_speed)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if (target_value := self._target_value) is None:
+            raise HomeAssistantError("Missing target value on device.")
         for zwave_value, mapped_preset_mode in self.fan_value_mapping.presets.items():
             if preset_mode == mapped_preset_mode:
-                await self.info.node.async_set_value(self._target_value, zwave_value)
+                await self.info.node.async_set_value(target_value, zwave_value)
                 return
 
         raise NotValidPresetModeError(
@@ -207,7 +220,9 @@ class ValueMappingZwaveFan(ZwaveFan):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return self.fan_value_mapping.presets.get(self.info.primary_value.value)
+        if (value := self.info.primary_value.value) is None:
+            return None
+        return self.fan_value_mapping.presets.get(value)
 
     @property
     def has_fan_value_mapping(self) -> bool:
@@ -300,10 +315,10 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     _fan_state: ZwaveValue | None = None
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the thermostat fan."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         self._fan_mode = self.info.primary_value
 
@@ -389,7 +404,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         return cast(str, self._fan_state.metadata.states[str(value)])
 
     @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the optional state attributes."""
         attrs = {}
 

@@ -21,13 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 class HarmonyData(HarmonySubscriberMixin):
     """HarmonyData registers for Harmony hub updates."""
 
-    def __init__(self, hass, address: str, name: str, unique_id: str):
+    _client: HarmonyClient
+
+    def __init__(self, hass, address: str, name: str, unique_id: str | None) -> None:
         """Initialize a data object."""
         super().__init__(hass)
         self._name = name
         self._unique_id = unique_id
         self._available = False
-        self._client = None
         self._address = address
 
     @property
@@ -99,7 +100,7 @@ class HarmonyData(HarmonySubscriberMixin):
             configuration_url="https://www.logitech.com/en-us/my-account",
         )
 
-    async def connect(self) -> bool:
+    async def connect(self) -> None:
         """Connect to the Harmony Hub."""
         _LOGGER.debug("%s: Connecting", self._name)
 

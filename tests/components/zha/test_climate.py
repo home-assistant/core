@@ -171,6 +171,24 @@ ZCL_ATTR_PLUG = {
 }
 
 
+@pytest.fixture(autouse=True)
+def climate_platform_only():
+    """Only setup the climate and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.CLIMATE,
+            Platform.BINARY_SENSOR,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def device_climate_mock(hass, zigpy_device_mock, zha_device_joined):
     """Test regular thermostat device."""

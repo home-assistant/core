@@ -28,16 +28,7 @@
                     "username": "Nom d'usuari",
                     "verify_ssl": "Verifica el certificat SSL"
                 },
-                "description": "Vols configurar {name} ({host})?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Contrasenya",
-                    "username": "Nom d'usuari"
-                },
-                "description": "Motiu: {details}",
-                "title": "Reautenticaci\u00f3 de la integraci\u00f3 Synology DSM"
+                "description": "Vols configurar {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari",
                     "verify_ssl": "Verifica el certificat SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },

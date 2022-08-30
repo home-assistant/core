@@ -8,42 +8,29 @@
             "unknown": "Error inesperado"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Recursos"
-                },
-                "title": "Selecciona los recursos a monitorizar"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Recursos"
+                    "alias": "Alias"
                 },
-                "title": "Selecciona el UPS a monitorizar"
+                "title": "Elige el SAI a supervisar"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Conectar con el servidor NUT"
             }
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "No se pudo conectar",
-            "unknown": "Error inesperado"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Recursos",
                     "scan_interval": "Intervalo de escaneo (segundos)"
-                },
-                "description": "Elige los recursos del sensor."
+                }
             }
         }
     }

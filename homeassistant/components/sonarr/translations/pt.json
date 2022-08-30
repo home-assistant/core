@@ -17,9 +17,6 @@
             "user": {
                 "data": {
                     "api_key": "Chave da API",
-                    "host": "Servidor",
-                    "port": "Porta",
-                    "ssl": "Utiliza um certificado SSL",
                     "verify_ssl": "Verificar o certificado SSL"
                 }
             }

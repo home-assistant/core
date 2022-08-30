@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from homeassistant.components import recorder
 from homeassistant.components.recorder import SQLITE_URL_PREFIX, statistics
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -25,7 +26,7 @@ from tests.components.recorder.common import wait_recording_done
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE = "tests.components.recorder.models_schema_23_with_newer_columns"
+SCHEMA_MODULE = "tests.components.recorder.db_schema_23_with_newer_columns"
 
 
 def _create_engine_test(*args, **kwargs):
@@ -34,13 +35,17 @@ def _create_engine_test(*args, **kwargs):
     This simulates an existing db with the old schema.
     """
     importlib.import_module(SCHEMA_MODULE)
-    old_models = sys.modules[SCHEMA_MODULE]
+    old_db_schema = sys.modules[SCHEMA_MODULE]
     engine = create_engine(*args, **kwargs)
-    old_models.Base.metadata.create_all(engine)
+    old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
-        session.add(recorder.models.StatisticsRuns(start=statistics.get_start_time()))
         session.add(
-            recorder.models.SchemaChanges(schema_version=old_models.SCHEMA_VERSION)
+            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+        )
+        session.add(
+            recorder.db_schema.SchemaChanges(
+                schema_version=old_db_schema.SCHEMA_VERSION
+            )
         )
         session.commit()
     return engine
@@ -52,7 +57,7 @@ def test_delete_duplicates(caplog, tmpdir):
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
-    old_models = sys.modules[SCHEMA_MODULE]
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -171,35 +176,39 @@ def test_delete_duplicates(caplog, tmpdir):
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "models", old_models), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
             )
-            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+            session.add(
+                recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
+            )
         with session_scope(hass=hass) as session:
             for stat in external_energy_statistics_1:
-                session.add(recorder.models.Statistics.from_stats(1, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(1, stat))
             for stat in external_energy_statistics_2:
-                session.add(recorder.models.Statistics.from_stats(2, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(2, stat))
             for stat in external_co2_statistics:
-                session.add(recorder.models.Statistics.from_stats(3, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(3, stat))
 
         hass.stop()
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -218,7 +227,7 @@ def test_delete_duplicates_many(caplog, tmpdir):
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
-    old_models = sys.modules[SCHEMA_MODULE]
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -337,41 +346,45 @@ def test_delete_duplicates_many(caplog, tmpdir):
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "models", old_models), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
             )
-            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+            session.add(
+                recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
+            )
         with session_scope(hass=hass) as session:
             for stat in external_energy_statistics_1:
-                session.add(recorder.models.Statistics.from_stats(1, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(1, stat))
             for _ in range(3000):
                 session.add(
-                    recorder.models.Statistics.from_stats(
+                    recorder.db_schema.Statistics.from_stats(
                         1, external_energy_statistics_1[-1]
                     )
                 )
             for stat in external_energy_statistics_2:
-                session.add(recorder.models.Statistics.from_stats(2, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(2, stat))
             for stat in external_co2_statistics:
-                session.add(recorder.models.Statistics.from_stats(3, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(3, stat))
 
         hass.stop()
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -391,7 +404,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
-    old_models = sys.modules[SCHEMA_MODULE]
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -480,26 +493,27 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "models", old_models), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_2)
             )
         with session_scope(hass=hass) as session:
             for stat in external_energy_statistics_1:
-                session.add(recorder.models.Statistics.from_stats(1, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(1, stat))
             for stat in external_energy_statistics_2:
-                session.add(recorder.models.Statistics.from_stats(2, stat))
+                session.add(recorder.db_schema.Statistics.from_stats(2, stat))
 
         hass.stop()
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
@@ -507,6 +521,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
     hass.config.config_dir = tmpdir
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -560,7 +575,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
-    old_models = sys.modules[SCHEMA_MODULE]
+    old_db_schema = sys.modules[SCHEMA_MODULE]
 
     period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
 
@@ -580,24 +595,25 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     }
 
     # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "models", old_models), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
             session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+                recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
         with session_scope(hass=hass) as session:
             session.add(
-                recorder.models.StatisticsShortTerm.from_stats(1, statistic_row)
+                recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
             )
             session.add(
-                recorder.models.StatisticsShortTerm.from_stats(1, statistic_row)
+                recorder.db_schema.StatisticsShortTerm.from_stats(1, statistic_row)
             )
 
         hass.stop()
@@ -606,6 +622,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
     hass.config.config_dir = tmpdir
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)

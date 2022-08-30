@@ -3,7 +3,8 @@
 from datetime import timedelta
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.models import RecorderRuns, process_timestamp
+from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.util import dt as dt_util
 
 

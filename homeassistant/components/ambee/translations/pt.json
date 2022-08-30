@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chave da API"
+                }
+            },
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}

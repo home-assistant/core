@@ -8,12 +8,6 @@
             "timeout": "Timeout establishing connection",
             "unknown": "Unexpected error"
         },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_api_key": "Invalid API key",
-            "timeout": "Timeout establishing connection",
-            "unknown": "Unexpected error"
-        },
         "step": {
             "community": {
                 "data": {
@@ -27,15 +21,8 @@
                 },
                 "description": "If you want to monitor not only state, choose its specific district"
             },
-            "state": {
-                "data": {
-                    "region": "Region"
-                },
-                "description": "Choose state to monitor"
-            },
             "user": {
                 "data": {
-                    "api_key": "API Key",
                     "region": "Region"
                 },
                 "description": "Choose state to monitor"

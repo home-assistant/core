@@ -578,7 +578,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device.async_stop()
 
     @catch_request_errors
-    async def async_media_seek(self, position: int | float) -> None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         assert self._device is not None
         time = timedelta(seconds=position)
@@ -597,7 +597,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         # If media is media_source, resolve it to url and MIME type, and maybe metadata
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
             _LOGGER.debug("sourced_media is %s", sourced_media)

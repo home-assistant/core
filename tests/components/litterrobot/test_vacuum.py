@@ -6,15 +6,10 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
-from homeassistant.components.litterrobot.vacuum import (
-    SERVICE_RESET_WASTE_DRAWER,
-    SERVICE_SET_SLEEP_MODE,
-    SERVICE_SET_WAIT_TIME,
-)
+from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
     DOMAIN as PLATFORM_DOMAIN,
@@ -24,7 +19,7 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -34,16 +29,14 @@ from .conftest import setup_integration
 from tests.common import async_fire_time_changed
 
 COMPONENT_SERVICE_DOMAIN = {
-    SERVICE_RESET_WASTE_DRAWER: DOMAIN,
     SERVICE_SET_SLEEP_MODE: DOMAIN,
-    SERVICE_SET_WAIT_TIME: DOMAIN,
 }
 
 
 async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     """Tests the vacuum entity was set up."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
-    assert hass.services.has_service(DOMAIN, SERVICE_RESET_WASTE_DRAWER)
+    assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -62,26 +55,13 @@ async def test_vacuum_status_when_sleeping(
     assert vacuum.attributes.get(ATTR_STATUS) == "Ready (Sleeping)"
 
 
-async def test_vacuum_state_when_not_recently_seen(
-    hass: HomeAssistant, mock_account_with_robot_not_recently_seen: MagicMock
-) -> None:
-    """Tests the vacuum state when not seen recently."""
-    await setup_integration(
-        hass, mock_account_with_robot_not_recently_seen, PLATFORM_DOMAIN
-    )
-
-    vacuum = hass.states.get(VACUUM_ENTITY_ID)
-    assert vacuum
-    assert vacuum.state == STATE_UNAVAILABLE
-
-
 async def test_no_robots(
     hass: HomeAssistant, mock_account_with_no_robots: MagicMock
 ) -> None:
     """Tests the vacuum entity was set up."""
     await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
 
-    assert not hass.services.has_service(DOMAIN, SERVICE_RESET_WASTE_DRAWER)
+    assert not hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
 
 async def test_vacuum_with_error(
@@ -101,7 +81,6 @@ async def test_vacuum_with_error(
         (SERVICE_START, "start_cleaning", None),
         (SERVICE_TURN_OFF, "set_power_status", None),
         (SERVICE_TURN_ON, "set_power_status", None),
-        (SERVICE_RESET_WASTE_DRAWER, "reset_waste_drawer", {"deprecated": True}),
         (
             SERVICE_SET_SLEEP_MODE,
             "set_sleep_mode",
@@ -109,16 +88,6 @@ async def test_vacuum_with_error(
         ),
         (SERVICE_SET_SLEEP_MODE, "set_sleep_mode", {"data": {"enabled": True}}),
         (SERVICE_SET_SLEEP_MODE, "set_sleep_mode", {"data": {"enabled": False}}),
-        (
-            SERVICE_SET_WAIT_TIME,
-            "set_wait_time",
-            {"data": {"minutes": 3}, "deprecated": True},
-        ),
-        (
-            SERVICE_SET_WAIT_TIME,
-            "set_wait_time",
-            {"data": {"minutes": "15"}, "deprecated": True},
-        ),
     ],
 )
 async def test_commands(
@@ -150,21 +119,3 @@ async def test_commands(
     async_fire_time_changed(hass, future)
     getattr(mock_account.robots[0], command).assert_called_once()
     assert (f"'{DOMAIN}.{service}' service is deprecated" in caplog.text) is deprecated
-
-
-async def test_invalid_wait_time(hass: HomeAssistant, mock_account: MagicMock) -> None:
-    """Test an attempt to send an invalid wait time to the vacuum."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
-
-    vacuum = hass.states.get(VACUUM_ENTITY_ID)
-    assert vacuum
-    assert vacuum.state == STATE_DOCKED
-
-    with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_WAIT_TIME,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, "minutes": 10},
-            blocking=True,
-        )
-    assert not mock_account.robots[0].set_wait_time.called

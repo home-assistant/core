@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API v\u00f5ti",
                     "heating_type": "K\u00fcttere\u017eiim",
-                    "name": "Nimi",
                     "password": "Salas\u00f5na",
-                    "scan_interval": "P\u00e4ringute intervall (sekundites)",
                     "username": "E-posti aadress"
                 },
-                "description": "Seadista ViCare sidumine. API-v\u00f5tme loomiseks mine aadressile https://developer.viessmann.com",
-                "title": "{name}"
+                "description": "Seadista ViCare sidumine. API-v\u00f5tme loomiseks mine aadressile https://developer.viessmann.com"
             }
         }
     }

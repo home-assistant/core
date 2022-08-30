@@ -1,6 +1,8 @@
 """Support for Insteon thermostat."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
 
@@ -9,8 +11,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_FAN_ONLY,
+    FAN_AUTO,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -24,6 +25,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
+
+FAN_ONLY = "fan_only"
 
 COOLING = 1
 HEATING = 2
@@ -46,7 +49,7 @@ HVAC_MODES = {
     2: HVACMode.COOL,
     3: HVACMode.HEAT_COOL,
 }
-FAN_MODES = {4: HVAC_MODE_AUTO, 8: HVAC_MODE_FAN_ONLY}
+FAN_MODES = {4: FAN_AUTO, 8: FAN_ONLY}
 
 
 async def async_setup_entry(
@@ -85,7 +88,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self._insteon_device.properties[CELSIUS].value:
+        if self._insteon_device.configuration[CELSIUS].value:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
@@ -181,7 +184,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         attr["humidifier"] = humidifier
         return attr
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -213,7 +216,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         await super().async_added_to_hass()
         await self._insteon_device.async_read_op_flags()

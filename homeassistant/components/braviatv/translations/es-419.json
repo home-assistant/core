@@ -18,8 +18,7 @@
                 "data": {
                     "host": "Nombre de host de TV o direcci\u00f3n IP"
                 },
-                "description": "Configure la integraci\u00f3n de Sony Bravia TV. Si tiene problemas con la configuraci\u00f3n, vaya a: https://www.home-assistant.io/integrations/braviatv \n\n Aseg\u00farese de que su televisi\u00f3n est\u00e9 encendida.",
-                "title": "Sony Bravia TV"
+                "description": "Configure la integraci\u00f3n de Sony Bravia TV. Si tiene problemas con la configuraci\u00f3n, vaya a: https://www.home-assistant.io/integrations/braviatv \n\n Aseg\u00farese de que su televisi\u00f3n est\u00e9 encendida."
             }
         }
     },

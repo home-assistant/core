@@ -36,6 +36,11 @@
       "low_battery": "Low battery",
       "maintenance_required": "Maintenance required",
       "no_defect": "No defect"
+    },
+    "overkiz__three_way_handle_direction": {
+      "closed": "Closed",
+      "open": "Open",
+      "tilt": "Tilt"
     }
   }
 }

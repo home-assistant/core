@@ -7,14 +7,16 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     Base,
     EventData,
     Events,
-    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
+)
+from homeassistant.components.recorder.models import (
+    LazyState,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
@@ -79,7 +81,7 @@ def test_from_event_to_delete_state():
 
     assert db_state.entity_id == "sensor.temperature"
     assert db_state.state == ""
-    assert db_state.last_changed == event.time_fired
+    assert db_state.last_changed is None
     assert db_state.last_updated == event.time_fired
 
 

@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Automatikus ind\u00edt\u00e1s (tiltsa le, ha manu\u00e1lisan h\u00edvja a homekit.start szolg\u00e1ltat\u00e1st)",
                     "devices": "Eszk\u00f6z\u00f6k (triggerek)"
                 },
                 "description": "Programozhat\u00f3 kapcsol\u00f3k j\u00f6nnek l\u00e9tre minden kiv\u00e1lasztott eszk\u00f6zh\u00f6z. Amikor egy eszk\u00f6z esem\u00e9nyt ind\u00edt el, a HomeKit be\u00e1ll\u00edthat\u00f3 \u00fagy, hogy egy automatizmus vagy egy jelenet induljon el.",

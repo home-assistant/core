@@ -1,0 +1,46 @@
+{
+    "state": {
+        "overkiz__battery": {
+            "full": "Full",
+            "low": "L\u00e5gt",
+            "normal": "Normal",
+            "verylow": "V\u00e4ldigt l\u00e5gt"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Bra",
+            "low": "L\u00e5g",
+            "normal": "Normal",
+            "verylow": "Mycket l\u00e5g"
+        },
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "Extern gateway",
+            "local_user": "Lokal anv\u00e4ndare",
+            "lsc": "LSC",
+            "myself": "Jag sj\u00e4lv",
+            "rain": "Regn",
+            "saac": "SAAC",
+            "security": "S\u00e4kerhet",
+            "sfc": "SFC",
+            "temperature": "Temperatur",
+            "timer": "Timer",
+            "ups": "UPS",
+            "user": "Anv\u00e4ndare",
+            "wind": "Vind"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "D\u00f6d",
+            "low_battery": "L\u00e5g batteriniv\u00e5",
+            "maintenance_required": "Underh\u00e5ll kr\u00e4vs",
+            "no_defect": "Ingen defekt"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Ren",
+            "dirty": "Smutsig"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "St\u00e4ngd",
+            "open": "\u00d6ppen",
+            "tilt": "Vinkla"
+        }
+    }
+}

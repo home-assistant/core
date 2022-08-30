@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_format": "\u00c9rv\u00e9nytelen form\u00e1tum. K\u00e9rem, \u00edgy adja meg: xxx-xxx.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Hiteles\u00edt\u00e9si k\u00f3d (xxx-xxx)"
+                },
+                "description": "K\u00e9rem, adja meg a laundrify-alkalmaz\u00e1sban megjelen\u0151 szem\u00e9lyes enged\u00e9lyez\u00e9si k\u00f3dj\u00e1t."
+            },
+            "reauth_confirm": {
+                "description": "A laundrify integr\u00e1ci\u00f3nak \u00fajra kell hiteles\u00edtenie.",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            }
+        }
+    }
+}

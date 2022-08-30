@@ -13,8 +13,7 @@
                 "data": {
                     "access_token": "\u5b58\u53d6\u6b0a\u6756"
                 },
-                "description": "\u8f38\u5165\u7531 https://developer.tibber.com/settings/accesstoken \u6240\u7372\u5f97\u7684\u5b58\u53d6\u6b0a\u6756",
-                "title": "Tibber"
+                "description": "\u8f38\u5165\u7531 https://developer.tibber.com/settings/accesstoken \u6240\u7372\u5f97\u7684\u5b58\u53d6\u6b0a\u6756"
             }
         }
     }

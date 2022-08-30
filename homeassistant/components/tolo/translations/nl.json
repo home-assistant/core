@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
-            "no_devices_found": "Geen apparaten gevonden op het netwerk"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
@@ -10,7 +9,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Wilt u beginnen met instellen?"
+                "description": "Wil je beginnen met instellen?"
             },
             "user": {
                 "data": {

@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "no_devices": "Keine Ger\u00e4te im Konto gefunden",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

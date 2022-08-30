@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Conta j\u00e1 configurada",
             "authorize_url_timeout": "Tempo excedido a gerar um URL de autoriza\u00e7\u00e3o",
+            "invalid_access_token": "Token de acesso inv\u00e1lido",
             "missing_configuration": "O componente n\u00e3o est\u00e1 configurado. Por favor, siga a documenta\u00e7\u00e3o.",
             "no_url_available": "Nenhum URL dispon\u00edvel. Para obter informa\u00e7\u00f5es sobre esse erro, [verifique a sec\u00e7\u00e3o de ajuda]({docs_url})",
             "single_instance_allowed": "J\u00e1 configurado. Apenas uma \u00fanica configura\u00e7\u00e3o \u00e9 poss\u00edvel.",
@@ -14,9 +16,14 @@
             "internal_error": "Erro interno ao validar o c\u00f3digo",
             "invalid_pin": "C\u00f3digo PIN inv\u00e1lido",
             "timeout": "Limite temporal ultrapassado ao validar c\u00f3digo",
-            "unknown": "Erro desconhecido ao validar o c\u00f3digo"
+            "unknown": "Erro inesperado"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Token de Acesso"
+                }
+            },
             "init": {
                 "data": {
                     "flow_impl": "Fornecedor"
@@ -33,6 +40,9 @@
             },
             "pick_implementation": {
                 "title": "Escolha o m\u00e9todo de autentica\u00e7\u00e3o"
+            },
+            "reauth_confirm": {
+                "title": "Reautenticar integra\u00e7\u00e3o"
             }
         }
     },

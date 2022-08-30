@@ -11,7 +11,7 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "connection_upgrade": "Nem siker\u00fclt csatlakozni a nyomtat\u00f3hoz. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra az SSL/TLS opci\u00f3 bejel\u00f6l\u00e9s\u00e9vel."
+            "connection_upgrade": "Nem siker\u00fclt csatlakozni a nyomtat\u00f3hoz. K\u00e9rem, esetleg pr\u00f3b\u00e1lja meg \u00fajra az SSL/TLS opci\u00f3 bejel\u00f6l\u00e9s\u00e9vel."
         },
         "flow_title": "{name}",
         "step": {

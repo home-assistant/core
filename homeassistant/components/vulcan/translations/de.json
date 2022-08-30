@@ -30,14 +30,6 @@
                 },
                 "description": "Melde dich bei deinem Vulcan-Konto \u00fcber die Registrierungsseite der mobilen App an."
             },
-            "reauth": {
-                "data": {
-                    "pin": "PIN",
-                    "region": "Symbol",
-                    "token": "Token"
-                },
-                "description": "Melde dich bei deinem Vulcan-Konto \u00fcber die Registrierungsseite der mobilen App an."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
@@ -57,21 +49,6 @@
                     "student_name": "Sch\u00fcler ausw\u00e4hlen"
                 },
                 "description": "W\u00e4hle Sch\u00fcler aus, Du kannst weitere Sch\u00fcler hinzuf\u00fcgen, indem du die Integration erneut hinzuf\u00fcgst."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Ein Fehler ist aufgetreten"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Benachrichtigungen \u00fcber die neuesten Anwesenheitseintr\u00e4ge anzeigen",
-                    "grade_notify": "Benachrichtigungen \u00fcber die neuesten Noten anzeigen",
-                    "message_notify": "Benachrichtigungen anzeigen, wenn eine neue Nachricht eingegangen ist",
-                    "scan_interval": "Aktualisierungsintervall (in Minuten)"
-                }
             }
         }
     }

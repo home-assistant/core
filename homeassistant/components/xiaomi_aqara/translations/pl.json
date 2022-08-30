@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "Adres IP"
                 },
-                "description": "Wybierz bramk\u0119 Xiaomi Aqara, z kt\u00f3r\u0105 chcesz si\u0119 po\u0142\u0105czy\u0107",
-                "title": "Wybierz bramk\u0119 Xiaomi Aqara, z kt\u00f3r\u0105 chcesz si\u0119 po\u0142\u0105czy\u0107"
+                "description": "Wybierz bramk\u0119 Xiaomi Aqara, z kt\u00f3r\u0105 chcesz si\u0119 po\u0142\u0105czy\u0107"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Interfejs sieciowy",
                     "mac": "Adres MAC (opcjonalnie)"
                 },
-                "description": "Je\u015bli zostawisz Adres IP oraz MAC puste to bramka zostanie automatycznie wykryta.",
-                "title": "Bramka Xiaomi Aqara"
+                "description": "Je\u015bli zostawisz Adres IP oraz MAC puste to bramka zostanie automatycznie wykryta."
             }
         }
     }

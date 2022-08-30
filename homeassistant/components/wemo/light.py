@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Optional, cast
+from typing import Any, cast
 
-from pywemo.ouimeaux_device import bridge
+from pywemo import Bridge, BridgeLight, Dimmer
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
-        if isinstance(coordinator.wemo, bridge.Bridge):
+        if isinstance(coordinator.wemo, Bridge):
             async_setup_bridge(hass, config_entry, async_add_entities, coordinator)
         else:
             async_add_entities([WemoDimmer(coordinator)])
@@ -70,7 +70,8 @@ def async_setup_bridge(
         """Check to see if the bridge has any new lights."""
         new_lights = []
 
-        for light_id, light in coordinator.wemo.Lights.items():
+        bridge = cast(Bridge, coordinator.wemo)
+        for light_id, light in bridge.Lights.items():
             if light_id not in known_light_ids:
                 known_light_ids.add(light_id)
                 new_lights.append(WemoLight(coordinator, light))
@@ -87,7 +88,7 @@ class WemoLight(WemoEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
 
-    def __init__(self, coordinator: DeviceCoordinator, light: bridge.Light) -> None:
+    def __init__(self, coordinator: DeviceCoordinator, light: BridgeLight) -> None:
         """Initialize the WeMo light."""
         super().__init__(coordinator)
         self.light = light
@@ -97,17 +98,17 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return cast(str, self.light.name)
+        return self.light.name
 
     @property
     def available(self) -> bool:
         """Return true if the device is available."""
-        return super().available and self.light.state.get("available")
+        return super().available and self.light.state.get("available", False)
 
     @property
     def unique_id(self) -> str:
         """Return the ID of this light."""
-        return cast(str, self.light.uniqueID)
+        return self.light.uniqueID
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -123,17 +124,17 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return cast(int, self.light.state.get("level", 255))
+        return self.light.state.get("level", 255)
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
-        return self.light.state.get("color_xy")  # type:ignore[no-any-return]
+        return self.light.state.get("color_xy")
 
     @property
     def color_temp(self) -> int | None:
         """Return the color temperature of this light in mireds."""
-        return cast(Optional[int], self.light.state.get("temperature_mireds"))
+        return self.light.state.get("temperature_mireds")
 
     @property
     def color_mode(self) -> ColorMode:
@@ -166,7 +167,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return cast(int, self.light.state.get("onoff")) != WEMO_OFF
+        return self.light.state.get("onoff", WEMO_OFF) != WEMO_OFF
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -210,6 +211,7 @@ class WemoDimmer(WemoBinaryStateEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
+    wemo: Dimmer
 
     @property
     def brightness(self) -> int:

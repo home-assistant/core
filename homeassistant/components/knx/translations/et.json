@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
-                    "individual_address": "\u00dchenduse individuaalne aadress",
                     "local_ip": "Home Assistanti kohalik IP aadress",
                     "port": "Port",
-                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim",
                     "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
                 },
                 "data_description": {
@@ -104,15 +102,13 @@
                     "multicast_group": "Kasutatakse marsruutimiseks ja avastamiseks. Vaikimisi: \"224.0.23.12\"",
                     "multicast_port": "Kasutatakse marsruutimiseks ja avastamiseks. Vaikev\u00e4\u00e4rtus: \"3671\"",
                     "rate_limit": "Maksimaalne v\u00e4ljaminevate telegrammide arv sekundis.\nSoovitatav: 20 kuni 40",
-                    "state_updater": "KNX siini lugemisolekute globaalne lubamine v\u00f5i keelamine. Kui see on keelatud, ei too Home Assistant aktiivselt olekuid KNX siinilt, olemi s\u00fcnkroonimisoleku valikudi ei m\u00f5juta."
+                    "state_updater": "M\u00e4\u00e4ra KNX siini olekute lugemise vaikev\u00e4\u00e4rtused. Kui see on keelatud, ei too Home Assistant aktiivselt olemi olekuid KNX siinilt. Saab alistada olemivalikute s\u00fcnkroonimise_olekuga."
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "Kohalik IP (j\u00e4ta t\u00fchjaks, kui ei ole kindel)",
                     "port": "Port",
-                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim",
                     "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
                 },
                 "data_description": {

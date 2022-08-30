@@ -103,10 +103,30 @@ async def test_async_resolve_media(hass):
     media = await media_source.async_resolve_media(
         hass,
         media_source.generate_media_source_id(media_source.DOMAIN, "local/test.mp3"),
+        None,
     )
     assert isinstance(media, media_source.models.PlayMedia)
     assert media.url == "/media/local/test.mp3"
     assert media.mime_type == "audio/mpeg"
+
+
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
+async def test_async_resolve_media_no_entity(hass, caplog):
+    """Test browse media."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    media = await media_source.async_resolve_media(
+        hass,
+        media_source.generate_media_source_id(media_source.DOMAIN, "local/test.mp3"),
+    )
+    assert isinstance(media, media_source.models.PlayMedia)
+    assert media.url == "/media/local/test.mp3"
+    assert media.mime_type == "audio/mpeg"
+    assert (
+        "calls media_source.async_resolve_media without passing an entity_id"
+        in caplog.text
+    )
 
 
 async def test_async_unresolve_media(hass):
@@ -116,15 +136,17 @@ async def test_async_unresolve_media(hass):
 
     # Test no media content
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(hass, "")
+        await media_source.async_resolve_media(hass, "", None)
 
     # Test invalid media content
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(hass, "invalid")
+        await media_source.async_resolve_media(hass, "invalid", None)
 
     # Test invalid media source
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(hass, "media-source://media_source2")
+        await media_source.async_resolve_media(
+            hass, "media-source://media_source2", None
+        )
 
 
 async def test_websocket_browse_media(hass, hass_ws_client):
@@ -242,4 +264,4 @@ async def test_browse_resolve_without_setup():
         await media_source.async_browse_media(Mock(data={}), None)
 
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(Mock(data={}), None)
+        await media_source.async_resolve_media(Mock(data={}), None, None)

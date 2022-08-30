@@ -83,6 +83,7 @@ class ValloxFan(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
     _attr_supported_features = FanEntityFeature.PRESET_MODE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -95,7 +96,6 @@ class ValloxFan(ValloxEntity, FanEntity):
 
         self._client = client
 
-        self._attr_name = name
         self._attr_unique_id = str(self._device_uuid)
 
     @property
@@ -132,7 +132,7 @@ class ValloxFan(ValloxEntity, FanEntity):
         Returns true if the mode has been changed, false otherwise.
         """
         try:
-            self._valid_preset_mode_or_raise(preset_mode)  # type: ignore[no-untyped-call]
+            self._valid_preset_mode_or_raise(preset_mode)
 
         except NotValidPresetModeError as err:
             _LOGGER.error(err)

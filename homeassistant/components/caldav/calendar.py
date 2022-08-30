@@ -1,7 +1,6 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-import copy
 from datetime import datetime, timedelta
 import logging
 import re
@@ -136,22 +135,22 @@ class WebDavCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self):
+    def update(self) -> None:
         """Update event data."""
         self.data.update()
-        event = copy.deepcopy(self.data.event)
-        if event is None:
-            self._event = event
-            return
-        (summary, offset) = extract_offset(event.summary, OFFSET)
-        event.summary = summary
-        self._event = event
+        self._event = self.data.event
         self._attr_extra_state_attributes = {
-            "offset_reached": is_offset_reached(event.start_datetime_local, offset)
+            "offset_reached": is_offset_reached(
+                self._event.start_datetime_local, self.data.offset
+            )
+            if self._event
+            else False
         }
 
 
@@ -165,6 +164,7 @@ class WebDavCalendarData:
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
+        self.offset = None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -264,13 +264,15 @@ class WebDavCalendarData:
             return
 
         # Populate the entity attributes with the event values
+        (summary, offset) = extract_offset(vevent.summary.value, OFFSET)
         self.event = CalendarEvent(
-            summary=vevent.summary.value,
+            summary=summary,
             start=vevent.dtstart.value,
             end=self.get_end_date(vevent),
             location=self.get_attr_value(vevent, "location"),
             description=self.get_attr_value(vevent, "description"),
         )
+        self.offset = offset
 
     @staticmethod
     def is_matching(vevent, search):

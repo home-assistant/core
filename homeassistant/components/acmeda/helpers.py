@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
@@ -36,7 +36,7 @@ def async_add_acmeda_entities(
 
 async def update_devices(hass: HomeAssistant, config_entry: ConfigEntry, api):
     """Tell hass that device info has been updated."""
-    dev_registry = await get_dev_reg(hass)
+    dev_registry = dr.async_get(hass)
 
     for api_item in api.values():
         # Update Device name

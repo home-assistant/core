@@ -34,7 +34,6 @@ from aioairzone.const import (
     API_WIFI_RSSI,
     API_ZONE_ID,
 )
-from aioairzone.exceptions import InvalidMethod
 
 from homeassistant.components.airzone import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
@@ -219,7 +218,7 @@ async def async_init_integration(
         return_value=HVAC_SYSTEMS_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        side_effect=InvalidMethod,
+        return_value=HVAC_WEBSERVER_MOCK,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

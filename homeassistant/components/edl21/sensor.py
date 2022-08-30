@@ -17,20 +17,21 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_NAME,
+    DEGREE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
@@ -251,6 +252,8 @@ SENSOR_UNIT_MAPPING = {
     "W": POWER_WATT,
     "A": ELECTRIC_CURRENT_AMPERE,
     "V": ELECTRIC_POTENTIAL_VOLT,
+    "°": DEGREE,
+    "Hz": FREQUENCY_HERTZ,
 }
 
 
@@ -340,7 +343,7 @@ class EDL21:
 
     async def add_entities(self, new_entities) -> None:
         """Migrate old unique IDs, then add entities to hass."""
-        registry = await async_get_registry(self._hass)
+        registry = er.async_get(self._hass)
 
         for entity in new_entities:
             old_entity_id = registry.async_get_entity_id(
@@ -365,6 +368,8 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
+    _attr_should_poll = False
+
     def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
@@ -383,7 +388,7 @@ class EDL21Entity(SensorEntity):
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
         @callback
@@ -408,15 +413,10 @@ class EDL21Entity(SensorEntity):
             self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._async_remove_dispatcher:
             self._async_remove_dispatcher()
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
 
     @property
     def unique_id(self) -> str:
@@ -450,7 +450,7 @@ class EDL21Entity(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        if (unit := self._telegram.get("unit")) is None:
+        if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None
 
         return SENSOR_UNIT_MAPPING[unit]

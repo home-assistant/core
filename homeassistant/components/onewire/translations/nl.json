@@ -4,22 +4,13 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "invalid_path": "Directory niet gevonden."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
-            "owserver": {
-                "data": {
-                    "host": "Host",
-                    "port": "Poort"
-                },
-                "title": "Owserver-details instellen"
-            },
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Poort",
-                    "type": "Verbindingstype"
+                    "port": "Poort"
                 },
                 "title": "Serverdetails instellen"
             }
@@ -34,9 +25,7 @@
                 "data": {
                     "one": "Leeg",
                     "other": "Ander"
-                },
-                "description": "Er zijn geen opties voor de SysBus implementatie",
-                "title": "OneWire SysBus opties"
+                }
             },
             "configure_device": {
                 "data": {

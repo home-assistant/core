@@ -7,7 +7,7 @@ from ndms2_client import Device
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     update_from_router()
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     # Restore devices that are not a part of active clients list.
     restored = []
     for entity_entry in registry.entities.values():
@@ -86,6 +86,8 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
 class KeeneticTracker(ScannerEntity):
     """Representation of network device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: Device, router: KeeneticRouter) -> None:
         """Initialize the tracked device."""
         self._device = device
@@ -93,11 +95,6 @@ class KeeneticTracker(ScannerEntity):
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False since entity pushes its state to HA."""
-        return False
 
     @property
     def is_connected(self):
@@ -109,9 +106,9 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type of the client."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def name(self) -> str:

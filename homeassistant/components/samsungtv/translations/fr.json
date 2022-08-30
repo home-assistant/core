@@ -6,7 +6,6 @@
             "auth_missing": "Home Assistant n'est pas autoris\u00e9 \u00e0 se connecter \u00e0 ce t\u00e9l\u00e9viseur Samsung. Veuillez v\u00e9rifier les param\u00e8tres de votre t\u00e9l\u00e9viseur pour autoriser Home Assistant.",
             "cannot_connect": "\u00c9chec de connexion",
             "id_missing": "Cet appareil Samsung n'a pas de num\u00e9ro de s\u00e9rie.",
-            "missing_config_entry": "Cet appareil Samsung n'a pas d'entr\u00e9e de configuration.",
             "not_supported": "Ce t\u00e9l\u00e9viseur Samsung n'est actuellement pas pris en charge.",
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
             "unknown": "Erreur inattendue"
@@ -18,8 +17,7 @@
         "flow_title": "{device}",
         "step": {
             "confirm": {
-                "description": "Voulez-vous configurer {device}\u00a0? Si vous n'avez jamais connect\u00e9 Home Assistant auparavant, une fen\u00eatre contextuelle d'autorisation devrait appara\u00eetre sur votre t\u00e9l\u00e9viseur.",
-                "title": "TV Samsung"
+                "description": "Voulez-vous configurer {device}\u00a0? Si vous n'avez jamais connect\u00e9 Home Assistant auparavant, une fen\u00eatre contextuelle d'autorisation devrait appara\u00eetre sur votre t\u00e9l\u00e9viseur."
             },
             "encrypted_pairing": {
                 "description": "Veuillez saisir le code PIN affich\u00e9 sur {device}."

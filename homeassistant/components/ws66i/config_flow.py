@@ -1,5 +1,8 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pyws66i import WS66i, get_ws66i
 import voluptuous as vol
@@ -50,22 +53,34 @@ def _sources_from_config(data):
     }
 
 
-async def validate_input(hass: core.HomeAssistant, input_data):
-    """Validate the user input allows us to connect.
+def _verify_connection(ws66i: WS66i) -> bool:
+    """Verify a connection can be made to the WS66i."""
+    try:
+        ws66i.open()
+    except ConnectionError as err:
+        raise CannotConnect from err
+
+    # Connection successful. Verify correct port was opened
+    # Test on FIRST_ZONE because this zone will always be valid
+    ret_val = ws66i.zone_status(FIRST_ZONE)
+
+    ws66i.close()
+
+    return bool(ret_val)
+
+
+async def validate_input(
+    hass: core.HomeAssistant, input_data: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate the user input.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     ws66i: WS66i = get_ws66i(input_data[CONF_IP_ADDRESS])
-    await hass.async_add_executor_job(ws66i.open)
-    # No exception. run a simple test to make sure we opened correct port
-    # Test on FIRST_ZONE because this zone will always be valid
-    ret_val = await hass.async_add_executor_job(ws66i.zone_status, FIRST_ZONE)
-    if ret_val is None:
-        ws66i.close()
-        raise ConnectionError("Not a valid WS66i connection")
 
-    # Validation done. No issues. Close the connection
-    ws66i.close()
+    is_valid: bool = await hass.async_add_executor_job(_verify_connection, ws66i)
+    if not is_valid:
+        raise CannotConnect("Not a valid WS66i connection")
 
     # Return info that you want to store in the config entry.
     return {CONF_IP_ADDRESS: input_data[CONF_IP_ADDRESS]}
@@ -82,17 +97,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                # Data is valid. Add default values for options flow.
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Data is valid. Create a config entry.
                 return self.async_create_entry(
                     title="WS66i Amp",
                     data=info,
                     options={CONF_SOURCES: INIT_OPTIONS_DEFAULT},
                 )
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -100,7 +116,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> Ws66iOptionsFlowHandler:
         """Define the config flow to handle options."""
         return Ws66iOptionsFlowHandler(config_entry)
 
@@ -117,7 +135,7 @@ def _key_for_source(index, source, previous_sources):
 class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a WS66i options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 

@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 
-from . import create_file
+from . import async_create_file
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +14,7 @@ async def test_load_unload_config_entry(
 ) -> None:
     """Test the Filesize configuration entry loading/unloading."""
     testfile = f"{tmpdir}/file.txt"
-    create_file(testfile)
+    await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmpdir}
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -54,7 +54,7 @@ async def test_not_valid_path_to_file(
 ) -> None:
     """Test that an invalid path is caught."""
     testfile = f"{tmpdir}/file.txt"
-    create_file(testfile)
+    await async_create_file(hass, testfile)
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=testfile, data={CONF_FILE_PATH: testfile}

@@ -7,8 +7,7 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
         "error": {
-            "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "Hesap Kimli\u011fi",
-                    "connection_type": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in",
-                    "host": "Sunucu",
-                    "password": "Parola"
+                    "connection_type": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in"
                 },
                 "description": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in. Yerel Bluetooth'lu \u0131s\u0131t\u0131c\u0131lar gerektirir"
             }

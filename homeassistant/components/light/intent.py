@@ -21,7 +21,7 @@ INTENT_SET = "HassLightSet"
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the light intents."""
-    hass.helpers.intent.async_register(SetIntentHandler())
+    intent.async_register(hass, SetIntentHandler())
 
 
 def _test_supports_color(state: State) -> None:
@@ -56,8 +56,8 @@ class SetIntentHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = hass.helpers.intent.async_match_state(
-            slots["name"]["value"], hass.states.async_all(DOMAIN)
+        state = intent.async_match_state(
+            hass, slots["name"]["value"], hass.states.async_all(DOMAIN)
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}

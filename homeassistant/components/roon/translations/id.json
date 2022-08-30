@@ -18,12 +18,6 @@
             "link": {
                 "description": "Anda harus mengotorisasi Home Assistant di Roon. Setelah Anda mengeklik kirim, buka aplikasi Roon Core, buka Pengaturan dan aktifkan HomeAssistant pada tab Ekstensi.",
                 "title": "Otorisasi HomeAssistant di Roon"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Tidak dapat menemukan server Roon, masukkan Nama Host atau IP Anda."
             }
         }
     }

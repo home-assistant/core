@@ -1,8 +1,7 @@
 """Support for Z-Wave lights."""
 from __future__ import annotations
 
-import logging
-from typing import Any
+from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
@@ -23,6 +22,8 @@ from zwave_js_server.const.command_class.color_switch import (
     TARGET_COLOR_PROPERTY,
     ColorComponent,
 )
+from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.value import Value
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -47,8 +48,6 @@ from .entity import ZWaveBaseEntity
 
 PARALLEL_UPDATES = 0
 
-LOGGER = logging.getLogger(__name__)
-
 MULTI_COLOR_MAP = {
     ColorComponent.WARM_WHITE: COLOR_SWITCH_COMBINED_WARM_WHITE,
     ColorComponent.COLD_WHITE: COLOR_SWITCH_COMBINED_COLD_WHITE,
@@ -72,11 +71,13 @@ async def async_setup_entry(
     @callback
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Light."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
 
         if info.platform_hint == "black_is_off":
-            async_add_entities([ZwaveBlackIsOffLight(config_entry, client, info)])
+            async_add_entities([ZwaveBlackIsOffLight(config_entry, driver, info)])
         else:
-            async_add_entities([ZwaveLight(config_entry, client, info)])
+            async_add_entities([ZwaveLight(config_entry, driver, info)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -101,10 +102,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     """Representation of a Z-Wave light."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._supports_color = False
         self._supports_rgbw = False
         self._supports_color_temp = False
@@ -298,10 +299,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Set (multiple) defined colors to given value(s)."""
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
-        combined_color_val = self.get_zwave_value(
-            "targetColor",
-            CommandClass.SWITCH_COLOR,
-            value_property_key=None,
+        # Setting colors is only done if there's a target color value.
+        combined_color_val = cast(
+            Value,
+            self.get_zwave_value(
+                "targetColor",
+                CommandClass.SWITCH_COLOR,
+                value_property_key=None,
+            ),
         )
         zwave_transition = None
 
@@ -445,10 +450,10 @@ class ZwaveBlackIsOffLight(ZwaveLight):
     """
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         self._last_color: dict[str, int] | None = None
         self._supported_color_modes.discard(ColorMode.BRIGHTNESS)

@@ -3,46 +3,23 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components import lock
-from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_ENTITY_ID,
-    ATTR_SERVICE_DATA,
-    EVENT_CALL_SERVICE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.core import callback
-
-
-@pytest.fixture
-def service_calls(hass):
-    """Track service call events for switch.test_state."""
-    events = []
-    entity_id = "switch.test_state"
-
-    @callback
-    def capture_events(event):
-        if event.data[ATTR_DOMAIN] != "switch":
-            return
-        if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
-            return
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, capture_events)
-
-    return events
-
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 OPTIMISTIC_LOCK_CONFIG = {
     "platform": "template",
     "lock": {
-        "service": "switch.turn_on",
-        "entity_id": "switch.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "lock",
+            "caller": "{{ this.entity_id }}",
+        },
     },
     "unlock": {
-        "service": "switch.turn_off",
-        "entity_id": "switch.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "unlock",
+            "caller": "{{ this.entity_id }}",
+        },
     },
 }
 
@@ -201,7 +178,7 @@ async def test_template_static(hass, start_ha):
         },
     ],
 )
-async def test_lock_action(hass, start_ha, service_calls):
+async def test_lock_action(hass, start_ha, calls):
     """Test lock action."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
@@ -215,8 +192,9 @@ async def test_lock_action(hass, start_ha, service_calls):
     )
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "turn_on"
+    assert len(calls) == 1
+    assert calls[0].data["action"] == "lock"
+    assert calls[0].data["caller"] == "lock.template_lock"
 
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
@@ -231,7 +209,7 @@ async def test_lock_action(hass, start_ha, service_calls):
         },
     ],
 )
-async def test_unlock_action(hass, start_ha, service_calls):
+async def test_unlock_action(hass, start_ha, calls):
     """Test unlock action."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_ON)
@@ -245,8 +223,9 @@ async def test_unlock_action(hass, start_ha, service_calls):
     )
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "turn_off"
+    assert len(calls) == 1
+    assert calls[0].data["action"] == "unlock"
+    assert calls[0].data["caller"] == "lock.template_lock"
 
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])

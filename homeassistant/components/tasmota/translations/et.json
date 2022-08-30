@@ -10,9 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Tuvastusteema eesliide"
-                },
-                "description": "Sisesta Tasmota konfiguratsioon.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Kas soovid seadistada Tasmota sidumist?"

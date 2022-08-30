@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Union
 
 from pydeconz.models.event import EventType
 from pydeconz.models.light.lock import Lock
@@ -11,7 +11,6 @@ from pydeconz.models.sensor.door_lock import DoorLock
 from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
@@ -33,50 +32,28 @@ async def async_setup_entry(
         lock = gateway.api.lights.locks[lock_id]
         async_add_entities([DeconzLock(lock, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.locks.subscribe(
-            async_add_lock_from_light,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_lock_from_light,
+        gateway.api.lights.locks,
     )
-    for lock_id in gateway.api.lights.locks:
-        async_add_lock_from_light(EventType.ADDED, lock_id)
 
     @callback
-    def async_add_lock_from_sensor(sensors: list[DoorLock] | None = None) -> None:
+    def async_add_lock_from_sensor(_: EventType, lock_id: str) -> None:
         """Add lock from deCONZ."""
-        entities = []
+        lock = gateway.api.sensors.door_lock[lock_id]
+        async_add_entities([DeconzLock(lock, gateway)])
 
-        if sensors is None:
-            sensors = list(gateway.api.sensors.door_lock.values())
-
-        for sensor in sensors:
-
-            if (
-                isinstance(sensor, DoorLock)
-                and sensor.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzLock(sensor, gateway))
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_sensor,
-            async_add_lock_from_sensor,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_lock_from_sensor,
+        gateway.api.sensors.door_lock,
+        always_ignore_clip_sensors=True,
     )
 
-    async_add_lock_from_sensor()
 
-
-class DeconzLock(DeconzDevice, LockEntity):
+class DeconzLock(DeconzDevice[Union[DoorLock, Lock]], LockEntity):
     """Representation of a deCONZ lock."""
 
     TYPE = DOMAIN
-    _device: DoorLock | Lock
 
     @property
     def is_locked(self) -> bool:
@@ -85,8 +62,26 @@ class DeconzLock(DeconzDevice, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._device.lock()
+        if isinstance(self._device, DoorLock):
+            await self.gateway.api.sensors.door_lock.set_config(
+                id=self._device.resource_id,
+                lock=True,
+            )
+        else:
+            await self.gateway.api.lights.locks.set_state(
+                id=self._device.resource_id,
+                lock=True,
+            )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        await self._device.unlock()
+        if isinstance(self._device, DoorLock):
+            await self.gateway.api.sensors.door_lock.set_config(
+                id=self._device.resource_id,
+                lock=False,
+            )
+        else:
+            await self.gateway.api.lights.locks.set_state(
+                id=self._device.resource_id,
+                lock=False,
+            )

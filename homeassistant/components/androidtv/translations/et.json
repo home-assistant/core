@@ -20,9 +20,7 @@
                     "device_class": "Seadme t\u00fc\u00fcp",
                     "host": "Host",
                     "port": "Port"
-                },
-                "description": "Seadista Android TV seadmega \u00fchenduse loomiseks vajalikud parameetrid",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "M\u00e4\u00e4ra oleku tuvastamise reeglid",
                     "turn_off_command": "ADB shell turn off k\u00e4sk (vaikimisi j\u00e4ta t\u00fchjaks)",
                     "turn_on_command": "ADB shell turn on k\u00e4sk (vaikimisi j\u00e4ta t\u00fchjaks)"
-                },
-                "title": "Android TV suvandid"
+                }
             },
             "rules": {
                 "data": {

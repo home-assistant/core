@@ -8,8 +8,10 @@ from homeassistant.const import (
     ATTR_SERVICE_DATA,
     EVENT_CALL_SERVICE,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
@@ -44,22 +46,37 @@ OPTIMISTIC_TEMPLATE_ALARM_CONFIG = {
     "arm_away": {
         "service": "alarm_control_panel.alarm_arm_away",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
     },
     "arm_home": {
         "service": "alarm_control_panel.alarm_arm_home",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
     },
     "arm_night": {
         "service": "alarm_control_panel.alarm_arm_night",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+    "arm_vacation": {
+        "service": "alarm_control_panel.alarm_arm_vacation",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+    "arm_custom_bypass": {
+        "service": "alarm_control_panel.alarm_arm_custom_bypass",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
     },
     "disarm": {
         "service": "alarm_control_panel.alarm_disarm",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+    "trigger": {
+        "service": "alarm_control_panel.alarm_trigger",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
     },
 }
 
@@ -89,6 +106,8 @@ async def test_template_state_text(hass, start_ha):
         STATE_ALARM_ARMED_HOME,
         STATE_ALARM_ARMED_AWAY,
         STATE_ALARM_ARMED_NIGHT,
+        STATE_ALARM_ARMED_VACATION,
+        STATE_ALARM_ARMED_CUSTOM_BYPASS,
         STATE_ALARM_ARMING,
         STATE_ALARM_DISARMED,
         STATE_ALARM_PENDING,
@@ -128,7 +147,10 @@ async def test_optimistic_states(hass, start_ha):
         ("alarm_arm_away", STATE_ALARM_ARMED_AWAY),
         ("alarm_arm_home", STATE_ALARM_ARMED_HOME),
         ("alarm_arm_night", STATE_ALARM_ARMED_NIGHT),
+        ("alarm_arm_vacation", STATE_ALARM_ARMED_VACATION),
+        ("alarm_arm_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS),
         ("alarm_disarm", STATE_ALARM_DISARMED),
+        ("alarm_trigger", STATE_ALARM_TRIGGERED),
     ]:
         await hass.services.async_call(
             ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
@@ -250,7 +272,10 @@ async def test_name(hass, start_ha):
         "alarm_arm_home",
         "alarm_arm_away",
         "alarm_arm_night",
+        "alarm_arm_vacation",
+        "alarm_arm_custom_bypass",
         "alarm_disarm",
+        "alarm_trigger",
     ],
 )
 async def test_actions(hass, service, start_ha, service_calls):
@@ -261,6 +286,7 @@ async def test_actions(hass, service, start_ha, service_calls):
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["service"] == service
+    assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME
 
 
 @pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])

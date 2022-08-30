@@ -6,6 +6,7 @@ from typing import Any
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
     CMD_CLIMATE_MODE,
+    ISY_VALUE_UNKNOWN,
     PROP_HEAT_COOL_STATE,
     PROP_HUMIDITY,
     PROP_SETPOINT_COOL,
@@ -75,6 +76,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     """Representation of an ISY994 thermostat entity."""
 
     _attr_hvac_modes = ISY_HVAC_MODES
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -96,11 +98,6 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         self._target_temp_high = 0
 
     @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
-
-    @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if not (uom := self._node.aux_properties.get(PROP_UOM)):
@@ -115,6 +112,8 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         if not (humidity := self._node.aux_properties.get(PROP_HUMIDITY)):
+            return None
+        if humidity.value == ISY_VALUE_UNKNOWN:
             return None
         return int(humidity.value)
 

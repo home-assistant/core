@@ -4,22 +4,13 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "invalid_path": "Cartella non trovata."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
-            "owserver": {
-                "data": {
-                    "host": "Host",
-                    "port": "Porta"
-                },
-                "title": "Imposta i dettagli dell'owserver"
-            },
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Porta",
-                    "type": "Tipo di connessione"
+                    "port": "Porta"
                 },
                 "title": "Imposta i dettagli del server"
             }
@@ -34,9 +25,7 @@
                 "data": {
                     "one": "Vuoto",
                     "other": "Vuoti"
-                },
-                "description": "Non ci sono opzioni per l'implementazione SysBus",
-                "title": "Opzioni SysBus OneWire"
+                }
             },
             "configure_device": {
                 "data": {

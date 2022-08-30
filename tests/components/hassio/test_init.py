@@ -8,7 +8,12 @@ import pytest
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.hassio import ADDONS_COORDINATOR, DOMAIN, STORAGE_KEY
+from homeassistant.components.hassio import (
+    ADDONS_COORDINATOR,
+    DOMAIN,
+    STORAGE_KEY,
+    async_get_addon_store_info,
+)
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.device_registry import async_get
@@ -17,11 +22,28 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
+
+
+@pytest.fixture()
+def extra_os_info():
+    """Extra os/info."""
+    return {}
+
+
+@pytest.fixture()
+def os_info(extra_os_info):
+    """Mock os/info."""
+    return {
+        "json": {
+            "result": "ok",
+            "data": {"version_latest": "1.0.0", "version": "1.0.0", **extra_os_info},
+        }
+    }
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request):
+def mock_all(aioclient_mock, request, os_info):
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -64,7 +86,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
+        **os_info,
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -325,13 +347,13 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
 async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch.dict(
-        os.environ, {"HASSIO_TOKEN": "123456"}
+        os.environ, {"SUPERVISOR_TOKEN": "123456"}
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
 
     assert aioclient_mock.call_count == 15
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
 async def test_fail_setup_without_environ_var(hass):
@@ -701,3 +723,46 @@ async def test_coordinator_updates(hass, caplog):
         )
         assert refresh_updates_mock.call_count == 1
         assert "Error on Supervisor API: Unknown" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "extra_os_info, integration",
+    [
+        ({"board": "odroid-c2"}, "hardkernel"),
+        ({"board": "odroid-c4"}, "hardkernel"),
+        ({"board": "odroid-n2"}, "hardkernel"),
+        ({"board": "odroid-xu4"}, "hardkernel"),
+        ({"board": "rpi2"}, "raspberry_pi"),
+        ({"board": "rpi3"}, "raspberry_pi"),
+        ({"board": "rpi3-64"}, "raspberry_pi"),
+        ({"board": "rpi4"}, "raspberry_pi"),
+        ({"board": "rpi4-64"}, "raspberry_pi"),
+        ({"board": "yellow"}, "homeassistant_yellow"),
+    ],
+)
+async def test_setup_hardware_integration(hass, aioclient_mock, integration):
+    """Test setup initiates hardware integration."""
+
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        f"homeassistant.components.{integration}.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await async_setup_component(hass, "hassio", {"hassio": {}})
+        assert result
+        await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 15
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_get_store_addon_info(hass, hassio_stubs, aioclient_mock):
+    """Test get store add-on info from Supervisor API."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://127.0.0.1/store/addons/test",
+        json={"result": "ok", "data": {"name": "bla"}},
+    )
+
+    data = await async_get_addon_store_info(hass, "test")
+    assert data["name"] == "bla"
+    assert aioclient_mock.call_count == 1

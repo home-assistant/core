@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
-).extend(mqtt.MQTT_RO_PLATFORM_SCHEMA.schema)
+).extend(mqtt.config.MQTT_RO_SCHEMA.schema)
 
 MQTT_PAYLOAD = vol.Schema(
     vol.All(

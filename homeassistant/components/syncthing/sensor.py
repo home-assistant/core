@@ -57,6 +57,8 @@ async def async_setup_entry(
 class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
+    _attr_should_poll = False
+
     STATE_ATTRIBUTES = {
         "errors": "errors",
         "globalBytes": "global_bytes",
@@ -130,11 +132,6 @@ class FolderSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
 
     @property
     def device_info(self) -> DeviceInfo:

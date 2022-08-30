@@ -1,10 +1,13 @@
 {
     "config": {
         "step": {
-            "manual_tunnel": {
+            "secure_knxkeys": {
                 "data": {
-                    "route_back": "\ub77c\uc6b0\ud2b8 \ubc31 / NAT \ubaa8\ub4dc"
+                    "knxkeys_filename": "`.knxkeys` \ud30c\uc77c\uc758 \ud30c\uc77c \uc774\ub984(\ud655\uc7a5\uc790 \ud3ec\ud568)"
                 }
+            },
+            "secure_manual": {
+                "description": "IP \ubcf4\uc548 \uc815\ubcf4\ub97c \uc785\ub825\ud558\uc138\uc694."
             }
         }
     }

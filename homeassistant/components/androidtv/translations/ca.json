@@ -20,9 +20,7 @@
                     "device_class": "Tipus de dispositiu",
                     "host": "Amfitri\u00f3",
                     "port": "Port"
-                },
-                "description": "Estableix els par\u00e0metres necessaris per connectar al teu dispositiu Android TV",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Configura les regles de detecci\u00f3 d'estat",
                     "turn_off_command": "Comanda d'apagada de shell ADB (deixa-ho buit per utilitzar la predeterminada)",
                     "turn_on_command": "Comanda d'engegada de shell ADB (deixa-ho buit per utilitzar la predeterminada)"
-                },
-                "title": "Opcions d'Android TV"
+                }
             },
             "rules": {
                 "data": {

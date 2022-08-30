@@ -15,7 +15,6 @@
         "trigger_type": {
             "changed_states": "{entity_name} for ligado ou desligado",
             "target_humidity_changed": "{entity_name} tiver a umidade alvo alterada",
-            "toggled": "{entity_name} for ligado ou desligado",
             "turned_off": "{entity_name} for desligado",
             "turned_on": "{entity_name} for ligado"
         }

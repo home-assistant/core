@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 import logging
 from typing import Any
@@ -140,12 +141,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_auth()
         return await self.async_step_confirm()
 
-    async def async_step_reauth(
-        self,
-        config_data: dict[str, Any],
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthentication flow."""
-        self._data = dict(config_data)
+        self._data = dict(entry_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")

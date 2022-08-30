@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "Endere\u00e7o IP"
                 },
-                "description": "Selecione o Xiaomi Aqara Gateway que voc\u00ea deseja conectar",
-                "title": "Selecione o Xiaomi Aqara Gateway que voc\u00ea deseja conectar"
+                "description": "Selecione o Xiaomi Aqara Gateway que voc\u00ea deseja conectar"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "A interface de rede a ser usada",
                     "mac": "Endere\u00e7o Mac (opcional)"
                 },
-                "description": "Se os endere\u00e7os IP e MAC forem deixados vazios, a descoberta autom\u00e1tica \u00e9 usada",
-                "title": "Gateway Xiaomi Aqara"
+                "description": "Se os endere\u00e7os IP e MAC forem deixados vazios, a descoberta autom\u00e1tica \u00e9 usada"
             }
         }
     }

@@ -1,6 +1,7 @@
 """Browse media features for media player."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import timedelta
 import logging
 from typing import Any
@@ -97,7 +98,7 @@ class BrowseMedia:
         title: str,
         can_play: bool,
         can_expand: bool,
-        children: list[BrowseMedia] | None = None,
+        children: Sequence[BrowseMedia] | None = None,
         children_media_class: str | None = None,
         thumbnail: str | None = None,
         not_shown: int = 0,

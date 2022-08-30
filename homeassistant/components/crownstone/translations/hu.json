@@ -6,7 +6,7 @@
             "usb_setup_unsuccessful": "A Crownstone USB be\u00e1ll\u00edt\u00e1sa sikertelen volt."
         },
         "error": {
-            "account_not_verified": "Nem ellen\u0151rz\u00f6tt fi\u00f3k. K\u00e9rj\u00fck, aktiv\u00e1lja fi\u00f3kj\u00e1t a Crownstone-t\u00f3l kapott aktiv\u00e1l\u00f3 e-mailben.",
+            "account_not_verified": "Nem ellen\u0151rz\u00f6tt fi\u00f3k. K\u00e9rem, aktiv\u00e1lja fi\u00f3kj\u00e1t a Crownstone-t\u00f3l kapott aktiv\u00e1l\u00f3 e-mailben.",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },

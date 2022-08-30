@@ -59,8 +59,6 @@
             "connected": "{entity_name} s'est connect\u00e9",
             "gas": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter du gaz",
             "hot": "{entity_name} est devenu chaud",
-            "is_not_tampered": "{entity_name} a cess\u00e9 de d\u00e9tecter une manipulation",
-            "is_tampered": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter une manipulation",
             "light": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter de la lumi\u00e8re",
             "locked": "{entity_name} s'est verrouill\u00e9",
             "moist": "{entity_name} est devenu humide",
@@ -135,10 +133,6 @@
             "on": "En charge"
         },
         "carbon_monoxide": {
-            "off": "Non d\u00e9tect\u00e9",
-            "on": "D\u00e9tect\u00e9"
-        },
-        "co": {
             "off": "Non d\u00e9tect\u00e9",
             "on": "D\u00e9tect\u00e9"
         },

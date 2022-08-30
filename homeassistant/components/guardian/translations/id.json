@@ -15,10 +15,20 @@
                     "port": "Port"
                 },
                 "description": "Konfigurasikan perangkat Elexa Guardian lokal."
-            },
-            "zeroconf_confirm": {
-                "description": "Ingin menyiapkan perangkat Guardian ini?"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Perbarui semua otomasi atau skrip yang menggunakan layanan ini untuk menggunakan layanan `{alternate_service}` dengan ID entitas target `{alternate_target}`. Kemudian, klik KIRIM di bawah ini untuk menandai masalah ini sebagai terselesaikan.",
+                        "title": "Layanan {deprecated_service} dalam proses penghapusan"
+                    }
+                }
+            },
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
         }
     }
 }

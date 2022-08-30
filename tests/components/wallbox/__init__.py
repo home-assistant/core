@@ -26,7 +26,7 @@ from homeassistant.components.wallbox.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import ERROR, JWT, STATUS, TTL, USER_ID
+from .const import ERROR, STATUS, TTL, USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -54,11 +54,32 @@ test_response = json.loads(
 authorisation_response = json.loads(
     json.dumps(
         {
-            JWT: "fakekeyhere",
-            USER_ID: 12345,
-            TTL: 145656758,
-            ERROR: "false",
-            STATUS: 200,
+            "data": {
+                "attributes": {
+                    "token": "fakekeyhere",
+                    USER_ID: 12345,
+                    TTL: 145656758,
+                    ERROR: "false",
+                    STATUS: 200,
+                }
+            }
+        }
+    )
+)
+
+
+authorisation_response_unauthorised = json.loads(
+    json.dumps(
+        {
+            "data": {
+                "attributes": {
+                    "token": "fakekeyhere",
+                    USER_ID: 12345,
+                    TTL: 145656758,
+                    ERROR: "false",
+                    STATUS: 404,
+                }
+            }
         }
     )
 )
@@ -81,7 +102,7 @@ async def setup_integration(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.OK,
         )
@@ -107,7 +128,7 @@ async def setup_integration_connection_error(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.FORBIDDEN,
         )
@@ -133,7 +154,7 @@ async def setup_integration_read_only(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.OK,
         )

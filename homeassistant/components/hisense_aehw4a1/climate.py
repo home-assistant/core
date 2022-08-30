@@ -142,6 +142,7 @@ class ClimateAehW4a1(ClimateEntity):
     """Representation of a Hisense AEH-W4A1 module for climate device."""
 
     _attr_hvac_modes = HVAC_MODES
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -293,11 +294,6 @@ class ClimateAehW4a1(ClimateEntity):
         if self._temperature_unit == TEMP_CELSIUS:
             return MAX_TEMP_C
         return MAX_TEMP_F
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
 
     @property
     def target_temperature_step(self):

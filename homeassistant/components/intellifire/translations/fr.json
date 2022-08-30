@@ -8,8 +8,7 @@
         "error": {
             "api_error": "La connexion a \u00e9chou\u00e9",
             "cannot_connect": "\u00c9chec de connexion",
-            "iftapi_connect": "Erreur lors de la connexion \u00e0 iftapi.net",
-            "unknown": "Erreur inattendue"
+            "iftapi_connect": "Erreur lors de la connexion \u00e0 iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Les appareils IntelliFire suivants ont \u00e9t\u00e9 d\u00e9couverts. Veuillez s\u00e9lectionner celui que vous souhaitez configurer.",
                 "title": "S\u00e9lection de l'appareil"
-            },
-            "user": {
-                "data": {
-                    "host": "H\u00f4te"
-                }
             }
         }
     }

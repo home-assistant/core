@@ -811,7 +811,7 @@ async def test_humidity_change_dry_trigger_on_not_long_enough(hass, setup_comp_4
 async def test_humidity_change_dry_trigger_on_long_enough(hass, setup_comp_4):
     """Test if humidity change turn dry on."""
     fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
+        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
@@ -845,7 +845,7 @@ async def test_humidity_change_dry_trigger_off_not_long_enough(hass, setup_comp_
 async def test_humidity_change_dry_trigger_off_long_enough(hass, setup_comp_4):
     """Test if humidity change turn dry on."""
     fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
+        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
@@ -967,7 +967,7 @@ async def test_humidity_change_humidifier_trigger_on_not_long_enough(
 async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_comp_6):
     """Test if humidity change turn humidifier on after min cycle."""
     fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
+        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
@@ -989,7 +989,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_com
 async def test_humidity_change_humidifier_trigger_off_long_enough(hass, setup_comp_6):
     """Test if humidity change turn humidifier off after min cycle."""
     fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
+        1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed

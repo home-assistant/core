@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API Anahtar\u0131",
                     "heating_type": "Is\u0131tma tipi",
-                    "name": "Ad",
                     "password": "Parola",
-                    "scan_interval": "Tarama Aral\u0131\u011f\u0131 (saniye)",
                     "username": "E-posta"
                 },
-                "description": "ViCare entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://developer.viessmann.com adresine gidin.",
-                "title": "{name}"
+                "description": "ViCare entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://developer.viessmann.com adresine gidin."
             }
         }
     }

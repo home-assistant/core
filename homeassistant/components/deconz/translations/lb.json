@@ -5,7 +5,6 @@
             "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang.",
             "no_bridges": "Keng dECONZ bridges fonnt",
             "no_hardware_available": "Keng Radio Hardware verbonne mat deCONZ",
-            "not_deconz_bridge": "Keng deCONZ Bridge",
             "updated_instance": "deCONZ Instanz gouf mat der neier Adress vum Apparat ge\u00e4nnert"
         },
         "error": {

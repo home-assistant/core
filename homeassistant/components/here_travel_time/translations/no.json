@@ -1,0 +1,89 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "destination_coordinates": {
+                "data": {
+                    "destination": "Destinasjon som GPS-koordinater"
+                },
+                "title": "Velg Destinasjon"
+            },
+            "destination_entity_id": {
+                "data": {
+                    "destination_entity_id": "Destinasjon ved hjelp av en enhet"
+                },
+                "title": "Velg Destinasjon"
+            },
+            "destination_menu": {
+                "menu_options": {
+                    "destination_coordinates": "Bruke en kartplassering",
+                    "destination_entity": "Bruke en enhet"
+                },
+                "title": "Velg Destinasjon"
+            },
+            "origin_coordinates": {
+                "data": {
+                    "origin": "Opprinnelse som GPS-koordinater"
+                },
+                "title": "Velg Opprinnelse"
+            },
+            "origin_entity_id": {
+                "data": {
+                    "origin_entity_id": "Opprinnelse ved hjelp av en enhet"
+                },
+                "title": "Velg Opprinnelse"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Bruk kartplassering",
+                    "origin_entity": "Bruke en enhet"
+                },
+                "title": "Velg Opprinnelse"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "mode": "Reisemodus",
+                    "name": "Navn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arrival_time": {
+                "data": {
+                    "arrival_time": "Ankomsttid"
+                },
+                "title": "Velg Ankomsttid"
+            },
+            "departure_time": {
+                "data": {
+                    "departure_time": "Avgangstid"
+                },
+                "title": "Velg Avreisetid"
+            },
+            "init": {
+                "data": {
+                    "route_mode": "Rutemodus",
+                    "traffic_mode": "Trafikkmodus",
+                    "unit_system": "Enhetssystem"
+                }
+            },
+            "time_menu": {
+                "menu_options": {
+                    "arrival_time": "Konfigurer en ankomsttid",
+                    "departure_time": "Konfigurer en avgangstid",
+                    "no_time": "Ikke konfigurer en tid"
+                },
+                "title": "Velg Tidstype"
+            }
+        }
+    }
+}

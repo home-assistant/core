@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "firmware_not_fully_provisioned": "\u88dd\u7f6e\u4e26\u672a\u5b8c\u5168\u652f\u63f4\uff0c\u8acb\u806f\u7e6b Shelly \u5c0b\u6c42\u652f\u63f4",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },

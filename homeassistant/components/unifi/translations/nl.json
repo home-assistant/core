@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Unifi Network site is al geconfigureerd",
             "configuration_updated": "Configuratie bijgewerkt",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "faulty_credentials": "Ongeldige authenticatie",

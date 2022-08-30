@@ -7,7 +7,8 @@ import logging
 
 from aiohttp import CookieJar
 from aiohttp.client_exceptions import ServerDisconnectedError
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
+from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,13 +21,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_IGNORED,
     CONF_OVERRIDE_CHOST,
     DEFAULT_SCAN_INTERVAL,
     DEVICES_FOR_SUBSCRIBE,
+    DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
@@ -34,7 +38,10 @@ from .const import (
 )
 from .data import ProtectData
 from .discovery import async_start_discovery
+from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
+from .utils import async_unifi_mac, convert_mac_list
+from .views import ThumbnailProxyView, VideoProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
+        ignore_unadopted=False,
     )
     _LOGGER.debug("Connect to UniFi Protect")
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
@@ -64,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nvr_info = await protect.get_nvr()
     except NotAuthorized as err:
         raise ConfigEntryAuthFailed(err) from err
-    except (asyncio.TimeoutError, NvrError, ServerDisconnectedError) as err:
+    except (asyncio.TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
@@ -75,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
+    await async_migrate_data(hass, entry, protect)
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
@@ -83,8 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_setup_services(hass)
+    hass.http.register_view(ThumbnailProxyView(hass))
+    hass.http.register_view(VideoProxyView(hass))
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
@@ -96,6 +107,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
+
+    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    changed = data.async_get_changed_options(entry)
+
+    if len(changed) == 1 and CONF_IGNORED in changed:
+        new_macs = convert_mac_list(entry.options.get(CONF_IGNORED, ""))
+        added_macs = new_macs - data.ignored_macs
+        removed_macs = data.ignored_macs - new_macs
+        # if only ignored macs are added, we can handle without reloading
+        if not removed_macs and added_macs:
+            data.async_add_new_ignored_macs(added_macs)
+            return
+
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -108,3 +132,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_cleanup_services(hass)
 
     return bool(unload_ok)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove ufp config entry from a device."""
+    unifi_macs = {
+        async_unifi_mac(connection[1])
+        for connection in device_entry.connections
+        if connection[0] == dr.CONNECTION_NETWORK_MAC
+    }
+    data: ProtectData = hass.data[DOMAIN][config_entry.entry_id]
+    if data.api.bootstrap.nvr.mac in unifi_macs:
+        return False
+    for device in data.get_by_types(DEVICES_THAT_ADOPT):
+        if device.is_adopted_by_us and device.mac in unifi_macs:
+            data.async_ignore_mac(device.mac)
+            break
+    return True

@@ -1,16 +1,24 @@
 """Support for IP Cameras."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import httpx
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,
     PLATFORM_SCHEMA,
     Camera,
     CameraEntityFeature,
+)
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -34,14 +42,10 @@ from .const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
-    FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
-    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS.keys()),
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
     }
 )
 
@@ -114,12 +118,12 @@ async def async_setup_entry(
     )
 
 
-def generate_auth(device_info) -> httpx.Auth | None:
+def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
     """Generate httpx.Auth object from credentials."""
-    username = device_info.get(CONF_USERNAME)
-    password = device_info.get(CONF_PASSWORD)
+    username: str | None = device_info.get(CONF_USERNAME)
+    password: str | None = device_info.get(CONF_PASSWORD)
     authentication = device_info.get(CONF_AUTHENTICATION)
-    if username:
+    if username and password:
         if authentication == HTTP_DIGEST_AUTHENTICATION:
             return httpx.DigestAuth(username=username, password=password)
         return httpx.BasicAuth(username=username, password=password)
@@ -129,12 +133,22 @@ def generate_auth(device_info) -> httpx.Auth | None:
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
-    def __init__(self, hass, device_info, identifier, title):
+    _last_image: bytes | None
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_info: Mapping[str, Any],
+        identifier: str,
+        title: str,
+    ) -> None:
         """Initialize a generic camera."""
         super().__init__()
         self.hass = hass
         self._attr_unique_id = identifier
         self._authentication = device_info.get(CONF_AUTHENTICATION)
+        self._username = device_info.get(CONF_USERNAME)
+        self._password = device_info.get(CONF_PASSWORD)
         self._name = device_info.get(CONF_NAME, title)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
         if (
@@ -142,10 +156,10 @@ class GenericCamera(Camera):
             and self._still_image_url
         ):
             self._still_image_url = cv.template(self._still_image_url)
-        if self._still_image_url not in [None, ""]:
+        if self._still_image_url:
             self._still_image_url.hass = hass
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
-        if self._stream_source not in (None, ""):
+        if self._stream_source:
             if not isinstance(self._stream_source, template_helper.Template):
                 self._stream_source = cv.template(self._stream_source)
             self._stream_source.hass = hass
@@ -157,14 +171,10 @@ class GenericCamera(Camera):
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
-            self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
-                CONF_RTSP_TRANSPORT
-            ]
+            self.stream_options[CONF_RTSP_TRANSPORT] = device_info[CONF_RTSP_TRANSPORT]
         self._auth = generate_auth(device_info)
         if device_info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-            self.stream_options[
-                FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]
-            ] = "1"
+            self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
 
         self._last_url = None
         self._last_image = None
@@ -210,13 +220,23 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if self._stream_source is None:
             return None
 
         try:
-            return self._stream_source.async_render(parse_result=False)
+            stream_url = self._stream_source.async_render(parse_result=False)
+            url = yarl.URL(stream_url)
+            if (
+                not url.user
+                and not url.password
+                and self._username
+                and self._password
+                and url.is_absolute()
+            ):
+                url = url.with_user(self._username).with_password(self._password)
+            return str(url)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
             return None

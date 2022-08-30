@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Hostitel",
                     "port": "Port"
-                },
-                "title": "Freebox"
+                }
             }
         }
     }

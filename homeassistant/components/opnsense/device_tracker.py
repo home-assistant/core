@@ -1,10 +1,12 @@
 """Device tracker support for OPNSense routers."""
 from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from . import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
 
 
-async def async_get_scanner(hass, config, discovery_info=None):
+async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
     scanner = OPNSenseDeviceScanner(

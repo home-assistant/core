@@ -104,6 +104,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _async_get_component(hass: HomeAssistant) -> EntityComponent:
+    if (component := hass.data.get(DOMAIN)) is None:
+        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    return component
+
+
 class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
@@ -225,7 +231,9 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    hass.config_entries.async_setup_platforms(entry, (entry.options["group_type"],))
+    await hass.config_entries.async_forward_entry_setups(
+        entry, (entry.options["group_type"],)
+    )
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
@@ -274,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
 
-    await _async_process_config(hass, config, component)
+    await _async_process_config(hass, config)
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
@@ -286,7 +294,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if (conf := await component.async_prepare_reload()) is None:
             return
-        await _async_process_config(hass, conf, component)
+        await _async_process_config(hass, conf)
 
         await component.async_add_entities(auto)
 
@@ -406,31 +414,33 @@ async def _process_group_platform(hass, domain, platform):
     platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
 
-async def _async_process_config(hass, config, component):
+async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None:
     """Process group configuration."""
     hass.data.setdefault(GROUP_ORDER, 0)
 
-    tasks = []
+    entities = []
+    domain_config: dict[str, dict[str, Any]] = config.get(DOMAIN, {})
 
-    for object_id, conf in config.get(DOMAIN, {}).items():
-        name = conf.get(CONF_NAME, object_id)
-        entity_ids = conf.get(CONF_ENTITIES) or []
-        icon = conf.get(CONF_ICON)
-        mode = conf.get(CONF_ALL)
+    for object_id, conf in domain_config.items():
+        name: str = conf.get(CONF_NAME, object_id)
+        entity_ids: Iterable[str] = conf.get(CONF_ENTITIES) or []
+        icon: str | None = conf.get(CONF_ICON)
+        mode = bool(conf.get(CONF_ALL))
+        order: int = hass.data[GROUP_ORDER]
 
         # We keep track of the order when we are creating the tasks
         # in the same way that async_create_group does to make
         # sure we use the same ordering system.  This overcomes
         # the problem with concurrently creating the groups
-        tasks.append(
-            Group.async_create_group(
+        entities.append(
+            Group.async_create_group_entity(
                 hass,
                 name,
                 entity_ids,
                 icon=icon,
                 object_id=object_id,
                 mode=mode,
-                order=hass.data[GROUP_ORDER],
+                order=order,
             )
         )
 
@@ -439,7 +449,8 @@ async def _async_process_config(hass, config, component):
         # we setup a new group
         hass.data[GROUP_ORDER] += 1
 
-    await asyncio.gather(*tasks)
+    # If called before the platform async_setup is called (test cases)
+    await _async_get_component(hass).async_add_entities(entities)
 
 
 class GroupEntity(Entity):
@@ -478,14 +489,14 @@ class Group(Entity):
 
     def __init__(
         self,
-        hass,
-        name,
-        order=None,
-        icon=None,
-        user_defined=True,
-        entity_ids=None,
-        mode=None,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        order: int | None = None,
+        icon: str | None = None,
+        user_defined: bool = True,
+        entity_ids: Iterable[str] | None = None,
+        mode: bool | None = None,
+    ) -> None:
         """Initialize a group.
 
         This Object has factory function for creation.
@@ -508,15 +519,15 @@ class Group(Entity):
 
     @staticmethod
     def create_group(
-        hass,
-        name,
-        entity_ids=None,
-        user_defined=True,
-        icon=None,
-        object_id=None,
-        mode=None,
-        order=None,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        entity_ids: Iterable[str] | None = None,
+        user_defined: bool = True,
+        icon: str | None = None,
+        object_id: str | None = None,
+        mode: bool | None = None,
+        order: int | None = None,
+    ) -> Group:
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
@@ -526,20 +537,18 @@ class Group(Entity):
         ).result()
 
     @staticmethod
-    async def async_create_group(
-        hass,
-        name,
-        entity_ids=None,
-        user_defined=True,
-        icon=None,
-        object_id=None,
-        mode=None,
-        order=None,
-    ):
-        """Initialize a group.
-
-        This method must be run in the event loop.
-        """
+    @callback
+    def async_create_group_entity(
+        hass: HomeAssistant,
+        name: str,
+        entity_ids: Iterable[str] | None = None,
+        user_defined: bool = True,
+        icon: str | None = None,
+        object_id: str | None = None,
+        mode: bool | None = None,
+        order: int | None = None,
+    ) -> Group:
+        """Create a group entity."""
         if order is None:
             hass.data.setdefault(GROUP_ORDER, 0)
             order = hass.data[GROUP_ORDER]
@@ -562,12 +571,29 @@ class Group(Entity):
             ENTITY_ID_FORMAT, object_id or name, hass=hass
         )
 
+        return group
+
+    @staticmethod
+    async def async_create_group(
+        hass: HomeAssistant,
+        name: str,
+        entity_ids: Iterable[str] | None = None,
+        user_defined: bool = True,
+        icon: str | None = None,
+        object_id: str | None = None,
+        mode: bool | None = None,
+        order: int | None = None,
+    ) -> Group:
+        """Initialize a group.
+
+        This method must be run in the event loop.
+        """
+        group = Group.async_create_group_entity(
+            hass, name, entity_ids, user_defined, icon, object_id, mode, order
+        )
+
         # If called before the platform async_setup is called (test cases)
-        if (component := hass.data.get(DOMAIN)) is None:
-            component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
-
-        await component.async_add_entities([group])
-
+        await _async_get_component(hass).async_add_entities([group])
         return group
 
     @property

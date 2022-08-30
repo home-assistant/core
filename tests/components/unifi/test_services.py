@@ -9,7 +9,7 @@ from homeassistant.components.unifi.services import (
     SUPPORTED_SERVICES,
 )
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers import device_registry as dr
 
 from .test_controller import setup_unifi_integration
 
@@ -62,10 +62,10 @@ async def test_reconnect_client(hass, aioclient_mock):
         f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
     )
 
     await hass.services.async_call(
@@ -98,7 +98,7 @@ async def test_reconnect_device_without_mac(hass, aioclient_mock):
 
     aioclient_mock.clear_requests()
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={("other connection", "not mac")},
@@ -132,10 +132,10 @@ async def test_reconnect_client_controller_unavailable(hass, aioclient_mock):
         f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
     )
 
     await hass.services.async_call(
@@ -153,10 +153,10 @@ async def test_reconnect_client_unknown_mac(hass, aioclient_mock):
 
     aioclient_mock.clear_requests()
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, "mac unknown to controller")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "mac unknown to controller")},
     )
 
     await hass.services.async_call(
@@ -182,10 +182,10 @@ async def test_reconnect_wired_client(hass, aioclient_mock):
 
     aioclient_mock.clear_requests()
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
     )
 
     await hass.services.async_call(

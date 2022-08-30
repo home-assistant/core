@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from functools import partial
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -22,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
+
+PARALLEL_UPDATES = 2
 
 
 def scaleto255(value: int | None) -> int:
@@ -84,7 +87,10 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "RGBW" in fibaro_device.type
             or "rgbw" in fibaro_device.type
         )
-        supports_dimming = "levelChange" in fibaro_device.interfaces
+        supports_dimming = (
+            "levelChange" in fibaro_device.interfaces
+            and "setValue" in fibaro_device.actions
+        )
 
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -102,7 +108,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
@@ -129,7 +135,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         # The simplest case is left for last. No dimming, just switch on
         self.call_turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(partial(self._turn_off, **kwargs))
@@ -162,7 +168,7 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the state."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(self._update)

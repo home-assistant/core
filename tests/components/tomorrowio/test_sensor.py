@@ -25,6 +25,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import API_V4_ENTRY_DATA
 
@@ -166,6 +167,37 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, CLOUD_COVER, "100")
     check_sensor_state(hass, CLOUD_CEILING, "0.74")
     check_sensor_state(hass, WIND_GUST, "12.64")
+    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+
+
+async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
+    """Test v4 sensor data."""
+    hass.config.units = IMPERIAL_SYSTEM
+    await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
+    check_sensor_state(hass, O3, "91.35")
+    check_sensor_state(hass, CO, "0.0")
+    check_sensor_state(hass, NO2, "20.08")
+    check_sensor_state(hass, SO2, "4.32")
+    check_sensor_state(hass, PM25, "0.15")
+    check_sensor_state(hass, PM10, "0.57")
+    check_sensor_state(hass, MEP_AQI, "23")
+    check_sensor_state(hass, MEP_HEALTH_CONCERN, "good")
+    check_sensor_state(hass, MEP_PRIMARY_POLLUTANT, "pm10")
+    check_sensor_state(hass, EPA_AQI, "24")
+    check_sensor_state(hass, EPA_HEALTH_CONCERN, "good")
+    check_sensor_state(hass, EPA_PRIMARY_POLLUTANT, "pm25")
+    check_sensor_state(hass, FIRE_INDEX, "10")
+    check_sensor_state(hass, GRASS_POLLEN, "none")
+    check_sensor_state(hass, WEED_POLLEN, "none")
+    check_sensor_state(hass, TREE_POLLEN, "none")
+    check_sensor_state(hass, FEELS_LIKE, "214.3")
+    check_sensor_state(hass, DEW_POINT, "163.08")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "29.47")
+    check_sensor_state(hass, GHI, "0.0")
+    check_sensor_state(hass, CLOUD_BASE, "0.46")
+    check_sensor_state(hass, CLOUD_COVER, "100")
+    check_sensor_state(hass, CLOUD_CEILING, "0.46")
+    check_sensor_state(hass, WIND_GUST, "28.27")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
 
 

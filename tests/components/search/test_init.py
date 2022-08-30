@@ -368,6 +368,36 @@ async def test_area_lookup(hass):
     }
 
 
+async def test_person_lookup(hass):
+    """Test searching persons."""
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "id": "abcd",
+                    "name": "Paulus",
+                    "device_trackers": ["device_tracker.paulus_iphone"],
+                }
+            ]
+        },
+    )
+
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("entity", "device_tracker.paulus_iphone") == {
+        "person": {"person.paulus"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("entity", "person.paulus") == {
+        "entity": {"device_tracker.paulus_iphone"},
+    }
+
+
 async def test_ws_api(hass, hass_ws_client):
     """Test WS API."""
     assert await async_setup_component(hass, "search", {})

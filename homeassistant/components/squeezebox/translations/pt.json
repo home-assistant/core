@@ -17,7 +17,8 @@
                     "password": "Palavra-passe",
                     "port": "Porta",
                     "username": "Utilizador"
-                }
+                },
+                "title": "Editar informa\u00e7\u00e3o sobre a liga\u00e7\u00e3o"
             },
             "user": {
                 "data": {

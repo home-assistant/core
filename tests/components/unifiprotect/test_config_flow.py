@@ -6,24 +6,21 @@ import socket
 from unittest.mock import patch
 
 import pytest
-from pyunifiprotect import NotAuthorized, NvrError
-from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
+from pyunifiprotect.data import NVR
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp
 from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
+    CONF_IGNORED,
     CONF_OVERRIDE_CHOST,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from . import (
@@ -61,17 +58,17 @@ UNIFI_DISCOVERY_DICT = asdict(UNIFI_DISCOVERY)
 UNIFI_DISCOVERY_DICT_PARTIAL = asdict(UNIFI_DISCOVERY_PARTIAL)
 
 
-async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
+async def test_form(hass: HomeAssistant, nvr: NVR) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=mock_nvr,
+        return_value=nvr,
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
@@ -86,7 +83,7 @@ async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -99,7 +96,7 @@ async def test_form(hass: HomeAssistant, mock_nvr: NVR) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_version_too_old(hass: HomeAssistant, mock_old_nvr: NVR) -> None:
+async def test_form_version_too_old(hass: HomeAssistant, old_nvr: NVR) -> None:
     """Test we handle the version being too old."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -107,7 +104,7 @@ async def test_form_version_too_old(hass: HomeAssistant, mock_old_nvr: NVR) -> N
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=mock_old_nvr,
+        return_value=old_nvr,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,7 +115,7 @@ async def test_form_version_too_old(hass: HomeAssistant, mock_old_nvr: NVR) -> N
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "protect_version"}
 
 
@@ -141,7 +138,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
@@ -164,11 +161,11 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
+async def test_form_reauth_auth(hass: HomeAssistant, nvr: NVR) -> None:
     """Test we handle reauth auth."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -191,7 +188,7 @@ async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
             "entry_id": mock_config.entry_id,
         },
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -211,13 +208,13 @@ async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
     assert result2["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=mock_nvr,
+        return_value=nvr,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -227,11 +224,11 @@ async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
             },
         )
 
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
 
 
-async def test_form_options(hass: HomeAssistant, mock_client) -> None:
+async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -> None:
     """Test we handle options flows."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -242,6 +239,7 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
             "id": "UnifiProtect",
             "port": 443,
             "verify_ssl": False,
+            "max_media": 1000,
         },
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
@@ -251,14 +249,14 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
     with _patch_discovery(), patch(
         "homeassistant.components.unifiprotect.ProtectApiClient"
     ) as mock_api:
-        mock_api.return_value = mock_client
+        mock_api.return_value = ufp_client
 
         await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
         assert mock_config.state == config_entries.ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(mock_config.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
     assert result["step_id"] == "init"
 
@@ -267,12 +265,55 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
         {CONF_DISABLE_RTSP: True, CONF_ALL_UPDATES: True, CONF_OVERRIDE_CHOST: True},
     )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "all_updates": True,
         "disable_rtsp": True,
         "override_connection_host": True,
     }
+
+
+async def test_form_options_invalid_mac(
+    hass: HomeAssistant, ufp_client: ProtectApiClient
+) -> None:
+    """Test we handle options flows."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+            "max_media": 1000,
+        },
+        version=2,
+        unique_id=dr.format_mac(MAC_ADDR),
+    )
+    mock_config.add_to_hass(hass)
+
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.ProtectApiClient"
+    ) as mock_api:
+        mock_api.return_value = ufp_client
+
+        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config.state == config_entries.ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(mock_config.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_IGNORED: "test,test2"},
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {CONF_IGNORED: "invalid_mac_list"}
 
 
 @pytest.mark.parametrize(
@@ -295,12 +336,12 @@ async def test_discovered_by_ssdp_or_dhcp(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
 
 
 async def test_discovered_by_unifi_discovery_direct_connect(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant, nvr: NVR
 ) -> None:
     """Test a discovery from unifi-discovery."""
 
@@ -312,7 +353,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -324,7 +365,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=mock_nvr,
+        return_value=nvr,
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
@@ -338,7 +379,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": DIRECT_CONNECT_DOMAIN,
@@ -352,7 +393,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_updated(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test a discovery from unifi-discovery updates the direct connect host."""
     mock_config = MockConfigEntry(
@@ -378,13 +419,13 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == DIRECT_CONNECT_DOMAIN
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_using_direct_connect(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test a discovery from unifi-discovery updates the host but not direct connect if its not in use."""
     mock_config = MockConfigEntry(
@@ -402,7 +443,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery():
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.config_flow.async_console_is_alive",
+        return_value=False,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -410,13 +454,48 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "127.0.0.1"
 
 
+async def test_discovered_by_unifi_discovery_does_not_update_ip_when_console_is_still_online(
+    hass: HomeAssistant,
+) -> None:
+    """Test a discovery from unifi-discovery does not update the ip unless the console at the old ip is offline."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.2.2",
+            "username": "test-username",
+            "password": "test-password",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+        },
+        version=2,
+        unique_id=DEVICE_MAC_ADDRESS.replace(":", "").upper(),
+    )
+    mock_config.add_to_hass(hass)
+
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.config_flow.async_console_is_alive",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == "1.2.2.2"
+
+
 async def test_discovered_host_not_updated_if_existing_is_a_hostname(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test we only update the host if its an ip address from discovery."""
     mock_config = MockConfigEntry(
@@ -441,14 +520,12 @@ async def test_discovered_host_not_updated_if_existing_is_a_hostname(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "a.hostname"
 
 
-async def test_discovered_by_unifi_discovery(
-    hass: HomeAssistant, mock_nvr: NVR
-) -> None:
+async def test_discovered_by_unifi_discovery(hass: HomeAssistant, nvr: NVR) -> None:
     """Test a discovery from unifi-discovery."""
 
     with _patch_discovery():
@@ -459,7 +536,7 @@ async def test_discovered_by_unifi_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -471,7 +548,7 @@ async def test_discovered_by_unifi_discovery(
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        side_effect=[NotAuthorized, mock_nvr],
+        side_effect=[NotAuthorized, nvr],
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
@@ -485,7 +562,7 @@ async def test_discovered_by_unifi_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": DEVICE_IP_ADDRESS,
@@ -499,7 +576,7 @@ async def test_discovered_by_unifi_discovery(
 
 
 async def test_discovered_by_unifi_discovery_partial(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant, nvr: NVR
 ) -> None:
     """Test a discovery from unifi-discovery partial."""
 
@@ -511,7 +588,7 @@ async def test_discovered_by_unifi_discovery_partial(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -523,7 +600,7 @@ async def test_discovered_by_unifi_discovery_partial(
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=mock_nvr,
+        return_value=nvr,
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
@@ -537,7 +614,7 @@ async def test_discovered_by_unifi_discovery_partial(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": DEVICE_IP_ADDRESS,
@@ -551,7 +628,7 @@ async def test_discovered_by_unifi_discovery_partial(
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test a discovery from unifi-discovery from an alternate interface."""
     mock_config = MockConfigEntry(
@@ -576,12 +653,12 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_ip_matches(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test a discovery from unifi-discovery from an alternate interface when the ip matches."""
     mock_config = MockConfigEntry(
@@ -606,12 +683,12 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test a discovery from unifi-discovery from an alternate interface when direct connect domain resolves to host ip."""
     mock_config = MockConfigEntry(
@@ -644,12 +721,12 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver_fails(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant, nvr: NVR
 ) -> None:
     """Test we can still configure if the resolver fails."""
     mock_config = MockConfigEntry(
@@ -680,7 +757,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
@@ -692,7 +769,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
-        return_value=mock_nvr,
+        return_value=nvr,
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
@@ -706,7 +783,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "UnifiProtect"
     assert result2["data"] == {
         "host": "nomatchsameip.ui.direct",
@@ -720,7 +797,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver_no_result(
-    hass: HomeAssistant, mock_nvr: NVR
+    hass: HomeAssistant,
 ) -> None:
     """Test a discovery from unifi-discovery from an alternate interface when direct connect domain resolve has no result."""
     mock_config = MockConfigEntry(
@@ -749,11 +826,11 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_discovery_can_be_ignored(hass: HomeAssistant, mock_nvr: NVR) -> None:
+async def test_discovery_can_be_ignored(hass: HomeAssistant) -> None:
     """Test a discovery can be ignored."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -770,5 +847,5 @@ async def test_discovery_can_be_ignored(hass: HomeAssistant, mock_nvr: NVR) -> N
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
