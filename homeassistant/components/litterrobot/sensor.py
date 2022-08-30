@@ -47,13 +47,13 @@ class RobotSensorEntityDescription(SensorEntityDescription, Generic[_RobotT]):
 class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
     """Litter-Robot sensor entity."""
 
-    entity_description: RobotSensorEntityDescription
+    entity_description: RobotSensorEntityDescription[_RobotT]
 
     def __init__(
         self,
         robot: _RobotT,
         hub: LitterRobotHub,
-        description: RobotSensorEntityDescription,
+        description: RobotSensorEntityDescription[_RobotT],
     ) -> None:
         """Initialize a Litter-Robot sensor entity."""
         assert description.name
