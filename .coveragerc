@@ -394,7 +394,7 @@ omit =
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/__init__.py
     homeassistant/components/flume/coordinator.py
-    homeassistant/components/flume/entity.py
+    homeassistant/components/flume/entity.py    
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/repairs.py
@@ -1207,7 +1207,7 @@ omit =
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/entity.py
     homeassistant/components/switchbot/cover.py
-    homeassistant/components/switchbot/light.py
+    homeassistant/components/switchbot/light.py    
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py
