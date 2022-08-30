@@ -54,7 +54,7 @@ class IslamicPrayerTimeSensor(SensorEntity):
             dt_util.UTC
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DATA_UPDATED, self.async_write_ha_state)
