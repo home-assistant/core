@@ -36,6 +36,9 @@ async def test_update_entity(
     hass_ws_client,
 ):
     """Test update entity."""
+    ws_client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
     assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
 
     client.async_send_command.return_value = {"updates": []}
@@ -46,6 +49,16 @@ async def test_update_entity(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     assert state.state == STATE_OFF
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": UPDATE_ENTITY,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] is None
 
     client.async_send_command.return_value = {
         "updates": [
@@ -86,12 +99,9 @@ async def test_update_entity(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_URL] is None
 
-    ws_client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
     await ws_client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "update/release_notes",
             "entity_id": UPDATE_ENTITY,
         }
