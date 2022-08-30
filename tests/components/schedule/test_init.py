@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ClientWebSocketResponse
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
@@ -177,6 +176,55 @@ async def test_invalid_schedules(
     assert error in caplog.text
 
 
+@pytest.mark.parametrize(
+    "schedule",
+    ({CONF_FROM: "07:00:00", CONF_TO: "11:00:00"},),
+)
+async def test_events_one_day(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    caplog: pytest.LogCaptureFixture,
+    schedule: list[dict[str, str]],
+    freezer,
+) -> None:
+    """Test events only during one day of the week."""
+    freezer.move_to("2022-08-30 13:20:00-07:00")
+
+    assert await schedule_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    CONF_NAME: "from yaml",
+                    CONF_ICON: "mdi:party-popper",
+                    CONF_SUNDAY: schedule,
+                }
+            }
+        },
+        items=[],
+    )
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T07:00:00-07:00"
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T11:00:00-07:00"
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T07:00:00-07:00"
+
+
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
@@ -224,19 +272,19 @@ async def test_load(
 async def test_schedule_updates(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    freezer,
 ) -> None:
     """Test the schedule updates when time changes."""
-    with freeze_time("2022-08-10 20:10:00-07:00"):
-        assert await schedule_setup()
+    freezer.move_to("2022-08-10 20:10:00-07:00")
+    assert await schedule_setup()
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
 
-    with freeze_time(state.attributes[ATTR_NEXT_EVENT]):
-        async_fire_time_changed(hass, state.attributes[ATTR_NEXT_EVENT])
-        await hass.async_block_till_done()
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
