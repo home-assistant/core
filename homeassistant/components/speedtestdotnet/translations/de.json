@@ -9,6 +9,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, um stattdessen den Dienst \"homeassistant.update_entity\" mit einer Speedtest-Entity_id zu verwenden. Dr\u00fccke dann unten auf SENDEN, um dieses Problem als behoben zu markieren.",
+                        "title": "Der Speedtest-Dienst wird entfernt"
+                    }
+                }
+            },
+            "title": "Der Speedtest-Dienst wird entfernt"
+        }
+    },
     "options": {
         "step": {
             "init": {
