@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import itertools
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot
 
@@ -17,24 +17,28 @@ from .const import DOMAIN
 from .entity import LitterRobotConfigEntity, _RobotT
 from .hub import LitterRobotHub
 
+_CastTypeT = TypeVar("_CastTypeT", int, float)
+
 
 @dataclass
-class RequiredKeysMixin(Generic[_RobotT]):
+class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     """A class that describes robot select entity required keys."""
 
-    current_fn: Callable[[_RobotT], int | float]
-    options_fn: Callable[[_RobotT], list]
+    current_fn: Callable[[_RobotT], _CastTypeT]
+    options_fn: Callable[[_RobotT], list[_CastTypeT]]
     select_fn: Callable[
-        [_RobotT, str], tuple[Callable[..., Coroutine[Any, Any, bool]], int | float]
+        [_RobotT, str], tuple[Callable[..., Coroutine[Any, Any, bool]], _CastTypeT]
     ]
 
 
 @dataclass
-class RobotSelectEntityDescription(SelectEntityDescription, RequiredKeysMixin[_RobotT]):
+class RobotSelectEntityDescription(
+    SelectEntityDescription, RequiredKeysMixin[_RobotT, _CastTypeT]
+):
     """A class that describes robot select entities."""
 
 
-LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot](
+LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
     key="clean_cycle_wait_time_minutes",
     name="Clean Cycle Wait Time Minutes",
     icon="mdi:timer-outline",
@@ -42,7 +46,7 @@ LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot](
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
     select_fn=lambda robot, option: (robot.set_wait_time, int(option)),
 )
-FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot](
+FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot, float](
     key="meal_insert_size",
     name="Meal insert size",
     icon="mdi:scale",
@@ -74,16 +78,18 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotSelect(LitterRobotConfigEntity[_RobotT], SelectEntity):
+class LitterRobotSelect(
+    LitterRobotConfigEntity[_RobotT], SelectEntity, Generic[_RobotT, _CastTypeT]
+):
     """Litter-Robot Select."""
 
-    entity_description: RobotSelectEntityDescription[_RobotT]
+    entity_description: RobotSelectEntityDescription[_RobotT, _CastTypeT]
 
     def __init__(
         self,
         robot: _RobotT,
         hub: LitterRobotHub,
-        description: RobotSelectEntityDescription[_RobotT],
+        description: RobotSelectEntityDescription[_RobotT, _CastTypeT],
     ) -> None:
         """Initialize a Litter-Robot select entity."""
         assert description.name
