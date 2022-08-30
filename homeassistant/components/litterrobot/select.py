@@ -27,7 +27,8 @@ class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     current_fn: Callable[[_RobotT], _CastTypeT]
     options_fn: Callable[[_RobotT], list[_CastTypeT]]
     select_fn: Callable[
-        [_RobotT, str], tuple[Callable[..., Coroutine[Any, Any, bool]], _CastTypeT]
+        [_RobotT, str],
+        tuple[Callable[[_CastTypeT], Coroutine[Any, Any, bool]], _CastTypeT],
     ]
 
 
