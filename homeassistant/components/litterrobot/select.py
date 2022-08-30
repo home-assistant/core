@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import itertools
-from typing import Any
+from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, Robot
+from pylitterbot import FeederRobot, LitterRobot
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,46 +14,34 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity
+from .entity import LitterRobotConfigEntity, _RobotT
 from .hub import LitterRobotHub
 
 
 @dataclass
-class RobotSelectEntityDescription(SelectEntityDescription):
+class RequiredKeysMixin(Generic[_RobotT]):
+    """A class that describes robot select entity required keys."""
+
+    current_fn: Callable[[_RobotT], int | float]
+    options_fn: Callable[[_RobotT], list]
+    select_fn: Callable[[_RobotT], Callable[..., Coroutine[Any, Any, bool]]]
+
+
+@dataclass
+class RobotSelectEntityDescription(SelectEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot select entities."""
 
-    current_fn: Callable[[Robot], int | float | None] = lambda _: None
-    options_fn: Callable[[Robot], list] = lambda _: []
-    select_fn: Callable[
-        [Robot], Callable[..., Coroutine[Any, Any, bool]] | None
-    ] = lambda _: None
     cast_type: type[int | float] = field(default=int)
 
 
 @dataclass
-class LitterRobotSelectEntityDescription(RobotSelectEntityDescription):
-    """A class that describes Litter-Robot select entities."""
-
-    current_fn: Callable[[LitterRobot], int | None] = lambda _: None
-    options_fn: Callable[[LitterRobot], list] = lambda _: []
-    select_fn: Callable[
-        [LitterRobot], Callable[..., Coroutine[Any, Any, bool]] | None
-    ] = lambda _: None
-
-
-@dataclass
-class FeederRobotSelectEntityDescription(RobotSelectEntityDescription):
+class FeederRobotSelectEntityDescription(RobotSelectEntityDescription[FeederRobot]):
     """A class that describes Feeder-Robot select entities."""
 
-    current_fn: Callable[[FeederRobot], float | None] = lambda _: None
-    options_fn: Callable[[FeederRobot], list] = lambda _: []
-    select_fn: Callable[
-        [FeederRobot], Callable[..., Coroutine[Any, Any, bool]] | None
-    ] = lambda _: None
     cast_type: type[float] = field(default=float)
 
 
-LITTER_ROBOT_SELECT = LitterRobotSelectEntityDescription(
+LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot](
     key="clean_cycle_wait_time_minutes",
     name="Clean Cycle Wait Time Minutes",
     icon="mdi:timer-outline",
@@ -93,16 +81,16 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotSelect(LitterRobotConfigEntity[LitterRobot], SelectEntity):
+class LitterRobotSelect(LitterRobotConfigEntity[_RobotT], SelectEntity):
     """Litter-Robot Select."""
 
-    entity_description: RobotSelectEntityDescription
+    entity_description: RobotSelectEntityDescription[_RobotT]
 
     def __init__(
         self,
-        robot: Robot,
+        robot: _RobotT,
         hub: LitterRobotHub,
-        description: RobotSelectEntityDescription,
+        description: RobotSelectEntityDescription[_RobotT],
     ) -> None:
         """Initialize a Litter-Robot select entity."""
         assert description.name
