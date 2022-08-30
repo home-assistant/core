@@ -10,8 +10,9 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    DEGREE,
-    SPEED_KILOMETERS_PER_HOUR,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -58,7 +59,7 @@ async def async_setup_platform(
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     station_id = config.get(CONF_STATION_ID) or probe.closest_station(
-        latitude, longitude, hass.config.config_dir
+        latitude, longitude
     )
     probe.set_default_station(station_id)
 
@@ -95,54 +96,58 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
+        # set units of ZAMG API
+        self._attr_native_temperature_unit = TEMP_CELSIUS
+        self._attr_native_pressure_unit = PRESSURE_HPA
+        self._attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+        self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return None
 
     @property
-    def attribution(self):
+    def attribution(self) -> str | None:
         """Return the attribution."""
         return ATTRIBUTION
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the platform temperature."""
-        return float(
-            str(
-                self.coordinator.data[self.station_id].get(f"T {TEMP_CELSIUS}")
-            ).replace(",", ".")
-        )
+        try:
+            return float(self.coordinator.data[self.station_id].get("TL")["data"])
+        except (TypeError, ValueError):
+            return None
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return float(
-            str(self.coordinator.data[self.station_id].get("LDstat hPa")).replace(
-                ",", "."
-            )
-        )
+        try:
+            return float(self.coordinator.data[self.station_id].get("P")["data"])
+        except (TypeError, ValueError):
+            return None
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
-        return float(
-            str(self.coordinator.data[self.station_id].get("RF %")).replace(",", ".")
-        )
+        try:
+            return float(self.coordinator.data[self.station_id].get("RFAM")["data"])
+        except (TypeError, ValueError):
+            return None
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return float(
-            str(
-                self.coordinator.data[self.station_id].get(
-                    f"WG {SPEED_KILOMETERS_PER_HOUR}"
-                )
-            ).replace(",", ".")
-        )
+        try:
+            return float(self.coordinator.data[self.station_id].get("FF")["data"])
+        except (TypeError, ValueError):
+            return None
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.coordinator.data[self.station_id].get(f"WR {DEGREE}")
+        try:
+            return self.coordinator.data[self.station_id].get("DD")["data"]
+        except (TypeError, ValueError):
+            return None

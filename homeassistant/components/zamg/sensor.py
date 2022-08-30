@@ -1,6 +1,7 @@
 """Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Union
 
@@ -15,18 +16,19 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
-    LENGTH_METERS,
+    LENGTH_CENTIMETERS,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
+    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -47,8 +49,6 @@ from .const import (
     MANUFACTURER_URL,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 _DType = Union[type[int], type[float], type[str]]
 
 
@@ -56,7 +56,7 @@ _DType = Union[type[int], type[float], type[str]]
 class ZamgRequiredKeysMixin:
     """Mixin for required keys."""
 
-    col_heading: str
+    para_name: str
     dtype: _DType
 
 
@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         native_unit_of_measurement=PRESSURE_HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading="LDstat hPa",
+        para_name="P",
         dtype=float,
     ),
     ZamgSensorEntityDescription(
@@ -81,7 +81,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         native_unit_of_measurement=PRESSURE_HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading="LDred hPa",
+        para_name="PRED",
         dtype=float,
     ),
     ZamgSensorEntityDescription(
@@ -90,15 +90,15 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading="RF %",
+        para_name="RFAM",
         dtype=int,
     ),
     ZamgSensorEntityDescription(
         key="wind_speed",
         name="Wind Speed",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"WG {SPEED_KILOMETERS_PER_HOUR}",
+        para_name="FFAM",
         dtype=float,
     ),
     ZamgSensorEntityDescription(
@@ -106,15 +106,15 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"WR {DEGREE}",
+        para_name="DD",
         dtype=int,
     ),
     ZamgSensorEntityDescription(
         key="wind_max_speed",
         name="Top Wind Speed",
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"WSG {SPEED_KILOMETERS_PER_HOUR}",
+        para_name="FFX",
         dtype=float,
     ),
     ZamgSensorEntityDescription(
@@ -122,15 +122,15 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         name="Top Wind Bearing",
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"WSR {DEGREE}",
+        para_name="DDX",
         dtype=int,
     ),
     ZamgSensorEntityDescription(
-        key="sun_last_hour",
-        name="Sun Last Hour",
-        native_unit_of_measurement=PERCENTAGE,
+        key="sun_last_10min",
+        name="Sun Last 10 Minutes",
+        native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"SO {PERCENTAGE}",
+        para_name="SO",
         dtype=int,
     ),
     ZamgSensorEntityDescription(
@@ -139,15 +139,32 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"T {TEMP_CELSIUS}",
+        para_name="TL",
+        dtype=float,
+    ),
+    ZamgSensorEntityDescription(
+        key="temperature_average",
+        name="Temperature Average",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        para_name="TLAM",
         dtype=float,
     ),
     ZamgSensorEntityDescription(
         key="precipitation",
         name="Precipitation",
-        native_unit_of_measurement=f"l/{AREA_SQUARE_METERS}",
+        native_unit_of_measurement=LENGTH_MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"N l/{AREA_SQUARE_METERS}",
+        para_name="RR",
+        dtype=float,
+    ),
+    ZamgSensorEntityDescription(
+        key="snow",
+        name="Snow",
+        native_unit_of_measurement=LENGTH_CENTIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        para_name="SCHNEE",
         dtype=float,
     ),
     ZamgSensorEntityDescription(
@@ -156,45 +173,24 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        col_heading=f"TP {TEMP_CELSIUS}",
+        para_name="TP",
         dtype=float,
     ),
-    # The following is probably not useful for general
     ZamgSensorEntityDescription(
-        key="station_name",
-        name="Station Name",
-        col_heading="Name",
-        dtype=str,
-        entity_registry_enabled_default=False,
-    ),
-    ZamgSensorEntityDescription(
-        key="station_elevation",
-        name="Station Elevation",
-        native_unit_of_measurement=LENGTH_METERS,
-        col_heading=f"Höhe {LENGTH_METERS}",
-        dtype=int,
-        entity_registry_enabled_default=False,
-    ),
-    ZamgSensorEntityDescription(
-        key="update_date",
-        name="Update Date",
-        col_heading="Datum",
-        dtype=str,
-        entity_registry_enabled_default=False,
-    ),
-    ZamgSensorEntityDescription(
-        key="update_time",
-        name="Update Time",
-        col_heading="Zeit",
-        dtype=str,
-        entity_registry_enabled_default=False,
+        key="dewpoint_average",
+        name="Dew Point Average",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        para_name="TPAM",
+        dtype=float,
     ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 API_FIELDS: dict[str, tuple[str, _DType]] = {
-    desc.col_heading: (desc.key, desc.dtype) for desc in SENSOR_TYPES
+    desc.para_name: (desc.key, desc.dtype) for desc in SENSOR_TYPES
 }
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -228,9 +224,7 @@ def setup_platform(
 
     probe = ZamgData(station_id)
 
-    station_id = station_id or probe.closest_station(
-        latitude, longitude, hass.config.config_dir
-    )
+    station_id = station_id or probe.closest_station(latitude, longitude)
     if station_id not in probe.zamg_stations():
         LOGGER.error(
             "Configured ZAMG %s (%s) is not a known station",
@@ -240,6 +234,7 @@ def setup_platform(
         return
 
     try:
+        probe.set_default_station(station_id)
         probe.update()
     except (ValueError, TypeError) as err:
         LOGGER.error("Sensor: Received error from ZAMG: %s", err)
@@ -294,25 +289,17 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        val = self.coordinator.data[self.station_id].get(
-            self.entity_description.col_heading
-        )
-        try:
-            if self.entity_description.dtype == float:
-                return float(val.replace(",", "."))
-            if self.entity_description.dtype == int:
-                return int(val.replace(",", "."))
-            return val
-        except ValueError:
-            return val
+        return self.coordinator.data[self.station_id].get(
+            self.entity_description.para_name
+        )["data"]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, str]:
         """Return the state attributes."""
         update_time = self.coordinator.data.get("last_update", "")
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STATION: self.coordinator.data[self.station_id].get("Name"),
+            ATTR_STATION: self.coordinator.data.get("Name"),
             CONF_STATION_ID: self.station_id,
             ATTR_UPDATED: update_time.isoformat(),
         }

@@ -35,10 +35,9 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             closest_station_id = await self._client.closest_station(
                 self.hass.config.latitude,
                 self.hass.config.longitude,
-                self.hass.config.config_dir,
             )
             LOGGER.debug("config_flow: closest station = %s", str(closest_station_id))
-            stations = await self._client.zamg_stations(self.hass.config.config_dir)
+            stations = await self._client.zamg_stations()
             user_input = {}
 
             schema = vol.Schema(
@@ -72,7 +71,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=self._client.get_data("Name"),
+            title=self._client.get_station_name,
             data={CONF_STATION_ID: station_id},
         )
 
@@ -93,6 +92,6 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         return self.async_create_entry(
-            title=self._client.get_data("Name"),
+            title=self._client.get_station_name,
             data={CONF_STATION_ID: config[CONF_STATION_ID]},
         )

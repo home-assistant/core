@@ -13,7 +13,7 @@ PLATFORMS = (Platform.WEATHER, Platform.SENSOR)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Zamg from config entry."""
-    coordinator = ZamgDataUpdateCoordinator(hass)
+    coordinator = ZamgDataUpdateCoordinator(hass, entry=entry)
     station_id = entry.data[CONF_STATION_ID]
     coordinator.zamg.set_default_station(station_id)
     await coordinator.async_config_entry_first_refresh()
