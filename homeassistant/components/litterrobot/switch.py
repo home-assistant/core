@@ -77,15 +77,13 @@ class RobotSwitchEntity(LitterRobotConfigEntity[_RobotT], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.perform_action_and_assume_state(
-            self.entity_description.set_fn(self.robot), True
-        )
+        set_fn = self.entity_description.set_fn
+        await self.perform_action_and_assume_state(set_fn(self.robot), True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.perform_action_and_assume_state(
-            self.entity_description.set_fn(self.robot), False
-        )
+        set_fn = self.entity_description.set_fn
+        await self.perform_action_and_assume_state(set_fn(self.robot), False)
 
 
 async def async_setup_entry(
