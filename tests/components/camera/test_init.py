@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import (
+    DATA_CAMERA_PREFS,
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
@@ -24,7 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_camera_prefs, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
 HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
@@ -37,12 +38,6 @@ def mock_stream_fixture(hass):
     assert hass.loop.run_until_complete(
         async_setup_component(hass, "stream", {"stream": {}})
     )
-
-
-@pytest.fixture(name="setup_camera_prefs")
-def setup_camera_prefs_fixture(hass):
-    """Initialize HTTP API."""
-    return mock_camera_prefs(hass, "camera.demo_uniquecamera")
 
 
 @pytest.fixture(name="image_mock_url")
@@ -299,25 +294,59 @@ async def test_websocket_get_prefs(hass, hass_ws_client, mock_camera):
     assert msg["success"]
 
 
-async def test_websocket_update_prefs(
-    hass, hass_ws_client, mock_camera, setup_camera_prefs
-):
-    """Test updating preference."""
-    assert setup_camera_prefs[PREF_PRELOAD_STREAM]
-    registry = er.async_get(hass)
-    # Since we don't have a unique id, there is no registry entry
-    registry.async_get_or_create(DOMAIN, "demo", "uniquecamera")
-    registry.async_update_entity_options(
-        "camera.demo_uniquecamera",
-        DOMAIN,
-        {PREF_ORIENTATION: 1},
-    )
-    camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
-    assert camera_prefs[PREF_ORIENTATION] == 1
+async def test_websocket_update_prefs(hass, hass_ws_client, mock_camera):
+    """Test updating camera preferences."""
+
+    legacy_camera_prefs_by_entity = hass.data[DATA_CAMERA_PREFS]._prefs
+
+    assert "demo.uniquecamera" not in legacy_camera_prefs_by_entity
+
     client = await hass_ws_client(hass)
     await client.send_json(
         {
             "id": 8,
+            "type": "camera/update_prefs",
+            "entity_id": "camera.demo_uniquecamera",
+            "preload_stream": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # preload_stream entry for this camera should have been added
+    assert "camera.demo_uniquecamera" in legacy_camera_prefs_by_entity
+    legacy_camera_prefs = legacy_camera_prefs_by_entity["camera.demo_uniquecamera"]
+    assert legacy_camera_prefs[PREF_PRELOAD_STREAM] is True
+    assert response["result"][PREF_PRELOAD_STREAM] is True
+
+    # Try sending orientation update for entity not in entity registry
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/update_prefs",
+            "entity_id": "camera.demo_uniquecamera",
+            "orientation": 3,
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "update_failed"
+
+    registry = er.async_get(hass)
+    assert not registry.async_get("camera.demo_uniquecamera")
+    # Since we don't have a unique id, we need to create a registry entry
+    registry.async_get_or_create(DOMAIN, "demo", "uniquecamera")
+    registry.async_update_entity_options(
+        "camera.demo_uniquecamera",
+        DOMAIN,
+        {PREF_ORIENTATION: 4},
+    )
+    er_camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
+    assert er_camera_prefs[PREF_ORIENTATION] == 4
+
+    await client.send_json(
+        {
+            "id": 10,
             "type": "camera/update_prefs",
             "entity_id": "camera.demo_uniquecamera",
             "preload_stream": False,
@@ -325,16 +354,13 @@ async def test_websocket_update_prefs(
         }
     )
     response = await client.receive_json()
-
     assert response["success"]
-    assert not setup_camera_prefs[PREF_PRELOAD_STREAM]
-    assert (
-        response["result"][PREF_PRELOAD_STREAM]
-        == setup_camera_prefs[PREF_PRELOAD_STREAM]
-    )
-    camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
-    assert camera_prefs[PREF_ORIENTATION] == 3
-    assert response["result"][PREF_ORIENTATION] == camera_prefs[PREF_ORIENTATION]
+
+    er_camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
+    assert er_camera_prefs[PREF_ORIENTATION] == 3
+    assert response["result"][PREF_ORIENTATION] == er_camera_prefs[PREF_ORIENTATION]
+    assert legacy_camera_prefs[PREF_PRELOAD_STREAM] is False
+    assert response["result"][PREF_PRELOAD_STREAM] is False
 
 
 async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
