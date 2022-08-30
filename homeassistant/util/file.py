@@ -34,10 +34,10 @@ def write_utf8_file_atomic(
     negatively impact performance.
     """
     try:
-        with AtomicWriter(filename, overwrite=True).open() as fdesc:
+        with AtomicWriter(filename, overwrite=True, mode="wb").open() as fdesc:
             if not private:
                 os.fchmod(fdesc.fileno(), 0o644)
-            fdesc.write(utf8_data)
+            fdesc.write(utf8_data.encode("utf-8"))
     except OSError as error:
         _LOGGER.exception("Saving file failed: %s", filename)
         raise WriteError(error) from error
