@@ -5,13 +5,16 @@ from unittest.mock import AsyncMock
 import pytest
 import whirlpool
 import whirlpool.aircon
-from whirlpool.backendselector import Region
+from whirlpool.backendselector import Brand, Region
 
 MOCK_SAID1 = "said1"
 MOCK_SAID2 = "said2"
 
 
-@pytest.fixture(name="region", params=[("EU", Region.EU), ("US", Region.US)])
+@pytest.fixture(
+    name="region",
+    params=[("EU", Region.EU, Brand.Whirlpool), ("US", Region.US, Brand.Maytag)],
+)
 def fixture_region(request):
     """Return a region for input."""
     return request.param

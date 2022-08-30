@@ -3,7 +3,6 @@ import asyncio
 from unittest.mock import patch
 
 import aiohttp
-from whirlpool.backendselector import Brand
 
 from homeassistant import config_entries
 from homeassistant.components.whirlpool.const import DOMAIN
@@ -48,7 +47,7 @@ async def test_form(hass, region):
         "region": region[0],
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    mock_backend_selector.assert_called_once_with(Brand.Whirlpool, region[1])
+    mock_backend_selector.assert_called_once_with(region[2], region[1])
 
 
 async def test_form_invalid_auth(hass, region):
