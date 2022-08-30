@@ -105,16 +105,18 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         if ATTR_ACTIVITY in data:
             self.default_activity = data[ATTR_ACTIVITY]
 
-    def _setup_callbacks(self):
-        callbacks = {
-            "connected": self.async_got_connected,
-            "disconnected": self.async_got_disconnected,
-            "config_updated": self.async_new_config,
-            "activity_starting": self.async_new_activity,
-            "activity_started": self.async_new_activity_finished,
-        }
-
-        self.async_on_remove(self._data.async_subscribe(HarmonyCallback(**callbacks)))
+    def _setup_callbacks(self) -> None:
+        self.async_on_remove(
+            self._data.async_subscribe(
+                HarmonyCallback(
+                    connected=self.async_got_connected,
+                    disconnected=self.async_got_disconnected,
+                    config_updated=self.async_new_config,
+                    activity_starting=self.async_new_activity,
+                    activity_started=self.async_new_activity_finished,
+                )
+            )
+        )
 
     @callback
     def async_new_activity_finished(self, activity_info: tuple) -> None:

@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = TautulliDataUpdateCoordinator(hass, host_configuration, api_client)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -45,6 +45,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
     """Defines a base Tautulli entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

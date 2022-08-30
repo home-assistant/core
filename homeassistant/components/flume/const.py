@@ -1,6 +1,9 @@
 """The Flume component."""
 from __future__ import annotations
 
+from datetime import timedelta
+import logging
+
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import Platform
 
@@ -9,6 +12,11 @@ DOMAIN = "flume"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_NAME = "Flume Sensor"
+
+NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=1)
+DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+
+_LOGGER = logging.getLogger(__package__)
 
 FLUME_TYPE_SENSOR = 2
 FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (

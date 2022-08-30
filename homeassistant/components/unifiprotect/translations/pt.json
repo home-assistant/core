@@ -1,0 +1,26 @@
+{
+    "config": {
+        "flow_title": "{name} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "username": "Nome de Utilizador"
+                },
+                "description": "Do you want to setup {name} ({ip_address})? "
+            },
+            "reauth_confirm": {
+                "data": {
+                    "port": "Porta"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "verify_ssl": "Verificar o certificado SSL"
+                }
+            }
+        }
+    }
+}

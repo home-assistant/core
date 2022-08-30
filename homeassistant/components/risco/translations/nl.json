@@ -9,6 +9,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "pin": "Pincode",
+                    "username": "Gebruikersnaam"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

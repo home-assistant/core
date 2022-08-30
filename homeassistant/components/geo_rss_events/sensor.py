@@ -150,7 +150,7 @@ class GeoRssServiceSensor(SensorEntity):
         """Return the state attributes."""
         return self._state_attributes
 
-    def update(self):
+    def update(self) -> None:
         """Update this sensor from the GeoRSS service."""
 
         status, feed_entries = self._feed.update()

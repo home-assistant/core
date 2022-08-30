@@ -513,6 +513,8 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
+    client.async_send_command.reset_mock()
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -773,6 +775,8 @@ async def test_thermostat_fan_without_off(
 
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
+
+    client.async_send_command.reset_mock()
 
     state = hass.states.get(entity_id)
     assert state

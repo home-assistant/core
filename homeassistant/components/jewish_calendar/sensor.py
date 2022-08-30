@@ -64,6 +64,11 @@ TIME_SENSORS = (
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
+        key="sunrise",
+        name="Hanetz Hachama",
+        icon="mdi:calendar-clock",
+    ),
+    SensorEntityDescription(
         key="gra_end_shma",
         name='Latest time for Shma Gr"a',
         icon="mdi:calendar-clock",

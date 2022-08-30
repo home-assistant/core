@@ -25,7 +25,7 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with _patch_glucose_readings(), _patch_server_status(), _patch_async_setup_entry() as mock_setup_entry:
@@ -34,7 +34,7 @@ async def test_form(hass):
             CONFIG,
         )
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == SERVER_STATUS.name  # pylint: disable=maybe-no-member
         assert result2["data"] == CONFIG
         await hass.async_block_till_done()
@@ -56,7 +56,7 @@ async def test_user_form_cannot_connect(hass):
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -78,7 +78,7 @@ async def test_user_form_api_key_required(hass):
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -97,7 +97,7 @@ async def test_user_form_unexpected_exception(hass):
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -112,7 +112,7 @@ async def test_user_form_duplicate(hass):
             context={"source": config_entries.SOURCE_USER},
             data=CONFIG,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 

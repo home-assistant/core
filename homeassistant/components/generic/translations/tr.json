@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Bu URL ayarlar\u0131na sahip bir kamera zaten var.",
             "invalid_still_image": "URL ge\u00e7erli bir hareketsiz resim d\u00f6nd\u00fcrmedi",
+            "malformed_url": "Hatal\u0131 bi\u00e7imlendirilmi\u015f URL",
             "no_still_image_or_stream_url": "En az\u0131ndan bir dura\u011fan resim veya ak\u0131\u015f URL'si belirtmelisiniz",
+            "relative_url": "G\u00f6receli URL'lere izin verilmez",
             "stream_file_not_found": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken dosya bulunamad\u0131 (ffmpeg y\u00fckl\u00fc m\u00fc?)",
             "stream_http_not_found": "HTTP 404 Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken bulunamad\u0131",
             "stream_io_error": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken Giri\u015f/\u00c7\u0131k\u0131\u015f hatas\u0131. Yanl\u0131\u015f RTSP aktar\u0131m protokol\u00fc?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Bu URL ayarlar\u0131na sahip bir kamera zaten var.",
             "invalid_still_image": "URL ge\u00e7erli bir hareketsiz resim d\u00f6nd\u00fcrmedi",
+            "malformed_url": "Hatal\u0131 bi\u00e7imlendirilmi\u015f URL",
             "no_still_image_or_stream_url": "En az\u0131ndan bir dura\u011fan resim veya ak\u0131\u015f URL'si belirtmelisiniz",
+            "relative_url": "G\u00f6receli URL'lere izin verilmez",
             "stream_file_not_found": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken dosya bulunamad\u0131 (ffmpeg y\u00fckl\u00fc m\u00fc?)",
             "stream_http_not_found": "HTTP 404 Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken bulunamad\u0131",
             "stream_io_error": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken Giri\u015f/\u00c7\u0131k\u0131\u015f hatas\u0131. Yanl\u0131\u015f RTSP aktar\u0131m protokol\u00fc?",

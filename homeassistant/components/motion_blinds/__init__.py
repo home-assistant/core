@@ -65,36 +65,43 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
 
     def update_gateway(self):
-        """Call all updates using one async_add_executor_job."""
-        data = {}
-
+        """Fetch data from gateway."""
         try:
             self._gateway.Update()
         except (timeout, ParseException):
             # let the error be logged and handled by the motionblinds library
-            data[KEY_GATEWAY] = {ATTR_AVAILABLE: False}
-            return data
+            return {ATTR_AVAILABLE: False}
         else:
-            data[KEY_GATEWAY] = {ATTR_AVAILABLE: True}
+            return {ATTR_AVAILABLE: True}
 
-        for blind in self._gateway.device_list.values():
-            try:
-                if self._wait_for_push:
-                    blind.Update()
-                else:
-                    blind.Update_trigger()
-            except (timeout, ParseException):
-                # let the error be logged and handled by the motionblinds library
-                data[blind.mac] = {ATTR_AVAILABLE: False}
+    def update_blind(self, blind):
+        """Fetch data from a blind."""
+        try:
+            if self._wait_for_push:
+                blind.Update()
             else:
-                data[blind.mac] = {ATTR_AVAILABLE: True}
-
-        return data
+                blind.Update_trigger()
+        except (timeout, ParseException):
+            # let the error be logged and handled by the motionblinds library
+            return {ATTR_AVAILABLE: False}
+        else:
+            return {ATTR_AVAILABLE: True}
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
+        data = {}
+
         async with self.api_lock:
-            data = await self.hass.async_add_executor_job(self.update_gateway)
+            data[KEY_GATEWAY] = await self.hass.async_add_executor_job(
+                self.update_gateway
+            )
+
+        for blind in self._gateway.device_list.values():
+            await asyncio.sleep(1.5)
+            async with self.api_lock:
+                data[blind.mac] = await self.hass.async_add_executor_job(
+                    self.update_blind, blind
+                )
 
         all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
@@ -113,8 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
     wait_for_push = entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Create multicast Listener
     async with setup_lock:
@@ -204,7 +209,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=version,
         )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 

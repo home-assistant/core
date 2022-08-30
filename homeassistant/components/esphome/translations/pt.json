@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
-            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer"
+            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer",
+            "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida"
         },
         "error": {
             "connection_error": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao ESP. Por favor, verifique se o seu arquivo YAML cont\u00e9m uma linha 'api:'.",
@@ -20,6 +21,9 @@
             "discovery_confirm": {
                 "description": "Deseja adicionar um n\u00f3 ESPHome `{name}` ao Home Assistant?",
                 "title": "N\u00f3 ESPHome descoberto"
+            },
+            "encryption_key": {
+                "description": "Insira a chave de criptografia que voc\u00ea definiu em sua configura\u00e7\u00e3o para {name}."
             },
             "user": {
                 "data": {

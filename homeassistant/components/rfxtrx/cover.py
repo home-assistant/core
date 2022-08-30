@@ -71,6 +71,21 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         """Initialize the RFXtrx cover device."""
         super().__init__(device, device_id, event)
         self._venetian_blind_mode = venetian_blind_mode
+        self._attr_is_closed: bool | None = True
+
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+
+        if venetian_blind_mode in (
+            CONST_VENETIAN_BLIND_MODE_US,
+            CONST_VENETIAN_BLIND_MODE_EU,
+        ):
+            self._attr_supported_features |= (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+            )
 
     async def async_added_to_hass(self) -> None:
         """Restore device state."""
@@ -79,31 +94,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         if self._event is None:
             old_state = await self.async_get_last_state()
             if old_state is not None:
-                self._state = old_state.state == STATE_OPEN
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
-
-        if self._venetian_blind_mode in (
-            CONST_VENETIAN_BLIND_MODE_US,
-            CONST_VENETIAN_BLIND_MODE_EU,
-        ):
-            supported_features |= (
-                CoverEntityFeature.OPEN_TILT
-                | CoverEntityFeature.CLOSE_TILT
-                | CoverEntityFeature.STOP_TILT
-            )
-
-        return supported_features
-
-    @property
-    def is_closed(self) -> bool:
-        """Return if the cover is closed."""
-        return not self._state
+                self._attr_is_closed = old_state.state != STATE_OPEN
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
@@ -113,7 +104,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             await self._async_send(self._device.send_up2sec)
         else:
             await self._async_send(self._device.send_open)
-        self._state = True
+        self._attr_is_closed = False
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -124,13 +115,13 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             await self._async_send(self._device.send_down2sec)
         else:
             await self._async_send(self._device.send_close)
-        self._state = False
+        self._attr_is_closed = True
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_send(self._device.send_stop)
-        self._state = True
+        self._attr_is_closed = False
         self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
@@ -150,7 +141,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self._async_send(self._device.send_stop)
-        self._state = True
+        self._attr_is_closed = False
         self.async_write_ha_state()
 
     def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
@@ -158,9 +149,9 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
-            self._state = True
+            self._attr_is_closed = False
         elif event.values["Command"] in COMMAND_OFF_LIST:
-            self._state = False
+            self._attr_is_closed = True
 
     @callback
     def _handle_event(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):

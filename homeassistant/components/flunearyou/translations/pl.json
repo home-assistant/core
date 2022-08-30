@@ -16,5 +16,18 @@
                 "title": "Konfiguracja Flu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Zewn\u0119trzne \u017ar\u00f3d\u0142o danych dla integracji Flu Near You nie jest ju\u017c dost\u0119pne; tym sposobem integracja ju\u017c nie dzia\u0142a. \n\nNaci\u015bnij ZATWIERD\u0179, aby usun\u0105\u0107 Flu Near You z Home Assistanta.",
+                        "title": "Usu\u0144 Flu Near You"
+                    }
+                }
+            },
+            "title": "Flu Near You nie jest ju\u017c dost\u0119pna"
+        }
     }
 }

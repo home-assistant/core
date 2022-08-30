@@ -3,10 +3,13 @@
         "abort": {
             "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
             "email_2fa_timed_out": "Meilip\u00f5hise kahefaktorilise autentimise ajal\u00f5pp.",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "wrong_account": "Esitatud kasutaja mandaadid ei \u00fchti selle SimpliSafe kontoga."
         },
         "error": {
+            "identifier_exists": "Konto on juba registreeritud",
             "invalid_auth": "Tuvastamise viga",
+            "invalid_auth_code_length": "SimpliSafe autoriseerimiskoodid on 45 t\u00e4hem\u00e4rki pikad.",
             "unknown": "Tundmatu viga"
         },
         "progress": {
@@ -28,10 +31,11 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Tuvastuskood",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta kasutajatunnus ja salas\u00f5na"
+                "description": "SimpliSafe autentib kasutajad veebirakenduse kaudu. Tehniliste piirangute t\u00f5ttu on selle protsessi l\u00f5pus manuaalne samm; palun lugege enne alustamist kindlasti [dokumentatsiooni](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code).\n\nKui olete valmis, kl\u00f5psake [siin]({url}), et avada SimpliSafe veebirakendus ja sisestada oma volitused. Kui olete juba SimpliSafe'ile oma brauseris sisse loginud, siis avage uus vahekaart ja kopeerige/liidke \u00fclaltoodud URL sellesse vahekaarti.\n\nKui protsess on l\u00f5pule viidud, naaske siia ja sisestage autoriseerimiskood `com.simplisafe.mobile` URL-i."
             }
         }
     },

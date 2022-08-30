@@ -6,7 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import automation, group, script, websocket_api
+from homeassistant.components import automation, group, person, script, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
@@ -36,6 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "group",
                 "scene",
                 "script",
+                "person",
             )
         ),
         vol.Required("item_id"): str,
@@ -67,7 +68,7 @@ class Searcher:
     # These types won't be further explored. Config entries + Output types.
     DONT_RESOLVE = {"scene", "automation", "script", "group", "config_entry", "area"}
     # These types exist as an entity and so need cleanup in results
-    EXIST_AS_ENTITY = {"script", "scene", "automation", "group"}
+    EXIST_AS_ENTITY = {"script", "scene", "automation", "group", "person"}
 
     def __init__(
         self,
@@ -183,6 +184,9 @@ class Searcher:
         for entity in script.scripts_with_entity(self.hass, entity_id):
             self._add_or_resolve("entity", entity)
 
+        for entity in person.persons_with_entity(self.hass, entity_id):
+            self._add_or_resolve("entity", entity)
+
         # Find devices
         entity_entry = self._entity_reg.async_get(entity_id)
         if entity_entry is not None:
@@ -249,6 +253,15 @@ class Searcher:
         Will only be called if scene is an entry point.
         """
         for entity in scene.entities_in_scene(self.hass, scene_entity_id):
+            self._add_or_resolve("entity", entity)
+
+    @callback
+    def _resolve_person(self, person_entity_id) -> None:
+        """Resolve a person.
+
+        Will only be called if person is an entry point.
+        """
+        for entity in person.entities_in_person(self.hass, person_entity_id):
             self._add_or_resolve("entity", entity)
 
     @callback

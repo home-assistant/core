@@ -1,23 +1,6 @@
 """Tests for the Sonos Media Player platform."""
-import pytest
-
-from homeassistant.components.sonos import DOMAIN, media_player
 from homeassistant.const import STATE_IDLE
-from homeassistant.core import Context
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import device_registry as dr
-
-
-async def test_services(hass, async_autosetup_sonos, hass_read_only_user):
-    """Test join/unjoin requires control access."""
-    with pytest.raises(Unauthorized):
-        await hass.services.async_call(
-            DOMAIN,
-            media_player.SERVICE_JOIN,
-            {"master": "media_player.bla", "entity_id": "media_player.blub"},
-            blocking=True,
-            context=Context(user_id=hass_read_only_user.id),
-        )
 
 
 async def test_device_registry(hass, async_autosetup_sonos, soco):

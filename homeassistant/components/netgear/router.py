@@ -42,9 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_api(
     password: str,
-    host: str = None,
-    username: str = None,
-    port: int = None,
+    host: str | None = None,
+    username: str | None = None,
+    port: int | None = None,
     ssl: bool = False,
 ) -> Netgear:
     """Get the Netgear API and login to it."""
@@ -198,6 +198,9 @@ class NetgearRouter:
             _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
 
         for ntg_device in ntg_devices:
+            if ntg_device.mac is None:
+                continue
+
             device_mac = format_mac(ntg_device.mac)
 
             if not self.devices.get(device_mac):
@@ -250,7 +253,7 @@ class NetgearRouter:
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._api.reboot)
 
-    async def async_check_new_firmware(self) -> None:
+    async def async_check_new_firmware(self) -> dict[str, Any] | None:
         """Check for new firmware of the router."""
         async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.check_new_firmware)

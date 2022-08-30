@@ -24,5 +24,11 @@
                 "description": "Seadista Ambee sidumine Home Assistantiga."
             }
         }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "Ambee integratsioon on Home Assistantist eemaldamisel ja ei ole enam saadaval alates Home Assistant 2022.10.\n\nIntegratsioon eemaldatakse, sest Ambee eemaldas oma tasuta (piiratud) kontod ja ei paku tavakasutajatele enam v\u00f5imalust tasulisele plaanile registreeruda.\n\nSelle probleemi lahendamiseks eemaldage Ambee integratsiooni kirje oma instantsist.",
+            "title": "Ambee integratsioon eemaldatakse"
+        }
     }
 }

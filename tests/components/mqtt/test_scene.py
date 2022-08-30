@@ -22,7 +22,10 @@ from .test_common import (
     help_test_reloadable_late,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
 )
+
+from tests.common import mock_restore_cache
 
 DEFAULT_CONFIG = {
     scene.DOMAIN: {
@@ -44,25 +47,22 @@ def scene_platform_only():
 async def test_sending_mqtt_commands(hass, mqtt_mock_entry_with_yaml_config):
     """Test the sending MQTT commands."""
     fake_state = ha.State("scene.test", STATE_UNKNOWN)
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            scene.DOMAIN,
-            {
-                scene.DOMAIN: {
-                    "platform": "mqtt",
-                    "name": "test",
-                    "command_topic": "command-topic",
-                    "payload_on": "beer on",
-                },
+    assert await async_setup_component(
+        hass,
+        scene.DOMAIN,
+        {
+            scene.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": "beer on",
             },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("scene.test")
     assert state.state == STATE_UNKNOWN
@@ -237,3 +237,12 @@ async def test_setup_manual_entity_from_yaml(hass):
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = scene.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )
