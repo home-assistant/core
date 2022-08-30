@@ -136,11 +136,9 @@ async def async_setup_entry(
     """Set up Litter-Robot sensors using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
-            for robot in hub.account.robots
-            for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
-            if isinstance(robot, robot_type)
-            for description in entity_descriptions
-        ]
+        LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
+        for robot in hub.account.robots
+        for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
+        if isinstance(robot, robot_type)
+        for description in entity_descriptions
     )
