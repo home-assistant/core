@@ -8,7 +8,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from aiohttp import ClientTimeout
 from life360 import Life360, Life360Error, LoginError
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert
 import homeassistant.util.dt as dt_util
@@ -107,9 +106,8 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
         )
         self._hass = hass
         self._api = Life360(
-            session=async_create_clientsession(
-                hass, timeout=ClientTimeout(total=COMM_TIMEOUT)
-            ),
+            session=async_get_clientsession(hass),
+            timeout=COMM_TIMEOUT,
             authorization=entry.data[CONF_AUTHORIZATION],
         )
         self._missing_loc_reason = hass.data[DOMAIN].missing_loc_reason

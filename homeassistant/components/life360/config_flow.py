@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast
 
-from aiohttp import ClientTimeout
 from life360 import Life360, Life360Error, LoginError
 import voluptuous as vol
 
@@ -13,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -69,9 +68,7 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Attempt to authorize the provided credentials."""
         if not self._api:
             self._api = Life360(
-                session=async_create_clientsession(
-                    self.hass, timeout=ClientTimeout(total=COMM_TIMEOUT)
-                ),
+                session=async_get_clientsession(self.hass), timeout=COMM_TIMEOUT
             )
         errors: dict[str, str] = {}
         try:
