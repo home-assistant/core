@@ -1,6 +1,8 @@
 """Support for Insteon thermostat."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
 
@@ -182,7 +184,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         attr["humidifier"] = humidifier
         return attr
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -214,7 +216,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         await super().async_added_to_hass()
         await self._insteon_device.async_read_op_flags()
