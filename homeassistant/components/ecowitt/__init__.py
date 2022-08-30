@@ -29,7 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Stop the Ecowitt listener."""
         await ecowitt.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_ecowitt)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_ecowitt)
+    )
 
     return True
 
