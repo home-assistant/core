@@ -2187,6 +2187,9 @@ sendgrid==6.8.2
 # homeassistant.components.sense
 sense_energy==0.10.4
 
+# homeassistant.components.sensorpro
+sensorpro-ble==0.4.0
+
 # homeassistant.components.sensorpush
 sensorpush-ble==1.5.2
 
