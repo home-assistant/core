@@ -1,3 +1,24 @@
+set_hev_cycle_state:
+  name: Set HEV Cycle State
+  description: Control the HEV LEDs on a LIFX Clean bulb.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power:
+      name: enable
+      description: Turn the HEV LEDs on (True) or off (False).
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: How long the HEV LEDs will remain on. Uses the configured default duration if not specified.
+      selector:
+        number:
+          min: 0
+          max: 86400
+          unit_of_measurement: seconds
 set_state:
   name: Set State
   description: Set a color/brightness and possibly turn the light on/off.
