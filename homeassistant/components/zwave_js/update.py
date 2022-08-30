@@ -112,10 +112,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         Sets latest version attribute and FirmwareUpdateInfo instance.
         """
-        if self.available_firmware_updates:
-            self._latest_version_firmware = firmware = max(
+        if self.available_firmware_updates and (
+            firmware := max(
                 self.available_firmware_updates, key=lambda x: AwesomeVersion(x.version)
             )
+        ) > AwesomeVersion(self.node.firmware_version):
+            self._latest_version_firmware = firmware
             self._attr_latest_version = firmware.version
         else:
             self._latest_version_firmware = None
