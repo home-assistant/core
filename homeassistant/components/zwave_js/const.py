@@ -120,3 +120,7 @@ ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
+
+# This API key is only for use with Home Assistant. Reach out to Z-Wave JS to apply for
+# your own (https://github.com/zwave-js/firmware-updates/).
+API_KEY_FIRMWARE_UPDATE_SERVICE = "b48e74337db217f44e1e003abb1e9144007d260a17e2b2422e0a45d0eaf6f4ad86f2a9943f17fee6dde343941f238a64"
