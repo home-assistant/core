@@ -284,7 +284,7 @@ class SonosSpeaker:
 
     @property
     def subscription_address(self) -> str:
-        """Return the current subscription callback address if any."""
+        """Return the current subscription callback address."""
         assert len(self._subscriptions) > 0
         addr, port = self._subscriptions[0].event_listener.address
         return ":".join([addr, str(port)])
