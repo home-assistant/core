@@ -18,13 +18,16 @@ from .hub import LitterRobotHub
 
 
 @dataclass
-class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_RobotT]):
-    """A class that describes robot switch entities."""
+class RequiredKeysMixin(Generic[_RobotT]):
+    """A class that describes robot switch entity required keys."""
 
-    icons: tuple[str | None, str | None] = (None, None)
-    set_fn: Callable[
-        [_RobotT], Callable[[bool], Coroutine[Any, Any, bool]]
-    ] | None = None
+    icons: tuple[str, str]
+    set_fn: Callable[[_RobotT], Callable[[bool], Coroutine[Any, Any, bool]]]
+
+
+@dataclass
+class RobotSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin[_RobotT]):
+    """A class that describes robot switch entities."""
 
 
 ROBOT_SWITCHES = [
@@ -67,20 +70,22 @@ class RobotSwitchEntity(LitterRobotConfigEntity[_RobotT], SwitchEntity):
         return bool(getattr(self.robot, self.entity_description.key))
 
     @property
-    def icon(self) -> str | None:
+    def icon(self) -> str:
         """Return the icon."""
         icon_on, icon_off = self.entity_description.icons
         return icon_on if self.is_on else icon_off
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if set_fn := self.entity_description.set_fn:
-            await self.perform_action_and_assume_state(set_fn(self.robot), True)
+        await self.perform_action_and_assume_state(
+            self.entity_description.set_fn(self.robot), True
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        if set_fn := self.entity_description.set_fn:
-            await self.perform_action_and_assume_state(set_fn(self.robot), False)
+        await self.perform_action_and_assume_state(
+            self.entity_description.set_fn(self.robot), False
+        )
 
 
 async def async_setup_entry(
