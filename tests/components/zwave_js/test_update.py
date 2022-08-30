@@ -269,3 +269,7 @@ async def test_update_entity_sleep(
 
     # Now that the node is up we can check for updates
     assert len(client.async_send_command.call_args_list) > 0
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "controller.get_available_firmware_updates"
+    assert args["nodeId"] == multisensor_6.node_id
