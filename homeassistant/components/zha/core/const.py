@@ -236,13 +236,13 @@ _ControllerClsType = type[zigpy.application.ControllerApplication]
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    znp = (
-        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
-        zigpy_znp.zigbee.application.ControllerApplication,
-    )
     ezsp = (
         "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
         bellows.zigbee.application.ControllerApplication,
+    )
+    znp = (
+        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_znp.zigbee.application.ControllerApplication,
     )
     deconz = (
         "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
@@ -263,11 +263,11 @@ class RadioType(enum.Enum):
         return [e.description for e in RadioType]
 
     @classmethod
-    def get_by_description(cls, description: str) -> str:
+    def get_by_description(cls, description: str) -> RadioType:
         """Get radio by description."""
         for radio in cls:
             if radio.description == description:
-                return radio.name
+                return radio
         raise ValueError
 
     def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:

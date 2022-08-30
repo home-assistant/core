@@ -106,6 +106,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     _attr_fan_modes = [FAN_ON, FAN_AUTO]
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
+    _attr_precision = PRECISION_HALVES
 
     def __init__(
         self,
@@ -138,15 +139,6 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         return features
-
-    @property
-    def precision(self):
-        """Return the precision of the system.
-
-        Venstar temperature values are passed back and forth in the
-        API in C or F, with half-degree accuracy.
-        """
-        return PRECISION_HALVES
 
     @property
     def temperature_unit(self):

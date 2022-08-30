@@ -99,6 +99,7 @@ ABBREVIATIONS = {
     "min_mirs": "min_mireds",
     "max_temp": "max_temp",
     "min_temp": "min_temp",
+    "mode": "mode",
     "mode_cmd_tpl": "mode_command_template",
     "mode_cmd_t": "mode_command_topic",
     "mode_stat_t": "mode_state_topic",
