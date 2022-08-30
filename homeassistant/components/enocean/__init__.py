@@ -267,18 +267,18 @@ async def async_setup_entry(
                 if old_entity is None:
                     continue
 
-                new_name = None
-                if new_entity.name is not None:
-                    new_name = old_entity.name
-
                 ent_reg.async_update_entity(
                     entity_id=new_entity.entity_id,
                     new_entity_id=old_entity.entity_id,
                     area_id=old_entity.area_id,
                     device_class=old_entity.device_class,
                     icon=old_entity.icon,
-                    name=new_name,
+                    name=old_entity.name,
                 )
+
+        LOGGER.warning(
+            "Import of EnOcean platform configurations completed. Please delete these entries from your configuration.yaml"
+        )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _schedule_yaml_import)
 
