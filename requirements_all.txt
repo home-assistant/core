@@ -427,7 +427,7 @@ blockchain==1.4.4
 bluetooth-adapters==0.3.2
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.2.2
+bluetooth-auto-recovery==0.3.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -2405,7 +2405,7 @@ uasiren==0.0.1
 ultraheat-api==0.4.1
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.5
+unifi-discovery==1.1.6
 
 # homeassistant.components.unifiled
 unifiled==0.11
