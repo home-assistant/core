@@ -19,8 +19,6 @@ from zwave_js_server.model.notification import (
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -28,6 +26,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -244,7 +243,7 @@ async def setup_driver(  # noqa: C901
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
     discovered_value_ids: dict[str, set[str]] = defaultdict(set)
 
-    async def async_setup_platform(platform: str) -> None:
+    async def async_setup_platform(platform: Platform) -> None:
         """Set up platform if needed."""
         if platform not in platform_setup_tasks:
             platform_setup_tasks[platform] = hass.async_create_task(
@@ -353,15 +352,21 @@ async def setup_driver(  # noqa: C901
         # No need for a ping button or node status sensor for controller nodes
         if not node.is_controller_node:
             # Create a node status sensor for each device
-            await async_setup_platform(SENSOR_DOMAIN)
+            await async_setup_platform(Platform.SENSOR)
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
             )
 
             # Create a ping button for each device
-            await async_setup_platform(BUTTON_DOMAIN)
+            await async_setup_platform(Platform.BUTTON)
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_ping_button_entity", node
+            )
+
+            # Create a firmware update entity for each device
+            await async_setup_platform(Platform.UPDATE)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_firmware_update_entity", node
             )
 
         # we only want to run discovery when the node has reached ready state,
