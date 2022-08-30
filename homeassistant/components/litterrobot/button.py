@@ -1,10 +1,10 @@
 """Support for Litter-Robot button."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 import itertools
-from typing import Any
+from typing import Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot3
 
@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotEntity
+from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
@@ -26,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    entities = itertools.chain(
+    entities: Iterable[LitterRobotButtonEntity] = itertools.chain(
         (
             LitterRobotButtonEntity(
                 robot=robot, hub=hub, description=LITTER_ROBOT_BUTTON
@@ -45,38 +45,20 @@ async def async_setup_entry(
 
 
 @dataclass
-class RobotButtonEntityDescription(ButtonEntityDescription):
+class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_RobotT]):
     """A class that describes robot button entities."""
 
-    press_fn: Callable[
-        [LitterRobot3 | FeederRobot], Coroutine[Any, Any, bool] | None
-    ] = lambda _: None
+    press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool] | None] = lambda _: None
 
 
-@dataclass
-class LitterRobotButtonEntityDescription(RobotButtonEntityDescription):
-    """A class that describes Litter-Robot button entities."""
-
-    press_fn: Callable[
-        [LitterRobot3], Coroutine[Any, Any, bool] | None
-    ] = lambda _: None
-
-
-@dataclass
-class FeederRobotButtonEntityDescription(RobotButtonEntityDescription):
-    """A class that describes Feeder-Robot button entities."""
-
-    press_fn: Callable[[FeederRobot], Coroutine[Any, Any, bool] | None] = lambda _: None
-
-
-LITTER_ROBOT_BUTTON = LitterRobotButtonEntityDescription(
+LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
     name="Reset Waste Drawer",
     icon="mdi:delete-variant",
     entity_category=EntityCategory.CONFIG,
     press_fn=lambda robot: robot.reset_waste_drawer(),
 )
-FEEDER_ROBOT_BUTTON = FeederRobotButtonEntityDescription(
+FEEDER_ROBOT_BUTTON = RobotButtonEntityDescription[FeederRobot](
     key="give_snack",
     name="Give snack",
     icon="mdi:candy-outline",
@@ -84,17 +66,16 @@ FEEDER_ROBOT_BUTTON = FeederRobotButtonEntityDescription(
 )
 
 
-class LitterRobotButtonEntity(LitterRobotEntity[LitterRobot3], ButtonEntity):
+class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
     """Litter-Robot button entity."""
 
-    entity_description: RobotButtonEntityDescription
-    robot: LitterRobot3 | FeederRobot
+    entity_description: RobotButtonEntityDescription[_RobotT]
 
     def __init__(
         self,
-        robot: LitterRobot3 | FeederRobot,
+        robot: _RobotT,
         hub: LitterRobotHub,
-        description: RobotButtonEntityDescription,
+        description: RobotButtonEntityDescription[_RobotT],
     ) -> None:
         """Initialize a Litter-Robot button entity."""
         assert description.name
