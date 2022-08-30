@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import combine_hex, from_hex_string
+from enocean.utils import combine_hex, from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -14,12 +14,16 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, CONF_NAME
+from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import (
+    EnOceanPlatformConfig,
+    register_platform_config_for_migration_to_config_entry,
+)
 from .config_flow import (
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_EEP,
@@ -50,11 +54,15 @@ def setup_platform(
 ) -> None:
     """Set up the EnOcean light platform."""
 
-    sender_id = config.get(CONF_SENDER_ID)
-    dev_name = config.get(CONF_NAME)
-    dev_id = config.get(CONF_ID)
+    # sender_id = config.get(CONF_SENDER_ID)
+    # dev_name = config.get(CONF_NAME)
+    # dev_id = config.get(CONF_ID)
 
-    add_entities([EnOceanLight(sender_id, dev_id, dev_name, name=dev_name)])
+    # add_entities([EnOceanLight(sender_id, dev_id, dev_name, name=dev_name, from_platform=True)])
+
+    register_platform_config_for_migration_to_config_entry(
+        EnOceanPlatformConfig(platform=Platform.LIGHT.value, config=config)
+    )
 
 
 async def async_setup_entry(
@@ -101,13 +109,20 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         dev_name,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
+        from_platform=False,
     ):
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
-        self._attr_unique_id = f"{combine_hex(dev_id)}"
+
+        if from_platform:
+            self._attr_unique_id = f"{combine_hex(dev_id)}"
+        else:
+            self._attr_unique_id = (
+                f"{to_hex_string(dev_id).upper()}-{Platform.LIGHT.value}-0"
+            )
 
     @property
     def brightness(self):

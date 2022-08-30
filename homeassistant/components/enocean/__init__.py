@@ -178,6 +178,7 @@ async def async_setup_entry(
             new_unique_ids[dev_id_string] = []
             old_unique_ids[dev_id_string] = {}
             old_entities[dev_id_string] = {}
+            device_type = None
 
             if platform_config.platform == Platform.BINARY_SENSOR.value:
                 new_unique_id = (
@@ -195,11 +196,19 @@ async def async_setup_entry(
                         str(combine_hex(dev_id)) + "-" + device_class
                     )
 
-            if platform_config.platform == Platform.BINARY_SENSOR.value:
                 device_type = EnOceanSupportedDeviceType(
                     eep="F6-02-01",
                     manufacturer="Generic",
                     model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
+                )
+
+            elif platform_config.platform == Platform.LIGHT.value:
+                new_unique_id = dev_id_string + "-" + Platform.LIGHT.value + "-0"
+                new_unique_ids[dev_id_string].append(new_unique_id)
+                old_unique_ids[dev_id_string][new_unique_id] = str(combine_hex(dev_id))
+
+                device_type = EnOceanSupportedDeviceType(
+                    eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
                 )
 
             if device_type is None:
