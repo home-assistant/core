@@ -2108,7 +2108,6 @@ async def test_max_mireds(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting min_mireds and max_mireds."""
     config = {
         light.DOMAIN: {
-            "platform": "mqtt",
             "schema": "json",
             "name": "test",
             "command_topic": "test_max_mireds/set",
@@ -2117,7 +2116,7 @@ async def test_max_mireds(hass, mqtt_mock_entry_with_yaml_config):
         }
     }
 
-    assert await async_setup_component(hass, light.DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
