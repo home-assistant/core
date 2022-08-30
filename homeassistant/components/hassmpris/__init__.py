@@ -6,7 +6,7 @@ import datetime
 import hassmpris_client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -16,6 +16,7 @@ from .const import (
     CONF_MPRIS_PORT,
     DOMAIN,
     ENTRY_CLIENT,
+    ENTRY_UNLOAD_FUNC,
     ENTRY_UNLOADERS,
     LOGGER as _LOGGER,
 )
@@ -57,10 +58,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(str(exc)) from exc
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
+    component_data = hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_CLIENT: clnt,
         ENTRY_UNLOADERS: [],
     }
+
+    async def unload(*unused_args):
+        _LOGGER.debug("Running unloaders")
+        while component_data[ENTRY_UNLOADERS]:
+            unloader = component_data[ENTRY_UNLOADERS].pop()
+            await unloader()
+        _LOGGER.debug("Unloaders complete")
+
+    component_data[ENTRY_UNLOAD_FUNC] = unload
+
+    async def async_close_client():
+        if ENTRY_CLIENT in component_data:
+            clnt = component_data[ENTRY_CLIENT]
+            _LOGGER.debug("Closing connection to agent")
+            await clnt.close()
+            _LOGGER.debug("Connection closed")
+            component_data.pop(ENTRY_CLIENT)
+
+    component_data[ENTRY_UNLOADERS].append(async_close_client)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unload)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -70,14 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data = hass.data[DOMAIN].pop(entry.entry_id)
-        _LOGGER.debug("Closing connection to agent")
-        await data[ENTRY_CLIENT].close()
-        _LOGGER.debug("Connection closed -- running unloaders")
-        unloaders = data[ENTRY_UNLOADERS]
-        for unloader in reversed(unloaders):
-            await unloader()
-        _LOGGER.debug("Unloaders complete")
+        component_data = hass.data[DOMAIN].pop(entry.entry_id)
+        unload_func = component_data[ENTRY_UNLOAD_FUNC]
+        await unload_func()
 
     return unload_ok
 

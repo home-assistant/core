@@ -17,7 +17,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -672,5 +671,4 @@ async def async_setup_entry(
             _LOGGER.debug("Entity manager stopped")
             component_data.pop(ENTRY_MEDIA_PLAYER_ENTITY_MANAGER)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_manager)
     component_data[ENTRY_UNLOADERS].append(async_stop_manager)
