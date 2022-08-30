@@ -1,5 +1,6 @@
 """Support for Ecowitt Weather Stations."""
 import dataclasses
+from typing import Final
 
 from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
 
@@ -15,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .entity import EcowittEntity
 
-ECOWITT_BINARYSENSORS_MAPPING = {
+ECOWITT_BINARYSENSORS_MAPPING: Final = {
     EcoWittSensorTypes.LEAK: BinarySensorEntityDescription(
         key="LEAK", device_class=BinarySensorDeviceClass.MOISTURE
     ),
