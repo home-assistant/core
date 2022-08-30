@@ -375,7 +375,7 @@ class LutronCasetaDevice(Entity):
         return self._device["serial"]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the device (serial)."""
         return str(self._handle_none_serial(self.serial))
 
