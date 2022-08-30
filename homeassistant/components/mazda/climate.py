@@ -33,9 +33,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    region = hass.data[DOMAIN][config_entry.entry_id][DATA_REGION]
+    entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    client = entry_data[DATA_CLIENT]
+    coordinator = entry_data[DATA_COORDINATOR]
+    region = entry_data[DATA_REGION]
 
     async_add_entities(
         MazdaClimateEntity(client, coordinator, index, region)
