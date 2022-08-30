@@ -287,7 +287,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
             for device in devices
         ]
-        device_list.sort(key=lambda entry: entry["label"].lower())
+        device_list.sort(key=lambda entry: entry["label"].upper())
 
         if user_input is not None:
             device_id = user_input[CONF_DEVICE]
@@ -426,7 +426,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
             for device in devices
         ]
-        device_list.sort(key=lambda entry: entry["label"].lower())
+        device_list.sort(key=lambda entry: entry["label"].upper())
 
         if user_input is not None:
             device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
@@ -479,4 +479,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def normalize_enocean_id_string(self, id_string: str) -> str:
         """Normalize the supplied EnOcean ID string."""
-        return to_hex_string(from_hex_string(id_string))
+        return to_hex_string(from_hex_string(id_string)).upper()

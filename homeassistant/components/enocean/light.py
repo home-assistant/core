@@ -26,7 +26,6 @@ from .config_flow import (
     CONF_ENOCEAN_MANUFACTURER,
     CONF_ENOCEAN_MODEL,
 )
-from .const import LOGGER
 from .device import EnOceanEntity
 from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
@@ -50,11 +49,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean light platform."""
-
-    LOGGER.warning(
-        "Configuring EnOcean via configuration.yaml is deprecated"
-        "It will be removed in a future release"
-    )
 
     sender_id = config.get(CONF_SENDER_ID)
     dev_name = config.get(CONF_NAME)
