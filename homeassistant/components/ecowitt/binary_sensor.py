@@ -1,4 +1,5 @@
 """Support for Ecowitt Weather Stations."""
+import dataclasses
 
 from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
 
@@ -15,8 +16,12 @@ from .const import DOMAIN
 from .entity import EcowittEntity
 
 ECOWITT_BINARYSENSORS_MAPPING = {
-    EcoWittSensorTypes.LEAK: (BinarySensorDeviceClass.MOISTURE,),
-    EcoWittSensorTypes.BATTERY_BINARY: (BinarySensorDeviceClass.BATTERY,),
+    EcoWittSensorTypes.LEAK: BinarySensorEntityDescription(
+        key="LEAK", device_class=BinarySensorDeviceClass.MOISTURE
+    ),
+    EcoWittSensorTypes.BATTERY_BINARY: BinarySensorEntityDescription(
+        key="BATTERY", device_class=BinarySensorDeviceClass.BATTERY
+    ),
 }
 
 
@@ -33,10 +38,10 @@ async def async_setup_entry(
         mapping = ECOWITT_BINARYSENSORS_MAPPING[sensor.stype]
 
         # Setup sensor description
-        description = BinarySensorEntityDescription(
+        description = dataclasses.replace(
+            mapping,
             key=sensor.key,
             name=sensor.name,
-            device_class=mapping[0],
         )
 
         async_add_entities([EcowittBinarySensorEntity(sensor, description)])
