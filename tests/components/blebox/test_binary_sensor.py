@@ -29,10 +29,8 @@ def airsensor_fixture():
 
 async def test_init(rainsensor, hass, config):
     """Test binary_sensor initialisation."""
-    print("rainsensor:", rainsensor, "\n", config)
     _, entity_id = rainsensor
     entry = await async_setup_entity(hass, config, entity_id)
-    print("binary_sensor:", entry)
     assert entry.unique_id == "BleBox-windRainSensor-ea68e74f4f49-0.rain"
 
     state = hass.states.get(entity_id)
