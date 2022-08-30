@@ -337,14 +337,13 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
-        self._bridge_serial = bridge_device["serial"]
         self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         if "serial" not in self._device:
             return
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
@@ -367,14 +366,14 @@ class LutronCasetaDevice(Entity):
     @property
     def serial(self):
         """Return the serial number of the device."""
-        if self._device["serial"] is None:
-            return f"{self._bridge_serial}_{self.device_id}"
         return self._device["serial"]
 
     @property
     def unique_id(self):
         """Return the unique ID of the device (serial)."""
-        return str(self.serial)
+        if self._device["serial"] is None:
+            return f'{self._bridge_device["serial"]}_{self.device_id}'
+        return str(self._device["serial"])
 
     @property
     def extra_state_attributes(self):
