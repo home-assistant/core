@@ -42,11 +42,15 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "\u5fc5\u9808\u70ba\u4ee5\u9017\u865f\uff08\uff1a\uff09\u5206\u9694\u958b\u7684 MAC \u5730\u5740\u5217\u8868"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "\u5373\u6642\u6307\u6a19\uff08\u8b66\u544a\uff1a\u5927\u91cf\u63d0\u5347 CPU \u4f7f\u7528\u7387\uff09",
                     "disable_rtsp": "\u95dc\u9589 RTSP \u4e32\u6d41",
+                    "ignored_devices": "\u4ee5\u9017\u865f\u5206\u9694\u7684\u5ffd\u7565 MAC \u4f4d\u5740\u5217\u8868",
                     "max_media": "\u5a92\u9ad4\u700f\u89bd\u5668\u6700\u9ad8\u8f09\u5165\u4e8b\u4ef6\u6578\uff08\u589e\u52a0\u8a18\u61b6\u9ad4\u4f7f\u7528\uff09",
                     "override_connection_host": "\u7f6e\u63db\u9023\u7dda\u4e3b\u6a5f\u7aef"
                 },
