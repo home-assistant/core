@@ -1,6 +1,8 @@
 """Support for Litter-Robot selects."""
 from __future__ import annotations
 
+from pylitterbot import LitterRobot
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,7 +31,7 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotSelect(LitterRobotConfigEntity, SelectEntity):
+class LitterRobotSelect(LitterRobotConfigEntity[LitterRobot], SelectEntity):
     """Litter-Robot Select."""
 
     _attr_icon = "mdi:timer-outline"

@@ -83,13 +83,33 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_invalid_version(hass: HomeAssistant, mock_version_api) -> None:
-    """Test we handle invalid auth."""
+async def test_form_too_low_version(hass: HomeAssistant, mock_version_api) -> None:
+    """Test we handle too low API version."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     mock_version_api["api"] = "1.2.0"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "api_key": "abcdefg",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "not_supported"}
+
+
+async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> None:
+    """Test we handle invalid version."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_version_api["api"] = "i am not a version"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
