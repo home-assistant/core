@@ -55,6 +55,7 @@ class RequiredKeysMixin(Generic[_RobotT]):
 class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot button entities."""
 
+
 LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
     name="Reset Waste Drawer",
