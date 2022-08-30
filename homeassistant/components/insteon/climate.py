@@ -208,9 +208,9 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         mode = list(HVAC_MODES)[list(HVAC_MODES.values()).index(hvac_mode)]
         await self._insteon_device.async_set_mode(mode)
 
-    async def async_set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
-        change = humidity - self.target_humidity
+        change = humidity - (self.target_humidity or 0)
         high = self._insteon_device.groups[HUMIDITY_HIGH].value + change
         low = self._insteon_device.groups[HUMIDITY_LOW].value + change
         await self._insteon_device.async_set_humidity_low_set_point(low)
