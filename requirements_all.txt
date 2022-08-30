@@ -430,7 +430,7 @@ blockchain==1.4.4
 bluetooth-adapters==0.3.2
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.2.2
+bluetooth-auto-recovery==0.3.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
