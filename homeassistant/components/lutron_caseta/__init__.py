@@ -358,7 +358,7 @@ class LutronCasetaDevice(Entity):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 
-    def _handle_none_serial(self, serial):
+    def _handle_none_serial(self, serial: str | None) -> str | int:
         """Handle None serial returned by RA3 and QSX processors."""
         if serial is None:
             return f"{self._bridge_unique_id}_{self.device_id}"
