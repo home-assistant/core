@@ -63,7 +63,6 @@ SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
     key=API_SCORE,
     icon="mdi:blur",
     native_unit_of_measurement=PERCENTAGE,
-    name="Awair score",
     unique_id_tag="score",  # matches legacy format
     state_class=SensorStateClass.MEASUREMENT,
 )
