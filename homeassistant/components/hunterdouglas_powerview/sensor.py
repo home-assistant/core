@@ -69,20 +69,20 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         return f"{self._shade_name} Battery"
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Get the current value in percentage."""
         return round(
             self._shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
     @callback
-    def _async_update_shade_from_group(self):
+    def _async_update_shade_from_group(self) -> None:
         """Update with new data from the coordinator."""
         self._shade.raw_data = self.data.get_raw_data(self._shade.id)
         self.async_write_ha_state()
