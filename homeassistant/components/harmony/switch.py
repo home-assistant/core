@@ -1,5 +1,6 @@
 """Support for Harmony Hub activities."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -50,11 +51,11 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
         _, activity_name = self._data.current_activity
         return activity_name == self._activity_name
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Start this activity."""
         await self._data.async_start_activity(self._activity_name)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop this activity."""
         await self._data.async_power_off()
 

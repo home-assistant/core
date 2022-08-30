@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import itertools
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 import voluptuous as vol
 
@@ -81,6 +81,30 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     return schedule
 
 
+def deserialize_to_time(value: Any) -> Any:
+    """Convert 24:00 and 24:00:00 to time.max."""
+    if not isinstance(value, str):
+        return cv.time(value)
+
+    parts = value.split(":")
+    if len(parts) < 2:
+        return cv.time(value)
+    hour = int(parts[0])
+    minute = int(parts[1])
+
+    if hour == 24 and minute == 0:
+        return time.max
+
+    return cv.time(value)
+
+
+def serialize_to_time(value: Any) -> Any:
+    """Convert time.max to 24:00:00."""
+    if value == time.max:
+        return "24:00:00"
+    return vol.Coerce(str)(value)
+
+
 BASE_SCHEMA = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_ICON): cv.icon,
@@ -88,12 +112,14 @@ BASE_SCHEMA = {
 
 TIME_RANGE_SCHEMA = {
     vol.Required(CONF_FROM): cv.time,
-    vol.Required(CONF_TO): cv.time,
+    vol.Required(CONF_TO): deserialize_to_time,
 }
+
+# Serialize time in validated config
 STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_FROM): vol.All(cv.time, vol.Coerce(str)),
-        vol.Required(CONF_TO): vol.All(cv.time, vol.Coerce(str)),
+        vol.Required(CONF_FROM): vol.Coerce(str),
+        vol.Required(CONF_TO): serialize_to_time,
     }
 )
 
@@ -111,11 +137,17 @@ STORAGE_SCHEDULE_SCHEMA = {
 }
 
 
+# Validate YAML config
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(vol.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
     extra=vol.ALLOW_EXTRA,
 )
+# Validate storage config
 STORAGE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
+)
+# Validate + transform entity config
+ENTITY_SCHEMA = vol.Schema(
     {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
 )
 
@@ -219,7 +251,7 @@ class Schedule(Entity):
 
     def __init__(self, config: ConfigType, editable: bool = True) -> None:
         """Initialize a schedule."""
-        self._config = STORAGE_SCHEMA(config)
+        self._config = ENTITY_SCHEMA(config)
         self._attr_capability_attributes = {ATTR_EDITABLE: editable}
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
@@ -234,7 +266,7 @@ class Schedule(Entity):
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
-        self._config = STORAGE_SCHEMA(config)
+        self._config = ENTITY_SCHEMA(config)
         self._attr_icon = config.get(CONF_ICON)
         self._attr_name = config[CONF_NAME]
         self._clean_up_listener()
