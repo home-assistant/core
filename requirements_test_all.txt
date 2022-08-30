@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.14
+PySwitchbot==0.18.21
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -699,6 +699,9 @@ lacrosse-view==0.0.9
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
 
+# homeassistant.components.led_ble
+led-ble==0.5.4
+
 # homeassistant.components.foscam
 libpyfoscam==1.0
 
@@ -1151,7 +1154,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.8.0
+pylitterbot==2022.8.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1248,6 +1251,9 @@ pyprof2calltree==1.4.5
 # homeassistant.components.prosegur
 pyprosegur==0.0.5
 
+# homeassistant.components.prusalink
+pyprusalink==1.0.1
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
 
@@ -1332,7 +1338,7 @@ python-fullykiosk==0.0.11
 python-homewizard-energy==1.1.0
 
 # homeassistant.components.izone
-python-izone==1.2.3
+python-izone==1.2.9
 
 # homeassistant.components.juicenet
 python-juicenet==1.1.0
@@ -1385,7 +1391,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.8
+pyunifiprotect==4.1.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

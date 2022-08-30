@@ -408,3 +408,7 @@ class Strobe(t.enum8):
 
     No_Strobe = 0x00
     Strobe = 0x01
+
+
+STARTUP_FAILURE_DELAY_S = 3
+STARTUP_RETRIES = 3

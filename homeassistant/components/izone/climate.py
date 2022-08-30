@@ -126,6 +126,7 @@ def _return_on_connection_error(ret=None):
 class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_should_poll = False
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -252,11 +253,6 @@ class ControllerDevice(ClimateEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return f"iZone Controller {self._controller.device_uid}"
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def extra_state_attributes(self):
@@ -438,6 +434,7 @@ class ControllerDevice(ClimateEntity):
 class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_should_poll = False
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -525,11 +522,6 @@ class ZoneDevice(ClimateEntity):
         if self._zone.mode == Zone.Mode.AUTO:
             return self._attr_supported_features
         return self._attr_supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self) -> HVACMode | None:

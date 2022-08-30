@@ -23,12 +23,14 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
+    HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    SupportedModels.BULB.value: [Platform.SENSOR],
+    SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.LIGHT_STRIP.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.CURTAIN.value: [
@@ -44,6 +46,8 @@ CLASS_BY_DEVICE = {
     SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
     SupportedModels.BOT.value: switchbot.Switchbot,
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
+    SupportedModels.BULB.value: switchbot.SwitchbotBulb,
+    SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
 }
 
 
@@ -72,8 +76,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
+    switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
     # connectable means we can make connections to the device
-    connectable = sensor_type in CONNECTABLE_SUPPORTED_MODEL_TYPES.values()
+    connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
@@ -97,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.unique_id,
         entry.data.get(CONF_NAME, entry.title),
         connectable,
+        switchbot_model,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():

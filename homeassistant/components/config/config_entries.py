@@ -121,6 +121,7 @@ def _prepare_config_flow_result_json(result, prepare_result_json):
     data = result.copy()
     data["result"] = entry_json(result["result"])
     data.pop("data")
+    data.pop("context")
     return data
 
 
