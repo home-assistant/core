@@ -59,7 +59,7 @@ _IMPERIAL: Final = (
 )
 
 
-ECOWITT_SENSORS_MAPPING = {
+ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.HUMIDITY: SensorEntityDescription(
         key="HUMIDITY",
         device_class=SensorDeviceClass.HUMIDITY,
