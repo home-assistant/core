@@ -39,7 +39,10 @@ async def test_failed_update(
     assert mock_config_entry.state == ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.prusalink.PrusaLinkUpdateCoordinator._async_update_data",
+        "homeassistant.components.prusalink.PrusaLink.get_printer",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.prusalink.PrusaLink.get_job",
         side_effect=exception,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30), fire_all=True)
