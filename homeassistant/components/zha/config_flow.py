@@ -146,7 +146,7 @@ class ZhaFlowMixin:
         )
 
         # Don't create `zigbee.db` if it doesn't already exist
-        if not os.path.exists(database_path):
+        if not await self.hass.async_add_executor_job(os.path.exists, database_path):
             database_path = None
 
         app_config[CONF_DATABASE] = database_path
