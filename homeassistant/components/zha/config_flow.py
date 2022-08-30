@@ -767,10 +767,6 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
         ):
             return
 
-        setup = self.hass.config_entries.async_setup(self.config_entry.entry_id)
-
-        try:
-            self.hass.async_create_task(setup)
-        except RuntimeError:
-            # ZHA cannot be restarted if the event loop is closing
-            pass
+        self.hass.async_create_task(
+            self.hass.config_entries.async_setup(self.config_entry.entry_id)
+        )
