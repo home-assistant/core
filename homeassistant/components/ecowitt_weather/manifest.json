@@ -1,0 +1,13 @@
+{
+  "domain": "ecowitt_weather",
+  "name": "Ecowitt Weather",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ecowitt_weather",
+  "requirements": ["ecpatestapitest==0.0.8"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@ecowitt"],
+  "iot_class": "cloud_polling"
+}

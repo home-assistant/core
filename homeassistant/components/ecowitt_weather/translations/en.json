@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "cloud": {
+                "title": "Fill in your information",
+                "data": {
+                    "api_key": "API Key",
+                    "app_key": "Application Key",
+                    "mac": "MAC"
+                }
+            },
+            "local": {
+                "data": {
+                    "ip": "Device IP address"
+                },
+                "description": "Please enter the IP address of the device to view the data"
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Select connection type"
+                },
+                "description": ""
+            }
+        }
+    }
+}
