@@ -339,8 +339,10 @@ class EntityRegistry:
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
-        config_entry_id: UndefinedType | str = UNDEFINED
-        if config_entry and config_entry is not UNDEFINED:
+        config_entry_id: str | None | UndefinedType = UNDEFINED
+        if not config_entry:
+            config_entry_id = None
+        elif config_entry is not UNDEFINED:
             config_entry_id = config_entry.entry_id
 
         supported_features = supported_features or 0
