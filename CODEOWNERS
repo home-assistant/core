@@ -846,6 +846,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/prosegur/ @dgomes
 /tests/components/prosegur/ @dgomes
 /homeassistant/components/proxmoxve/ @jhollowe @Corbeno
+/homeassistant/components/prusalink/ @balloob
+/tests/components/prusalink/ @balloob
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pure_energie/ @klaasnicolaas

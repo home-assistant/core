@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}
