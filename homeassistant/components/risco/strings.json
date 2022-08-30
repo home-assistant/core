@@ -18,7 +18,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "pin": "[%key:common::config_flow::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "delay": "How long to wait (in seconds) before creating a new connection. Increase this if setup hangs."
         }
       }
     },

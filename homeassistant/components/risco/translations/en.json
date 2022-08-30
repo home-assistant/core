@@ -18,17 +18,13 @@
             },
             "local": {
                 "data": {
+                    "delay": "How long to wait (in seconds) before creating a new connection. Increase this if setup hangs.",
                     "host": "Host",
                     "pin": "PIN Code",
                     "port": "Port"
                 }
             },
             "user": {
-                "data": {
-                    "password": "Password",
-                    "pin": "PIN Code",
-                    "username": "Username"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (recommended)",
                     "local": "Local Risco Panel (advanced)"

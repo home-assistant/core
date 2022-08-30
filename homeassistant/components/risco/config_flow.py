@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import (
+    CONF_DELAY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PIN,
@@ -32,7 +33,6 @@ from .const import (
     DEFAULT_OPTIONS,
     DOMAIN,
     RISCO_STATES,
-    SLEEP_INTERVAL,
     TYPE_LOCAL,
 )
 
@@ -51,6 +51,7 @@ LOCAL_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=1000): int,
         vol.Required(CONF_PIN): str,
+        vol.Required(CONF_DELAY, default=5): int,
     }
 )
 HA_STATES = [
@@ -151,7 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 # Risco can hang if we don't wait before creating a new connection
-                await asyncio.sleep(SLEEP_INTERVAL)
+                await asyncio.sleep(user_input[CONF_DELAY])
 
                 return self.async_create_entry(
                     title=info["title"], data={**user_input, **{CONF_TYPE: TYPE_LOCAL}}

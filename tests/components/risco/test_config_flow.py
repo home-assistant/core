@@ -25,6 +25,7 @@ TEST_LOCAL_DATA = {
     "host": "test-host",
     "port": 5004,
     "pin": "1234",
+    "delay": 0,
 }
 
 TEST_RISCO_TO_HA = {
@@ -72,9 +73,6 @@ async def test_cloud_form(hass):
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoCloud.close"
     ) as mock_close, patch(
-        "homeassistant.components.risco.config_flow.SLEEP_INTERVAL",
-        0,
-    ), patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -168,9 +166,6 @@ async def test_local_form(hass):
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoLocal.disconnect"
     ) as mock_close, patch(
-        "homeassistant.components.risco.config_flow.SLEEP_INTERVAL",
-        0,
-    ), patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
