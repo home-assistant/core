@@ -17,7 +17,6 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
