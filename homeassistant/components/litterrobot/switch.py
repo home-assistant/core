@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic, Union
 
-from pylitterbot import FeederRobot, LitterRobot, Robot
+from pylitterbot import FeederRobot, LitterRobot
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -13,28 +13,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity
+from .entity import LitterRobotConfigEntity, _RobotT
 from .hub import LitterRobotHub
 
 
 @dataclass
-class RobotSwitchEntityDescription(SwitchEntityDescription):
+class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_RobotT]):
     """A class that describes robot switch entities."""
 
     icons: tuple[str | None, str | None] = (None, None)
     set_fn: Callable[
-        [LitterRobot | FeederRobot], Callable[[bool], Coroutine[Any, Any, bool]]
+        [_RobotT], Callable[[bool], Coroutine[Any, Any, bool]]
     ] | None = None
 
 
 ROBOT_SWITCHES = [
-    RobotSwitchEntityDescription(
+    RobotSwitchEntityDescription[Union[LitterRobot, FeederRobot]](
         key="night_light_mode_enabled",
         name="Night Light Mode",
         icons=("mdi:lightbulb-on", "mdi:lightbulb-off"),
         set_fn=lambda robot: robot.set_night_light,
     ),
-    RobotSwitchEntityDescription(
+    RobotSwitchEntityDescription[Union[LitterRobot, FeederRobot]](
         key="panel_lock_enabled",
         name="Panel Lockout",
         icons=("mdi:lock", "mdi:lock-open"),
@@ -43,16 +43,16 @@ ROBOT_SWITCHES = [
 ]
 
 
-class RobotSwitchEntity(LitterRobotConfigEntity, SwitchEntity):
+class RobotSwitchEntity(LitterRobotConfigEntity[_RobotT], SwitchEntity):
     """Litter-Robot switch entity."""
 
-    entity_description: RobotSwitchEntityDescription
+    entity_description: RobotSwitchEntityDescription[_RobotT]
 
     def __init__(
         self,
-        robot: Robot,
+        robot: _RobotT,
         hub: LitterRobotHub,
-        description: RobotSwitchEntityDescription,
+        description: RobotSwitchEntityDescription[_RobotT],
     ) -> None:
         """Initialize a Litter-Robot switch entity."""
         assert description.name
