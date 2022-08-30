@@ -100,7 +100,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
 
         return val
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Get initial data."""
         # To make sure we get initial data for the sensors ignoring the normal
         # throttle of 15 minutes but using an update throttle of 5 seconds
@@ -126,7 +126,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
         self._state = len(self._data.data[self._email])
         self.schedule_update_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Update data and see if it contains data for our email."""
         self._data.update()
 
