@@ -58,18 +58,19 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
         """Stop this activity."""
         await self._data.async_power_off()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-
-        callbacks = {
-            "connected": self.async_got_connected,
-            "disconnected": self.async_got_disconnected,
-            "activity_starting": self._async_activity_update,
-            "activity_started": self._async_activity_update,
-            "config_updated": None,
-        }
-
-        self.async_on_remove(self._data.async_subscribe(HarmonyCallback(**callbacks)))
+        self.async_on_remove(
+            self._data.async_subscribe(
+                HarmonyCallback(
+                    connected=self.async_got_connected,
+                    disconnected=self.async_got_disconnected,
+                    activity_starting=self._async_activity_update,
+                    activity_started=self._async_activity_update,
+                    config_updated=None,
+                )
+            )
+        )
 
     @callback
     def _async_activity_update(self, activity_info: tuple):
