@@ -34,6 +34,8 @@ class LitterRobotEntity(
 ):
     """Generic Litter-Robot entity representing common data and methods."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
