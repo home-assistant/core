@@ -20,8 +20,8 @@ from homeassistant import config_entries
 from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt
 
@@ -117,11 +117,13 @@ def _prevent_overwrite_ezsp_ieee(
     )
 
 
-class ZhaFlowMixin:
+class BaseZhaFlow(FlowHandler):
     """Mixin for common ZHA flow steps and forms."""
 
     def __init__(self):
         """Initialize flow instance."""
+        super().__init__()
+
         self._device_path: str | None = None
         self._device_settings: dict[str, Any] | None = None
         self._radio_type: RadioType | None = None
@@ -129,8 +131,6 @@ class ZhaFlowMixin:
         self._current_settings: zigpy.backups.NetworkBackup | None = None
         self._backups: list[zigpy.backups.NetworkBackup] | None = None
         self._chosen_backup: zigpy.backups.NetworkBackup | None = None
-
-        self.hass: HomeAssistant
 
     @contextlib.asynccontextmanager
     async def _connect_zigpy_app(self) -> ControllerApplication:
@@ -504,7 +504,7 @@ class ZhaFlowMixin:
         )
 
 
-class ZhaConfigFlowHandler(ZhaFlowMixin, config_entries.ConfigFlow, domain=DOMAIN):
+class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 3
@@ -672,7 +672,7 @@ class ZhaConfigFlowHandler(ZhaFlowMixin, config_entries.ConfigFlow, domain=DOMAI
         )
 
 
-class ZhaOptionsFlowHandler(ZhaFlowMixin, config_entries.OptionsFlow):
+class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
     """Handle an options flow."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
