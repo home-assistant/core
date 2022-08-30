@@ -213,6 +213,7 @@ async def async_setup_entry(
         async_add_entities([EcowittSensorEntity(sensor, description)])
 
     ecowitt.new_sensor_cb.append(_new_sensor)
+    entry.async_on_unload(lambda: ecowitt.new_sensor_cb.remove(_new_sensor))
 
     # Add all sensors that are already known
     for sensor in ecowitt.sensors.values():
