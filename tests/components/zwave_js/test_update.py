@@ -26,7 +26,7 @@ from tests.common import async_fire_time_changed
 UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 
 
-async def test_update_entity(
+async def test_update_entity_success(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
