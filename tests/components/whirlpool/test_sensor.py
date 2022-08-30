@@ -26,8 +26,9 @@ async def update_sensor_state(
 
 async def test_sensor_values(
     hass: HomeAssistant,
-    mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
+    mock_sensor2_api: MagicMock,
+    mock_sensor_api_instances: MagicMock,
 ):
     """Test the sensor value callbacks."""
     await init_integration(hass)
@@ -42,6 +43,7 @@ async def test_sensor_values(
 
     for sensor_test_instance in (
         SensorTestInstance("sensor.washer_state", mock_sensor1_api, 0),
+        SensorTestInstance("sensor.dryer_state", mock_sensor2_api, 1),
     ):
         entity_id = sensor_test_instance.entity_id
         mock_instance_idx = sensor_test_instance.mock_instance_idx

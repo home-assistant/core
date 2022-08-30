@@ -76,18 +76,20 @@ async def async_setup_entry(
 ) -> None:
     """Config flow entry for Whrilpool Laundry."""
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-    for appliance in whirlpool_data.appliances_manager.washer_dryers:
-        entities = [
-            WasherDryerClass(
-                appliance["SAID"],
-                appliance["NAME"],
-                whirlpool_data.backend_selector,
-                whirlpool_data.auth,
-                description,
-            )
-            for description in SENSORS
-        ]
-        async_add_entities(entities)
+
+    entities = [
+        WasherDryerClass(
+            appliance["SAID"],
+            appliance["NAME"],
+            whirlpool_data.backend_selector,
+            whirlpool_data.auth,
+            description,
+        )
+        for appliance in whirlpool_data.appliances_manager.washer_dryers
+        for description in SENSORS
+    ]
+
+    async_add_entities(entities)
 
 
 class WasherDryerClass(SensorEntity):

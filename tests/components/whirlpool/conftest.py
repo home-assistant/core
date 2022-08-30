@@ -105,12 +105,19 @@ def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
         yield mock_aircon_api
 
 
+def side_effect_function(*args, **kwargs):
+    """Return correct value for attribute."""
+    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
+        return 3540
+
+
 def get_sensor_mock(said):
     """Get a mock of a sensor."""
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
+    mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value.name = "RunningMainCycle"
-    mock_sensor.get_attribute.return_value = "3540"
+    mock_sensor.get_attribute.side_effect = side_effect_function
 
     return mock_sensor
 
@@ -133,5 +140,10 @@ def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
     with mock.patch(
         "homeassistant.components.whirlpool.sensor.WasherDryer"
     ) as mock_sensor_api:
-        mock_sensor_api.side_effect = [mock_sensor1_api, mock_sensor2_api]
+        mock_sensor_api.side_effect = [
+            mock_sensor1_api,
+            mock_sensor1_api,
+            mock_sensor2_api,
+            mock_sensor2_api,
+        ]
         yield mock_sensor_api
