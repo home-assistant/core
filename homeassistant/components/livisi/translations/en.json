@@ -1,15 +1,10 @@
 {
     "config": {
         "step": {
-            "user": {
-                "description": "Enter the IP address of the SHC.",
-                "data": {
-                    "host": "IP Address"
-                }
-            },
             "credentials": {
-                "description": "Enter the (local) password of the SHC.",
+                "description": "Enter the IP address and the (local) password of the SHC.",
                 "data": {
+                    "host": "IP Address",
                     "password": "Password"
                 }
             }

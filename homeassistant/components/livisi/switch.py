@@ -1,14 +1,20 @@
 """Code to handle a Livisi switches."""
-from aiolivisi import AioLivisi
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER, SWITCH_PLATFORM
-from .device import Device
+from .const import (
+    DOMAIN,
+    LIVISI_DISCOVERY_NEW,
+    LIVISI_REACHABILITY_CHANGE,
+    LIVISI_STATE_CHANGE,
+    LOGGER,
+)
 from .shc import SHC
 
 
@@ -18,48 +24,33 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch device."""
-
     shc = hass.data[DOMAIN][config_entry.entry_id]
 
-    @callback
-    async def async_add_switch(device) -> None:
+    async def async_discover_device(device) -> None:
         """Add switch."""
-        livisi_switch: LivisiSwitch = await create_device(device, hass, shc)
+        livisi_switch: SwitchEntity = await create_entity(
+            hass, config_entry, device, shc
+        )
         LOGGER.debug("Include device type: %s", device.get("type"))
-        shc.included_devices.append(livisi_switch)
         async_add_entities([livisi_switch])
 
-    shc.register_new_device_callback(SWITCH_PLATFORM, async_add_switch)
-    await async_setup_switch_entry(hass, shc, async_add_entities)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, LIVISI_DISCOVERY_NEW, async_discover_device)
+    )
 
 
-async def async_setup_switch_entry(
-    hass: HomeAssistant,
-    shc: SHC,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up switch device."""
-
-    livisi_switches = []
-    for device in shc.switch_devices:
-        if device in shc.included_devices:
-            continue
-        livisi_switch: LivisiSwitch = await create_device(device, hass, shc)
-        livisi_switches.append(livisi_switch)
-        LOGGER.debug("Include device type: %s", device.get("type"))
-        shc.included_devices.append(livisi_switch)
-
-    async_add_entities(livisi_switches)
-
-
-async def create_device(device, hass, shc):
+async def create_entity(
+    hass: HomeAssistant, config_entry: ConfigEntry, device: dict[str, Any], shc: SHC
+) -> SwitchEntity:
     """Create Switch Entity."""
-    config_details = device.get("config")
-    capabilities: list = device.get("capabilities")
+    config_details: dict[str, Any] = device["config"]
+    capabilities: list = device["capabilities"]
     is_on = await shc.async_get_pss_state(capability=capabilities[0])
-    room_id: str = device.get("location").removeprefix("/location/")
+    room_id: str = device["location"].removeprefix("/location/")
     room_name: str = shc.rooms[room_id]
     livisi_switch = LivisiSwitch(
+        hass,
+        config_entry,
         shc,
         unique_id=device.get("id"),
         manufacturer=device.get("manufacturer"),
@@ -74,11 +65,13 @@ async def create_device(device, hass, shc):
     return livisi_switch
 
 
-class LivisiSwitch(SwitchEntity, Device):
+class LivisiSwitch(SwitchEntity):
     """Represents the Livisi Switch."""
 
     def __init__(
         self,
+        hass,
+        config_entry,
         shc,
         unique_id,
         manufacturer,
@@ -92,86 +85,43 @@ class LivisiSwitch(SwitchEntity, Device):
         version=None,
     ):
         """Initialize the Livisi Switch."""
-        self._shc = shc
+        self.hass: HomeAssistant = hass
+        self.config_entry: ConfigEntry = config_entry
+        self._shc: SHC = shc
         self._attr_unique_id = unique_id
         self._manufacturer = manufacturer
         self._product = product
         self._serial_number = serial_number
-        self._device_type = device_type
-        self._name = name
+        self._attr_model = device_type
+        self._attr_name = name
         self._state = None
         self._capability_id = capability_id
-        self._is_on = is_on
+        self._attr_is_on = is_on
         self._room = room
         self._version = version
-        self.aio_livisi = AioLivisi.get_instance()
+        self.aio_livisi = shc.aiolivisi
         if is_on is None:
-            self._is_available = False
+            self._attr_is_available = False
         else:
-            self._is_available = True
+            self._attr_is_available = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self._attr_unique_id))},
+            manufacturer=self._manufacturer,
+            model=self._attr_model,
+            name=self._attr_name,
+            suggested_area=self._room,
+            sw_version=self._version,
+            via_device=(DOMAIN, str(self._attr_unique_id)),
+        )
 
-    @property
-    def manufacturer(self) -> str:
-        """Return the manufacturer."""
-        return self._manufacturer
-
-    @manufacturer.setter
-    def manufacturer(self, new_value: str):
-        self._manufacturer = new_value
-
-    @property
-    def product(self) -> str:
-        """Return the product type."""
-        return self._product
-
-    @product.setter
-    def product(self, new_value: str):
-        self._product = new_value
-
-    @property
-    def serial_number(self) -> str:
-        """Return the serial number."""
-        return self._serial_number
-
-    @serial_number.setter
-    def serial_number(self, new_value: str):
-        self._serial_number = new_value
-
-    @property
-    def device_type(self) -> str:
-        """Return the device type."""
-        return self._device_type
-
-    @device_type.setter
-    def device_type(self, new_value: str):
-        self._device_type = new_value
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @name.setter
-    def name(self, new_value: str):
-        self._name = new_value
-
-    @property
-    def version(self):
-        """Return the version number."""
-        return self._version
-
-    @version.setter
-    def version(self, new_value: str):
-        self._version = new_value
-
-    @property
-    def capability_id(self):
-        """Return the capability id of the device."""
-        return self._capability_id
-
-    @capability_id.setter
-    def capability_id(self, new_value: str):
-        self._capability_id = new_value
+        config_entry.async_on_unload(
+            async_dispatcher_connect(hass, LIVISI_STATE_CHANGE, self.update_states)
+        )
+        config_entry.async_on_unload(
+            async_dispatcher_connect(
+                hass, LIVISI_REACHABILITY_CHANGE, self.update_reachability
+            )
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -179,62 +129,55 @@ class LivisiSwitch(SwitchEntity, Device):
         return False
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._attr_unique_id))},
-            manufacturer=self.manufacturer,
-            model=self.device_type,
-            name=self.name,
-            suggested_area=self._room,
-            sw_version=self._version,
-            via_device=(DOMAIN, str(self._attr_unique_id)),
-        )
-
-    @property
     def is_on(self):
         """Return the device state."""
-        return self._is_on
+        return self._attr_is_on
 
     @property
     def available(self):
         """Return if switch is available."""
-        return self._is_available
+        return self._attr_is_available
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         if self.is_on is True:
             return
         response = await self.aio_livisi.async_pss_set_state(
-            self.capability_id, is_on=True
+            self._capability_id, is_on=True
         )
         if response is None:
-            self._is_available = False
+            self._attr_is_available = False
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         if self.is_on is False:
             return
         response = await self.aio_livisi.async_pss_set_state(
-            self.capability_id, is_on=False
+            self._capability_id, is_on=False
         )
         if response is None:
-            self._is_available = False
+            self._attr_is_available = False
 
-    def update_states(self, states) -> None:
+    @callback
+    def update_states(self, device_id_state: dict) -> None:
         """Update the states of the switch device."""
-        on_state = states.get("onState")
+        if device_id_state.get("id") != self._capability_id:
+            return
+        on_state = device_id_state.get("state")
         if on_state is None:
             return
         if on_state is True:
-            self._is_on = True
+            self._attr_is_on = True
         else:
-            self._is_on = False
+            self._attr_is_on = False
         self.async_write_ha_state()
 
-    def update_reachability(self, is_reachable: bool) -> None:
+    @callback
+    def update_reachability(self, device_id_reachability: dict) -> None:
         """Update the reachability of the switch device."""
-        if is_reachable is False:
-            self._is_available = False
+        if device_id_reachability.get("id") != self.unique_id:
+            return
+        if device_id_reachability.get("is_reachable") is False:
+            self._attr_is_available = False
         else:
-            self._is_available = True
+            self._attr_is_available = True

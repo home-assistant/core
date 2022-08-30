@@ -1,106 +1,52 @@
 """Code for the Livisi Smart Home Controller."""
-import asyncio
-from collections.abc import Callable
-import json
 from typing import Any
 
-from aiolivisi import AioLivisi, Websocket
+from aiolivisi import AioLivisi, LivisiEvent, Websocket
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     AVATAR_PORT,
     CLASSIC_PORT,
-    DEVICE_POLLING_DELAY,
+    LIVISI_DISCOVERY_NEW,
+    LIVISI_REACHABILITY_CHANGE,
+    LIVISI_STATE_CHANGE,
     PSS_DEVICE_TYPE,
-    SWITCH_PLATFORM,
 )
+from .coordinator import LivisiDataUpdateCoordinator
 
 
-class SHC:
+class SHC(CoordinatorEntity[LivisiDataUpdateCoordinator]):
     """Represents the Livisi Smart Home Controller."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        coordinator: LivisiDataUpdateCoordinator,
+        aiolivisi: AioLivisi,
+    ) -> None:
         """Initialize the Livisi Smart Home Controller."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
-        self.aiolivisi: AioLivisi = None
-        self._serial_number: str = ""
-        self._controller_type: str = ""
-        self._os_version: str = ""
-        self._devices: list[dict[str, Any]] = []
-        self.included_devices: list = []
-        self._switch_devices: list = []
-        self._websocket: Websocket = Websocket()
-        self._is_avatar: bool = False
-        self._port: str = ""
-        self._rooms: dict[str, Any] = {}
-        self._subscribers: dict[str, Callable] = {}
-
-    @property
-    def serial_number(self) -> str:
-        """Return the serial number."""
-        return self._serial_number
-
-    @serial_number.setter
-    def serial_number(self, new_value: str):
-        self._serial_number = new_value
-
-    @property
-    def controller_type(self) -> str:
-        """Return the controller type."""
-        return self._controller_type
-
-    @controller_type.setter
-    def controller_type(self, new_value):
-        self._controller_type = new_value
-
-    @property
-    def os_version(self) -> str:
-        """Return the os version of the box."""
-        return self._os_version
-
-    @os_version.setter
-    def os_version(self, new_value: str):
-        self._os_version = new_value
-
-    @property
-    def host(self):
-        """Return ip address of the LIVISI Smart Home Controller."""
-        return self._config_entry.data["host"]
-
-    @property
-    def devices(self):
-        """Return a list of all devices."""
-        return self._devices
-
-    @property
-    def switch_devices(self):
-        """Return a list of all switch devices."""
-        return self._switch_devices
-
-    @property
-    def websocket(self) -> Websocket:
-        """Return the websocket."""
-        return self._websocket
-
-    @property
-    def is_avatar(self):
-        """Return the controller type."""
-        return self._is_avatar
-
-    @property
-    def rooms(self):
-        """Return the LIVISI rooms."""
-        return self._rooms
+        self.aiolivisi: AioLivisi = aiolivisi
+        self.serial_number: str = ""
+        self.controller_type: str = ""
+        self.os_version: str = ""
+        self.devices: list[dict[Any, Any]] = []
+        self.switch_devices: list = []
+        self.websocket: Websocket = Websocket(aiolivisi)
+        self.is_avatar: bool = False
+        self.port: str = ""
+        self.rooms: dict[str, Any] = {}
+        super().__init__(coordinator)
+        self.coordinator.async_add_listener(self._handle_coordinator_update)
 
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""
-        web_session = aiohttp_client.async_get_clientsession(self._hass)
-        self.aiolivisi = AioLivisi.get_instance()
-        self.aiolivisi.web_session = web_session
         if bool(self.aiolivisi.livisi_connection_data) is False:
             livisi_connection_data = {
                 "ip_address": self._config_entry.data["host"],
@@ -111,52 +57,17 @@ class SHC:
                 livisi_connection_data=livisi_connection_data
             )
         controller_info = await self.aiolivisi.async_get_controller()
-        if bool(controller_info) is False:
-            controller_info = await self.aiolivisi.async_get_controller()
 
         controller_data = controller_info
         if controller_data.get("controllerType") == "Avatar":
-            self._port = AVATAR_PORT
-            self._is_avatar = True
+            self.port = AVATAR_PORT
+            self.is_avatar = True
         else:
-            self._port = CLASSIC_PORT
-            self._is_avatar = False
+            self.port = CLASSIC_PORT
+            self.is_avatar = False
         self.serial_number = controller_data.get("serialNumber")
         self.controller_type = controller_data.get("controllerType")
         self.os_version = controller_data.get("osVersion")
-        self._hass.loop.create_task(self.async_poll_devices())
-
-    def register_new_device_callback(
-        self, device_type: str, add_device_callback: Callable
-    ):
-        """Register new device callback."""
-        self._subscribers[device_type] = add_device_callback
-
-    async def async_set_devices(self) -> None:
-        """Set the discovered devices list."""
-        shc_devices = await self.aiolivisi.async_get_devices()
-        if bool(shc_devices) is False:
-            shc_devices = await self.aiolivisi.async_get_devices()
-
-        for device in shc_devices:
-            if device in self._devices:
-                continue
-            if device.get("type") == PSS_DEVICE_TYPE:
-                if device not in self._switch_devices:
-                    self._switch_devices.append(device)
-                    if SWITCH_PLATFORM in self._subscribers:
-                        async_add_switch: Callable = self._subscribers[SWITCH_PLATFORM]
-                        await async_add_switch(device)
-            self._devices.append(device)
-
-    async def async_poll_devices(self) -> None:
-        """Get the devices from the LIVISI Smart Home Controller."""
-        while True:
-            try:
-                await asyncio.sleep(DEVICE_POLLING_DELAY)
-                await self.async_set_devices()
-            except Exception:  # pylint: disable=broad-except
-                await asyncio.sleep(DEVICE_POLLING_DELAY)
 
     async def async_get_pss_state(self, capability):
         """Set the PSS state."""
@@ -171,32 +82,54 @@ class SHC:
         response = await self.aiolivisi.async_get_all_rooms()
 
         for available_room in response:
-            self._rooms[available_room.get("id")] = available_room.get("config").get(
+            self.rooms[available_room.get("id")] = available_room.get("config").get(
                 "name"
             )
 
-    def on_data(self, event_data: str) -> None:
-        """Define a handler to fire when the data is received."""
-        json_data = json.loads(event_data)
-        for device in self.included_devices:
-            source = json_data.get("source")
-            if device.capability_id == source:
-                device.update_states(json_data.get("properties"))
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Set LIVISI devices."""
+        shc_devices: dict[Any, Any] = self.coordinator.data
+        for device in shc_devices:
+            if device in self.devices:
                 continue
-            if device.unique_id in source:
-                reachability = json_data.get("properties")
-                is_reachable: bool = reachability.get("isReachable")
-                device.update_reachability(is_reachable)
-            elif device.available is False:
-                device.update_reachability(True)
+            if device["type"] == PSS_DEVICE_TYPE:
+                if device not in self.switch_devices:
+                    self.switch_devices.append(device)
+                    dispatcher_send(self._hass, LIVISI_DISCOVERY_NEW, device)
+            self.devices.append(device)
+
+    def on_data(self, event_data: LivisiEvent) -> None:
+        """Define a handler to fire when the data is received."""
+        source = event_data.source
+        if event_data.onState is not None:
+            device_id_state: dict = {
+                "id": source,
+                "state": event_data.onState,
+            }
+            dispatcher_send(self._hass, LIVISI_STATE_CHANGE, device_id_state)
+        if event_data.isReachable is not None:
+            device_id_reachability: dict = {
+                "id": source.replace("/device/", ""),
+                "is_reachable": event_data.isReachable,
+            }
+            dispatcher_send(
+                self._hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability
+            )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
-        for device in self.included_devices:
-            device.update_reachability(False)
+        for device in self.devices:
+            device_id_reachability: dict = {
+                "id": device.get("id"),
+                "is_reachable": False,
+            }
+            dispatcher_send(
+                self._hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability
+            )
 
-        await self._websocket.connect(self.on_data, self.on_close, self._port)
+        await self.websocket.connect(self.on_data, self.on_close, self.port)
 
     async def ws_connect(self) -> None:
         """Connect the websocket."""
-        await self._websocket.connect(self.on_data, self.on_close, self._port)
+        await self.websocket.connect(self.on_data, self.on_close, self.port)

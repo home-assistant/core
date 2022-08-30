@@ -10,6 +10,9 @@ CONF_PASSWORD: Final = "password"
 AVATAR_PORT: Final = "9090"
 CLASSIC_PORT: Final = "8080"
 DEVICE_POLLING_DELAY: Final = 60
+LIVISI_DISCOVERY_NEW: Final = "livisi_discovery_new"
+LIVISI_STATE_CHANGE: Final = "livisi_state_change"
+LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 
 SWITCH_PLATFORM: Final = "switch"
 

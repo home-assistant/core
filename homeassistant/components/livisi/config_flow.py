@@ -1,8 +1,9 @@
 """Config flow for Livisi Home Assistant."""
+from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any
 
-from aiolivisi import AioLivisi, errors
+from aiolivisi import AioLivisi, errors as livisi_errors
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,8 +11,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
-
-HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -25,48 +24,42 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._auth_headers: dict[str, Any] = {}
         self._aio_livisi: AioLivisi = None
         self._access_data = None
-
-    async def async_step_user(self, user_input=None) -> FlowResult:
-        """Handle the initial step."""
-        if user_input is not None:
-            host: str = user_input[CONF_HOST]
-            self._host = host
-            return await self.async_step_credentials(None)
-
-        return self.async_show_form(step_id="user", data_schema=HOST_SCHEMA)
-
-    async def async_step_credentials(
-        self, user_input: dict[str, Any] = None
-    ) -> FlowResult:
-        """Handle the credentials step."""
-        found_errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                return await self._login(user_input)
-            except errors.WrongCredentialException:
-                found_errors["base"] = "wrong_password"
-            except errors.ShcUnreachableException:
-                found_errors["base"] = "shc_unreachable"
-            except errors.IncorrectIpAddressException:
-                found_errors["base"] = "wrong_ip_address"
-        else:
-            user_input = {}
-
-        schema = vol.Schema(
+        self.data_schema = vol.Schema(
             {
-                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_PASSWORD): str,
             }
         )
 
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                ip_password: dict[str, str] = user_input
+                return await self.async_step_credentials(ip_password)
+            except livisi_errors.WrongCredentialException:
+                errors["base"] = "wrong_password"
+            except livisi_errors.ShcUnreachableException:
+                errors["base"] = "shc_unreachable"
+            except livisi_errors.IncorrectIpAddressException:
+                errors["base"] = "wrong_ip_address"
+
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=found_errors
+            step_id="credentials", data_schema=self.data_schema, errors=errors
         )
 
-    async def _login(self, user_input: dict[str, Any]):
+    async def async_step_credentials(self, user_input: dict[str, str]) -> FlowResult:
+        """Handle the login step."""
+        return await self._login(user_input)
+
+    async def _login(self, user_input: dict[str, str]) -> FlowResult:
         """Login into Livisi Smart Home and register the controller."""
+        self._host = str(user_input.get(CONF_HOST))
         web_session = aiohttp_client.async_get_clientsession(self.hass)
-        self._aio_livisi = AioLivisi.get_instance()
-        self._aio_livisi.web_session = web_session
+        self._aio_livisi = AioLivisi(web_session)
         livisi_connection_data = {
             "ip_address": self._host,
             "password": user_input.get(CONF_PASSWORD),
@@ -76,12 +69,10 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         controller_info = await self._aio_livisi.async_get_controller()
 
-        if controller_info.get("gateway") is not None:
-            controller_data = controller_info.get("gateway")
-        else:
+        if (controller_data := controller_info.get("gateway")) is None:
             controller_data = controller_info
         controller_type = controller_data.get("controllerType")
-        LOGGER.info(
+        LOGGER.debug(
             "Integrating SHC %s with serial number: %s",
             controller_type,
             controller_data.get("serialNumber"),
@@ -92,7 +83,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 **user_input,
                 CONF_HOST: self._host,
-                "osVersion": controller_info.get("osVersion"),
-                "configVersion": controller_info.get("configVersion"),
+                "os_version": controller_info.get("osVersion"),
+                "config_version": controller_info.get("configVersion"),
             },
         )
