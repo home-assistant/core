@@ -170,6 +170,17 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "sensorpro",
+        "manufacturer_id": 43605,
+        "manufacturer_data_start": [
+            1,
+            5,
+            164,
+            193
+        ],
+        "connectable": False
+    },
+    {
         "domain": "sensorpush",
         "local_name": "SensorPush*",
         "connectable": False

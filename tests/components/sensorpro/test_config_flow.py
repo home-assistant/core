@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.sensorpro.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import NOT_THERMOBEACON_SERVICE_INFO, THERMOBEACON_SERVICE_INFO
+from . import NOT_SENSORPRO_SERVICE_INFO, SENSORPRO_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=THERMOBEACON_SERVICE_INFO,
+        data=SENSORPRO_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -37,7 +37,7 @@ async def test_async_step_bluetooth_not_sensorpro(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=NOT_THERMOBEACON_SERVICE_INFO,
+        data=NOT_SENSORPRO_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_supported"
@@ -57,7 +57,7 @@ async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.sensorpro.config_flow.async_discovered_service_info",
-        return_value=[THERMOBEACON_SERVICE_INFO],
+        return_value=[SENSORPRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -82,7 +82,7 @@ async def test_async_step_user_device_added_between_steps(hass):
     """Test the device gets added via another flow between steps."""
     with patch(
         "homeassistant.components.sensorpro.config_flow.async_discovered_service_info",
-        return_value=[THERMOBEACON_SERVICE_INFO],
+        return_value=[SENSORPRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -118,7 +118,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
 
     with patch(
         "homeassistant.components.sensorpro.config_flow.async_discovered_service_info",
-        return_value=[THERMOBEACON_SERVICE_INFO],
+        return_value=[SENSORPRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -139,7 +139,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=THERMOBEACON_SERVICE_INFO,
+        data=SENSORPRO_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -150,7 +150,7 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=THERMOBEACON_SERVICE_INFO,
+        data=SENSORPRO_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -158,7 +158,7 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=THERMOBEACON_SERVICE_INFO,
+        data=SENSORPRO_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
@@ -169,14 +169,14 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=THERMOBEACON_SERVICE_INFO,
+        data=SENSORPRO_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
         "homeassistant.components.sensorpro.config_flow.async_discovered_service_info",
-        return_value=[THERMOBEACON_SERVICE_INFO],
+        return_value=[SENSORPRO_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

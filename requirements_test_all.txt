@@ -1491,7 +1491,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.4.0
+sensorpro-ble==0.5.0
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.5.2

@@ -7,7 +7,7 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.sensorpro.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
-from . import THERMOBEACON_SERVICE_INFO
+from . import SENSORPRO_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -35,7 +35,7 @@ async def test_sensors(hass):
         await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    saved_callback(THERMOBEACON_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    saved_callback(SENSORPRO_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 4
 

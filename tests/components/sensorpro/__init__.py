@@ -3,7 +3,7 @@
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-NOT_THERMOBEACON_SERVICE_INFO = BluetoothServiceInfo(
+NOT_SENSORPRO_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     rssi=-63,
@@ -13,14 +13,14 @@ NOT_THERMOBEACON_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-THERMOBEACON_SERVICE_INFO = BluetoothServiceInfo(
-    name="SensorPro",
+SENSORPRO_SERVICE_INFO = BluetoothServiceInfo(
+    name="T201",
     address="aa:bb:cc:dd:ee:ff",
     rssi=-60,
     service_data={},
     manufacturer_data={
-        16: b"\x00\x00\xb0\x02\x00\x00G\xa4\xe2\x0c\x80\x01\xb6\x02J\x00\x00\x00"
+        43605: b"\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01"
     },
-    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    service_uuids=[],
     source="local",
 )
