@@ -891,9 +891,10 @@ async def websocket_update_prefs(
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
-    await prefs.async_update(entity_id, **changes)
-
-    connection.send_result(msg["id"], prefs.get(entity_id).as_dict())
+    if isinstance(entity_prefs := await prefs.async_update(entity_id, **changes), dict):
+        connection.send_result(msg["id"], entity_prefs)
+    else:
+        connection.send_error(msg["id"], "update_failed", entity_prefs)
 
 
 async def async_handle_snapshot_service(

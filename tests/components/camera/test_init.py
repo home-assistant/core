@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_camera_prefs, mock_turbo_jpeg
@@ -41,7 +42,7 @@ def mock_stream_fixture(hass):
 @pytest.fixture(name="setup_camera_prefs")
 def setup_camera_prefs_fixture(hass):
     """Initialize HTTP API."""
-    return mock_camera_prefs(hass, "camera.demo_camera")
+    return mock_camera_prefs(hass, "camera.demo_uniquecamera")
 
 
 @pytest.fixture(name="image_mock_url")
@@ -302,15 +303,23 @@ async def test_websocket_update_prefs(
     hass, hass_ws_client, mock_camera, setup_camera_prefs
 ):
     """Test updating preference."""
-    await async_setup_component(hass, "camera", {})
     assert setup_camera_prefs[PREF_PRELOAD_STREAM]
-    assert setup_camera_prefs[PREF_ORIENTATION] == 1
+    registry = er.async_get(hass)
+    # Since we don't have a unique id, there is no registry entry
+    registry.async_get_or_create(DOMAIN, "demo", "uniquecamera")
+    registry.async_update_entity_options(
+        "camera.demo_uniquecamera",
+        DOMAIN,
+        {PREF_ORIENTATION: 1},
+    )
+    camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
+    assert camera_prefs[PREF_ORIENTATION] == 1
     client = await hass_ws_client(hass)
     await client.send_json(
         {
             "id": 8,
             "type": "camera/update_prefs",
-            "entity_id": "camera.demo_camera",
+            "entity_id": "camera.demo_uniquecamera",
             "preload_stream": False,
             "orientation": 3,
         }
@@ -323,8 +332,9 @@ async def test_websocket_update_prefs(
         response["result"][PREF_PRELOAD_STREAM]
         == setup_camera_prefs[PREF_PRELOAD_STREAM]
     )
-    assert setup_camera_prefs[PREF_ORIENTATION] == 3
-    assert response["result"][PREF_ORIENTATION] == setup_camera_prefs[PREF_ORIENTATION]
+    camera_prefs = registry.async_get("camera.demo_uniquecamera").options[DOMAIN]
+    assert camera_prefs[PREF_ORIENTATION] == 3
+    assert response["result"][PREF_ORIENTATION] == camera_prefs[PREF_ORIENTATION]
 
 
 async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):

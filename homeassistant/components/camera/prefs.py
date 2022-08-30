@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Final, Union, cast
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
@@ -41,9 +42,12 @@ class CameraPreferences:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize camera prefs."""
         self._hass = hass
+        # The orientation prefs are stored in in the entity registry options
+        # The preload_stream prefs are stored in this Store
         self._store = Store[dict[str, dict[str, Union[bool, int]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
+        # Local copy of the preload_stream prefs
         self._prefs: dict[str, dict[str, bool | int]] | None = None
 
     async def async_initialize(self) -> None:
@@ -60,24 +64,32 @@ class CameraPreferences:
         preload_stream: bool | UndefinedType = UNDEFINED,
         orientation: int | UndefinedType = UNDEFINED,
         stream_options: dict[str, str] | UndefinedType = UNDEFINED,
-    ) -> None:
-        """Update camera preferences."""
-        # Prefs already initialized.
-        assert self._prefs is not None
-        if not self._prefs.get(entity_id):
-            self._prefs[entity_id] = {}
+    ) -> dict[str, bool | int] | str:
+        """Update camera preferences.
 
-        for key, value in (
-            (PREF_PRELOAD_STREAM, preload_stream),
-            (PREF_ORIENTATION, orientation),
-        ):
-            if value is not UNDEFINED:
-                self._prefs[entity_id][key] = value
+        Returns a dict with the preferences on success or a string on error.
+        """
+        if preload_stream is not UNDEFINED:
+            # Prefs already initialized.
+            assert self._prefs is not None
+            if not self._prefs.get(entity_id):
+                self._prefs[entity_id] = {}
+            self._prefs[entity_id][PREF_PRELOAD_STREAM] = preload_stream
+            await self._store.async_save(self._prefs)
 
-        await self._store.async_save(self._prefs)
+        if orientation is not UNDEFINED:
+            if (registry := er.async_get(self._hass)).async_get(entity_id):
+                registry.async_update_entity_options(
+                    entity_id, DOMAIN, {PREF_ORIENTATION: orientation}
+                )
+            else:
+                return "Orientation is only supported on entities set up through config flows"
+        return self.get(entity_id).as_dict()
 
     def get(self, entity_id: str) -> CameraEntityPreferences:
         """Get preferences for an entity."""
         # Prefs are already initialized.
         assert self._prefs is not None
-        return CameraEntityPreferences(self._prefs.get(entity_id, {}))
+        reg_entry = er.async_get(self._hass).async_get(entity_id)
+        er_prefs = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
+        return CameraEntityPreferences(self._prefs.get(entity_id, {}) | er_prefs)
