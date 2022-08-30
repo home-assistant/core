@@ -22,6 +22,12 @@
       "known_devices": ["slae.sh cc2652rb stick"]
     },
     {
+      "vid": "1A86",
+      "pid": "55D4",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus v2"]
+    },
+    {
       "vid": "10C4",
       "pid": "EA60",
       "description": "*sonoff*plus*",
