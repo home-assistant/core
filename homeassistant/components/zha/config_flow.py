@@ -120,7 +120,7 @@ def _prevent_overwrite_ezsp_ieee(
 class BaseZhaFlow(FlowHandler):
     """Mixin for common ZHA flow steps and forms."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow instance."""
         super().__init__()
 
@@ -129,7 +129,7 @@ class BaseZhaFlow(FlowHandler):
         self._radio_type: RadioType | None = None
         self._title: str | None = None
         self._current_settings: zigpy.backups.NetworkBackup | None = None
-        self._backups: list[zigpy.backups.NetworkBackup] | None = None
+        self._backups: list[zigpy.backups.NetworkBackup] = []
         self._chosen_backup: zigpy.backups.NetworkBackup | None = None
 
     @contextlib.asynccontextmanager
@@ -164,7 +164,7 @@ class BaseZhaFlow(FlowHandler):
             await app.disconnect()
 
     async def _restore_backup(
-        self, backup: zigpy.backups.NetworkBackup, **kwargs: dict[str, Any]
+        self, backup: zigpy.backups.NetworkBackup, **kwargs: Any
     ) -> None:
         """Restore the provided network backup, passing through kwargs."""
         if self._current_settings is not None and self._current_settings.supersedes(
@@ -199,8 +199,13 @@ class BaseZhaFlow(FlowHandler):
 
         return False
 
-    async def _async_create_radio_entity(self):
+    async def _async_create_radio_entity(self) -> FlowResult:
         """Create a config entity with the current flow state."""
+        assert self._title is not None
+        assert self._radio_type is not None
+        assert self._device_path is not None
+        assert self._device_settings is not None
+
         device_settings = self._device_settings.copy()
         device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, self._device_path
@@ -214,7 +219,9 @@ class BaseZhaFlow(FlowHandler):
             },
         )
 
-    async def async_step_choose_serial_port(self, user_input=None):
+    async def async_step_choose_serial_port(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose a serial port."""
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = [
@@ -270,7 +277,9 @@ class BaseZhaFlow(FlowHandler):
         )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
 
-    async def async_step_manual_pick_radio_type(self, user_input=None):
+    async def async_step_manual_pick_radio_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manually select the radio type."""
         if user_input is not None:
             self._radio_type = RadioType.get_by_description(user_input[CONF_RADIO_TYPE])
@@ -291,8 +300,11 @@ class BaseZhaFlow(FlowHandler):
             data_schema=vol.Schema(schema),
         )
 
-    async def async_step_manual_port_config(self, user_input=None):
+    async def async_step_manual_port_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Enter port settings specific for this type of radio."""
+        assert self._radio_type is not None
         errors = {}
 
         if user_input is not None:
@@ -330,7 +342,7 @@ class BaseZhaFlow(FlowHandler):
             errors=errors,
         )
 
-    async def _async_load_network_settings(self):
+    async def _async_load_network_settings(self) -> None:
         """Connect to the radio and load its current network settings."""
         async with self._connect_zigpy_app() as app:
             # Check if the stick has any settings and load them
@@ -347,7 +359,9 @@ class BaseZhaFlow(FlowHandler):
             # The list of backups will always exist
             self._backups = app.backups.backups.copy()
 
-    async def async_step_choose_formation_strategy(self, user_input=None):
+    async def async_step_choose_formation_strategy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose how to deal with the current radio's settings."""
         await self._async_load_network_settings()
 
@@ -375,11 +389,15 @@ class BaseZhaFlow(FlowHandler):
             menu_options=strategies,
         )
 
-    async def async_step_reuse_settings(self, user_input=None):
+    async def async_step_reuse_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Reuse the existing network settings on the stick."""
         return await self._async_create_radio_entity()
 
-    async def async_step_form_new_network(self, user_input=None):
+    async def async_step_form_new_network(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Form a brand new network."""
         async with self._connect_zigpy_app() as app:
             await app.form_network()
@@ -395,7 +413,9 @@ class BaseZhaFlow(FlowHandler):
 
         return zigpy.backups.NetworkBackup.from_dict(json.loads(contents))
 
-    async def async_step_upload_manual_backup(self, user_input=None):
+    async def async_step_upload_manual_backup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Upload and restore a coordinator backup JSON file."""
         errors = {}
 
@@ -421,7 +441,9 @@ class BaseZhaFlow(FlowHandler):
             errors=errors,
         )
 
-    async def async_step_choose_automatic_backup(self, user_input=None):
+    async def async_step_choose_automatic_backup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Choose an automatic backup."""
         if self.show_advanced_options:
             # Always show the PAN IDs when in advanced mode
@@ -457,8 +479,12 @@ class BaseZhaFlow(FlowHandler):
             ),
         )
 
-    async def async_step_maybe_confirm_ezsp_restore(self, user_input=None):
+    async def async_step_maybe_confirm_ezsp_restore(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
+        assert self._chosen_backup is not None
+
         if self._radio_type != RadioType.ezsp:
             await self._restore_backup(self._chosen_backup)
             return await self._async_create_radio_entity()
@@ -471,6 +497,8 @@ class BaseZhaFlow(FlowHandler):
             temp_backup = _prevent_overwrite_ezsp_ieee(self._chosen_backup)
             await self._restore_backup(temp_backup, create_new=False)
             await self._async_load_network_settings()
+
+            assert self._current_settings is not None
 
         if (
             self._current_settings.node_info.ieee == self._chosen_backup.node_info.ieee
@@ -517,12 +545,14 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         """Create the options flow."""
         return ZhaOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a zha config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        return await self.async_step_choose_serial_port(user_input=user_input)
+        return await self.async_step_choose_serial_port(user_input)
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
@@ -568,7 +598,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self.context["title_placeholders"] = {CONF_NAME: self._title}
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             if not await self._detect_radio_type():
@@ -626,7 +658,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         return await self.async_step_manual_port_config()
 
-    async def async_step_hardware(self, data=None):
+    async def async_step_hardware(
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle hardware flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -661,7 +695,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self._set_confirm_only()
         return await self.async_step_confirm_hardware()
 
-    async def async_step_confirm_hardware(self, user_input=None):
+    async def async_step_confirm_hardware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a hardware discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return await self._async_create_radio_entity()
