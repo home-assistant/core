@@ -159,7 +159,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
         ObsoleteImportMatch(
             reason="replaced by color modes",
-            constant=re.compile("^SUPPORT_(BRIGHTNESS|COLOR_TEMP|COLOR|WHITE_VALUE)$"),
+            constant=re.compile("^SUPPORT_(BRIGHTNESS|COLOR_TEMP|COLOR)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by LightEntityFeature enum",
