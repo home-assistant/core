@@ -218,6 +218,7 @@ FLOWS = {
         "mazda",
         "meater",
         "melcloud",
+        "melnor",
         "met",
         "met_eireann",
         "meteo_france",
