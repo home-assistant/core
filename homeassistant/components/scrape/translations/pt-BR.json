@@ -29,7 +29,7 @@
                     "index": "Define qual dos elementos retornados pelo seletor CSS usar",
                     "resource": "A URL para o site que cont\u00e9m o valor",
                     "select": "Define qual tag pesquisar. Verifique os seletores CSS da Beautiful Soup para obter detalhes",
-                    "state_class": "O classe de estado do sensor",
+                    "state_class": "A classe de estado do sensor",
                     "value_template": "Define um modelo para obter o estado do sensor",
                     "verify_ssl": "Ativa/desativa a verifica\u00e7\u00e3o do certificado SSL/TLS, por exemplo, se for autoassinado"
                 }
@@ -63,7 +63,7 @@
                     "index": "Define qual dos elementos retornados pelo seletor CSS usar",
                     "resource": "A URL para o site que cont\u00e9m o valor",
                     "select": "Define qual tag pesquisar. Verifique os seletores CSS da Beautiful Soup para obter detalhes",
-                    "state_class": "O classe de estado do sensor",
+                    "state_class": "A classe de estado do sensor",
                     "value_template": "Define um modelo para obter o estado do sensor",
                     "verify_ssl": "Ativa/desativa a verifica\u00e7\u00e3o do certificado SSL/TLS, por exemplo, se for autoassinado"
                 }

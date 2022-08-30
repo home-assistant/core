@@ -294,6 +294,7 @@ FLOWS = {
         "profiler",
         "progettihwsw",
         "prosegur",
+        "prusalink",
         "ps4",
         "pure_energie",
         "pushover",
