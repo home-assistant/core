@@ -6,7 +6,7 @@ from datetime import time
 import logging
 from typing import Any, Generic, TypeVar
 
-from pylitterbot import LitterRobot, Robot
+from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 from typing_extensions import ParamSpec
 
@@ -60,12 +60,10 @@ class LitterRobotEntity(
         )
 
 
-class LitterRobotControlEntity(LitterRobotEntity[LitterRobot]):
+class LitterRobotControlEntity(LitterRobotEntity[_RobotT]):
     """A Litter-Robot entity that can control the unit."""
 
-    def __init__(
-        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
-    ) -> None:
+    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
         self._refresh_callback: CALLBACK_TYPE | None = None
@@ -129,14 +127,12 @@ class LitterRobotControlEntity(LitterRobotEntity[LitterRobot]):
         )
 
 
-class LitterRobotConfigEntity(LitterRobotControlEntity):
+class LitterRobotConfigEntity(LitterRobotControlEntity[_RobotT]):
     """A Litter-Robot entity that can control configuration of the unit."""
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(
-        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
-    ) -> None:
+    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
         self._assumed_state: bool | None = None
