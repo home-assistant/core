@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pylitterbot import LitterRobot
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,7 +15,9 @@ from .entity import LitterRobotConfigEntity
 from .hub import LitterRobotHub
 
 
-class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
+class LitterRobotNightLightModeSwitch(
+    LitterRobotConfigEntity[LitterRobot], SwitchEntity
+):
     """Litter-Robot Night Light Mode Switch."""
 
     @property
@@ -21,7 +25,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
         """Return true if switch is on."""
         if self._refresh_callback is not None:
             return self._assumed_state
-        return self.robot.night_light_mode_enabled  # type: ignore[no-any-return]
+        return self.robot.night_light_mode_enabled
 
     @property
     def icon(self) -> str:
@@ -37,7 +41,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
         await self.perform_action_and_assume_state(self.robot.set_night_light, False)
 
 
-class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
+class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity[LitterRobot], SwitchEntity):
     """Litter-Robot Panel Lockout Switch."""
 
     @property
@@ -45,7 +49,7 @@ class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
         """Return true if switch is on."""
         if self._refresh_callback is not None:
             return self._assumed_state
-        return self.robot.panel_lock_enabled  # type: ignore[no-any-return]
+        return self.robot.panel_lock_enabled
 
     @property
     def icon(self) -> str:
@@ -76,10 +80,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-
-    entities: list[SwitchEntity] = []
-    for robot in hub.account.robots:
-        for switch_class, switch_type in ROBOT_SWITCHES:
-            entities.append(switch_class(robot=robot, entity_type=switch_type, hub=hub))
-
-    async_add_entities(entities)
+    async_add_entities(
+        switch_class(robot=robot, entity_type=switch_type, hub=hub)
+        for switch_class, switch_type in ROBOT_SWITCHES
+        for robot in hub.litter_robots()
+    )

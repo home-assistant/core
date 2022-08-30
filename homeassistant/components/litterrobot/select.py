@@ -1,7 +1,7 @@
 """Support for Litter-Robot selects."""
 from __future__ import annotations
 
-from pylitterbot.robot import VALID_WAIT_TIMES
+from pylitterbot import LitterRobot
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -24,16 +24,14 @@ async def async_setup_entry(
     hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            LitterRobotSelect(
-                robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
-            )
-            for robot in hub.account.robots
-        ]
+        LitterRobotSelect(
+            robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
+        )
+        for robot in hub.litter_robots()
     )
 
 
-class LitterRobotSelect(LitterRobotConfigEntity, SelectEntity):
+class LitterRobotSelect(LitterRobotConfigEntity[LitterRobot], SelectEntity):
     """Litter-Robot Select."""
 
     _attr_icon = "mdi:timer-outline"
@@ -46,7 +44,7 @@ class LitterRobotSelect(LitterRobotConfigEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        return [str(minute) for minute in VALID_WAIT_TIMES]
+        return [str(minute) for minute in self.robot.VALID_WAIT_TIMES]
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

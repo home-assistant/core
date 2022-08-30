@@ -1,6 +1,6 @@
 {
     "application_credentials": {
-        "description": "Folge den [Anweisungen]({more_info_url}) f\u00fcr den [OAuth-Zustimmungsbildschirm]({oauth_consent_url}), um Home Assistant Zugriff auf deinen Google-Kalender zu geben. Du musst auch Anwendungsnachweise erstellen, die mit deinem Kalender verkn\u00fcpft sind:\n1. Gehe zu [Credentials]({oauth_creds_url}) und klicke auf **Create Credentials**.\n1. W\u00e4hle in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **TV und eingeschr\u00e4nkte Eingabeger\u00e4te** f\u00fcr den Anwendungstyp.\n\n"
+        "description": "Folge den [Anweisungen]({more_info_url}) f\u00fcr den [OAuth-Zustimmungsbildschirm]({oauth_consent_url}), um Home Assistant Zugriff auf deinen Google-Kalender zu geben. Du musst auch Anwendungsnachweise erstellen, die mit deinem Kalender verkn\u00fcpft sind:\n1. Gehe zu [Credentials]({oauth_creds_url}) und dr\u00fccke auf **Create Credentials**.\n1. W\u00e4hle in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **TV und eingeschr\u00e4nkte Eingabeger\u00e4te** f\u00fcr den Anwendungstyp.\n\n"
     },
     "config": {
         "abort": {

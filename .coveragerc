@@ -393,6 +393,8 @@ omit =
     homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/__init__.py
+    homeassistant/components/flume/coordinator.py
+    homeassistant/components/flume/entity.py    
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/repairs.py
@@ -439,10 +441,10 @@ omit =
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
     homeassistant/components/glances/__init__.py
-    homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
+    homeassistant/components/goodwe/button.py
     homeassistant/components/goodwe/const.py
     homeassistant/components/goodwe/number.py
     homeassistant/components/goodwe/select.py
@@ -641,6 +643,7 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/__init__.py
+    homeassistant/components/lametric/button.py
     homeassistant/components/lametric/coordinator.py
     homeassistant/components/lametric/entity.py
     homeassistant/components/lametric/notify.py
@@ -655,6 +658,9 @@ omit =
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
     homeassistant/components/lcn/services.py
+    homeassistant/components/led_ble/__init__.py
+    homeassistant/components/led_ble/light.py
+    homeassistant/components/led_ble/util.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/life360/__init__.py
@@ -1201,6 +1207,7 @@ omit =
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/entity.py
     homeassistant/components/switchbot/cover.py
+    homeassistant/components/switchbot/light.py    
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py

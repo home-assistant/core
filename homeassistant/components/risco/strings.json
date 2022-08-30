@@ -2,9 +2,22 @@
   "config": {
     "step": {
       "user": {
+        "menu_options": {
+          "cloud": "Risco Cloud (recommended)",
+          "local": "Local Risco Panel (advanced)"
+        }
+      },
+      "cloud": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "local": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
