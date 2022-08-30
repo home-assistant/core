@@ -34,6 +34,7 @@ from .const import (
     ATTR_PLAYBACK_RATE,
     DOMAIN,
     ENTRY_CLIENT,
+    ENTRY_MEDIA_PLAYER_ENTITY_MANAGER,
     ENTRY_UNLOADERS,
     LOGGER as _LOGGER,
 )
@@ -639,6 +640,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up all the media players for the MPRIS integration."""
     component_data = hass.data[DOMAIN][config_entry.entry_id]
+    assert ENTRY_MEDIA_PLAYER_ENTITY_MANAGER not in component_data
+
     mpris_client = cast(
         hassmpris_client.AsyncMPRISClient,
         component_data[ENTRY_CLIENT],
@@ -649,9 +652,8 @@ async def async_setup_entry(
         mpris_client,
         async_add_entities,
     )
-
     await manager.start()
-    managers = [manager]
+    component_data[ENTRY_MEDIA_PLAYER_ENTITY_MANAGER] = manager
 
     async def async_stop_manager(*unused_args):
         # The following is a very simple trick to delete the
@@ -660,11 +662,15 @@ async def async_setup_entry(
         # That way, if the manager is stopped because the entry
         # was unloaded (e.g. integration deleted), this will
         # not try to stop the manager again.
-        if managers:
-            manager = managers.pop()
+        if ENTRY_MEDIA_PLAYER_ENTITY_MANAGER in component_data:
+            manager = cast(
+                EntityManager,
+                component_data[ENTRY_MEDIA_PLAYER_ENTITY_MANAGER],
+            )
             _LOGGER.debug("Stopping entity manager")
             await manager.stop()
             _LOGGER.debug("Entity manager stopped")
+            component_data.pop(ENTRY_MEDIA_PLAYER_ENTITY_MANAGER)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_manager)
     component_data[ENTRY_UNLOADERS].append(async_stop_manager)

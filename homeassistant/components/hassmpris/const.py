@@ -8,6 +8,7 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "hassmpris"
 ENTRY_CLIENT = "client"
+ENTRY_MEDIA_PLAYER_ENTITY_MANAGER = "media_player_entity_manager"
 ENTRY_UNLOADERS = "unloaders"
 
 CONF_HOST = _CONF_HOST
