@@ -1,0 +1,10 @@
+{
+    "state": {
+        "nobo_hub__override": {
+            "away": "Away",
+            "comfort": "Comfort",
+            "eco": "Eco",
+            "normal": "None"
+        }
+    }
+}
