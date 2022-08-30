@@ -72,7 +72,7 @@ async def test_awair_gen1_sensors(hass: HomeAssistant, user, cloud_devices, gen1
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
         {},
@@ -164,7 +164,7 @@ async def test_awair_gen2_sensors(hass: HomeAssistant, user, cloud_devices, gen2
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "97",
         {},
@@ -197,7 +197,7 @@ async def test_local_awair_sensors(hass: HomeAssistant, local_devices, local_dat
     assert_expected_properties(
         hass,
         registry,
-        "sensor.mock_title",
+        "sensor.mock_title_score",
         f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "94",
         {},
@@ -214,7 +214,7 @@ async def test_awair_mint_sensors(hass: HomeAssistant, user, cloud_devices, mint
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "98",
         {},
@@ -255,7 +255,7 @@ async def test_awair_glow_sensors(hass: HomeAssistant, user, cloud_devices, glow
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "93",
         {},
@@ -275,7 +275,7 @@ async def test_awair_omni_sensors(hass: HomeAssistant, user, cloud_devices, omni
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "99",
         {},
@@ -315,7 +315,7 @@ async def test_awair_offline(hass: HomeAssistant, user, cloud_devices, awair_off
     # device *should* have if it's online. If we don't see it,
     # then we probably didn't set anything up. Which is correct,
     # in this case.
-    assert hass.states.get("sensor.living_room") is None
+    assert hass.states.get("sensor.living_room_score") is None
 
 
 async def test_awair_unavailable(
@@ -330,18 +330,18 @@ async def test_awair_unavailable(
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
         {},
     )
 
     with patch("python_awair.AwairClient.query", side_effect=awair_offline):
-        await async_update_entity(hass, "sensor.living_room")
+        await async_update_entity(hass, "sensor.living_room_score")
         assert_expected_properties(
             hass,
             registry,
-            "sensor.living_room",
+            "sensor.living_room_score",
             f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
             STATE_UNAVAILABLE,
             {},
