@@ -87,7 +87,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         self._attr_installed_version = self._attr_latest_version = node.firmware_version
 
-    def _update_on_wake_up(self) -> None:
+    def _update_on_wake_up(self, _: dict[str, Any]) -> None:
         """Update the entity when node is awake."""
         self._status_unsub = None
         self.hass.async_create_task(self.async_update(True))
