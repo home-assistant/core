@@ -20,7 +20,6 @@ class EcowittEntity(Entity):
         """Construct the entity."""
         self.ecowitt: EcoWittSensor = sensor
 
-        self._attr_name = sensor.name
         self._attr_unique_id = f"{sensor.station.key}-{sensor.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -39,6 +38,7 @@ class EcowittEntity(Entity):
             self.async_schedule_update_ha_state()
 
         self.ecowitt.update_cb.append(_update_state)
+        self.async_on_remove(lambda: self.ecowitt.update_cb.remove(_update_state))
 
     @property
     def available(self) -> bool:
