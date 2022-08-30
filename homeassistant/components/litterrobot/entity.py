@@ -31,17 +31,15 @@ REFRESH_WAIT_TIME_SECONDS = 8
 class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
     """Generic Litter-Robot entity representing common data and methods."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
         self.entity_type = entity_type
         self.hub = hub
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return f"{self.robot.name} {self.entity_type}"
+        self._attr_name = entity_type.capitalize()
 
     @property
     def unique_id(self) -> str:
