@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import itertools
 from typing import Any, Generic
 
@@ -24,21 +24,14 @@ class RequiredKeysMixin(Generic[_RobotT]):
 
     current_fn: Callable[[_RobotT], int | float]
     options_fn: Callable[[_RobotT], list]
-    select_fn: Callable[[_RobotT], Callable[..., Coroutine[Any, Any, bool]]]
+    select_fn: Callable[
+        [_RobotT, str], tuple[Callable[..., Coroutine[Any, Any, bool]], int | float]
+    ]
 
 
 @dataclass
 class RobotSelectEntityDescription(SelectEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot select entities."""
-
-    cast_type: type[int | float] = field(default=int)
-
-
-@dataclass
-class FeederRobotSelectEntityDescription(RobotSelectEntityDescription[FeederRobot]):
-    """A class that describes Feeder-Robot select entities."""
-
-    cast_type: type[float] = field(default=float)
 
 
 LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot](
@@ -47,16 +40,16 @@ LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot](
     icon="mdi:timer-outline",
     current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
-    select_fn=lambda robot: robot.set_wait_time,
+    select_fn=lambda robot, option: (robot.set_wait_time, int(option)),
 )
-FEEDER_ROBOT_SELECT = FeederRobotSelectEntityDescription(
+FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot](
     key="meal_insert_size",
     name="Meal insert size",
     icon="mdi:scale",
     unit_of_measurement="cups",
     current_fn=lambda robot: robot.meal_insert_size,
     options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
-    select_fn=lambda robot: robot.set_meal_insert_size,
+    select_fn=lambda robot, option: (robot.set_meal_insert_size, float(option)),
 )
 
 
@@ -96,23 +89,17 @@ class LitterRobotSelect(LitterRobotConfigEntity[_RobotT], SelectEntity):
         assert description.name
         super().__init__(robot, description.name, hub)
         self.entity_description = description
+        self._attr_options = list(
+            map(str, self.entity_description.options_fn(self.robot))
+        )
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        current_value = self.entity_description.current_fn(self.robot)
-        return None if current_value is None else str(current_value)
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return [
-            str(option) for option in self.entity_description.options_fn(self.robot)
-        ]
+        return str(self.entity_description.current_fn(self.robot))
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if select_fn := self.entity_description.select_fn(self.robot):
-            await self.perform_action_and_refresh(
-                select_fn, self.entity_description.cast_type(option)
-            )
+        await self.perform_action_and_refresh(
+            *self.entity_description.select_fn(self.robot, option)
+        )
