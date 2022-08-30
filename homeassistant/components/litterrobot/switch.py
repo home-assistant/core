@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pylitterbot import LitterRobot
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,7 +15,9 @@ from .entity import LitterRobotConfigEntity
 from .hub import LitterRobotHub
 
 
-class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
+class LitterRobotNightLightModeSwitch(
+    LitterRobotConfigEntity[LitterRobot], SwitchEntity
+):
     """Litter-Robot Night Light Mode Switch."""
 
     @property
@@ -37,7 +41,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
         await self.perform_action_and_assume_state(self.robot.set_night_light, False)
 
 
-class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
+class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity[LitterRobot], SwitchEntity):
     """Litter-Robot Panel Lockout Switch."""
 
     @property
