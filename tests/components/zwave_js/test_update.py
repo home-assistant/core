@@ -10,13 +10,11 @@ from homeassistant.components.update.const import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
-    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
-from homeassistant.components.zwave_js.update import ATTR_AVAILABLE_FIRMWARE_UPDATES
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
@@ -86,7 +84,6 @@ async def test_update_entity(
     assert not attrs[ATTR_IN_PROGRESS]
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert attrs[ATTR_RELEASE_URL] is None
-    assert attrs[ATTR_AVAILABLE_FIRMWARE_UPDATES] == ["10.11.1", "11.1.5", "11.2.4"]
 
     ws_client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -151,43 +148,6 @@ async def test_update_entity(
     }
 
     client.async_send_command.reset_mock()
-
-    # Test successful install call with a valid specific version
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {
-            ATTR_ENTITY_ID: UPDATE_ENTITY,
-            ATTR_VERSION: "11.1.5",
-        },
-        blocking=True,
-    )
-
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "controller.begin_ota_firmware_update"
-    assert (
-        args["nodeId"]
-        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
-    )
-    assert args["update"] == {
-        "target": 0,
-        "url": "https://example3.com",
-        "integrity": "sha3",
-    }
-
-    client.async_send_command.reset_mock()
-
-    # Test successful install call with an invalid specific version
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {
-                ATTR_ENTITY_ID: UPDATE_ENTITY,
-                ATTR_VERSION: "1.1.1",
-            },
-            blocking=True,
-        )
 
     # Test failed installation by driver
     client.async_send_command.side_effect = FailedZWaveCommand("test", 12, "test")

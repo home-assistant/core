@@ -1,7 +1,7 @@
 """Representation of Z-Wave updates."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
@@ -27,8 +27,6 @@ from .helpers import get_device_id, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(days=1)
-
-ATTR_AVAILABLE_FIRMWARE_UPDATES = "available_firmware_updates"
 
 
 async def async_setup_entry(
@@ -61,9 +59,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL
-        | UpdateEntityFeature.RELEASE_NOTES
-        | UpdateEntityFeature.SPECIFIC_VERSION
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
 
@@ -90,20 +86,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
 
         self._attr_installed_version = self._attr_latest_version = node.firmware_version
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-
-        return {
-            ATTR_AVAILABLE_FIRMWARE_UPDATES: [
-                firmware.version
-                for firmware in sorted(
-                    self.available_firmware_updates,
-                    key=lambda f: AwesomeVersion(f.version),
-                )
-            ]
-        }
 
     def _update_on_wake_up(self) -> None:
         """Update the entity when node is awake."""
@@ -151,17 +133,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if version is None and self._latest_version_firmware:
-            firmware = self._latest_version_firmware
-        else:
-            try:
-                firmware = next(
-                    firmware
-                    for firmware in self.available_firmware_updates
-                    if firmware.version == version
-                )
-            except StopIteration as err:
-                raise ValueError(f"Version {version} not found") from err
+        firmware = self._latest_version_firmware
+        assert firmware
         self._attr_in_progress = True
         self.async_write_ha_state()
         try:
