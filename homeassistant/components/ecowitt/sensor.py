@@ -1,4 +1,5 @@
 """Support for Ecowitt Weather Stations."""
+import dataclasses
 from typing import Final
 
 from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
@@ -40,145 +41,157 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN
 from .entity import EcowittEntity
 
-_METRIC: Final = "metric"
-_IMPERIAL: Final = "imperial"
+_METRIC: Final = (
+    EcoWittSensorTypes.TEMPERATURE_C,
+    EcoWittSensorTypes.RAIN_COUNT_MM,
+    EcoWittSensorTypes.RAIN_RATE_MM,
+    EcoWittSensorTypes.LIGHTNING_DISTANCE_KM,
+    EcoWittSensorTypes.SPEED_KPH,
+    EcoWittSensorTypes.PRESSURE_HPA,
+)
+_IMPERIAL: Final = (
+    EcoWittSensorTypes.TEMPERATURE_F,
+    EcoWittSensorTypes.RAIN_COUNT_INCHES,
+    EcoWittSensorTypes.RAIN_RATE_INCHES,
+    EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES,
+    EcoWittSensorTypes.SPEED_MPH,
+    EcoWittSensorTypes.PRESSURE_INHG,
+)
 
 
 ECOWITT_SENSORS_MAPPING = {
-    EcoWittSensorTypes.HUMIDITY: (
-        SensorDeviceClass.HUMIDITY,
-        PERCENTAGE,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.HUMIDITY: SensorEntityDescription(
+        key="HUMIDITY",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.DEGREE: (None, DEGREE, None, None),
-    EcoWittSensorTypes.WATT_METERS_SQUARED: (
-        None,
-        f"{POWER_WATT}/{AREA_SQUARE_METERS}",
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.DEGREE: SensorEntityDescription(
+        key="DEGREE", native_unit_of_measurement=DEGREE
     ),
-    EcoWittSensorTypes.UV_INDEX: (None, UV_INDEX, SensorStateClass.MEASUREMENT, None),
-    EcoWittSensorTypes.PM25: (
-        SensorDeviceClass.PM25,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.WATT_METERS_SQUARED: SensorEntityDescription(
+        key="WATT_METERS_SQUARED",
+        native_unit_of_measurement=f"{POWER_WATT}/{AREA_SQUARE_METERS}",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.PM10: (
-        SensorDeviceClass.PM10,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.UV_INDEX: SensorEntityDescription(
+        key="UV_INDEX",
+        native_unit_of_measurement=UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.BATTERY_PERCENTAGE: (
-        SensorDeviceClass.BATTERY,
-        PERCENTAGE,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.PM25: SensorEntityDescription(
+        key="PM25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.BATTERY_VOLTAGE: (
-        SensorDeviceClass.VOLTAGE,
-        ELECTRIC_POTENTIAL_VOLT,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.PM10: SensorEntityDescription(
+        key="PM10",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.CO2_PPM: (
-        SensorDeviceClass.CO2,
-        CONCENTRATION_PARTS_PER_MILLION,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.BATTERY_PERCENTAGE: SensorEntityDescription(
+        key="BATTERY_PERCENTAGE",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.LUX: (
-        SensorDeviceClass.ILLUMINANCE,
-        LIGHT_LUX,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.BATTERY_VOLTAGE: SensorEntityDescription(
+        key="BATTERY_VOLTAGE",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.TIMESTAMP: (SensorDeviceClass.TIMESTAMP, None, None),
-    EcoWittSensorTypes.VOLTAGE: (
-        SensorDeviceClass.VOLTAGE,
-        ELECTRIC_POTENTIAL_VOLT,
-        SensorStateClass.MEASUREMENT,
-        None,
+    EcoWittSensorTypes.CO2_PPM: SensorEntityDescription(
+        key="CO2_PPM",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.LIGHTNING_COUNT: (
-        None,
-        "strikes",
-        SensorStateClass.TOTAL,
-        None,
+    EcoWittSensorTypes.LUX: SensorEntityDescription(
+        key="LUX",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.TEMPERATURE_C: (
-        SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
-        SensorStateClass.MEASUREMENT,
-        _METRIC,
+    EcoWittSensorTypes.TIMESTAMP: SensorEntityDescription(
+        key="TIMESTAMP", device_class=SensorDeviceClass.TIMESTAMP
     ),
-    EcoWittSensorTypes.TEMPERATURE_F: (
-        SensorDeviceClass.TEMPERATURE,
-        TEMP_FAHRENHEIT,
-        SensorStateClass.MEASUREMENT,
-        _IMPERIAL,
+    EcoWittSensorTypes.VOLTAGE: SensorEntityDescription(
+        key="VOLTAGE",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.RAIN_COUNT_MM: (
-        None,
-        LENGTH_MILLIMETERS,
-        SensorStateClass.TOTAL,
-        _METRIC,
+    EcoWittSensorTypes.LIGHTNING_COUNT: SensorEntityDescription(
+        key="LIGHTNING_COUNT",
+        native_unit_of_measurement="strikes",
+        state_class=SensorStateClass.TOTAL,
     ),
-    EcoWittSensorTypes.RAIN_COUNT_INCHES: (
-        None,
-        LENGTH_INCHES,
-        SensorStateClass.TOTAL,
-        _IMPERIAL,
+    EcoWittSensorTypes.TEMPERATURE_C: SensorEntityDescription(
+        key="TEMPERATURE_C",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.RAIN_RATE_MM: (
-        None,
-        PRECIPITATION_MILLIMETERS_PER_HOUR,
-        SensorStateClass.MEASUREMENT,
-        _METRIC,
+    EcoWittSensorTypes.TEMPERATURE_F: SensorEntityDescription(
+        key="TEMPERATURE_F",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.RAIN_RATE_INCHES: (
-        None,
-        PRECIPITATION_INCHES_PER_HOUR,
-        SensorStateClass.MEASUREMENT,
-        _IMPERIAL,
+    EcoWittSensorTypes.RAIN_COUNT_MM: SensorEntityDescription(
+        key="RAIN_COUNT_MM",
+        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
     ),
-    EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: (
-        None,
-        LENGTH_KILOMETERS,
-        SensorStateClass.MEASUREMENT,
-        _METRIC,
+    EcoWittSensorTypes.RAIN_COUNT_INCHES: SensorEntityDescription(
+        key="RAIN_COUNT_INCHES",
+        native_unit_of_measurement=LENGTH_INCHES,
+        state_class=SensorStateClass.TOTAL,
     ),
-    EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES: (
-        None,
-        LENGTH_MILES,
-        SensorStateClass.MEASUREMENT,
-        _IMPERIAL,
+    EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
+        key="RAIN_RATE_MM",
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.SPEED_KPH: (
-        None,
-        SPEED_KILOMETERS_PER_HOUR,
-        SensorStateClass.MEASUREMENT,
-        _METRIC,
+    EcoWittSensorTypes.RAIN_RATE_INCHES: SensorEntityDescription(
+        key="RAIN_RATE_INCHES",
+        native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.SPEED_MPH: (
-        None,
-        SPEED_MILES_PER_HOUR,
-        SensorStateClass.MEASUREMENT,
-        _IMPERIAL,
+    EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(
+        key="LIGHTNING_DISTANCE_KM",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.PRESSURE_HPA: (
-        SensorDeviceClass.PRESSURE,
-        PRESSURE_HPA,
-        SensorStateClass.MEASUREMENT,
-        _METRIC,
+    EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES: SensorEntityDescription(
+        key="LIGHTNING_DISTANCE_MILES",
+        native_unit_of_measurement=LENGTH_MILES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    EcoWittSensorTypes.PRESSURE_INHG: (
-        SensorDeviceClass.PRESSURE,
-        PRESSURE_INHG,
-        SensorStateClass.MEASUREMENT,
-        _IMPERIAL,
+    EcoWittSensorTypes.SPEED_KPH: SensorEntityDescription(
+        key="SPEED_KPH",
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.SPEED_MPH: SensorEntityDescription(
+        key="SPEED_MPH",
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.PRESSURE_HPA: SensorEntityDescription(
+        key="PRESSURE_HPA",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=PRESSURE_HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.PRESSURE_INHG: SensorEntityDescription(
+        key="PRESSURE_INHG",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=PRESSURE_INHG,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -193,21 +206,19 @@ async def async_setup_entry(
         """Add new sensor."""
         if sensor.stype not in ECOWITT_SENSORS_MAPPING:
             return
-        mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
 
         # Ignore metrics that are not supported by the user's locale
-        if mapping[3] == _METRIC and not hass.config.units.is_metric:
+        if sensor.stype in _METRIC and not hass.config.units.is_metric:
             return
-        if mapping[3] == _IMPERIAL and hass.config.units.is_metric:
+        if sensor.stype in _IMPERIAL and hass.config.units.is_metric:
             return
+        mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
 
         # Setup sensor description
-        description = SensorEntityDescription(
+        description = dataclasses.replace(
+            mapping,
             key=sensor.key,
             name=sensor.name,
-            device_class=mapping[0],
-            native_unit_of_measurement=mapping[1],
-            state_class=mapping[2],
         )
 
         async_add_entities([EcowittSensorEntity(sensor, description)])
