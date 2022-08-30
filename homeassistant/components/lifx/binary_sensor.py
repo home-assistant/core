@@ -43,7 +43,7 @@ async def async_setup_entry(
 class LIFXBinarySensorEntity(LIFXEntity, BinarySensorEntity):
     """LIFX sensor entity base class."""
 
-    _attr_has_entity_name: bool = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
