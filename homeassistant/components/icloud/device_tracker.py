@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,7 +72,7 @@ class IcloudTrackerEntity(TrackerEntity):
         """Set up the iCloud tracker entity."""
         self._account = account
         self._device = device
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: CALLBACK_TYPE | None = None
 
     @property
     def unique_id(self) -> str:
@@ -130,15 +130,16 @@ class IcloudTrackerEntity(TrackerEntity):
             name=self._device.name,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
-        self._unsub_dispatcher()
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()
 
 
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
