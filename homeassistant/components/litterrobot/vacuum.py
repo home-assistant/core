@@ -1,7 +1,6 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pylitterbot import LitterRobot
@@ -14,6 +13,7 @@ from homeassistant.components.vacuum import (
     STATE_ERROR,
     STATE_PAUSED,
     StateVacuumEntity,
+    StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,10 +25,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .entity import LitterRobotControlEntity
 from .hub import LitterRobotHub
-
-_LOGGER = logging.getLogger(__name__)
-
-TYPE_LITTER_BOX = "Litter Box"
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 
@@ -44,6 +40,8 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.OFF: STATE_OFF,
 }
 
+LITTER_BOX_ENTITY = StateVacuumEntityDescription("litter_box", name="Litter Box")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -54,7 +52,7 @@ async def async_setup_entry(
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
+        LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
         for robot in hub.litter_robots()
     )
 

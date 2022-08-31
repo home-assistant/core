@@ -93,9 +93,7 @@ class LitterRobotSelect(
         description: RobotSelectEntityDescription[_RobotT, _CastTypeT],
     ) -> None:
         """Initialize a Litter-Robot select entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
+        super().__init__(robot, hub, description)
         options = self.entity_description.options_fn(self.robot)
         self._attr_options = list(map(str, options))
 

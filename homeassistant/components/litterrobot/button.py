@@ -76,17 +76,6 @@ class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
 
     entity_description: RobotButtonEntityDescription[_RobotT]
 
-    def __init__(
-        self,
-        robot: _RobotT,
-        hub: LitterRobotHub,
-        description: RobotButtonEntityDescription[_RobotT],
-    ) -> None:
-        """Initialize a Litter-Robot button entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
-
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)

@@ -51,17 +51,6 @@ class RobotSwitchEntity(LitterRobotConfigEntity[_RobotT], SwitchEntity):
 
     entity_description: RobotSwitchEntityDescription[_RobotT]
 
-    def __init__(
-        self,
-        robot: _RobotT,
-        hub: LitterRobotHub,
-        description: RobotSwitchEntityDescription[_RobotT],
-    ) -> None:
-        """Initialize a Litter-Robot switch entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
-
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""

@@ -48,17 +48,6 @@ class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
 
     entity_description: RobotSensorEntityDescription[_RobotT]
 
-    def __init__(
-        self,
-        robot: _RobotT,
-        hub: LitterRobotHub,
-        description: RobotSensorEntityDescription[_RobotT],
-    ) -> None:
-        """Initialize a Litter-Robot sensor entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
-
     @property
     def native_value(self) -> float | datetime | str | None:
         """Return the state."""
