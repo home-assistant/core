@@ -9,6 +9,7 @@ from pyoverkiz.exceptions import (
     MaintenanceException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
+    UnknownUserException,
 )
 import pytest
 
@@ -88,6 +89,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),
         (TooManyAttemptsBannedException, "too_many_attempts"),
+        (UnknownUserException, "unknown_user"),
         (Exception, "unknown"),
     ],
 )
