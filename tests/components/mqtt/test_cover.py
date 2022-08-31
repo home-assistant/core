@@ -84,9 +84,10 @@ DEFAULT_CONFIG = {
     mqtt.DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
 
-DEFAULT_CONFIG_LEGACY = {
-    cover.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
-}
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[cover.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)

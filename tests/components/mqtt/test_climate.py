@@ -87,29 +87,10 @@ DEFAULT_CONFIG = {
     }
 }
 
-DEFAULT_CONFIG_LEGACY = {
-    climate.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "mode_command_topic": "mode-topic",
-        "temperature_command_topic": "temperature-topic",
-        "temperature_low_command_topic": "temperature-low-topic",
-        "temperature_high_command_topic": "temperature-high-topic",
-        "fan_mode_command_topic": "fan-mode-topic",
-        "swing_mode_command_topic": "swing-mode-topic",
-        "aux_command_topic": "aux-topic",
-        "preset_mode_command_topic": "preset-mode-topic",
-        "preset_modes": [
-            "eco",
-            "away",
-            "boost",
-            "comfort",
-            "home",
-            "sleep",
-            "activity",
-        ],
-    }
-}
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[climate.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)

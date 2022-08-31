@@ -45,9 +45,10 @@ from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 
-DEFAULT_CONFIG_LEGACY = {
-    camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
-}
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[camera.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)

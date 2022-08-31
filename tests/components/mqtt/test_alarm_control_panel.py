@@ -81,15 +81,6 @@ DEFAULT_CONFIG = {
     }
 }
 
-DEFAULT_CONFIG_LEGACY = {
-    alarm_control_panel.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "alarm/state",
-        "command_topic": "alarm/command",
-    }
-}
-
 DEFAULT_CONFIG_CODE = {
     mqtt.DOMAIN: {
         alarm_control_panel.DOMAIN: {
@@ -99,19 +90,6 @@ DEFAULT_CONFIG_CODE = {
             "code": "0123",
             "code_arm_required": True,
         }
-    }
-}
-
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
-DEFAULT_CONFIG_CODE_LEGACY = {
-    alarm_control_panel.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "alarm/state",
-        "command_topic": "alarm/command",
-        "code": "0123",
-        "code_arm_required": True,
     }
 }
 
@@ -138,6 +116,13 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
         }
     }
 }
+
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN]["platform"] = mqtt.DOMAIN
+DEFAULT_CONFIG_CODE_LEGACY = copy.deepcopy(DEFAULT_CONFIG_CODE[mqtt.DOMAIN])
+DEFAULT_CONFIG_CODE_LEGACY[alarm_control_panel.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
