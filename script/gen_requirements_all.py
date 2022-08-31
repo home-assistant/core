@@ -139,6 +139,9 @@ pubnub!=6.4.0
 # Package's __init__.pyi stub has invalid syntax and breaks mypy
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
+
+# Unifiprotect not compatible with 1.10
+pydantic==1.9.2
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
