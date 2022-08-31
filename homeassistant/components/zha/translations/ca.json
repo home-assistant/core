@@ -10,11 +10,26 @@
         },
         "flow_title": "{name}",
         "step": {
+            "choose_serial_port": {
+                "title": "Selecciona un port s\u00e8rie"
+            },
             "confirm": {
                 "description": "Vols configurar {name}?"
             },
             "confirm_hardware": {
                 "description": "Vols configurar {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "title": "Tipus de r\u00e0dio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocitat del port"
+                },
+                "title": "Configuraci\u00f3 del port s\u00e8rie"
             },
             "pick_radio": {
                 "data": {
@@ -31,6 +46,11 @@
                 },
                 "description": "Introdueix la configuraci\u00f3 espec\u00edfica de port",
                 "title": "Configuraci\u00f3"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Puja un fitxer"
+                }
             },
             "user": {
                 "data": {
@@ -113,6 +133,42 @@
             "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
             "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Aquest no \u00e9s un dispositiu zha",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "usb_probe_failed": "No s'ha pogut provar el dispositiu USB"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_serial_port": {
+                "title": "Selecciona un port s\u00e8rie"
+            },
+            "init": {
+                "title": "Reconfiguraci\u00f3 de ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "title": "Tipus de r\u00e0dio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocitat del port"
+                },
+                "title": "Configuraci\u00f3 del port s\u00e8rie"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Puja un fitxer"
+                }
+            }
         }
     }
 }
