@@ -1151,9 +1151,10 @@ async def help_test_entity_debug_info(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
+    config["platform"] = "mqtt"
 
     registry = dr.async_get(hass)
 
@@ -1188,7 +1189,7 @@ async def help_test_entity_debug_info_max_messages(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1252,7 +1253,7 @@ async def help_test_entity_debug_info_message(
     """
     # Add device settings to config
     await mqtt_mock_entry_no_yaml_config()
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1355,9 +1356,10 @@ async def help_test_entity_debug_info_remove(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
+    config["platform"] = "mqtt"
 
     registry = dr.async_get(hass)
 
@@ -1401,9 +1403,10 @@ async def help_test_entity_debug_info_update_entity_id(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
+    config["platform"] = "mqtt"
 
     dev_registry = dr.async_get(hass)
     ent_registry = mock_registry(hass, {})

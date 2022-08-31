@@ -584,7 +584,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         vacuum.DOMAIN,
-        DEFAULT_CONFIG_2_LEGACY,
+        DEFAULT_CONFIG_2,
         vacuum.SERVICE_START,
         command_payload="start",
         state_payload="{}",

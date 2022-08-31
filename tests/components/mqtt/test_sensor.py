@@ -1018,35 +1018,35 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock_entry_no_yaml_config)
 async def test_entity_debug_info(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT sensor debug info."""
     await help_test_entity_debug_info(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_debug_info_max_messages(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT sensor debug info."""
     await help_test_entity_debug_info_max_messages(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY, None
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
 async def test_entity_debug_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT sensor debug info."""
     await help_test_entity_debug_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_debug_info_update_entity_id(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT sensor debug info."""
     await help_test_entity_debug_info_update_entity_id(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 

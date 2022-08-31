@@ -1223,11 +1223,12 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_c
 async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     config = {
-        climate.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "mode_command_topic": "command-topic",
-            "mode_state_topic": "test-topic",
+        mqtt.DOMAIN: {
+            climate.DOMAIN: {
+                "name": "test",
+                "mode_command_topic": "command-topic",
+                "mode_state_topic": "test-topic",
+            }
         }
     }
     await help_test_entity_debug_info_message(

@@ -1070,14 +1070,15 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_c
 async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "schema": "template",
-            "name": "test",
-            "command_topic": "test-topic",
-            "command_on_template": "ON",
-            "command_off_template": "off,{{ transition|d }}",
-            "state_template": '{{ value.split(",")[0] }}',
+        mqtt.DOMAIN: {
+            light.DOMAIN: {
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test-topic",
+                "command_on_template": "ON",
+                "command_off_template": "off,{{ transition|d }}",
+                "state_template": '{{ value.split(",")[0] }}',
+            }
         }
     }
     await help_test_entity_debug_info_message(

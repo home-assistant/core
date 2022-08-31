@@ -669,7 +669,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         number.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         SERVICE_SET_VALUE,
         service_parameters={ATTR_VALUE: 45},
         command_payload="45",

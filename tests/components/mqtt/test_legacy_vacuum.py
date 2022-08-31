@@ -835,13 +835,14 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_c
 async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     config = {
-        vacuum.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "battery_level_topic": "state-topic",
-            "battery_level_template": "{{ value_json.battery_level }}",
-            "command_topic": "command-topic",
-            "payload_turn_on": "ON",
+        mqtt.DOMAIN: {
+            vacuum.DOMAIN: {
+                "name": "test",
+                "battery_level_topic": "state-topic",
+                "battery_level_template": "{{ value_json.battery_level }}",
+                "command_topic": "command-topic",
+                "payload_turn_on": "ON",
+            }
         }
     }
     await help_test_entity_debug_info_message(

@@ -1236,7 +1236,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         humidifier.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         humidifier.SERVICE_TURN_ON,
     )
 
