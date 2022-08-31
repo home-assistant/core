@@ -84,7 +84,6 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self._id = device
         self.dcb = None
         self._attr_hvac_mode = HVACMode.HEAT
-        self._attr_temperature_unit = None
 
     @property
     def name(self):
