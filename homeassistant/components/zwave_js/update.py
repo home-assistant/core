@@ -67,7 +67,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
-        self.available_firmware_updates: list[FirmwareUpdateInfo] = []
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
 
@@ -98,12 +97,16 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             if not self._status_unsub:
                 self._status_unsub = self.node.once("wake up", self._update_on_wake_up)
             return
-        self.available_firmware_updates = (
+        if available_firmware_updates := (
             await self.driver.controller.async_get_available_firmware_updates(
                 self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
             )
-        )
-        self._async_process_available_updates(write_state)
+        ):
+            self._latest_version_firmware = max(
+                available_firmware_updates,
+                key=lambda x: AwesomeVersion(x.version),
+            )
+            self._async_process_available_updates(write_state)
 
     @callback
     def _async_process_available_updates(self, write_state: bool = True) -> None:
@@ -114,18 +117,11 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         """
         # If we have an available firmware update that is a higher version than what's
         # on the node, we should advertise it, otherwise we are on the latest version
-        if self.available_firmware_updates and AwesomeVersion(
-            (
-                firmware := max(
-                    self.available_firmware_updates,
-                    key=lambda x: AwesomeVersion(x.version),
-                )
-            ).version
+        if (firmware := self._latest_version_firmware) and AwesomeVersion(
+            firmware.version
         ) > AwesomeVersion(self.node.firmware_version):
-            self._latest_version_firmware = firmware
             self._attr_latest_version = firmware.version
         else:
-            self._latest_version_firmware = None
             self._attr_latest_version = self._attr_installed_version
         if write_state:
             self.async_write_ha_state()
@@ -153,7 +149,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             raise HomeAssistantError(err) from err
         else:
             self._attr_installed_version = firmware.version
-            self.available_firmware_updates.remove(firmware)
+            self._latest_version_firmware = None
             self._async_process_available_updates()
         finally:
             self._attr_in_progress = False

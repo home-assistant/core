@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     NOT_BTHOME_SERVICE_INFO,
-    PM_SERVICE_INFO,
+    PRST_SERVICE_INFO,
     TEMP_HUMI_ENCRYPTED_SERVICE_INFO,
     TEMP_HUMI_SERVICE_INFO,
 )
@@ -185,7 +185,7 @@ async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.bthome.config_flow.async_discovered_service_info",
-        return_value=[PM_SERVICE_INFO],
+        return_value=[PRST_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -199,7 +199,7 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "54:48:E6:8F:80:A5"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 80A5"
+    assert result2["title"] == "b-parasite 80A5"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
@@ -384,7 +384,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=PM_SERVICE_INFO,
+        data=PRST_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -395,7 +395,7 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=PM_SERVICE_INFO,
+        data=PRST_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -403,7 +403,7 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=PM_SERVICE_INFO,
+        data=PRST_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
@@ -414,14 +414,14 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=PM_SERVICE_INFO,
+        data=PRST_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
         "homeassistant.components.bthome.config_flow.async_discovered_service_info",
-        return_value=[PM_SERVICE_INFO],
+        return_value=[PRST_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -435,7 +435,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
             user_input={"address": "54:48:E6:8F:80:A5"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TEST DEVICE 80A5"
+    assert result2["title"] == "b-parasite 80A5"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 

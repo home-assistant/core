@@ -226,11 +226,12 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "W",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "W",
+            "statistics_unit_of_measurement": "W",
         }
     ]
 
@@ -252,11 +253,12 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": new_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": new_unit,
+            "statistics_unit_of_measurement": new_unit,
         }
     ]
 
@@ -526,11 +528,12 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "statistics_unit_of_measurement": unit,
         }
     ]
 
@@ -552,11 +555,12 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "statistics_unit_of_measurement": unit,
         }
     ]
 
@@ -646,12 +650,13 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
