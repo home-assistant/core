@@ -621,6 +621,58 @@ async def test_integration_discovery_updates_key_without_unique_local_name(
     assert entry.data[CONF_SLOT] == 66
 
 
+async def test_integration_discovery_updates_key_duplicate_local_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test integration discovery updates the key with duplicate local names."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LOCAL_NAME: "Aug",
+            CONF_ADDRESS: OLD_FIRMWARE_LOCK_DISCOVERY_INFO.address,
+            CONF_KEY: "5fd51b8621c6a139eaffbedcb846b60f",
+            CONF_SLOT: 11,
+        },
+        unique_id=OLD_FIRMWARE_LOCK_DISCOVERY_INFO.address,
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LOCAL_NAME: "Aug",
+            CONF_ADDRESS: "CC:DD:CC:DD:CC:DD",
+            CONF_KEY: "5fd51b8621c6a139eaffbedcb846b60f",
+            CONF_SLOT: 11,
+        },
+        unique_id="CC:DD:CC:DD:CC:DD",
+    )
+    entry2.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.yalexs_ble.util.async_process_advertisements",
+        return_value=LOCK_DISCOVERY_INFO_UUID_ADDRESS,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                "name": "Front Door",
+                "address": OLD_FIRMWARE_LOCK_DISCOVERY_INFO.address,
+                "key": "2fd51b8621c6a139eaffbedcb846b60f",
+                "slot": 66,
+                "serial": "M1XXX012LU",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_KEY] == "2fd51b8621c6a139eaffbedcb846b60f"
+    assert entry.data[CONF_SLOT] == 66
+
+    assert entry2.data[CONF_KEY] == "5fd51b8621c6a139eaffbedcb846b60f"
+    assert entry2.data[CONF_SLOT] == 11
+
+
 async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_address(
     hass: HomeAssistant,
 ) -> None:

@@ -143,6 +143,9 @@ async def async_setup_platform(
 class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
+    _attr_should_poll = False
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
         self._controller = controller
@@ -215,11 +218,6 @@ class IntesisAC(ClimateEntity):
     def name(self):
         """Return the name of the AC device."""
         return self._device_name
-
-    @property
-    def temperature_unit(self):
-        """Intesishome API uses celsius on the backend."""
-        return TEMP_CELSIUS
 
     @property
     def extra_state_attributes(self):
@@ -409,11 +407,6 @@ class IntesisAC(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature for the current mode of operation."""
         return self._max_temp
-
-    @property
-    def should_poll(self):
-        """Poll for updates if pyIntesisHome doesn't have a socket open."""
-        return False
 
     @property
     def fan_mode(self):

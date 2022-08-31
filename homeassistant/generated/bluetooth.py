@@ -8,6 +8,16 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
+        "domain": "bthome",
+        "connectable": False,
+        "service_data_uuid": "0000181c-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "bthome",
+        "connectable": False,
+        "service_data_uuid": "0000181e-0000-1000-8000-00805f9b34fb"
+    },
+    {
         "domain": "fjaraskupan",
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
@@ -141,6 +151,43 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        "manufacturer_id": 16,
+        "manufacturer_data_start": [
+            0
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        "manufacturer_id": 17,
+        "manufacturer_data_start": [
+            0
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+        "manufacturer_id": 21,
+        "manufacturer_data_start": [
+            0
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "thermobeacon",
+        "local_name": "ThermoBeacon",
+        "connectable": False
+    },
+    {
+        "domain": "thermopro",
+        "local_name": "TP35*",
         "connectable": False
     },
     {

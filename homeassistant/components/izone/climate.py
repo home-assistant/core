@@ -126,6 +126,9 @@ def _return_on_connection_error(ret=None):
 class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
+    _attr_should_poll = False
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
@@ -249,19 +252,6 @@ class ControllerDevice(ClimateEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return f"iZone Controller {self._controller.device_uid}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
 
     @property
     def precision(self) -> float:
@@ -448,6 +438,9 @@ class ControllerDevice(ClimateEntity):
 class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
 
+    _attr_should_poll = False
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""
         self._controller = controller
@@ -525,14 +518,6 @@ class ZoneDevice(ClimateEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
     @property  # type: ignore[misc]
     @_return_on_connection_error(0)
     def supported_features(self):
@@ -540,11 +525,6 @@ class ZoneDevice(ClimateEntity):
         if self._zone.mode == Zone.Mode.AUTO:
             return self._attr_supported_features
         return self._attr_supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
 
     @property
     def precision(self):

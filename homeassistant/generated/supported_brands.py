@@ -11,6 +11,7 @@ HAS_SUPPORTED_BRANDS = (
     "motion_blinds",
     "overkiz",
     "renault",
+    "thermobeacon",
     "wemo",
     "yalexs_ble",
     "zwave_js"
