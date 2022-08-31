@@ -585,21 +585,21 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -608,7 +608,7 @@ async def test_default_availability_list_payload(
 ):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_list_payload(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -617,7 +617,7 @@ async def test_default_availability_list_payload_all(
 ):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_list_payload_all(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -626,34 +626,31 @@ async def test_default_availability_list_payload_any(
 ):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_list_payload_any(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_list_single(
-    hass, mqtt_mock_entry_no_yaml_config, caplog
-):
+async def test_default_availability_list_single(hass, caplog):
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
         hass,
-        mqtt_mock_entry_no_yaml_config,
         caplog,
         sensor.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_availability(hass, mqtt_mock_entry_no_yaml_config):
     """Test availability discovery update."""
     await help_test_discovery_update_availability(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 

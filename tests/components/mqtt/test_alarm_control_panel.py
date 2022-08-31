@@ -588,7 +588,7 @@ async def test_availability_when_connection_lost(
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE_LEGACY,
+        DEFAULT_CONFIG_CODE,
     )
 
 
@@ -598,7 +598,7 @@ async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE_LEGACY,
+        DEFAULT_CONFIG_CODE,
     )
 
 
@@ -608,7 +608,7 @@ async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_conf
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE_LEGACY,
+        DEFAULT_CONFIG_CODE,
     )
 
 
@@ -618,7 +618,7 @@ async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_confi
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 

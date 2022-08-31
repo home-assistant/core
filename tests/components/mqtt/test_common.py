@@ -53,7 +53,7 @@ async def help_test_availability_when_connection_lost(
     hass, mqtt_mock_entry_with_yaml_config, domain, config
 ):
     """Test availability after MQTT disconnection."""
-    assert await async_setup_component(hass, domain, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -72,8 +72,8 @@ async def help_test_availability_without_topic(
     hass, mqtt_mock_entry_with_yaml_config, domain, config
 ):
     """Test availability without defined availability topic."""
-    assert "availability_topic" not in config[domain]
-    assert await async_setup_component(hass, domain, config)
+    assert "availability_topic" not in config[mqtt.DOMAIN][domain]
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -96,10 +96,10 @@ async def help_test_default_availability_payload(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[domain]["availability_topic"] = "availability-topic"
+    config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -147,13 +147,13 @@ async def help_test_default_availability_list_payload(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[domain]["availability"] = [
+    config[mqtt.DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -213,14 +213,14 @@ async def help_test_default_availability_list_payload_all(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[domain]["availability_mode"] = "all"
-    config[domain]["availability"] = [
+    config[mqtt.DOMAIN][domain]["availability_mode"] = "all"
+    config[mqtt.DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -281,14 +281,14 @@ async def help_test_default_availability_list_payload_any(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[domain]["availability_mode"] = "any"
-    config[domain]["availability"] = [
+    config[mqtt.DOMAIN][domain]["availability_mode"] = "any"
+    config[mqtt.DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -331,7 +331,6 @@ async def help_test_default_availability_list_payload_any(
 
 async def help_test_default_availability_list_single(
     hass,
-    mqtt_mock_entry_with_yaml_config,
     caplog,
     domain,
     config,
@@ -345,22 +344,17 @@ async def help_test_default_availability_list_single(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[domain]["availability"] = [
+    config[mqtt.DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
     ]
-    config[domain]["availability_topic"] = "availability-topic"
-    assert await async_setup_component(
+    config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
+    assert not await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(f"{domain}.test")
-    assert state is None
     assert (
-        "Invalid config for [sensor.mqtt]: two or more values in the same group of exclusion 'availability'"
+        "Invalid config for [mqtt]: two or more values in the same group of exclusion 'availability'"
         in caplog.text
     )
 
@@ -380,12 +374,12 @@ async def help_test_custom_availability_payload(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[domain]["availability_topic"] = "availability-topic"
-    config[domain]["payload_available"] = "good"
-    config[domain]["payload_not_available"] = "nogood"
+    config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
+    config[mqtt.DOMAIN][domain]["payload_available"] = "good"
+    config[mqtt.DOMAIN][domain]["payload_not_available"] = "nogood"
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -434,17 +428,17 @@ async def help_test_discovery_update_availability(
     await mqtt_mock_entry_no_yaml_config()
     # Add availability settings to config
     config1 = copy.deepcopy(config)
-    config1[domain]["availability_topic"] = "availability-topic1"
+    config1[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic1"
     config2 = copy.deepcopy(config)
-    config2[domain]["availability"] = [
+    config2[mqtt.DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic2"},
         {"topic": "availability-topic3"},
     ]
     config3 = copy.deepcopy(config)
-    config3[domain]["availability_topic"] = "availability-topic4"
-    data1 = json.dumps(config1[domain])
-    data2 = json.dumps(config2[domain])
-    data3 = json.dumps(config3[domain])
+    config3[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic4"
+    data1 = json.dumps(config1[mqtt.DOMAIN][domain])
+    data2 = json.dumps(config2[mqtt.DOMAIN][domain])
+    data3 = json.dumps(config3[mqtt.DOMAIN][domain])
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()

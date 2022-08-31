@@ -227,27 +227,28 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, switch.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, switch.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     config = {
-        switch.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "state-topic",
-            "command_topic": "command-topic",
-            "payload_on": 1,
-            "payload_off": 0,
+        mqtt.DOMAIN: {
+            switch.DOMAIN: {
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "payload_on": 1,
+                "payload_off": 0,
+            }
         }
     }
 
@@ -265,13 +266,14 @@ async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_conf
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     config = {
-        switch.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "state-topic",
-            "command_topic": "command-topic",
-            "payload_on": 1,
-            "payload_off": 0,
+        mqtt.DOMAIN: {
+            switch.DOMAIN: {
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "payload_on": 1,
+                "payload_off": 0,
+            }
         }
     }
 

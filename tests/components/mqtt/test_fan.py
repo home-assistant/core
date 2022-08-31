@@ -1639,14 +1639,14 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1656,7 +1656,7 @@ async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_conf
         hass,
         mqtt_mock_entry_with_yaml_config,
         fan.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         True,
         "state-topic",
         "1",
@@ -1669,7 +1669,7 @@ async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_confi
         hass,
         mqtt_mock_entry_with_yaml_config,
         fan.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         True,
         "state-topic",
         "1",
