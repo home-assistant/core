@@ -12,11 +12,14 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
+    NumberMode,
     RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_UNIT_OF_MEASUREMENT,
@@ -82,6 +85,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
+        vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
@@ -144,8 +148,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT number."""
     async_add_entities([MqttNumber(hass, config, config_entry, discovery_data)])
 
@@ -267,9 +275,14 @@ class MqttNumber(MqttEntity, RestoreNumber):
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self._current_number
+
+    @property
+    def mode(self) -> NumberMode:
+        """Return the mode of the entity."""
+        return self._config[CONF_MODE]
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -292,11 +305,11 @@ class MqttNumber(MqttEntity, RestoreNumber):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> NumberDeviceClass | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)

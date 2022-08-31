@@ -152,8 +152,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT siren."""
     async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 
@@ -309,12 +313,12 @@ class MqttSiren(MqttEntity, SirenEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         mqtt_attributes = super().extra_state_attributes
         attributes = (
@@ -353,7 +357,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 self._config[CONF_ENCODING],
             )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.
 
         This method is a coroutine.
@@ -371,7 +375,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._update(kwargs)
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off.
 
         This method is a coroutine.

@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Es existiert bereits eine Kamera mit diesen URL-Einstellungen.",
             "invalid_still_image": "URL hat kein g\u00fcltiges Standbild zur\u00fcckgegeben",
+            "malformed_url": "Falsch formatierte URL",
             "no_still_image_or_stream_url": "Du musst mindestens eine Standbild- oder Stream-URL angeben",
+            "relative_url": "Relative URLs sind nicht zul\u00e4ssig",
             "stream_file_not_found": "Datei nicht gefunden beim Versuch, eine Verbindung zum Stream herzustellen (ist ffmpeg installiert?)",
             "stream_http_not_found": "HTTP 404 Not found beim Versuch, eine Verbindung zum Stream herzustellen",
             "stream_io_error": "Eingabe-/Ausgabefehler beim Versuch, eine Verbindung zum Stream herzustellen. Falsches RTSP-Transportprotokoll?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Es existiert bereits eine Kamera mit diesen URL-Einstellungen.",
             "invalid_still_image": "URL hat kein g\u00fcltiges Standbild zur\u00fcckgegeben",
+            "malformed_url": "Falsch formatierte URL",
             "no_still_image_or_stream_url": "Du musst mindestens eine Standbild- oder Stream-URL angeben",
+            "relative_url": "Relative URLs sind nicht zul\u00e4ssig",
             "stream_file_not_found": "Datei nicht gefunden beim Versuch, eine Verbindung zum Stream herzustellen (ist ffmpeg installiert?)",
             "stream_http_not_found": "HTTP 404 Not found beim Versuch, eine Verbindung zum Stream herzustellen",
             "stream_io_error": "Eingabe-/Ausgabefehler beim Versuch, eine Verbindung zum Stream herzustellen. Falsches RTSP-Transportprotokoll?",

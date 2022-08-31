@@ -17,5 +17,18 @@
                 "description": "Configura un dispositivo Elexa Guardian locale."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aggiorna tutte le automazioni o gli script che utilizzano questo servizio e utilizzare invece il servizio `{alternate_service}` con un ID entit\u00e0 di destinazione di `{alternate_target}`. Quindi, fai clic su INVIA di seguito per contrassegnare questo problema come risolto.",
+                        "title": "Il servizio {deprecated_service} verr\u00e0 rimosso"
+                    }
+                }
+            },
+            "title": "Il servizio {deprecated_service} verr\u00e0 rimosso"
+        }
     }
 }

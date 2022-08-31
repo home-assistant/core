@@ -37,9 +37,15 @@ async def test_koogeek_sw2_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="switch.koogeek_sw2_187a91",
-                    friendly_name="Koogeek-SW2-187A91",
+                    entity_id="switch.koogeek_sw2_187a91_switch_1",
+                    friendly_name="Koogeek-SW2-187A91 Switch 1",
                     unique_id="homekit-CNNT061751001372-8",
+                    state="off",
+                ),
+                EntityTestInfo(
+                    entity_id="switch.koogeek_sw2_187a91_switch_2",
+                    friendly_name="Koogeek-SW2-187A91 Switch 2",
+                    unique_id="homekit-CNNT061751001372-11",
                     state="off",
                 ),
                 EntityTestInfo(

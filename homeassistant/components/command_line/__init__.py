@@ -23,7 +23,11 @@ def call_shell_with_timeout(
         return 0
     except subprocess.CalledProcessError as proc_exception:
         if log_return_code:
-            _LOGGER.error("Command failed: %s", command)
+            _LOGGER.error(
+                "Command failed (with return code %s): %s",
+                proc_exception.returncode,
+                command,
+            )
         return proc_exception.returncode
     except subprocess.TimeoutExpired:
         _LOGGER.error("Timeout for command: %s", command)
@@ -40,8 +44,10 @@ def check_output_or_log(command: str, timeout: int) -> str | None:
             command, shell=True, timeout=timeout  # nosec # shell by design
         )
         return return_value.strip().decode("utf-8")
-    except subprocess.CalledProcessError:
-        _LOGGER.error("Command failed: %s", command)
+    except subprocess.CalledProcessError as err:
+        _LOGGER.error(
+            "Command failed (with return code %s): %s", err.returncode, command
+        )
     except subprocess.TimeoutExpired:
         _LOGGER.error("Timeout for command: %s", command)
     except subprocess.SubprocessError:

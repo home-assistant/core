@@ -71,7 +71,7 @@ async def test_record_stream(hass, filename, h264_video):
     assert os.path.exists(filename)
 
 
-async def test_record_lookback(hass, h264_video):
+async def test_record_lookback(hass, filename, h264_video):
     """Exercise record with loopback."""
 
     stream = create_stream(hass, h264_video, {})
@@ -81,7 +81,7 @@ async def test_record_lookback(hass, h264_video):
     await stream.start()
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path", lookback=4)
+        await stream.async_record(filename, lookback=4)
 
     # This test does not need recorder cleanup since it is not fully exercised
 
@@ -245,10 +245,10 @@ async def test_record_stream_audio(
     await hass.async_block_till_done()
 
 
-async def test_recorder_log(hass, caplog):
+async def test_recorder_log(hass, filename, caplog):
     """Test starting a stream to record logs the url without username and password."""
     stream = create_stream(hass, "https://abcd:efgh@foo.bar", {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+        await stream.async_record(filename)
     assert "https://abcd:efgh@foo.bar" not in caplog.text
     assert "https://****:****@foo.bar" in caplog.text

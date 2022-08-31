@@ -32,7 +32,7 @@ async def test_form_create_entry_without_auth(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {}
 
@@ -51,7 +51,7 @@ async def test_form_create_entry_without_auth(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -62,7 +62,7 @@ async def test_form_create_entry_with_auth(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {}
 
@@ -80,7 +80,7 @@ async def test_form_create_entry_with_auth(hass):
             VALID_CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "credentials"
 
         result = await hass.config_entries.flow.async_configure(
@@ -89,7 +89,7 @@ async def test_form_create_entry_with_auth(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert result["data"]["username"] == "fake_username"
@@ -120,7 +120,7 @@ async def test_reauth_successful(hass):
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -128,7 +128,7 @@ async def test_reauth_successful(hass):
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
 
@@ -152,7 +152,7 @@ async def test_reauth_unsuccessful(hass):
             data=entry.data,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -160,7 +160,7 @@ async def test_reauth_unsuccessful(hass):
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_unsuccessful"
 
 
@@ -189,7 +189,7 @@ async def test_form_with_auth_errors(hass, error):
             data=VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
     with patch(
@@ -244,7 +244,7 @@ async def test_form_abort(hass):
             data=VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "device_unsupported"
 
 
@@ -271,7 +271,7 @@ async def test_form_already_configured(hass):
             {"host": "1.1.1.1"},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
@@ -298,7 +298,7 @@ async def test_zeroconf(hass):
             if flow["flow_id"] == result["flow_id"]
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
     assert context["confirm_only"] is True
@@ -313,7 +313,7 @@ async def test_zeroconf(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"] == {"host": "10.10.2.3"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -339,7 +339,7 @@ async def test_zeroconf_with_auth(hass):
             if flow["flow_id"] == result["flow_id"]
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "credentials"
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
@@ -359,7 +359,7 @@ async def test_zeroconf_with_auth(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
     assert result["data"]["username"] == "fake_username"
@@ -380,7 +380,7 @@ async def test_zeroconf_host_already_configured(hass):
         context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -404,5 +404,5 @@ async def test_zeroconf_errors(hass, error):
             context={"source": SOURCE_ZEROCONF},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == reason

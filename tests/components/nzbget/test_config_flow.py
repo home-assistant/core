@@ -6,11 +6,7 @@ from pynzbgetapi import NZBGetAPIException
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     ENTRY_CONFIG,
@@ -30,7 +26,7 @@ async def test_user_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
@@ -40,7 +36,7 @@ async def test_user_form(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: False}
 
@@ -53,7 +49,7 @@ async def test_user_form_show_advanced_options(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     user_input_advanced = {
@@ -68,7 +64,7 @@ async def test_user_form_show_advanced_options(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: True}
 
@@ -90,7 +86,7 @@ async def test_user_form_cannot_connect(hass):
             USER_INPUT,
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -109,7 +105,7 @@ async def test_user_form_unexpected_exception(hass):
             USER_INPUT,
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -123,7 +119,7 @@ async def test_user_form_single_instance_allowed(hass):
         context={"source": SOURCE_USER},
         data=USER_INPUT,
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -143,7 +139,7 @@ async def test_options_flow(hass, nzbget_api):
     assert entry.options[CONF_SCAN_INTERVAL] == 5
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with _patch_async_setup_entry():
@@ -153,5 +149,5 @@ async def test_options_flow(hass, nzbget_api):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 15

@@ -94,20 +94,23 @@ def get_device_entities(
         # If the value ID returns as None, we don't need to include this entity
         if (value_id := get_value_id_from_unique_id(entry.unique_id)) is None:
             continue
-        state_key = get_state_key_from_unique_id(entry.unique_id)
 
-        zwave_value = node.values[value_id]
-        primary_value_data = {
-            "command_class": zwave_value.command_class,
-            "command_class_name": zwave_value.command_class_name,
-            "endpoint": zwave_value.endpoint,
-            "property": zwave_value.property_,
-            "property_name": zwave_value.property_name,
-            "property_key": zwave_value.property_key,
-            "property_key_name": zwave_value.property_key_name,
-        }
-        if state_key is not None:
-            primary_value_data["state_key"] = state_key
+        primary_value_data = None
+        if (zwave_value := node.values.get(value_id)) is not None:
+            primary_value_data = {
+                "command_class": zwave_value.command_class,
+                "command_class_name": zwave_value.command_class_name,
+                "endpoint": zwave_value.endpoint,
+                "property": zwave_value.property_,
+                "property_name": zwave_value.property_name,
+                "property_key": zwave_value.property_key,
+                "property_key_name": zwave_value.property_key_name,
+            }
+
+            state_key = get_state_key_from_unique_id(entry.unique_id)
+            if state_key is not None:
+                primary_value_data["state_key"] = state_key
+
         entity = {
             "domain": entry.domain,
             "entity_id": entry.entity_id,

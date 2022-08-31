@@ -8,7 +8,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +18,7 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -31,7 +31,7 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tesla Wall Connector"
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -52,7 +52,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -73,7 +73,7 @@ async def test_form_other_error(
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -128,7 +128,7 @@ async def test_dhcp_can_finish(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.2.3.4"}
 
 

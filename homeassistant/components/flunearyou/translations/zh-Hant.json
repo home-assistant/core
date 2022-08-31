@@ -16,5 +16,18 @@
                 "title": "\u8a2d\u5b9a Flu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "The external data source powering the Flu Near You \u6574\u5408\u6240\u4f7f\u7528\u7684\u5916\u90e8\u8cc7\u6599\u4f86\u6e90\u5df2\u7d93\u7121\u6cd5\u4f7f\u7528\uff0c\u6574\u5408\u7121\u6cd5\u4f7f\u7528\u3002\n\n\u6309\u4e0b\u300c\u50b3\u9001\u300d\u4ee5\u79fb\u9664\u7531 Home Assistant \u79fb\u9664 Flu Near You\u3002",
+                        "title": "\u79fb\u9664 Flu Near You"
+                    }
+                }
+            },
+            "title": "Flu Near You \u5df2\u7d93\u7121\u6cd5\u4f7f\u7528"
+        }
     }
 }

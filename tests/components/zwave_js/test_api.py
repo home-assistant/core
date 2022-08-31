@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
+    ExclusionStrategy,
     InclusionState,
     InclusionStrategy,
     LogLevel,
@@ -68,8 +69,8 @@ from homeassistant.components.zwave_js.api import (
     SECURITY_CLASSES,
     SPECIFIC_DEVICE_CLASS,
     STATUS,
+    STRATEGY,
     TYPE,
-    UNPROVISION,
     VALUE,
     VERSION,
 )
@@ -1528,7 +1529,7 @@ async def test_remove_node(
             ID: 2,
             TYPE: "zwave_js/remove_node",
             ENTRY_ID: entry.entry_id,
-            UNPROVISION: True,
+            STRATEGY: ExclusionStrategy.EXCLUDE_ONLY,
         }
     )
 
@@ -1538,7 +1539,7 @@ async def test_remove_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_exclusion",
-        "unprovision": True,
+        "strategy": 0,
     }
 
     # Test FailedZWaveCommand is caught
@@ -3437,10 +3438,10 @@ async def test_abort_firmware_update(
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
-async def test_get_firmware_update_progress(
+async def test_is_node_firmware_update_in_progress(
     hass, client, multisensor_6, integration, hass_ws_client
 ):
-    """Test that the get_firmware_update_progress WS API call works."""
+    """Test that the is_firmware_update_in_progress WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
@@ -3449,7 +3450,7 @@ async def test_get_firmware_update_progress(
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "zwave_js/get_firmware_update_progress",
+            TYPE: "zwave_js/is_node_firmware_update_in_progress",
             DEVICE_ID: device.id,
         }
     )
@@ -3459,18 +3460,18 @@ async def test_get_firmware_update_progress(
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.get_firmware_update_progress"
+    assert args["command"] == "node.is_firmware_update_in_progress"
     assert args["nodeId"] == multisensor_6.node_id
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "zwave_js_server.model.node.Node.async_get_firmware_update_progress",
+        "zwave_js_server.model.node.Node.async_is_firmware_update_in_progress",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(
             {
                 ID: 2,
-                TYPE: "zwave_js/get_firmware_update_progress",
+                TYPE: "zwave_js/is_node_firmware_update_in_progress",
                 DEVICE_ID: device.id,
             }
         )
@@ -3487,7 +3488,7 @@ async def test_get_firmware_update_progress(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/get_firmware_update_progress",
+            TYPE: "zwave_js/is_node_firmware_update_in_progress",
             DEVICE_ID: device.id,
         }
     )
@@ -3723,10 +3724,10 @@ async def test_get_firmware_update_capabilities(
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
-async def test_get_any_firmware_update_progress(
+async def test_is_any_ota_firmware_update_in_progress(
     hass, client, integration, hass_ws_client
 ):
-    """Test that the get_any_firmware_update_progress WS API call works."""
+    """Test that the is_any_ota_firmware_update_in_progress WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -3734,7 +3735,7 @@ async def test_get_any_firmware_update_progress(
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "zwave_js/get_any_firmware_update_progress",
+            TYPE: "zwave_js/is_any_ota_firmware_update_in_progress",
             ENTRY_ID: entry.entry_id,
         }
     )
@@ -3744,17 +3745,17 @@ async def test_get_any_firmware_update_progress(
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "controller.get_any_firmware_update_progress"
+    assert args["command"] == "controller.is_any_ota_firmware_update_in_progress"
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "zwave_js_server.model.controller.Controller.async_get_any_firmware_update_progress",
+        "zwave_js_server.model.controller.Controller.async_is_any_ota_firmware_update_in_progress",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(
             {
                 ID: 2,
-                TYPE: "zwave_js/get_any_firmware_update_progress",
+                TYPE: "zwave_js/is_any_ota_firmware_update_in_progress",
                 ENTRY_ID: entry.entry_id,
             }
         )
@@ -3771,7 +3772,7 @@ async def test_get_any_firmware_update_progress(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/get_any_firmware_update_progress",
+            TYPE: "zwave_js/is_any_ota_firmware_update_in_progress",
             ENTRY_ID: entry.entry_id,
         }
     )
@@ -3784,7 +3785,7 @@ async def test_get_any_firmware_update_progress(
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/get_any_firmware_update_progress",
+            TYPE: "zwave_js/is_any_ota_firmware_update_in_progress",
             ENTRY_ID: "invalid_entry",
         }
     )

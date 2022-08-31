@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
@@ -30,6 +30,10 @@ from .entity import ZhaEntity, ZhaGroupEntity
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
+
+_ZHASwitchConfigurationEntitySelfT = TypeVar(
+    "_ZHASwitchConfigurationEntitySelfT", bound="ZHASwitchConfigurationEntity"
+)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.SWITCH)
@@ -172,12 +176,12 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZHASwitchConfigurationEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> ZhaEntity | None:
+    ) -> _ZHASwitchConfigurationEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -288,7 +292,8 @@ class P1MotionTriggerIndicatorSwitch(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
 class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """ZHA BinarySensor."""
@@ -297,7 +302,8 @@ class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
 class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
     """ZHA BinarySensor."""

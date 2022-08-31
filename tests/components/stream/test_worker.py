@@ -71,6 +71,12 @@ SEGMENTS_PER_PACKET = PACKET_DURATION / SEGMENT_DURATION
 TIMEOUT = 15
 
 
+@pytest.fixture
+def filename(tmpdir):
+    """Use this filename for the tests."""
+    return f"{tmpdir}/test.mp4"
+
+
 @pytest.fixture(autouse=True)
 def mock_stream_settings(hass):
     """Set the stream settings data in hass before each test."""
@@ -749,7 +755,9 @@ async def test_durations(hass, worker_finished_stream):
         },
     )
 
-    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
+    source = generate_h264_video(
+        duration=round(SEGMENT_DURATION + target_part_duration + 1)
+    )
     worker_finished, mock_stream = worker_finished_stream
 
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
@@ -895,7 +903,7 @@ async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     }
 
 
-async def test_get_image(hass):
+async def test_get_image(hass, filename):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
@@ -909,7 +917,7 @@ async def test_get_image(hass):
         stream = create_stream(hass, source, {})
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        make_recording = hass.async_create_task(stream.async_record("/example/path"))
+        make_recording = hass.async_create_task(stream.async_record(filename))
         await make_recording
     assert stream._keyframe_converter._image is None
 

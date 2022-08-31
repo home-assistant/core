@@ -44,7 +44,13 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
 
     client = await hass_ws_client(hass, access_token)
 
-    await client.send_json({"id": 10, "type": mfa_setup_flow.WS_TYPE_SETUP_MFA})
+    await client.send_json(
+        {
+            "id": 10,
+            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "mfa_module_id": "invalid_module",
+        }
+    )
 
     result = await client.receive_json()
     assert result["id"] == 10
@@ -64,7 +70,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     assert result["success"]
 
     flow = result["result"]
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow["type"] == data_entry_flow.FlowResultType.FORM
     assert flow["handler"] == "example_module"
     assert flow["step_id"] == "init"
     assert flow["data_schema"][0] == {"type": "string", "name": "pin", "required": True}
@@ -83,7 +89,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     assert result["success"]
 
     flow = result["result"]
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert flow["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert flow["handler"] == "example_module"
     assert flow["data"]["result"] is None
 

@@ -42,7 +42,7 @@ async def test_show_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -55,7 +55,7 @@ async def test_abort_if_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -91,7 +91,7 @@ async def test_step_user(hass):
 
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_CONF[CONF_USERNAME]
         assert result["data"] == {
             "auth_implementation": "fireservicerota",
@@ -131,7 +131,7 @@ async def test_reauth(hass):
         )
 
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
@@ -147,5 +147,5 @@ async def test_reauth(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "no_adapters": "No se encontraron adaptadores Bluetooth no configurados"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "\u00bfQuieres configurar Bluetooth?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adaptador"
+                },
+                "description": "Selecciona un adaptador Bluetooth para configurar"
+            },
+            "single_adapter": {
+                "description": "\u00bfQuieres configurar el adaptador Bluetooth {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Elige un dispositivo para configurar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "El adaptador Bluetooth que se usar\u00e1 para escanear",
+                    "passive": "Escaneo pasivo"
+                },
+                "description": "La escucha pasiva requiere BlueZ 5.63 o posterior con funciones experimentales habilitadas."
+            }
+        }
+    }
+}

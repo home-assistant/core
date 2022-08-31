@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 
 from .const import DOMAIN
 
@@ -50,7 +51,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_HOST): TextSelector(),
                 }
             ),
             errors=errors or {},

@@ -19,8 +19,7 @@ def patch_zeroconf_multiple_catcher():
 def prevent_io():
     """Fixture to prevent certain I/O from happening."""
     with patch(
-        "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=[],
+        "homeassistant.components.http.ban.load_yaml_config_file",
     ):
         yield
 

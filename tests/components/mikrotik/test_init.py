@@ -39,7 +39,6 @@ async def test_successful_config_entry(hass):
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN][entry.entry_id]
 
 
 async def test_hub_conn_error(hass, mock_api):

@@ -78,7 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("DHCP discovery detected QSW: %s", self._discovered_mac)
 
-        mac = format_mac(self._discovered_mac)
         options = ConnectionOptions(self._discovered_url, "", "")
         qsw = QnapQswApi(aiohttp_client.async_get_clientsession(self.hass), options)
 
@@ -87,7 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except QswError as err:
             raise AbortFlow("cannot_connect") from err
 
-        await self.async_set_unique_id(format_mac(mac))
+        await self.async_set_unique_id(format_mac(self._discovered_mac))
         self._abort_if_unique_id_configured()
 
         return await self.async_step_discovered_connection()

@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -50,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -85,7 +86,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
     def initialize(self) -> None:
         """Initialize speedtest api."""
-        self.api = speedtest.Speedtest()
+        self.api = speedtest.Speedtest(secure=True)
         self.update_servers()
 
     def update_servers(self):
@@ -142,6 +143,24 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
         async def request_update(call: ServiceCall) -> None:
             """Request update."""
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_service",
+                breaks_in_ha_version="2022.11.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_service",
+            )
+
+            _LOGGER.warning(
+                (
+                    'The "%s" service is deprecated and will be removed in "2022.11.0"; '
+                    'use the "homeassistant.update_entity" service and pass it a target Speedtest entity_id'
+                ),
+                SPEED_TEST_SERVICE,
+            )
             await self.async_request_refresh()
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)

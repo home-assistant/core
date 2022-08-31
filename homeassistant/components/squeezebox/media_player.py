@@ -39,7 +39,11 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    entity_platform,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import (
@@ -99,16 +103,15 @@ async def start_server_discovery(hass):
     """Start a server discovery task."""
 
     def _discovered_server(server):
-        asyncio.create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_INTEGRATION_DISCOVERY},
-                data={
-                    CONF_HOST: server.host,
-                    CONF_PORT: int(server.port),
-                    "uuid": server.uuid,
-                },
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_HOST: server.host,
+                CONF_PORT: int(server.port),
+                "uuid": server.uuid,
+            },
         )
 
     hass.data.setdefault(DOMAIN, {})
@@ -479,6 +482,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             cmd = "add"
         elif enqueue == MediaPlayerEnqueue.NEXT:
             cmd = "insert"
+        elif enqueue == MediaPlayerEnqueue.PLAY:
+            cmd = "play_now"
         else:
             cmd = "play"
 

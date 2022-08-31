@@ -66,7 +66,7 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     async def async_trigger(
         self,
-        run_variables: dict,
+        run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
     ) -> None:

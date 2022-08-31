@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
@@ -19,7 +21,10 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="activeplug",
     ),
-    SwitchEntityDescription(key="Heating_Heat_On_Demand"),
+    SwitchEntityDescription(
+        key="Heating_Heat_On_Demand",
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 
@@ -48,16 +53,16 @@ class HiveSwitch(HiveEntity, SwitchEntity):
         self.entity_description = entity_description
 
     @refresh_system
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hive.switch.turnOn(self.device)
 
     @refresh_system
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hive.switch.turnOff(self.device)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.switch.getSwitch(self.device)

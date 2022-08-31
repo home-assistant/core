@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
@@ -42,6 +43,7 @@ from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_con
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_VACATION,
@@ -53,10 +55,12 @@ _VALID_STATES = [
 ]
 
 CONF_ARM_AWAY_ACTION = "arm_away"
+CONF_ARM_CUSTOM_BYPASS_ACTION = "arm_custom_bypass"
 CONF_ARM_HOME_ACTION = "arm_home"
 CONF_ARM_NIGHT_ACTION = "arm_night"
 CONF_ARM_VACATION_ACTION = "arm_vacation"
 CONF_DISARM_ACTION = "disarm"
+CONF_TRIGGER_ACTION = "trigger"
 CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_FORMAT = "code_format"
@@ -75,9 +79,11 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
             TemplateCodeFormat
@@ -164,6 +170,16 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         self._arm_vacation_script = None
         if (arm_vacation_action := config.get(CONF_ARM_VACATION_ACTION)) is not None:
             self._arm_vacation_script = Script(hass, arm_vacation_action, name, DOMAIN)
+        self._arm_custom_bypass_script = None
+        if (
+            arm_custom_bypass_action := config.get(CONF_ARM_CUSTOM_BYPASS_ACTION)
+        ) is not None:
+            self._arm_custom_bypass_script = Script(
+                hass, arm_custom_bypass_action, name, DOMAIN
+            )
+        self._trigger_script = None
+        if (trigger_action := config.get(CONF_TRIGGER_ACTION)) is not None:
+            self._trigger_script = Script(hass, trigger_action, name, DOMAIN)
 
         self._state: str | None = None
 
@@ -194,6 +210,16 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         if self._arm_vacation_script is not None:
             supported_features = (
                 supported_features | AlarmControlPanelEntityFeature.ARM_VACATION
+            )
+
+        if self._arm_custom_bypass_script is not None:
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+            )
+
+        if self._trigger_script is not None:
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.TRIGGER
             )
 
         return supported_features
@@ -275,8 +301,22 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             STATE_ALARM_ARMED_VACATION, script=self._arm_vacation_script, code=code
         )
 
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Arm the panel to Custom Bypass."""
+        await self._async_alarm_arm(
+            STATE_ALARM_ARMED_CUSTOM_BYPASS,
+            script=self._arm_custom_bypass_script,
+            code=code,
+        )
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
             STATE_ALARM_DISARMED, script=self._disarm_script, code=code
+        )
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Trigger the panel."""
+        await self._async_alarm_arm(
+            STATE_ALARM_TRIGGERED, script=self._trigger_script, code=code
         )
