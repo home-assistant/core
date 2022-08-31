@@ -34,7 +34,7 @@
             "init": {
                 "data": {
                     "adapter": "L'adattatore Bluetooth da utilizzare per la scansione",
-                    "passive": "Ascolto passivo"
+                    "passive": "Scansione passiva"
                 },
                 "description": "L'ascolto passivo richiede BlueZ 5.63 o successivo con funzionalit\u00e0 sperimentali abilitate."
             }

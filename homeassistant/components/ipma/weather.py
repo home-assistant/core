@@ -190,7 +190,7 @@ class IPMAWeather(WeatherEntity):
         self._forecast = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Condition and Forecast."""
         async with async_timeout.timeout(10):
             new_observation = await self._location.observation(self._api)

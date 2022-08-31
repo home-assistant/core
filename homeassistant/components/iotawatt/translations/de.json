@@ -11,7 +11,7 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Das IoTawatt-Ger\u00e4t erfordert eine Authentifizierung. Bitte gib den Benutzernamen und das Passwort ein und klicke auf die Schaltfl\u00e4che Senden."
+                "description": "Das IoTawatt-Ger\u00e4t erfordert eine Authentifizierung. Bitte gib den Benutzernamen und das Passwort ein und dr\u00fccke auf die Schaltfl\u00e4che Senden."
             },
             "user": {
                 "data": {

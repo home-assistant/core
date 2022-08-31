@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "N\u00e3o h\u00e1 dispositivos Melnor Bluetooth nas proximidades."
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Deseja adicionar a v\u00e1lvula Melnor Bluetooth `{name}` ao Home Assistant?",
+                "title": "V\u00e1lvula Melnor Bluetooth descoberta"
+            }
+        }
+    }
+}
