@@ -121,7 +121,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
-        side_effect=Exception()),
+        side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
