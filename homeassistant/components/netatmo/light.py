@@ -33,9 +33,7 @@ async def async_setup_entry(
 
     @callback
     def _create_camera_light_entity(netatmo_device: NetatmoDevice) -> None:
-        try:
-            getattr(netatmo_device.device, "floodlight")
-        except AttributeError:
+        if not hasattr(netatmo_device.device, "floodlight"):
             return
         entity = NetatmoCameraLight(netatmo_device)
         async_add_entities([entity])
