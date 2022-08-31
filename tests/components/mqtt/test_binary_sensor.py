@@ -1010,12 +1010,14 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = binary_sensor.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
 
 
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = binary_sensor.DOMAIN
@@ -1040,11 +1042,11 @@ async def test_cleanup_triggers_and_restoring_state(
 ):
     """Test cleanup old triggers at reloading and restoring the state."""
     domain = binary_sensor.DOMAIN
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config1["name"] = "test1"
     config1["expire_after"] = 30
     config1["state_topic"] = "test-topic1"
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config2["name"] = "test2"
     config2["expire_after"] = 5
     config2["state_topic"] = "test-topic2"
@@ -1053,8 +1055,8 @@ async def test_cleanup_triggers_and_restoring_state(
 
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
-        {binary_sensor.DOMAIN: [config1, config2]},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {binary_sensor.DOMAIN: [config1, config2]}},
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
@@ -1070,7 +1072,7 @@ async def test_cleanup_triggers_and_restoring_state(
     freezer.move_to("2022-02-02 12:01:10+01:00")
 
     await help_test_reload_with_config(
-        hass, caplog, tmp_path, {domain: [config1, config2]}
+        hass, caplog, tmp_path, {mqtt.DOMAIN: {domain: [config1, config2]}}
     )
     assert "Clean up expire after trigger for binary_sensor.test1" in caplog.text
     assert "Clean up expire after trigger for binary_sensor.test2" not in caplog.text
@@ -1125,17 +1127,14 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = binary_sensor.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
-    config["name"] = "test"
-    del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
-    assert hass.states.get(f"{platform}.test") is not None
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = binary_sensor.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )

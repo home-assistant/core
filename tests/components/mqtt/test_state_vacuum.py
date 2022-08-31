@@ -674,12 +674,14 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
 
 
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = vacuum.DOMAIN
@@ -731,11 +733,8 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = vacuum.DOMAIN
-    config = deepcopy(DEFAULT_CONFIG_LEGACY[platform])
-    config["name"] = "test"
-    del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
-    assert hass.states.get(f"{platform}.test") is not None
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.mqtttest")
 
 
 # Test deprecated YAML configuration under the platform key

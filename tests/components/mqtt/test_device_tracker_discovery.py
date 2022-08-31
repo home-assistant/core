@@ -451,8 +451,10 @@ async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
     entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
     topic = "/location/jan"
 
-    config = {"name": dev_id, "state_topic": topic}
+    config = {
+        mqtt.DOMAIN: {device_tracker.DOMAIN: {"name": dev_id, "state_topic": topic}}
+    }
 
-    await help_test_setup_manual_entity_from_yaml(hass, device_tracker.DOMAIN, config)
+    await help_test_setup_manual_entity_from_yaml(hass, config)
 
     assert hass.states.get(entity_id) is not None

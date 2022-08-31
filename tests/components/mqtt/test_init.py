@@ -1485,9 +1485,17 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
-    config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    config = {
+        mqtt.DOMAIN: {
+            "light": {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "test-topic",
+            }
+        }
+    }
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+        await help_test_setup_manual_entity_from_yaml(hass, config)
     assert (
         "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
         in caplog.text
@@ -1497,9 +1505,9 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
-    config = {"name": "test"}
+    config = {mqtt.DOMAIN: {"light": {"name": "test"}}}
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+        await help_test_setup_manual_entity_from_yaml(hass, config)
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
@@ -1509,8 +1517,8 @@ async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
-    config = []
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    config = {mqtt.DOMAIN: {"light": []}}
+    await help_test_setup_manual_entity_from_yaml(hass, config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
@@ -2797,7 +2805,11 @@ async def test_publish_or_subscribe_without_valid_config_entry(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_reload_entry_with_new_config(hass, tmp_path):
     """Test reloading the config entry with a new yaml config."""
-    config_old = [{"name": "test_old1", "command_topic": "test-topic_old"}]
+    # YAML configuration under the platform key is deprecated.
+    # Support and will be removed as with HA 2022.12
+    config_old = {
+        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
+    }
     config_yaml_new = {
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
@@ -2812,7 +2824,7 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
             }
         ],
     }
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config_old)
+    await help_test_setup_manual_entity_from_yaml(hass, config_old)
     assert hass.states.get("light.test_old1") is not None
 
     await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
@@ -2824,7 +2836,9 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
     """Test disabling and enabling the config entry."""
-    config_old = [{"name": "test_old1", "command_topic": "test-topic_old"}]
+    config_old = {
+        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
+    }
     config_yaml_new = {
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
@@ -2839,7 +2853,7 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
             }
         ],
     }
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config_old)
+    await help_test_setup_manual_entity_from_yaml(hass, config_old)
     assert hass.states.get("light.test_old1") is not None
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
@@ -2929,7 +2943,9 @@ async def test_setup_manual_items_with_unique_ids(
     hass, tmp_path, caplog, config, unique
 ):
     """Test setup manual items is generating unique id's."""
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    await help_test_setup_manual_entity_from_yaml(
+        hass, {mqtt.DOMAIN: {"light": config}}
+    )
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique

@@ -1697,24 +1697,29 @@ async def help_test_reloadable(
     hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
 ):
     """Test reloading an MQTT platform."""
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     # Create and test an old config of 2 entities based on the config supplied
     old_config_1 = copy.deepcopy(config)
     old_config_1["name"] = "test_old_1"
     old_config_2 = copy.deepcopy(config)
     old_config_2["name"] = "test_old_2"
+
+    # YAML configuration under the platform key is deprecated.
+    # Support and will be removed as with HA 2022.12
     old_config_3 = copy.deepcopy(config)
     old_config_3["name"] = "test_old_3"
-    old_config_3.pop("platform")
+    old_config_3["platform"] = mqtt.DOMAIN
     old_config_4 = copy.deepcopy(config)
     old_config_4["name"] = "test_old_4"
-    old_config_4.pop("platform")
+    old_config_4["platform"] = mqtt.DOMAIN
 
     old_config = {
-        domain: [old_config_1, old_config_2],
-        "mqtt": {domain: [old_config_3, old_config_4]},
+        mqtt.DOMAIN: {domain: [old_config_1, old_config_2]},
+        domain: [old_config_3, old_config_4],
     }
 
     assert await async_setup_component(hass, domain, old_config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, old_config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -1730,21 +1735,24 @@ async def help_test_reloadable(
     new_config_1["name"] = "test_new_1"
     new_config_2 = copy.deepcopy(config)
     new_config_2["name"] = "test_new_2"
+    new_config_extra = copy.deepcopy(config)
+    new_config_extra["name"] = "test_new_5"
+
+    # YAML configuration under the platform key is deprecated.
+    # Support and will be removed as with HA 2022.12
     new_config_3 = copy.deepcopy(config)
     new_config_3["name"] = "test_new_3"
-    new_config_3.pop("platform")
+    new_config_3["platform"] = mqtt.DOMAIN
     new_config_4 = copy.deepcopy(config)
     new_config_4["name"] = "test_new_4"
-    new_config_4.pop("platform")
-    new_config_5 = copy.deepcopy(config)
-    new_config_5["name"] = "test_new_5"
-    new_config_6 = copy.deepcopy(config)
-    new_config_6["name"] = "test_new_6"
-    new_config_6.pop("platform")
+    new_config_4["platform"] = mqtt.DOMAIN
+    new_config_extra_legacy = copy.deepcopy(config)
+    new_config_extra_legacy["name"] = "test_new_6"
+    new_config_extra_legacy["platform"] = mqtt.DOMAIN
 
     new_config = {
-        domain: [new_config_1, new_config_2, new_config_5],
-        "mqtt": {domain: [new_config_3, new_config_4, new_config_6]},
+        mqtt.DOMAIN: {domain: [new_config_1, new_config_2, new_config_extra]},
+        domain: [new_config_3, new_config_4, new_config_extra_legacy],
     }
 
     await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
@@ -1759,9 +1767,12 @@ async def help_test_reloadable(
     assert hass.states.get(f"{domain}.test_new_6")
 
 
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
 async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
-    """Test reloading an MQTT platform when config entry is setup late."""
+    """Test reloading an MQTT platform when config entry is setup is late."""
     # Create and test an old config of 2 entities based on the config supplied
+    # using the deprecated platform schema
     old_config_1 = copy.deepcopy(config)
     old_config_1["name"] = "test_old_1"
     old_config_2 = copy.deepcopy(config)
@@ -1814,7 +1825,7 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     assert hass.states.get(f"{domain}.test_new_3")
 
 
-async def help_test_setup_manual_entity_from_yaml(hass, platform, config):
+async def help_test_setup_manual_entity_from_yaml(hass, config):
     """Help to test setup from yaml through configuration entry."""
     calls = MagicMock()
 
@@ -1822,9 +1833,7 @@ async def help_test_setup_manual_entity_from_yaml(hass, platform, config):
         """Mock reload."""
         calls()
 
-    config_structure = {mqtt.DOMAIN: {platform: config}}
-
-    await async_setup_component(hass, mqtt.DOMAIN, config_structure)
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     # Mock config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
@@ -1863,14 +1872,14 @@ async def help_test_unload_config_entry_with_platform(
     """Test unloading the MQTT config entry with a specific platform domain."""
     # prepare setup through configuration.yaml
     config_setup = copy.deepcopy(config)
-    config_setup["name"] = "config_setup"
+    config_setup[mqtt.DOMAIN][domain]["name"] = "config_setup"
     config_name = config_setup
-    assert await async_setup_component(hass, domain, {domain: [config_setup]})
+    assert await async_setup_component(hass, mqtt.DOMAIN, config_setup)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
     # prepare setup through discovery
-    discovery_setup = copy.deepcopy(config)
+    discovery_setup = copy.deepcopy(config[mqtt.DOMAIN][domain])
     discovery_setup["name"] = "discovery_setup"
     async_fire_mqtt_message(
         hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)
