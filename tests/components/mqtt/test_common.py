@@ -665,7 +665,7 @@ async def help_test_discovery_update_attr(
 
 async def help_test_unique_id(hass, mqtt_mock_entry_with_yaml_config, domain, config):
     """Test unique id option only creates one entity per unique_id."""
-    assert await async_setup_component(hass, domain, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
     assert len(hass.states.async_entity_ids(domain)) == 1

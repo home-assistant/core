@@ -1058,22 +1058,22 @@ async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplo
 async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one climate per unique_id."""
     config = {
-        climate.DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "Test 1",
-                "power_state_topic": "test-topic",
-                "power_command_topic": "test_topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-            {
-                "platform": "mqtt",
-                "name": "Test 2",
-                "power_state_topic": "test-topic",
-                "power_command_topic": "test_topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-        ]
+        mqtt.DOMAIN: {
+            climate.DOMAIN: [
+                {
+                    "name": "Test 1",
+                    "power_state_topic": "test-topic",
+                    "power_command_topic": "test_topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+                {
+                    "name": "Test 2",
+                    "power_state_topic": "test-topic",
+                    "power_command_topic": "test_topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+            ]
+        }
     }
     await help_test_unique_id(
         hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, config
