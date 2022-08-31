@@ -82,6 +82,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.deconz.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.demo.*
 homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
