@@ -1011,3 +1011,32 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
 
     with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_notify_get_service(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for async_get_service."""
+    func_node = astroid.extract_node(
+        """
+    class BaseNotificationService():
+        pass
+
+    class CustomNotificationService(BaseNotificationService):
+        pass
+
+    async def async_get_service( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> CustomNotificationService:
+        pass
+    """,
+        "homeassistant.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
