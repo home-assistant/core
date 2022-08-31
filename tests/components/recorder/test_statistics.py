@@ -524,12 +524,13 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -616,12 +617,13 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
             "source": source,
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
