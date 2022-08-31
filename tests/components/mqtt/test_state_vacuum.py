@@ -86,22 +86,14 @@ DEFAULT_CONFIG = {
     }
 }
 
-DEFAULT_CONFIG_LEGACY = {
-    vacuum.DOMAIN: {
-        CONF_PLATFORM: "mqtt",
-        CONF_SCHEMA: "state",
-        CONF_NAME: "mqtttest",
-        CONF_COMMAND_TOPIC: COMMAND_TOPIC,
-        mqttvacuum.CONF_SEND_COMMAND_TOPIC: SEND_COMMAND_TOPIC,
-        CONF_STATE_TOPIC: STATE_TOPIC,
-        mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: "vacuum/set_fan_speed",
-        mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
-    }
-}
+DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"schema": "state", "name": "test"}}}
 
-DEFAULT_CONFIG_2_LEGACY = {
-    vacuum.DOMAIN: {"platform": "mqtt", "schema": "state", "name": "test"}
-}
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+DEFAULT_CONFIG_LEGACY = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
+DEFAULT_CONFIG_2_LEGACY = deepcopy(DEFAULT_CONFIG_2[mqtt.DOMAIN])
+DEFAULT_CONFIG_2_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)

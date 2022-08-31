@@ -90,16 +90,10 @@ DEFAULT_CONFIG = {
     }
 }
 
-DEFAULT_CONFIG_LEGACY = {
-    light.DOMAIN: {
-        "platform": "mqtt",
-        "schema": "template",
-        "name": "test",
-        "command_topic": "test-topic",
-        "command_on_template": "on,{{ transition }}",
-        "command_off_template": "off,{{ transition|d }}",
-    }
-}
+# YAML configuration under the platform key is deprecated.
+# Support and will be removed as with HA 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[light.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
