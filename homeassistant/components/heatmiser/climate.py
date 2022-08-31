@@ -84,17 +84,11 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self._id = device
         self.dcb = None
         self._attr_hvac_mode = HVACMode.HEAT
-        self._temperature_unit = None
 
     @property
     def name(self):
         """Return the name of the thermostat, if any."""
         return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return self._temperature_unit
 
     @property
     def current_temperature(self):
@@ -119,7 +113,7 @@ class HeatmiserV3Thermostat(ClimateEntity):
             _LOGGER.error("Failed to update device %s", self._name)
             return
         self.dcb = self.therm.read_dcb()
-        self._temperature_unit = (
+        self._attr_temperature_unit = (
             TEMP_CELSIUS
             if (self.therm.get_temperature_format() == "C")
             else TEMP_FAHRENHEIT
