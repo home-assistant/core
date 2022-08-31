@@ -22,7 +22,7 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%] - check serial number",
+      "cannot_connect": "Failed to connect - check serial number",
       "invalid_serial": "Invalid serial number",
       "invalid_ip": "Invalid IP address",
       "unknown": "[%key:common::config_flow::error::unknown%]"

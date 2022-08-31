@@ -41,9 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if self._discovered_hubs is None:
-            self._discovered_hubs = dict(
-                await nobo.async_discover_hubs(loop=self.hass.loop)
-            )
+            self._discovered_hubs = dict(await nobo.async_discover_hubs())
 
         if not self._discovered_hubs:
             # No hubs auto discovered
@@ -146,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             socket.inet_aton(ip_address)
         except OSError as err:
             raise NoboHubConnectError("invalid_ip") from err
-        hub = nobo(serial=serial, ip=ip_address, discover=False, loop=self.hass.loop)
+        hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
         if not await hub.async_connect_hub(ip_address, serial):
             raise NoboHubConnectError("cannot_connect")
         name = hub.hub_info["name"]

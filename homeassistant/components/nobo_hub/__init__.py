@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     serial = entry.data[CONF_SERIAL]
     discover = entry.data[CONF_AUTO_DISCOVERED]
     ip_address = None if discover else entry.data[CONF_IP_ADDRESS]
-    hub = nobo(serial=serial, ip=ip_address, discover=discover, loop=hass.loop)
+    hub = nobo(serial=serial, ip=ip_address, discover=discover, synchronous=False)
     await hub.start()
 
     hass.data.setdefault(DOMAIN, {})
