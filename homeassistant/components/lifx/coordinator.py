@@ -140,11 +140,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
 
     def async_get_hev_cycle_state(self) -> bool | None:
         """Return the current HEV cycle state."""
-        state = None
-        if lifx_features(self.device)["hev"]:
-            state = bool(self.device.hev_cycle.get(ATTR_REMAINING, 0) > 0)
-
-        return state
+        if self.device.hev_cycle is None:
+            return None
+        return bool(self.device.hev_cycle.get(ATTR_REMAINING, 0) > 0)
 
     async def async_get_hev_cycle(self) -> None:
         """Update the HEV cycle status from a LIFX Clean bulb."""

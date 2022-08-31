@@ -26,7 +26,9 @@ class MockMessage:
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
-        [setattr(self, k, v) for k, v in kwargs.items() if k != "callb"]
+        for k, v in kwargs.items():
+            if k != "callb":
+                setattr(self, k, v)
 
 
 class MockFailingLifxCommand:
