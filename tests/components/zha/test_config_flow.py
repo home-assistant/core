@@ -858,8 +858,9 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
     assert config_entry.data[CONF_RADIO_TYPE] == new_type
 
 
+@pytest.mark.parametrize("onboarded", [True, False])
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_hardware_not_onboarded(hass):
+async def test_hardware(onboarded, hass):
     """Test hardware flow."""
     data = {
         "name": "Yellow",
@@ -871,52 +872,23 @@ async def test_hardware_not_onboarded(hass):
         },
     }
     with patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
     ):
-        result = await hass.config_entries.flow.async_init(
+        result1 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "hardware"}, data=data
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Yellow"
-    assert result["data"] == {
-        CONF_DEVICE: {
-            CONF_BAUDRATE: 115200,
-            CONF_FLOWCONTROL: "hardware",
-            CONF_DEVICE_PATH: "/dev/ttyAMA1",
-        },
-        CONF_RADIO_TYPE: "ezsp",
-    }
+    assert result1["type"] == FlowResultType.MENU
+    assert result1["step_id"] == "choose_formation_strategy"
 
-
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_hardware_onboarded(hass):
-    """Test hardware flow."""
-    data = {
-        "radio_type": "efr32",
-        "port": {
-            "path": "/dev/ttyAMA1",
-            "baudrate": 115200,
-            "flow_control": "hardware",
-        },
-    }
-    with patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "hardware"}, data=data
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm_hardware"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "/dev/ttyAMA1"
-    assert result["data"] == {
+    assert result2["title"] == "Yellow"
+    assert result2["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
             CONF_FLOWCONTROL: "hardware",
