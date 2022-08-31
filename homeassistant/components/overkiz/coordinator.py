@@ -35,8 +35,6 @@ EVENT_HANDLERS: Registry[
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
-    original_update_interval: timedelta
-
     def __init__(
         self,
         hass: HomeAssistant,
