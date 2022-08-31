@@ -694,7 +694,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             return self.async_abort(reason="invalid_hardware_data")
 
         self._title = data.get("name", data["port"]["path"])
-        self._device_path = device_settings.pop(CONF_DEVICE_PATH)
+        self._device_path = device_settings[CONF_DEVICE_PATH]
         self._device_settings = device_settings
 
         return await self.async_step_choose_formation_strategy()
