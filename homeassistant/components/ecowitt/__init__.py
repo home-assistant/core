@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> web.Response:
         """Handle webhook callback."""
-        return ecowitt.handler(request)
+        return await ecowitt.handler(request)
 
     webhook.async_register(
         hass, DOMAIN, entry.title, entry.data[CONF_WEBHOOK_ID], handle_webhook
