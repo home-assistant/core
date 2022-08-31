@@ -653,6 +653,8 @@ build.json @home-assistant/supervisor
 /tests/components/melcloud/ @vilppuvuorinen
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
+/homeassistant/components/melnor/ @vanstinator
+/tests/components/melnor/ @vanstinator
 /homeassistant/components/met/ @danielhiversen @thimic
 /tests/components/met/ @danielhiversen @thimic
 /homeassistant/components/met_eireann/ @DylanGore
@@ -963,6 +965,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
 /homeassistant/components/sensor/ @home-assistant/core
 /tests/components/sensor/ @home-assistant/core
+/homeassistant/components/sensorpro/ @bdraco
+/tests/components/sensorpro/ @bdraco
 /homeassistant/components/sensorpush/ @bdraco
 /tests/components/sensorpush/ @bdraco
 /homeassistant/components/sentry/ @dcramer @frenck
