@@ -68,7 +68,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         return bool(self._state)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if the binary sensor is available."""
         return self._state is not None
 

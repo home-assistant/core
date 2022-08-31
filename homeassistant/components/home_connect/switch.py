@@ -60,11 +60,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         """Return true if the switch is on."""
         return bool(self._state)
 
-    @property
-    def available(self):
-        """Return true if the entity is available."""
-        return True
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the program."""
         _LOGGER.debug("Tried to turn on program %s", self.program_name)
