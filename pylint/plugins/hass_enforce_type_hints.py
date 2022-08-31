@@ -388,6 +388,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DiscoveryInfoType | None",
             },
             return_type=["BaseNotificationService", None],
+            check_return_type_inheritance=True,
             has_async_counterpart=True,
         ),
     ],
@@ -2534,16 +2535,25 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
 
     if (
         match.check_return_type_inheritance
-        and isinstance(match.return_type, str)
+        and (isinstance(match.return_type, str) or isinstance(match.return_type, list))
         and isinstance(node, nodes.Name)
+        and (isinstance(match.return_type, str) or isinstance(match.return_type, list))
     ):
+        if isinstance(match.return_type, str):
+            valid_types = {match.return_type}
+        elif isinstance(match.return_type, list):
+            valid_types = {el for el in match.return_type if isinstance(el, str)}
+        else:
+            pass
+
+        # Check ancestors
         ancestor: nodes.ClassDef
         for infer_node in node.infer():
             if isinstance(infer_node, nodes.ClassDef):
-                if infer_node.name == match.return_type:
+                if infer_node.name in valid_types:
                     return True
                 for ancestor in infer_node.ancestors():
-                    if ancestor.name == match.return_type:
+                    if ancestor.name in valid_types:
                         return True
 
     return False
