@@ -132,7 +132,7 @@ class IcloudAccount:
                 self._config_entry.data[CONF_USERNAME],
             )
 
-            self._config_entry.async_start_reauth(self.hass)
+            self._require_reauth()
             return
 
         try:
@@ -164,7 +164,7 @@ class IcloudAccount:
             return
 
         if self.api.requires_2fa:
-            self._config_entry.async_start_reauth(self.hass)
+            self._require_reauth()
             return
 
         api_devices = {}
@@ -229,6 +229,9 @@ class IcloudAccount:
             self.keep_alive,
             utcnow() + timedelta(minutes=self._fetch_interval),
         )
+
+    def _require_reauth(self):
+        self.hass.async_add_job(self._config_entry.async_start_reauth, self.hass)
 
     def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""
