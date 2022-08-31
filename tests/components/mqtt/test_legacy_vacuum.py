@@ -732,7 +732,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_vacuum(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered vacuum."""
-    data = json.dumps(DEFAULT_CONFIG_2_LEGACY[vacuum.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG_2[mqtt.DOMAIN][vacuum.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, vacuum.DOMAIN, data
     )

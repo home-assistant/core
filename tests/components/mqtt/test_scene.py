@@ -177,8 +177,8 @@ async def test_discovery_removal_scene(hass, mqtt_mock_entry_no_yaml_config, cap
 
 async def test_discovery_update_payload(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered scene."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[scene.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[scene.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["payload_on"] = "ON"

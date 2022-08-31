@@ -658,8 +658,8 @@ async def test_discovery_update_siren_topic_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered siren."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
@@ -695,8 +695,8 @@ async def test_discovery_update_siren_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered siren."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"

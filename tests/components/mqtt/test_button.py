@@ -292,8 +292,8 @@ async def test_discovery_removal_button(hass, mqtt_mock_entry_no_yaml_config, ca
 
 async def test_discovery_update_button(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered button."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[button.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[button.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][button.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][button.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
 

@@ -311,7 +311,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_camera(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered camera."""
-    data = json.dumps(DEFAULT_CONFIG_LEGACY[camera.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][camera.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, camera.DOMAIN, data
     )

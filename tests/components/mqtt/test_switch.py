@@ -428,8 +428,8 @@ async def test_discovery_update_switch_topic_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered switch."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[switch.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[switch.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "switch/state1"
@@ -465,8 +465,8 @@ async def test_discovery_update_switch_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered switch."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[switch.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[switch.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "switch/state1"

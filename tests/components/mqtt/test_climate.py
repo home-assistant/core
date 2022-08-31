@@ -1122,7 +1122,7 @@ async def test_encoding_subscribable_topics(
 
 async def test_discovery_removal_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered climate."""
-    data = json.dumps(DEFAULT_CONFIG_LEGACY[climate.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, climate.DOMAIN, data
     )

@@ -443,7 +443,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_select(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered select."""
-    data = json.dumps(DEFAULT_CONFIG_LEGACY[select.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, data
     )

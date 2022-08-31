@@ -786,7 +786,7 @@ async def test_discovery_removal_binary_sensor(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test removal of discovered binary_sensor."""
-    data = json.dumps(DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, binary_sensor.DOMAIN, data
     )
@@ -796,8 +796,8 @@ async def test_discovery_update_binary_sensor_topic_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered binary_sensor."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "sensor/state1"
@@ -833,8 +833,8 @@ async def test_discovery_update_binary_sensor_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered binary_sensor."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "sensor/state1"
@@ -904,7 +904,7 @@ async def test_discovery_update_unchanged_binary_sensor(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered binary_sensor."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
     config1["name"] = "Beer"
 
     data1 = json.dumps(config1)

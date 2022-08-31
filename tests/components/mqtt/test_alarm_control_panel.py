@@ -721,7 +721,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_alarm(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered alarm_control_panel."""
-    data = json.dumps(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, alarm_control_panel.DOMAIN, data
     )
