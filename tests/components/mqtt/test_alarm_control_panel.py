@@ -731,8 +731,8 @@ async def test_discovery_update_alarm_topic_and_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "alarm/state1"
@@ -766,8 +766,8 @@ async def test_discovery_update_alarm_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "alarm/state1"
