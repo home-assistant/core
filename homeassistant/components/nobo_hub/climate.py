@@ -99,7 +99,7 @@ class NoboZone(ClimateEntity):
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._attr_name = hub.zones[self._id][ATTR_NAME]
-        self._attr_has_entity_name = True
+        self._attr_has_entity_name = False
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type
