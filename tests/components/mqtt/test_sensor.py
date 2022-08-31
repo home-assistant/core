@@ -1053,7 +1053,7 @@ async def test_entity_debug_info_update_entity_id(hass, mqtt_mock_entry_no_yaml_
 async def test_entity_disabled_by_default(hass, mqtt_mock_entry_no_yaml_config):
     """Test entity disabled by default."""
     await help_test_entity_disabled_by_default(
-        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 

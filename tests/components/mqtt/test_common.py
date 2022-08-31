@@ -1460,7 +1460,7 @@ async def help_test_entity_disabled_by_default(
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["enabled_by_default"] = False
     config["unique_id"] = "veryunique1"
@@ -1499,7 +1499,7 @@ async def help_test_entity_category(
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
 
     ent_registry = er.async_get(hass)
