@@ -21,6 +21,7 @@ from homeassistant.components.zha.core.const import (
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
+    EZSP_OVERWRITE_EUI64,
     RadioType,
 )
 from homeassistant.config_entries import (
@@ -968,25 +969,18 @@ def test_allow_overwrite_ezsp_ieee():
     new_backup = config_flow._allow_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
-    assert (
-        new_backup.network_info.stack_specific["ezsp"][
-            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
-        ]
-        is True
-    )
+    assert new_backup.network_info.stack_specific["ezsp"][EZSP_OVERWRITE_EUI64] is True
 
 
 def test_prevent_overwrite_ezsp_ieee():
     """Test modifying the backup to prevent bellows from overriding the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
-    backup.network_info.stack_specific["ezsp"] = {
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
-    }
+    backup.network_info.stack_specific["ezsp"] = {EZSP_OVERWRITE_EUI64: True}
     new_backup = config_flow._prevent_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
     assert not new_backup.network_info.stack_specific.get("ezsp", {}).get(
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+        EZSP_OVERWRITE_EUI64
     )
 
 
@@ -1356,9 +1350,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     mock_app.state.network_info.network_key.tx_counter += 10000
 
     # Include the overwrite option, just in case someone uploads a backup with it
-    backup.network_info.metadata["ezsp"] = {
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
-    }
+    backup.network_info.metadata["ezsp"] = {EZSP_OVERWRITE_EUI64: True}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

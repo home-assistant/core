@@ -35,6 +35,7 @@ from .core.const import (
     DATA_ZHA_CONFIG,
     DEFAULT_DATABASE_NAME,
     DOMAIN,
+    EZSP_OVERWRITE_EUI64,
     RadioType,
 )
 
@@ -91,9 +92,7 @@ def _allow_overwrite_ezsp_ieee(
 ) -> zigpy.backups.NetworkBackup:
     """Return a new backup with the flag to allow overwriting the EZSP EUI64."""
     new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-    new_stack_specific.setdefault("ezsp", {})[
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
-    ] = True
+    new_stack_specific.setdefault("ezsp", {})[EZSP_OVERWRITE_EUI64] = True
 
     return backup.replace(
         network_info=backup.network_info.replace(stack_specific=new_stack_specific)
@@ -108,9 +107,7 @@ def _prevent_overwrite_ezsp_ieee(
         return backup
 
     new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-    new_stack_specific.setdefault("ezsp", {}).pop(
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it", None
-    )
+    new_stack_specific.setdefault("ezsp", {}).pop(EZSP_OVERWRITE_EUI64, None)
 
     return backup.replace(
         network_info=backup.network_info.replace(stack_specific=new_stack_specific)
