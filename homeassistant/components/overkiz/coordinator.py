@@ -110,9 +110,13 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         return self.devices
 
     def set_update_interval(self, update_interval: timedelta) -> None:
-        """Store update interval and set new update interval."""
-        if self.update_interval:
+        """Store update interval if changed and set new update interval."""
+        if (
+            self.update_interval
+            and self.original_update_interval is not self.update_interval
+        ):
             self.original_update_interval = self.update_interval
+
         self.update_interval = update_interval
 
     def _restore_update_interval(self) -> None:
