@@ -30,10 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data):
     """Validate user input."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_PORT] == data[CONF_PORT]:
-            raise InvalidPort
-
     # Check if the port is in use
     try:
         listener = EcoWittListener(port=data[CONF_PORT])
@@ -60,6 +56,9 @@ class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+
+        # Check if the port is in use by another config entry
+        self._async_abort_entries_match({CONF_PORT: user_input[CONF_PORT]})
 
         try:
             info = await validate_input(self.hass, user_input)
