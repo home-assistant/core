@@ -340,6 +340,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
     ),
+    # IoT Switch
+    # Note: Undocumented
     "tdq": (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
