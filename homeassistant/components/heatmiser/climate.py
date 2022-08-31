@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from heatmiserV3 import connection, heatmiser
 import voluptuous as vol
@@ -100,9 +101,10 @@ class HeatmiserV3Thermostat(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
         self._target_temperature = int(temperature)
         self.therm.set_target_temp(self._target_temperature)
 
