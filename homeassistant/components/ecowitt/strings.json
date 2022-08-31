@@ -2,7 +2,7 @@
   "config": {
     "error": {
       "invalid_port": "Port is already used.",
-      "unknown": "Unknown error."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
