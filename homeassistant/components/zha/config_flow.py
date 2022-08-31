@@ -564,10 +564,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware!
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            # One last time, check if ZHA is already configured before touching hardware
-            if self._async_current_entries():
-                return self.async_abort(reason="single_instance_allowed")
-
             # Probe the radio type if we don't have one yet
             if self._radio_type is None and not await self._detect_radio_type():
                 # This path probably will not happen now that we have
