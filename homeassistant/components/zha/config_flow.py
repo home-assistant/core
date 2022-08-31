@@ -35,6 +35,7 @@ from .core.const import (
     DATA_ZHA_CONFIG,
     DEFAULT_DATABASE_NAME,
     DOMAIN,
+    EZSP_OVERWRITE_EUI64,
     RadioType,
 )
 
@@ -91,9 +92,7 @@ def _allow_overwrite_ezsp_ieee(
 ) -> zigpy.backups.NetworkBackup:
     """Return a new backup with the flag to allow overwriting the EZSP EUI64."""
     new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-    new_stack_specific.setdefault("ezsp", {})[
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
-    ] = True
+    new_stack_specific.setdefault("ezsp", {})[EZSP_OVERWRITE_EUI64] = True
 
     return backup.replace(
         network_info=backup.network_info.replace(stack_specific=new_stack_specific)
@@ -108,9 +107,7 @@ def _prevent_overwrite_ezsp_ieee(
         return backup
 
     new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-    new_stack_specific.setdefault("ezsp", {}).pop(
-        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it", None
-    )
+    new_stack_specific.setdefault("ezsp", {}).pop(EZSP_OVERWRITE_EUI64, None)
 
     return backup.replace(
         network_info=backup.network_info.replace(stack_specific=new_stack_specific)
@@ -664,10 +661,12 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         """Handle hardware flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
         if not data:
             return self.async_abort(reason="invalid_hardware_data")
         if data.get("radio_type") != "efr32":
             return self.async_abort(reason="invalid_hardware_data")
+
         self._radio_type = RadioType.ezsp
 
         schema = {
@@ -689,23 +688,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             return self.async_abort(reason="invalid_hardware_data")
 
         self._title = data.get("name", data["port"]["path"])
-        self._device_path = device_settings.pop(CONF_DEVICE_PATH)
+        self._device_path = device_settings[CONF_DEVICE_PATH]
         self._device_settings = device_settings
 
-        self._set_confirm_only()
-        return await self.async_step_confirm_hardware()
-
-    async def async_step_confirm_hardware(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm a hardware discovery."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return await self._async_create_radio_entity()
-
-        return self.async_show_form(
-            step_id="confirm_hardware",
-            description_placeholders={CONF_NAME: self._title},
-        )
+        return await self.async_step_choose_formation_strategy()
 
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
