@@ -387,7 +387,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
                 2: "DiscoveryInfoType | None",
             },
-            return_type=_Special.UNDEFINED,
+            return_type=["BaseNotificationService", None],
             has_async_counterpart=True,
         ),
     ],
