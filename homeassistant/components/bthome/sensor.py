@@ -25,6 +25,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     MASS_KILOGRAMS,
+    MASS_POUNDS,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_MBAR,
@@ -132,11 +133,39 @@ SENSOR_DESCRIPTIONS = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    # Used for e.g. weight sensor
+    # Used for mass sensor with kg unit
     (None, Units.MASS_KILOGRAMS): SensorEntityDescription(
-        key=str(Units.MASS_KILOGRAMS),
+        key=f"{DeviceClass.MASS}_{Units.MASS_KILOGRAMS}",
         device_class=None,
         native_unit_of_measurement=MASS_KILOGRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for mass sensor with lb unit
+    (None, Units.MASS_POUNDS): SensorEntityDescription(
+        key=f"{DeviceClass.MASS}_{Units.MASS_POUNDS}",
+        device_class=None,
+        native_unit_of_measurement=MASS_POUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for moisture sensor
+    (None, Units.PERCENTAGE,): SensorEntityDescription(
+        key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for dew point sensor
+    (None, Units.TEMP_CELSIUS): SensorEntityDescription(
+        key=f"{DeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for count sensor
+    (None, None): SensorEntityDescription(
+        key=f"{DeviceClass.COUNT}",
+        device_class=None,
+        native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -156,7 +185,6 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.native_unit_of_measurement
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value

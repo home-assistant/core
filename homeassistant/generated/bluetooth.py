@@ -19,6 +19,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "fjaraskupan",
+        "connectable": False,
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
             79,
@@ -76,6 +77,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "govee_ble",
+        "manufacturer_id": 63585,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "govee_ble",
         "manufacturer_id": 14474,
         "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
         "connectable": False
@@ -84,6 +91,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "govee_ble",
         "manufacturer_id": 10032,
         "service_uuid": "00008251-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 19506,
+        "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
         "connectable": False
     },
     {

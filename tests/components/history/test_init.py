@@ -1122,18 +1122,24 @@ async def test_statistics_during_period_bad_end_time(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    "units, attributes, display_unit, statistics_unit",
     [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "W"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F", "°C"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C", "°C"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi", "Pa"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa", "Pa"),
     ],
 )
 async def test_list_statistic_ids(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
+    hass,
+    hass_ws_client,
+    recorder_mock,
+    units,
+    attributes,
+    display_unit,
+    statistics_unit,
 ):
     """Test list_statistic_ids."""
     now = dt_util.utcnow()
@@ -1162,7 +1168,8 @@ async def test_list_statistic_ids(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "display_unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
 
@@ -1182,7 +1189,8 @@ async def test_list_statistic_ids(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "display_unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
 
@@ -1204,7 +1212,8 @@ async def test_list_statistic_ids(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "display_unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
 
