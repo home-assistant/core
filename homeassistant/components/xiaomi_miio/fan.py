@@ -85,6 +85,7 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
+    SPEEDS_FAN_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -234,9 +235,13 @@ async def async_setup_entry(
     elif model in MODELS_FAN_MIIO:
         entity = XiaomiFan(device, config_entry, unique_id, coordinator)
     elif model == MODEL_FAN_ZA5:
-        entity = XiaomiFanZA5(device, config_entry, unique_id, coordinator)
+        speed_count = SPEEDS_FAN_MIOT[model]
+        entity = XiaomiFanZA5(device, config_entry, unique_id, coordinator, speed_count)
     elif model in MODELS_FAN_MIOT:
-        entity = XiaomiFanMiot(device, config_entry, unique_id, coordinator)
+        speed_count = SPEEDS_FAN_MIOT[model]
+        entity = XiaomiFanMiot(
+            device, config_entry, unique_id, coordinator, speed_count
+        )
     else:
         return
 
@@ -329,6 +334,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
+        _LOGGER.warning("TRYING TO TURN ON")
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
         )
@@ -340,6 +346,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
 
         if result:
+            _LOGGER.warning("RESULT WAS OK")
             self._state = True
             self.async_write_ha_state()
 
@@ -975,6 +982,7 @@ class XiaomiFan(XiaomiGenericFan):
             )
         self._percentage = percentage
 
+        # NOTE: this is broken, is_on is never set
         if not self.is_on:
             await self.async_turn_on()
         else:
@@ -1044,6 +1052,11 @@ class XiaomiFanP5(XiaomiGenericFan):
 class XiaomiFanMiot(XiaomiGenericFan):
     """Representation of a Xiaomi Fan Miot."""
 
+    def __init__(self, device, entry, unique_id, coordinator, speed_count):
+        """Initialize MIOT fan with speed count."""
+        super().__init__(device, entry, unique_id, coordinator)
+        self._speed_count = speed_count
+
     @property
     def operation_mode_class(self):
         """Hold operation mode class."""
@@ -1061,7 +1074,9 @@ class XiaomiFanMiot(XiaomiGenericFan):
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:
-            self._percentage = self.coordinator.data.speed
+            self._percentage = ranged_value_to_percentage(
+                (1, self._speed_count), self.coordinator.data.speed
+            )
         else:
             self._percentage = 0
 
@@ -1087,17 +1102,21 @@ class XiaomiFanMiot(XiaomiGenericFan):
             await self.async_turn_off()
             return
 
+        speed = math.ceil(
+            percentage_to_ranged_value((1, self._speed_count), percentage)
+        )
+
+        # if the fan is not on, we have to turn it on first
+        if not self._state:
+            await self.async_turn_on()
+
         await self._try_command(
             "Setting fan speed percentage of the miio device failed.",
             self._device.set_speed,
-            percentage,
+            speed,
         )
         self._percentage = percentage
-
-        if not self.is_on:
-            await self.async_turn_on()
-        else:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
 
 class XiaomiFanZA5(XiaomiFanMiot):
