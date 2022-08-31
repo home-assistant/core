@@ -635,8 +635,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    config["options"] = ["milk", "beer"]
+    config = DEFAULT_CONFIG
+    config[mqtt.DOMAIN][domain]["options"] = ["milk", "beer"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -685,13 +685,13 @@ async def test_encoding_subscribable_topics(
     attribute_value,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY["select"])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
     config["options"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry_with_yaml_config,
         caplog,
-        "select",
+        select.DOMAIN,
         config,
         topic,
         value,

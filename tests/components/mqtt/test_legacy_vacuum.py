@@ -904,8 +904,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = vacuum.DOMAIN
-    config = deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["supported_features"] = [
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqtt.DOMAIN][domain]["supported_features"] = [
         "turn_on",
         "turn_off",
         "clean_spot",
@@ -975,7 +975,7 @@ async def test_encoding_subscribable_topics(
 ):
     """Test handling of incoming encoded payload."""
     domain = vacuum.DOMAIN
-    config = deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config[CONF_SUPPORTED_FEATURES] = [
         "turn_on",
         "turn_off",

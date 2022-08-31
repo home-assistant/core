@@ -1106,7 +1106,7 @@ async def test_encoding_subscribable_topics(
     attribute_value,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[climate.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry_with_yaml_config,
@@ -1375,10 +1375,10 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = climate.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config = copy.deepcopy(DEFAULT_CONFIG)
     if topic != "preset_mode_command_topic":
-        del config["preset_mode_command_topic"]
-        del config["preset_modes"]
+        del config[mqtt.DOMAIN][domain]["preset_mode_command_topic"]
+        del config[mqtt.DOMAIN][domain]["preset_modes"]
 
     await help_test_publishing_with_custom_encoding(
         hass,

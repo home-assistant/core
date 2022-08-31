@@ -459,7 +459,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = button.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
 
     await help_test_publishing_with_custom_encoding(
         hass,

@@ -2158,9 +2158,9 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = light.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "effect_command_topic":
-        config["effect_list"] = ["random", "color_loop"]
+        config[mqtt.DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -2217,7 +2217,7 @@ async def test_encoding_subscribable_topics(
     init_payload,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[light.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
     config["color_mode"] = True
     config["supported_color_modes"] = [
         "color_temp",

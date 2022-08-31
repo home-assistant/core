@@ -877,7 +877,7 @@ async def help_test_encoding_subscribable_topics(
     await hass.async_block_till_done()
 
     assert await async_setup_component(
-        hass, domain, {domain: [config1, config2, config3]}
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {domain: [config1, config2, config3]}}
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
@@ -1560,7 +1560,7 @@ async def help_test_publishing_with_custom_encoding(
     setup_config = []
     service_data = {}
     for test_id, test_data in test_config.items():
-        test_config_setup = copy.deepcopy(config)
+        test_config_setup = copy.deepcopy(config[mqtt.DOMAIN][domain])
         test_config_setup.update(
             {
                 topic: f"cmd/{test_id}",
@@ -1569,7 +1569,7 @@ async def help_test_publishing_with_custom_encoding(
         )
         if test_data["encoding"] is not None:
             test_config_setup["encoding"] = test_data["encoding"]
-        if test_data["cmd_tpl"]:
+        if template and test_data["cmd_tpl"]:
             test_config_setup[
                 template
             ] = f"{{{{ (('%.1f'|format({tpl_par}))[0] if is_number({tpl_par}) else {tpl_par}[0]) | ord | pack('b') }}}}"
@@ -1583,8 +1583,8 @@ async def help_test_publishing_with_custom_encoding(
     # setup test entities
     assert await async_setup_component(
         hass,
-        domain,
-        {domain: setup_config},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {domain: setup_config}},
     )
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()

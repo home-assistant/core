@@ -1227,7 +1227,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         sensor.DOMAIN,
-        DEFAULT_CONFIG_LEGACY[sensor.DOMAIN],
+        DEFAULT_CONFIG[mqtt.DOMAIN][sensor.DOMAIN],
         topic,
         value,
         attribute,

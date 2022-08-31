@@ -2914,11 +2914,11 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = light.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "effect_command_topic":
-        config["effect_list"] = ["random", "color_loop"]
+        config[mqtt.DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
     elif topic == "white_command_topic":
-        config["rgb_command_topic"] = "some-cmd-topic"
+        config[mqtt.DOMAIN][domain]["rgb_command_topic"] = "some-cmd-topic"
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -2993,7 +2993,7 @@ async def test_encoding_subscribable_topics(
     init_payload,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[light.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
     config[CONF_EFFECT_COMMAND_TOPIC] = "light/CONF_EFFECT_COMMAND_TOPIC"
     config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
@@ -3036,7 +3036,7 @@ async def test_encoding_subscribable_topics_brightness(
     init_payload,
 ):
     """Test handling of incoming encoded payload for a brightness only light."""
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[light.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
 
     await help_test_encoding_subscribable_topics(

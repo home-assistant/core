@@ -928,8 +928,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with command templates and different encoding."""
     domain = siren.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config[siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config[mqtt.DOMAIN][domain][siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -982,7 +982,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         siren.DOMAIN,
-        DEFAULT_CONFIG_LEGACY[siren.DOMAIN],
+        DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN],
         topic,
         value,
         attribute,

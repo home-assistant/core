@@ -643,8 +643,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = vacuum.DOMAIN
-    config = deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["supported_features"] = [
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqtt.DOMAIN][domain]["supported_features"] = [
         "battery",
         "clean_spot",
         "fan_speed",
@@ -719,7 +719,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         vacuum.DOMAIN,
-        DEFAULT_CONFIG_LEGACY[vacuum.DOMAIN],
+        DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN],
         topic,
         value,
         attribute,

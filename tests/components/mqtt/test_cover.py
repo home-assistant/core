@@ -3342,8 +3342,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    config["position_topic"] = "some-position-topic"
+    config = DEFAULT_CONFIG
+    config[mqtt.DOMAIN][domain]["position_topic"] = "some-position-topic"
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -3399,7 +3399,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         cover.DOMAIN,
-        DEFAULT_CONFIG_LEGACY[cover.DOMAIN],
+        DEFAULT_CONFIG[mqtt.DOMAIN][cover.DOMAIN],
         topic,
         value,
         attribute,

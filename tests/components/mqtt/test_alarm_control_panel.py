@@ -851,7 +851,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN],
+        DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN],
         topic,
         value,
     )
@@ -966,7 +966,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = alarm_control_panel.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
 
     await help_test_publishing_with_custom_encoding(
         hass,

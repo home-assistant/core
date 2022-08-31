@@ -1365,7 +1365,7 @@ async def test_encoding_subscribable_topics(
     attribute_value,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[fan.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][fan.DOMAIN])
     config[ATTR_PRESET_MODES] = ["eco", "auto"]
     config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
     config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
@@ -1914,9 +1914,9 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = fan.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "preset_mode_command_topic":
-        config["preset_modes"] = ["auto", "eco"]
+        config[mqtt.DOMAIN][domain]["preset_modes"] = ["auto", "eco"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
