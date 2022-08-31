@@ -4,13 +4,13 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -65,9 +65,6 @@ from .const import (
     SUPPORTED_FEATURES_ZONE,
     TTS_TIMEOUT,
 )
-
-if TYPE_CHECKING:
-    from homeassistant.components.media_player import BrowseMedia
 
 _LOGGER = logging.getLogger(__name__)
 
