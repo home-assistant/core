@@ -22,7 +22,13 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
+from .deconz_event import (
+    CONF_DECONZ_EVENT,
+    CONF_GESTURE,
+    DeconzAlarmEvent,
+    DeconzEvent,
+    DeconzPresenceEvent,
+)
 from .gateway import DeconzGateway
 
 CONF_SUBTYPE = "subtype"
@@ -622,7 +628,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 def _get_deconz_event_from_device(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
-) -> DeconzAlarmEvent | DeconzEvent:
+) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent:
     """Resolve deconz event from device."""
     gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
     for gateway in gateways.values():
