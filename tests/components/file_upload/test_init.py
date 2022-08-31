@@ -9,7 +9,6 @@ from homeassistant.components import file_upload
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.components.file_upload import TEST_LARGE_FILE
 from tests.components.image import TEST_IMAGE
 
 
@@ -67,7 +66,7 @@ async def test_removed_on_stop(hass: HomeAssistant, hass_client, uploaded_file_d
     assert not uploaded_file_dir.exists()
 
 
-async def test_upload_large_file(hass: HomeAssistant, hass_client):
+async def test_upload_large_file(hass: HomeAssistant, hass_client, large_file):
     """Test uploading large file."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
@@ -76,7 +75,7 @@ async def test_upload_large_file(hass: HomeAssistant, hass_client):
         # Patch temp dir name to avoid tests fail running in parallel
         "homeassistant.components.file_upload.TEMP_DIR_NAME",
         file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
-    ), TEST_LARGE_FILE.open("rb") as fp:
+    ), open(large_file.name) as fp:
         res = await client.post("/api/file_upload", data={"file": fp})
 
     assert res.status == 200
@@ -88,7 +87,7 @@ async def test_upload_large_file(hass: HomeAssistant, hass_client):
     with file_upload.process_uploaded_file(hass, file_dir.name) as file_path:
         assert file_path.is_file()
         assert file_path.parent == file_dir
-        assert file_path.read_bytes() == TEST_LARGE_FILE.read_bytes()
+        assert file_path.read_bytes() == large_file.read()
 
 
 async def test_upload_with_wrong_key_fails(hass: HomeAssistant, hass_client):

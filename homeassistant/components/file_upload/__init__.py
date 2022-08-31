@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+import io
 from pathlib import Path
 import shutil
 import tempfile
@@ -106,6 +107,7 @@ class FileUploadView(HomeAssistantView):
     name = "api:file_upload"
 
     _upload_lock: asyncio.Lock | None = None
+    _file_handle: io.BufferedWriter | None = None
 
     @callback
     def _get_upload_lock(self) -> asyncio.Lock:
@@ -154,27 +156,25 @@ class FileUploadView(HomeAssistantView):
 
         await hass.async_add_executor_job(_sync_create_dir)
 
-        def _sync_write_file(
-            _file_name: str, _chunk: bytes, _append_to_file: bool
-        ) -> None:
-            mode = "ab" if _append_to_file else "wb"
-            with (file_dir / _file_name).open(mode) as target_fileobj:
-                target_fileobj.write(_chunk)
+        def _sync_write_file(_file_name: str, _chunk: bytes) -> None:
+            if self._file_handle is None:
+                self._file_handle = (file_dir / _file_name).open("wb")
 
-        # We cannot rely on Content-Length if transfer is chunked
-        size = 0
-        # We cannot rely on the requested chunk size
-        initial_chunk_size = 0
-        while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-            if size == 0:
-                initial_chunk_size = len(chunk)
-            size += len(chunk)
-            await hass.async_add_executor_job(
-                _sync_write_file,
-                file_field_reader.filename,
-                chunk,
-                size > initial_chunk_size,
-            )
+            self._file_handle.write(_chunk)
+
+        def _close_file_handle() -> None:
+            if self._file_handle is not None:
+                self._file_handle.close()
+
+        try:
+            while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
+                await hass.async_add_executor_job(
+                    _sync_write_file,
+                    file_field_reader.filename,
+                    chunk,
+                )
+        finally:
+            await hass.async_add_executor_job(_close_file_handle)
 
         file_upload_data.files[file_id] = file_field_reader.filename
 
