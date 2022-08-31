@@ -18,7 +18,7 @@ from .entity import OverkizDescriptiveEntity
 
 @dataclass
 class OverkizButtonDescription(ButtonEntityDescription):
-    """Class to describe an Overkiz switch."""
+    """Class to describe an Overkiz button."""
 
     press_args: OverkizStateType | None = None
 
