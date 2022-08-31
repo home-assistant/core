@@ -924,6 +924,9 @@ progettihwsw==0.1.1
 # homeassistant.components.prometheus
 prometheus_client==0.7.1
 
+# homeassistant.components.hardware
+psutil-home-assistant==0.0.1
+
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
 
