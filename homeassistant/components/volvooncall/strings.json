@@ -9,10 +9,6 @@
           "mutable": "Allow Remote Start / Lock / etc.",
           "scandinavian_miles": "Use Scandinavian Miles"
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Volvo On Call integration needs to re-authenticate your account"
       }
     },
     "error": {
@@ -20,8 +16,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "cant_reauth": "Could not find original configuration that needs reauthentication"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "issues": {

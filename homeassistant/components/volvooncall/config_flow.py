@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from . import VolvoData
 from .const import CONF_MUTABLE, CONF_SCANDINAVIAN_MILES, DOMAIN
@@ -25,6 +24,7 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
 
     VERSION = 1
+    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -40,7 +40,10 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         if user_input is not None:
-            existing_entry = await self.async_set_unique_id(user_input[CONF_USERNAME])
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+
+            if not self._reauth_entry:
+                self._abort_if_unique_id_configured()
 
             try:
                 await self.is_valid(user_input)
@@ -50,38 +53,33 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unhandled exception in user step")
                 errors["base"] = "unknown"
             if not errors:
-                if existing_entry:
+                if self._reauth_entry:
                     self.hass.config_entries.async_update_entry(
-                        existing_entry, data=user_input
+                        self._reauth_entry, data=self._reauth_entry.data | user_input
                     )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    await self.hass.config_entries.async_reload(
+                        self._reauth_entry.entry_id
+                    )
                     return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
-        elif self.source == config_entries.SOURCE_REAUTH:
-            existing_entry = self.hass.config_entries.async_get_entry(
-                self.context["entry_id"]
-            )
-
-            if existing_entry is None:
-                return self.async_abort(reason="cant_reauth")
-
+        elif self._reauth_entry:
             for key in defaults:
-                defaults[key] = existing_entry.data.get(key)
+                defaults[key] = self._reauth_entry.data.get(key)
 
         user_schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default=defaults[CONF_USERNAME]): cv.string,
-                vol.Required(CONF_PASSWORD, default=defaults[CONF_PASSWORD]): cv.string,
+                vol.Required(CONF_USERNAME, default=defaults[CONF_USERNAME]): str,
+                vol.Required(CONF_PASSWORD, default=defaults[CONF_PASSWORD]): str,
                 vol.Required(CONF_REGION, default=defaults[CONF_REGION]): vol.In(
                     {"na": "North America", "cn": "China", None: "Rest of world"}
                 ),
-                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): cv.boolean,
+                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): bool,
                 vol.Optional(
                     CONF_SCANDINAVIAN_MILES, default=defaults[CONF_SCANDINAVIAN_MILES]
-                ): cv.boolean,
+                ): bool,
             },
         )
 
@@ -95,17 +93,9 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_user()
 
     async def is_valid(self, user_input):

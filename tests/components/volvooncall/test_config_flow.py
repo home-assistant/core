@@ -74,6 +74,37 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
+async def test_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test we handle a flow that has already been configured."""
+    first_entry = MockConfigEntry(domain=DOMAIN, unique_id="test-username")
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert len(result["errors"]) == 0
+
+    with patch("volvooncall.Connection.get"), patch(
+        "homeassistant.components.volvooncall.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "region": "na",
+                "mutable": True,
+                "scandinavian_miles": False,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
 async def test_form_other_exception(hass: HomeAssistant) -> None:
     """Test we handle other exceptions."""
     result = await hass.config_entries.flow.async_init(
@@ -189,28 +220,3 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
-
-
-async def test_cant_reauth(hass: HomeAssistant) -> None:
-    """Test that we handle a failure in the reauth flow."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": "some_impossible_entry_id",
-        },
-    )
-
-    # the first form is just the confirmation prompt
-    assert result["type"] == FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    await hass.async_block_till_done()
-
-    # the second form (user auth) should fail
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "cant_reauth"
