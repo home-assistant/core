@@ -329,7 +329,7 @@ bellows==0.33.1
 bimmer_connected==0.10.2
 
 # homeassistant.components.bluetooth
-bleak==0.15.1
+bleak==0.16.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
