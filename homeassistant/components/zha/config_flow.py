@@ -599,9 +599,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm a discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             if not await self._detect_radio_type():
                 # This path probably will not happen now that we have
