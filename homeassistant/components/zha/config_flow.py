@@ -551,6 +551,33 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         return await self.async_step_choose_serial_port(user_input)
 
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm a discovery."""
+
+        self._set_confirm_only()
+
+        # Without confirmation, discovery can automatically progress into parts of the
+        # config flow logic that interacts with hardware!
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            # One last time, check if ZHA is already configured before touching hardware
+            if self._async_current_entries():
+                return self.async_abort(reason="single_instance_allowed")
+
+            if self._radio_type is None and not await self._detect_radio_type():
+                # This path probably will not happen now that we have
+                # more precise USB matching unless there is a problem
+                # with the device
+                return self.async_abort(reason="usb_probe_failed")
+
+            return await self.async_step_choose_formation_strategy()
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={CONF_NAME: self._title},
+        )
+
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
@@ -570,9 +597,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
                     },
                 }
             )
-        # Check if already configured
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         # If they already have a discovery for deconz we ignore the usb discovery as
         # they probably want to use it there instead
@@ -591,32 +615,14 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             vid,
             pid,
         )
-        self._set_confirm_only()
         self.context["title_placeholders"] = {CONF_NAME: self._title}
         return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm a discovery."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            if not await self._detect_radio_type():
-                # This path probably will not happen now that we have
-                # more precise USB matching unless there is a problem
-                # with the device
-                return self.async_abort(reason="usb_probe_failed")
-
-            return await self.async_step_choose_formation_strategy()
-
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders={CONF_NAME: self._title},
-        )
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+
         # Hostname is format: livingroom.local.
         local_name = discovery_info.hostname[:-1]
         radio_type = discovery_info.properties.get("radio_type") or local_name
@@ -638,10 +644,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
                 }
             )
 
-        # Check if already configured
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         self.context["title_placeholders"] = {CONF_NAME: node_name}
         self._title = device_path
         self._device_path = device_path
@@ -653,15 +655,12 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         else:
             self._radio_type = RadioType.znp
 
-        return await self.async_step_manual_port_config()
+        return await self.async_step_confirm()
 
     async def async_step_hardware(
         self, data: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle hardware flow."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if not data:
             return self.async_abort(reason="invalid_hardware_data")
         if data.get("radio_type") != "efr32":
@@ -691,7 +690,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self._device_path = device_settings[CONF_DEVICE_PATH]
         self._device_settings = device_settings
 
-        return await self.async_step_choose_formation_strategy()
+        return await self.async_step_confirm()
 
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
