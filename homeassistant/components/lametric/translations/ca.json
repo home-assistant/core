@@ -4,6 +4,8 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "invalid_discovery_info": "S'ha rebut informaci\u00f3 de descobriment no v\u00e0lida",
+            "missing_configuration": "La integraci\u00f3 LaMetric no est\u00e0 configurada. Consulta la documentaci\u00f3.",
+            "no_devices": "L'usuari autoritzat no t\u00e9 cap dispositiu LaMetric",
             "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})"
         },
         "error": {

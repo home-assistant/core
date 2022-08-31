@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -136,11 +137,11 @@ class HeosMediaPlayer(MediaPlayerEntity):
             self._media_position_updated_at = utcnow()
         await self.async_update_ha_state(True)
 
-    async def _heos_updated(self):
+    async def _heos_updated(self) -> None:
         """Handle sources changed."""
         await self.async_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Device added to hass."""
         # Update state when attributes of the player change
         self._signals.append(
@@ -159,7 +160,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
     @log_command_error("clear playlist")
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._player.clear_queue()
 
@@ -169,37 +170,39 @@ class HeosMediaPlayer(MediaPlayerEntity):
         await self._group_manager.async_join_players(self.entity_id, group_members)
 
     @log_command_error("pause")
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._player.pause()
 
     @log_command_error("play")
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._player.play()
 
     @log_command_error("move to previous track")
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._player.play_previous()
 
     @log_command_error("move to next track")
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._player.play_next()
 
     @log_command_error("stop")
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._player.stop()
 
     @log_command_error("set mute")
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._player.set_mute(mute)
 
     @log_command_error("play media")
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_URL
@@ -218,7 +221,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
             # media_id may be an int or a str
             selects = await self._player.get_quick_selects()
             try:
-                index = int(media_id)
+                index: int | None = int(media_id)
             except ValueError:
                 # Try finding index by name
                 index = next(
@@ -262,21 +265,21 @@ class HeosMediaPlayer(MediaPlayerEntity):
         raise ValueError(f"Unsupported media type '{media_type}'")
 
     @log_command_error("select source")
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._source_manager.play_source(source, self._player)
 
     @log_command_error("set shuffle")
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._player.set_play_mode(self._player.repeat, shuffle)
 
     @log_command_error("set volume level")
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update supported features of the player."""
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
@@ -291,11 +294,11 @@ class HeosMediaPlayer(MediaPlayerEntity):
             self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
 
     @log_command_error("unjoin_player")
-    async def async_unjoin_player(self):
+    async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         await self._group_manager.async_unjoin_player(self.entity_id)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""
         for signal_remove in self._signals:
             signal_remove()
@@ -318,7 +321,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attribute about the state."""
         return {
             "media_album_id": self._player.now_playing_media.album_id,
@@ -434,7 +437,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Volume level of the media player (0..1)."""
         return self._player.volume / 100
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
             self.hass,

@@ -24,7 +24,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Adapter Bluetooth u\u017cywany do skanowania"
+                    "adapter": "Adapter Bluetooth u\u017cywany do skanowania",
+                    "passive": "Skanowanie pasywne"
                 }
             }
         }

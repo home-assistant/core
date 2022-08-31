@@ -157,32 +157,32 @@ def async_log_errors(
             return await func(self, *args, **kwargs)
         except AvrTimoutError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
                     "Timeout connecting to Denon AVR receiver at host %s. "
                     "Device is unavailable",
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrNetworkError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
                     "Network error connecting to Denon AVR receiver at host %s. "
                     "Device is unavailable",
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrForbiddenError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
                     "Denon AVR receiver at host %s responded with HTTP 403 error. "
                     "Device is unavailable. Please consider power cycling your "
                     "receiver",
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrCommandError as err:
             available = False
             _LOGGER.error(
@@ -199,12 +199,12 @@ def async_log_errors(
                 exc_info=True,
             )
         finally:
-            if available is True and self._available is False:
+            if available and not self.available:
                 _LOGGER.info(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )
-                self._available = True
+                self._attr_available = True
         return None
 
     return wrapper
@@ -242,7 +242,6 @@ class DenonDevice(MediaPlayerEntity):
             self._receiver.support_sound_mode
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
-        self._available = True
 
     @async_log_errors
     async def async_update(self) -> None:
@@ -250,11 +249,6 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_update()
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def state(self):
