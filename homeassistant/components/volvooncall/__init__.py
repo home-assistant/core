@@ -197,18 +197,20 @@ class VolvoData:
     async def update(self):
         """Update status from the online service."""
         try:
-            if not await self.connection.update(journal=True):
-                return False
-
-            for vehicle in self.connection.vehicles:
-                if vehicle.vin not in self.vehicles:
-                    self.discover_vehicle(vehicle)
-
-            return True
+            update_successful = await self.connection.update(journal=True)
         except ClientResponseError as ex:
             if ex.status == 401:
                 raise ConfigEntryAuthFailed(ex) from ex
             raise
+
+        if not update_successful:
+            return False
+
+        for vehicle in self.connection.vehicles:
+            if vehicle.vin not in self.vehicles:
+                self.discover_vehicle(vehicle)
+
+        return True
 
     async def auth_is_valid(self):
         """Check if provided username/password/region authenticate."""
