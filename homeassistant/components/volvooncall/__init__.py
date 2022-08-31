@@ -27,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from .const import (
@@ -197,20 +196,15 @@ class VolvoData:
     async def update(self):
         """Update status from the online service."""
         try:
-            update_successful = await self.connection.update(journal=True)
+            await self.connection.update(journal=True)
         except ClientResponseError as ex:
             if ex.status == 401:
                 raise ConfigEntryAuthFailed(ex) from ex
             raise
 
-        if not update_successful:
-            return False
-
         for vehicle in self.connection.vehicles:
             if vehicle.vin not in self.vehicles:
                 self.discover_vehicle(vehicle)
-
-        return True
 
     async def auth_is_valid(self):
         """Check if provided username/password/region authenticate."""
@@ -239,8 +233,7 @@ class VolvoUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from API endpoint."""
 
         async with async_timeout.timeout(10):
-            if not await self.volvo_data.update():
-                raise UpdateFailed("Error communicating with API")
+            await self.volvo_data.update()
 
 
 class VolvoEntity(CoordinatorEntity):
