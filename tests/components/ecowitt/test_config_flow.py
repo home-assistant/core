@@ -1,4 +1,4 @@
-"""Test the NEW_NAME config flow."""
+"""Test the Ecowitt Weather Station config flow."""
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
@@ -7,8 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_create_entry(hass: HomeAssistant) -> None:
+    """Test we can create a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -43,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_form_invalid_port(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle invalid port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -64,8 +64,8 @@ async def test_form_invalid_port(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_port"}
 
 
-async def test_form_invalid_second(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_already_configured_port(hass: HomeAssistant) -> None:
+    """Test already configured port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -113,15 +113,15 @@ async def test_form_invalid_second(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "invalid_port"}
 
 
-async def test_form_unknown(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+async def test_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
-        AsyncMock(side_effect=TypeError),
+        side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
