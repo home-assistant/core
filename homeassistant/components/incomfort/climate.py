@@ -75,7 +75,7 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         """Return max valid temperature that can be set."""
         return 30.0
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
