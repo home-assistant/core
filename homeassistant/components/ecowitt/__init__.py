@@ -2,32 +2,38 @@
 from __future__ import annotations
 
 from aioecowitt import EcoWittListener
+from aiohttp import web
 
+from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import CONF_PATH, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Ecowitt component from UI."""
-    hass.data.setdefault(DOMAIN, {})
-
-    ecowitt = hass.data[DOMAIN][entry.entry_id] = EcoWittListener(
-        port=entry.data[CONF_PORT], path=entry.data[CONF_PATH]
-    )
+    ecowitt = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = EcoWittListener()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await ecowitt.start()
+    async def handle_webhook(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle webhook callback."""
+        return ecowitt.handler(request)
 
-    # Close on shutdown
-    async def _stop_ecowitt(_: Event):
+    webhook.async_register(
+        hass, DOMAIN, entry.title, entry.data[CONF_WEBHOOK_ID], handle_webhook
+    )
+
+    @callback
+    def _stop_ecowitt(_: Event):
         """Stop the Ecowitt listener."""
-        await ecowitt.stop()
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_ecowitt)
@@ -38,9 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    ecowitt = hass.data[DOMAIN][entry.entry_id]
-    await ecowitt.stop()
-
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
