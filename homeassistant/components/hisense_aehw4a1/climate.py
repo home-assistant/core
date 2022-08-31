@@ -158,7 +158,7 @@ class ClimateAehW4a1(ClimateEntity):
         self._fan_modes = FAN_MODES
         self._swing_modes = SWING_MODES
         self._preset_modes = PRESET_MODES
-        self._available = None
+        self._attr_available = False
         self._on = None
         self._temperature_unit = None
         self._current_temperature = None
@@ -177,10 +177,10 @@ class ClimateAehW4a1(ClimateEntity):
             _LOGGER.warning(
                 "Unexpected error of %s: %s", self._unique_id, library_error
             )
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
+        self._attr_available = True
 
         self._on = status["run_status"]
 
@@ -226,11 +226,6 @@ class ClimateAehW4a1(ClimateEntity):
             self._swing_mode = None
             self._target_temperature = None
             self._preset_mode = None
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def name(self):
