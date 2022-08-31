@@ -502,10 +502,10 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[domain]["json_attributes_topic"] = "attr-topic"
+    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -529,8 +529,8 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
 
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[domain]["json_attributes_topic"] = "attr-topic"
-    data = json.dumps(config[domain])
+    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    data = json.dumps(config[mqtt.DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
     val = "abc123"
@@ -555,11 +555,13 @@ async def help_test_setting_attribute_with_template(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[domain]["json_attributes_topic"] = "attr-topic"
-    config[domain]["json_attributes_template"] = "{{ value_json['Timer1'] | tojson }}"
+    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    config[mqtt.DOMAIN][domain][
+        "json_attributes_template"
+    ] = "{{ value_json['Timer1'] | tojson }}"
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -583,10 +585,10 @@ async def help_test_update_with_json_attrs_not_dict(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[domain]["json_attributes_topic"] = "attr-topic"
+    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -599,7 +601,7 @@ async def help_test_update_with_json_attrs_not_dict(
     assert "JSON result was not a dictionary" in caplog.text
 
 
-async def help_test_update_with_json_attrs_bad_JSON(
+async def help_test_update_with_json_attrs_bad_json(
     hass, mqtt_mock_entry_with_yaml_config, caplog, domain, config
 ):
     """Test JSON validation of attributes.
@@ -608,10 +610,10 @@ async def help_test_update_with_json_attrs_bad_JSON(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[domain]["json_attributes_topic"] = "attr-topic"
+    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -634,11 +636,11 @@ async def help_test_discovery_update_attr(
     await mqtt_mock_entry_no_yaml_config()
     # Add JSON attributes settings to config
     config1 = copy.deepcopy(config)
-    config1[domain]["json_attributes_topic"] = "attr-topic1"
+    config1[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic1"
     config2 = copy.deepcopy(config)
-    config2[domain]["json_attributes_topic"] = "attr-topic2"
-    data1 = json.dumps(config1[domain])
-    data2 = json.dumps(config2[domain])
+    config2[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic2"
+    data1 = json.dumps(config1[mqtt.DOMAIN][domain])
+    data2 = json.dumps(config2[mqtt.DOMAIN][domain])
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()

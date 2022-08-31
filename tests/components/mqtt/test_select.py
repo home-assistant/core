@@ -49,7 +49,7 @@ from .test_common import (
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
-    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
 
@@ -353,7 +353,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -365,7 +365,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         select.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         MQTT_SELECT_ATTRIBUTES_BLOCKED,
     )
 
@@ -373,7 +373,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -386,20 +386,20 @@ async def test_update_with_json_attrs_not_dict(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         select.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
-async def test_update_with_json_attrs_bad_JSON(
+async def test_update_with_json_attrs_bad_json(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test attributes get extracted from a JSON result."""
-    await help_test_update_with_json_attrs_bad_JSON(
+    await help_test_update_with_json_attrs_bad_json(
         hass,
         mqtt_mock_entry_with_yaml_config,
         caplog,
         select.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
@@ -410,7 +410,7 @@ async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplo
         mqtt_mock_entry_no_yaml_config,
         caplog,
         select.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
