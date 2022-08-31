@@ -983,7 +983,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==4.1.1
+life360==5.1.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2040,7 +2040,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.9
+pyunifiprotect==4.2.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
