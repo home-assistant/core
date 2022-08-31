@@ -55,7 +55,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
 
-        self._existing_entry = None
+        self._existing_entry_data = None
         self._description_placeholders = None
 
     def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
@@ -99,8 +99,8 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If an existing entry was found, meaning this is a password update attempt,
         # use those to get config values that aren't changing
-        if self._existing_entry:
-            extra_inputs = self._existing_entry
+        if self._existing_entry_data:
+            extra_inputs = self._existing_entry_data
 
         self._username = extra_inputs[CONF_USERNAME]
         self._with_family = extra_inputs.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY)
@@ -183,7 +183,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Store existing entry data so it can be used later and set unique ID
         # so existing config entry can be updated
         await self.async_set_unique_id(self.context["unique_id"])
-        self._existing_entry = {**entry_data}
+        self._existing_entry_data = {**entry_data}
         self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
         return await self.async_step_reauth_confirm()
 
