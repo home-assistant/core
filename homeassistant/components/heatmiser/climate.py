@@ -109,9 +109,8 @@ class HeatmiserV3Thermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        temperature = kwargs[ATTR_TEMPERATURE]
         self._target_temperature = int(temperature)
         self.therm.set_target_temp(self._target_temperature)
 
