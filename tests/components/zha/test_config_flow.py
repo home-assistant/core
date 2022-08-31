@@ -107,22 +107,31 @@ async def test_zeroconf_discovery_znp(hass):
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
+    assert flow["step_id"] == "confirm"
+
+    # Confirm discovery
     result1 = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
     )
+    assert result1["step_id"] == "manual_port_config"
 
-    assert result1["type"] == FlowResultType.MENU
-    assert result1["step_id"] == "choose_formation_strategy"
-
+    # Confirm port settings
     result2 = await hass.config_entries.flow.async_configure(
-        result1["flow_id"],
+        result1["flow_id"], user_input={}
+    )
+
+    assert result2["type"] == FlowResultType.MENU
+    assert result2["step_id"] == "choose_formation_strategy"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "socket://192.168.1.200:6638"
-    assert result2["data"] == {
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "socket://192.168.1.200:6638"
+    assert result3["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
             CONF_FLOWCONTROL: None,
@@ -148,22 +157,31 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass):
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
+    assert flow["step_id"] == "confirm"
+
+    # Confirm discovery
     result1 = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
     )
+    assert result1["step_id"] == "manual_port_config"
 
-    assert result1["type"] == FlowResultType.MENU
-    assert result1["step_id"] == "choose_formation_strategy"
-
+    # Confirm port settings
     result2 = await hass.config_entries.flow.async_configure(
-        result1["flow_id"],
+        result1["flow_id"], user_input={}
+    )
+
+    assert result2["type"] == FlowResultType.MENU
+    assert result2["step_id"] == "choose_formation_strategy"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "socket://192.168.1.200:1234"
-    assert result2["data"] == {
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "socket://192.168.1.200:1234"
+    assert result3["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
         },
@@ -187,22 +205,31 @@ async def test_efr32_via_zeroconf(hass):
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
+    assert flow["step_id"] == "confirm"
+
+    # Confirm discovery
     result1 = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
     )
+    assert result1["step_id"] == "manual_port_config"
 
-    assert result1["type"] == FlowResultType.MENU
-    assert result1["step_id"] == "choose_formation_strategy"
-
+    # Confirm port settings
     result2 = await hass.config_entries.flow.async_configure(
-        result1["flow_id"],
+        result1["flow_id"], user_input={}
+    )
+
+    assert result2["type"] == FlowResultType.MENU
+    assert result2["step_id"] == "choose_formation_strategy"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "socket://192.168.1.200:6638"
-    assert result2["data"] == {
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "socket://192.168.1.200:6638"
+    assert result3["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
             CONF_BAUDRATE: 115200,
@@ -293,15 +320,16 @@ async def test_discovery_via_usb(hass):
         description="zigbee radio",
         manufacturer="test",
     )
-    result = await hass.config_entries.flow.async_init(
+    result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+
+    assert result1["type"] == FlowResultType.FORM
+    assert result1["step_id"] == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+        result1["flow_id"], user_input={}
     )
     await hass.async_block_till_done()
 
@@ -878,17 +906,30 @@ async def test_hardware(onboarded, hass):
             DOMAIN, context={"source": "hardware"}, data=data
         )
 
-    assert result1["type"] == FlowResultType.MENU
-    assert result1["step_id"] == "choose_formation_strategy"
+    if onboarded:
+        # Confirm discovery
+        assert result1["type"] == FlowResultType.FORM
+        assert result1["step_id"] == "confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result1["flow_id"],
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            user_input={},
+        )
+    else:
+        # No need to confirm
+        result2 = result1
+
+    assert result2["type"] == FlowResultType.MENU
+    assert result2["step_id"] == "choose_formation_strategy"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result2["title"] == "Yellow"
-    assert result2["data"] == {
+    assert result3["title"] == "Yellow"
+    assert result3["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
             CONF_FLOWCONTROL: "hardware",

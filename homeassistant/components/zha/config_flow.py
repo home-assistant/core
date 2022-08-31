@@ -555,8 +555,11 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm a discovery."""
-
         self._set_confirm_only()
+
+        # Don't permit discovery if ZHA is already set up
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware!
@@ -565,11 +568,15 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
             if self._async_current_entries():
                 return self.async_abort(reason="single_instance_allowed")
 
+            # Probe the radio type if we don't have one yet
             if self._radio_type is None and not await self._detect_radio_type():
                 # This path probably will not happen now that we have
                 # more precise USB matching unless there is a problem
                 # with the device
                 return self.async_abort(reason="usb_probe_failed")
+
+            if self._device_settings is None:
+                return await self.async_step_manual_port_config()
 
             return await self.async_step_choose_formation_strategy()
 
