@@ -309,6 +309,37 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass):
     }
 
 
+async def test_discovery_confirm_final_abort_if_entries(hass):
+    """Test discovery aborts if ZHA was set up after the confirmation dialog is shown."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.200",
+        addresses=["192.168.1.200"],
+        hostname="tube._tube_zb_gw._tcp.local.",
+        name="tube",
+        port=6053,
+        properties={"name": "tube_123456"},
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    assert flow["step_id"] == "confirm"
+
+    # ZHA was somehow set up while we were in the config flow
+    with patch(
+        "homeassistant.config_entries.ConfigFlow._async_current_entries",
+        return_value=[MagicMock()],
+    ):
+        # Confirm discovery
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    # Config will fail
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb(hass):
     """Test usb flow -- radio detected."""
