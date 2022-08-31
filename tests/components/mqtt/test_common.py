@@ -940,7 +940,7 @@ async def help_test_entity_device_info_with_identifier(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -971,7 +971,7 @@ async def help_test_entity_device_info_with_connection(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_MAC)
     config["unique_id"] = "veryunique"
 
@@ -1001,7 +1001,7 @@ async def help_test_entity_device_info_remove(
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1033,7 +1033,7 @@ async def help_test_entity_device_info_update(
     """
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
-    config = copy.deepcopy(config[domain])
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 

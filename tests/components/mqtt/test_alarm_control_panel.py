@@ -863,7 +863,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
@@ -873,7 +873,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
@@ -883,7 +883,7 @@ async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
@@ -893,7 +893,7 @@ async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
