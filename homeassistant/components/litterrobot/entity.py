@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from datetime import time
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
-from pylitterbot import LitterRobot
+from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 from typing_extensions import ParamSpec
 
@@ -23,28 +23,26 @@ from .const import DOMAIN
 from .hub import LitterRobotHub
 
 _P = ParamSpec("_P")
-
+_RobotT = TypeVar("_RobotT", bound=Robot)
 _LOGGER = logging.getLogger(__name__)
 
 REFRESH_WAIT_TIME_SECONDS = 8
 
 
-class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
+class LitterRobotEntity(
+    CoordinatorEntity[DataUpdateCoordinator[bool]], Generic[_RobotT]
+):
     """Generic Litter-Robot entity representing common data and methods."""
 
-    def __init__(
-        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
-    ) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
         self.entity_type = entity_type
         self.hub = hub
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return f"{self.robot.name} {self.entity_type}"
+        self._attr_name = entity_type.capitalize()
 
     @property
     def unique_id(self) -> str:
@@ -60,15 +58,14 @@ class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
             manufacturer="Litter-Robot",
             model=self.robot.model,
             name=self.robot.name,
+            sw_version=getattr(self.robot, "firmware", None),
         )
 
 
-class LitterRobotControlEntity(LitterRobotEntity):
+class LitterRobotControlEntity(LitterRobotEntity[_RobotT]):
     """A Litter-Robot entity that can control the unit."""
 
-    def __init__(
-        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
-    ) -> None:
+    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
         self._refresh_callback: CALLBACK_TYPE | None = None
@@ -132,14 +129,12 @@ class LitterRobotControlEntity(LitterRobotEntity):
         )
 
 
-class LitterRobotConfigEntity(LitterRobotControlEntity):
+class LitterRobotConfigEntity(LitterRobotControlEntity[_RobotT]):
     """A Litter-Robot entity that can control configuration of the unit."""
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(
-        self, robot: LitterRobot, entity_type: str, hub: LitterRobotHub
-    ) -> None:
+    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
         self._assumed_state: bool | None = None
