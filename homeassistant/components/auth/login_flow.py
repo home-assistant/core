@@ -240,7 +240,7 @@ class LoginFlowBaseView(HomeAssistantView):
 
 
 class LoginFlowIndexView(LoginFlowBaseView):
-    """View to create a config flow."""
+    """View to create a login flow."""
 
     url = "/auth/login_flow"
     name = "api:auth:login_flow"
