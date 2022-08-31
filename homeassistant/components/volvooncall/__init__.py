@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -200,7 +201,7 @@ class VolvoData:
         except ClientResponseError as ex:
             if ex.status == 401:
                 raise ConfigEntryAuthFailed(ex) from ex
-            raise
+            raise UpdateFailed(ex) from ex
 
         for vehicle in self.connection.vehicles:
             if vehicle.vin not in self.vehicles:
