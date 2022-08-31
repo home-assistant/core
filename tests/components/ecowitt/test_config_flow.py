@@ -5,12 +5,13 @@ from homeassistant import config_entries
 from homeassistant.components.ecowitt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
+from homeassistant.setup import async_setup_component
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test we can create a config entry."""
+    await async_setup_component(hass, "http", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -18,93 +19,18 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start"
-    ), patch(
-        "homeassistant.components.ecowitt.config_flow.EcoWittListener.stop"
-    ), patch(
         "homeassistant.components.ecowitt.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "port": 49911,
-                "path": "/ecowitt-station",
-            },
+            {},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Ecowitt on port 49911"
+    assert result2["title"] == "Ecowitt"
     assert result2["data"] == {
-        "port": 49911,
-        "path": "/ecowitt-station",
+        "webhook_id": result2["description_placeholders"]["path"].split("/")[-1],
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_port(hass: HomeAssistant) -> None:
-    """Test we handle invalid port."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
-        side_effect=OSError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "port": 49911,
-                "path": "/ecowitt-station",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_port"}
-
-
-async def test_already_configured_port(hass: HomeAssistant) -> None:
-    """Test already configured port."""
-    MockConfigEntry(domain=DOMAIN, data={"port": 49911}).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
-        side_effect=OSError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "port": 49911,
-                "path": "/ecowitt-station",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.ABORT
-
-
-async def test_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.ecowitt.config_flow.EcoWittListener.start",
-        side_effect=Exception(),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "port": 49911,
-                "path": "/ecowitt-station",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
