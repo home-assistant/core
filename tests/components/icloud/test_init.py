@@ -34,7 +34,7 @@ async def test_setup_2fa(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.config_entries.flow.async_progress() == []
+    assert not hass.config_entries.flow.async_progress()
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
