@@ -28,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any) -> dict[str, str]:
     """Validate user input."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data[CONF_PORT] == data[CONF_PORT]:

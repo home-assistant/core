@@ -35,7 +35,7 @@ class EcowittEntity(Entity):
 
         def _update_state():
             """Update the state on callback."""
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self.ecowitt.update_cb.append(_update_state)
         self.async_on_remove(lambda: self.ecowitt.update_cb.remove(_update_state))

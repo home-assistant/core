@@ -2,13 +2,13 @@
     "config": {
 		"title": "Ecowitt Weather Station",
 		"error": {
-		    "invalid_port": "Port is allready used.",
+		    "invalid_port": "Port is already used.",
 		    "unknown": "Unknown error."
 		},
 		"step": {
 		    "user": {
 				"title": "Setting up the Ecowitt.",
-				"description": "The following steps must be performed too setting up this integration.\n\nUse the Ecowitt App (on your phone) for your Ecowitt WebUI at the device.\nPick your station -> Menu Others -> DIY Upload Servers.\nHit next and select 'Customized'\n\nPick the protocol Ecowitt, and put in the ip/hostname of your hass server.\nPath have to match, you can copy with secure token /.\nSave configuration. The Ecowitt should then start attempting to send data to your server.",
+				"description": "The following steps must be performed to set up this integration.\n\nUse the Ecowitt App (on your phone) for your Ecowitt WebUI at the device.\nPick your station -> Menu Others -> DIY Upload Servers.\nHit next and select 'Customized'\n\nPick the protocol Ecowitt, and put in the ip/hostname of your hass server.\nPath have to match, you can copy with secure token /.\nSave configuration. The Ecowitt should then start attempting to send data to your server.",
 				"data": {
 				    "port": "Listening port",
 					"path": "Path with Security token"
