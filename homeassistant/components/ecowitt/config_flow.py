@@ -1,6 +1,7 @@
 """Config flow for ecowitt."""
 from __future__ import annotations
 
+import secrets
 from typing import Any
 
 from yarl import URL
@@ -26,7 +27,7 @@ class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            self._webhook_id = webhook.async_generate_id()
+            self._webhook_id = secrets.token_hex(16)
             return self.async_show_form(
                 step_id="user",
             )
