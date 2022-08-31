@@ -96,9 +96,8 @@ class LitterRobotSelect(
         assert description.name
         super().__init__(robot, description.name, hub)
         self.entity_description = description
-        self._attr_options = list(
-            map(str, self.entity_description.options_fn(self.robot))
-        )
+        options = self.entity_description.options_fn(self.robot)
+        self._attr_options = list(map(str, options))
 
     @property
     def current_option(self) -> str | None:
@@ -107,6 +106,5 @@ class LitterRobotSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.perform_action_and_refresh(
-            *self.entity_description.select_fn(self.robot, option)
-        )
+        action, adjusted_option = self.entity_description.select_fn(self.robot, option)
+        await self.perform_action_and_refresh(action, adjusted_option)
