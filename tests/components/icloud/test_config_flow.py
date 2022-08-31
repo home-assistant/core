@@ -385,8 +385,8 @@ async def test_password_update(hass: HomeAssistant, service_authenticated: Magic
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={**MOCK_CONFIG, "unique_id": USERNAME},
+        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
+        data={**MOCK_CONFIG},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -409,8 +409,8 @@ async def test_password_update_wrong_password(hass: HomeAssistant):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={**MOCK_CONFIG, "unique_id": USERNAME},
+        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
+        data={**MOCK_CONFIG},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM

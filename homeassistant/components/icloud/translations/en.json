@@ -11,7 +11,7 @@
             "validate_verification_code": "Failed to verify your verification code, try again"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Password"
                 },
