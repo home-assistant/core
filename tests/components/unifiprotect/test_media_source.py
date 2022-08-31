@@ -673,7 +673,7 @@ async def test_browse_media_browse_whole_month(
 ):
     """Test events for a specific day."""
 
-    fixed_now = fixed_now.replace(month=11)
+    fixed_now = fixed_now.replace(month=10)
     last_month = fixed_now.replace(day=1) - timedelta(days=1)
     ufp.api.bootstrap._recording_start = last_month
 
