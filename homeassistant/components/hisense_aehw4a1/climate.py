@@ -160,7 +160,6 @@ class ClimateAehW4a1(ClimateEntity):
         self._preset_modes = PRESET_MODES
         self._available = None
         self._on = None
-        self._attr_temperature_unit = None
         self._current_temperature = None
         self._target_temperature = None
         self._attr_hvac_mode = None
