@@ -334,7 +334,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        _LOGGER.warning("TRYING TO TURN ON")
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
         )
@@ -346,7 +345,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
 
         if result:
-            _LOGGER.warning("RESULT WAS OK")
             self._state = True
             self.async_write_ha_state()
 
