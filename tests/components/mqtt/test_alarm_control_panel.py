@@ -903,7 +903,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 
@@ -913,7 +913,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_c
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
     )
 
 

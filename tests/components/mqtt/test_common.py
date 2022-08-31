@@ -1063,19 +1063,19 @@ async def help_test_entity_id_update_subscriptions(
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
     config = copy.deepcopy(config)
-    config[domain]["unique_id"] = "TOTALLY_UNIQUE"
+    config[mqtt.DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
 
     if topics is None:
         # Add default topics to config
-        config[domain]["availability_topic"] = "avty-topic"
-        config[domain]["state_topic"] = "test-topic"
+        config[mqtt.DOMAIN][domain]["availability_topic"] = "avty-topic"
+        config[mqtt.DOMAIN][domain]["state_topic"] = "test-topic"
         topics = ["avty-topic", "test-topic"]
     assert len(topics) > 0
     registry = mock_registry(hass, {})
 
     assert await async_setup_component(
         hass,
-        domain,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -1107,16 +1107,16 @@ async def help_test_entity_id_update_discovery_update(
     # Add unique_id to config
     await mqtt_mock_entry_no_yaml_config()
     config = copy.deepcopy(config)
-    config[domain]["unique_id"] = "TOTALLY_UNIQUE"
+    config[mqtt.DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
 
     if topic is None:
         # Add default topic to config
-        config[domain]["availability_topic"] = "avty-topic"
+        config[mqtt.DOMAIN][domain]["availability_topic"] = "avty-topic"
         topic = "avty-topic"
 
     ent_registry = mock_registry(hass, {})
 
-    data = json.dumps(config[domain])
+    data = json.dumps(config[mqtt.DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
@@ -1131,8 +1131,8 @@ async def help_test_entity_id_update_discovery_update(
     ent_registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
     await hass.async_block_till_done()
 
-    config[domain]["availability_topic"] = f"{topic}_2"
-    data = json.dumps(config[domain])
+    config[mqtt.DOMAIN][domain]["availability_topic"] = f"{topic}_2"
+    data = json.dumps(config[mqtt.DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1

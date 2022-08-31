@@ -2681,7 +2681,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
