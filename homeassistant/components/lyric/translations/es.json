@@ -20,8 +20,8 @@
     },
     "issues": {
         "removed_yaml": {
-            "description": "Se elimin\u00f3 la configuraci\u00f3n de Honeywell Lyric mediante YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
-            "title": "Se elimin\u00f3 la configuraci\u00f3n YAML de Honeywell Lyric"
+            "description": "Se ha eliminado la configuraci\u00f3n de Honeywell Lyric mediante YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "title": "Se ha eliminado la configuraci\u00f3n YAML de Honeywell Lyric"
         }
     }
 }

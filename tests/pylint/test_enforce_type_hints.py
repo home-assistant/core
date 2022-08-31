@@ -73,7 +73,12 @@ def test_regex_x_of_y_i(
 
 @pytest.mark.parametrize(
     ("string", "expected_a", "expected_b"),
-    [("DiscoveryInfoType | None", "DiscoveryInfoType", "None")],
+    [
+        ("DiscoveryInfoType | None", "DiscoveryInfoType", "None"),
+        ("dict | list | None", "dict | list", "None"),
+        ("dict[str, Any] | list[Any] | None", "dict[str, Any] | list[Any]", "None"),
+        ("dict[str, Any] | list[Any]", "dict[str, Any]", "list[Any]"),
+    ],
 )
 def test_regex_a_or_b(
     hass_enforce_type_hints: ModuleType, string: str, expected_a: str, expected_b: str
@@ -962,6 +967,45 @@ def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
             pass
     """,
         "homeassistant.components.pylint_test.number",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
+    """Ensure valid hints are accepted for vacuum entity."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    # Ensure that `dict | list | None` is valid for params
+    class_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class _BaseVacuum(Entity):
+        pass
+
+    class VacuumEntity(_BaseVacuum, ToggleEntity):
+        pass
+
+    class MyVacuum( #@
+        VacuumEntity
+    ):
+        def send_command(
+            self,
+            command: str,
+            params: dict[str, Any] | list[Any] | None = None,
+            **kwargs: Any,
+        ) -> None:
+            pass
+    """,
+        "homeassistant.components.pylint_test.vacuum",
     )
     type_hint_checker.visit_module(class_node.parent)
 

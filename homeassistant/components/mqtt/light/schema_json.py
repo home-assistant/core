@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     ATTR_XY_COLOR,
     ENTITY_ID_FORMAT,
     FLASH_LONG,
@@ -37,7 +38,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_RGB,
-    CONF_WHITE_VALUE,
     CONF_XY,
     STATE_ON,
 )
@@ -61,7 +61,11 @@ from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
-from .schema_basic import CONF_BRIGHTNESS_SCALE, MQTT_LIGHT_ATTRIBUTES_BLOCKED
+from .schema_basic import (
+    CONF_BRIGHTNESS_SCALE,
+    CONF_WHITE_SCALE,
+    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +83,7 @@ DEFAULT_RGB = False
 DEFAULT_XY = False
 DEFAULT_HS = False
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_WHITE_SCALE = 255
 
 CONF_COLOR_MODE = "color_mode"
 CONF_SUPPORTED_COLOR_MODES = "supported_color_modes"
@@ -90,6 +95,8 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
+
+CONF_WHITE_VALUE = "white_value"
 
 
 def valid_color_configuration(config):
@@ -136,6 +143,9 @@ _PLATFORM_SCHEMA_BASE = (
                 vol.Unique(),
                 valid_supported_color_modes,
             ),
+            vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
+                vol.Coerce(int), vol.Range(min=1)
+            ),
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
         },
     )
@@ -157,6 +167,8 @@ DISCOVERY_SCHEMA_JSON = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
+    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
@@ -294,6 +306,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     w = int(values["color"]["w"])  # pylint: disable=invalid-name
                     self._color_mode = ColorMode.RGBWW
                     self._rgbww = (r, g, b, c, w)
+                elif color_mode == ColorMode.WHITE:
+                    self._color_mode = ColorMode.WHITE
                 elif color_mode == ColorMode.XY:
                     x = float(values["color"]["x"])  # pylint: disable=invalid-name
                     y = float(values["color"]["y"])  # pylint: disable=invalid-name
@@ -498,7 +512,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def _supports_color_mode(self, color_mode):
         return self.supported_color_modes and color_mode in self.supported_color_modes
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):  # noqa: C901
         """Turn the device on.
 
         This method is a coroutine.
@@ -611,6 +625,19 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if self._optimistic:
                 self._effect = kwargs[ATTR_EFFECT]
+                should_update = True
+
+        if ATTR_WHITE in kwargs and self._supports_color_mode(ColorMode.WHITE):
+            white_normalized = kwargs[ATTR_WHITE] / DEFAULT_WHITE_SCALE
+            white_scale = self._config[CONF_WHITE_SCALE]
+            device_white_level = min(round(white_normalized * white_scale), white_scale)
+            # Make sure the brightness is not rounded down to 0
+            device_white_level = max(device_white_level, 1)
+            message["white"] = device_white_level
+
+            if self._optimistic:
+                self._color_mode = ColorMode.WHITE
+                self._brightness = kwargs[ATTR_WHITE]
                 should_update = True
 
         await self.async_publish(

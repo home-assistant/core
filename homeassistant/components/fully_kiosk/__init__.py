@@ -6,7 +6,14 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -101,9 +101,30 @@ async def async_setup(
     hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
 ) -> None:
     """Component to allow users to login."""
+    hass.http.register_view(WellKnownOAuthInfoView)
     hass.http.register_view(AuthProvidersView)
     hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow, store_result))
     hass.http.register_view(LoginFlowResourceView(hass.auth.login_flow, store_result))
+
+
+class WellKnownOAuthInfoView(HomeAssistantView):
+    """View to host the OAuth2 information."""
+
+    requires_auth = False
+    url = "/.well-known/oauth-authorization-server"
+    name = "well-known/oauth-authorization-server"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return the well known OAuth2 authorization info."""
+        return self.json(
+            {
+                "authorization_endpoint": "/auth/authorize",
+                "token_endpoint": "/auth/token",
+                "revocation_endpoint": "/auth/revoke",
+                "response_types_supported": ["code"],
+                "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
+            }
+        )
 
 
 class AuthProvidersView(HomeAssistantView):
@@ -190,9 +211,16 @@ class LoginFlowBaseView(HomeAssistantView):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 
-        result.pop("data")
-
         hass: HomeAssistant = request.app["hass"]
+
+        if not await indieauth.verify_redirect_uri(
+            hass, client_id, result["context"]["redirect_uri"]
+        ):
+            return self.json_message("Invalid redirect URI", HTTPStatus.FORBIDDEN)
+
+        result.pop("data")
+        result.pop("context")
+
         result_obj: Credentials = result.pop("result")
 
         # Result can be None if credential was never linked to a user before.
@@ -212,7 +240,7 @@ class LoginFlowBaseView(HomeAssistantView):
 
 
 class LoginFlowIndexView(LoginFlowBaseView):
-    """View to create a config flow."""
+    """View to create a login flow."""
 
     url = "/auth/login_flow"
     name = "api:auth:login_flow"
@@ -234,14 +262,11 @@ class LoginFlowIndexView(LoginFlowBaseView):
     @log_invalid_auth
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Create a new login flow."""
-        hass: HomeAssistant = request.app["hass"]
         client_id: str = data["client_id"]
         redirect_uri: str = data["redirect_uri"]
 
-        if not await indieauth.verify_redirect_uri(hass, client_id, redirect_uri):
-            return self.json_message(
-                "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST
-            )
+        if not indieauth.verify_client_id(client_id):
+            return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         handler: tuple[str, ...] | str
         if isinstance(data["handler"], list):
@@ -255,6 +280,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 context={
                     "ip_address": ip_address(request.remote),  # type: ignore[arg-type]
                     "credential_only": data.get("type") == "link_user",
+                    "redirect_uri": redirect_uri,
                 },
             )
         except data_entry_flow.UnknownHandler:
@@ -277,13 +303,18 @@ class LoginFlowResourceView(LoginFlowBaseView):
         """Do not allow getting status of a flow in progress."""
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
-    @RequestDataValidator(vol.Schema({"client_id": str}, extra=vol.ALLOW_EXTRA))
+    @RequestDataValidator(
+        vol.Schema(
+            {vol.Required("client_id"): str},
+            extra=vol.ALLOW_EXTRA,
+        )
+    )
     @log_invalid_auth
     async def post(
         self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:
         """Handle progressing a login flow request."""
-        client_id = data.pop("client_id")
+        client_id: str = data.pop("client_id")
 
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)

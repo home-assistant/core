@@ -1,6 +1,7 @@
 """Support for Flick Electric Pricing data."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from pyflick import FlickAPI, FlickPrice
@@ -45,7 +46,7 @@ class FlickPricingSensor(SensorEntity):
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
         self._price: FlickPrice = None
-        self._attributes = {
+        self._attributes: dict[str, Any] = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
         }
@@ -65,7 +66,7 @@ class FlickPricingSensor(SensorEntity):
         """Return the state attributes."""
         return self._attributes
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the Flick Pricing data from the web service."""
         if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid

@@ -17,6 +17,8 @@ YALE_ACCESS_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
     advertisement=AdvertisementData(),
+    time=0,
+    connectable=True,
 )
 
 
@@ -33,6 +35,8 @@ LOCK_DISCOVERY_INFO_UUID_ADDRESS = BluetoothServiceInfoBleak(
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
     advertisement=AdvertisementData(),
+    time=0,
+    connectable=True,
 )
 
 OLD_FIRMWARE_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
@@ -48,6 +52,8 @@ OLD_FIRMWARE_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Aug"),
     advertisement=AdvertisementData(),
+    time=0,
+    connectable=True,
 )
 
 
@@ -64,4 +70,6 @@ NOT_YALE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Aug"),
     advertisement=AdvertisementData(),
+    time=0,
+    connectable=True,
 )

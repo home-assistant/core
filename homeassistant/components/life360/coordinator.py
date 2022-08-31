@@ -19,12 +19,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    COMM_MAX_RETRIES,
     COMM_TIMEOUT,
     CONF_AUTHORIZATION,
     DOMAIN,
@@ -106,8 +106,8 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
         )
         self._hass = hass
         self._api = Life360(
+            session=async_get_clientsession(hass),
             timeout=COMM_TIMEOUT,
-            max_retries=COMM_MAX_RETRIES,
             authorization=entry.data[CONF_AUTHORIZATION],
         )
         self._missing_loc_reason = hass.data[DOMAIN].missing_loc_reason
@@ -115,9 +115,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
     async def _retrieve_data(self, func: str, *args: Any) -> list[dict[str, Any]]:
         """Get data from Life360."""
         try:
-            return await self._hass.async_add_executor_job(
-                getattr(self._api, func), *args
-            )
+            return await getattr(self._api, func)(*args)
         except LoginError as exc:
             LOGGER.debug("Login error: %s", exc)
             raise ConfigEntryAuthFailed from exc

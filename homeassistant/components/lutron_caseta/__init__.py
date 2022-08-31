@@ -46,6 +46,7 @@ from .const import (
 from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+    _lutron_model_to_device_type,
 )
 from .models import LutronCasetaData
 from .util import serial_to_unique_id
@@ -281,7 +282,7 @@ def _async_subscribe_pico_remote_events(
         else:
             action = ACTION_RELEASE
 
-        type_ = device["type"]
+        type_ = _lutron_model_to_device_type(device["model"], device["type"])
         area, name = _area_and_name_from_name(device["name"])
         leap_button_number = device["button_number"]
         lip_button_number = async_get_lip_button(type_, leap_button_number)
@@ -342,7 +343,7 @@ class LutronCasetaDevice(Entity):
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
@@ -357,6 +358,12 @@ class LutronCasetaDevice(Entity):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 
+    def _handle_none_serial(self, serial: str | None) -> str | int:
+        """Handle None serial returned by RA3 and QSX processors."""
+        if serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return serial
+
     @property
     def device_id(self):
         """Return the device ID used for calling pylutron_caseta."""
@@ -368,9 +375,9 @@ class LutronCasetaDevice(Entity):
         return self._device["serial"]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the device (serial)."""
-        return str(self.serial)
+        return str(self._handle_none_serial(self.serial))
 
     @property
     def extra_state_attributes(self):
