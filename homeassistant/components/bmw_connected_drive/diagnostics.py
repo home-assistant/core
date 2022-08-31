@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.utils import MyBMWJSONEncoder
@@ -42,30 +40,6 @@ TO_REDACT_DATA = [
 ]
 
 
-async def async_get_fingerprints(
-    coordinator: "BMWDataUpdateCoordinator",
-) -> dict[str, Any]:
-    """Return pre-redacted fingerprints (i.e. the raw API responses)."""
-
-    fingerprints = {}
-
-    try:
-        # Use the library's fingerprint function to store all relevant
-        # HTTP requests into a temporary directory and load from there
-        with TemporaryDirectory() as tempdir:
-            tempdir_path = Path(tempdir)
-            coordinator.account.config.log_response_path = tempdir_path
-            await coordinator.account.get_vehicles()
-            for logfile in tempdir_path.iterdir():
-                with open(logfile, "rb") as fp:
-                    fingerprints[logfile.name] = json.load(fp)
-    finally:
-        # Make sure that log_response_path is always set to None afterwards
-        coordinator.account.config.log_response_path = None
-
-    return fingerprints
-
-
 def vehicle_to_dict(vehicle: MyBMWVehicle) -> dict:
     """Convert a MyBMWVehicle to a dictionary using MyBMWJSONEncoder."""
     retval: dict = json.loads(json.dumps(vehicle, cls=MyBMWJSONEncoder))
@@ -85,7 +59,7 @@ async def async_get_config_entry_diagnostics(
             for vehicle in coordinator.account.vehicles
         ],
         "fingerprint": async_redact_data(
-            await async_get_fingerprints(coordinator), TO_REDACT_DATA
+            await coordinator.account.get_fingerprints(), TO_REDACT_DATA
         ),
     }
 
@@ -109,7 +83,7 @@ async def async_get_device_diagnostics(
         "data": async_redact_data(vehicle_to_dict(vehicle), TO_REDACT_DATA),
         # Always have to get the full fingerprint as the VIN is redacted beforehand by the library
         "fingerprint": async_redact_data(
-            await async_get_fingerprints(coordinator), TO_REDACT_DATA
+            await coordinator.account.get_fingerprints(), TO_REDACT_DATA
         ),
     }
 
