@@ -1022,14 +1022,14 @@ def test_notify_get_service(
     class BaseNotificationService():
         pass
 
-    class CustomNotificationService(BaseNotificationService):
-        pass
-
     async def async_get_service( #@
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> CustomNotificationService:
+        pass
+
+    class CustomNotificationService(BaseNotificationService):
         pass
     """,
         "homeassistant.components.pylint_test.notify",
