@@ -255,4 +255,14 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Send command to device."""
         for _ in range(repeats):
             for cmd in command:
-                await self.client.send_command(cmd)
+                response = await self.client.send_command(cmd)
+                if not response:
+                    commands = await self.client.get_command_list()
+                    commands_keys = ", ".join(commands.keys())
+                    # Logging an error instead of raising a ValueError
+                    # https://github.com/home-assistant/core/pull/77329#discussion_r955768245
+                    _LOGGER.error(
+                        "Unsupported command: %s, list of available commands: %s",
+                        cmd,
+                        commands_keys,
+                    )

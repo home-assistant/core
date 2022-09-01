@@ -133,6 +133,9 @@ aioeafm==0.1.2
 # homeassistant.components.rainforest_eagle
 aioeagle==1.1.0
 
+# homeassistant.components.ecowitt
+aioecowitt==2022.08.3
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
@@ -567,7 +570,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.0
+govee-ble==0.17.1
 
 # homeassistant.components.gree
 greeclimate==1.3.0
@@ -604,7 +607,7 @@ hangups==0.4.18
 hass-nabucasa==0.55.0
 
 # homeassistant.components.tasmota
-hatasmota==0.5.1
+hatasmota==0.6.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -622,7 +625,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220816.0
+home-assistant-frontend==20220831.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -712,7 +715,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==4.1.1
+life360==5.1.0
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
@@ -739,7 +742,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.13
+melnor-bluetooth==0.0.15
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
@@ -895,7 +898,7 @@ pilight==0.1.1
 pillow==9.2.0
 
 # homeassistant.components.plex
-plexapi==4.12.1
+plexapi==4.13.0
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1115,7 +1118,7 @@ pyicloud==1.0.0
 pyinsteon==1.2.0
 
 # homeassistant.components.ipma
-pyipma==2.0.5
+pyipma==3.0.2
 
 # homeassistant.components.ipp
 pyipp==0.11.0
@@ -1397,7 +1400,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.1.9
+pyunifiprotect==4.2.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1726,7 +1729,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
-xknx==1.0.1
+xknx==1.0.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

@@ -158,9 +158,8 @@ class ClimateAehW4a1(ClimateEntity):
         self._fan_modes = FAN_MODES
         self._swing_modes = SWING_MODES
         self._preset_modes = PRESET_MODES
-        self._available = None
+        self._attr_available = False
         self._on = None
-        self._temperature_unit = None
         self._current_temperature = None
         self._target_temperature = None
         self._attr_hvac_mode = None
@@ -177,17 +176,17 @@ class ClimateAehW4a1(ClimateEntity):
             _LOGGER.warning(
                 "Unexpected error of %s: %s", self._unique_id, library_error
             )
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
+        self._attr_available = True
 
         self._on = status["run_status"]
 
         if status["temperature_Fahrenheit"] == "0":
-            self._temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = TEMP_CELSIUS
         else:
-            self._temperature_unit = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = TEMP_FAHRENHEIT
 
         self._current_temperature = int(status["indoor_temperature_status"], 2)
 
@@ -228,19 +227,9 @@ class ClimateAehW4a1(ClimateEntity):
             self._preset_mode = None
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
     def name(self):
         """Return the name of the climate device."""
         return self._unique_id
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._temperature_unit
 
     @property
     def current_temperature(self):
@@ -285,14 +274,14 @@ class ClimateAehW4a1(ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        if self._temperature_unit == TEMP_CELSIUS:
+        if self.temperature_unit == TEMP_CELSIUS:
             return MIN_TEMP_C
         return MIN_TEMP_F
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self._temperature_unit == TEMP_CELSIUS:
+        if self.temperature_unit == TEMP_CELSIUS:
             return MAX_TEMP_C
         return MAX_TEMP_F
 
@@ -312,7 +301,7 @@ class ClimateAehW4a1(ClimateEntity):
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
             if self._preset_mode != PRESET_NONE:
                 await self.async_set_preset_mode(PRESET_NONE)
-            if self._temperature_unit == TEMP_CELSIUS:
+            if self.temperature_unit == TEMP_CELSIUS:
                 await self._device.command(f"temp_{int(temp)}_C")
             else:
                 await self._device.command(f"temp_{int(temp)}_F")
