@@ -5,7 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_CLIP_SENSOR,
+    DOMAIN as DECONZ_DOMAIN,
+)
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -54,7 +57,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.bosch_air_quality_sensor",
-            "unique_id": "00:12:4b:00:14:4d:00:07-02-fdef",
+            "unique_id": "00:12:4b:00:14:4d:00:07-02-fdef-air_quality",
+            "old_unique_id": "00:12:4b:00:14:4d:00:07-02-fdef",
             "state": "poor",
             "entity_category": None,
             "device_class": None,
@@ -92,7 +96,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.bosch_air_quality_sensor_ppb",
-            "unique_id": "00:12:4b:00:14:4d:00:07-ppb",
+            "unique_id": "00:12:4b:00:14:4d:00:07-02-fdef-air_quality_ppb",
+            "old_unique_id": "00:12:4b:00:14:4d:00:07-ppb",
             "state": "809",
             "entity_category": None,
             "device_class": SensorDeviceClass.AQI,
@@ -131,7 +136,8 @@ TEST_DATA = [
             "entity_count": 1,
             "device_count": 3,
             "entity_id": "sensor.fyrtur_block_out_roller_blind_battery",
-            "unique_id": "00:0d:6f:ff:fe:01:23:45-battery",
+            "unique_id": "00:0d:6f:ff:fe:01:23:45-01-0001-battery",
+            "old_unique_id": "00:0d:6f:ff:fe:01:23:45-battery",
             "state": "100",
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": SensorDeviceClass.BATTERY,
@@ -167,7 +173,8 @@ TEST_DATA = [
             "entity_count": 1,
             "device_count": 3,
             "entity_id": "sensor.consumption_15",
-            "unique_id": "00:0d:6f:00:0b:7a:64:29-01-0702",
+            "unique_id": "00:0d:6f:00:0b:7a:64:29-01-0702-consumption",
+            "old_unique_id": "00:0d:6f:00:0b:7a:64:29-01-0702",
             "state": "11.342",
             "entity_category": None,
             "device_class": SensorDeviceClass.ENERGY,
@@ -203,13 +210,15 @@ TEST_DATA = [
             },
             "swversion": "1.0",
             "type": "Daylight",
+            "uniqueid": "01:23:4E:FF:FF:56:78:9A-01",
         },
         {
             "enable_entity": True,
             "entity_count": 1,
-            "device_count": 2,
+            "device_count": 3,
             "entity_id": "sensor.daylight",
-            "unique_id": "",
+            "unique_id": "01:23:4E:FF:FF:56:78:9A-01-daylight_status",
+            "old-unique_id": "01:23:4E:FF:FF:56:78:9A-01",
             "state": "solar_noon",
             "entity_category": None,
             "device_class": None,
@@ -246,7 +255,8 @@ TEST_DATA = [
             "entity_count": 1,
             "device_count": 2,
             "entity_id": "sensor.fsm_state_motion_stair",
-            "unique_id": "fsm-state-1520195376277",
+            "unique_id": "fsm-state-1520195376277-status",
+            "old_unique_id": "fsm-state-1520195376277",
             "state": "0",
             "entity_category": None,
             "device_class": None,
@@ -284,7 +294,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.mi_temperature_1",
-            "unique_id": "00:15:8d:00:02:45:dc:53-01-0405",
+            "unique_id": "00:15:8d:00:02:45:dc:53-01-0405-humidity",
+            "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0405",
             "state": "35.5",
             "entity_category": None,
             "device_class": SensorDeviceClass.HUMIDITY,
@@ -333,7 +344,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.motion_sensor_4",
-            "unique_id": "00:17:88:01:03:28:8c:9b-02-0400",
+            "unique_id": "00:17:88:01:03:28:8c:9b-02-0400-light_level",
+            "old_unique_id": "00:17:88:01:03:28:8c:9b-02-0400",
             "state": "5.0",
             "entity_category": None,
             "device_class": SensorDeviceClass.ILLUMINANCE,
@@ -375,7 +387,8 @@ TEST_DATA = [
             "entity_count": 1,
             "device_count": 3,
             "entity_id": "sensor.power_16",
-            "unique_id": "00:0d:6f:00:0b:7a:64:29-01-0b04",
+            "unique_id": "00:0d:6f:00:0b:7a:64:29-01-0b04-power",
+            "old_unique_id": "00:0d:6f:00:0b:7a:64:29-01-0b04",
             "state": "64",
             "entity_category": None,
             "device_class": SensorDeviceClass.POWER,
@@ -417,7 +430,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.mi_temperature_1",
-            "unique_id": "00:15:8d:00:02:45:dc:53-01-0403",
+            "unique_id": "00:15:8d:00:02:45:dc:53-01-0403-pressure",
+            "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0403",
             "state": "1010",
             "entity_category": None,
             "device_class": SensorDeviceClass.PRESSURE,
@@ -458,7 +472,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.mi_temperature_1",
-            "unique_id": "00:15:8d:00:02:45:dc:53-01-0402",
+            "unique_id": "00:15:8d:00:02:45:dc:53-01-0402-temperature",
+            "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0402",
             "state": "21.8",
             "entity_category": None,
             "device_class": SensorDeviceClass.TEMPERATURE,
@@ -501,7 +516,8 @@ TEST_DATA = [
             "entity_count": 2,
             "device_count": 3,
             "entity_id": "sensor.etrv_sejour",
-            "unique_id": "cc:cc:cc:ff:fe:38:4d:b3-01-000a",
+            "unique_id": "cc:cc:cc:ff:fe:38:4d:b3-01-000a-last_set",
+            "old_unique_id": "cc:cc:cc:ff:fe:38:4d:b3-01-000a",
             "state": "2020-11-19T08:07:08+00:00",
             "entity_category": None,
             "device_class": SensorDeviceClass.TIMESTAMP,
@@ -515,7 +531,7 @@ TEST_DATA = [
             "next_state": "2020-12-14T10:12:14+00:00",
         },
     ),
-    (  # Secondary temperature sensor
+    (  # Internal temperature sensor
         {
             "config": {
                 "battery": 100,
@@ -542,7 +558,8 @@ TEST_DATA = [
             "entity_count": 3,
             "device_count": 3,
             "entity_id": "sensor.alarm_10_temperature",
-            "unique_id": "00:15:8d:00:02:b5:d1:80-temperature",
+            "unique_id": "00:15:8d:00:02:b5:d1:80-01-0500-internal_temperature",
+            "old_unique_id": "00:15:8d:00:02:b5:d1:80-temperature",
             "state": "26.0",
             "entity_category": None,
             "device_class": SensorDeviceClass.TEMPERATURE,
@@ -583,7 +600,8 @@ TEST_DATA = [
             "entity_count": 1,
             "device_count": 3,
             "entity_id": "sensor.dimmer_switch_3_battery",
-            "unique_id": "00:17:88:01:02:0e:32:a3-battery",
+            "unique_id": "00:17:88:01:02:0e:32:a3-02-fc00-battery",
+            "old_unique_id": "00:17:88:01:02:0e:32:a3-battery",
             "state": "90",
             "entity_category": EntityCategory.DIAGNOSTIC,
             "device_class": SensorDeviceClass.BATTERY,
@@ -610,6 +628,15 @@ async def test_sensors(
     """Test successful creation of sensor entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
+
+    # Create entity entry to migrate to new unique ID
+    if "old_unique_id" in expected:
+        ent_reg.async_get_or_create(
+            SENSOR_DOMAIN,
+            DECONZ_DOMAIN,
+            expected["old_unique_id"],
+            suggested_object_id=expected["entity_id"].replace("sensor.", ""),
+        )
 
     with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
         config_entry = await setup_deconz_integration(
@@ -848,7 +875,11 @@ async def test_air_quality_sensor_without_ppb(hass, aioclient_mock):
 
 
 async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
-    """Test that a sensor without an initial battery state creates a battery sensor once state exist."""
+    """Test that a battery sensor can be created later on.
+
+    Without an initial battery state a battery sensor
+    can be created once a value is reported.
+    """
     data = {
         "sensors": {
             "1": {
@@ -856,15 +887,33 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
                 "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+                "uniqueid": "00:00:00:00:00:00:00:00-00-0000",
+            },
+            "2": {
+                "name": "Switch 2",
+                "type": "ZHASwitch",
+                "state": {"buttonevent": 1000},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:00-00-0001",
+            },
         }
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 0
-    assert not hass.states.get("sensor.switch_1_battery")
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "2",
+        "config": {"battery": 50},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
         "t": "event",

@@ -18,22 +18,22 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextDnsSettingsUpdateCoordinator, TCoordinatorData
+from . import CoordinatorDataT, NextDnsSettingsUpdateCoordinator
 from .const import ATTR_SETTINGS, DOMAIN
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass
-class NextDnsSwitchRequiredKeysMixin(Generic[TCoordinatorData]):
+class NextDnsSwitchRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
-    state: Callable[[TCoordinatorData], bool]
+    state: Callable[[CoordinatorDataT], bool]
 
 
 @dataclass
 class NextDnsSwitchEntityDescription(
-    SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[TCoordinatorData]
+    SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[CoordinatorDataT]
 ):
     """NextDNS switch entity description."""
 

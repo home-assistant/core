@@ -19,6 +19,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "fjaraskupan",
+        "connectable": False,
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
             79,
@@ -87,6 +88,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "govee_ble",
+        "manufacturer_id": 19506,
+        "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
         "domain": "homekit_controller",
         "manufacturer_id": 76,
         "manufacturer_data_start": [
@@ -119,6 +126,33 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "led_ble",
+        "local_name": "LEDnet*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "BLE-LED*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "LEDBLE*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "Triones*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "LEDBlue*"
+    },
+    {
+        "domain": "melnor",
+        "manufacturer_data_start": [
+            89
+        ],
+        "manufacturer_id": 13
+    },
+    {
         "domain": "moat",
         "local_name": "Moat_S*",
         "connectable": False
@@ -136,6 +170,28 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "qingping",
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "sensorpro",
+        "manufacturer_id": 43605,
+        "manufacturer_data_start": [
+            1,
+            1,
+            164,
+            193
+        ],
+        "connectable": False
+    },
+    {
+        "domain": "sensorpro",
+        "manufacturer_id": 43605,
+        "manufacturer_data_start": [
+            1,
+            5,
+            164,
+            193
+        ],
         "connectable": False
     },
     {

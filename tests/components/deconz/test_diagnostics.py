@@ -57,6 +57,7 @@ async def test_entry_diagnostics(
             str(Platform.LOCK): [],
             str(Platform.NUMBER): [],
             str(Platform.SCENE): [],
+            str(Platform.SELECT): [],
             str(Platform.SENSOR): [],
             str(Platform.SIREN): [],
             str(Platform.SWITCH): [],

@@ -150,7 +150,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = None
+        self._state: Decimal | None = None
         self._method = integration_method
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
@@ -174,7 +174,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
         return self._unit_template.format(integral_unit)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():

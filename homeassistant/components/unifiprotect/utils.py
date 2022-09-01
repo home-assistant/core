@@ -1,9 +1,9 @@
 """UniFi Protect Integration utils."""
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
 import contextlib
 from enum import Enum
+import re
 import socket
 from typing import Any
 
@@ -14,11 +14,15 @@ from pyunifiprotect.data import (
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, ModelType
+
+MAC_RE = re.compile(r"[0-9A-F]{12}")
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -38,15 +42,16 @@ def get_nested_attr(obj: Any, attr: str) -> Any:
 
 
 @callback
-def _async_unifi_mac_from_hass(mac: str) -> str:
+def async_unifi_mac(mac: str) -> str:
+    """Convert MAC address to format from UniFi Protect."""
     # MAC addresses in UFP are always caps
-    return mac.replace(":", "").upper()
+    return mac.replace(":", "").replace("-", "").replace("_", "").upper()
 
 
 @callback
-def _async_short_mac(mac: str) -> str:
+def async_short_mac(mac: str) -> str:
     """Get the short mac address from the full mac."""
-    return _async_unifi_mac_from_hass(mac)[-6:]
+    return async_unifi_mac(mac)[-6:]
 
 
 async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
@@ -78,18 +83,6 @@ def async_get_devices_by_type(
 
 
 @callback
-def async_get_devices(
-    bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
-    """Return all device by type."""
-    return (
-        device
-        for device_type in model_type
-        for device in async_get_devices_by_type(bootstrap, device_type).values()
-    )
-
-
-@callback
 def async_get_light_motion_current(obj: Light) -> str:
     """Get light motion mode for Flood Light."""
 
@@ -106,3 +99,22 @@ def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
     """Generate entry specific dispatch ID."""
 
     return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
+
+
+@callback
+def convert_mac_list(option: str, raise_exception: bool = False) -> set[str]:
+    """Convert csv list of MAC addresses."""
+
+    macs = set()
+    values = cv.ensure_list_csv(option)
+    for value in values:
+        if value == "":
+            continue
+        value = async_unifi_mac(value)
+        if not MAC_RE.match(value):
+            if raise_exception:
+                raise vol.Invalid("invalid_mac_list")
+            continue
+        macs.add(value)
+
+    return macs
