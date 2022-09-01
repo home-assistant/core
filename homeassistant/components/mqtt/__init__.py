@@ -438,6 +438,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_forward_entry_setup_and_setup_discovery(config_entry):
         """Forward the config entry setup to the platforms and set up discovery."""
+        reload_manual_setup: bool = False
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
         from . import device_automation, tag
@@ -460,8 +461,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()
+        # When the entry is reloaded, also reload manual set up items to enable MQTT
+        if DATA_MQTT_RELOAD_ENTRY in hass.data:
+            hass.data.pop(DATA_MQTT_RELOAD_ENTRY)
+            reload_manual_setup = True
+
+        # When the entry was disabled before, reload manual set up items to enable MQTT again
         if DATA_MQTT_RELOAD_NEEDED in hass.data:
             hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
+            reload_manual_setup = True
+
+        if reload_manual_setup:
             await async_reload_manual_mqtt_items(hass)
 
     await async_forward_entry_setup_and_setup_discovery(entry)
@@ -613,8 +623,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mqtt_client.cleanup()
 
     # Trigger reload manual MQTT items at entry setup
-    # Reload the legacy yaml platform
-    await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
     if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
         # The entry is disabled reload legacy manual items when the entry is enabled again
         hass.data[DATA_MQTT_RELOAD_NEEDED] = True
@@ -622,7 +630,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The entry is reloaded:
         # Trigger re-fetching the yaml config at entry setup
         hass.data[DATA_MQTT_RELOAD_ENTRY] = True
-    # Stop the loop
+    # Reload the legacy yaml platform to make entities unavailable
+    await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
+    # Wait for all ACKs and stop the loop
     await mqtt_client.async_disconnect()
 
     return True
