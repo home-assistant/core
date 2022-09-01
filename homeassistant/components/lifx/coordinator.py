@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     _LOGGER,
+    ATTR_REMAINING,
     IDENTIFY_WAVEFORM,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
@@ -101,26 +102,25 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 self.device.get_hostfirmware()
             if self.device.product is None:
                 self.device.get_version()
-            try:
-                response = await async_execute_lifx(self.device.get_color)
-            except asyncio.TimeoutError as ex:
-                raise UpdateFailed(
-                    f"Failed to fetch state from device: {self.device.ip_addr}"
-                ) from ex
+            response = await async_execute_lifx(self.device.get_color)
+
             if self.device.product is None:
                 raise UpdateFailed(
                     f"Failed to fetch get version from device: {self.device.ip_addr}"
                 )
+
             # device.mac_addr is not the mac_address, its the serial number
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
+
             if lifx_features(self.device)["multizone"]:
-                try:
-                    await self.async_update_color_zones()
-                except asyncio.TimeoutError as ex:
-                    raise UpdateFailed(
-                        f"Failed to fetch zones from device: {self.device.ip_addr}"
-                    ) from ex
+                await self.async_update_color_zones()
+
+            if lifx_features(self.device)["hev"]:
+                if self.device.hev_cycle_configuration is None:
+                    self.device.get_hev_configuration()
+
+                await self.async_get_hev_cycle()
 
     async def async_update_color_zones(self) -> None:
         """Get updated color information for each zone."""
@@ -137,6 +137,17 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # We only await multizone responses so don't ask for just one
             if zone == top - 1:
                 zone -= 1
+
+    def async_get_hev_cycle_state(self) -> bool | None:
+        """Return the current HEV cycle state."""
+        if self.device.hev_cycle is None:
+            return None
+        return bool(self.device.hev_cycle.get(ATTR_REMAINING, 0) > 0)
+
+    async def async_get_hev_cycle(self) -> None:
+        """Update the HEV cycle status from a LIFX Clean bulb."""
+        if lifx_features(self.device)["hev"]:
+            await async_execute_lifx(self.device.get_hev_cycle)
 
     async def async_set_waveform_optional(
         self, value: dict[str, Any], rapid: bool = False
