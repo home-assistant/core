@@ -1,7 +1,7 @@
 """Litter-Robot entities for common data and methods."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Iterable
 from datetime import time
 import logging
 from typing import Any, Generic, TypeVar
@@ -10,8 +10,9 @@ from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 from typing_extensions import ParamSpec
 
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory, EntityDescription
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -44,7 +45,7 @@ class LitterRobotEntity(
         self.robot = robot
         self.hub = hub
         self.entity_description = description
-        self._attr_unique_id = f"{self.robot.serial}-{description.name}"
+        self._attr_unique_id = f"{self.robot.serial}-{description.key}"
         if description.name is not None:
             self._attr_name = description.name.capitalize()
 
@@ -149,3 +150,20 @@ class LitterRobotConfigEntity(LitterRobotControlEntity[_RobotT]):
         if await self.perform_action_and_refresh(action, assumed_state):
             self._assumed_state = assumed_state
             self.async_write_ha_state()
+
+
+def async_update_unique_id(
+    hass: HomeAssistant, domain: str, entities: Iterable[LitterRobotEntity]
+) -> None:
+    """Update unique ID to be based on entity description key instead of name.
+
+    Introduced with release 2022.9.
+    """
+    ent_reg = er.async_get(hass)
+    for entity in entities:
+        old_unique_id = f"{entity.robot.serial}-{entity.entity_description.name}"
+        new_unique_id = f"{entity.robot.serial}-{entity.entity_description.key}"
+        if not ent_reg.async_get_entity_id(domain, DOMAIN, new_unique_id) and (
+            entity_id := ent_reg.async_get_entity_id(domain, DOMAIN, old_unique_id)
+        ):
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)

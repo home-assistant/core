@@ -1,21 +1,25 @@
 """Support for Litter-Robot button."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import itertools
 from typing import Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot3
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    DOMAIN as PLATFORM,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _RobotT, async_update_unique_id
 from .hub import LitterRobotHub
 
 
@@ -26,21 +30,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    entities: Iterable[LitterRobotButtonEntity] = itertools.chain(
-        (
-            LitterRobotButtonEntity(
-                robot=robot, hub=hub, description=LITTER_ROBOT_BUTTON
-            )
-            for robot in hub.litter_robots()
-            if isinstance(robot, LitterRobot3)
-        ),
-        (
-            LitterRobotButtonEntity(
-                robot=robot, hub=hub, description=FEEDER_ROBOT_BUTTON
-            )
-            for robot in hub.feeder_robots()
-        ),
+    entities: list[LitterRobotButtonEntity] = list(
+        itertools.chain(
+            (
+                LitterRobotButtonEntity(
+                    robot=robot, hub=hub, description=LITTER_ROBOT_BUTTON
+                )
+                for robot in hub.litter_robots()
+                if isinstance(robot, LitterRobot3)
+            ),
+            (
+                LitterRobotButtonEntity(
+                    robot=robot, hub=hub, description=FEEDER_ROBOT_BUTTON
+                )
+                for robot in hub.feeder_robots()
+            ),
+        )
     )
+    async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
 
 

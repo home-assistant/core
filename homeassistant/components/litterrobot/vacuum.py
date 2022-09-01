@@ -8,6 +8,7 @@ from pylitterbot.enums import LitterBoxStatus
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    DOMAIN as PLATFORM,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -23,7 +24,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotControlEntity
+from .entity import LitterRobotControlEntity, async_update_unique_id
 from .hub import LitterRobotHub
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
@@ -51,10 +52,12 @@ async def async_setup_entry(
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
+    entities = [
         LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
         for robot in hub.litter_robots()
-    )
+    ]
+    async_update_unique_id(hass, PLATFORM, entities)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

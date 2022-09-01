@@ -7,13 +7,17 @@ from typing import Any, Generic, Union
 
 from pylitterbot import FeederRobot, LitterRobot
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as PLATFORM,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity, _RobotT
+from .entity import LitterRobotConfigEntity, _RobotT, async_update_unique_id
 from .hub import LitterRobotHub
 
 
@@ -82,9 +86,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities = [
         RobotSwitchEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SWITCHES
         for robot in hub.account.robots
         if isinstance(robot, (LitterRobot, FeederRobot))
-    )
+    ]
+    async_update_unique_id(hass, PLATFORM, entities)
+    async_add_entities(entities)
