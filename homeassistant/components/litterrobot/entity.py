@@ -46,6 +46,7 @@ class LitterRobotEntity(
         self.hub = hub
         self.entity_description = description
         self._attr_unique_id = f"{self.robot.serial}-{description.key}"
+        # The following can be removed in 2022.12 after adjusting names in entities appropriately
         if description.name is not None:
             self._attr_name = description.name.capitalize()
 
