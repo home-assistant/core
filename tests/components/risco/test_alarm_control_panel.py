@@ -36,8 +36,8 @@ from .util import TEST_SITE_UUID
 FIRST_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
 SECOND_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
-FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.risco_test_site_uuid_partition_0"
-SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.risco_test_site_uuid_partition_1"
+FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.name_0"
+SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.name_1"
 
 CODES_REQUIRED_OPTIONS = {"code_arm_required": True, "code_disarm_required": True}
 TEST_RISCO_TO_HA = {
@@ -113,7 +113,11 @@ def two_part_local_alarm():
     with patch.object(
         partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
     ), patch.object(
+        partition_mocks[0], "name", new_callable=PropertyMock(return_value="Name 0")
+    ), patch.object(
         partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+    ), patch.object(
+        partition_mocks[1], "name", new_callable=PropertyMock(return_value="Name 1")
     ), patch(
         "homeassistant.components.risco.RiscoLocal.zones",
         new_callable=PropertyMock(return_value={}),

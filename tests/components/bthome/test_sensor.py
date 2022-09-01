@@ -110,6 +110,73 @@ from tests.common import MockConfigEntry
             "A4:C1:38:8D:18:B2",
             make_advertisement(
                 "A4:C1:38:8D:18:B2",
+                b"\x03\x06\x5e\x1f",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_mass",
+                    "friendly_name": "Test Device 18B2 Mass",
+                    "unit_of_measurement": "kg",
+                    "state_class": "measurement",
+                    "expected_state": "80.3",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x03\x07\x3e\x1d",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_mass",
+                    "friendly_name": "Test Device 18B2 Mass",
+                    "unit_of_measurement": "lb",
+                    "state_class": "measurement",
+                    "expected_state": "74.86",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x23\x08\xCA\x06",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_dew_point",
+                    "friendly_name": "Test Device 18B2 Dew Point",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                    "expected_state": "17.38",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x02\x09\x60",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_count",
+                    "friendly_name": "Test Device 18B2 Count",
+                    "state_class": "measurement",
+                    "expected_state": "96",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
                 b"\x04\n\x13\x8a\x14",
             ),
             None,
@@ -216,6 +283,23 @@ from tests.common import MockConfigEntry
             ],
         ),
         (
+            "A4:C1:38:8D:18:B2",
+            make_advertisement(
+                "A4:C1:38:8D:18:B2",
+                b"\x03\x14\x02\x0c",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_moisture",
+                    "friendly_name": "Test Device 18B2 Moisture",
+                    "unit_of_measurement": "%",
+                    "state_class": "measurement",
+                    "expected_state": "30.74",
+                },
+            ],
+        ),
+        (
             "54:48:E6:8F:80:A5",
             make_encrypted_advertisement(
                 "54:48:E6:8F:80:A5",
@@ -283,9 +367,10 @@ async def test_sensors(
         sensor = hass.states.get(meas["sensor_entity"])
         sensor_attr = sensor.attributes
         assert sensor.state == meas["expected_state"]
-
         assert sensor_attr[ATTR_FRIENDLY_NAME] == meas["friendly_name"]
-        assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == meas["unit_of_measurement"]
+        if ATTR_UNIT_OF_MEASUREMENT in sensor_attr:
+            # Count sensor does not have a unit of measurement
+            assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == meas["unit_of_measurement"]
         assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

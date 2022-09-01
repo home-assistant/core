@@ -63,20 +63,22 @@ async def test_demo_statistics(hass, recorder_mock):
         list_statistic_ids, hass
     )
     assert {
+        "display_unit_of_measurement": "°C",
         "has_mean": True,
         "has_sum": False,
         "name": "Outdoor temperature",
         "source": "demo",
         "statistic_id": "demo:temperature_outdoor",
-        "unit_of_measurement": "°C",
+        "statistics_unit_of_measurement": "°C",
     } in statistic_ids
     assert {
+        "display_unit_of_measurement": "kWh",
         "has_mean": False,
         "has_sum": True,
         "name": "Energy consumption 1",
         "source": "demo",
         "statistic_id": "demo:energy_consumption_kwh",
-        "unit_of_measurement": "kWh",
+        "statistics_unit_of_measurement": "kWh",
     } in statistic_ids
 
 
