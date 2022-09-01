@@ -16,8 +16,13 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     SOUND_PRESSURE_DB,
+    TEMP_CELSIUS,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
     Platform,
 )
 import homeassistant.core as ha
@@ -262,7 +267,7 @@ async def _insert_sum_statistics(
     statistic_id = metadata["statistic_id"]
 
     last_stats = await get_instance(hass).async_add_executor_job(
-        get_last_statistics, hass, 1, statistic_id, True
+        get_last_statistics, hass, 1, statistic_id, False
     )
     if statistic_id in last_stats:
         sum_ = last_stats[statistic_id][0]["sum"] or 0
@@ -291,7 +296,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
-        "unit_of_measurement": "°C",
+        "unit_of_measurement": TEMP_CELSIUS,
         "has_mean": True,
         "has_sum": False,
     }
@@ -304,11 +309,11 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
-        "unit_of_measurement": "kWh",
+        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
     }
-    await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 2)
+    await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 1)
 
     # Add external energy consumption in MWh, ~ 12 kWh / day
     # This should not be possible to pick for the energy dashboard
@@ -316,12 +321,12 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
-        "unit_of_measurement": "MWh",
+        "unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
     }
     await _insert_sum_statistics(
-        hass, metadata, yesterday_midnight, today_midnight, 0.002
+        hass, metadata, yesterday_midnight, today_midnight, 0.001
     )
 
     # Add external gas consumption in m³, ~6 m3/day
@@ -330,11 +335,13 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Gas consumption 1",
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
-        "unit_of_measurement": "m³",
+        "unit_of_measurement": VOLUME_CUBIC_METERS,
         "has_mean": False,
         "has_sum": True,
     }
-    await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 1)
+    await _insert_sum_statistics(
+        hass, metadata, yesterday_midnight, today_midnight, 0.5
+    )
 
     # Add external gas consumption in ft³, ~180 ft3/day
     # This should not be possible to pick for the energy dashboard
@@ -342,11 +349,11 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Gas consumption 2",
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
-        "unit_of_measurement": "ft³",
+        "unit_of_measurement": VOLUME_CUBIC_FEET,
         "has_mean": False,
         "has_sum": True,
     }
-    await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 30)
+    await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 15)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
