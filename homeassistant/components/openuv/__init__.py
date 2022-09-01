@@ -187,7 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "homeassistant.update_entity",
             "binary_sensor.protection_window, sensor.current_uv_index",
-            "2022.11.0",
+            "2022.12.0",
         )
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
@@ -202,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "homeassistant.update_entity",
             "sensor.current_uv_index",
-            "2022.11.0",
+            "2022.12.0",
         )
         await openuv.async_update_uv_index_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
@@ -217,7 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "homeassistant.update_entity",
             "binary_sensor.protection_window",
-            "2022.11.0",
+            "2022.12.0",
         )
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
