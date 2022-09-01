@@ -93,6 +93,7 @@
       "name": "*zigate*"
     }
   ],
+  "dependencies": ["file_upload"],
   "after_dependencies": ["onboarding", "usb", "zeroconf"],
   "iot_class": "local_polling",
   "loggers": [

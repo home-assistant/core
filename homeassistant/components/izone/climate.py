@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -170,7 +171,7 @@ class ControllerDevice(ClimateEntity):
         for zone in controller.zones:
             self.zones[zone] = ZoneDevice(self, zone)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call on adding to hass."""
         # Register for connect/disconnect/update events
         @callback
@@ -395,7 +396,7 @@ class ControllerDevice(ClimateEntity):
         else:
             self.set_available(True)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             self.async_schedule_update_ha_state(True)
@@ -468,7 +469,7 @@ class ZoneDevice(ClimateEntity):
             via_device=(IZONE, controller.unique_id),
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call on adding to hass."""
 
         @callback
@@ -517,7 +518,7 @@ class ZoneDevice(ClimateEntity):
 
     @property  # type: ignore[misc]
     @_return_on_connection_error(0)
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         if self._zone.mode == Zone.Mode.AUTO:
             return self._attr_supported_features
@@ -588,7 +589,7 @@ class ZoneDevice(ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
             return
@@ -606,7 +607,7 @@ class ZoneDevice(ClimateEntity):
         """Return true if on."""
         return self._zone.mode != Zone.Mode.CLOSE
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn device on (open zone)."""
         if self._zone.type == Zone.Type.AUTO:
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.AUTO))
@@ -614,7 +615,7 @@ class ZoneDevice(ClimateEntity):
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
         self.async_write_ha_state()

@@ -37,18 +37,18 @@ TEMP_HUMI_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=False,
 )
 
-PM_SERVICE_INFO = BluetoothServiceInfoBleak(
-    name="TEST DEVICE 8F80A5",
+PRST_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="prst 8F80A5",
     address="54:48:E6:8F:80:A5",
     device=BLEDevice("54:48:E6:8F:80:A5", None),
     rssi=-63,
     manufacturer_data={},
     service_data={
-        "0000181c-0000-1000-8000-00805f9b34fb": b"\x03\r\x12\x0c\x03\x0e\x02\x1c"
+        "0000181c-0000-1000-8000-00805f9b34fb": b'\x02\x14\x00\n"\x02\xdd\n\x02\x03{\x12\x02\x0c\n\x0b'
     },
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=AdvertisementData(local_name="prst"),
     time=0,
     connectable=False,
 )
