@@ -11,6 +11,8 @@ from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ENTITY_NAMESPACE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
@@ -30,6 +32,8 @@ from .const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE,
     CONF_DEPARTURE_TIME,
+    CONF_DESTINATION,
+    CONF_ORIGIN,
     CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
@@ -187,13 +191,25 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure origin by using gps coordinates."""
         if user_input is not None:
-            self._config[CONF_ORIGIN_LATITUDE] = user_input["origin"]["latitude"]
-            self._config[CONF_ORIGIN_LONGITUDE] = user_input["origin"]["longitude"]
+            self._config[CONF_ORIGIN_LATITUDE] = user_input[CONF_ORIGIN][CONF_LATITUDE]
+            self._config[CONF_ORIGIN_LONGITUDE] = user_input[CONF_ORIGIN][
+                CONF_LONGITUDE
+            ]
             return self.async_show_menu(
                 step_id="destination_menu",
                 menu_options=["destination_coordinates", "destination_entity"],
             )
-        schema = vol.Schema({"origin": selector({LocationSelector.selector_type: {}})})
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ORIGIN,
+                    default={
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    },
+                ): LocationSelector()
+            }
+        )
         return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
 
     async def async_step_origin_entity(
@@ -206,9 +222,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="destination_menu",
                 menu_options=["destination_coordinates", "destination_entity"],
             )
-        schema = vol.Schema(
-            {CONF_ORIGIN_ENTITY_ID: selector({EntitySelector.selector_type: {}})}
-        )
+        schema = vol.Schema({vol.Required(CONF_ORIGIN_ENTITY_ID): EntitySelector()})
         return self.async_show_form(step_id="origin_entity", data_schema=schema)
 
     async def async_step_destination_coordinates(
@@ -217,11 +231,11 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure destination by using gps coordinates."""
         if user_input is not None:
-            self._config[CONF_DESTINATION_LATITUDE] = user_input["destination"][
-                "latitude"
+            self._config[CONF_DESTINATION_LATITUDE] = user_input[CONF_DESTINATION][
+                CONF_LATITUDE
             ]
-            self._config[CONF_DESTINATION_LONGITUDE] = user_input["destination"][
-                "longitude"
+            self._config[CONF_DESTINATION_LONGITUDE] = user_input[CONF_DESTINATION][
+                CONF_LONGITUDE
             ]
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
@@ -229,7 +243,15 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options=default_options(self.hass),
             )
         schema = vol.Schema(
-            {"destination": selector({LocationSelector.selector_type: {}})}
+            {
+                vol.Required(
+                    CONF_DESTINATION,
+                    default={
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    },
+                ): LocationSelector()
+            }
         )
         return self.async_show_form(
             step_id="destination_coordinates", data_schema=schema
@@ -250,7 +272,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options=default_options(self.hass),
             )
         schema = vol.Schema(
-            {CONF_DESTINATION_ENTITY_ID: selector({EntitySelector.selector_type: {}})}
+            {vol.Required(CONF_DESTINATION_ENTITY_ID): EntitySelector()}
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
