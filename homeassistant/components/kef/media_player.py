@@ -219,7 +219,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._muted = None
         self._source = None
         self._volume = None
-        self._is_online = None
+        self._attr_available = False
         self._dsp = None
         self._update_dsp_task_remover = None
 
@@ -251,8 +251,8 @@ class KefMediaPlayer(MediaPlayerEntity):
         """Update latest state."""
         _LOGGER.debug("Running async_update")
         try:
-            self._is_online = await self._speaker.is_online()
-            if self._is_online:
+            self._attr_available = await self._speaker.is_online()
+            if self.available:
                 (
                     self._volume,
                     self._muted,
@@ -293,11 +293,6 @@ class KefMediaPlayer(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return self._sources
-
-    @property
-    def available(self):
-        """Return if the speaker is reachable online."""
-        return self._is_online
 
     @property
     def unique_id(self):
