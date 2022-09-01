@@ -102,8 +102,8 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
 @callback
 def _get_start_end(hass: HomeAssistant, start: datetime) -> tuple[datetime, datetime]:
-    start = dt_util.as_local(start)
-    end = dt_util.now()
+    start = dt_util.as_utc(dt_util.as_local(start))
+    end = dt_util.utcnow()
 
     start = start.replace(day=1, hour=1, minute=0, second=0, microsecond=0)
     end = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -702,8 +702,11 @@ class ProtectMediaSource(MediaSource):
             self._build_recent(data, camera_id, event_type, 30),
         ]
 
+        print(data.api.bootstrap.recording_start)
         start, end = _get_start_end(self.hass, data.api.bootstrap.recording_start)
+        print(start, end)
         while end > start:
+            print(end)
             children.append(self._build_month(data, camera_id, event_type, end.date()))
             end = (end - timedelta(days=1)).replace(day=1)
 
