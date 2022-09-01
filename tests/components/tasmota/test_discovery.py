@@ -5,7 +5,11 @@ from unittest.mock import ANY, patch
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_tasmota_helper
@@ -495,3 +499,179 @@ async def test_entity_duplicate_removal(hass, mqtt_mock, caplog, setup_tasmota):
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
     assert "Removing entity: switch" not in caplog.text
+
+
+async def test_same_topic(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
+    """Test detecting devices with same topic."""
+    configs = [
+        copy.deepcopy(DEFAULT_CONFIG),
+        copy.deepcopy(DEFAULT_CONFIG),
+        copy.deepcopy(DEFAULT_CONFIG),
+    ]
+    configs[0]["rl"][0] = 1
+    configs[1]["rl"][0] = 1
+    configs[2]["rl"][0] = 1
+    configs[0]["mac"] = "000000000001"
+    configs[1]["mac"] = "000000000002"
+    configs[2]["mac"] = "000000000003"
+
+    for config in configs[0:2]:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config['mac']}/config",
+            json.dumps(config),
+        )
+    await hass.async_block_till_done()
+
+    # Verify device registry entries are created for both devices
+    for config in configs[0:2]:
+        device_entry = device_reg.async_get_device(
+            set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+        )
+        assert device_entry is not None
+        assert device_entry.configuration_url == f"http://{config['ip']}/"
+        assert device_entry.manufacturer == "Tasmota"
+        assert device_entry.model == config["md"]
+        assert device_entry.name == config["dn"]
+        assert device_entry.sw_version == config["sw"]
+
+    # Verify entities are created only for the first device
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, configs[0]["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 0
+
+    # Verify a repairs issue was created
+    issue_id = "topic_duplicated_tasmota_49A3BC/cmnd/"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("tasmota", issue_id)
+    assert issue.data["mac"] == " ".join(config["mac"] for config in configs[0:2])
+
+    # Discover a 3rd device with same topic
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{configs[2]['mac']}/config",
+        json.dumps(configs[2]),
+    )
+    await hass.async_block_till_done()
+
+    # Verify device registry entries was created
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
+    )
+    assert device_entry is not None
+    assert device_entry.configuration_url == f"http://{configs[2]['ip']}/"
+    assert device_entry.manufacturer == "Tasmota"
+    assert device_entry.model == configs[2]["md"]
+    assert device_entry.name == configs[2]["dn"]
+    assert device_entry.sw_version == configs[2]["sw"]
+
+    # Verify no entities were created
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 0
+
+    # Verify the repairs issue has been updated
+    issue = issue_registry.async_get_issue("tasmota", issue_id)
+    assert issue.data["mac"] == " ".join(config["mac"] for config in configs[0:3])
+
+    # Rediscover 3rd device with fixed config
+    configs[2]["t"] = "unique_topic_2"
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{configs[2]['mac']}/config",
+        json.dumps(configs[2]),
+    )
+    await hass.async_block_till_done()
+
+    # Verify entities are created also for the third device
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, configs[2]["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
+
+    # Verify the repairs issue has been updated
+    issue = issue_registry.async_get_issue("tasmota", issue_id)
+    assert issue.data["mac"] == " ".join(config["mac"] for config in configs[0:2])
+
+    # Rediscover 2nd device with fixed config
+    configs[1]["t"] = "unique_topic_1"
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{configs[1]['mac']}/config",
+        json.dumps(configs[1]),
+    )
+    await hass.async_block_till_done()
+
+    # Verify entities are created also for the second device
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, configs[1]["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
+
+    # Verify the repairs issue has been removed
+    assert issue_registry.async_get_issue("tasmota", issue_id) is None
+
+
+async def test_topic_no_prefix(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
+    """Test detecting devices with same topic."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    config["ft"] = "%topic%/blah/"
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{config['mac']}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    # Verify device registry entry is created
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+    )
+    assert device_entry is not None
+    assert device_entry.configuration_url == f"http://{config['ip']}/"
+    assert device_entry.manufacturer == "Tasmota"
+    assert device_entry.model == config["md"]
+    assert device_entry.name == config["dn"]
+    assert device_entry.sw_version == config["sw"]
+
+    # Verify entities are not created
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 0
+
+    # Verify a repairs issue was created
+    issue_id = "topic_no_prefix_00000049A3BC"
+    issue_registry = ir.async_get(hass)
+    assert ("tasmota", issue_id) in issue_registry.issues
+
+    # Rediscover device with fixed config
+    config["ft"] = "%topic%/%prefix%/"
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{config['mac']}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    # Verify entities are created
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config["mac"])}
+    )
+    assert len(er.async_entries_for_device(entity_reg, device_entry.id, True)) == 1
+
+    # Verify the repairs issue has been removed
+    issue_registry = ir.async_get(hass)
+    assert ("tasmota", issue_id) not in issue_registry.issues
