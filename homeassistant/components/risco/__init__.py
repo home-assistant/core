@@ -154,6 +154,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        if is_local(entry):
+            local_data: LocalData = hass.data[DOMAIN][entry.entry_id]
+            await local_data.system.disconnect()
+
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
