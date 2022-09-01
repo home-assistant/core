@@ -68,19 +68,31 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         # The list of notifications returned by API will be in chronological order and there may be
         # multiple notifications of the same type (such as High Flow). The only special
         # case here is bridge notifications: NOTIFICATION_BRIDGE_DISCONNECT, which will be either True
-        # or False as indicated in the ["extra"][BRIDGE_NOTIFICATION_KEY] field.
-
-        notifications_by_device = {}
+        # or False as indicated in the ["extra"][BRIDGE_NOTIFICATION_KEY].
+        full_notification_info = {}
         for item in self.notifications:
 
             device_id = item["device_id"]
             rule = item["extra"]["event_rule_name"]
 
-            # Bridge notifications are a special case, the actual status (connected/disconnected) is stored
-            # in the BRIDGE_NOTIFICATION_KEY and we get a notification
-            value = item["extra"].get(BRIDGE_NOTIFICATION_KEY, True)
-            notifications_by_device.setdefault(device_id, {})
-            notifications_by_device[device_id][rule] = value
+            # Because bridge is a disconnect notification, True = disconnected - its value needs to be reversed
+            # all other notifications will be not False ... aka True
+            value = not item["extra"].get(BRIDGE_NOTIFICATION_KEY, False)
+
+            full_notification_info.setdefault(device_id, {})
+            full_notification_info[device_id][rule] = value
+
+        # Next preserve only notifications that are present in a set
+        notifications_by_device = {}
+        for device_id in full_notification_info.items():
+            notifications_by_device[device_id] = set(
+                dict(
+                    filter(
+                        lambda x: x[1] is True,
+                        full_notification_info[device_id].items(),
+                    )
+                )
+            )
 
         self.active_notifications_by_device = notifications_by_device
 

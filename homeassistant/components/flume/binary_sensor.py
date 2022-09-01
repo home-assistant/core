@@ -127,8 +127,8 @@ class FlumeBinarySensor(FlumeEntity, BinarySensorEntity):
             self.entity_description.device_class == BinarySensorDeviceClass.CONNECTIVITY
         )
 
-        value = self.coordinator.active_notifications_by_device.get(
-            self.device_id, {}
-        ).get(rule, initial_value)
-
-        return value
+        return (
+            rule
+            in self.coordinator.active_notifications_by_device.get(self.device_id, [])
+            or initial_value
+        )
