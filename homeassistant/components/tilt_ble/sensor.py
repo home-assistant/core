@@ -80,6 +80,7 @@ def _sensor_device_info_to_hass(
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
 ) -> PassiveBluetoothDataUpdate:
+    """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
             device_id: _sensor_device_info_to_hass(device_info)
