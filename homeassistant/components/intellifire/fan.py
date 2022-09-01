@@ -99,7 +99,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         # Calculate percentage steps
         LOGGER.debug("Setting Fan Speed %s", percentage)
 
-        int_value = math.ceil(percentage_to_ranged_value((1, 4), percentage))
+        int_value = math.ceil(percentage_to_ranged_value(self.entity_description.speed_range, percentage))
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
         await self.async_update_ha_state(force_refresh=True)
 
