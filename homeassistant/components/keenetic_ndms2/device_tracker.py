@@ -97,10 +97,10 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return (
-            self._last_seen
+            self._last_seen is not None
             and (dt_util.utcnow() - self._last_seen)
             < self._router.consider_home_interval
         )
