@@ -6,6 +6,7 @@ import pytest
 import whirlpool
 import whirlpool.aircon
 from whirlpool.backendselector import Brand, Region
+import whirlpool.washerdryer
 
 MOCK_SAID1 = "said1"
 MOCK_SAID2 = "said2"
@@ -116,8 +117,16 @@ def get_sensor_mock(said):
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
     mock_sensor.get_online.return_value = True
-    mock_sensor.get_machine_state.return_value.name = "RunningMainCycle"
+    mock_sensor.get_machine_state.return_value = (
+        whirlpool.washerdryer.MachineState.Standby
+    )
     mock_sensor.get_attribute.side_effect = side_effect_function
+    mock_sensor.get_cycle_status_filling.return_value = True
+    mock_sensor.get_cycle_status_rinsing.return_value = False
+    mock_sensor.get_cycle_status_sensing.return_value = False
+    mock_sensor.get_cycle_status_soaking.return_value = False
+    mock_sensor.get_cycle_status_spinning.return_value = False
+    mock_sensor.get_cycle_status_washing.return_value = False
 
     return mock_sensor
 

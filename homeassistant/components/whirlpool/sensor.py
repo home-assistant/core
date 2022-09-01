@@ -7,7 +7,7 @@ import logging
 
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
-from whirlpool.washerdryer import WasherDryer
+from whirlpool.washerdryer import MachineState, WasherDryer
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,6 +28,50 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
+
+MACHINE_STATE = {
+    MachineState.Standby: "Standby",
+    MachineState.Setting: "Setting",
+    MachineState.DelayCountdownMode: "Delay Countdown",
+    MachineState.DelayPause: "Delay Paused",
+    MachineState.SmartDelay: "Smart Delay",
+    MachineState.SmartGridPause: "Smart Grid Pause",
+    MachineState.Pause: "Pause",
+    MachineState.RunningMainCycle: "Running Maincycle",
+    MachineState.RunningPostCycle: "Running Postcycle",
+    MachineState.Exceptions: "Exception",
+    MachineState.Complete: "Complete",
+    MachineState.PowerFailure: "Power Failure",
+    MachineState.ServiceDiagnostic: "Service Diagnostic Mode",
+    MachineState.FactoryDiagnostic: "Factory Diagnostic Mode",
+    MachineState.LifeTest: "Life Test",
+    MachineState.CustomerFocusMode: "Customer Focus Mode",
+    MachineState.DemoMode: "Demo Mode",
+    MachineState.HardStopOrError: "Hard Stop or Error",
+    MachineState.SystemInit: "System Initialize",
+}
+
+
+def washer_state(washer: WasherDryer) -> str | None:
+    """Determine correct states for a washer."""
+    machine_state = washer.get_machine_state()
+    machine_cycle = None
+    if washer.get_cycle_status_filling():
+        machine_cycle = "Cycle Filling"
+    if washer.get_cycle_status_rinsing():
+        machine_cycle = "Cycle Rinsing"
+    if washer.get_cycle_status_sensing():
+        machine_cycle = "Cycle Sensing"
+    if washer.get_cycle_status_soaking():
+        machine_cycle = "Cycle Soaking"
+    if washer.get_cycle_status_spinning():
+        machine_cycle = "Cycle Spinning"
+    if washer.get_cycle_status_washing():
+        machine_cycle = "Cycle Washing"
+
+    if machine_state == MachineState.RunningMainCycle and machine_cycle:
+        return machine_cycle
+    return MACHINE_STATE.get(machine_state)
 
 
 @dataclass
@@ -51,7 +95,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         icon=ICON_W,
         has_entity_name=True,
-        value_fn=lambda WasherDryer: WasherDryer.get_machine_state().name,
+        value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
         key="timeremaining",
