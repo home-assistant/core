@@ -1126,6 +1126,8 @@ build.json @home-assistant/supervisor
 /tests/components/tibber/ @danielhiversen
 /homeassistant/components/tile/ @bachya
 /tests/components/tile/ @bachya
+/homeassistant/components/tilt_ble/ @apt-itude
+/tests/components/tilt_ble/ @apt-itude
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
