@@ -75,22 +75,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_wrong_version(hass: HomeAssistant) -> None:
-    """Test to check if wrong version is entered."""
-
-    user_input = DEMO_USER_INPUT.copy()
-    user_input.update(version=1)
-    result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"version": "wrong_version"}
-
-
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""
     entry = MockConfigEntry(

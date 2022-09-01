@@ -260,6 +260,11 @@ omit =
     homeassistant/components/econet/const.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
+    homeassistant/components/ecowitt/__init__.py
+    homeassistant/components/ecowitt/binary_sensor.py
+    homeassistant/components/ecowitt/diagnostics.py
+    homeassistant/components/ecowitt/entity.py
+    homeassistant/components/ecowitt/sensor.py
     homeassistant/components/ecovacs/*
     homeassistant/components/edl21/*
     homeassistant/components/eddystone_temperature/sensor.py
@@ -394,7 +399,7 @@ omit =
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/__init__.py
     homeassistant/components/flume/coordinator.py
-    homeassistant/components/flume/entity.py    
+    homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/repairs.py
