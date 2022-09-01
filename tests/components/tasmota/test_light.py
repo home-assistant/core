@@ -182,7 +182,7 @@ async def test_attributes_rgb(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -217,7 +217,7 @@ async def test_attributes_rgbw(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -252,7 +252,7 @@ async def test_attributes_rgbww(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -288,7 +288,7 @@ async def test_attributes_rgbww_reduced(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",

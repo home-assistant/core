@@ -303,7 +303,7 @@ class Schedule(Entity):
         # Find next event in the schedule, loop over each day (starting with
         # the current day) until the next event has been found.
         next_event = None
-        for day in range(8):  # 8 because we need to search same weekday next week
+        for day in range(8):  # 8 because we need to search today's weekday next week
             day_schedule = self._config.get(
                 WEEKDAY_TO_CONF[(now.weekday() + day) % 7], []
             )
