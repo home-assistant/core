@@ -313,7 +313,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (conf := await async_fetch_config(hass, entry)) is None:
         # Bail out
         return False
-    client: MQTT = hass.data.setdefault(DATA_MQTT, MQTT(hass, entry, conf))
+    if DATA_MQTT not in hass.data:
+        hass.data[DATA_MQTT] = MQTT(hass, entry, conf)
+    client: MQTT = hass.data[DATA_MQTT]
     if client.conf != conf:
         client.update_config(conf)
 
