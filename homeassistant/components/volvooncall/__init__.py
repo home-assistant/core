@@ -15,6 +15,9 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -142,6 +145,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+
+        new_conf = {**config_entry.data}
+
+        scandinavian_miles: bool = new_conf[CONF_SCANDINAVIAN_MILES]
+        new_conf.pop(CONF_SCANDINAVIAN_MILES)
+
+        new_conf[CONF_UNIT_SYSTEM] = (
+            CONF_SCANDINAVIAN_MILES if scandinavian_miles else CONF_UNIT_SYSTEM_METRIC
+        )
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new_conf)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
+
+
 class VolvoData:
     """Hold component state."""
 
@@ -183,7 +209,12 @@ class VolvoData:
 
         dashboard = vehicle.dashboard(
             mutable=self.config_entry.data[CONF_MUTABLE],
-            scandinavian_miles=self.config_entry.data[CONF_SCANDINAVIAN_MILES],
+            scandinavian_miles=(
+                self.config_entry.data[CONF_UNIT_SYSTEM] == CONF_SCANDINAVIAN_MILES
+            ),
+            usa_units=(
+                self.config_entry.data[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL
+            ),
         )
 
         for instrument in (

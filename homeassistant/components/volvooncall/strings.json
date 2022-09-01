@@ -6,8 +6,8 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "region": "Region",
-          "mutable": "Allow Remote Start / Lock / etc.",
-          "scandinavian_miles": "Use Scandinavian Miles"
+          "unit_system": "Unit System",
+          "mutable": "Allow Remote Start / Lock / etc."
         }
       }
     },

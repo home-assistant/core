@@ -9,7 +9,14 @@ import voluptuous as vol
 from volvooncall import Connection
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -23,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
 
-    VERSION = 1
+    VERSION = 2
     _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
@@ -36,7 +43,7 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: "",
             CONF_REGION: None,
             CONF_MUTABLE: True,
-            CONF_SCANDINAVIAN_MILES: False,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         }
 
         if user_input is not None:
@@ -76,10 +83,16 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_REGION, default=defaults[CONF_REGION]): vol.In(
                     {"na": "North America", "cn": "China", None: "Rest of world"}
                 ),
-                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): bool,
                 vol.Optional(
-                    CONF_SCANDINAVIAN_MILES, default=defaults[CONF_SCANDINAVIAN_MILES]
-                ): bool,
+                    CONF_UNIT_SYSTEM, default=defaults[CONF_UNIT_SYSTEM]
+                ): vol.In(
+                    {
+                        CONF_UNIT_SYSTEM_METRIC: "Metric",
+                        CONF_SCANDINAVIAN_MILES: "Metric with Scandinavian Miles",
+                        CONF_UNIT_SYSTEM_IMPERIAL: "Imperial",
+                    }
+                ),
+                vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): bool,
             },
         )
 
