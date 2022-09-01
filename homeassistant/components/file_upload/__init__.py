@@ -107,7 +107,6 @@ class FileUploadView(HomeAssistantView):
     name = "api:file_upload"
 
     _upload_lock: asyncio.Lock | None = None
-    _file_handle: io.BufferedWriter | None = None
 
     @callback
     def _get_upload_lock(self) -> asyncio.Lock:
@@ -150,21 +149,20 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
-
-        def _sync_create_dir() -> None:
-            file_dir.mkdir()
-
-        await hass.async_add_executor_job(_sync_create_dir)
+        file_handle: io.BufferedWriter | None = None
 
         def _sync_write_file(_file_name: str, _chunk: bytes) -> None:
-            if self._file_handle is None:
-                self._file_handle = (file_dir / _file_name).open("wb")
+            nonlocal file_handle
+            if file_handle is None:
+                file_dir.mkdir()
+                file_handle = (file_dir / _file_name).open("wb")
 
-            self._file_handle.write(_chunk)
+            file_handle.write(_chunk)
 
         def _close_file_handle() -> None:
-            if self._file_handle is not None:
-                self._file_handle.close()
+            nonlocal file_handle
+            if file_handle is not None:
+                file_handle.close()
 
         try:
             while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
