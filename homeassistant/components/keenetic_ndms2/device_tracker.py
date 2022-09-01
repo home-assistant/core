@@ -86,6 +86,8 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
 class KeeneticTracker(ScannerEntity):
     """Representation of network device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: Device, router: KeeneticRouter) -> None:
         """Initialize the tracked device."""
         self._device = device
@@ -93,11 +95,6 @@ class KeeneticTracker(ScannerEntity):
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False since entity pushes its state to HA."""
-        return False
 
     @property
     def is_connected(self):
@@ -147,12 +144,12 @@ class KeeneticTracker(ScannerEntity):
             }
         return None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
 
         @callback
-        def update_device():
+        def update_device() -> None:
             _LOGGER.debug(
                 "Updating Keenetic tracked device %s (%s)",
                 self.entity_id,

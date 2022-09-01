@@ -3,14 +3,18 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+import functools as ft
 from typing import Any, cast
 
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.storage import Store
+from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
-from .models import IssueSeverity
+from .storage import Store
 
 DATA_REGISTRY = "issue_registry"
 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
@@ -18,6 +22,14 @@ STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 2
 SAVE_DELAY = 10
+
+
+class IssueSeverity(StrEnum):
+    """Issue severity."""
+
+    CRITICAL = "critical"
+    ERROR = "error"
+    WARNING = "warning"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -267,3 +279,111 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = IssueRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
+
+
+@callback
+def async_create_issue(
+    hass: HomeAssistant,
+    domain: str,
+    issue_id: str,
+    *,
+    breaks_in_ha_version: str | None = None,
+    data: dict[str, str | int | float | None] | None = None,
+    is_fixable: bool,
+    is_persistent: bool = False,
+    issue_domain: str | None = None,
+    learn_more_url: str | None = None,
+    severity: IssueSeverity,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> None:
+    """Create an issue, or replace an existing one."""
+    # Verify the breaks_in_ha_version is a valid version string
+    if breaks_in_ha_version:
+        AwesomeVersion(
+            breaks_in_ha_version,
+            ensure_strategy=AwesomeVersionStrategy.CALVER,
+        )
+
+    issue_registry = async_get(hass)
+    issue_registry.async_get_or_create(
+        domain,
+        issue_id,
+        breaks_in_ha_version=breaks_in_ha_version,
+        data=data,
+        is_fixable=is_fixable,
+        is_persistent=is_persistent,
+        issue_domain=issue_domain,
+        learn_more_url=learn_more_url,
+        severity=severity,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+    )
+
+
+def create_issue(
+    hass: HomeAssistant,
+    domain: str,
+    issue_id: str,
+    *,
+    breaks_in_ha_version: str | None = None,
+    data: dict[str, str | int | float | None] | None = None,
+    is_fixable: bool,
+    is_persistent: bool = False,
+    issue_domain: str | None = None,
+    learn_more_url: str | None = None,
+    severity: IssueSeverity,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> None:
+    """Create an issue, or replace an existing one."""
+    return run_callback_threadsafe(
+        hass.loop,
+        ft.partial(
+            async_create_issue,
+            hass,
+            domain,
+            issue_id,
+            breaks_in_ha_version=breaks_in_ha_version,
+            data=data,
+            is_fixable=is_fixable,
+            is_persistent=is_persistent,
+            issue_domain=issue_domain,
+            learn_more_url=learn_more_url,
+            severity=severity,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        ),
+    ).result()
+
+
+@callback
+def async_delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
+    """Delete an issue.
+
+    It is not an error to delete an issue that does not exist.
+    """
+    issue_registry = async_get(hass)
+    issue_registry.async_delete(domain, issue_id)
+
+
+def delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
+    """Delete an issue.
+
+    It is not an error to delete an issue that does not exist.
+    """
+    return run_callback_threadsafe(
+        hass.loop, async_delete_issue, hass, domain, issue_id
+    ).result()
+
+
+@callback
+def async_ignore_issue(
+    hass: HomeAssistant, domain: str, issue_id: str, ignore: bool
+) -> None:
+    """Ignore an issue.
+
+    Will raise if the issue does not exist.
+    """
+    issue_registry = async_get(hass)
+    issue_registry.async_ignore(domain, issue_id, ignore)

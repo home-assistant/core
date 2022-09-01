@@ -1,0 +1,16 @@
+{
+  "after_dependencies": ["bluetooth"],
+  "bluetooth": [
+    {
+      "manufacturer_data_start": [89],
+      "manufacturer_id": 13
+    }
+  ],
+  "codeowners": ["@vanstinator"],
+  "config_flow": true,
+  "domain": "melnor",
+  "documentation": "https://www.home-assistant.io/integrations/melnor",
+  "iot_class": "local_polling",
+  "name": "Melnor Bluetooth",
+  "requirements": ["melnor-bluetooth==0.0.15"]
+}

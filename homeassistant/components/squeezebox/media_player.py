@@ -482,6 +482,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             cmd = "add"
         elif enqueue == MediaPlayerEnqueue.NEXT:
             cmd = "insert"
+        elif enqueue == MediaPlayerEnqueue.PLAY:
+            cmd = "play_now"
         else:
             cmd = "play"
 

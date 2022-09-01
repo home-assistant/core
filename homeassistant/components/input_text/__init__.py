@@ -198,6 +198,8 @@ class InputTextStorageCollection(collection.StorageCollection):
 class InputText(RestoreEntity):
     """Represent a text box."""
 
+    _attr_should_poll = False
+
     def __init__(self, config: dict) -> None:
         """Initialize a text input."""
         self._config = config
@@ -211,11 +213,6 @@ class InputText(RestoreEntity):
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
         return input_text
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self):
