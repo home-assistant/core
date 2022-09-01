@@ -8,9 +8,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     _LOGGER,
+    BRIDGE_NOTIFICATION_KEY,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
-    NOTIFICATION_BRIDGE_DISCONNECT,
     NOTIFICATION_SCAN_INTERVAL,
 )
 
@@ -65,22 +65,22 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)
 
+        # The list of notifications returned by API will be in chronological order and there may be
+        # multiple notifications of the same type (such as High Flow). The only special
+        # case here is bridge notifications: NOTIFICATION_BRIDGE_DISCONNECT, which will be either True
+        # or False as indicated in the ["extra"][BRIDGE_NOTIFICATION_KEY] field.
+
         notifications_by_device = {}
+        for item in self.notifications:
 
-        # Reformat notificatinos to correct format
-        for notification in self.notifications:
-            device_id = notification["device_id"]
-            extra = notification["extra"]
-            rule = notification["extra"]["event_rule_name"]
+            device_id = item["device_id"]
+            rule = item["extra"]["event_rule_name"]
 
-            device_notifications = notifications_by_device.setdefault(device_id, {})
-            if rule == NOTIFICATION_BRIDGE_DISCONNECT:
-                # Bridge notifications are a special case
-                # both connect and disconnect register as notifications
-                # the last one (by time) will indicate connection state
-                device_notifications[rule] = extra["connected"]
-            else:
-                device_notifications[rule] = True
+            # Bridge notifications are a special case, the actual status (connected/disconnected) is stored
+            # in the BRIDGE_NOTIFICATION_KEY and we get a notification
+            value = item["extra"].get(BRIDGE_NOTIFICATION_KEY, True)
+            notifications_by_device.setdefault(device_id, {})
+            notifications_by_device[device_id][rule] = value
 
         self.active_notifications_by_device = notifications_by_device
 

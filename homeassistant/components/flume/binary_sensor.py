@@ -119,13 +119,16 @@ class FlumeBinarySensor(FlumeEntity, BinarySensorEntity):
 
         rule = self.entity_description.event_rule
 
-        # Bridge notifications are reversed so set the default accordingly
-        default = (
+        # The default notification value for notifications will be False, which means the notification
+        # is not currently active. Bridge notifications, on the other hand, which are of Connectivity
+        # class need to default to true which shows the unit IS connected. In the absence of an actual
+        # notification from the coordinator this value will be used - as the "initial" or default value
+        initial_value = (
             self.entity_description.device_class == BinarySensorDeviceClass.CONNECTIVITY
         )
 
         value = self.coordinator.active_notifications_by_device.get(
             self.device_id, {}
-        ).get(rule, default)
+        ).get(rule, initial_value)
 
         return value
