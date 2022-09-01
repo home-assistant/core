@@ -980,7 +980,6 @@ class XiaomiFan(XiaomiGenericFan):
             )
         self._percentage = percentage
 
-        # NOTE: this is broken, is_on is never set
         if not self.is_on:
             await self.async_turn_on()
         else:
@@ -1105,7 +1104,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
         )
 
         # if the fan is not on, we have to turn it on first
-        if not self._state:
+        if not self.is_on:
             await self.async_turn_on()
 
         await self._try_command(
