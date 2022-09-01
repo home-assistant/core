@@ -50,7 +50,7 @@ class LightwaveBattery(SensorEntity):
         self._serial = serial
         self._attr_unique_id = f"{serial}-trv-battery"
 
-    def update(self):
+    def update(self) -> None:
         """Communicate with a Lightwave RTF Proxy to get state."""
         (dummy_temp, dummy_targ, battery, dummy_output) = self._lwlink.read_trv_status(
             self._serial

@@ -529,6 +529,78 @@ async def test_migration_1_1(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_7(hass, hass_storage):
+    """Test migration from version 1.7.
+
+    This tests cleanup after frontend bug which incorrectly updated device_class
+    """
+    entity_dict = {
+        "area_id": None,
+        "capabilities": {},
+        "config_entry_id": None,
+        "device_id": None,
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "id": "12345",
+        "name": None,
+        "options": None,
+        "original_icon": None,
+        "original_name": None,
+        "platform": "super_platform",
+        "supported_features": 0,
+        "unique_id": "very_unique",
+        "unit_of_measurement": None,
+    }
+
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 7,
+        "data": {
+            "entities": [
+                {
+                    **entity_dict,
+                    "device_class": "original_class_by_integration",
+                    "entity_id": "test.entity",
+                    "original_device_class": "new_class_by_integration",
+                },
+                {
+                    **entity_dict,
+                    "device_class": "class_by_user",
+                    "entity_id": "binary_sensor.entity",
+                    "original_device_class": "class_by_integration",
+                },
+                {
+                    **entity_dict,
+                    "device_class": "class_by_user",
+                    "entity_id": "cover.entity",
+                    "original_device_class": "class_by_integration",
+                },
+            ]
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+    assert entry.device_class is None
+    assert entry.original_device_class == "new_class_by_integration"
+
+    entry = registry.async_get_or_create(
+        "binary_sensor", "super_platform", "very_unique"
+    )
+    assert entry.device_class == "class_by_user"
+    assert entry.original_device_class == "class_by_integration"
+
+    entry = registry.async_get_or_create("cover", "super_platform", "very_unique")
+    assert entry.device_class == "class_by_user"
+    assert entry.original_device_class == "class_by_integration"
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_loading_invalid_entity_id(hass, hass_storage):
     """Test we skip entities with invalid entity IDs."""
     hass_storage[er.STORAGE_KEY] = {

@@ -745,7 +745,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.13
+melnor-bluetooth==0.0.15
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
@@ -1732,7 +1732,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
-xknx==1.0.1
+xknx==1.0.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
