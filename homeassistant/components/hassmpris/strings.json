@@ -46,6 +46,7 @@
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "cannot_decrypt": "Could not decrypt the response from the device",
       "ignored": "The device ignored our verification request",
+      "invalid_zeroconf": "Invalid zeroconf announcement",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }

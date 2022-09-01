@@ -25,6 +25,12 @@ from .const import (
     DEF_MPRIS_PORT,
     DOMAIN,
     LOGGER as _LOGGER,
+    REASON_CANNOT_CONNECT,
+    REASON_CANNOT_DECRYPT,
+    REASON_IGNORED,
+    REASON_INVALID_ZEROCONF,
+    REASON_REJECTED,
+    REASON_TIMEOUT,
     STEP_CONFIRM,
     STEP_REAUTH_CONFIRM,
     STEP_USER,
@@ -213,7 +219,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Do not proceed if the device is already configured by hand.
-        await self.async_set_unique_id(self._unique_id)
+        await self.async_set_unique_id(self._get_unique_id_by_connection_data())
         self._abort_if_unique_id_configured()
 
         return await self.async_step_pairing()
@@ -242,6 +248,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert CONF_CAKES_PORT in discovery_info.properties
         except AssertionError:
             _LOGGER.debug("Ignoring invalid zeroconf announcement: %s", discovery_info)
+            return self.async_abort(reason=REASON_INVALID_ZEROCONF)
 
         self._set_data(
             discovery_info.name.split(".")[0],
@@ -337,9 +344,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             ecdh = await self._cakes_client.obtain_verifier()
         except hassmpris_client.Timeout:
-            return self.async_abort(reason="timeout_connect")
+            return self.async_abort(reason=REASON_TIMEOUT)
         except hassmpris_client.ClientException:
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=REASON_CANNOT_CONNECT)
         emojis = emoji(ecdh.derived_key, 6)
 
         return self.async_show_form(
@@ -352,6 +359,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors={},
+            last_step=True,
         )
 
     async def async_step_confirm(
@@ -366,14 +374,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._trust_chain,
             ) = await self._cakes_client.obtain_certificate()
         except hassmpris_client.Ignored:
-            return self.async_abort(reason="ignored")
+            return self.async_abort(reason=REASON_IGNORED)
         except hassmpris_client.Rejected:
-            return self.async_abort(reason="rejected")
+            return self.async_abort(reason=REASON_REJECTED)
         except hassmpris_client.CannotDecrypt:
-            return self.async_abort(reason="cannot_decrypt")
+            return self.async_abort(reason=REASON_CANNOT_DECRYPT)
         except hassmpris_client.Timeout:
-            return self.async_abort(reason="timeout_connect")
+            return self.async_abort(reason=REASON_TIMEOUT)
         except hassmpris_client.CannotConnect:
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=REASON_CANNOT_CONNECT)
+        except hassmpris_client.ClientException:
+            return self.async_abort(reason=REASON_CANNOT_CONNECT)
 
         return await self._create_entry()

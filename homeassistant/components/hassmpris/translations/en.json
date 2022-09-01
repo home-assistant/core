@@ -10,7 +10,8 @@
             "rejected": "The device rejected our verification request",
             "timeout_connect": "Timeout establishing connection",
             "unimplemented": "This flow is currently not implemented",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "invalid_zeroconf": "Invalid zeroconf announcement"
         },
         "error": {
             "cannot_connect": "Failed to connect",

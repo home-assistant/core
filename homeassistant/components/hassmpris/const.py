@@ -29,4 +29,11 @@ STEP_REAUTH_CONFIRM = "reauth_confirm"
 STEP_USER = "user"
 STEP_ZEROCONF_CONFIRM = "zeroconf_confirm"
 
+REASON_CANNOT_CONNECT = "cannot_connect"
+REASON_CANNOT_DECRYPT = "cannot_decrypt"
+REASON_IGNORED = "ignored"
+REASON_REJECTED = "rejected"
+REASON_INVALID_ZEROCONF = "invalid_zeroconf"
+REASON_TIMEOUT = "timeout_connect"
+
 ATTR_PLAYBACK_RATE = "playback_rate"

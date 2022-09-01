@@ -10,7 +10,8 @@
             "rejected": "El dispositivo rechazó la solicitud de verificación",
             "timeout_connect": "El tiempo de conexión expiró mientras se establecía la conexión",
             "unimplemented": "Este flujo no está implementado actualmente",
-            "unknown": "Error inesperado"
+            "unknown": "Error inesperado",
+            "invalid_zeroconf": "Anuncio zeroconf inválido"
         },
         "error": {
             "cannot_connect": "Fallo al conectar",
