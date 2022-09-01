@@ -9,6 +9,7 @@ from typing import Any, Generic, Union, cast
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
 
 from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -20,7 +21,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _RobotT, async_update_unique_id
 from .hub import LitterRobotHub
 
 
@@ -48,17 +49,6 @@ class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
 
     entity_description: RobotSensorEntityDescription[_RobotT]
 
-    def __init__(
-        self,
-        robot: _RobotT,
-        hub: LitterRobotHub,
-        description: RobotSensorEntityDescription[_RobotT],
-    ) -> None:
-        """Initialize a Litter-Robot sensor entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
-
     @property
     def native_value(self) -> float | datetime | str | None:
         """Return the state."""
@@ -79,32 +69,32 @@ class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
 ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
     LitterRobot: [
         RobotSensorEntityDescription[LitterRobot](
-            name="Waste Drawer",
             key="waste_drawer_level",
+            name="Waste Drawer",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
         ),
         RobotSensorEntityDescription[LitterRobot](
-            name="Sleep Mode Start Time",
             key="sleep_mode_start_time",
+            name="Sleep Mode Start Time",
             device_class=SensorDeviceClass.TIMESTAMP,
             should_report=lambda robot: robot.sleep_mode_enabled,
         ),
         RobotSensorEntityDescription[LitterRobot](
-            name="Sleep Mode End Time",
             key="sleep_mode_end_time",
+            name="Sleep Mode End Time",
             device_class=SensorDeviceClass.TIMESTAMP,
             should_report=lambda robot: robot.sleep_mode_enabled,
         ),
         RobotSensorEntityDescription[LitterRobot](
-            name="Last Seen",
             key="last_seen",
+            name="Last Seen",
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         RobotSensorEntityDescription[LitterRobot](
-            name="Status Code",
             key="status_code",
+            name="Status Code",
             device_class="litterrobot__status_code",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -119,8 +109,8 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
     ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
-            name="Food level",
             key="food_level",
+            name="Food level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
         )
@@ -135,10 +125,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities = [
         LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
         for robot in hub.account.robots
         for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
         if isinstance(robot, robot_type)
         for description in entity_descriptions
-    )
+    ]
+    async_update_unique_id(hass, PLATFORM, entities)
+    async_add_entities(entities)
