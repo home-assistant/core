@@ -1861,7 +1861,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
-    "notify": [ # There are not entities for notify platform
+    "notify": [
         ClassTypeHintMatch(
             base_class="BaseNotificationService",
             matches=[
