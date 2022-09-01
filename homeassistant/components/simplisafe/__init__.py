@@ -393,7 +393,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "button.press",
             "button.alarm_control_panel_clear_notifications",
-            "2022.11.0",
+            "2022.12.0",
         )
         await system.async_clear_notifications()
 
