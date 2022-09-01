@@ -41,7 +41,7 @@ class DemoCamera(Camera):
     _attr_motion_detection_enabled = False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
-    def __init__(self, name, content_type):
+    def __init__(self, name: str, content_type: str) -> None:
         """Initialize demo camera component."""
         super().__init__()
         self._attr_name = name

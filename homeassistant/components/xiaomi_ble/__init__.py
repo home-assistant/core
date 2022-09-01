@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_ble_device_from_address,
 )
 from homeassistant.components.bluetooth.active_update_coordinator import (
     ActiveBluetoothProcessorCoordinator,
@@ -64,7 +65,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _async_poll(service_info: BluetoothServiceInfoBleak):
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
         # directly to the Xiaomi code
-        return await data.async_poll(service_info.device)
+        # Make sure the device we have is one that we can connect with
+        # in case its coming from a passive scanner
+        if service_info.connectable:
+            connectable_device = service_info.device
+        elif device := async_ble_device_from_address(
+            hass, service_info.device.address, True
+        ):
+            connectable_device = device
+        else:
+            # We have no bluetooth controller that is in range of
+            # the device to poll it
+            raise RuntimeError(
+                f"No connectable device found for {service_info.device.address}"
+            )
+        return await data.async_poll(connectable_device)
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
@@ -78,6 +93,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         needs_poll_method=_needs_poll,
         poll_method=_async_poll,
+        # We will take advertisements from non-connectable devices
+        # since we will trade the BLEDevice for a connectable one
+        # if we need to poll it
+        connectable=False,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

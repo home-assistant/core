@@ -18,6 +18,10 @@
             "link": {
                 "description": "Voc\u00ea deve autorizar o Home Assistant no Roon. Depois de clicar em enviar, v\u00e1 para o aplicativo Roon principal, abra Configura\u00e7\u00f5es e habilite o HomeAssistant na aba Extens\u00f5es.",
                 "title": "Autorizar HomeAssistant no Roon"
+            },
+            "user": {
+                "one": "",
+                "other": ""
             }
         }
     }

@@ -182,7 +182,7 @@ async def test_attributes_rgb(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -217,7 +217,7 @@ async def test_attributes_rgbw(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -252,7 +252,7 @@ async def test_attributes_rgbww(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -288,7 +288,7 @@ async def test_attributes_rgbww_reduced(hass, mqtt_mock, setup_tasmota):
 
     state = hass.states.get("light.test")
     assert state.attributes.get("effect_list") == [
-        "None",
+        "Solid",
         "Wake up",
         "Cycle up",
         "Cycle down",
@@ -574,7 +574,6 @@ async def test_controlling_state_via_mqtt_rgbww(hass, mqtt_mock, setup_tasmota):
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert "white_value" not in state.attributes
     # Setting white > 0 should clear the color
     assert "rgb_color" not in state.attributes
     assert state.attributes.get("color_mode") == "color_temp"
@@ -593,7 +592,6 @@ async def test_controlling_state_via_mqtt_rgbww(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     # Setting white to 0 should clear the color_temp
-    assert "white_value" not in state.attributes
     assert "color_temp" not in state.attributes
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
@@ -686,7 +684,6 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(hass, mqtt_mock, setup_tasm
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert "white_value" not in state.attributes
     # Setting white > 0 should clear the color
     assert "rgb_color" not in state.attributes
     assert state.attributes.get("color_mode") == "color_temp"
@@ -704,8 +701,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(hass, mqtt_mock, setup_tasm
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    # Setting white to 0 should clear the white_value and color_temp
-    assert not state.attributes.get("white_value")
+    # Setting white to 0 should clear the color_temp
     assert not state.attributes.get("color_temp")
     assert state.attributes.get("color_mode") == "hs"
 
@@ -904,16 +900,6 @@ async def test_sending_mqtt_commands_rgbw_legacy(hass, mqtt_mock, setup_tasmota)
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.test", white_value=128)
-    # white_value should be ignored
-    mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
-        0,
-        False,
-    )
-    mqtt_mock.async_publish.reset_mock()
-
     await common.async_turn_on(hass, "light.test", effect="Random")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
@@ -1011,16 +997,6 @@ async def test_sending_mqtt_commands_rgbw(hass, mqtt_mock, setup_tasmota):
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.test", white_value=128)
-    # white_value should be ignored
-    mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
-        0,
-        False,
-    )
-    mqtt_mock.async_publish.reset_mock()
-
     await common.async_turn_on(hass, "light.test", effect="Random")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
@@ -1091,16 +1067,6 @@ async def test_sending_mqtt_commands_rgbww(hass, mqtt_mock, setup_tasmota):
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Power1 ON;NoDelay;CT 200",
-        0,
-        False,
-    )
-    mqtt_mock.async_publish.reset_mock()
-
-    await common.async_turn_on(hass, "light.test", white_value=128)
-    # white_value should be ignored
-    mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
         0,
         False,
     )

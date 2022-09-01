@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import number
+from homeassistant.components import mqtt, number
 from homeassistant.components.mqtt.number import (
     CONF_MAX,
     CONF_MIN,
@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
     TEMP_FAHRENHEIT,
     Platform,
@@ -700,6 +701,77 @@ async def test_invalid_min_max_attributes(hass, caplog, mqtt_mock_entry_no_yaml_
     await mqtt_mock_entry_no_yaml_config()
 
     assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
+
+
+async def test_default_mode(hass, mqtt_mock_entry_with_yaml_config):
+    """Test default mode."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("number.test_number")
+    assert state.attributes.get(ATTR_MODE) == "auto"
+
+
+@pytest.mark.parametrize("mode", ("auto", "box", "slider"))
+async def test_mode(hass, mqtt_mock_entry_with_yaml_config, mode):
+    """Test mode."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "mode": mode,
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("number.test_number")
+    assert state.attributes.get(ATTR_MODE) == mode
+
+
+@pytest.mark.parametrize("mode,valid", [("bleh", False), ("auto", True)])
+async def test_invalid_mode(hass, mode, valid):
+    """Test invalid mode."""
+    topic = "test/number"
+    assert (
+        await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": topic,
+                        "command_topic": topic,
+                        "name": "Test Number",
+                        "mode": mode,
+                    }
+                }
+            },
+        )
+        is valid
+    )
 
 
 async def test_mqtt_payload_not_a_number_warning(

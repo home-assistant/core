@@ -17,7 +17,7 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Escribe la contrase\u00f1a que hayas puesto en la configuraci\u00f3n para {name}."
+                "description": "Por favor, introduce la contrase\u00f1a que hayas puesto en la configuraci\u00f3n para {name}."
             },
             "discovery_confirm": {
                 "description": "\u00bfQuieres a\u00f1adir el nodo de ESPHome `{name}` a Home Assistant?",
@@ -33,7 +33,7 @@
                 "data": {
                     "noise_psk": "Clave de cifrado"
                 },
-                "description": "El dispositivo ESPHome {name} habilit\u00f3 el cifrado de transporte o cambi\u00f3 la clave de cifrado. Introduce la clave actualizada."
+                "description": "El dispositivo ESPHome {name} habilit\u00f3 el cifrado de transporte o cambi\u00f3 la clave de cifrado. Por favor, introduce la clave actualizada."
             },
             "user": {
                 "data": {

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Actualiza UniFi Protect y vuelve a intentarlo."
+            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Por favor, actualiza UniFi Protect y vuelve a intentarlo."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
@@ -42,11 +42,15 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "Debe ser una lista de direcciones MAC separadas por comas"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "M\u00e9tricas en tiempo real (ADVERTENCIA: aumenta considerablemente el uso de la CPU)",
                     "disable_rtsp": "Deshabilitar la transmisi\u00f3n RTSP",
+                    "ignored_devices": "Lista separada por comas de direcciones MAC de dispositivos para ignorar",
                     "max_media": "N\u00famero m\u00e1ximo de eventos a cargar para el Navegador de Medios (aumenta el uso de RAM)",
                     "override_connection_host": "Anular la conexi\u00f3n del host"
                 },

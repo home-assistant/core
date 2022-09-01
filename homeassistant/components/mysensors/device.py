@@ -217,10 +217,7 @@ def get_mysensors_devices(
 class MySensorsEntity(MySensorsDevice, Entity):
     """Representation of a MySensors entity."""
 
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling state. The gateway pushes its states."""
-        return False
+    _attr_should_poll = False
 
     @property
     def available(self) -> bool:

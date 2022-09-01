@@ -45,7 +45,7 @@ class KiraRemote(Entity):
         """Return the Kira device's name."""
         return self._name
 
-    def update(self):
+    def update(self) -> None:
         """No-op."""
 
     def send_command(self, command, **kwargs):

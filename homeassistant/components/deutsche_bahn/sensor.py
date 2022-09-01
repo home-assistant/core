@@ -7,12 +7,12 @@ import logging
 import schiene
 import voluptuous as vol
 
-from homeassistant.components.repairs import IssueSeverity, create_issue
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_OFFSET
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -98,7 +98,7 @@ class DeutscheBahnSensor(SensorEntity):
             connections["next_on"] = self.data.connections[2]["departure"]
         return connections
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest delay from bahn.de and updates the state."""
         self.data.update()
         self._state = self.data.connections[0].get("departure", "Unknown")

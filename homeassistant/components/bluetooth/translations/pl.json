@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
-            "no_adapters": "Nie znaleziono adapter\u00f3w Bluetooth"
+            "no_adapters": "Nie znaleziono nieskonfigurowanych adapter\u00f3w Bluetooth"
         },
         "flow_title": "{name}",
         "step": {
@@ -24,7 +24,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Adapter Bluetooth u\u017cywany do skanowania"
+                    "adapter": "Adapter Bluetooth u\u017cywany do skanowania",
+                    "passive": "Skanowanie pasywne"
                 }
             }
         }

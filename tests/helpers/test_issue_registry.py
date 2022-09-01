@@ -1,20 +1,14 @@
 """Test the repairs websocket API."""
-from homeassistant.components.repairs import async_create_issue, issue_registry
-from homeassistant.components.repairs.const import DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_delete_issue,
-    async_ignore_issue,
-)
+import pytest
+
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import issue_registry
 
 from tests.common import async_capture_events, flush_store
 
 
 async def test_load_issues(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
     issues = [
         {
             "breaks_in_ha_version": "2022.9",
@@ -68,7 +62,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
     )
 
     for issue in issues:
-        async_create_issue(
+        issue_registry.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
@@ -105,7 +99,9 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_4",
     }
 
-    async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
+    issue_registry.async_ignore_issue(
+        hass, issues[0]["domain"], issues[0]["issue_id"], True
+    )
     await hass.async_block_till_done()
 
     assert len(events) == 5
@@ -115,7 +111,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         "issue_id": "issue_1",
     }
 
-    async_delete_issue(hass, issues[2]["domain"], issues[2]["issue_id"])
+    issue_registry.async_delete_issue(hass, issues[2]["domain"], issues[2]["issue_id"])
     await hass.async_block_till_done()
 
     assert len(events) == 6
@@ -175,6 +171,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
     assert issue4_registry2 == issue4
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) -> None:
     """Test loading stored issues on start."""
     hass_storage[issue_registry.STORAGE_KEY] = {
@@ -215,12 +212,13 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
         },
     }
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await issue_registry.async_load(hass)
 
     registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
     assert len(registry.issues) == 3
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
     """Test migration from version 1.1."""
     hass_storage[issue_registry.STORAGE_KEY] = {
@@ -244,7 +242,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
         },
     }
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await issue_registry.async_load(hass)
 
     registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
     assert len(registry.issues) == 2
