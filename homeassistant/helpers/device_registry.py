@@ -34,7 +34,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -90,6 +90,7 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    serial_number: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
@@ -204,6 +205,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2022.2
                 for device in old_data["devices"]:
                     device["hw_version"] = device.get("hw_version")
+            if old_minor_version < 4:
+                # Introduced in 2022.10
+                for device in old_data["devices"]:
+                    device["serial_number"] = device.get("serial_number")
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -323,6 +328,7 @@ class DeviceRegistry:
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None = None,
@@ -388,6 +394,7 @@ class DeviceRegistry:
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
+            serial_number=serial_number,
             suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
@@ -417,6 +424,7 @@ class DeviceRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
@@ -501,6 +509,7 @@ class DeviceRegistry:
             ("model", model),
             ("name", name),
             ("name_by_user", name_by_user),
+            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
@@ -591,6 +600,7 @@ class DeviceRegistry:
                     model=device["model"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
+                    serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
@@ -634,6 +644,7 @@ class DeviceRegistry:
                 "model": entry.model,
                 "name_by_user": entry.name_by_user,
                 "name": entry.name,
+                "serial_number": entry.serial_number,
                 "sw_version": entry.sw_version,
                 "via_device_id": entry.via_device_id,
             }

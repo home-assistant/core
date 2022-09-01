@@ -167,6 +167,7 @@ def _entry_dict(entry):
         "model": entry.model,
         "name_by_user": entry.name_by_user,
         "name": entry.name,
+        "serial_number": entry.serial_number,
         "sw_version": entry.sw_version,
         "via_device_id": entry.via_device_id,
     }
