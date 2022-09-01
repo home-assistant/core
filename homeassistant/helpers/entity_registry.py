@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import (
     Event,
@@ -62,7 +63,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -970,9 +971,18 @@ async def _async_migrate(
             entity["hidden_by"] = None
 
     if old_major_version == 1 and old_minor_version < 7:
-        # Version 1.6 adds has_entity_name
+        # Version 1.7 adds has_entity_name
         for entity in data["entities"]:
             entity["has_entity_name"] = False
+
+    if old_major_version == 1 and old_minor_version < 8:
+        # Cleanup after frontend bug which incorrectly updated device_class
+        # Fixed by frontend PR #13551
+        for entity in data["entities"]:
+            domain = split_entity_id(entity["entity_id"])[0]
+            if domain in [Platform.BINARY_SENSOR, Platform.COVER]:
+                continue
+            entity["device_class"] = None
 
     if old_major_version > 1:
         raise NotImplementedError
