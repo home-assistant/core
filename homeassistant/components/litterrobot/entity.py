@@ -153,7 +153,7 @@ class LitterRobotConfigEntity(LitterRobotControlEntity[_RobotT]):
 
 
 def async_update_unique_id(
-    hass: HomeAssistant, domain: str, entities: Iterable[LitterRobotEntity]
+    hass: HomeAssistant, domain: str, entities: Iterable[LitterRobotEntity[_RobotT]]
 ) -> None:
     """Update unique ID to be based on entity description key instead of name.
 
@@ -162,8 +162,6 @@ def async_update_unique_id(
     ent_reg = er.async_get(hass)
     for entity in entities:
         old_unique_id = f"{entity.robot.serial}-{entity.entity_description.name}"
-        new_unique_id = f"{entity.robot.serial}-{entity.entity_description.key}"
-        if not ent_reg.async_get_entity_id(domain, DOMAIN, new_unique_id) and (
-            entity_id := ent_reg.async_get_entity_id(domain, DOMAIN, old_unique_id)
-        ):
+        if entity_id := ent_reg.async_get_entity_id(domain, DOMAIN, old_unique_id):
+            new_unique_id = f"{entity.robot.serial}-{entity.entity_description.key}"
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
