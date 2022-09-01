@@ -6,8 +6,13 @@ from typing import Final
 from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
+<<<<<<< HEAD
 MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "1"
+=======
+MINOR_VERSION: Final = 10
+PATCH_VERSION: Final = "0.dev0"
+>>>>>>> 8dda2389c8 (2022.10.0.dev0 (#77635))
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
