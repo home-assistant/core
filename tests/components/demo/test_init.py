@@ -17,6 +17,7 @@ from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -83,6 +84,8 @@ async def test_demo_statistics(hass, recorder_mock):
 
 async def test_demo_statistics_growth(hass, recorder_mock):
     """Test that the demo sum statistics adds to the previous state."""
+    hass.config.units = IMPERIAL_SYSTEM
+
     now = dt_util.now()
     last_week = now - datetime.timedelta(days=7)
     last_week_midnight = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -92,7 +95,7 @@ async def test_demo_statistics_growth(hass, recorder_mock):
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": statistic_id,
-        "unit_of_measurement": "kWh",
+        "unit_of_measurement": "m³",
         "has_mean": False,
         "has_sum": True,
     }
@@ -114,6 +117,7 @@ async def test_demo_statistics_growth(hass, recorder_mock):
         get_last_statistics, hass, 1, statistic_id, False
     )
     assert statistics[statistic_id][0]["sum"] > 2**20
+    assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
 
 
 async def test_issues_created(hass, hass_client, hass_ws_client):
