@@ -1,7 +1,7 @@
 """Litter-Robot entities for common data and methods."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Iterable
 from datetime import time
 import logging
 from typing import Any, Generic, TypeVar
@@ -10,8 +10,9 @@ from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 from typing_extensions import ParamSpec
 
-from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory, EntityDescription
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -36,18 +37,18 @@ class LitterRobotEntity(
 
     _attr_has_entity_name = True
 
-    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
+    def __init__(
+        self, robot: _RobotT, hub: LitterRobotHub, description: EntityDescription
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
-        self.entity_type = entity_type
         self.hub = hub
-        self._attr_name = entity_type.capitalize()
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.robot.serial}-{self.entity_type}"
+        self.entity_description = description
+        self._attr_unique_id = f"{self.robot.serial}-{description.key}"
+        # The following can be removed in 2022.12 after adjusting names in entities appropriately
+        if description.name is not None:
+            self._attr_name = description.name.capitalize()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -65,9 +66,11 @@ class LitterRobotEntity(
 class LitterRobotControlEntity(LitterRobotEntity[_RobotT]):
     """A Litter-Robot entity that can control the unit."""
 
-    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
+    def __init__(
+        self, robot: _RobotT, hub: LitterRobotHub, description: EntityDescription
+    ) -> None:
         """Init a Litter-Robot control entity."""
-        super().__init__(robot=robot, entity_type=entity_type, hub=hub)
+        super().__init__(robot=robot, hub=hub, description=description)
         self._refresh_callback: CALLBACK_TYPE | None = None
 
     async def perform_action_and_refresh(
@@ -134,9 +137,11 @@ class LitterRobotConfigEntity(LitterRobotControlEntity[_RobotT]):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, robot: _RobotT, entity_type: str, hub: LitterRobotHub) -> None:
+    def __init__(
+        self, robot: _RobotT, hub: LitterRobotHub, description: EntityDescription
+    ) -> None:
         """Init a Litter-Robot control entity."""
-        super().__init__(robot=robot, entity_type=entity_type, hub=hub)
+        super().__init__(robot=robot, hub=hub, description=description)
         self._assumed_state: bool | None = None
 
     async def perform_action_and_assume_state(
@@ -146,3 +151,18 @@ class LitterRobotConfigEntity(LitterRobotControlEntity[_RobotT]):
         if await self.perform_action_and_refresh(action, assumed_state):
             self._assumed_state = assumed_state
             self.async_write_ha_state()
+
+
+def async_update_unique_id(
+    hass: HomeAssistant, domain: str, entities: Iterable[LitterRobotEntity[_RobotT]]
+) -> None:
+    """Update unique ID to be based on entity description key instead of name.
+
+    Introduced with release 2022.9.
+    """
+    ent_reg = er.async_get(hass)
+    for entity in entities:
+        old_unique_id = f"{entity.robot.serial}-{entity.entity_description.name}"
+        if entity_id := ent_reg.async_get_entity_id(domain, DOMAIN, old_unique_id):
+            new_unique_id = f"{entity.robot.serial}-{entity.entity_description.key}"
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
