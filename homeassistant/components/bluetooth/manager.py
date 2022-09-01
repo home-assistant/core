@@ -221,10 +221,15 @@ class BluetoothManager:
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""
-        return itertools.chain.from_iterable(
+        yield from itertools.chain.from_iterable(
             scanner.discovered_devices
-            for scanner in self._get_scanners_by_type(connectable)
+            for scanner in self._get_scanners_by_type(True)
         )
+        if not connectable:
+            yield from itertools.chain.from_iterable(
+                scanner.discovered_devices
+                for scanner in self._get_scanners_by_type(False)
+            )
 
     @hass_callback
     def async_discovered_devices(self, connectable: bool) -> list[BLEDevice]:
