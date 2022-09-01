@@ -237,6 +237,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "entity_id": entry.entity_id,
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
+        "id": entry.id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
