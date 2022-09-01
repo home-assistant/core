@@ -247,6 +247,7 @@ homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
+homeassistant.components.tilt_ble.*
 homeassistant.components.tplink.*
 homeassistant.components.tolo.*
 homeassistant.components.tractive.*
