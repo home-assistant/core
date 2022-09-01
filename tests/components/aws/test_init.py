@@ -318,6 +318,11 @@ async def test_events_service_call(hass):
         await hass.async_block_till_done()
 
     assert hass.services.has_service("notify", "events_test") is True
+
+    mock_session.put_events.return_value = {
+        "Entries": [{"EventId": "", "ErrorCode": 0, "ErrorMessage": "test-error"}]
+    }
+
     await hass.services.async_call(
         "notify",
         "events_test",
@@ -328,6 +333,7 @@ async def test_events_service_call(hass):
         },
         blocking=True,
     )
+
     mock_session.put_events.assert_called_once_with(
         Entries=[
             {
