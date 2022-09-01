@@ -32,7 +32,6 @@ class IntellifireFanRequiredKeysMixin:
 
     set_fn: Callable[[IntellifireControlAsync, int], Awaitable]
     value_fn: Callable[[IntellifirePollData], bool]
-    data_field: str
     speed_range: tuple[int, int]
 
 
