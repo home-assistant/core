@@ -571,15 +571,13 @@ class ProtectMediaSource(MediaSource):
         if not build_children:
             return source
 
-        end = start.replace(month=start.month + 1) - timedelta(days=1)
-        recording_start = data.api.bootstrap.recording_start.date()
+        if data.api.bootstrap.recording_start is not None:
+            recording_start = data.api.bootstrap.recording_start.date()
+        start = max(recording_start, start)
+
         recording_end = dt_util.now().date()
-
-        if recording_start > start:
-            start = recording_start
-
-        if end > recording_end:
-            end = recording_end
+        end = start.replace(month=start.month + 1) - timedelta(days=1)
+        end = min(recording_end, end)
 
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
         while start <= end:
