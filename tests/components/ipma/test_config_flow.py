@@ -2,10 +2,8 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant import config_entries
 from homeassistant.components.ipma import DOMAIN, config_flow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -181,45 +179,3 @@ async def test_config_entry_migration(hass):
 
         weather_home2 = ent_reg.async_get("weather.hometown_2")
         assert weather_home2.unique_id == "0, 0, hourly"
-
-
-async def test_import_flow_success(hass):
-    """Test a successful import of yaml."""
-
-    with patch(
-        "homeassistant.components.ipma.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Home Town"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_already_exist(hass):
-    """Test import of yaml already exist."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=ENTRY_CONFIG,
-    ).add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.ipma.async_setup_entry",
-        return_value=True,
-    ):
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.ABORT
-    assert result3["reason"] == "already_configured"
