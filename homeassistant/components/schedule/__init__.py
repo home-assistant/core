@@ -291,17 +291,17 @@ class Schedule(Entity):
         todays_schedule = self._config.get(WEEKDAY_TO_CONF[now.weekday()], [])
 
         # Determine current schedule state
-        self._attr_state = next(
-            (
-                STATE_ON
-                for time_range in todays_schedule
-                if time_range[CONF_FROM] <= now.time()
-                and (
-                    now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max
-                )
-            ),
-            STATE_OFF,
-        )
+        for time_range in todays_schedule:
+            # The current time should be greater or equal to CONF_FROM.
+            if now.time() < time_range[CONF_FROM]:
+                continue
+            # The current time should be smaller (and not equal) to CONF_TO.
+            # Note that any time in the day is treated as smaller than time.max.
+            if now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max:
+                self._attr_state = STATE_ON
+                break
+        else:
+            self._attr_state = STATE_OFF
 
         # Find next event in the schedule, loop over each day (starting with
         # the current day) until the next event has been found.
