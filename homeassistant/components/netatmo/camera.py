@@ -236,7 +236,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Add meta data to events."""
         events = {}
         for event in event_list:
-            if not (video_id := getattr(event, "video_id")):
+            if not (video_id := event.video_id):
                 continue
             event_data = event.__dict__
             event_data["subevents"] = [
