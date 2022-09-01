@@ -2535,7 +2535,7 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
 
     if (
         match.check_return_type_inheritance
-        and (isinstance(match.return_type, str) or isinstance(match.return_type, list))
+        and isinstance(match.return_type, (str, list))
         and isinstance(node, nodes.Name)
     ):
         if isinstance(match.return_type, str):
