@@ -201,9 +201,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     @callback
     def async_reset(self, now):
         """Reset the value back to 0 at midnight."""
-        self._previous_value = 0
-        self.coordinator.data[self._sensor.id_] = 0
-        self.async_write_ha_state()
+        if not self.coordinator.last_update_success:
+            self._previous_value = 0
+            self.coordinator.data[self._sensor.id_] = 0
+            self.async_write_ha_state()
         next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
         self._stop_reset = async_track_point_in_time(
             self.hass, self.async_reset, next_midnight
