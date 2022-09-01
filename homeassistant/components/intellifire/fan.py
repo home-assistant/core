@@ -49,7 +49,6 @@ INTELLIFIRE_FANS: tuple[IntellifireFanEntityDescription, ...] = (
         has_entity_name=True,
         set_fn=lambda control_api, speed: control_api.set_fan_speed(speed=speed),
         value_fn=lambda data: data.fanspeed,
-        data_field="fanspeed",
         speed_range=(1, 4),
     ),
 )
