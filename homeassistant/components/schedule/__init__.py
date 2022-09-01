@@ -295,7 +295,10 @@ class Schedule(Entity):
             (
                 STATE_ON
                 for time_range in todays_schedule
-                if time_range[CONF_FROM] <= now.time() <= time_range[CONF_TO]
+                if time_range[CONF_FROM] <= now.time()
+                and (
+                    now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max
+                )
             ),
             STATE_OFF,
         )
@@ -319,11 +322,15 @@ class Schedule(Entity):
             if next_event := next(
                 (
                     possible_next_event
-                    for time in times
+                    for timestamp in times
                     if (
                         possible_next_event := (
-                            datetime.combine(now.date(), time, tzinfo=now.tzinfo)
+                            datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
                             + timedelta(days=day)
+                            if not timestamp == time.max
+                            # Special case for midnight of the following day.
+                            else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)
+                            + timedelta(days=day + 1)
                         )
                     )
                     > now
