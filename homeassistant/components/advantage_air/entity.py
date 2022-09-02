@@ -61,7 +61,7 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
     def __init__(self, instance, thing):
         """Initialize common aspects of an Advantage Air Things entity."""
         super().__init__(instance)
-        self.async_change = instance["things"]
+        self.things = instance["things"]
         self._id = thing["id"]
         self._attr_unique_id += f"-{self._id}"
 
@@ -85,8 +85,8 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the thing on."""
-        await self.async_change({"id": self._id, "value": 100})
+        await self.things({"id": self._id, "value": 100})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the thing off."""
-        await self.async_change({"id": self._id, "value": 0})
+        await self.things({"id": self._id, "value": 0})
