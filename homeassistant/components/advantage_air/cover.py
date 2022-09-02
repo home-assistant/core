@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[CoverEntity] = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         for zone_key, zone in ac_device["zones"].items():
             # Only add zone vent controls when zone in vent control mode.

@@ -24,7 +24,7 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[LightEntity] = []
     if "myLights" in instance["coordinator"].data:
         for light in instance["coordinator"].data["myLights"]["lights"].values():
             if light.get("relay"):

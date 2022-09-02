@@ -23,7 +23,7 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[SwitchEntity] = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         if ac_device["info"]["freshAirStatus"] != "none":
             entities.append(AdvantageAirFreshAir(instance, ac_key))

@@ -19,7 +19,7 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[SelectEntity] = []
     for ac_key in instance["coordinator"].data["aircons"]:
         entities.append(AdvantageAirMyZone(instance, ac_key))
     async_add_entities(entities)
