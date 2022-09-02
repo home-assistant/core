@@ -258,7 +258,7 @@ class InputSelectStorageCollection(collection.StorageCollection):
         return _cv_input_select({**data, **update_data})
 
 
-class InputSelect(SelectEntity, RestoreEntity):
+class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _attr_should_poll = False

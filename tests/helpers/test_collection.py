@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.helpers import (
     collection,
-    entity,
     entity_component,
     entity_registry as er,
     storage,
@@ -29,7 +28,7 @@ def track_changes(coll: collection.ObservableCollection):
     return changes
 
 
-class MockEntity(entity.Entity):
+class MockEntity(collection.CollectionEntity):
     """Entity that is config based."""
 
     def __init__(self, config):

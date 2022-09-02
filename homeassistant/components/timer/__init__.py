@@ -195,7 +195,7 @@ class TimerStorageCollection(collection.StorageCollection):
         return data
 
 
-class Timer(RestoreEntity):
+class Timer(collection.CollectionEntity, RestoreEntity):
     """Representation of a timer."""
 
     def __init__(self, config: dict) -> None:
@@ -384,7 +384,7 @@ class Timer(RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self._duration = cv.time_period_str(config[CONF_DURATION])

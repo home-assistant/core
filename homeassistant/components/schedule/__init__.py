@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
+    CollectionEntity,
     IDManager,
     StorageCollection,
     StorageCollectionWebsocket,
@@ -27,7 +28,6 @@ from homeassistant.helpers.collection import (
     sync_entity_lifecycle,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.integration_platform import (
@@ -239,7 +239,7 @@ class ScheduleStorageCollection(StorageCollection):
         return data
 
 
-class Schedule(Entity):
+class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _attr_has_entity_name = True

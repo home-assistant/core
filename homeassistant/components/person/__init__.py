@@ -385,7 +385,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Person(RestoreEntity):
+class Person(collection.CollectionEntity, RestoreEntity):
     """Represent a tracked person."""
 
     _attr_should_poll = False
@@ -468,7 +468,7 @@ class Person(RestoreEntity):
                 EVENT_HOMEASSISTANT_START, person_start_hass
             )
 
-    async def async_update_config(self, config):
+    async def async_update_config(self, config: ConfigType):
         """Handle when the config is updated."""
         self._config = config
 

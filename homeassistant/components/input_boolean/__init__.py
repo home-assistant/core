@@ -150,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputBoolean(ToggleEntity, RestoreEntity):
+class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
     _attr_should_poll = False

@@ -31,7 +31,6 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callbac
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
-    entity,
     entity_component,
     event,
     service,
@@ -284,7 +283,7 @@ async def async_unload_entry(
     return True
 
 
-class Zone(entity.Entity):
+class Zone(collection.CollectionEntity):
     """Representation of a Zone."""
 
     def __init__(self, config: dict) -> None:
@@ -329,7 +328,7 @@ class Zone(entity.Entity):
         """Zone does not poll."""
         return False
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         if self._config == config:
             return

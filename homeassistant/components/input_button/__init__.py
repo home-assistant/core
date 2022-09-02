@@ -131,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputButton(ButtonEntity, RestoreEntity):
+class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
 
     _attr_should_poll = False
@@ -143,7 +143,7 @@ class InputButton(ButtonEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> ButtonEntity:
+    def from_yaml(cls, config: ConfigType) -> InputButton:
         """Return entity instance initialized from yaml storage."""
         button = cls(config)
         button.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

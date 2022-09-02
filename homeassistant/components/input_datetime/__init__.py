@@ -231,7 +231,7 @@ class DateTimeStorageCollection(collection.StorageCollection):
         return has_date_or_time({**data, **update_data})
 
 
-class InputDatetime(RestoreEntity):
+class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
     _attr_should_poll = False
@@ -420,7 +420,7 @@ class InputDatetime(RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

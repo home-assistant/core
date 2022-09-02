@@ -202,7 +202,7 @@ class NumberStorageCollection(collection.StorageCollection):
         return _cv_input_number({**data, **update_data})
 
 
-class InputNumber(RestoreEntity):
+class InputNumber(collection.CollectionEntity, RestoreEntity):
     """Representation of a slider."""
 
     _attr_should_poll = False
@@ -310,7 +310,7 @@ class InputNumber(RestoreEntity):
         """Decrement value."""
         await self.async_set_value(max(self._current_value - self._step, self._minimum))
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed

@@ -195,7 +195,7 @@ class InputTextStorageCollection(collection.StorageCollection):
         return _cv_input_text({**data, **update_data})
 
 
-class InputText(RestoreEntity):
+class InputText(collection.CollectionEntity, RestoreEntity):
     """Represent a text box."""
 
     _attr_should_poll = False
@@ -286,7 +286,7 @@ class InputText(RestoreEntity):
         self._current_value = value
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

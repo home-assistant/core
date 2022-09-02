@@ -22,6 +22,7 @@ from . import entity_registry
 from .entity import Entity
 from .entity_component import EntityComponent
 from .storage import Store
+from .typing import ConfigType
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -99,6 +100,14 @@ class IDManager:
             proposal = f"{base}_{attempt}"
 
         return proposal
+
+
+class CollectionEntity(Entity):
+    """Mixin class for entities managed by an ObservableCollection."""
+
+    @abstractmethod
+    async def async_update_config(self, config: ConfigType) -> None:
+        """Handle updated configuration."""
 
 
 class ObservableCollection(ABC):
@@ -327,13 +336,13 @@ def sync_entity_lifecycle(
     platform: str,
     entity_component: EntityComponent,
     collection: ObservableCollection,
-    create_entity: Callable[[dict], Entity],
+    create_entity: Callable[[dict], CollectionEntity],
 ) -> None:
     """Map a collection to an entity component."""
-    entities: dict[str, Entity] = {}
+    entities: dict[str, CollectionEntity] = {}
     ent_reg = entity_registry.async_get(hass)
 
-    async def _add_entity(change_set: CollectionChangeSet) -> Entity:
+    async def _add_entity(change_set: CollectionChangeSet) -> CollectionEntity:
         def entity_removed() -> None:
             """Remove entity from entities if it's removed or not added."""
             if change_set.item_id in entities:
@@ -359,10 +368,11 @@ def sync_entity_lifecycle(
     async def _update_entity(change_set: CollectionChangeSet) -> None:
         if change_set.item_id not in entities:
             return
-        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore[attr-defined]
+        await entities[change_set.item_id].async_update_config(change_set.item)
 
     _func_map: dict[
-        str, Callable[[CollectionChangeSet], Coroutine[Any, Any, Entity | None]]
+        str,
+        Callable[[CollectionChangeSet], Coroutine[Any, Any, CollectionEntity | None]],
     ] = {
         CHANGE_ADDED: _add_entity,
         CHANGE_REMOVED: _remove_entity,

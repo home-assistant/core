@@ -170,7 +170,7 @@ class CounterStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-class Counter(RestoreEntity):
+class Counter(collection.CollectionEntity, RestoreEntity):
     """Representation of a counter."""
 
     _attr_should_poll: bool = False
@@ -273,7 +273,7 @@ class Counter(RestoreEntity):
         self._state = self.compute_next_state(new_state)
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Change the counter's settings WS CRUD."""
         self._config = config
         self._state = self.compute_next_state(self._state)
