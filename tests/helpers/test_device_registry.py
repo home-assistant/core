@@ -195,6 +195,7 @@ async def test_loading_from_storage(hass, hass_storage):
             ],
             "deleted_devices": [
                 {
+                    "area_id": "area_52",
                     "config_entries": ["1234"],
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "id": "bcdefghijklmn",
@@ -373,6 +374,7 @@ async def test_migration_1_1_to_1_3(hass, hass_storage):
             ],
             "deleted_devices": [
                 {
+                    "area_id": None,
                     "config_entries": ["123456"],
                     "connections": [],
                     "id": "deletedid",
@@ -788,6 +790,8 @@ async def test_loading_saving_data(hass, registry, area_registry):
         via_device=("hue", "0123"),
     )
 
+    orig_light2 = registry.async_update_device(orig_light2.id, area_id="area_52")
+
     registry.async_remove_device(orig_light2.id)
 
     orig_light3 = registry.async_get_or_create(
@@ -848,10 +852,19 @@ async def test_loading_saving_data(hass, registry, area_registry):
 
     new_via = registry2.async_get_device({("hue", "0123")})
     new_light = registry2.async_get_device({("hue", "456")})
+    new_light2 = registry.async_get_or_create(
+        config_entry_id="456",
+        connections=set(),
+        identifiers={("hue", "789")},
+        manufacturer="manufacturer",
+        model="light",
+        via_device=("hue", "0123"),
+    )
     new_light4 = registry2.async_get_device({("hue", "abc")})
 
     assert orig_via == new_via
     assert orig_light == new_light
+    assert orig_light2 == new_light2
     assert orig_light4 == new_light4
 
     # Ensure enums converted
@@ -1246,6 +1259,8 @@ async def test_restore_device(hass, registry, update_events):
         model="model",
     )
 
+    entry = registry.async_update_device(entry.id, area_id="area_52")
+
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 0
 
@@ -1269,7 +1284,7 @@ async def test_restore_device(hass, registry, update_events):
         model="model",
     )
 
-    assert entry.id == entry3.id
+    assert entry == entry3
     assert entry.id != entry2.id
     assert len(registry.devices) == 2
     assert len(registry.deleted_devices) == 0
@@ -1280,19 +1295,20 @@ async def test_restore_device(hass, registry, update_events):
 
     await hass.async_block_till_done()
 
-    assert len(update_events) == 4
+    assert len(update_events) == 5
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
     assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "remove"
-    assert update_events[1]["device_id"] == entry.id
-    assert "changes" not in update_events[1]
-    assert update_events[2]["action"] == "create"
-    assert update_events[2]["device_id"] == entry2.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[2]["action"] == "remove"
+    assert update_events[2]["device_id"] == entry.id
     assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "create"
-    assert update_events[3]["device_id"] == entry3.id
+    assert update_events[3]["device_id"] == entry2.id
     assert "changes" not in update_events[3]
+    assert update_events[4]["action"] == "create"
+    assert update_events[4]["device_id"] == entry3.id
+    assert "changes" not in update_events[4]
 
 
 async def test_restore_simple_device(hass, registry, update_events):

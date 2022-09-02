@@ -34,7 +34,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -106,6 +106,7 @@ class DeviceEntry:
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
+    area_id: str | None = attr.ib()
     config_entries: set[str] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
@@ -120,6 +121,7 @@ class DeletedDeviceEntry:
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
+            area_id=self.area_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
             config_entries={config_entry_id},  # type: ignore[arg-type]
             connections=self.connections & connections,  # type: ignore[arg-type]
@@ -204,6 +206,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2022.2
                 for device in old_data["devices"]:
                     device["hw_version"] = device.get("hw_version")
+            if old_minor_version < 4:
+                # Introduced in 2022.10
+                for device in old_data["deleted_devices"]:
+                    device["area_id"] = device.get("area_id")
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -546,6 +552,7 @@ class DeviceRegistry:
         self._remove_device(device)
         self._add_device(
             DeletedDeviceEntry(
+                area_id=device.area_id,
                 config_entries=device.config_entries,
                 connections=device.connections,
                 identifiers=device.identifiers,
@@ -563,7 +570,7 @@ class DeviceRegistry:
 
     async def async_load(self) -> None:
         """Load the device registry."""
-        async_setup_cleanup(self.hass, self)
+        _async_setup_cleanup(self.hass, self)
 
         data = await self._store.async_load()
 
@@ -594,9 +601,9 @@ class DeviceRegistry:
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
-            # Introduced in 0.111
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
+                    area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
                     connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
@@ -641,6 +648,7 @@ class DeviceRegistry:
         ]
         data["deleted_devices"] = [
             {
+                "area_id": entry.area_id,
                 "config_entries": list(entry.config_entries),
                 "connections": list(entry.connections),
                 "identifiers": list(entry.identifiers),
@@ -700,6 +708,12 @@ class DeviceRegistry:
         for dev_id, device in self.devices.items():
             if area_id == device.area_id:
                 self.async_update_device(dev_id, area_id=None)
+        for dev_id, deleted_device in self.deleted_devices.items():
+            if area_id == deleted_device.area_id:
+                self.deleted_devices[deleted_device.id] = attr.evolve(
+                    deleted_device, area_id=None
+                )
+                self.async_schedule_save()
 
 
 @callback
@@ -825,7 +839,7 @@ def async_cleanup(
 
 
 @callback
-def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
+def _async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
     from . import entity_registry  # pylint: disable=import-outside-toplevel
 
