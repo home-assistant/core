@@ -213,6 +213,7 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
                 del self._connections[connection]
             for identifier in old_entry.identifiers:
                 del self._identifiers[identifier]
+       # type ignore linked to mypy issue: https://github.com/python/mypy/issues/13596
         super().__setitem__(key, entry)  # type: ignore[assignment]
         for connection in entry.connections:
             self._connections[connection] = entry
