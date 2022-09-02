@@ -178,8 +178,8 @@ class YamlCollection(ObservableCollection):
     def create_entity(
         entity_class: type[CollectionEntity], config: ConfigType
     ) -> CollectionEntity:
-        """Create a CollectioEntity instance."""
-        return entity_class.from_storage(config)
+        """Create a CollectionEntity instance."""
+        return entity_class.from_yaml(config)
 
     async def async_load(self, data: list[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
@@ -228,7 +228,7 @@ class StorageCollection(ObservableCollection):
     def create_entity(
         entity_class: type[CollectionEntity], config: ConfigType
     ) -> CollectionEntity:
-        """Create a CollectioEntity instance."""
+        """Create a CollectionEntity instance."""
         return entity_class.from_storage(config)
 
     @property

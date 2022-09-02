@@ -164,14 +164,14 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> InputBoolean:
-        """Return entity instance initialized from yaml storage."""
+        """Return entity instance initialized from storage."""
         input_bool = cls(config)
         input_bool.editable = True
         return input_bool
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> InputBoolean:
-        """Return entity instance initialized from yaml storage."""
+        """Return entity instance initialized from yaml."""
         input_bool = cls(config)
         input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_bool.editable = False

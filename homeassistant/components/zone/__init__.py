@@ -291,6 +291,7 @@ class Zone(collection.CollectionEntity):
     def __init__(self, config: ConfigType) -> None:
         """Initialize the zone."""
         self._config = config
+        self.editable = True
         self._attrs: dict | None = None
         self._remove_listener: Callable[[], None] | None = None
         self._persons_in_zone: set[str] = set()
