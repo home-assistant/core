@@ -1,6 +1,8 @@
 """Sensor platform for Advantage Air integration."""
 from __future__ import annotations
 
+from decimal import Decimal
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -71,12 +73,12 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
         self._attr_unique_id += f"-timeto{action}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value."""
         return self._ac[self._time_key]
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
             return "mdi:timer-outline"
@@ -102,14 +104,14 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-vent"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return self._zone["value"]
-        return 0
+        return Decimal(0)
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return "mdi:fan"
@@ -130,12 +132,12 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-signal"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["rssi"] >= 80:
             return "mdi:wifi-strength-4"
@@ -164,6 +166,6 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-temp"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value of the measured temperature."""
         return self._zone["measuredTemp"]

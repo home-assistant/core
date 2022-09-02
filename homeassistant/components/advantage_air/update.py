@@ -40,12 +40,12 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
         )
 
     @property
-    def installed_version(self):
+    def installed_version(self) -> str:
         """Return the current app version."""
         return self.coordinator.data["system"]["myAppRev"]
 
     @property
-    def latest_version(self):
+    def latest_version(self) -> str:
         """Return if there is an update."""
         if self.coordinator.data["system"]["needsUpdate"]:
             return "Needs Update"

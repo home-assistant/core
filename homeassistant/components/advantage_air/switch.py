@@ -42,7 +42,7 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
         self._attr_unique_id += "-freshair"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the fresh air status."""
         return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 

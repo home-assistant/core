@@ -99,19 +99,19 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             self._attr_hvac_modes = AC_HVAC_MODES + [HVACMode.AUTO]
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the current target temperature."""
         return self._ac["setTemp"]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | str | None:
         """Return the current HVAC modes."""
         if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
         return HVACMode.OFF
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the current fan modes."""
         return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
 
@@ -164,19 +164,19 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         )
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | str | None:
         """Return the current state as HVAC mode."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return HVACMode.HEAT_COOL
         return HVACMode.OFF
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone["measuredTemp"]
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._zone["setTemp"]
 
