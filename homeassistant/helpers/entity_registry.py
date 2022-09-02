@@ -185,7 +185,7 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
 
     Maintains two additional indexes:
     - id -> entry
-    - (domain, platform, unique_id) -> entry
+    - (domain, platform, unique_id) -> entity_id
     """
 
     def __init__(self) -> None:
@@ -201,14 +201,14 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
             del self._entry_ids[old_entry.id]
             del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
         super().__setitem__(key, entry)
-        self._entry_ids.__setitem__(entry.id, entry)
+        self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         entry = self[key]
-        self._entry_ids.__delitem__(entry.id)
-        self._index.__delitem__((entry.domain, entry.platform, entry.unique_id))
+        del self._entry_ids[entry.id]
+        del self._index[(entry.domain, entry.platform, entry.unique_id)]
         super().__delitem__(key)
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
