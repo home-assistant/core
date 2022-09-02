@@ -32,6 +32,7 @@ CONF_TLS_VERSION = "tls_version"
 
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_MQTT = "mqtt"
+DATA_MQTT_SUBSCRIPTIONS_TO_RESTORE = "mqtt_client_subscriptions"
 DATA_MQTT_CONFIG = "mqtt_config"
 MQTT_DATA_DEVICE_TRACKER_LEGACY = "mqtt_device_tracker_legacy"
 DATA_MQTT_RELOAD_DISPATCHERS = "mqtt_reload_dispatchers"
