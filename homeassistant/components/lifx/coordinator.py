@@ -16,7 +16,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     _LOGGER,
     ATTR_REMAINING,
-    ATTR_DURATION,
     IDENTIFY_WAVEFORM,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
@@ -118,9 +117,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 await self.async_update_color_zones()
 
             if lifx_features(self.device)["hev"]:
-                if self.device.hev_cycle_configuration is None:
-                    self.device.get_hev_configuration()
-
                 await self.async_get_hev_cycle()
 
     async def async_update_color_zones(self) -> None:
@@ -196,15 +192,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             )
         )
 
-    async def async_get_hev_cycle_default_duration(self) -> int:
-        """Return the currently configured default HEV cycle duration."""
-        if self.device.hev_cycle_configuration is None:
-            await async_execute_lifx(self.device.get_hev_configuration)
-
-        hev_config = cast(dict, self.device.hev_cycle_configuration)
-        return hev_config.get(ATTR_DURATION, 7200)
-
-    async def async_set_hev_cycle_state(self, enable: bool, duration: int) -> None:
+    async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
         """Start or stop an HEV cycle on a LIFX Clean bulb."""
         if lifx_features(self.device)["hev"]:
             await async_execute_lifx(

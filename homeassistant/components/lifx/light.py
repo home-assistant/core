@@ -265,7 +265,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             )
 
         if duration is None:
-            duration = await self.coordinator.async_get_hev_cycle_default_duration()
+            duration = 0
 
         await self.coordinator.async_set_hev_cycle_state(power, duration)
         await self.update_during_transition(duration)
