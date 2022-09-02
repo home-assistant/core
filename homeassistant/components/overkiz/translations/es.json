@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "reauth_wrong_account": "Solo puedes volver a autenticar esta entrada con la misma cuenta y concentrador de Overkiz"
         },
         "error": {
@@ -11,7 +11,8 @@
             "server_in_maintenance": "El servidor est\u00e1 ca\u00eddo por mantenimiento",
             "too_many_attempts": "Demasiados intentos con un token no v\u00e1lido, prohibido temporalmente",
             "too_many_requests": "Demasiadas solicitudes, vuelve a intentarlo m\u00e1s tarde",
-            "unknown": "Error inesperado"
+            "unknown": "Error inesperado",
+            "unknown_user": "Usuario desconocido. Las cuentas de Somfy Protect no son compatibles con esta integraci\u00f3n."
         },
         "flow_title": "Puerta de enlace: {gateway_id}",
         "step": {

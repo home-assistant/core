@@ -114,5 +114,12 @@
             "remote_button_short_release": "\"{subtype}\" nupp  vabastati",
             "remote_button_triple_press": "Nuppu \"{subtype}\" kl\u00f5psati kolm korda"
         }
+    },
+    "options": {
+        "step": {
+            "upload_manual_backup": {
+                "title": "Lae k\u00e4sitsi loodud varukoopia \u00fcles"
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@
                     "password": "Contrase\u00f1a"
                 },
                 "description": "La autenticaci\u00f3n fall\u00f3 para OVO Energy. Por favor, introduce tus credenciales actuales.",
-                "title": "Reautenticaci\u00f3n"
+                "title": "Volver a autenticar"
             },
             "user": {
                 "data": {
