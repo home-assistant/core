@@ -248,6 +248,7 @@ async def test_loading_from_storage(hass, hass_storage):
         model="model",
     )
     assert entry == device_registry.DeviceEntry(
+        area_id="area_52",
         config_entries={"1234"},
         connections={("Zigbee", "23.45.67.89.01")},
         id="bcdefghijklmn",
