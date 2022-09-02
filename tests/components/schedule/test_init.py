@@ -176,15 +176,10 @@ async def test_invalid_schedules(
     assert error in caplog.text
 
 
-@pytest.mark.parametrize(
-    "schedule",
-    ({CONF_FROM: "07:00:00", CONF_TO: "11:00:00"},),
-)
 async def test_events_one_day(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
-    schedule: list[dict[str, str]],
     freezer,
 ) -> None:
     """Test events only during one day of the week."""
@@ -196,7 +191,7 @@ async def test_events_one_day(
                 "from_yaml": {
                     CONF_NAME: "from yaml",
                     CONF_ICON: "mdi:party-popper",
-                    CONF_SUNDAY: schedule,
+                    CONF_SUNDAY: {CONF_FROM: "07:00:00", CONF_TO: "11:00:00"},
                 }
             }
         },
