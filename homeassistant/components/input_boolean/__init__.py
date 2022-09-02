@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputBoolean.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputBoolean
     )
 
     storage_collection = InputBooleanStorageCollection(
@@ -154,13 +154,20 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
     _attr_should_poll = False
+    editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a boolean input."""
         self._config = config
-        self.editable = True
         self._attr_is_on = config.get(CONF_INITIAL, False)
         self._attr_unique_id = config[CONF_ID]
+
+    @classmethod
+    def from_storage(cls, config: ConfigType) -> InputBoolean:
+        """Return entity instance initialized from yaml storage."""
+        input_bool = cls(config)
+        input_bool.editable = True
+        return input_bool
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> InputBoolean:

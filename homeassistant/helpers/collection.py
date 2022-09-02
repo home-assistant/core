@@ -105,6 +105,16 @@ class IDManager:
 class CollectionEntity(Entity):
     """Mixin class for entities managed by an ObservableCollection."""
 
+    @classmethod
+    @abstractmethod
+    def from_storage(cls, config: ConfigType) -> CollectionEntity:
+        """Create instance from storage."""
+
+    @classmethod
+    @abstractmethod
+    def from_yaml(cls, config: ConfigType) -> CollectionEntity:
+        """Create instance from yaml config."""
+
     @abstractmethod
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle updated configuration."""
@@ -164,6 +174,13 @@ class ObservableCollection(ABC):
 class YamlCollection(ObservableCollection):
     """Offer a collection based on static data."""
 
+    @staticmethod
+    def create_entity(
+        entity_class: type[CollectionEntity], config: ConfigType
+    ) -> CollectionEntity:
+        """Create a CollectioEntity instance."""
+        return entity_class.from_storage(config)
+
     async def async_load(self, data: list[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
         old_ids = set(self.data)
@@ -206,6 +223,13 @@ class StorageCollection(ObservableCollection):
         """Initialize the storage collection."""
         super().__init__(logger, id_manager)
         self.store = store
+
+    @staticmethod
+    def create_entity(
+        entity_class: type[CollectionEntity], config: ConfigType
+    ) -> CollectionEntity:
+        """Create a CollectioEntity instance."""
+        return entity_class.from_storage(config)
 
     @property
     def hass(self) -> HomeAssistant:
@@ -299,7 +323,7 @@ class StorageCollection(ObservableCollection):
         return {"items": list(self.data.values())}
 
 
-class IDLessCollection(ObservableCollection):
+class IDLessCollection(YamlCollection):
     """A collection without IDs."""
 
     counter = 0
@@ -335,8 +359,8 @@ def sync_entity_lifecycle(
     domain: str,
     platform: str,
     entity_component: EntityComponent,
-    collection: ObservableCollection,
-    create_entity: Callable[[dict], CollectionEntity],
+    collection: StorageCollection | YamlCollection,
+    entity_class: type[CollectionEntity],
 ) -> None:
     """Map a collection to an entity component."""
     entities: dict[str, CollectionEntity] = {}
@@ -348,7 +372,9 @@ def sync_entity_lifecycle(
             if change_set.item_id in entities:
                 entities.pop(change_set.item_id)
 
-        entities[change_set.item_id] = create_entity(change_set.item)
+        entities[change_set.item_id] = collection.create_entity(
+            entity_class, change_set.item
+        )
         entities[change_set.item_id].async_on_remove(entity_removed)
         return entities[change_set.item_id]
 

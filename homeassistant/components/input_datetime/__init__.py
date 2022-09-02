@@ -149,7 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime
     )
 
     storage_collection = DateTimeStorageCollection(
@@ -235,11 +235,11 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
     _attr_should_poll = False
+    editable: bool
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
         self._config = config
-        self.editable = True
         self._current_datetime = None
 
         if not config.get(CONF_INITIAL):
@@ -258,8 +258,15 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             )
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputDatetime:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> InputDatetime:
+        """Return entity instance initialized from storage."""
+        input_dt = cls(config)
+        input_dt.editable = True
+        return input_dt
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> InputDatetime:
+        """Return entity instance initialized from yaml."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_dt.editable = False

@@ -119,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Timer.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Timer
     )
 
     storage_collection = TimerStorageCollection(
@@ -198,10 +198,11 @@ class TimerStorageCollection(collection.StorageCollection):
 class Timer(collection.CollectionEntity, RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, config: dict) -> None:
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a timer."""
         self._config: dict = config
-        self.editable: bool = True
         self._state: str = STATUS_IDLE
         self._duration = cv.time_period_str(config[CONF_DURATION])
         self._remaining: timedelta | None = None
@@ -213,8 +214,15 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._attr_force_update = True
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Timer:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Timer:
+        """Return entity instance initialized from storage."""
+        timer = cls(config)
+        timer.editable = True
+        return timer
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Timer:
+        """Return entity instance initialized from yaml."""
         timer = cls(config)
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
         timer.editable = False

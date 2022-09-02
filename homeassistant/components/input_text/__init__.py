@@ -129,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputText.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputText
     )
 
     storage_collection = InputTextStorageCollection(
@@ -199,16 +199,23 @@ class InputText(collection.CollectionEntity, RestoreEntity):
     """Represent a text box."""
 
     _attr_should_poll = False
+    editable: bool
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a text input."""
         self._config = config
-        self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputText:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> InputText:
+        """Return entity instance initialized from storage."""
+        input_text = cls(config)
+        input_text.editable = True
+        return input_text
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> InputText:
+        """Return entity instance initialized from yaml."""
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
