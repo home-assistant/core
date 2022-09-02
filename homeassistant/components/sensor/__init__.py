@@ -113,11 +113,14 @@ class SensorDeviceClass(StrEnum):
     # gas (m³ or ft³)
     GAS = "gas"
 
-    # % of humidity in the air
+    # Relative humidity (%)
     HUMIDITY = "humidity"
 
     # current light level (lx/lm)
     ILLUMINANCE = "illuminance"
+
+    # moisture (%)
+    MOISTURE = "moisture"
 
     # Amount of money (currency)
     MONETARY = "monetary"

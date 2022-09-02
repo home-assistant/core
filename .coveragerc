@@ -260,6 +260,11 @@ omit =
     homeassistant/components/econet/const.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
+    homeassistant/components/ecowitt/__init__.py
+    homeassistant/components/ecowitt/binary_sensor.py
+    homeassistant/components/ecowitt/diagnostics.py
+    homeassistant/components/ecowitt/entity.py
+    homeassistant/components/ecowitt/sensor.py
     homeassistant/components/ecovacs/*
     homeassistant/components/edl21/*
     homeassistant/components/eddystone_temperature/sensor.py
@@ -395,7 +400,7 @@ omit =
     homeassistant/components/flume/__init__.py
     homeassistant/components/flume/binary_sensor.py
     homeassistant/components/flume/coordinator.py
-    homeassistant/components/flume/entity.py    
+    homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/repairs.py
@@ -442,7 +447,6 @@ omit =
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
     homeassistant/components/glances/__init__.py
-    homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
@@ -660,6 +664,9 @@ omit =
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
     homeassistant/components/lcn/services.py
+    homeassistant/components/led_ble/__init__.py
+    homeassistant/components/led_ble/light.py
+    homeassistant/components/led_ble/util.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/life360/__init__.py
@@ -719,6 +726,10 @@ omit =
     homeassistant/components/melcloud/const.py
     homeassistant/components/melcloud/sensor.py
     homeassistant/components/melcloud/water_heater.py
+    homeassistant/components/melnor/__init__.py
+    homeassistant/components/melnor/const.py
+    homeassistant/components/melnor/models.py
+    homeassistant/components/melnor/switch.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/met_eireann/__init__.py
@@ -1206,6 +1217,7 @@ omit =
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/entity.py
     homeassistant/components/switchbot/cover.py
+    homeassistant/components/switchbot/light.py    
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py

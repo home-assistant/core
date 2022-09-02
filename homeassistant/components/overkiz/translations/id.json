@@ -11,7 +11,8 @@
             "server_in_maintenance": "Server sedang dalam masa pemeliharaan",
             "too_many_attempts": "Terlalu banyak percobaan dengan token yang tidak valid, untuk sementara diblokir",
             "too_many_requests": "Terlalu banyak permintaan, coba lagi nanti.",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unknown_user": "Pengguna tidak dikenal. Akun Somfy Protect tidak didukung oleh integrasi ini."
         },
         "flow_title": "Gateway: {gateway_id}",
         "step": {

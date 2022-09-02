@@ -37,6 +37,8 @@ async def async_setup_entry(
 class KonnectedBinarySensor(BinarySensorEntity):
     """Representation of a Konnected binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, device_id, zone_num, data):
         """Initialize the Konnected binary sensor."""
         self._data = data
@@ -63,11 +65,6 @@ class KonnectedBinarySensor(BinarySensorEntity):
         return self._state
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def device_class(self):
         """Return the device class."""
         return self._device_class
@@ -79,7 +76,7 @@ class KonnectedBinarySensor(BinarySensorEntity):
             identifiers={(KONNECTED_DOMAIN, self._device_id)},
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         self._data[ATTR_ENTITY_ID] = self.entity_id
         self.async_on_remove(

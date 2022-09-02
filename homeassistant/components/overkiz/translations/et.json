@@ -11,7 +11,8 @@
             "server_in_maintenance": "Server on hoolduse t\u00f5ttu maas",
             "too_many_attempts": "Liiga palju katseid kehtetu v\u00f5tmega, ajutiselt keelatud",
             "too_many_requests": "Liiga palju p\u00e4ringuid, proovi hiljem uuesti",
-            "unknown": "Ootamatu t\u00f5rge"
+            "unknown": "Ootamatu t\u00f5rge",
+            "unknown_user": "Tundmatu kasutaja. See sidumine ei toeta Somfy Protecti kontosid."
         },
         "flow_title": "L\u00fc\u00fcs: {gateway_id}",
         "step": {

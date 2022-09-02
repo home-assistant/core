@@ -1,4 +1,6 @@
 """This library brings support for forked_daapd to Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
@@ -8,7 +10,7 @@ from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -35,6 +37,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     CALLBACK_TIMEOUT,
+    CAN_PLAY_TYPE,
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
@@ -130,6 +133,8 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class ForkedDaapdZone(MediaPlayerEntity):
     """Representation of a forked-daapd output."""
 
+    _attr_should_poll = False
+
     def __init__(self, api, output, entry_id):
         """Initialize the ForkedDaapd Zone."""
         self._api = api
@@ -163,11 +168,6 @@ class ForkedDaapdZone(MediaPlayerEntity):
     def unique_id(self):
         """Return unique ID."""
         return f"{self._entry_id}-{self._output_id}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity pushes its state to HA."""
-        return False
 
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
@@ -234,6 +234,8 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
 class ForkedDaapdMaster(MediaPlayerEntity):
     """Representation of the main forked-daapd device."""
+
+    _attr_should_poll = False
 
     def __init__(
         self, clientsession, api, ip_address, api_port, api_password, config_entry
@@ -411,11 +413,6 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     def unique_id(self):
         """Return unique ID."""
         return self._config_entry.entry_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity pushes its state to HA."""
-        return False
 
     @property
     def available(self) -> bool:
@@ -775,6 +772,18 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             )()
         _LOGGER.warning("No pipe control available for %s", pipe_name)
 
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda bm: bm.media_content_type in CAN_PLAY_TYPE,
+        )
+
 
 class ForkedDaapdUpdater:
     """Manage updates for the forked-daapd device."""
@@ -891,11 +900,3 @@ class ForkedDaapdUpdater:
                 self._api,
                 outputs_to_add,
             )
-
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
-        """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
-        )

@@ -146,6 +146,17 @@ class HaScanner(BaseHaScanner):
         """Return a list of discovered devices."""
         return self.scanner.discovered_devices
 
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the scanner."""
+        base_diag = await super().async_diagnostics()
+        return base_diag | {
+            "adapter": self.adapter,
+            "source": self.source,
+            "name": self.name,
+            "last_detection": self._last_detection,
+            "start_time": self._start_time,
+        }
+
     @hass_callback
     def async_register_callback(
         self, callback: Callable[[BluetoothServiceInfoBleak], None]

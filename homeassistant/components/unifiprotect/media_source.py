@@ -7,7 +7,13 @@ from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, cast
 
-from pyunifiprotect.data import Camera, Event, EventType, SmartDetectObjectType
+from pyunifiprotect.data import (
+    Camera,
+    Event,
+    EventType,
+    ModelType,
+    SmartDetectObjectType,
+)
 from pyunifiprotect.exceptions import NvrError
 from pyunifiprotect.utils import from_js_time
 from yarl import URL
@@ -95,12 +101,12 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
 
 @callback
-def _get_start_end(hass: HomeAssistant, start: datetime) -> tuple[datetime, datetime]:
+def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
     start = dt_util.as_local(start)
     end = dt_util.now()
 
-    start = start.replace(day=1, hour=1, minute=0, second=0, microsecond=0)
-    end = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    start = start.replace(day=1, hour=0, minute=0, second=1, microsecond=0)
+    end = end.replace(day=1, hour=0, minute=0, second=2, microsecond=0)
 
     return start, end
 
@@ -565,9 +571,16 @@ class ProtectMediaSource(MediaSource):
         if not build_children:
             return source
 
-        month = start.month
+        if data.api.bootstrap.recording_start is not None:
+            recording_start = data.api.bootstrap.recording_start.date()
+        start = max(recording_start, start)
+
+        recording_end = dt_util.now().date()
+        end = start.replace(month=start.month + 1) - timedelta(days=1)
+        end = min(recording_end, end)
+
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
-        while start.month == month:
+        while start <= end:
             children.append(
                 self._build_days(data, camera_id, event_type, start, is_all=False)
             )
@@ -696,7 +709,7 @@ class ProtectMediaSource(MediaSource):
             self._build_recent(data, camera_id, event_type, 30),
         ]
 
-        start, end = _get_start_end(self.hass, data.api.bootstrap.recording_start)
+        start, end = _get_month_start_end(data.api.bootstrap.recording_start)
         while end > start:
             children.append(self._build_month(data, camera_id, event_type, end.date()))
             end = (end - timedelta(days=1)).replace(day=1)
@@ -810,7 +823,8 @@ class ProtectMediaSource(MediaSource):
 
         cameras: list[BrowseMediaSource] = [await self._build_camera(data, "all")]
 
-        for camera in data.api.bootstrap.cameras.values():
+        for camera in data.get_by_types({ModelType.CAMERA}):
+            camera = cast(Camera, camera)
             if not camera.can_read_media(data.api.bootstrap.auth_user):
                 continue
             cameras.append(await self._build_camera(data, camera.id))

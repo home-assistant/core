@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
@@ -10,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mutable": "Consenti da remoto l'avvio / il blocco / ecc.",
                     "password": "Password",
                     "region": "Regione",
                     "scandinavian_miles": "Usa le miglia scandinave",

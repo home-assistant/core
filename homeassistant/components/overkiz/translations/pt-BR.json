@@ -11,7 +11,8 @@
             "server_in_maintenance": "O servidor est\u00e1 fora de servi\u00e7o para manuten\u00e7\u00e3o",
             "too_many_attempts": "Muitas tentativas com um token inv\u00e1lido, banido temporariamente",
             "too_many_requests": "Muitas solicita\u00e7\u00f5es, tente novamente mais tarde",
-            "unknown": "Erro inesperado"
+            "unknown": "Erro inesperado",
+            "unknown_user": "Usu\u00e1rio desconhecido. As contas Somfy Protect n\u00e3o s\u00e3o suportadas por esta integra\u00e7\u00e3o."
         },
         "flow_title": "Gateway: {gateway_id}",
         "step": {

@@ -17,7 +17,6 @@ from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Subquery
 
-from homeassistant.components import recorder
 from homeassistant.components.websocket_api.const import (
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
@@ -25,6 +24,7 @@ from homeassistant.components.websocket_api.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
+from .. import recorder
 from .db_schema import RecorderRuns, StateAttributes, States
 from .filters import Filters
 from .models import (

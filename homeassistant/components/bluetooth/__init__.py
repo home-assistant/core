@@ -60,6 +60,7 @@ __all__ = [
     "async_rediscover_address",
     "async_register_callback",
     "async_track_unavailable",
+    "async_scanner_count",
     "BaseHaScanner",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
@@ -84,6 +85,12 @@ def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
     multiple integrations to share the same BleakScanner.
     """
     return HaBleakScannerWrapper()
+
+
+@hass_callback
+def async_scanner_count(hass: HomeAssistant, connectable: bool = True) -> int:
+    """Return the number of scanners currently in use."""
+    return _get_manager(hass).async_scanner_count(connectable)
 
 
 @hass_callback
@@ -209,6 +216,7 @@ async def async_get_adapter_from_address(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
+    integration_matcher.async_setup()
     manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
