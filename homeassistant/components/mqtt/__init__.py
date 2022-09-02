@@ -67,6 +67,7 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONFIG_ENTRY_IS_SETUP,
     DATA_MQTT,
+    DATA_MQTT_CLIENT_SUBSCRIPTIONS,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_DISPATCHERS,
     DATA_MQTT_RELOAD_ENTRY,
@@ -315,6 +316,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     hass.data[DATA_MQTT] = MQTT(hass, entry, conf)
+    # Restore device trigger subscriptions
+    if DATA_MQTT_CLIENT_SUBSCRIPTIONS in hass.data:
+        hass.data[DATA_MQTT].subscriptions = hass.data[DATA_MQTT_CLIENT_SUBSCRIPTIONS]
     entry.add_update_listener(_async_config_entry_updated)
 
     await hass.data[DATA_MQTT].async_connect()
@@ -634,5 +638,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
     # Wait for all ACKs and stop the loop
     await mqtt_client.async_disconnect()
+    # Store device trigger subscriptions to be able to restore ore reload the entry
+    if mqtt_client.subscriptions:
+        hass.data[DATA_MQTT_CLIENT_SUBSCRIPTIONS] = mqtt_client.subscriptions
 
     return True
