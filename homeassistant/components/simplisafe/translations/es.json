@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Esta cuenta SimpliSafe ya est\u00e1 en uso.",
             "email_2fa_timed_out": "Se agot\u00f3 el tiempo de espera para la autenticaci\u00f3n de dos factores basada en correo electr\u00f3nico.",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "wrong_account": "Las credenciales de usuario proporcionadas no coinciden con esta cuenta de SimpliSafe."
         },
         "error": {

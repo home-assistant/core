@@ -10,7 +10,7 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Confirma la contrase\u00f1a de la cuenta de Meater Cloud {username}."
+                "description": "Confirma la contrase\u00f1a de la cuenta de {username} en Meater Cloud."
             },
             "user": {
                 "data": {
