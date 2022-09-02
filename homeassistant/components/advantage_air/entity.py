@@ -24,7 +24,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         """Initialize common aspects of an Advantage Air ac entity."""
         super().__init__(instance)
         self.aircon = instance["aircon"]
-        self.ac_key = ac_key
+        self.ac_key: str = ac_key
         self._attr_unique_id += f"-{ac_key}"
 
         self._attr_device_info = DeviceInfo(
@@ -36,7 +36,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         )
 
     @property
-    def _ac(self):
+    def _ac(self) -> dict:
         return self.coordinator.data["aircons"][self.ac_key]["info"]
 
 
@@ -46,9 +46,9 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
     def __init__(self, instance, ac_key: str, zone_key: str) -> None:
         """Initialize common aspects of an Advantage Air zone entity."""
         super().__init__(instance, ac_key)
-        self.zone_key = zone_key
+        self.zone_key: str = zone_key
         self._attr_unique_id += f"-{zone_key}"
 
     @property
-    def _zone(self):
+    def _zone(self) -> dict:
         return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
