@@ -23,7 +23,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
     def __init__(self, instance, ac_key):
         """Initialize common aspects of an Advantage Air ac entity."""
         super().__init__(instance)
-        self.async_change = instance["async_change"]
+        self.aircon = instance["aircon"]
         self.ac_key = ac_key
         self._attr_unique_id += f"-{ac_key}"
 
