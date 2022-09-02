@@ -22,7 +22,7 @@ PLATFORMS_BY_TYPE = {
 }
 
 
-def get_platforms_for_robots(robots: list[Robot]) -> set[str]:
+def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
     """Get platforms for robots."""
     return {
         platform
