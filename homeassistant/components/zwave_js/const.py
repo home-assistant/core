@@ -21,7 +21,6 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
-DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
