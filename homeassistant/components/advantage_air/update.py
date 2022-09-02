@@ -26,7 +26,7 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
 
     _attr_name = "App"
 
-    def __init__(self, instance):
+    def __init__(self, instance) -> None:
         """Initialize the Advantage Air App."""
         super().__init__(instance)
         self._attr_device_info = DeviceInfo(

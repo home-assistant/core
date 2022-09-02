@@ -31,8 +31,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[CoverEntity] = []
-    if "aircons" in instance["coordinator"].data:
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone vent controls when zone in vent control mode.
                 if zone["type"] == 0:
@@ -50,7 +50,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]

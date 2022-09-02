@@ -24,8 +24,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[SwitchEntity] = []
-    if "aircons" in instance["coordinator"].data:
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
             if ac_device["info"]["freshAirStatus"] != "none":
                 entities.append(AdvantageAirFreshAir(instance, ac_key))
     async_add_entities(entities)
@@ -37,7 +37,7 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
     _attr_icon = "mdi:air-filter"
     _attr_name = "Fresh air"
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance, ac_key: str) -> None:
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-freshair"

@@ -70,8 +70,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[ClimateEntity] = []
-    if "aircons" in instance["coordinator"].data:
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
             entities.append(AdvantageAirAC(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone climate control when zone is in temperature control
@@ -93,7 +93,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         if self._ac.get("myAutoModeEnabled"):
@@ -156,7 +156,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     _attr_hvac_modes = ZONE_HVAC_MODES
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]

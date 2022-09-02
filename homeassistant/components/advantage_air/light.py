@@ -25,8 +25,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[LightEntity] = []
-    if "myLights" in instance["coordinator"].data:
-        for light in instance["coordinator"].data["myLights"]["lights"].values():
+    if my_lights := instance["coordinator"].data.get("myLights"):
+        for light in my_lights["lights"].values():
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
@@ -39,7 +39,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, instance, light):
+    def __init__(self, instance, light) -> None:
         """Initialize an Advantage Air Light."""
         super().__init__(instance)
         self.lights = instance["lights"]

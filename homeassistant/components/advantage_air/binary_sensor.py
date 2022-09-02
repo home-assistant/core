@@ -26,8 +26,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[BinarySensorEntity] = []
-    if "aircons" in instance["coordinator"].data:
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
             entities.append(AdvantageAirFilter(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add motion sensor when motion is enabled
@@ -46,7 +46,7 @@ class AdvantageAirFilter(AdvantageAirAcEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name = "Filter"
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance, ac_key: str) -> None:
         """Initialize an Advantage Air Filter sensor."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-filter"
@@ -62,7 +62,7 @@ class AdvantageAirZoneMotion(AdvantageAirZoneEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Motion sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} motion'
@@ -80,7 +80,7 @@ class AdvantageAirZoneMyZone(AdvantageAirZoneEntity, BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone MyZone sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} myZone'

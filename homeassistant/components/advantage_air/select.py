@@ -32,7 +32,7 @@ class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
     _attr_icon = "mdi:home-thermometer"
     _attr_name = "MyZone"
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance, ac_key: str) -> None:
         """Initialize an Advantage Air MyZone control."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-myzone"

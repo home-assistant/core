@@ -11,16 +11,16 @@ class AdvantageAirEntity(CoordinatorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, instance):
+    def __init__(self, instance) -> None:
         """Initialize common aspects of an Advantage Air entity."""
         super().__init__(instance["coordinator"])
-        self._attr_unique_id = self.coordinator.data["system"]["rid"]
+        self._attr_unique_id: str = self.coordinator.data["system"]["rid"]
 
 
 class AdvantageAirAcEntity(AdvantageAirEntity):
     """Parent class for Advantage Air AC Entities."""
 
-    def __init__(self, instance, ac_key):
+    def __init__(self, instance, ac_key: str) -> None:
         """Initialize common aspects of an Advantage Air ac entity."""
         super().__init__(instance)
         self.aircon = instance["aircon"]
@@ -43,7 +43,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
 class AdvantageAirZoneEntity(AdvantageAirAcEntity):
     """Parent class for Advantage Air Zone Entities."""
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
         """Initialize common aspects of an Advantage Air zone entity."""
         super().__init__(instance, ac_key)
         self.zone_key = zone_key
