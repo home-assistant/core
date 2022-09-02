@@ -33,15 +33,15 @@ async def async_setup_entry(
     if lifx_features(coordinator.device)["hev"]:
         async_add_entities(
             [
-                LIFXBinarySensorEntity(
+                LIFXHevCycleBinarySensorEntity(
                     coordinator=coordinator, description=HEV_CYCLE_STATE_SENSOR
                 )
             ]
         )
 
 
-class LIFXBinarySensorEntity(LIFXEntity, BinarySensorEntity):
-    """LIFX sensor entity base class."""
+class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
+    """LIFX HEV cycle state binary sensor."""
 
     _attr_has_entity_name = True
 
