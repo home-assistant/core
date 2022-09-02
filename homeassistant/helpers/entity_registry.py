@@ -327,7 +327,6 @@ class EntityRegistry:
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
         # Data that we want entry to have
-        area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
@@ -353,7 +352,6 @@ class EntityRegistry:
         if entity_id:
             return self.async_update_entity(
                 entity_id,
-                area_id=area_id,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
                 device_id=device_id,
@@ -404,7 +402,6 @@ class EntityRegistry:
             return None if value is UNDEFINED else value
 
         entry = RegistryEntry(
-            area_id=none_if_undefined(area_id),
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
             device_id=none_if_undefined(device_id),
