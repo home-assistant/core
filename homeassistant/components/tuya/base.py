@@ -27,6 +27,10 @@ class IntegerTypeData:
     step: float
     unit: str | None = None
     type: str | None = None
+    # Default base during scaling is 10 according to specification:
+    # https://developer.tuya.com/en/docs/iot/datatypedescription?id=K9i5ql2jo7j1k
+    base_value: int = 10
+    base_step: int = 10
 
     @property
     def max_scaled(self) -> float:
@@ -41,15 +45,15 @@ class IntegerTypeData:
     @property
     def step_scaled(self) -> float:
         """Return the step scaled."""
-        return self.step / (10**self.scale)
+        return self.step / (self.base_step**self.scale)
 
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
-        return value / (10**self.scale)
+        return value / (self.base_value**self.scale)
 
     def scale_value_back(self, value: float | int) -> int:
         """Return raw value for scaled."""
-        return int(value * (10**self.scale))
+        return int(value * (self.base_value**self.scale))
 
     def remap_value_to(
         self,
@@ -235,6 +239,13 @@ class TuyaEntity(Entity):
                         )
                     ):
                         continue
+
+                    # Workaround for BHT-002 Thermostat devices which use the base 2
+                    # instead of 10 during scaling of the integer value (but not the
+                    # step). This is a violation from the specification.
+                    if self.device.product_id == "IAYz2WK1th0cMLmL":
+                        integer_type.base_value = 2
+
                     return integer_type
 
                 if dptype not in (DPType.ENUM, DPType.INTEGER):
