@@ -229,14 +229,6 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
             del self._identifiers[identifier]
         super().__delitem__(key)
 
-    def _get_entry_from_connections(self, key: tuple[str, str]) -> _EntryTypeT | None:
-        """Get entry from connection."""
-        return self._connections.get(key)
-
-    def _get_entry_from_identifiers(self, key: tuple[str, str]) -> _EntryTypeT | None:
-        """Get entry from identifier."""
-        return self._identifiers.get(key)
-
     def get_entry(
         self,
         identifiers: set[tuple[str, str]],
