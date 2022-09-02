@@ -182,24 +182,6 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.options = OPTIONS_SCHEMA({CONF_IO: {}})
 
-    async def async_gen_config(self, host, port):
-        """Populate self.data based on panel status.
-
-        This will raise CannotConnect if an error occurs
-        """
-        self.data[CONF_HOST] = host
-        self.data[CONF_PORT] = port
-        try:
-            status = await get_status(self.hass, host, port)
-            self.data[CONF_ID] = status.get("chipId", status[CONF_MAC].replace(":", ""))
-        except (CannotConnect, KeyError) as err:
-            raise CannotConnect from err
-        else:
-            self.data[CONF_MODEL] = status.get(CONF_MODEL, KONN_MODEL)
-            self.data[CONF_ACCESS_TOKEN] = "".join(
-                random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
-            )
-
     async def async_step_import(self, device_config):
         """Import a configuration.yaml config.
 
@@ -502,8 +484,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors=errors,
             )
 
-        return self.async_abort(reason="not_konn_panel")
-
     async def async_step_options_io_ext(self, user_input=None):
         """Allow the user to configure the extended IO for pro."""
         errors = {}
@@ -560,8 +540,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors=errors,
             )
 
-        return self.async_abort(reason="not_konn_panel")
-
     async def async_step_options_binary(self, user_input=None):
         """Allow the user to configure the IO options for binary sensors."""
         errors = {}
@@ -573,34 +551,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ) + [zone]
             self.io_cfg.pop(self.active_cfg)
             self.active_cfg = None
-
-        if self.active_cfg:
-            current_cfg = self.get_current_cfg(CONF_BINARY_SENSORS, self.active_cfg)
-            return self.async_show_form(
-                step_id="options_binary",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_TYPE,
-                            default=current_cfg.get(
-                                CONF_TYPE, BinarySensorDeviceClass.DOOR
-                            ),
-                        ): DEVICE_CLASSES_SCHEMA,
-                        vol.Optional(
-                            CONF_NAME, default=current_cfg.get(CONF_NAME, vol.UNDEFINED)
-                        ): str,
-                        vol.Optional(
-                            CONF_INVERSE, default=current_cfg.get(CONF_INVERSE, False)
-                        ): bool,
-                    }
-                ),
-                description_placeholders={
-                    CONF_ZONE: f"Zone {self.active_cfg}"
-                    if len(self.active_cfg) < 3
-                    else self.active_cfg.upper
-                },
-                errors=errors,
-            )
 
         # find the next unconfigured binary sensor
         for key, value in self.io_cfg.items():
@@ -646,32 +596,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.new_opt[CONF_SENSORS] = self.new_opt.get(CONF_SENSORS, []) + [zone]
             self.io_cfg.pop(self.active_cfg)
             self.active_cfg = None
-
-        if self.active_cfg:
-            current_cfg = self.get_current_cfg(CONF_SENSORS, self.active_cfg)
-            return self.async_show_form(
-                step_id="options_digital",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_TYPE, default=current_cfg.get(CONF_TYPE, "dht")
-                        ): vol.All(vol.Lower, vol.In(["dht", "ds18b20"])),
-                        vol.Optional(
-                            CONF_NAME, default=current_cfg.get(CONF_NAME, vol.UNDEFINED)
-                        ): str,
-                        vol.Optional(
-                            CONF_POLL_INTERVAL,
-                            default=current_cfg.get(CONF_POLL_INTERVAL, 3),
-                        ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                    }
-                ),
-                description_placeholders={
-                    CONF_ZONE: f"Zone {self.active_cfg}"
-                    if len(self.active_cfg) < 3
-                    else self.active_cfg.upper()
-                },
-                errors=errors,
-            )
 
         # find the next unconfigured digital sensor
         for key, value in self.io_cfg.items():

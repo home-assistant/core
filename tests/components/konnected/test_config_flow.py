@@ -102,6 +102,23 @@ async def test_pro_flow_works(hass, mock_panel):
     )
 
 
+async def test_user_flow_cant_connect(hass, mock_panel):
+    """Test config flow ."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_panel.get_status.side_effect = config_flow.CannotConnect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
+    )
+    assert result["errors"]["base"] == "cannot_connect"
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+
 async def test_ssdp(hass, mock_panel):
     """Test a panel being discovered."""
     mock_panel.get_status.return_value = {
