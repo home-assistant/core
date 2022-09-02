@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine
+from collections.abc import Coroutine
 from typing import Any
 
 from async_timeout import timeout
@@ -335,14 +335,7 @@ class ControllerEvents:
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        self.register_node_in_dev_reg(
-            self.hass,
-            self.config_entry,
-            self.dev_reg,
-            self.driver_events.driver,
-            node,
-            self.remove_device,
-        )
+        self.register_node_in_dev_reg(node)
 
     @callback
     def async_on_node_removed(self, event: dict) -> None:
@@ -365,19 +358,12 @@ class ControllerEvents:
             self.remove_device(device)
 
     @callback
-    def register_node_in_dev_reg(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        dev_reg: device_registry.DeviceRegistry,
-        driver: Driver,
-        node: ZwaveNode,
-        remove_device_func: Callable[[device_registry.DeviceEntry], None],
-    ) -> device_registry.DeviceEntry:
+    def register_node_in_dev_reg(self, node: ZwaveNode) -> device_registry.DeviceEntry:
         """Register node in dev reg."""
+        driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        device = dev_reg.async_get_device({device_id})
+        device = self.dev_reg.async_get_device({device_id})
 
         # Replace the device if it can be determined that this node is not the
         # same product as it was previously.
@@ -387,7 +373,7 @@ class ControllerEvents:
             and len(device.identifiers) == 2
             and device_id_ext not in device.identifiers
         ):
-            remove_device_func(device)
+            self.remove_device(device)
             device = None
 
         if device_id_ext:
@@ -395,8 +381,8 @@ class ControllerEvents:
         else:
             ids = {device_id}
 
-        device = dev_reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
+        device = self.dev_reg.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
             identifiers=ids,
             sw_version=node.firmware_version,
             name=node.name or node.device_config.description or f"Node {node.node_id}",
@@ -405,7 +391,7 @@ class ControllerEvents:
             suggested_area=node.location if node.location else UNDEFINED,
         )
 
-        async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+        async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
         return device
 
@@ -436,14 +422,7 @@ class NodeEvents:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
-        device = self.controller_events.register_node_in_dev_reg(
-            self.hass,
-            self.config_entry,
-            self.dev_reg,
-            self.controller_events.driver_events.driver,
-            node,
-            self.controller_events.remove_device,
-        )
+        device = self.controller_events.register_node_in_dev_reg(node)
         # We only want to create the defaultdict once, even on reinterviews
         if device.id not in self.controller_events.registered_unique_ids:
             self.controller_events.registered_unique_ids[device.id] = defaultdict(set)
