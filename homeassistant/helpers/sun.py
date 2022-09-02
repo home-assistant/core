@@ -101,6 +101,59 @@ def get_location_astral_event_next(
 
 @callback
 @bind_hass
+def get_astral_event_previous(
+    hass: HomeAssistant,
+    event: str,
+    utc_point_in_time: datetime.datetime | None = None,
+    offset: datetime.timedelta | None = None,
+) -> datetime.datetime:
+    """Calculate the previous specified solar event."""
+    location, elevation = get_astral_location(hass)
+    return get_location_astral_event_previous(
+        location, elevation, event, utc_point_in_time, offset
+    )
+
+
+@callback
+def get_location_astral_event_previous(
+    location: astral.location.Location,
+    elevation: astral.Elevation,
+    event: str,
+    utc_point_in_time: datetime.datetime | None = None,
+    offset: datetime.timedelta | None = None,
+) -> datetime.datetime:
+    """Calculate the previous specified solar event."""
+
+    if offset is None:
+        offset = datetime.timedelta()
+
+    if utc_point_in_time is None:
+        utc_point_in_time = dt_util.utcnow()
+
+    kwargs: dict[str, Any] = {"local": False}
+    if event not in ELEVATION_AGNOSTIC_EVENTS:
+        kwargs["observer_elevation"] = elevation
+
+    mod = 0
+    while True:
+        try:
+            prev_dt = (
+                cast(_AstralSunEventCallable, getattr(location, event))(
+                    dt_util.as_local(utc_point_in_time).date()
+                    + datetime.timedelta(days=mod),
+                    **kwargs,
+                )
+                + offset
+            )
+            if prev_dt < utc_point_in_time:
+                return prev_dt
+        except ValueError:
+            pass
+        mod -= 1
+
+
+@callback
+@bind_hass
 def get_astral_event_date(
     hass: HomeAssistant,
     event: str,

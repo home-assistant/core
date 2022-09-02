@@ -108,6 +108,100 @@ async def test_setting_rising(hass):
     )
 
 
+async def test_previous_setting_rising(hass):
+    """Test retrieving previous sun setting and rising."""
+    utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(utc_now):
+        await async_setup_component(
+            hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
+        )
+
+    await hass.async_block_till_done()
+    state = hass.states.get(sun.ENTITY_ID)
+
+    from astral import LocationInfo
+    import astral.sun
+
+    utc_today = utc_now.date()
+
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
+
+    mod = 0
+    while True:
+        prev_dawn = astral.sun.dawn(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_dawn < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_dusk = astral.sun.dusk(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_dusk < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_midnight = astral.sun.midnight(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_midnight < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_noon = astral.sun.noon(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_noon < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_rising < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_setting = astral.sun.sunset(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_setting < utc_now:
+            break
+        mod -= 1
+
+    assert prev_dawn == dt_util.parse_datetime(
+        state.attributes[sun.STATE_ATTR_PREVIOUS_DAWN]
+    )
+    assert prev_dusk == dt_util.parse_datetime(
+        state.attributes[sun.STATE_ATTR_PREVIOUS_DUSK]
+    )
+    assert prev_midnight == dt_util.parse_datetime(
+        state.attributes[sun.STATE_ATTR_PREVIOUS_MIDNIGHT]
+    )
+    assert prev_noon == dt_util.parse_datetime(
+        state.attributes[sun.STATE_ATTR_PREVIOUS_NOON]
+    )
+    assert prev_rising == dt_util.parse_datetime(
+        state.attributes[sun.STATE_ATTR_PREVIOUS_RISING]
+    )
+    assert prev_setting == dt_util.parse_datetime(
+        state.attributes[sun.STATE_ATTR_PREVIOUS_SETTING]
+    )
+
+
 async def test_state_change(hass, caplog):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)

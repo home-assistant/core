@@ -83,8 +83,83 @@ def test_next_events(hass):
         assert next_setting == sun.get_astral_event_next(hass, SUN_EVENT_SUNSET)
 
 
+def test_previous_events(hass):
+    """Test retrieving previous sun events."""
+    utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    from astral import LocationInfo
+    import astral.sun
+
+    utc_today = utc_now.date()
+
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
+
+    mod = 0
+    while True:
+        prev_dawn = astral.sun.dawn(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_dawn < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_dusk = astral.sun.dusk(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_dusk < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_midnight = astral.sun.midnight(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_midnight < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_noon = astral.sun.noon(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_noon < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
+        if prev_rising < utc_now:
+            break
+        mod -= 1
+
+    mod = 0
+    while True:
+        prev_setting = astral.sun.sunset(
+            location.observer, utc_today + timedelta(days=mod)
+        )
+        if prev_setting < utc_now:
+            break
+        mod -= 1
+
+    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+        assert prev_dawn == sun.get_astral_event_previous(hass, "dawn")
+        assert prev_dusk == sun.get_astral_event_previous(hass, "dusk")
+        assert prev_midnight == sun.get_astral_event_previous(hass, "midnight")
+        assert prev_noon == sun.get_astral_event_previous(hass, "noon")
+        assert prev_rising == sun.get_astral_event_previous(hass, SUN_EVENT_SUNRISE)
+        assert prev_setting == sun.get_astral_event_previous(hass, SUN_EVENT_SUNSET)
+
+
 def test_date_events(hass):
-    """Test retrieving next sun events."""
+    """Test retrieving sun events for a specified date/time."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     from astral import LocationInfo
     import astral.sun
@@ -111,7 +186,7 @@ def test_date_events(hass):
 
 
 def test_date_events_default_date(hass):
-    """Test retrieving next sun events."""
+    """Test retrieving sun events without specifying a date/time."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     from astral import LocationInfo
     import astral.sun
@@ -139,7 +214,7 @@ def test_date_events_default_date(hass):
 
 
 def test_date_events_accepts_datetime(hass):
-    """Test retrieving next sun events."""
+    """Test retrieving sun events with a datetime."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     from astral import LocationInfo
     import astral.sun

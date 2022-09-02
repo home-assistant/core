@@ -15,6 +15,12 @@ from homeassistant.components.sun import (
     STATE_ATTR_NEXT_NOON,
     STATE_ATTR_NEXT_RISING,
     STATE_ATTR_NEXT_SETTING,
+    STATE_ATTR_PREVIOUS_DAWN,
+    STATE_ATTR_PREVIOUS_DUSK,
+    STATE_ATTR_PREVIOUS_MIDNIGHT,
+    STATE_ATTR_PREVIOUS_NOON,
+    STATE_ATTR_PREVIOUS_RISING,
+    STATE_ATTR_PREVIOUS_SETTING,
     STATE_ATTR_RISING,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -54,5 +60,11 @@ async def test_exclude_attributes(hass, recorder_mock):
         assert STATE_ATTR_NEXT_NOON not in state.attributes
         assert STATE_ATTR_NEXT_RISING not in state.attributes
         assert STATE_ATTR_NEXT_SETTING not in state.attributes
+        assert STATE_ATTR_PREVIOUS_DAWN not in state.attributes
+        assert STATE_ATTR_PREVIOUS_DUSK not in state.attributes
+        assert STATE_ATTR_PREVIOUS_MIDNIGHT not in state.attributes
+        assert STATE_ATTR_PREVIOUS_NOON not in state.attributes
+        assert STATE_ATTR_PREVIOUS_RISING not in state.attributes
+        assert STATE_ATTR_PREVIOUS_SETTING not in state.attributes
         assert STATE_ATTR_RISING not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes

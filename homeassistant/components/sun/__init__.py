@@ -18,6 +18,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
+    get_location_astral_event_previous,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -42,6 +43,12 @@ STATE_ATTR_NEXT_MIDNIGHT = "next_midnight"
 STATE_ATTR_NEXT_NOON = "next_noon"
 STATE_ATTR_NEXT_RISING = "next_rising"
 STATE_ATTR_NEXT_SETTING = "next_setting"
+STATE_ATTR_PREVIOUS_DAWN = "previous_dawn"
+STATE_ATTR_PREVIOUS_DUSK = "previous_dusk"
+STATE_ATTR_PREVIOUS_MIDNIGHT = "previous_midnight"
+STATE_ATTR_PREVIOUS_NOON = "previous_noon"
+STATE_ATTR_PREVIOUS_RISING = "previous_rising"
+STATE_ATTR_PREVIOUS_SETTING = "previous_setting"
 
 # The algorithm used here is somewhat complicated. It aims to cut down
 # the number of sensor updates over the day. It's documented best in
@@ -124,6 +131,9 @@ class Sun(Entity):
         self._state = self.next_rising = self.next_setting = None
         self.next_dawn = self.next_dusk = None
         self.next_midnight = self.next_noon = None
+        self.previous_rising = self.previous_setting = None
+        self.previous_dawn = self.previous_dusk = None
+        self.previous_midnight = self.previous_noon = None
         self.solar_elevation = self.solar_azimuth = None
         self.rising = self.phase = None
         self._next_change = None
@@ -181,6 +191,12 @@ class Sun(Entity):
             STATE_ATTR_NEXT_NOON: self.next_noon.isoformat(),
             STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
             STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
+            STATE_ATTR_PREVIOUS_DAWN: self.previous_dawn.isoformat(),
+            STATE_ATTR_PREVIOUS_DUSK: self.previous_dusk.isoformat(),
+            STATE_ATTR_PREVIOUS_MIDNIGHT: self.previous_midnight.isoformat(),
+            STATE_ATTR_PREVIOUS_NOON: self.previous_noon.isoformat(),
+            STATE_ATTR_PREVIOUS_RISING: self.previous_rising.isoformat(),
+            STATE_ATTR_PREVIOUS_SETTING: self.previous_setting.isoformat(),
             STATE_ATTR_ELEVATION: self.solar_elevation,
             STATE_ATTR_AZIMUTH: self.solar_azimuth,
             STATE_ATTR_RISING: self.rising,
@@ -194,6 +210,11 @@ class Sun(Entity):
             self._next_change = next_utc
             self.phase = before
         return next_utc
+
+    def _get_previous_event(self, utc_point_in_time, sun_event):
+        return get_location_astral_event_previous(
+            self.location, self.elevation, sun_event, utc_point_in_time
+        )
 
     @callback
     def update_events(self, now=None):
@@ -212,23 +233,33 @@ class Sun(Entity):
         self.next_dawn = self._check_event(
             utc_point_in_time, "dawn", PHASE_NAUTICAL_TWILIGHT
         )
+        self.previous_dawn = self._get_previous_event(utc_point_in_time, "dawn")
         self.next_rising = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNRISE, PHASE_TWILIGHT
+        )
+        self.previous_rising = self._get_previous_event(
+            utc_point_in_time, SUN_EVENT_SUNRISE
         )
         self.location.solar_depression = -10
         self._check_event(utc_point_in_time, "dawn", PHASE_SMALL_DAY)
         self.next_noon = self._check_event(utc_point_in_time, "noon", None)
+        self.previous_noon = self._get_previous_event(utc_point_in_time, "noon")
         self._check_event(utc_point_in_time, "dusk", PHASE_DAY)
         self.next_setting = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNSET, PHASE_SMALL_DAY
         )
+        self.previous_setting = self._get_previous_event(
+            utc_point_in_time, SUN_EVENT_SUNSET
+        )
         self.location.solar_depression = "civil"
         self.next_dusk = self._check_event(utc_point_in_time, "dusk", PHASE_TWILIGHT)
+        self.previous_dusk = self._get_previous_event(utc_point_in_time, "dusk")
         self.location.solar_depression = "nautical"
         self._check_event(utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT)
         self.location.solar_depression = "astronomical"
         self._check_event(utc_point_in_time, "dusk", PHASE_ASTRONOMICAL_TWILIGHT)
         self.next_midnight = self._check_event(utc_point_in_time, "midnight", None)
+        self.previous_midnight = self._get_previous_event(utc_point_in_time, "midnight")
         self.location.solar_depression = "civil"
 
         # if the event was solar midday or midnight, phase will now
