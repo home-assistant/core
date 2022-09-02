@@ -310,7 +310,6 @@ class RegistryEntry:
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
 
-    area_id: str | None = attr.ib()
     entity_id: str = attr.ib()
     unique_id: str = attr.ib()
     platform: str = attr.ib()
@@ -627,13 +626,11 @@ class EntityRegistry:
                 unit_of_measurement=unit_of_measurement,
             )
 
-        area_id: str | None = None
         entity_registry_id: str | None = None
         deleted_entity = self.deleted_entities.get((domain, platform, unique_id))
         if deleted_entity is not None:
             self.deleted_entities.pop((domain, platform, unique_id))
-            # Restore area designation and id
-            area_id = deleted_entity.area_id
+            # Restore id
             entity_registry_id = deleted_entity.id
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id, known_object_ids):
@@ -673,7 +670,6 @@ class EntityRegistry:
         initial_options = get_initial_options() if get_initial_options else None
 
         entry = RegistryEntry(
-            area_id=area_id,
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
             device_id=none_if_undefined(device_id),
@@ -711,7 +707,6 @@ class EntityRegistry:
         # If the entity does not belong to a config entry, mark it as orphaned
         orphaned_timestamp = None if entity.config_entry_id else time.time()
         self.deleted_entities[key] = DeletedRegistryEntry(
-            area_id=entity.area_id,
             config_entry_id=entity.config_entry_id,
             entity_id=entity_id,
             id=entity.id,
@@ -1070,7 +1065,6 @@ class EntityRegistry:
                     entity["unique_id"],
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
-                    area_id=entity["area_id"],
                     config_entry_id=entity["config_entry_id"],
                     entity_id=entity["entity_id"],
                     id=entity["id"],
@@ -1123,7 +1117,6 @@ class EntityRegistry:
         ]
         data["deleted_entities"] = [
             {
-                "area_id": entry.area_id,
                 "config_entry_id": entry.config_entry_id,
                 "entity_id": entry.entity_id,
                 "id": entry.id,
@@ -1180,11 +1173,6 @@ class EntityRegistry:
         for entity_id, entry in self.entities.items():
             if area_id == entry.area_id:
                 self.async_update_entity(entity_id, area_id=None)
-        for key, deleted_entity in list(self.deleted_entities.items()):
-            if area_id != deleted_entity.area_id:
-                continue
-            self.deleted_entities[key] = attr.evolve(deleted_entity, area_id=None)
-            self.async_schedule_save()
 
 
 @callback
