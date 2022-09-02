@@ -22,10 +22,13 @@ DEFAULT_ENTRY_TITLE = LABEL
 class MockMessage:
     """Mock a lifx message."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
+        for k, v in kwargs.items():
+            if k != "callb":
+                setattr(self, k, v)
 
 
 class MockFailingLifxCommand:
@@ -50,15 +53,20 @@ class MockFailingLifxCommand:
 class MockLifxCommand:
     """Mock a lifx command."""
 
+    def __name__(self):
+        """Return name."""
+        return "mock_lifx_command"
+
     def __init__(self, bulb, **kwargs):
         """Init command."""
         self.bulb = bulb
         self.calls = []
+        self.msg_kwargs = kwargs
 
     def __call__(self, *args, **kwargs):
         """Call command."""
         if callb := kwargs.get("callb"):
-            callb(self.bulb, MockMessage())
+            callb(self.bulb, MockMessage(**self.msg_kwargs))
         self.calls.append([args, kwargs])
 
     def reset_mock(self):
@@ -105,6 +113,20 @@ def _mocked_white_bulb() -> Light:
 def _mocked_brightness_bulb() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 51  # LIFX Mini White
+    return bulb
+
+
+def _mocked_clean_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.get_hev_cycle = MockLifxCommand(
+        bulb, duration=7200, remaining=0, last_power=False
+    )
+    bulb.hev_cycle = {
+        "duration": 7200,
+        "remaining": 30,
+        "last_power": False,
+    }
+    bulb.product = 90
     return bulb
 
 

@@ -4,7 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "no_devices_found": "V\u00f5rgust seadmeid ei leitud",
-            "not_supported": "Seda seadet ei toetata"
+            "not_supported": "Seadet ei toetata"
         },
         "flow_title": "{name}",
         "step": {
