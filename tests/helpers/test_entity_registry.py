@@ -1597,46 +1597,35 @@ async def test_restore_entity(hass, update_events, freezer):
     entry2 = registry.async_get_or_create(
         "light", "hue", "5678", config_entry=config_entry
     )
-    entry3 = registry.async_get_or_create("light", "hue", "ABCD")
 
     entry1 = registry.async_update_entity(
         entry1.entity_id, new_entity_id="light.custom_1"
     )
-    entry3 = registry.async_update_entity(
-        entry3.entity_id, new_entity_id="light.custom_3"
-    )
 
     registry.async_remove(entry1.entity_id)
     registry.async_remove(entry2.entity_id)
-    registry.async_remove(entry3.entity_id)
     assert len(registry.entities) == 0
-    assert len(registry.deleted_entities) == 3
-
-    hass.states.async_set("light.custom_3", "on")
+    assert len(registry.deleted_entities) == 2
 
     # Re-add entities
     entry1_restored = registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
     )
     entry2_restored = registry.async_get_or_create("light", "hue", "5678")
-    entry3_restored = registry.async_get_or_create("light", "hue", "ABCD")
 
-    assert len(registry.entities) == 3
+    assert len(registry.entities) == 2
     assert len(registry.deleted_entities) == 0
-    assert entry1 == entry1_restored
+    assert entry1 != entry1_restored
+    # entity_id is not restored
+    assert attr.evolve(entry1, entity_id="light.hue_1234") == entry1_restored
     assert entry2 != entry2_restored
     # Config entry is not restored
     assert attr.evolve(entry2, config_entry_id=None) == entry2_restored
-    assert entry3 != entry3_restored
-    # Entity_id collided when restoring
-    assert attr.evolve(entry3, entity_id="light.hue_abcd") == entry3_restored
-    assert entry3.id == entry3_restored.id
-    assert entry3.entity_id != entry3_restored.entity_id
 
     # Remove two of the entities again, then bump time
-    registry.async_remove(entry1.entity_id)
+    registry.async_remove(entry1_restored.entity_id)
     registry.async_remove(entry2.entity_id)
-    assert len(registry.entities) == 1
+    assert len(registry.entities) == 0
     assert len(registry.deleted_entities) == 2
     freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
     async_fire_time_changed(hass)
@@ -1647,14 +1636,14 @@ async def test_restore_entity(hass, update_events, freezer):
         "light", "hue", "1234", config_entry=config_entry
     )
     entry2_restored = registry.async_get_or_create("light", "hue", "5678")
-    assert len(registry.entities) == 3
+    assert len(registry.entities) == 2
     assert len(registry.deleted_entities) == 0
     assert entry1.id == entry1_restored.id
     assert entry2.id != entry2_restored.id
 
     # Remove the first entity, then its config entry, finally bump time
-    registry.async_remove(entry1.entity_id)
-    assert len(registry.entities) == 2
+    registry.async_remove(entry1_restored.entity_id)
+    assert len(registry.entities) == 1
     assert len(registry.deleted_entities) == 1
     registry.async_clear_config_entry(config_entry.entry_id)
     freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
@@ -1665,30 +1654,26 @@ async def test_restore_entity(hass, update_events, freezer):
     entry1_restored = registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
     )
-    assert len(registry.entities) == 3
+    assert len(registry.entities) == 2
     assert len(registry.deleted_entities) == 0
     assert entry1.id != entry1_restored.id
 
     # Check the events
     await hass.async_block_till_done()
-    assert len(update_events) == 17
+    assert len(update_events) == 13
     assert update_events[0] == {"action": "create", "entity_id": "light.hue_1234"}
     assert update_events[1] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[2] == {"action": "create", "entity_id": "light.hue_abcd"}
-    assert update_events[3]["action"] == "update"
-    assert update_events[4]["action"] == "update"
-    assert update_events[5] == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[6] == {"action": "remove", "entity_id": "light.hue_5678"}
-    assert update_events[7] == {"action": "remove", "entity_id": "light.custom_3"}
+    assert update_events[2]["action"] == "update"
+    assert update_events[3] == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[4] == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 1st time
-    assert update_events[8] == {"action": "create", "entity_id": "light.custom_1"}
-    assert update_events[9] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[10] == {"action": "create", "entity_id": "light.hue_abcd"}
-    assert update_events[11] == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[12] == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[5] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[6] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[7] == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[8] == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 2nd time
-    assert update_events[13] == {"action": "create", "entity_id": "light.custom_1"}
-    assert update_events[14] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[15] == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[9] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[10] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
     # Restore entities the 3rd time
-    assert update_events[16] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}

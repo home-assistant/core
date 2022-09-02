@@ -632,16 +632,12 @@ class EntityRegistry:
             self.deleted_entities.pop((domain, platform, unique_id))
             # Restore id
             entity_registry_id = deleted_entity.id
-            # Restore entity_id if it's available
-            if self._entity_id_available(deleted_entity.entity_id, known_object_ids):
-                entity_id = deleted_entity.entity_id
 
-        if not entity_id:
-            entity_id = self.async_generate_entity_id(
-                domain,
-                suggested_object_id or f"{platform}_{unique_id}",
-                known_object_ids,
-            )
+        entity_id = self.async_generate_entity_id(
+            domain,
+            suggested_object_id or f"{platform}_{unique_id}",
+            known_object_ids,
+        )
 
         if disabled_by and not isinstance(disabled_by, RegistryEntryDisabler):
             raise ValueError("disabled_by must be a RegistryEntryDisabler value")
