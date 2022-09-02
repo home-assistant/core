@@ -20,12 +20,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQCoordinator
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,18 +170,10 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_device_info = DeviceInfo(
-            # the name (e.g. ABCDE) will be prepended to description.name: 'ABCDE NO2'
-            name=coordinator.config["name"],
-            model=coordinator.config["model"],
-            sw_version=coordinator.config["sw_version"],
-            hw_version=coordinator.config["hw_version"],
-            identifiers={(DOMAIN, coordinator.config["id"])},
-            manufacturer=MANUFACTURER,
-            suggested_area=coordinator.config["room_type"],
-        )
+        # device_info["name"] (e.g. ABC) will be prepended to description.name: 'ABC O3'
+        self._attr_device_info = coordinator.device_info
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.config['id']}_{description.key}"
+        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
     def native_value(self) -> float | int | None:

@@ -3,7 +3,7 @@
   "name": "air-Q",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airq",
-  "requirements": ["aioairq==0.1.1"],
+  "requirements": ["aioairq==0.2.0"],
   "codeowners": ["@Sibgatulin", "@dl2080"],
   "iot_class": "local_polling",
   "loggers": ["airq"]

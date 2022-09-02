@@ -8,14 +8,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairq import AirQ
+from aioairq import AirQ, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -27,29 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    auth_success = await AirQ(
-        data[CONF_IP_ADDRESS], data[CONF_PASSWORD]
-    ).test_authentication()
-
-    if not auth_success:
-        raise InvalidAuth
-
-
-async def fetch_device_info(data: dict[str, Any]) -> tuple[str, str]:
-    """Fetch device information: name and a unique ID."""
-    airq = AirQ(data[CONF_IP_ADDRESS], data[CONF_PASSWORD])
-    config = await airq.get("config")
-    device_id: str = config["id"]
-    device_name: str = config["devicename"]
-    return device_name, device_id
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -73,8 +50,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
+        session = async_get_clientsession(self.hass)
+        airq = AirQ(user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD], session)
+
         try:
-            await validate_input(user_input)
+            await airq.validate()
         except ClientConnectionError:
             _LOGGER.debug(
                 "Failed to connect to device %s. Check the specified IP address / mDNS, "
@@ -90,16 +70,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
 
-            device_name, device_id = await fetch_device_info(user_input)
-            await self.async_set_unique_id(device_id)
+            device_info = await airq.fetch_device_info()
+            await self.async_set_unique_id(device_info["id"])
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=device_name, data=user_input)
+            return self.async_create_entry(title=device_info["name"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
