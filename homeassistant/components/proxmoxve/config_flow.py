@@ -254,7 +254,7 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
-                _LOGGER.warning("Device %s removed", device.name)
+                _LOGGER.debug("Device %s removed", device.name)
 
         for lxc in self.config_entry.data[CONF_LXC]:
             if lxc not in self._config[CONF_LXC]:
@@ -270,7 +270,7 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
-                _LOGGER.warning("Device %s removed", device.name)
+                _LOGGER.debug("Device %s removed", device.name)
 
         self.hass.config_entries.async_update_entry(
             self.config_entry,
