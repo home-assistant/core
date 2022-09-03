@@ -68,6 +68,7 @@ from .const import (  # noqa: F401
     CONFIG_ENTRY_IS_SETUP,
     DATA_MQTT,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_DISCOVERY_REGISTRY_HOOKS,
     DATA_MQTT_RELOAD_DISPATCHERS,
     DATA_MQTT_RELOAD_ENTRY,
     DATA_MQTT_RELOAD_NEEDED,
@@ -315,6 +316,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Bail out
         return False
 
+    hass.data[DATA_MQTT_DISCOVERY_REGISTRY_HOOKS] = {}
     hass.data[DATA_MQTT] = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if DATA_MQTT_SUBSCRIPTIONS_TO_RESTORE in hass.data:
@@ -644,5 +646,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # when the entry is set up again
     if mqtt_client.subscriptions:
         hass.data[DATA_MQTT_SUBSCRIPTIONS_TO_RESTORE] = mqtt_client.subscriptions
+    # cleanup
+    hooks: dict[tuple, Callable] = hass.data[DATA_MQTT_DISCOVERY_REGISTRY_HOOKS]
+    for _, hook in hooks.items():
+        hook()
 
     return True

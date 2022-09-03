@@ -48,6 +48,7 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -59,11 +60,13 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
+    CONF_DISCOVERY_PREFIX,
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
     DATA_MQTT,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_DISCOVERY_REGISTRY_HOOKS,
     DATA_MQTT_RELOAD_DISPATCHERS,
     DATA_MQTT_RELOAD_ENTRY,
     DATA_MQTT_UPDATED_CONFIG,
@@ -791,6 +794,7 @@ class MqttDiscoveryUpdate(Entity):
         discovery_update: Callable | None = None,
     ) -> None:
         """Initialize the discovery update mixin."""
+        self._unsubscibe_cleanup_discovery = None
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
@@ -868,7 +872,37 @@ class MqttDiscoveryUpdate(Entity):
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
+        hook_register: dict[tuple, Callable] = self.hass.data[
+            DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
+        ]
+
+        async def _async_clear_discovery_topic_if_entity_removed(
+            discovery_data: dict[str, Any],
+            event: Event,
+        ) -> None:
+            """Clear the discovery topic when the entiy is removed."""
+            if event.data["action"] == "remove":
+                # publish empty payload to config topic to avoid re-adding
+                hass = async_get_hass()
+                discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+                discovery_prefix: str = hass.data[DATA_MQTT].conf[CONF_DISCOVERY_PREFIX]
+                topic = f"{discovery_prefix}/{discovery_hash[0]}/{discovery_hash[1].replace(' ','/')}/config"
+                hass.async_create_task(async_publish(hass, topic, "", retain=True))
+                hook_register.pop(discovery_hash)()
+
         if self._discovery_data:
+            discovery_hash: tuple = self._discovery_data[ATTR_DISCOVERY_HASH]
+            if discovery_hash not in hook_register:
+                hook_register[
+                    discovery_hash
+                ] = async_track_entity_registry_updated_event(
+                    self.hass,
+                    self.entity_id,
+                    partial(
+                        _async_clear_discovery_topic_if_entity_removed,
+                        self._discovery_data,
+                    ),
+                )
             stop_discovery_updates(self.hass, self._discovery_data)
             send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
