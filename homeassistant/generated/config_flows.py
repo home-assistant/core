@@ -12,6 +12,7 @@ FLOWS = {
         "switch_as_x",
         "threshold",
         "tod",
+        "utility_cost",
         "utility_meter",
     ],
     "integration": [

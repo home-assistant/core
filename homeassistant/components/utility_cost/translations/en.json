@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "utility_source": "Utility source",
+                    "price_source": "Price source"
+                },
+                "data_description": {
+                    "utility_source": "Utility sensor which provides the cumulative consumption of a given utility, e.g. energy (kWh).",
+                    "price_source": "Price sensor which gives the current price per unit of the given utility, e.g. price per unit of energy (EUR/kWh)."
+                },
+                "description": "Create a sensor which calculates the cumulative cost of a utility, based on the price given by another sensor.",
+                "title": "Add Utility Cost sensor"
+            }
+        }
+    },
+    "options": {},
+    "title": "Utility Cost"
+}

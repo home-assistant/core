@@ -6458,6 +6458,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "utility_cost": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "utility_meter": {
       "integration_type": "helper",
       "config_flow": true,
@@ -6502,6 +6507,7 @@
     "threshold",
     "tod",
     "uptime",
+    "utility_cost",
     "utility_meter",
     "waze_travel_time"
   ]
