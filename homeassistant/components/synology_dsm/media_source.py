@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-
-# import base64
+import base64
 import mimetypes
 
 from homeassistant.components.media_player.const import (
@@ -46,18 +45,16 @@ class SynologyPhotosMediaSource(MediaSource):
     @property
     def diskstation(self) -> SynologyDSMData | None:
         """Return the Synology dsm."""
-        return self.hass.data.get(DOMAIN)  # [self.entry.unique_id]
+        return self.hass.data.get(DOMAIN)
 
     async def async_browse_media(
         self,
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        diskstation = self.diskstation
-
-        if diskstation is None:
+        if not self.hass.data.get(DOMAIN):
             raise Unresolvable("Diskstation not initialized")
-
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][self.entry.unique_id]
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -103,8 +100,6 @@ class SynologyPhotosMediaSource(MediaSource):
         items = await loop.run_in_executor(
             None, api.photos.get_items, item.identifier, 0, 1000, '["thumbnail"]'
         )
-        # await self._async_generate_thumbnail(items[0], diskstation)
-
         return [
             BrowseMediaSource(
                 domain=DOMAIN,
@@ -114,7 +109,12 @@ class SynologyPhotosMediaSource(MediaSource):
                 title=items_item["filename"],
                 can_play=False,
                 can_expand=False,
-                # thumbnail=self._async_generate_thumbnail(items_item, diskstation),
+                # thumbnail can't be base64 encoded. It needs to be an url
+                # thumbnail=await self.async_get_thumbnail(
+                #    items_item["additional"]["thumbnail"]["cache_key"],
+                #    items_item["id"],
+                #    "sm",
+                # ),
             )
             for items_item in items
         ]
@@ -123,13 +123,24 @@ class SynologyPhotosMediaSource(MediaSource):
         """Resolve media to a url."""
         parts = item.identifier.split(":")
         cache_key = parts[1]
-        # image_id = cache_key.split("_")[0]
-        # api = self.diskstation.api
-        # loop = asyncio.get_event_loop()
-        # thumbnail = await loop.run_in_executor(
-        #    None, api.photos.get_thumbnail, image_id, cache_key
-        # )
+        image_id = cache_key.split("_")[0]
         mime_type, _ = mimetypes.guess_type(parts[2])
-        # base64_data = base64.b64encode(thumbnail)
         assert isinstance(mime_type, str)
-        return PlayMedia(f"data:image/jpeg;base64, {cache_key}", mime_type)
+        image = await self.async_get_thumbnail(cache_key, image_id, "xl", mime_type)
+        return PlayMedia(image, mime_type)
+
+    async def async_get_thumbnail(
+        self, cache_key: str, image_id: str, size: str, mime_type: str
+    ) -> str:
+        """Get thumbnail in base64."""
+        # diskstation = self.diskstation
+        if not self.hass.data.get(DOMAIN):
+            raise Unresolvable("Diskstation not initialized")
+
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][self.entry.unique_id]
+        loop = asyncio.get_event_loop()
+        thumbnail = await loop.run_in_executor(
+            None, diskstation.api.photos.get_thumbnail, image_id, cache_key, size
+        )
+        base64_data = base64.b64encode(thumbnail)
+        return f"data:{mime_type};base64, {base64_data.decode()}"
