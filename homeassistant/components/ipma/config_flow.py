@@ -18,13 +18,6 @@ class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Init IpmaFlowHandler."""
         self._errors = {}
 
-    async def async_step_import(self, config):
-        """Import a configuration from config.yaml."""
-
-        self._async_abort_entries_match(config)
-        config[CONF_MODE] = "daily"
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         self._errors = {}

@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
-from .const import DATA_LIFX_MANAGER, DOMAIN
+from .const import ATTR_INFRARED, ATTR_POWER, ATTR_ZONES, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
@@ -39,13 +39,7 @@ from .manager import (
 )
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
-SERVICE_LIFX_SET_STATE = "set_state"
-
 COLOR_ZONE_POPULATE_DELAY = 0.3
-
-ATTR_INFRARED = "infrared"
-ATTR_ZONES = "zones"
-ATTR_POWER = "power"
 
 SERVICE_LIFX_SET_STATE = "set_state"
 

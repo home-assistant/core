@@ -109,6 +109,9 @@ STATES_ORDER = [
     STATE_BUFFERING,
     STATE_PLAYING,
 ]
+STATES_ORDER_LOOKUP = {state: idx for idx, state in enumerate(STATES_ORDER)}
+STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[STATE_IDLE]
+
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
@@ -626,12 +629,12 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Update state in HA."""
         self._child_state = None
         for child_name in self._children:
-            if (child_state := self.hass.states.get(child_name)) and STATES_ORDER.index(
-                child_state.state
-            ) >= STATES_ORDER.index(STATE_IDLE):
+            if (child_state := self.hass.states.get(child_name)) and (
+                child_state_order := STATES_ORDER_LOOKUP.get(child_state.state, 0)
+            ) >= STATES_ORDER_IDLE:
                 if self._child_state:
-                    if STATES_ORDER.index(child_state.state) > STATES_ORDER.index(
-                        self._child_state.state
+                    if child_state_order > STATES_ORDER_LOOKUP.get(
+                        self._child_state.state, 0
                     ):
                         self._child_state = child_state
                 else:
