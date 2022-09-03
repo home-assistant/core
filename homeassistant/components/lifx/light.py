@@ -231,6 +231,9 @@ class LIFXLight(LIFXEntity, LightEntity):
                 if power_off:
                     await self.set_power(False, duration=fade)
 
+            # Avoid state ping-pong by holding off updates as the state settles
+            await asyncio.sleep(0.3)
+
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
 
