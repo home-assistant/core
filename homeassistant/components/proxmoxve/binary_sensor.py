@@ -46,7 +46,7 @@ async def async_setup_entry(
         vm_sensor = create_binary_sensor(
             coordinator,
             node,
-            ProxmoxType.QEMU.upper(),
+            ProxmoxType.QEMU,
             vm_id,
             vm_name,
             proxmox_version,
@@ -66,7 +66,7 @@ async def async_setup_entry(
         container_sensor = create_binary_sensor(
             coordinator,
             node,
-            ProxmoxType.LXC.upper(),
+            ProxmoxType.LXC,
             container_id,
             container_name,
             proxmox_version,
@@ -116,19 +116,24 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
 
         host = config_entry.data["host"]
         port = config_entry.data["port"]
-        host_port_node_vm = f"{host}_{port}_{node_name}_{vm_id}"
 
-        if proxmox_type is ProxmoxType.Node.upper():
-            name = (node_name,)
+        if proxmox_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
+            name = f"{node_name} {vm_name} ({vm_id})"
+            host_port_node_vm = f"{host}_{port}_{node_name}_{vm_id}"
+        elif proxmox_type is ProxmoxType.Node:
+            name = node_name
+            host_port_node_vm = f"{host}_{port}_{node_name}"
         else:
-            name = (f"{node_name} {vm_name} ({vm_id})",)
+            name = f"{host}"
+            host_port_node_vm = f"{host}_{port}"
+
         self._attr_device_info = DeviceInfo(
             entry_type=device_registry.DeviceEntryType.SERVICE,
             configuration_url=f"https://{host}:{port}",
             identifiers={(DOMAIN, host_port_node_vm)},
             default_manufacturer="Proxmox VE",
             name=name,
-            default_model=proxmox_type,
+            default_model=proxmox_type.upper(),
             sw_version=proxmox_version,
             hw_version=None,
         )
