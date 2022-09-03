@@ -748,6 +748,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/nmbs/ @thibmaek
 /homeassistant/components/noaa_tides/ @jdelaney72
+/homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
+/tests/components/nobo_hub/ @echoromeo @oyvindwe
 /homeassistant/components/notify/ @home-assistant/core
 /tests/components/notify/ @home-assistant/core
 /homeassistant/components/notify_events/ @matrozov @papajojo
