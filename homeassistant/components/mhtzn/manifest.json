@@ -1,0 +1,12 @@
+{
+  "domain": "mhtzn",
+  "name": "棉花糖智能",
+  "config_flow": true,
+  "documentation": "https://github.com/leonardlcl/hass-mhtzn",
+  "dependencies": ["mqtt"],
+  "requirements": ["paho-mqtt==1.6.1"],
+  "zeroconf": ["_mqtt._tcp.local."],
+  "codeowners": ["@leonardlcl"],
+  "iot_class": "local_push",
+  "version": "1.1.2"
+}

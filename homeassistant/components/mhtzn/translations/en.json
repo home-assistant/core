@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service has been configured",
+            "single_instance_allowed": "The integration has already been configured and can only be configured once. To reconfigure, delete the old integration first.",
+            "select_error": "Please select again",
+            "not_found_device": "Device not scanned"
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to device."
+        },
+        "step": {
+            "option": {
+                "data": {
+                    "light_device_type": "Smart Lighting Control Mode"
+                },
+                "description": "Please select the gateway addition method and the intelligent lighting control method."
+            },
+            "scan": {
+                "data": {},
+                "description": "Please select the scanned gateway to connect."
+            }
+        }
+    }
+}

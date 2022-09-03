@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "服务已被配置",
+            "single_instance_allowed": "该集成已经配置过了，且只能配置一次。若要重新配置，请先删除旧集成。",
+            "select_error": "请重新选择",
+            "not_found_device": "未扫描到设备"
+        },
+        "error": {
+            "cannot_connect": "无法连接到设备。"
+        },
+        "step": {
+            "option": {
+                "data": {
+                    "light_device_type": "智能灯光控制方式"
+                },
+                "description": "请选择网关添加方式以及智能灯光控制方式。"
+            },
+            "scan": {
+                "data": {},
+                "description": "请选择扫描到的网关进行连接。"
+            }
+        }
+    }
+}
