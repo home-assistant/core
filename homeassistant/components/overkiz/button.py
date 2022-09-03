@@ -61,7 +61,7 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
     OverkizButtonDescription(
         key="goToAlias",
-        press_args=1,
+        press_args="1",
         name="My position",
         icon="mdi:star",
     ),
