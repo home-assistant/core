@@ -27,7 +27,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "T201 EEFF"
+    assert result2["title"] == "Tempo Disc THD EEFF"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
@@ -73,7 +73,7 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "T201 EEFF"
+    assert result2["title"] == "Tempo Disc THD EEFF"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
@@ -192,7 +192,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
             user_input={"address": "aa:bb:cc:dd:ee:ff"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "T201 EEFF"
+    assert result2["title"] == "Tempo Disc THD EEFF"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 

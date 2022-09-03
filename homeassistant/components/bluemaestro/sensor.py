@@ -23,8 +23,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
+    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
@@ -70,12 +70,20 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
-        BlueMaestroSensorDeviceClass.VOLTAGE,
-        Units.ELECTRIC_POTENTIAL_VOLT,
+        BlueMaestroSensorDeviceClass.DEW_POINT,
+        Units.TEMP_CELSIUS,
     ): SensorEntityDescription(
-        key=f"{BlueMaestroSensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_VOLT}",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        key=f"{BlueMaestroSensorDeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        BlueMaestroSensorDeviceClass.PRESSURE,
+        Units.PRESSURE_MBAR,
+    ): SensorEntityDescription(
+        key=f"{BlueMaestroSensorDeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=PRESSURE_MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

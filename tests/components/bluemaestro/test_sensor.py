@@ -39,11 +39,11 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 4
 
-    humid_sensor = hass.states.get("sensor.t201_eeff_humidity")
+    humid_sensor = hass.states.get("sensor.tempo_disc_thd_eeff_temperature")
     humid_sensor_attrs = humid_sensor.attributes
-    assert humid_sensor.state == "50.21"
-    assert humid_sensor_attrs[ATTR_FRIENDLY_NAME] == "T201 EEFF Humidity"
-    assert humid_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert humid_sensor.state == "24.2"
+    assert humid_sensor_attrs[ATTR_FRIENDLY_NAME] == "Tempo Disc THD EEFF Temperature"
+    assert humid_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert humid_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)

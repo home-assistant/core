@@ -14,13 +14,13 @@ NOT_BLUEMAESTRO_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 BLUEMAESTRO_SERVICE_INFO = BluetoothServiceInfo(
-    name="T201",
+    name="FA17B62C",
+    manufacturer_data={
+        307: b"\x17d\x0e\x10\x00\x02\x00\xf2\x01\xf2\x00\x83\x01\x00\x01\r\x02\xab\x00\xf2\x01\xf2\x01\r\x02\xab\x00\xf2\x01\xf2\x00\xff\x02N\x00\x00\x00\x00\x00"
+    },
     address="aa:bb:cc:dd:ee:ff",
     rssi=-60,
     service_data={},
-    manufacturer_data={
-        43605: b"\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01\x01\x01\xa4\xc18.\xcan\x01\x07\n\x02\x13\x9dd\x00\x01"
-    },
     service_uuids=[],
     source="local",
 )
