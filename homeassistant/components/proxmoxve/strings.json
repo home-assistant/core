@@ -1,7 +1,8 @@
 {
   "config": {
     "step": {
-      "user": {
+      "host": {
+        "title": "Proxmox host information",
         "description": "Please fill out the form and then press submit when you're ready",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -10,6 +11,22 @@
           "password": "[%key:common::config_flow::data::password%]",
           "realm": "Realm",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "node": {
+        "title": "Proxmox node selection",
+        "description": "Select the Proxmox instance nodes you want to expose:",
+        "data": {
+          "node": "Node:"
+        }
+      },
+      "selection_qemu_lxc": {
+        "title": "Selection of Virtual Machines (QEMU) and Containers (LXC):",
+        "description": "Select the virtual machines and containers to expose:",
+        "data": {
+          "node": "Node",
+          "qemu": "Virtual Machines (QEMU)",
+          "lxc": "Linux Containers (LXC)"
         }
       },
       "reauth_confirm": {
@@ -30,18 +47,35 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "no_nodes": "No nodes were returned for the host."
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "Configuration in YAML file has been imported and can be removed",
+      "description": "Configuration of the {integration} (`{platform}`) in YAML is deprecated and will be removed in Home Assistant 2022.12.\n\nYour existing configuration has been imported into the UI automatically and can be safely removed from your configuration.yaml file."
     }
   },
   "options": {
     "step": {
-      "init": {
-        "description": "[%key:component::proxmoxve::config::step::user::description%]",
+      "host": {
+        "title": "Proxmox VE host information",
+        "description": "[%key:component::proxmoxve::config::step::host::description%]",
         "data": {
-          "username": "[%key:component::proxmoxve::config::step::user::data::username%]",
-          "password": "[%key:component::proxmoxve::config::step::user::data::password%]",
-          "realm": "[%key:component::proxmoxve::config::step::user::data::realm%]",
-          "verify_ssl": "[%key:component::proxmoxve::config::step::user::data::verify_ssl%]"
+          "username": "[%key:component::proxmoxve::config::step::host::data::username%]",
+          "password": "[%key:component::proxmoxve::config::step::host::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::host::data::realm%]",
+          "verify_ssl": "[%key:component::proxmoxve::config::step::host::data::verify_ssl%]"
+        }
+      },
+      "selection_qemu_lxc": {
+        "title": "Selection of Virtual Machines (QEMU) and Containers (LXC):",
+        "description": "Select the virtual machines (QEMU) and containers (LXC) to expose:",
+        "data": {
+          "node": "Node",
+          "qemu": "Virtual Machines (QEMU)",
+          "lxc": "Linux Containers (LXC)"
         }
       }
     },
@@ -51,6 +85,11 @@
       "cant_connect": "[%key:component::proxmoxve::config::error::cant_connect%]",
       "general_error": "[%key:component::proxmoxve::config::error::general_error%]",
       "invalid_port": "[%key:component::proxmoxve::config::error::invalid_port%]"
+    },
+    "abort": {
+      "no_nodes": "No nodes were returned for the host.",
+      "no_vms": "There are no virtual machines or containers for this node, the configuration entry will be created for the node.",
+      "changes_successful": "Changes saved successfully."
     }
   }
 }

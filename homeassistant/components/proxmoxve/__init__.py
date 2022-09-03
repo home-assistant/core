@@ -19,9 +19,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -30,8 +31,10 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_CONTAINERS,
+    CONF_LXC,
     CONF_NODE,
     CONF_NODES,
+    CONF_QEMU,
     CONF_REALM,
     CONF_VMS,
     COORDINATORS,
@@ -93,11 +96,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN in config:
         for conf in config[DOMAIN]:
             _LOGGER.warning(
-                # Proxmox VE config flow added in 2022.8 and should be removed in 2022.10
+                # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
                 "Configuration of the Proxmox in YAML is deprecated and "
-                "will be removed in Home Assistant 2022.10; Your existing configuration "
+                "will be removed in Home Assistant 2022.12; Your existing configuration "
                 "has been imported into the UI automatically and can be safely removed "
                 "from your configuration.yaml file"
+            )
+            # Register a repair
+            async_create_issue(
+                async_get_hass(),
+                DOMAIN,
+                f"deprecated_yaml_{DOMAIN}",
+                breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+                translation_placeholders={
+                    "integration": "Proxmox VE",
+                    "platform": DOMAIN,
+                },
             )
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
@@ -142,56 +159,60 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     proxmox = await hass.async_add_executor_job(proxmox_client.get_api_client)
 
-    for node_config in entry_data["nodes"]:
-        node_name = node_config["name"]
-        node_coordinators = coordinators[node_name] = {}
+    node = entry_data[CONF_NODE]
+    node_coordinators = coordinators[node] = {}
 
-        # Proxmox instance info
+    # Proxmox instance info
+    coordinator = create_coordinator_container_vm(
+        hass, proxmox, entry_data[CONF_HOST], None, None, ProxmoxType.Proxmox
+    )
+
+    # Fetch initial data
+    await coordinator.async_refresh()
+
+    node_coordinators[ProxmoxType.Proxmox] = coordinator
+
+    # Node info
+    coordinator = create_coordinator_container_vm(
+        hass, proxmox, entry_data[CONF_HOST], node, None, ProxmoxType.Node
+    )
+
+    # Fetch initial data
+    await coordinator.async_refresh()
+
+    node_coordinators[ProxmoxType.Node] = coordinator
+
+    # QEMU info
+    for vm_id in entry_data[CONF_QEMU]:
         coordinator = create_coordinator_container_vm(
-            hass, proxmox, entry_data["host"], None, None, ProxmoxType.Proxmox
+            hass,
+            proxmox,
+            entry_data[CONF_HOST],
+            node,
+            vm_id,
+            ProxmoxType.QEMU,
         )
 
         # Fetch initial data
         await coordinator.async_refresh()
 
-        node_coordinators[ProxmoxType.Proxmox] = coordinator
+        node_coordinators[vm_id] = coordinator
 
-        # Node info
+    # LXC info
+    for container_id in entry_data[CONF_LXC]:
         coordinator = create_coordinator_container_vm(
-            hass, proxmox, entry_data["host"], node_name, None, ProxmoxType.Node
+            hass,
+            proxmox,
+            entry_data[CONF_HOST],
+            node,
+            container_id,
+            ProxmoxType.LXC,
         )
 
         # Fetch initial data
         await coordinator.async_refresh()
 
-        node_coordinators[ProxmoxType.Node] = coordinator
-
-        # QEMU info
-        for vm_id in node_config["vms"]:
-            coordinator = create_coordinator_container_vm(
-                hass, proxmox, entry_data["host"], node_name, vm_id, ProxmoxType.QEMU
-            )
-
-            # Fetch initial data
-            await coordinator.async_refresh()
-
-            node_coordinators[vm_id] = coordinator
-
-        # LXC info
-        for container_id in node_config["containers"]:
-            coordinator = create_coordinator_container_vm(
-                hass,
-                proxmox,
-                entry_data["host"],
-                node_name,
-                container_id,
-                ProxmoxType.LXC,
-            )
-
-            # Fetch initial data
-            await coordinator.async_refresh()
-
-            node_coordinators[container_id] = coordinator
+        node_coordinators[container_id] = coordinator
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
