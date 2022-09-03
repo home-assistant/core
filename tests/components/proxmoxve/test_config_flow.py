@@ -186,24 +186,24 @@ async def test_flow_import_ok(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
 
 
-async def test_flow_import_ok_onlyrequired(hass: HomeAssistant):
-    """Test flow ok."""
+# async def test_flow_import_ok_onlyrequired(hass: HomeAssistant):
+#     """Test flow ok."""
 
-    with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
-        "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
-        return_value=True,
-    ):
+#     with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
+#         "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
+#         return_value=None,
+#     ), patch(
+#         "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
+#         return_value=True,
+#     ):
 
-        # imported config is identical to the one generated from config flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_REQONLY
-        )
+#         # imported config is identical to the one generated from config flow
+#         result = await hass.config_entries.flow.async_init(
+#             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_REQONLY
+#         )
 
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+#         assert result["type"] == FlowResultType.ABORT
+#         assert result["reason"] == "already_configured"
 
 
 async def test_flow_import_error(hass: HomeAssistant):
