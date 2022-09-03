@@ -256,6 +256,7 @@ FLOWS = {
         "nightscout",
         "nina",
         "nmap_tracker",
+        "nobo_hub",
         "notion",
         "nuheat",
         "nuki",

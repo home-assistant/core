@@ -838,6 +838,8 @@ omit =
     homeassistant/components/nmap_tracker/__init__.py
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/nobo_hub/__init__.py
+    homeassistant/components/nobo_hub/climate.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
