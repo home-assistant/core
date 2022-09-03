@@ -74,6 +74,7 @@ SENSOR_DESCRIPTIONS = {
         Units.TEMP_CELSIUS,
     ): SensorEntityDescription(
         key=f"{BlueMaestroSensorDeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
