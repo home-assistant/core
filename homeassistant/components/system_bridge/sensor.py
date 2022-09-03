@@ -32,13 +32,6 @@ from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
 
-ATTR_AVAILABLE: Final = "available"
-ATTR_FILESYSTEM: Final = "filesystem"
-ATTR_MOUNT: Final = "mount"
-ATTR_SIZE: Final = "size"
-ATTR_TYPE: Final = "type"
-ATTR_USED: Final = "used"
-
 PIXELS: Final = "px"
 
 
