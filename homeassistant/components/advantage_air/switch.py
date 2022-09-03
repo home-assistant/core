@@ -1,7 +1,7 @@
 """Switch platform for Advantage Air integration."""
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -11,7 +11,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirAcEntity
+from .entity import AdvantageAirAcEntity, AdvantageAirThingEntity
 
 
 async def async_setup_entry(
@@ -23,11 +23,15 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[SwitchEntity] = []
     if aircons := instance["coordinator"].data.get("aircons"):
         for ac_key, ac_device in aircons.items():
             if ac_device["info"]["freshAirStatus"] != "none":
                 entities.append(AdvantageAirFreshAir(instance, ac_key))
+    if my_things := instance["coordinator"].data.get("myThings"):
+        for thing in my_things["things"].values():
+            if thing["channelDipState"] == 8:  # 8 = Other relay
+                entities.append(AdvantageAirRelay(instance, thing))
     async_add_entities(entities)
 
 
@@ -36,6 +40,7 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
 
     _attr_icon = "mdi:air-filter"
     _attr_name = "Fresh air"
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air fresh air control."""
@@ -58,3 +63,9 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
         await self.aircon(
             {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}}
         )
+
+
+class AdvantageAirRelay(AdvantageAirThingEntity, SwitchEntity):
+    """Representation of Advantage Air Thing."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
