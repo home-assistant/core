@@ -70,8 +70,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[ClimateEntity] = []
-    if "aircons" in instance["coordinator"].data:
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
             entities.append(AdvantageAirAC(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone climate control when zone is in temperature control
