@@ -11,7 +11,8 @@
             "server_in_maintenance": "Le serveur est ferm\u00e9 pour maintenance",
             "too_many_attempts": "Trop de tentatives avec un jeton non valide\u00a0: banni temporairement",
             "too_many_requests": "Trop de demandes, r\u00e9essayez plus tard.",
-            "unknown": "Erreur inattendue"
+            "unknown": "Erreur inattendue",
+            "unknown_user": "Utilisateur inconnu. Les comptes Somfy Protect ne sont pas pris en charge par cette int\u00e9gration."
         },
         "flow_title": "Passerelle\u00a0: {gateway_id}",
         "step": {
