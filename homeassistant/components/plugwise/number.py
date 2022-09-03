@@ -42,7 +42,7 @@ NUMBER_TYPES = (
         key="maximum_boiler_temperature",
         command=lambda api, value: api.set_max_boiler_temperature(value),
         device_class=NumberDeviceClass.TEMPERATURE,
-        name="Maximum Boiler Temperature Setpoint",
+        name="Maximum boiler temperature setpoint",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
@@ -86,7 +86,6 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = (f"{self.device['name']} {description.name}").lstrip()
         self._attr_mode = NumberMode.BOX
 
     @property

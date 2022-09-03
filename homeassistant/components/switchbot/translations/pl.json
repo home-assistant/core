@@ -13,10 +13,20 @@
             "one": "Pusty",
             "other": ""
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Urz\u0105dzenie {name} wymaga has\u0142a"
+            },
             "user": {
                 "data": {
+                    "address": "Adres urz\u0105dzenia",
                     "mac": "Adres MAC urz\u0105dzenia",
                     "name": "Nazwa",
                     "password": "Has\u0142o"

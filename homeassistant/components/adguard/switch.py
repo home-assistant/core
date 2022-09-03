@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
@@ -15,10 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AdGuardHomeDeviceEntity
-from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN, LOGGER
+from .entity import AdGuardHomeEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
@@ -113,7 +110,7 @@ async def async_setup_entry(
     )
 
 
-class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
+class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
     """Defines a AdGuard Home switch."""
 
     entity_description: AdGuardHomeSwitchEntityDescription
@@ -125,18 +122,10 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         description: AdGuardHomeSwitchEntityDescription,
     ) -> None:
         """Initialize AdGuard Home switch."""
+        super().__init__(adguard, entry)
         self.entity_description = description
-
         self._attr_unique_id = "_".join(
             [DOMAIN, adguard.host, str(adguard.port), "switch", description.key]
-        )
-
-        super().__init__(
-            adguard,
-            entry,
-            description.name,
-            description.icon,
-            description.entity_registry_enabled_default,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -144,16 +133,16 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         try:
             await self.entity_description.turn_off_fn(self.adguard)()
         except AdGuardHomeError:
-            _LOGGER.error("An error occurred while turning off AdGuard Home switch")
-            self._available = False
+            LOGGER.error("An error occurred while turning off AdGuard Home switch")
+            self._attr_available = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
             await self.entity_description.turn_on_fn(self.adguard)()
         except AdGuardHomeError:
-            _LOGGER.error("An error occurred while turning on AdGuard Home switch")
-            self._available = False
+            LOGGER.error("An error occurred while turning on AdGuard Home switch")
+            self._attr_available = False
 
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""

@@ -1,5 +1,8 @@
 """Support for Apple TV media player."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pyatv import exceptions
 from pyatv.const import (
@@ -276,7 +279,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return dt_util.utcnow()
         return None
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         # If input (file) has a file format supported by pyatv, then stream it with
         # RAOP. Otherwise try to play it with regular AirPlay.
@@ -314,7 +319,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return self.atv.metadata.artwork_id
         return None
 
-    async def async_get_media_image(self):
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing image."""
         state = self.state
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
@@ -391,8 +396,8 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type=None,
-        media_content_id=None,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if media_content_id == "apps" or (
@@ -422,17 +427,17 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return cur_item
 
         # Add app item if we have one
-        if self._app_list and cur_item.children:
+        if self._app_list and cur_item.children and isinstance(cur_item.children, list):
             cur_item.children.insert(0, build_app_list(self._app_list))
 
         return cur_item
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if self._is_feature_available(FeatureName.TurnOn):
             await self.atv.power.turn_on()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         if (self._is_feature_available(FeatureName.TurnOff)) and (
             not self._is_feature_available(FeatureName.PowerState)
@@ -440,58 +445,58 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         ):
             await self.atv.power.turn_off()
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Pause media on media player."""
         if self._playing:
             await self.atv.remote_control.play_pause()
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Play media."""
         if self.atv:
             await self.atv.remote_control.play()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Stop the media player."""
         if self.atv:
             await self.atv.remote_control.stop()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Pause the media player."""
         if self.atv:
             await self.atv.remote_control.pause()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         if self.atv:
             await self.atv.remote_control.next()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         if self.atv:
             await self.atv.remote_control.previous()
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         if self.atv:
             await self.atv.remote_control.set_position(position)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         if self.atv:
             await self.atv.audio.volume_up()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         if self.atv:
             await self.atv.audio.volume_down()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         if self.atv:
             # pyatv expects volume in percent
             await self.atv.audio.set_volume(volume * 100.0)
 
-    async def async_set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         if self.atv:
             mode = {
@@ -500,7 +505,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             }.get(repeat, RepeatState.Off)
             await self.atv.remote_control.set_repeat(mode)
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         if self.atv:
             await self.atv.remote_control.set_shuffle(

@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_UNIT_SYSTEM,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -279,7 +279,6 @@ class FitbitAuthCallbackView(HomeAssistantView):
         self.add_entities = add_entities
         self.oauth = oauth
 
-    @callback
     async def get(self, request: Request) -> str:
         """Finish OAuth callback request."""
         hass: HomeAssistant = request.app["hass"]

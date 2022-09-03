@@ -16,8 +16,6 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.cloud.client",
-    "homeassistant.components.cloud.http_api",
     "homeassistant.components.sonos",
     "homeassistant.components.sonos.alarms",
     "homeassistant.components.sonos.binary_sensor",
@@ -56,6 +54,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     # Enable some checks globally.
     "ignore_missing_imports": "true",
     "strict_equality": "true",
+    "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
@@ -76,7 +75,6 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_calls",
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
-    "no_implicit_optional",
     "warn_return_any",
     "warn_unreachable",
     # TODO: turn these on, address issues

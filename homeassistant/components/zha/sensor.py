@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
@@ -69,6 +69,13 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+_SensorSelfT = TypeVar("_SensorSelfT", bound="Sensor")
+_BatterySelfT = TypeVar("_BatterySelfT", bound="Battery")
+_ThermostatHVACActionSelfT = TypeVar(
+    "_ThermostatHVACActionSelfT", bound="ThermostatHVACAction"
+)
+_RSSISensorSelfT = TypeVar("_RSSISensorSelfT", bound="RSSISensor")
+
 PARALLEL_UPDATES = 5
 
 BATTERY_SIZES = {
@@ -126,7 +133,7 @@ class Sensor(ZhaEntity, SensorEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
@@ -134,12 +141,12 @@ class Sensor(ZhaEntity, SensorEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_SensorSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _SensorSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -176,7 +183,7 @@ class Sensor(ZhaEntity, SensorEntity):
         """Handle state update from channel."""
         self.async_write_ha_state()
 
-    def formatter(self, value: int) -> int | float:
+    def formatter(self, value: int) -> int | float | None:
         """Numeric pass-through formatter."""
         if self._decimals > 0:
             return round(
@@ -214,12 +221,12 @@ class Battery(Sensor):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_BatterySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _BatterySelfT | None:
         """Entity Factory.
 
         Unlike any other entity, PowerConfiguration cluster may not support
@@ -229,11 +236,11 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int:  # pylint: disable=arguments-differ
+    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
-            return value
+            return None
         value = round(value / 2)
         return value
 
@@ -259,14 +266,10 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
+    _attr_should_poll = True  # BaseZhaEntity defaults to False
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _unit = POWER_WATT
     _div_mul_prefix = "ac_power"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if HA needs to poll for state changes."""
-        return True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -305,13 +308,9 @@ class ElectricalMeasurementApparentPower(
 
     SENSOR_ATTR = "apparent_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
+    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _unit = POWER_VOLT_AMPERE
     _div_mul_prefix = "ac_power"
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll indirectly by ElectricalMeasurementSensor."""
-        return False
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
@@ -320,13 +319,9 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_curr
 
     SENSOR_ATTR = "rms_current"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _unit = ELECTRIC_CURRENT_AMPERE
     _div_mul_prefix = "ac_current"
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll indirectly by ElectricalMeasurementSensor."""
-        return False
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
@@ -335,13 +330,9 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 
     SENSOR_ATTR = "rms_voltage"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _unit = ELECTRIC_POTENTIAL_VOLT
     _div_mul_prefix = "ac_voltage"
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll indirectly by ElectricalMeasurementSensor."""
-        return False
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
@@ -350,13 +341,9 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
 
     SENSOR_ATTR = "ac_frequency"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _unit = FREQUENCY_HERTZ
     _div_mul_prefix = "ac_frequency"
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll indirectly by ElectricalMeasurementSensor."""
-        return False
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
@@ -365,12 +352,8 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
 
     SENSOR_ATTR = "power_factor"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
+    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _unit = PERCENTAGE
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll indirectly by ElectricalMeasurementSensor."""
-        return False
 
 
 @MULTI_MATCH(
@@ -514,10 +497,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 class PolledSmartEnergySummation(SmartEnergySummation):
     """Polled Smart Energy Metering summation sensor."""
 
-    @property
-    def should_poll(self) -> bool:
-        """Poll the entity for current state."""
-        return True
+    _attr_should_poll = True  # BaseZhaEntity defaults to False
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
@@ -641,12 +621,12 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ThermostatHVACActionSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ThermostatHVACActionSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -763,16 +743,17 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    _attr_should_poll = True  # BaseZhaEntity defaults to False
     unique_id_suffix: str
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_RSSISensorSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _RSSISensorSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -786,11 +767,6 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return getattr(self._zha_device.device, self.unique_id_suffix)
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll the entity for current state."""
-        return True
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)

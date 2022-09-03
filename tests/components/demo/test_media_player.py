@@ -306,7 +306,7 @@ async def test_prev_next_track(hass):
 
     ent_id = "media_player.lounge_room"
     state = hass.states.get(ent_id)
-    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == 1
+    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == "1"
 
     await hass.services.async_call(
         mp.DOMAIN,
@@ -315,7 +315,7 @@ async def test_prev_next_track(hass):
         blocking=True,
     )
     state = hass.states.get(ent_id)
-    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == 2
+    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == "2"
 
     await hass.services.async_call(
         mp.DOMAIN,
@@ -324,7 +324,7 @@ async def test_prev_next_track(hass):
         blocking=True,
     )
     state = hass.states.get(ent_id)
-    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == 1
+    assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == "1"
 
 
 async def test_play_media(hass):

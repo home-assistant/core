@@ -127,7 +127,7 @@ class KonnectedSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         entity_id_key = self._addr or self.entity_description.key
         self._data[entity_id_key] = self.entity_id

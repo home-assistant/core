@@ -176,6 +176,8 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
 class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
         """Initialize the SAJ sensor."""
         self._sensor = pysaj_sensor
@@ -215,11 +217,6 @@ class SAJsensor(SensorEntity):
             return SensorDeviceClass.ENERGY
         if self.native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return SensorDeviceClass.TEMPERATURE
-
-    @property
-    def should_poll(self) -> bool:
-        """SAJ sensors are updated & don't poll."""
-        return False
 
     @property
     def per_day_basis(self) -> bool:

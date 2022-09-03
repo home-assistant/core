@@ -14,6 +14,7 @@ from homeassistant.components import dhcp, ssdp
 from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
+    CONF_IGNORED,
     CONF_OVERRIDE_CHOST,
     DOMAIN,
 )
@@ -238,6 +239,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "id": "UnifiProtect",
             "port": 443,
             "verify_ssl": False,
+            "max_media": 1000,
         },
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
@@ -269,6 +271,49 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
         "disable_rtsp": True,
         "override_connection_host": True,
     }
+
+
+async def test_form_options_invalid_mac(
+    hass: HomeAssistant, ufp_client: ProtectApiClient
+) -> None:
+    """Test we handle options flows."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+            "max_media": 1000,
+        },
+        version=2,
+        unique_id=dr.format_mac(MAC_ADDR),
+    )
+    mock_config.add_to_hass(hass)
+
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.ProtectApiClient"
+    ) as mock_api:
+        mock_api.return_value = ufp_client
+
+        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config.state == config_entries.ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(mock_config.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_IGNORED: "test,test2"},
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {CONF_IGNORED: "invalid_mac_list"}
 
 
 @pytest.mark.parametrize(

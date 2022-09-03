@@ -183,7 +183,7 @@ async def test_warning_close_session_custom(hass, caplog):
         await session.close()
     assert (
         "Detected integration that closes the Home Assistant aiohttp session. "
-        "Please report issue to the custom component author for hue using this method at "
+        "Please report issue to the custom integration author for hue using this method at "
         "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
     )
 

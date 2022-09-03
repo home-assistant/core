@@ -26,6 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_IGNORED,
     CONF_OVERRIDE_CHOST,
     DEFAULT_SCAN_INTERVAL,
     DEVICES_FOR_SUBSCRIBE,
@@ -35,11 +36,11 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
-from .data import ProtectData, async_ufp_instance_for_config_entry_ids
+from .data import ProtectData
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
-from .utils import _async_unifi_mac_from_hass, async_get_devices
+from .utils import async_unifi_mac, convert_mac_list
 from .views import ThumbnailProxyView, VideoProxyView
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +107,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
+
+    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    changed = data.async_get_changed_options(entry)
+
+    if len(changed) == 1 and CONF_IGNORED in changed:
+        new_macs = convert_mac_list(entry.options.get(CONF_IGNORED, ""))
+        added_macs = new_macs - data.ignored_macs
+        removed_macs = data.ignored_macs - new_macs
+        # if only ignored macs are added, we can handle without reloading
+        if not removed_macs and added_macs:
+            data.async_add_new_ignored_macs(added_macs)
+            return
+
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -125,15 +139,15 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove ufp config entry from a device."""
     unifi_macs = {
-        _async_unifi_mac_from_hass(connection[1])
+        async_unifi_mac(connection[1])
         for connection in device_entry.connections
         if connection[0] == dr.CONNECTION_NETWORK_MAC
     }
-    api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
-    assert api is not None
-    if api.bootstrap.nvr.mac in unifi_macs:
+    data: ProtectData = hass.data[DOMAIN][config_entry.entry_id]
+    if data.api.bootstrap.nvr.mac in unifi_macs:
         return False
-    for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):
+    for device in data.get_by_types(DEVICES_THAT_ADOPT):
         if device.is_adopted_by_us and device.mac in unifi_macs:
-            return False
+            data.async_ignore_mac(device.mac)
+            break
     return True

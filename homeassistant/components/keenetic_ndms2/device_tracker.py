@@ -7,7 +7,7 @@ from ndms2_client import Device
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -86,6 +86,8 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
 class KeeneticTracker(ScannerEntity):
     """Representation of network device."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: Device, router: KeeneticRouter) -> None:
         """Initialize the tracked device."""
         self._device = device
@@ -93,11 +95,6 @@ class KeeneticTracker(ScannerEntity):
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False since entity pushes its state to HA."""
-        return False
 
     @property
     def is_connected(self):
@@ -109,9 +106,9 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type of the client."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def name(self) -> str:
@@ -147,12 +144,12 @@ class KeeneticTracker(ScannerEntity):
             }
         return None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
 
         @callback
-        def update_device():
+        def update_device() -> None:
             _LOGGER.debug(
                 "Updating Keenetic tracked device %s (%s)",
                 self.entity_id,

@@ -1,0 +1,174 @@
+[
+  {
+    "title": "Aladdin Connect is turning off their previous connection method",
+    "created": "2022-07-14T06:00:00.000Z",
+    "integrations": [
+      {
+        "package": "aladdin_connect"
+      }
+    ],
+    "homeassistant": {
+      "package": "homeassistant",
+      "resolved_in_version": "2022.7"
+    },
+    "filename": "aladdin_connect.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#aladdin_connect.markdown"
+  },
+  {
+    "title": "Dark Sky API closed for new users",
+    "created": "2020-03-31T14:40:00.000Z",
+    "integrations": [
+      {
+        "package": "darksky"
+      }
+    ],
+    "github_issue": "https://github.com/home-assistant/home-assistant.io/pull/12591",
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.30"
+    },
+    "filename": "dark_sky.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
+  },
+  {
+    "title": "Hikvision Security Vulnerability",
+    "created": "2021-09-20T22:08:00.000Z",
+    "integrations": [
+      {
+        "package": "hikvision"
+      },
+      {
+        "package": "hikvisioncam"
+      }
+    ],
+    "filename": "hikvision.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#hikvision.markdown",
+    "homeassistant": {
+      "package": "homeassistant"
+    }
+  },
+  {
+    "title": "Hive shutting down North American Servers",
+    "created": "2021-11-13T13:58:00.000Z",
+    "integrations": [
+      {
+        "package": "hive"
+      }
+    ],
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "2021.11.0"
+    },
+    "filename": "hive_us.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#hive_us.markdown"
+  },
+  {
+    "title": "HomematicIP (EQ-3) blocks public IP addresses, if access to the Cloud is too frequent.",
+    "created": "2020-12-20T12:00:00.000Z",
+    "integrations": [
+      {
+        "package": "homematicip_cloud"
+      }
+    ],
+    "packages": [
+      {
+        "package": "homematicip"
+      }
+    ],
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.7"
+    },
+    "filename": "homematicip_cloud.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#homematicip_cloud.markdown"
+  },
+  {
+    "title": "Logitech no longer accepting API applications",
+    "created": "2022-05-16T12:00:00.000Z",
+    "integrations": [
+      {
+        "package": "logi_circle"
+      }
+    ],
+    "github_issue": "https://github.com/home-assistant/core/issues/71945",
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.92.0"
+    },
+    "filename": "logi_circle.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#logi_circle.markdown"
+  },
+  {
+    "title": "New Neato Botvacs Do Not Support Existing API",
+    "created": "2021-12-20T13:27:00.000Z",
+    "integrations": [
+      {
+        "package": "neato"
+      }
+    ],
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.30"
+    },
+    "filename": "neato.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#neato.markdown"
+  },
+  {
+    "title": "Nest Desktop Auth Deprecation",
+    "created": "2022-05-12T14:04:00.000Z",
+    "integrations": [
+      {
+        "package": "nest"
+      }
+    ],
+    "github_issue": "https://github.com/home-assistant/core/issues/67662#issuecomment-1144425848",
+    "filename": "nest.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#nest.markdown",
+    "homeassistant": {
+      "package": "homeassistant"
+    }
+  },
+  {
+    "title": "Haiku Firmware Update Protocol Change",
+    "created": "2022-04-05T00:00:00.000Z",
+    "integrations": [
+      {
+        "package": "senseme"
+      }
+    ],
+    "filename": "senseme.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#senseme.markdown",
+    "homeassistant": {
+      "package": "homeassistant"
+    }
+  },
+  {
+    "title": "The SoChain integration is disabled due to a dependency conflict",
+    "created": "2022-02-01T00:00:00.000Z",
+    "integrations": [
+      {
+        "package": "sochain"
+      }
+    ],
+    "filename": "sochain.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#sochain.markdown",
+    "homeassistant": {
+      "package": "homeassistant"
+    }
+  },
+  {
+    "title": "Yeelight-manufactured Xiaomi-branded devices removed Local Control",
+    "created": "2021-03-29T06:00:00.000Z",
+    "integrations": [
+      {
+        "package": "yeelight"
+      }
+    ],
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.89"
+    },
+    "filename": "yeelight.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#yeelight.markdown"
+  }
+]

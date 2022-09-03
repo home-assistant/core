@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
         "error": {
             "invalid_key": "Ogiltigt API-nyckel och/eller applikationsnyckel",
             "no_devices": "Inga enheter hittades i kontot"

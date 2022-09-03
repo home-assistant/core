@@ -24,7 +24,7 @@
                     "host": "IP c\u00edm",
                     "port": "Port"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg a Konnected Panel csatlakoz\u00e1si adatait."
+                "description": "K\u00e9rem, adja meg a Konnected Panel csatlakoz\u00e1si adatait."
             }
         }
     },
@@ -91,7 +91,7 @@
                     "discovery": "V\u00e1laszoljon a h\u00e1l\u00f3zaton \u00e9rkez\u0151 felder\u00edt\u00e9si k\u00e9r\u00e9sekre",
                     "override_api_host": "Az alap\u00e9rtelmezett Home Assistant API host-URL fel\u00fcl\u00edr\u00e1sa"
                 },
-                "description": "K\u00e9rj\u00fck, v\u00e1lassza ki a k\u00edv\u00e1nt viselked\u00e9st a panelhez",
+                "description": "K\u00e9rem, v\u00e1lassza ki panel k\u00edv\u00e1nt m\u0171k\u00f6d\u00e9s\u00e9t",
                 "title": "Egy\u00e9b be\u00e1ll\u00edt\u00e1sa"
             },
             "options_switch": {

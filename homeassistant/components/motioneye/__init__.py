@@ -328,7 +328,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    @callback
     async def async_update_data() -> dict[str, Any] | None:
         try:
             return await client.async_get_cameras()
@@ -545,7 +544,7 @@ class MotionEyeEntity(CoordinatorEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, Any],
-        entity_description: EntityDescription = None,
+        entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a motionEye entity."""
         self._camera_id = camera[KEY_ID]

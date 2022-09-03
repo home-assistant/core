@@ -2,23 +2,80 @@
 from __future__ import annotations
 
 from abc import ABC
+from dataclasses import dataclass
 from datetime import timedelta
-from functools import partial
 import logging
 
 from kostal.plenticore import SettingsData
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, POWER_WATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NUMBER_SETTINGS_DATA, PlenticoreNumberEntityDescription
+from .const import DOMAIN
 from .helper import PlenticoreDataFormatter, SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PlenticoreNumberEntityDescriptionMixin:
+    """Define an entity description mixin for number entities."""
+
+    module_id: str
+    data_id: str
+    fmt_from: str
+    fmt_to: str
+
+
+@dataclass
+class PlenticoreNumberEntityDescription(
+    NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
+):
+    """Describes a Plenticore number entity."""
+
+
+NUMBER_SETTINGS_DATA = [
+    PlenticoreNumberEntityDescription(
+        key="battery_min_soc",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:battery-negative",
+        name="Battery min SoC",
+        native_unit_of_measurement=PERCENTAGE,
+        native_max_value=100,
+        native_min_value=5,
+        native_step=5,
+        module_id="devices:local",
+        data_id="Battery:MinSoc",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
+    PlenticoreNumberEntityDescription(
+        key="battery_min_home_consumption",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        name="Battery min Home Consumption",
+        native_unit_of_measurement=POWER_WATT,
+        native_max_value=38000,
+        native_min_value=50,
+        native_step=1,
+        module_id="devices:local",
+        data_id="Battery:MinHomeComsumption",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
+]
 
 
 async def async_setup_entry(
@@ -54,10 +111,9 @@ async def async_setup_entry(
             continue
 
         setting_data = next(
-            filter(
-                partial(lambda id, sd: id == sd.id, description.data_id),
-                available_settings_data[description.module_id],
-            )
+            sd
+            for sd in available_settings_data[description.module_id]
+            if description.data_id == sd.id
         )
 
         entities.append(

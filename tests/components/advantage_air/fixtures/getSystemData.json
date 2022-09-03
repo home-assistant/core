@@ -143,16 +143,34 @@
       }
     }
   },
+  "myLights": {
+    "lights": {
+      "100": {
+        "id": "100",
+        "moduleType": "RM2",
+        "name": "Light A",
+        "relay": true,
+        "state": "off"
+      },
+      "101": {
+        "id": "101",
+        "name": "Light B",
+        "value": 50,
+        "state": "on"
+      }
+    }
+  },
   "system": {
     "hasAircons": true,
-    "hasLights": false,
+    "hasLights": true,
     "hasSensors": false,
     "hasThings": false,
     "hasThingsBOG": false,
     "hasThingsLight": false,
+    "needsUpdate": false,
     "name": "testname",
     "rid": "uniqueid",
     "sysType": "e-zone",
-    "myAppRev": "testversion"
+    "myAppRev": "1.234"
   }
 }

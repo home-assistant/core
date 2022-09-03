@@ -8,7 +8,6 @@ import ipaddress
 import logging
 import os
 from typing import Any, cast
-from uuid import UUID
 
 from aiohttp import web
 from pyhap.const import STANDALONE_AID
@@ -510,7 +509,7 @@ class HomeKit:
 
         self.bridge: HomeBridge | None = None
 
-    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
+    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 

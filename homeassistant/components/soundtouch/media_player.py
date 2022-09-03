@@ -36,6 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -70,11 +71,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Bose SoundTouch platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
-        "Configuration of the Bose SoundTouch platform in YAML is deprecated and will be "
-        "removed in a future release; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
+        "Configuration of the Bose SoundTouch integration in YAML is "
+        "deprecated and will be removed in Home Assistant 2022.10; Your "
+        "existing configuration has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(

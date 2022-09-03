@@ -11,6 +11,7 @@
             "is_gas": "\u76ee\u524d{entity_name}\u6c23\u9ad4",
             "is_humidity": "\u76ee\u524d{entity_name}\u6fd5\u5ea6",
             "is_illuminance": "\u76ee\u524d{entity_name}\u7167\u5ea6",
+            "is_moisture": "\u76ee\u524d{entity_name}\u6fd5\u5ea6",
             "is_nitrogen_dioxide": "\u76ee\u524d {entity_name} \u4e8c\u6c27\u5316\u6c2e\u6fc3\u5ea6\u72c0\u614b",
             "is_nitrogen_monoxide": "\u76ee\u524d {entity_name} \u4e00\u6c27\u5316\u6c2e\u6fc3\u5ea6\u72c0\u614b",
             "is_nitrous_oxide": "\u76ee\u524d {entity_name} \u4e00\u6c27\u5316\u4e8c\u6c2e\u6fc3\u5ea6\u72c0\u614b",
@@ -40,6 +41,7 @@
             "gas": "{entity_name}\u6c23\u9ad4\u8b8a\u66f4",
             "humidity": "{entity_name}\u6fd5\u5ea6\u8b8a\u66f4",
             "illuminance": "{entity_name}\u7167\u5ea6\u8b8a\u66f4",
+            "moisture": "{entity_name}\u6fd5\u5ea6\u8b8a\u66f4",
             "nitrogen_dioxide": "{entity_name} \u4e8c\u6c27\u5316\u6c2e\u6fc3\u5ea6\u8b8a\u5316",
             "nitrogen_monoxide": "{entity_name} \u4e00\u6c27\u5316\u6c2e\u6fc3\u5ea6\u8b8a\u5316",
             "nitrous_oxide": "{entity_name} \u4e00\u6c27\u5316\u4e8c\u6c2e\u6fc3\u5ea6\u8b8a\u5316",
@@ -62,7 +64,7 @@
     "state": {
         "_": {
             "off": "\u95dc\u9589",
-            "on": "\u958b\u5553"
+            "on": "\u958b\u555f"
         }
     },
     "title": "\u611f\u6e2c\u5668"

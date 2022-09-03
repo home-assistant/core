@@ -13,5 +13,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "De Bose SoundTouch YAML-configuratie wordt verwijderd"
+        }
     }
 }
