@@ -12,7 +12,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirEntity, AdvantageAirThingEntity
 
 
 async def async_setup_entry(
@@ -24,13 +24,19 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
-    if "myLights" in instance["coordinator"].data:
-        for light in instance["coordinator"].data["myLights"]["lights"].values():
+    entities: list[LightEntity] = []
+    if my_lights := instance["coordinator"].data.get("myLights"):
+        for light in my_lights["lights"].values():
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
                 entities.append(AdvantageAirLightDimmable(instance, light))
+    if my_things := instance["coordinator"].data.get("myThings"):
+        for thing in my_things["things"].values():
+            if thing["channelDipState"] == 4:  # 4 = "Light (on/off)""
+                entities.append(AdvantageAirThingLight(instance, thing))
+            elif thing["channelDipState"] == 5:  # 5 = "Light (Dimmable)""
+                entities.append(AdvantageAirThingLightDimmable(instance, thing))
     async_add_entities(entities)
 
 
@@ -88,3 +94,29 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
         if ATTR_BRIGHTNESS in kwargs:
             data["value"] = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
         await self.lights(data)
+
+
+class AdvantageAirThingLight(AdvantageAirThingEntity, LightEntity):
+    """Representation of Advantage Air Light controlled by myThings."""
+
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
+
+class AdvantageAirThingLightDimmable(AdvantageAirThingEntity, LightEntity):
+    """Representation of Advantage Air Dimmable Light controlled by myThings."""
+
+    _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.BRIGHTNESS}
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        return round(self._data["value"] * 255 / 100)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on by setting the brightness."""
+        await self.things(
+            {
+                "id": self._id,
+                "value": round(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255),
+            }
+        )
