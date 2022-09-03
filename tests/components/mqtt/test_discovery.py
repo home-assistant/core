@@ -1356,3 +1356,45 @@ async def test_mqtt_discovery_unsubscribe_once(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_clear_config_topic_disabled_entity(
+    hass, mqtt_mock_entry_no_yaml_config, device_reg
+):
+    """Test the discovery topic is removed when a disabled entity is removed."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    # discover an entity that is not enabled by default
+    config = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "unique_id": "sbfspot_12345",
+        "enabled_by_default": False,
+        "device": {
+            "identifiers": ["sbfspot_12345"],
+            "name": "sbfspot_12345",
+            "sw_version": "1.0",
+            "connections": [["mac", "12:34:56:AB:CD:EF"]],
+        },
+    }
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    # Verify device is created
+    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    assert device_entry is not None
+
+    # Remove the device from the registry
+    device_reg.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Assert the discovery topic is cleared
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True
+    )
