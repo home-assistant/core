@@ -1107,13 +1107,15 @@ class XiaomiFanMiot(XiaomiGenericFan):
         if not self.is_on:
             await self.async_turn_on()
 
-        await self._try_command(
+        result = await self._try_command(
             "Setting fan speed percentage of the miio device failed.",
             self._device.set_speed,
             speed,
         )
-        self._percentage = percentage
-        self.async_write_ha_state()
+
+        if result:
+            self._percentage = ranged_value_to_percentage((1, self._speed_count), speed)
+            self.async_write_ha_state()
 
 
 class XiaomiFanZA5(XiaomiFanMiot):
