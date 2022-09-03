@@ -16,7 +16,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirZoneEntity
+from .entity import AdvantageAirThingEntity, AdvantageAirZoneEntity
 
 PARALLEL_UPDATES = 0
 
@@ -37,7 +37,16 @@ async def async_setup_entry(
                 # Only add zone vent controls when zone in vent control mode.
                 if zone["type"] == 0:
                     entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
-
+    if my_things := instance["coordinator"].data.get("myThings"):
+        for thing in my_things["things"].values():
+            if thing["channelDipState"] in [1, 2]:  # 1 = "Blind", 2 = "Blind 2"
+                entities.append(
+                    AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
+                )
+            elif thing["channelDipState"] == 3:  # 3 = "Garage door"
+                entities.append(
+                    AdvantageAirThingCover(instance, thing, CoverDeviceClass.GARAGE)
+                )
     async_add_entities(entities)
 
 
@@ -114,3 +123,34 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
                     }
                 }
             )
+
+
+class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
+    """Representation of Advantage Air Cover controlled by MyPlace."""
+
+    def __init__(self, instance, thing, device_class):
+        """Initialize an Advantage Air Things Cover."""
+        super().__init__(instance, thing)
+        self.device_class = device_class
+
+    @property
+    def is_closed(self) -> bool:
+        """Return if cover is fully closed."""
+        return self._data["value"] == 0
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return covers current position as a percentage."""
+        return self._data["value"]
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Fully open zone vent."""
+        await self.things({"id": self._id, "value": 100})
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Fully close zone vent."""
+        await self.things({"id": self._id, "value": 0})
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Change cover position."""
+        await self.things({"id": self._id, "value": kwargs[ATTR_POSITION]})
