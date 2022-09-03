@@ -117,12 +117,17 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         host = config_entry.data["host"]
         port = config_entry.data["port"]
         host_port_node_vm = f"{host}_{port}_{node_name}_{vm_id}"
+
+        if proxmox_type is ProxmoxType.Node.upper():
+            name = (node_name,)
+        else:
+            name = (f"{node_name} {vm_name} ({vm_id})",)
         self._attr_device_info = DeviceInfo(
             entry_type=device_registry.DeviceEntryType.SERVICE,
             configuration_url=f"https://{host}:{port}",
             identifiers={(DOMAIN, host_port_node_vm)},
             default_manufacturer="Proxmox VE",
-            name=f"{node_name} {vm_name} ({vm_id})",
+            name=name,
             default_model=proxmox_type,
             sw_version=proxmox_version,
             hw_version=None,
