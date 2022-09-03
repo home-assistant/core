@@ -108,14 +108,22 @@ def gpu_memory_used_percentage(
 def memory_free(data: SystemBridgeCoordinatorData) -> float | None:
     """Return the free memory."""
     if data.memory.virtual_free is not None:
-        return round(data.memory.virtual_free / 1000**3, 2)
+        return round(data.memory.virtual_free / 1024**3, 2)
     return None
 
 
 def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
     """Return the used memory."""
     if data.memory.virtual_used is not None:
-        return round(data.memory.virtual_used / 1000**3, 2)
+        return round(data.memory.virtual_used / 1024**3, 2)
+    return None
+
+
+def filesystem_free(data: SystemBridgeCoordinatorData, partition: str):
+    """Return available storage in GB."""
+    result: float = getattr(data.disk, f"usage_{partition}_free")
+    if result is not None:
+        return round(result / 1024**3, 2)
     return None
 
 
@@ -253,11 +261,13 @@ async def async_setup_entry(
         )
 
     for partition in coordinator.data.disk.partitions:
-        entities.append(
+        key = partition.replace(":", "")
+        entities = [
+            *entities,
             SystemBridgeSensor(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
-                    key=f"filesystem_{partition.replace(':', '')}",
+                    key=f"filesystem_{key}",
                     name=f"{partition} Space Used",
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
@@ -267,8 +277,21 @@ async def async_setup_entry(
                     ),
                 ),
                 entry.data[CONF_PORT],
-            )
-        )
+            ),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"filesystem_{key}_free",
+                    name=f"{partition} Space Free",
+                    entity_registry_enabled_default=False,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    native_unit_of_measurement=DATA_GIGABYTES,
+                    icon="mdi:harddisk",
+                    value=lambda data, p=partition: filesystem_free(data, p),
+                ),
+                entry.data[CONF_PORT],
+            ),
+        ]
 
     if (
         coordinator.data.battery
