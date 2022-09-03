@@ -105,7 +105,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return self._ac["setTemp"]
 
     @property
-    def hvac_mode(self) -> HVACMode | str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC modes."""
         if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
@@ -165,7 +165,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> HVACMode | str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current state as HVAC mode."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return HVACMode.HEAT_COOL

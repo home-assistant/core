@@ -26,7 +26,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Get configuration from the user."""
         errors = {}
         if user_input:

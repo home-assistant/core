@@ -36,7 +36,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         )
 
     @property
-    def _ac(self) -> dict:
+    def _ac(self) -> dict[str, Any]:
         return self.coordinator.data["aircons"][self.ac_key]["info"]
 
 
@@ -50,5 +50,5 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
         self._attr_unique_id += f"-{zone_key}"
 
     @property
-    def _zone(self) -> dict:
+    def _zone(self) -> dict[str, Any]:
         return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]

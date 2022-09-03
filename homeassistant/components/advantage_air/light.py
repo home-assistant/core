@@ -39,7 +39,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, instance, light) -> None:
+    def __init__(self, instance: dict[str, Any], light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Light."""
         super().__init__(instance)
         self.lights = instance["lights"]
@@ -54,7 +54,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
         )
 
     @property
-    def _light(self) -> dict:
+    def _light(self) -> dict[str, Any]:
         """Return the light object."""
         return self.coordinator.data["myLights"]["lights"][self._id]
 
