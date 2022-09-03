@@ -139,6 +139,8 @@ build.json @home-assistant/supervisor
 /tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
+/homeassistant/components/bluemaestro/ @bdraco
+/tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
@@ -753,6 +755,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/nmbs/ @thibmaek
 /homeassistant/components/noaa_tides/ @jdelaney72
+/homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
+/tests/components/nobo_hub/ @echoromeo @oyvindwe
 /homeassistant/components/notify/ @home-assistant/core
 /tests/components/notify/ @home-assistant/core
 /homeassistant/components/notify_events/ @matrozov @papajojo
