@@ -1434,12 +1434,12 @@ async def test_unload_entry(hass, calls, device_reg, mqtt_mock, tmp_path) -> Non
     assert len(calls) == 1
 
     mqtt_entry = hass.config_entries.async_entries("mqtt")[0]
+
     # Load the entry again
     new_yaml_config_file = tmp_path / "configuration.yaml"
     new_yaml_config_file.write_text("")
     with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         await hass.config_entries.async_setup(mqtt_entry.entry_id)
-        await hass.async_block_till_done()
 
     # Rediscover and fake short press 3
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
