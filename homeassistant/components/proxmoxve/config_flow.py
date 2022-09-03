@@ -240,17 +240,11 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
         if CONF_NODE in self.config_entry.data:
             self._config[CONF_NODE] = self.config_entry.data[CONF_NODE]
 
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            data=self._config,
-            options=self.config_entry.options,
-        )
-
         for qemu in self.config_entry.data[CONF_QEMU]:
             if qemu not in self._config[CONF_QEMU]:
                 # Remove device
-                host_node_vm = f"{self.config_entry.data[CONF_HOST]}_{self.config_entry.data[CONF_NODE]}_{CONF_QEMU}"
-                device_identifiers = {(DOMAIN, host_node_vm)}
+                host_port_node_vm = f"{self.config_entry.data[CONF_HOST]}_{self.config_entry.data[CONF_PORT]}_{self.config_entry.data[CONF_NODE]}_{qemu}"
+                device_identifiers = {(DOMAIN, host_port_node_vm)}
                 dev_reg = dr.async_get(self.hass)
                 device = dev_reg.async_get_or_create(
                     config_entry_id=self.config_entry.entry_id,
@@ -260,20 +254,29 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
-                _LOGGER.debug("Device %s removed", device.name)
+                _LOGGER.warning("Device %s removed", device.name)
 
         for lxc in self.config_entry.data[CONF_LXC]:
             if lxc not in self._config[CONF_LXC]:
                 # Remove device
-                host_node_vm = f"{self.config_entry.data[CONF_HOST]}_{self.config_entry.data[CONF_NODE]}_{CONF_LXC}"
-                device_identifiers = {(DOMAIN, host_node_vm)}
+                host_port_node_vm = f"{self.config_entry.data[CONF_HOST]}_{self.config_entry.data[CONF_PORT]}_{self.config_entry.data[CONF_NODE]}_{lxc}"
+                device_identifiers = {(DOMAIN, host_port_node_vm)}
                 dev_reg = dr.async_get(self.hass)
                 device = dev_reg.async_get_or_create(
                     config_entry_id=self.config_entry.entry_id,
                     identifiers=device_identifiers,
                 )
-                dev_reg.async_remove_device(device.id)
-                _LOGGER.debug("Device %s removed", device.name)
+                dev_reg.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+                _LOGGER.warning("Device %s removed", device.name)
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data=self._config,
+            options=self.config_entry.options,
+        )
 
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
         return self.async_abort(reason="changes_successful")
