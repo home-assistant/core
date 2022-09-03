@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 import voluptuous as vol
 
@@ -65,7 +66,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, action) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key, action) -> None:
         """Initialize the Advantage Air timer control."""
         super().__init__(instance, ac_key)
         self.action = action
@@ -98,7 +99,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
         self._attr_name = f'{self._zone["name"]} vent'
@@ -126,7 +127,7 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} signal'
@@ -160,7 +161,7 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} temperature'

@@ -37,7 +37,7 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
     _attr_icon = "mdi:air-filter"
     _attr_name = "Fresh air"
 
-    def __init__(self, instance, ac_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-freshair"

@@ -1,4 +1,6 @@
 """Advantage Air Update platform."""
+from typing import Any
+
 from homeassistant.components.update import UpdateEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +28,7 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
 
     _attr_name = "App"
 
-    def __init__(self, instance) -> None:
+    def __init__(self, instance: dict[str, Any]) -> None:
         """Initialize the Advantage Air App."""
         super().__init__(instance)
         self._attr_device_info = DeviceInfo(

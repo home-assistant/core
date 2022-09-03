@@ -93,7 +93,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
 
-    def __init__(self, instance, ac_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         if self._ac.get("myAutoModeEnabled"):
@@ -156,7 +156,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     _attr_hvac_modes = ZONE_HVAC_MODES
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
-    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]

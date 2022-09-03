@@ -50,7 +50,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, instance, ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
