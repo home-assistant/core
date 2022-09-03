@@ -93,19 +93,16 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     async def async_update(self, write_state: bool = False) -> None:
         """Update the entity."""
-        if self.node.status == NodeStatus.ASLEEP:
-            if not self._status_unsub:
-                self._status_unsub = self.node.once(
-                    "wake up", self._update_on_status_change
-                )
-            return
-
-        if self.node.status == NodeStatus.DEAD:
-            if not self._status_unsub:
-                self._status_unsub = self.node.once(
-                    "alive", self._update_on_status_change
-                )
-            return
+        for status, event_name in (
+            (NodeStatus.ASLEEP, "wake up"),
+            (NodeStatus.DEAD, "alive"),
+        ):
+            if self.node.status == status:
+                if not self._status_unsub:
+                    self._status_unsub = self.node.once(
+                        event_name, self._update_on_status_change
+                    )
+                return
 
         if available_firmware_updates := (
             await self.driver.controller.async_get_available_firmware_updates(
