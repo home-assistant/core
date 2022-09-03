@@ -8,7 +8,8 @@
             "user": {
                 "data": {
                     "port": "Port d'\u00e9coute"
-                }
+                },
+                "description": "Voulez-vous vraiment configurer Ecowitt\u00a0?"
             }
         }
     }
