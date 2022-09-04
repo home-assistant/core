@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
+    PRECISION_HALVES,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
@@ -200,7 +201,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator):
@@ -225,7 +226,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_target_temperature(
-            int(temperature)
+            float(temperature)
         )
         await self.coordinator.async_request_refresh()
 
