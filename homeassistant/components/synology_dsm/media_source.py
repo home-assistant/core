@@ -26,8 +26,8 @@ from .models import SynologyDSMData
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Synology media source."""
     # Synology photos support only a single config entry
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    return SynologyPhotosMediaSource(hass, entry)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    return SynologyPhotosMediaSource(hass, entries)
 
 
 class SynologyPhotosMediaSource(MediaSource):
@@ -35,11 +35,11 @@ class SynologyPhotosMediaSource(MediaSource):
 
     name = "Synology Photos"
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entries: list[ConfigEntry]) -> None:
         """Initialize Synology source."""
         super().__init__(DOMAIN)
         self.hass = hass
-        self.entry = entry
+        self.entries = entries
 
     @property
     def diskstation(self) -> SynologyDSMData | None:
@@ -53,51 +53,75 @@ class SynologyPhotosMediaSource(MediaSource):
         """Return media."""
         if not self.hass.data.get(DOMAIN):
             raise Unresolvable("Diskstation not initialized")
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][self.entry.unique_id]
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_IMAGE,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=MEDIA_TYPE_IMAGE,
             title="Synology Photos",
             can_play=False,
             can_expand=True,
             children_media_class=MEDIA_CLASS_DIRECTORY,
             children=[
-                *await self._async_build_albums(diskstation, item),
+                *await self._async_build_diskstations(item),
             ],
         )
 
-    async def _async_build_albums(
-        self, diskstation: SynologyDSMData, item: MediaSourceItem
+    async def _async_build_diskstations(
+        self, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
-        """Handle browsing Albums."""
-        api = diskstation.api
+        """Handle browsing different diskstations."""
+        ret = []
 
         if not item.identifier:
+            for entry in self.entries:
+                ret.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=entry.unique_id,
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_type=MEDIA_TYPE_IMAGE,
+                        title=entry.title,
+                        can_play=False,
+                        can_expand=True,
+                    )
+                )
+            return ret
+        identifier_parts = item.identifier.split(":")
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier_parts[0]]
+
+        if len(identifier_parts) == 1:
             # Get Albums
             # The library works sync, and this expects async calls
             loop = asyncio.get_event_loop()
-            albums = await loop.run_in_executor(None, api.photos.get_albums)
-            return [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f'{album["id"]}',
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_IMAGE,
-                    title=album["name"],
-                    can_play=False,
-                    can_expand=True,
+            albums = await loop.run_in_executor(None, diskstation.api.photos.get_albums)
+            ret = []
+            for album in albums:
+                ret.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f'{item.identifier}:{album["id"]}',
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_type=MEDIA_TYPE_IMAGE,
+                        title=album["name"],
+                        can_play=False,
+                        can_expand=True,
+                    )
                 )
-                for album in albums
-            ]
+
+            return ret
 
         # Request items of album
         # Get Items
         # The library works sync, and this expects async calls
         loop = asyncio.get_event_loop()
         items = await loop.run_in_executor(
-            None, api.photos.get_items, item.identifier, 0, 1000, '["thumbnail"]'
+            None,
+            diskstation.api.photos.get_items,
+            identifier_parts[1],
+            0,
+            1000,
+            '["thumbnail"]',
         )
         ret = []
         for items_item in items:
@@ -114,12 +138,12 @@ class SynologyPhotosMediaSource(MediaSource):
                         title=items_item["filename"],
                         can_play=True,
                         can_expand=False,
-                        # thumbnail can't be base64 encoded. It needs to be an url
-                        # thumbnail=await self.async_get_thumbnail(
-                        #    items_item["additional"]["thumbnail"]["cache_key"],
-                        #    items_item["id"],
-                        #    "sm",
-                        # ),
+                        thumbnail=await self.async_get_thumbnail(
+                            items_item["additional"]["thumbnail"]["cache_key"],
+                            items_item["id"],
+                            "sm",
+                            identifier_parts[0],
+                        ),
                     )
                 )
         return ret
@@ -127,21 +151,21 @@ class SynologyPhotosMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         parts = item.identifier.split(":")
-        cache_key = parts[1]
+        cache_key = parts[2]
         image_id = cache_key.split("_")[0]
-        mime_type, _ = mimetypes.guess_type(parts[2])
+        mime_type, _ = mimetypes.guess_type(parts[3])
         assert isinstance(mime_type, str)
-        image = await self.async_get_thumbnail(cache_key, image_id, "xl", mime_type)
+        image = await self.async_get_thumbnail(cache_key, image_id, "xl", parts[0])
         return PlayMedia(image, mime_type)
 
     async def async_get_thumbnail(
-        self, cache_key: str, image_id: str, size: str, mime_type: str
+        self, cache_key: str, image_id: str, size: str, diskstation_unique_id: str
     ) -> str:
         """Get thumbnail."""
         if not self.hass.data.get(DOMAIN):
             raise Unresolvable("Diskstation not initialized")
 
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][self.entry.unique_id]
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][diskstation_unique_id]
         loop = asyncio.get_event_loop()
         thumbnail = await loop.run_in_executor(
             None, diskstation.api.photos.get_thumbnail_url, image_id, cache_key, size
