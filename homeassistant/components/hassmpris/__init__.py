@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ENTRY_UNLOADERS: [],
     }
 
-    async def unload(*unused_args):
+    async def _async_unload(*unused_args):
         _LOGGER.debug("Running unloaders")
         while component_data[ENTRY_UNLOADERS]:
             unloader = component_data[ENTRY_UNLOADERS].pop()
