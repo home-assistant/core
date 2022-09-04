@@ -99,24 +99,30 @@ class SynologyPhotosMediaSource(MediaSource):
         items = await loop.run_in_executor(
             None, api.photos.get_items, item.identifier, 0, 1000, '["thumbnail"]'
         )
-        return [
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f'{item.identifier}:{items_item["additional"]["thumbnail"]["cache_key"]}:{items_item["filename"]}',
-                media_class=MEDIA_CLASS_IMAGE,
-                media_content_type="image/jpeg",
-                title=items_item["filename"],
-                can_play=True,
-                can_expand=False,
-                # thumbnail can't be base64 encoded. It needs to be an url
-                # thumbnail=await self.async_get_thumbnail(
-                #    items_item["additional"]["thumbnail"]["cache_key"],
-                #    items_item["id"],
-                #    "sm",
-                # ),
-            )
-            for items_item in items
-        ]
+        ret = []
+        for items_item in items:
+            mime_type, _ = mimetypes.guess_type(items_item["filename"])
+            assert isinstance(mime_type, str)
+            parts = mime_type.split("/")
+            if parts[0] == "image":
+                ret.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f'{item.identifier}:{items_item["additional"]["thumbnail"]["cache_key"]}:{items_item["filename"]}',
+                        media_class=MEDIA_CLASS_IMAGE,
+                        media_content_type=mime_type,
+                        title=items_item["filename"],
+                        can_play=True,
+                        can_expand=False,
+                        # thumbnail can't be base64 encoded. It needs to be an url
+                        # thumbnail=await self.async_get_thumbnail(
+                        #    items_item["additional"]["thumbnail"]["cache_key"],
+                        #    items_item["id"],
+                        #    "sm",
+                        # ),
+                    )
+                )
+        return ret
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
