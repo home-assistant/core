@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await unloader()
         _LOGGER.debug("Unloaders complete")
 
-    component_data[ENTRY_UNLOAD_FUNC] = unload
+    component_data[ENTRY_UNLOAD_FUNC] = _async_unload
 
     async def async_close_client():
         if ENTRY_CLIENT in component_data:
@@ -82,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     component_data[ENTRY_UNLOADERS].append(async_close_client)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unload)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
