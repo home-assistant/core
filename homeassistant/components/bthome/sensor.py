@@ -1,4 +1,4 @@
-"""Support for BThome sensors."""
+"""Support for BTHome sensors."""
 from __future__ import annotations
 
 from typing import Optional, Union
@@ -150,7 +150,7 @@ SENSOR_DESCRIPTIONS = {
     # Used for moisture sensor
     (None, Units.PERCENTAGE,): SensorEntityDescription(
         key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
-        device_class=None,
+        device_class=SensorDeviceClass.MOISTURE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -202,26 +202,26 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the BThome BLE sensors."""
+    """Set up the BTHome BLE sensors."""
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
-            BThomeBluetoothSensorEntity, async_add_entities
+            BTHomeBluetoothSensorEntity, async_add_entities
         )
     )
     entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
-class BThomeBluetoothSensorEntity(
+class BTHomeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
         PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
     ],
     SensorEntity,
 ):
-    """Representation of a BThome BLE sensor."""
+    """Representation of a BTHome BLE sensor."""
 
     @property
     def native_value(self) -> int | float | None:
