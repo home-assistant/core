@@ -137,6 +137,8 @@ build.json @home-assistant/supervisor
 /tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
+/homeassistant/components/bluemaestro/ @bdraco
+/tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
