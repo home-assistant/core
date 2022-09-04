@@ -345,7 +345,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if self.validate_enocean_id_string(sender_id):
                     sender_id = self.normalize_enocean_id_string(sender_id)
                 else:
-                    errors["base"] = ENOCEAN_ERROR_INVALID_SENDER_ID
+                    errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE]
             device_type = EnOceanSupportedDeviceType("", "", "")
@@ -354,11 +354,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     device_type = esd
                     break
             if device_type.unique_id == "":
-                errors["base"] = "invalid_device_type"
+                errors[ENOCEAN_DEVICE_TYPE] = "invalid_device_type"
 
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
-                errors["base"] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
+                errors[CONF_ENOCEAN_DEVICE_NAME] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
 
             if not errors:
                 for dev in devices:
@@ -416,6 +416,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id=ENOCEAN_STEP_ID_EDIT_DEVICE,
             data_schema=edit_device_schema,
+            errors=errors,
         )
 
     async def async_step_delete_device(self, user_input=None) -> FlowResult:
