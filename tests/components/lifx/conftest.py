@@ -1,5 +1,4 @@
 """Tests for the lifx integration."""
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -55,15 +54,3 @@ def device_reg_fixture(hass):
 def entity_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
-
-
-@pytest.fixture(autouse=True)
-async def mock_lifx_sleep():
-    """Mock out lifx sleeps."""
-    asyncio_sleep = asyncio.sleep
-
-    async def sleep(duration, loop=None):
-        await asyncio_sleep(0)
-
-    with patch("homeassistant.components.lifx.asyncio.sleep", new=sleep):
-        yield

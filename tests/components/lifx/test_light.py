@@ -50,6 +50,13 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.fixture(autouse=True)
+def mock_lifx_light_sleep():
+    """Mock out lifx light sleeps."""
+    with patch("homeassistant.components.lifx.light.asyncio.sleep"):
+        yield
+
+
 async def test_light_unique_id(hass: HomeAssistant) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
