@@ -91,7 +91,7 @@ class MelnorSensorEntity(MelnorBluetoothBaseEntity, SensorEntity):
         """Initialize a sensor for a Melnor device."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"sensor-{self._device.mac}-{entity_description.key}"
+        self._attr_unique_id = f"{self._device.mac}-{entity_description.key}"
 
         self.entity_description = entity_description
 
