@@ -49,3 +49,8 @@ def short_address(address: str) -> str:
 def human_readable_name(name: str | None, local_name: str, address: str) -> str:
     """Return a human readable name for the given name, local_name, and address."""
     return f"{name or local_name} ({short_address(address)})"
+
+
+def _effect_brightness(brightness: int) -> int:
+    """Convert hass brightness to effect brightness."""
+    return round(brightness / 255 * 100)
