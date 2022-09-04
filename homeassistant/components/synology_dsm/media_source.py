@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import mimetypes
 
 from homeassistant.components.media_player.const import (
@@ -107,7 +106,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 media_class=MEDIA_CLASS_IMAGE,
                 media_content_type="image/jpeg",
                 title=items_item["filename"],
-                can_play=False,
+                can_play=True,
                 can_expand=False,
                 # thumbnail can't be base64 encoded. It needs to be an url
                 # thumbnail=await self.async_get_thumbnail(
@@ -132,15 +131,13 @@ class SynologyPhotosMediaSource(MediaSource):
     async def async_get_thumbnail(
         self, cache_key: str, image_id: str, size: str, mime_type: str
     ) -> str:
-        """Get thumbnail in base64."""
-        # diskstation = self.diskstation
+        """Get thumbnail."""
         if not self.hass.data.get(DOMAIN):
             raise Unresolvable("Diskstation not initialized")
 
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][self.entry.unique_id]
         loop = asyncio.get_event_loop()
         thumbnail = await loop.run_in_executor(
-            None, diskstation.api.photos.get_thumbnail, image_id, cache_key, size
+            None, diskstation.api.photos.get_thumbnail_url, image_id, cache_key, size
         )
-        base64_data = base64.b64encode(thumbnail)
-        return f"data:{mime_type};base64, {base64_data.decode()}"
+        return str(thumbnail)
