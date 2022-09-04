@@ -52,9 +52,37 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
+    "import_success": {
       "title": "Configuration in YAML file has been imported and can be removed",
-      "description": "Configuration of the {integration} (`{platform}`) in YAML is deprecated and will be removed in Home Assistant 2022.12.\n\nYour existing configuration has been imported into the UI automatically and can be safely removed from your configuration.yaml file."
+      "description": "The YAML configuration of node {node} of {host}:{port} instance of {integration} (`{platform}`) has been imported into the UI automatically.\n\nCan be safely removed from your configuration.yaml file."
+    },
+    "import_invalid_port": {
+      "title": "Error in importing YAML configuration",
+      "description": "Importing YAML configuration from {host}:{port} instance of {integration} (`{platform}`) failed due to invalid port.\n\nYou must remove this configuration from your configuration.yaml file, restart Home Assistant and configure it manually."
+    },
+    "import_auth_error": {
+      "title": "Error in importing YAML configuration",
+      "description": "Importing YAML configuration from {host}:{port} instance of {integration} (`{platform}`) failed due to authentication error.\n\nYou must remove this configuration from your configuration.yaml file, restart Home Assistant and configure it manually."
+    },
+    "import_ssl_rejection": {
+      "title": "Error in importing YAML configuration",
+      "description": "Importing YAML configuration from {host}:{port} instance of {integration} (`{platform}`) failed due to SSL rejection.\n\nYou must remove this configuration from your configuration.yaml file, restart Home Assistant and configure it manually."
+    },
+    "import_cant_connect": {
+      "title": "Error in importing YAML configuration",
+      "description": "Importing YAML configuration from {host}:{port} instance of {integration} (`{platform}`) failed due to connection failed.\n\nYou must remove this configuration from your configuration.yaml file, restart Home Assistant and configure it manually."
+    },
+    "import_general_error": {
+      "title": "Error in importing YAML configuration",
+      "description": "Importing YAML configuration from {host}:{port} instance of {integration} (`{platform}`) failed due to unknown error.\n\nYou must remove this configuration from your configuration.yaml file, restart Home Assistant and configure it manually."
+    },
+    "import_already_configured": {
+      "title": "YAML configuration already in the UI, can be removed",
+      "description": "The YAML configuration of the right {node} of {host}:{port} instance of {integration} (`{platform}`) already exists in the UI and was ignored on import.\n\nYou must remove this configuration from your configuration file .yaml and restart Home Assistant."
+    },
+    "import_node_not_exist": {
+      "title": "Node {node} does not exist in {host}:{port}",
+      "description": "The {node} of the {host}:{port} instance of {integration} (`{platform}`) present in the YAML configuration does not exist in this instance and was ignored in the import.\n\nYou must remove this configuration from your .yaml configuration and restart Home Assistant."
     }
   },
   "options": {

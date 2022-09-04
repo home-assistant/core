@@ -2,6 +2,7 @@
 from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "proxmoxve"
+INTEGRATION_NAME = "Proxmox VE"
 
 CONF_REALM = "realm"
 

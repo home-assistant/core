@@ -19,10 +19,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    INTEGRATION_NAME,
     PLATFORMS,
     PROXMOX_CLIENT,
     UPDATE_INTERVAL,
@@ -95,33 +97,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # import to config flow
     if DOMAIN in config:
         for conf in config[DOMAIN]:
-            _LOGGER.warning(
-                # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
-                "Configuration of the Proxmox in YAML is deprecated and "
-                "will be removed in Home Assistant 2022.12; Your existing configuration "
-                "has been imported into the UI automatically and can be safely removed "
-                "from your configuration.yaml file"
-            )
-            # Register a repair
-            async_create_issue(
-                async_get_hass(),
-                DOMAIN,
-                f"deprecated_yaml_{DOMAIN}",
-                breaks_in_ha_version="2022.12.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml",
-                translation_placeholders={
-                    "integration": "Proxmox VE",
-                    "platform": DOMAIN,
-                },
-            )
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
                 )
             )
-
     return True
 
 
@@ -310,6 +290,51 @@ def call_api_container_vm(proxmox, node_name, vm_id, info_type):
         return None
 
     return status
+
+
+def device_info(
+    hass,
+    config_entry,
+    proxmox_type,
+    vm_id,
+):
+    """Return the Device Info."""
+
+    coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
+
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
+    node = config_entry.data[CONF_NODE]
+
+    proxmox_version = None
+    coordinator = coordinators[node][ProxmoxType.Proxmox]
+    if not (coordinator_data := coordinator.data) is None:
+        proxmox_version = coordinator_data["version"]
+
+    coordinator = coordinators[node][vm_id]
+    if not (coordinator_data := coordinator.data) is None:
+        vm_name = coordinator_data["name"]
+
+    if proxmox_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
+        name = f"{node} {vm_name} ({vm_id})"
+        host_port_node_vm = f"{host}_{port}_{node}_{vm_id}"
+    elif proxmox_type is ProxmoxType.Node:
+        name = node
+        host_port_node_vm = f"{host}_{port}_{node}"
+    else:
+        name = f"{host}"
+        host_port_node_vm = f"{host}_{port}"
+
+    return DeviceInfo(
+        entry_type=device_registry.DeviceEntryType.SERVICE,
+        configuration_url=f"https://{host}:{port}",
+        identifiers={(DOMAIN, host_port_node_vm)},
+        default_manufacturer=INTEGRATION_NAME,
+        name=name,
+        default_model=proxmox_type.upper(),
+        sw_version=proxmox_version,
+        hw_version=None,
+    )
 
 
 class ProxmoxEntity(CoordinatorEntity):
