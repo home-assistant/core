@@ -20,6 +20,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -43,6 +44,7 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
     websocket_api.async_register_command(hass, config_entry_update)
+    websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
 
@@ -405,6 +407,43 @@ async def config_entries_get(
         await async_matching_config_entries(
             hass, msg.get("type_filter"), msg.get("domain")
         ),
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config_entries/subscribe",
+    }
+)
+@websocket_api.async_response
+async def config_entries_subscribe(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to config entry updates."""
+
+    @callback
+    def forward_config_entry_changes(
+        change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Forward entity state changed events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                [
+                    {
+                        "type": change,
+                        "entry": entry_json(entry),
+                    }
+                ],
+            )
+        )
+
+    current_entries = await async_matching_config_entries(hass, None, None)
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, forward_config_entry_changes
+    )
+    connection.send_result(
+        msg["id"], [{"type": None, "entry": entry} for entry in current_entries]
     )
 
 
