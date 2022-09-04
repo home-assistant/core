@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_lifx_coordinator_sleep():
     """Mock out lifx coordinator sleeps."""
-    with patch("homeassistant.components.lifx.coordinator.asyncio.sleep"):
+    with patch("homeassistant.components.lifx.coordinator.LIFX_IDENTIFY_DELAY", 0):
         yield
 
 
