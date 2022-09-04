@@ -112,5 +112,6 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
             await self.executor.async_execute_command(
                 self.entity_description.key, self.entity_description.press_args
             )
-        else:
-            await self.executor.async_execute_command(self.entity_description.key)
+            return
+
+        await self.executor.async_execute_command(self.entity_description.key)
