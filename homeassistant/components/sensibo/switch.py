@@ -132,13 +132,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
             await self.async_turn_off_timer(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
-                value=True,
+                value=False,
             )
         if self.entity_description.key == "pure_boost_switch":
             await self.async_turn_on_off_pure_boost(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
-                value=True,
+                value=False,
             )
 
     @property

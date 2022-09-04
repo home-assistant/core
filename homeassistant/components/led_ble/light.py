@@ -51,7 +51,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         self._attr_unique_id = device._address
         self._attr_device_info = DeviceInfo(
             name=name,
-            model=hex(device.model_num),
+            model=f"{device.model_data.description} {hex(device.model_num)}",
             sw_version=hex(device.version_num),
             connections={(dr.CONNECTION_BLUETOOTH, device._address)},
         )
