@@ -270,6 +270,61 @@ async def test_ws_update_item_fail(hass, hass_ws_client, sl_setup):
     assert msg["success"] is False
 
 
+async def test_ws_delete_item(hass, hass_ws_client, sl_setup):
+    """Test delete shopping_list item websocket command."""
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "shopping_list/items/delete",
+            "item_id": beer_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    data = msg["result"]
+    assert data == {"id": beer_id, "name": "beer", "complete": False}
+    assert len(hass.data["shopping_list"].items) == 1
+    assert hass.data["shopping_list"].items[0] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+
+
+async def test_ws_delete_item_fail(hass, hass_ws_client, sl_setup):
+    """Test failure of delete shopping_list item websocket command."""
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "shopping_list/items/delete",
+            "item_id": "non_existing",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    data = msg["error"]
+    assert data == {"code": "item_not_found", "message": "Item not found"}
+
+    await client.send_json({"id": 6, "type": "shopping_list/items/delete"})
+    msg = await client.receive_json()
+    assert msg["success"] is False
+
+
 async def test_deprecated_api_clear_completed(hass, hass_client, sl_setup):
     """Test the API."""
 

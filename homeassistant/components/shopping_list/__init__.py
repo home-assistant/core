@@ -39,6 +39,7 @@ SERVICE_LIST_SCHEMA = vol.Schema({})
 WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
 WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = "shopping_list/items/update"
+WS_TYPE_SHOPPING_LIST_DELETE_ITEM = "shopping_list/items/delete"
 WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = "shopping_list/items/clear"
 
 SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -55,6 +56,13 @@ SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
         vol.Required("item_id"): str,
         vol.Optional("name"): str,
         vol.Optional("complete"): bool,
+    }
+)
+
+SCHEMA_WEBSOCKET_DELETE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        vol.Required("type"): WS_TYPE_SHOPPING_LIST_DELETE_ITEM,
+        vol.Required("item_id"): str,
     }
 )
 
@@ -186,6 +194,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     websocket_api.async_register_command(
         hass,
+        WS_TYPE_SHOPPING_LIST_DELETE_ITEM,
+        websocket_handle_delete,
+        SCHEMA_WEBSOCKET_DELETE_ITEM,
+    )
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS,
         websocket_handle_clear,
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
@@ -220,6 +234,17 @@ class ShoppingData:
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
+        await self.hass.async_add_executor_job(self.save)
+        return item
+
+    async def async_delete(self, item_id):
+        """Delete a shopping list item."""
+        item = next((itm for itm in self.items if itm["id"] == item_id), None)
+
+        if item is None:
+            raise KeyError
+
+        self.items = [itm for itm in self.items if not itm["id"] == item_id]
         await self.hass.async_add_executor_job(self.save)
         return item
 
@@ -381,6 +406,28 @@ async def websocket_handle_update(
     except KeyError:
         connection.send_message(
             websocket_api.error_message(msg_id, "item_not_found", "Item not found")
+        )
+
+
+@websocket_api.async_response
+async def websocket_handle_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle deleting a shopping_list item."""
+    item_id = msg["item_id"]
+    try:
+        item = await hass.data[DOMAIN].async_delete(item_id)
+        hass.bus.async_fire(
+            EVENT,
+            {"action": "delete", "item_id": item_id},
+            context=connection.context(msg),
+        )
+        connection.send_message(websocket_api.result_message(msg["id"], item))
+    except KeyError:
+        connection.send_message(
+            websocket_api.error_message(msg["id"], "item_not_found", "Item not found")
         )
 
 
