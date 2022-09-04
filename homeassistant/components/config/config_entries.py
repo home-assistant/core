@@ -450,8 +450,11 @@ async def config_entries_subscribe(
         config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
         async_forward_config_entry_changes,
     )
-    connection.send_result(
-        msg["id"], [{"type": None, "entry": entry} for entry in current_entries]
+    connection.send_result(msg["id"])
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"], [{"type": None, "entry": entry} for entry in current_entries]
+        )
     )
 
 
