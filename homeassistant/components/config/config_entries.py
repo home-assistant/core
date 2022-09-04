@@ -425,7 +425,7 @@ async def config_entries_subscribe(
     def forward_config_entry_changes(
         change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
     ) -> None:
-        """Forward entity state changed events to websocket."""
+        """Forward config entry state events to websocket."""
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
