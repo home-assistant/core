@@ -63,7 +63,7 @@ class SensiboMotionSensorEntityDescription(
 class SensiboDeviceSensorEntityDescription(
     SensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes Sensibo Device sensor entity."""
 
 
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
@@ -178,6 +178,8 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
 )
 
+DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES, "airq": AIRQ_SENSOR_TYPES}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -200,20 +202,9 @@ async def async_setup_entry(
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for description in PURE_SENSOR_TYPES
-        if device_data.model == "pure"
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_SENSOR_TYPES
-        if device_data.model != "pure"
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in AIRQ_SENSOR_TYPES
-        if device_data.model == "airq"
+        for description in DESCRIPTION_BY_MODELS.get(
+            device_data.model, DEVICE_SENSOR_TYPES
+        )
     )
     async_add_entities(entities)
 
