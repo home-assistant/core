@@ -137,7 +137,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         """Return the device information associated with the entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._integration_id)},
-            name="MPRIS agent at %s" % self._client_host,
+            name=f"MPRIS agent at {self._client_host}",
             manufacturer="Freedesktop",
         )
 
