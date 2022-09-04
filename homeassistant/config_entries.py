@@ -145,10 +145,7 @@ class ConfigEntryChange(StrEnum):
 
     ADDED = "added"
     REMOVED = "removed"
-    STATE_CHANGED = "state_changed"
-
-    # DATA_CHANGED and OPTIONS_CHANGED are not
-    # implemented but could be in the future.
+    UPDATED = "updated"
 
 
 class ConfigEntryDisabler(StrEnum):
@@ -554,7 +551,7 @@ class ConfigEntry:
         self.state = state
         self.reason = reason
         async_dispatcher_send(
-            hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.STATE_CHANGED, self
+            hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
 
     async def async_migrate(self, hass: HomeAssistant) -> bool:
@@ -1183,7 +1180,9 @@ class ConfigEntries:
                 self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
-
+        async_dispatcher_send(
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, entry
+        )
         return True
 
     @callback
