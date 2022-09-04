@@ -186,7 +186,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.create_client()
             return await self.async_step_authorize()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
 
