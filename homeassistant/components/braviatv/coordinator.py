@@ -56,12 +56,14 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         client: BraviaTV,
         pin: str,
+        use_psk: bool,
         ignored_sources: list[str],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
         self.pin = pin
+        self.use_psk = use_psk
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
@@ -107,9 +109,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                await self.client.connect(
-                    pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-                )
+                if self.use_psk:
+                    await self.client.connect(psk=self.pin)
+                else:
+                    await self.client.connect(
+                        pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                    )
                 self.connected = True
 
             power_status = await self.client.get_power_status()
