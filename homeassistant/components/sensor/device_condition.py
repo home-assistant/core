@@ -43,6 +43,7 @@ CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
+CONF_IS_MOISTURE = "is_moisture"
 CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
 CONF_IS_NITROUS_OXIDE = "is_nitrous_oxide"
@@ -72,6 +73,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
+    SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_IS_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_MONOXIDE}],
     SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_IS_NITROUS_OXIDE}],
@@ -110,6 +112,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
                     CONF_IS_OZONE,
+                    CONF_IS_MOISTURE,
                     CONF_IS_NITROGEN_DIOXIDE,
                     CONF_IS_NITROGEN_MONOXIDE,
                     CONF_IS_NITROUS_OXIDE,

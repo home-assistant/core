@@ -672,7 +672,7 @@ async def test_restore_idle(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -712,7 +712,7 @@ async def test_restore_paused(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -756,7 +756,7 @@ async def test_restore_active_resume(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -807,7 +807,7 @@ async def test_restore_active_finished_outside_grace(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",

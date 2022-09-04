@@ -119,6 +119,9 @@ class SensorDeviceClass(StrEnum):
     # current light level (lx/lm)
     ILLUMINANCE = "illuminance"
 
+    # moisture (%)
+    MOISTURE = "moisture"
+
     # Amount of money (currency)
     MONETARY = "monetary"
 

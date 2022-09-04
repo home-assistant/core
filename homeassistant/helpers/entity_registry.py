@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import (
     Event,
@@ -62,7 +63,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -184,7 +185,7 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
 
     Maintains two additional indexes:
     - id -> entry
-    - (domain, platform, unique_id) -> entry
+    - (domain, platform, unique_id) -> entity_id
     """
 
     def __init__(self) -> None:
@@ -200,14 +201,14 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
             del self._entry_ids[old_entry.id]
             del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
         super().__setitem__(key, entry)
-        self._entry_ids.__setitem__(entry.id, entry)
+        self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         entry = self[key]
-        self._entry_ids.__delitem__(entry.id)
-        self._index.__delitem__((entry.domain, entry.platform, entry.unique_id))
+        del self._entry_ids[entry.id]
+        del self._index[(entry.domain, entry.platform, entry.unique_id)]
         super().__delitem__(key)
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
@@ -326,7 +327,6 @@ class EntityRegistry:
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
         # Data that we want entry to have
-        area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
@@ -352,7 +352,6 @@ class EntityRegistry:
         if entity_id:
             return self.async_update_entity(
                 entity_id,
-                area_id=area_id,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
                 device_id=device_id,
@@ -403,7 +402,6 @@ class EntityRegistry:
             return None if value is UNDEFINED else value
 
         entry = RegistryEntry(
-            area_id=none_if_undefined(area_id),
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
             device_id=none_if_undefined(device_id),
@@ -970,9 +968,18 @@ async def _async_migrate(
             entity["hidden_by"] = None
 
     if old_major_version == 1 and old_minor_version < 7:
-        # Version 1.6 adds has_entity_name
+        # Version 1.7 adds has_entity_name
         for entity in data["entities"]:
             entity["has_entity_name"] = False
+
+    if old_major_version == 1 and old_minor_version < 8:
+        # Cleanup after frontend bug which incorrectly updated device_class
+        # Fixed by frontend PR #13551
+        for entity in data["entities"]:
+            domain = split_entity_id(entity["entity_id"])[0]
+            if domain in [Platform.BINARY_SENSOR, Platform.COVER]:
+                continue
+            entity["device_class"] = None
 
     if old_major_version > 1:
         raise NotImplementedError

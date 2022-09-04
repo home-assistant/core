@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -902,7 +903,9 @@ class KodiEntity(MediaPlayerEntity):
 
         return sorted(out, key=lambda out: out[1], reverse=True)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)
 
@@ -924,7 +927,7 @@ class KodiEntity(MediaPlayerEntity):
         if media_content_type in [None, "library"]:
             return await library_payload(self.hass)
 
-        if media_source.is_media_source_id(media_content_id):
+        if media_content_id and media_source.is_media_source_id(media_content_id):
             return await media_source.async_browse_media(
                 self.hass, media_content_id, content_filter=media_source_content_filter
             )

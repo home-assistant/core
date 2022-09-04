@@ -73,7 +73,7 @@ class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
         self._attr_device_info = device
         self._attr_should_poll = bool(self.key in ("heat_usage", "heat_previous_year"))
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         state = await self.async_get_last_sensor_data()

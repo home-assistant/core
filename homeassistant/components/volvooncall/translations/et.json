@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kasutaja on juba seadistatud"
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Tuvastamine nurjus",

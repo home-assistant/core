@@ -5,7 +5,7 @@
             "already_configured_account": "La cuenta ya est\u00e1 configurada",
             "already_configured_device": "El dispositivo ya est\u00e1 configurado",
             "no_devices_found": "No se encontraron dispositivos en la red",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "unreachable": "No se pudo conectar"
         },
         "error": {

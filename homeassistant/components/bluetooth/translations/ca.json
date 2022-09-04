@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El servei ja est\u00e0 configurat",
-            "no_adapters": "No s'ha trobat cap adaptador Bluetooth"
+            "no_adapters": "No s'han trobat adaptadors Bluetooth sense configurar"
         },
         "flow_title": "{name}",
         "step": {
@@ -34,8 +34,9 @@
             "init": {
                 "data": {
                     "adapter": "Adaptador Bluetooth a utilitzar per escanejar",
-                    "passive": "Escolta passiva"
-                }
+                    "passive": "Escaneig passiu"
+                },
+                "description": "L'escolta passiva necessita BlueZ 5.63 o posterior i les funcions experimentals activades."
             }
         }
     }
