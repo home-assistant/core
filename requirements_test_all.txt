@@ -501,7 +501,6 @@ fjaraskupan==2.0.0
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-# homeassistant.components.led_ble
 flux_led==0.28.32
 
 # homeassistant.components.homekit
@@ -1372,7 +1371,7 @@ python-nest==4.2.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.32
+python-smarttub==0.0.33
 
 # homeassistant.components.songpal
 python-songpal==0.15
