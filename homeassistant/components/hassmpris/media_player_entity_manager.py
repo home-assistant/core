@@ -88,8 +88,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
           player_id: the name / unique identifier of the player
         """
         super().__init__()
-        if client is None:
-            raise ValueError("Instantiation of this class requires a client")
         self.client: hassmpris_client.AsyncMPRISClient | None = client
         self._client_host = self.client.host
         self.player_id = player_id
