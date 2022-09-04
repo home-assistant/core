@@ -8,7 +8,6 @@ from typing import Any
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -24,7 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -33,12 +32,6 @@ from homeassistant.util.enum import intenum_to_string
 from .const import ATTR_PLAYBACK_RATE, DOMAIN, LOGGER as _LOGGER
 
 PLATFORM = "media_player"
-
-DISCOVERY_SCHEMA = vol.Schema(
-    {
-        vol.Required("player_id"): cv.string,
-    }
-)
 
 SUPPORTED_MINIMAL = (
     MediaPlayerEntityFeature.PAUSE
@@ -141,11 +134,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
             manufacturer="Freedesktop",
         )
 
-    @staticmethod
-    def config_schema():
-        """Return the discovery schema."""
-        return DISCOVERY_SCHEMA
-
     async def async_added_to_hass(self) -> None:
         """Entity has been added to HASS."""
         _LOGGER.debug("Added to hass: %s", self)
@@ -153,7 +141,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity is about to be removed from HASS."""
         _LOGGER.debug("Will remove from hass: %s", self)
-        await self.set_unavailable()
+        self.client = None
 
     async def async_media_play(self) -> None:
         """Begin playback."""
