@@ -168,12 +168,10 @@ async def async_setup_entry(
 
             if device_found:
                 LOGGER.warning(
-                    "Skipping import of EnOcean device %s because an EnOcean device with this EnOcean ID already exists in the config entry",
+                    "Skipping import of EnOcean device %s because an EnOcean device with this EnOcean ID already exists in the config entry. Please delete the respective platform configuration entry in the configuration.yaml",
                     dev_id_string,
                 )
                 continue
-
-            LOGGER.warning("To Import: %s", dev_id_string)
 
             new_unique_ids[dev_id_string] = []
             old_unique_ids[dev_id_string] = {}
@@ -242,6 +240,14 @@ async def async_setup_entry(
                     ),
                     CONF_ENOCEAN_SENDER_ID: "",
                 }
+            )
+
+            LOGGER.warning(
+                "Importing EnOcean device %s as '%s %s' [EEP %s]",
+                dev_id_string,
+                device_type.manufacturer,
+                device_type.model,
+                device_type.eep,
             )
 
         # append devices to config_entry and update
