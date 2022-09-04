@@ -35,6 +35,15 @@ TEST_DIMMER = {
     CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
 }
 
+TEST_DIMMER_EDITED = {
+    CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
+    CONF_ENOCEAN_DEVICE_NAME: "Test Switch 1",
+    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_SWITCH.manufacturer,
+    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_SWITCH.model,
+    CONF_ENOCEAN_EEP: ENOCEAN_TEST_SWITCH.eep,
+    CONF_ENOCEAN_SENDER_ID: "BA:BA:BA:BA",
+}
+
 TEST_SWITCH = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
     CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
@@ -409,9 +418,53 @@ async def test_delete_device(hass: HomeAssistant):
     assert {CONF_ENOCEAN_DEVICES: []} == result["data"]
 
 
-async def test_edit_device_name(hass: HomeAssistant):
-    """Test that a device name can be edited."""
-    assert 1 == 1
+async def test_edit_device(hass: HomeAssistant):
+    """Test editing a device."""
+    mock_config_entry = MockConfigEntry(
+        title="",
+        domain=DOMAIN,
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
+        options={CONF_ENOCEAN_DEVICES: [TEST_DIMMER]},
+    )
+
+    result = None
+
+    with patch(
+        "homeassistant.components.enocean.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = True
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"next_step_id": "select_device_to_edit"}
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"id": "01:02:03:04"}
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
+                CONF_ENOCEAN_DEVICE_NAME: "Test Switch 1",
+                CONF_ENOCEAN_SENDER_ID: "BA:BA:BA:BA",
+            },
+        )
+
+    assert result is not None
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"] is True
+    assert {CONF_ENOCEAN_DEVICES: [TEST_DIMMER_EDITED]} == result["data"]
 
 
 async def test_edit_device_type(hass: HomeAssistant):

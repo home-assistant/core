@@ -293,7 +293,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         device_list.sort(key=lambda entry: entry["label"].upper())
 
         if user_input is not None:
-            device_id = user_input[CONF_DEVICE]
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
 
             # find the device belonging to the device_id
             device = None
@@ -306,7 +306,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         select_device_to_edit_schema = vol.Schema(
             {
-                vol.Required(CONF_DEVICE, default="none"): selector.SelectSelector(
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_ID, default="none"
+                ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=device_list)
                 )
             }
