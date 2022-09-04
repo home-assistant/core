@@ -1,6 +1,8 @@
 """Config Flow for Advantage Air integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from advantage_air import ApiError, advantage_air
 import voluptuous as vol
 
@@ -28,7 +30,9 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Get configuration from the user."""
         errors = {}
         if user_input:
