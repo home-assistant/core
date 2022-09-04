@@ -910,9 +910,7 @@ class ConfigEntries:
         self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
-        async_dispatcher_send(
-            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.ADDED, entry
-        )
+        self._async_dispatch(ConfigEntryChange.ADDED, entry)
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
         """Remove an entry."""
@@ -966,9 +964,7 @@ class ConfigEntries:
                 )
             )
 
-        async_dispatcher_send(
-            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.REMOVED, entry
-        )
+        self._async_dispatch(ConfigEntryChange.REMOVED, entry)
         return {"require_restart": not unload_success}
 
     async def _async_shutdown(self, event: Event) -> None:
@@ -1180,10 +1176,17 @@ class ConfigEntries:
                 self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
+        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
+        return True
+
+    @callback
+    def _async_dispatch(
+        self, change_type: ConfigEntryChange, entry: ConfigEntry
+    ) -> None:
+        """Dispatch a config entry change."""
         async_dispatcher_send(
             self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, entry
         )
-        return True
 
     @callback
     def async_setup_platforms(
