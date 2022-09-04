@@ -27,19 +27,20 @@ def async_handle_api_call(
 
     async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
         """Wrap services for api calls."""
-        res: dict[str, Any] = {"status": None}
+        res: bool = False
         try:
             async with async_timeout.timeout(TIMEOUT):
                 res = await function(*args, **kwargs)
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
 
-        LOGGER.debug("Result %s for entity %s with aurgements %s", res, args[0], kwargs)
+        LOGGER.debug("Result %s for entity %s with arguments %s", res, args[0], kwargs)
         entity: SensiboDeviceBaseEntity = args[0]
-        if not res:
+        if res is not True:
             raise HomeAssistantError(f"Could not execute service for {entity.name}")
         if kwargs.get("key") is not None and kwargs.get("value") is not None:
             setattr(entity.device_data, kwargs["key"], kwargs["value"])
+            LOGGER.debug("Debug check key %s is now %s", kwargs["key"], kwargs["value"])
             entity.async_write_ha_state()
 
     return wrap_api_call
