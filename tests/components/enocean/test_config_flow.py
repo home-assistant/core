@@ -45,8 +45,8 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
     assert EnOceanFlowHandler.MANUAL_PATH_VALUE in devices
 
 
-async def test_user_flow_with_no_detected_dongle(hass: HomeAssistant) -> None:
-    """Test the user flow with a detected ENOcean dongle."""
+async def test_user_flow_with_no_detected_dongle(hass):
+    """Test the user flow with a detected EnOcean dongle."""
     with patch(DONGLE_DETECT_METHOD, Mock(return_value=[])):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -23,20 +23,31 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
+ENOCEAN_TEST_DIMMER = EnOceanSupportedDeviceType(
+    eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
+)
+
+ENOCEAN_TEST_SWITCH = EnOceanSupportedDeviceType(
+    eep="A5-12-01",
+    manufacturer="Permundo",
+    model="PSC234 (switch and power monitor)",
+)
+
+ENOCEAN_TEST_BINARY_SENSOR = EnOceanSupportedDeviceType(
+    eep="F6-02-01",
+    manufacturer="Generic",
+    model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
+)
+
+
 ENOCEAN_SUPPORTED_DEVICES = [
-    EnOceanSupportedDeviceType(
-        eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
-    ),
+    ENOCEAN_TEST_DIMMER,
     EnOceanSupportedDeviceType(
         eep="F6-02-01", manufacturer="Eltako", model="FT55 battery-less wall switch"
     ),
     EnOceanSupportedDeviceType(eep="F6-02-01", manufacturer="Jung", model="ENO Series"),
     EnOceanSupportedDeviceType(eep="F6-02-01", manufacturer="Omnio", model="WS-CH-102"),
-    EnOceanSupportedDeviceType(
-        eep="A5-12-01",
-        manufacturer="Permundo",
-        model="PSC234 (switch and power monitor)",
-    ),
+    ENOCEAN_TEST_SWITCH,
     EnOceanSupportedDeviceType(
         eep="F6-10-00",
         manufacturer="Hoppe",
@@ -45,11 +56,7 @@ ENOCEAN_SUPPORTED_DEVICES = [
     EnOceanSupportedDeviceType(
         eep="F6-02-01", manufacturer="TRIO2SYS", model="TRIO2SYS Wall switches "
     ),
-    EnOceanSupportedDeviceType(
-        eep="F6-02-01",
-        manufacturer="Generic",
-        model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
-    ),
+    ENOCEAN_TEST_BINARY_SENSOR,
     EnOceanSupportedDeviceType(
         eep="F5-02-02",
         manufacturer="Generic",
