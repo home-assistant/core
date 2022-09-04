@@ -1,10 +1,12 @@
 """Support for Overkiz (virtual) numbers."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import cast
 
-from pyoverkiz.enums import OverkizCommand, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -21,6 +23,9 @@ from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
+BOOST_MODE_DURATION_DELAY = 1
+OPERATING_MODE_DELAY = 3
+
 
 @dataclass
 class OverkizNumberDescriptionMixin:
@@ -34,6 +39,41 @@ class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescription
     """Class to describe an Overkiz number."""
 
     inverted: bool = False
+    set_native_value: Callable[
+        [float, Callable[..., Awaitable[None]]], Awaitable[None]
+    ] | None = None
+
+
+async def _async_set_native_value_boost_mode_duration(
+    value: float, execute_command: Callable[..., Awaitable[None]]
+) -> None:
+    """Update the boost duration value."""
+
+    if value > 0:
+        await execute_command(OverkizCommand.SET_BOOST_MODE_DURATION, value)
+        await asyncio.sleep(
+            BOOST_MODE_DURATION_DELAY
+        )  # wait one second to not overload the device
+        await execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+        )
+    else:
+        await execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+        )
+
+    await asyncio.sleep(
+        OPERATING_MODE_DELAY
+    )  # wait 3 seconds to have the new duration in
+    await execute_command(OverkizCommand.REFRESH_BOOST_MODE_DURATION)
 
 
 NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
@@ -101,6 +141,27 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_max_value=100,
         inverted=True,
     ),
+    # DomesticHotWaterProduction - boost mode duration in days (0 - 7)
+    OverkizNumberDescription(
+        key=OverkizState.CORE_BOOST_MODE_DURATION,
+        name="Boost mode duration",
+        icon="mdi:water-boiler",
+        command=OverkizCommand.SET_BOOST_MODE_DURATION,
+        native_min_value=0,
+        native_max_value=7,
+        set_native_value=_async_set_native_value_boost_mode_duration,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    # DomesticHotWaterProduction - away mode in days (0 - 6)
+    OverkizNumberDescription(
+        key=OverkizState.IO_AWAY_MODE_DURATION,
+        name="Away mode duration",
+        icon="mdi:water-boiler-off",
+        command=OverkizCommand.SET_AWAY_MODE_DURATION,
+        native_min_value=0,
+        native_max_value=6,
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
@@ -155,6 +216,12 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
         """Set new value."""
         if self.entity_description.inverted:
             value = self.native_max_value - value
+
+        if self.entity_description.set_native_value:
+            await self.entity_description.set_native_value(
+                value, self.executor.async_execute_command
+            )
+            return
 
         await self.executor.async_execute_command(
             self.entity_description.command, value
