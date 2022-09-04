@@ -267,11 +267,8 @@ class LIFXLight(LIFXEntity, LightEntity):
                 "This device does not support setting HEV cycle state"
             )
 
-        if duration is None:
-            duration = 0
-
-        await self.coordinator.async_set_hev_cycle_state(power, duration)
-        await self.update_during_transition(duration)
+        await self.coordinator.async_set_hev_cycle_state(power, duration or 0)
+        await self.update_during_transition(duration or 0)
 
     async def set_power(
         self,
