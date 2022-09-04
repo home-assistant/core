@@ -299,7 +299,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host: str
         self._proxmox_client: ProxmoxClient | None = None
 
-    async def async_step_import(self, import_config=None) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import existing configuration."""
 
         errors = {}
@@ -425,114 +425,111 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 proxmox_nodes_host = []
                 if (proxmox_cliente := self._proxmox_client) is not None:
-                    proxmox = proxmox_cliente.get_api_client()
-                    proxmox_nodes = await self.hass.async_add_executor_job(
-                        proxmox.nodes.get
-                    )
-                    for node in proxmox_nodes:
-                        proxmox_nodes_host.append(node[CONF_NODE])
+                    if proxmox := (proxmox_cliente.get_api_client()):
+                        proxmox_nodes = await self.hass.async_add_executor_job(
+                            proxmox.nodes.get
+                        )
+                        for node in proxmox_nodes:
+                            proxmox_nodes_host.append(node[CONF_NODE])
 
-                for node in import_config.get(CONF_NODES):
-                    if node[CONF_NODE] not in proxmox_nodes_host:
+                if import_nodes := (import_config.get(CONF_NODES)):
+                    for node in import_nodes:
+                        if node[CONF_NODE] not in proxmox_nodes_host:
+                            _LOGGER.warning(
+                                "The node %s does not exist of instance %s:%s and will be ignored",
+                                node[CONF_NODE],
+                                self._config[CONF_HOST],
+                                self._config[CONF_PORT],
+                            )
+                            async_create_issue(
+                                async_get_hass(),
+                                DOMAIN,
+                                f"import_node_not_exist_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
+                                breaks_in_ha_version="2022.12.0",
+                                is_fixable=False,
+                                severity=IssueSeverity.WARNING,
+                                translation_key="import_node_not_exist",
+                                translation_placeholders={
+                                    "integration": INTEGRATION_NAME,
+                                    "platform": DOMAIN,
+                                    "host": host,
+                                    "port": port,
+                                    "node": node[CONF_NODE],
+                                },
+                            )
+                            continue
+
+                        if await self._async_endpoint_exists(
+                            f"{self._config[CONF_HOST]}/{self._config[CONF_PORT]}/{node[CONF_NODE]}"
+                        ):
+                            _LOGGER.warning(
+                                "The node %s of instance %s:%s already configured, you can remove it from configuration.yaml if you still have it",
+                                node[CONF_NODE],
+                                self._config[CONF_HOST],
+                                self._config[CONF_PORT],
+                            )
+                            async_create_issue(
+                                async_get_hass(),
+                                DOMAIN,
+                                f"import_already_configured_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
+                                breaks_in_ha_version="2022.12.0",
+                                is_fixable=False,
+                                severity=IssueSeverity.WARNING,
+                                translation_key="import_already_configured",
+                                translation_placeholders={
+                                    "integration": INTEGRATION_NAME,
+                                    "platform": DOMAIN,
+                                    "host": host,
+                                    "port": port,
+                                    "node": node[CONF_NODE],
+                                },
+                            )
+                            continue
+
+                        self._config[CONF_NODE] = node[CONF_NODE]
+                        self._config[CONF_QEMU] = []
+                        self._config[CONF_LXC] = []
+                        for vm_id in node[CONF_VMS]:
+                            self._config[CONF_QEMU].append(vm_id)
+                        for container_id in node[CONF_CONTAINERS]:
+                            self._config[CONF_LXC].append(container_id)
+
                         _LOGGER.warning(
-                            "The node %s does not exist of instance %s:%s and will be ignored",
+                            # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
+                            "Configuration of the Proxmox in YAML is deprecated and "
+                            "will be removed in Home Assistant 2022.12; Your existing configuration of node"
+                            "%s of %s:%s instance has been imported into the UI automatically and "
+                            "can be safely removed from your configuration.yaml file",
                             node[CONF_NODE],
-                            self._config[CONF_HOST],
-                            self._config[CONF_PORT],
+                            host,
+                            port,
                         )
                         async_create_issue(
                             async_get_hass(),
                             DOMAIN,
-                            f"import_node_not_exist_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
+                            f"import_success_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
                             breaks_in_ha_version="2022.12.0",
                             is_fixable=False,
                             severity=IssueSeverity.WARNING,
-                            translation_key="import_node_not_exist",
+                            translation_key="import_success",
                             translation_placeholders={
-                                "integration": INTEGRATION_NAME,
+                                "integration": "Proxmox VE",
                                 "platform": DOMAIN,
+                                "node": node[CONF_NODE],
                                 "host": host,
                                 "port": port,
-                                "node": node[CONF_NODE],
                             },
                         )
-                        continue
 
-                    if await self._async_endpoint_exists(
-                        f"{self._config[CONF_HOST]}/{self._config[CONF_PORT]}/{node[CONF_NODE]}"
-                    ):
-                        _LOGGER.warning(
-                            "The node %s of instance %s:%s already configured, you can remove it from configuration.yaml if you still have it",
-                            node[CONF_NODE],
-                            self._config[CONF_HOST],
-                            self._config[CONF_PORT],
+                        return self.async_create_entry(
+                            title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}",
+                            data=self._config,
                         )
-                        async_create_issue(
-                            async_get_hass(),
-                            DOMAIN,
-                            f"import_already_configured_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
-                            breaks_in_ha_version="2022.12.0",
-                            is_fixable=False,
-                            severity=IssueSeverity.WARNING,
-                            translation_key="import_already_configured",
-                            translation_placeholders={
-                                "integration": INTEGRATION_NAME,
-                                "platform": DOMAIN,
-                                "host": host,
-                                "port": port,
-                                "node": node[CONF_NODE],
-                            },
-                        )
-                        continue
-
-                    self._config[CONF_NODE] = node[CONF_NODE]
-                    self._config[CONF_QEMU] = []
-                    self._config[CONF_LXC] = []
-                    for vm_id in node[CONF_VMS]:
-                        self._config[CONF_QEMU].append(vm_id)
-                    for container_id in node[CONF_CONTAINERS]:
-                        self._config[CONF_LXC].append(container_id)
-
-                    _LOGGER.warning(
-                        # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
-                        "Configuration of the Proxmox in YAML is deprecated and "
-                        "will be removed in Home Assistant 2022.12; Your existing configuration of node"
-                        "%s of %s:%s instance has been imported into the UI automatically and "
-                        "can be safely removed from your configuration.yaml file",
-                        node[CONF_NODE],
-                        host,
-                        port,
-                    )
-                    async_create_issue(
-                        async_get_hass(),
-                        DOMAIN,
-                        f"import_success_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
-                        breaks_in_ha_version="2022.12.0",
-                        is_fixable=False,
-                        severity=IssueSeverity.WARNING,
-                        translation_key="import_success",
-                        translation_placeholders={
-                            "integration": "Proxmox VE",
-                            "platform": DOMAIN,
-                            "node": node[CONF_NODE],
-                            "host": host,
-                            "port": port,
-                        },
-                    )
-
-                    return self.async_create_entry(
-                        title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}",
-                        data=self._config,
-                    )
 
         _LOGGER.error(
             "Could not import ProxmoxVE configuration, please configure it manually from Integrations"
         )
         return self.async_abort(reason="import_failed")
-
-    async def async_step_user(self, user_input=None) -> FlowResult:
-        """Manual user configuration."""
-        return await self.async_step_init(user_input)
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
@@ -619,6 +616,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        """Manual user configuration."""
+        return await self.async_step_init(user_input)
 
     async def async_step_init(self, user_input) -> FlowResult:
         """Async step user for proxmoxve config flow."""
