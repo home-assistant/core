@@ -25,6 +25,7 @@ from .const import (
 from .util import async_execute_lifx, get_real_mac_addr, lifx_features
 
 REQUEST_REFRESH_DELAY = 0.35
+LIFX_IDENTIFY_DELAY = 3.0
 
 
 class LIFXUpdateCoordinator(DataUpdateCoordinator):
@@ -92,7 +93,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         # Turn the bulb on first, flash for 3 seconds, then turn off
         await self.async_set_power(state=True, duration=1)
         await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
-        await asyncio.sleep(3)
+        await asyncio.sleep(LIFX_IDENTIFY_DELAY)
         await self.async_set_power(state=False, duration=1)
 
     async def _async_update_data(self) -> None:

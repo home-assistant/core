@@ -8,7 +8,7 @@ from homeassistant.components.melnor.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
+from .conftest import (
     FAKE_ADDRESS_1,
     FAKE_SERVICE_INFO_1,
     FAKE_SERVICE_INFO_2,

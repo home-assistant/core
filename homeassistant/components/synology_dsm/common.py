@@ -102,6 +102,7 @@ class SynoApi:
             self.dsm.upgrade.update()
         except SynologyDSMAPIErrorException as ex:
             self._with_upgrade = False
+            self.dsm.reset(SynoCoreUpgrade.API_KEY)
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
 
         self._fetch_device_configuration()

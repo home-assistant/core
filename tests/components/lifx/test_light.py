@@ -52,6 +52,13 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.fixture(autouse=True)
+def patch_lifx_state_settle_delay():
+    """Set asyncio.sleep for state settles to zero."""
+    with patch("homeassistant.components.lifx.light.LIFX_STATE_SETTLE_DELAY", 0):
+        yield
+
+
 async def test_light_unique_id(hass: HomeAssistant) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
@@ -100,7 +107,6 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
 
-@patch("homeassistant.components.lifx.light.COLOR_ZONE_POPULATE_DELAY", 0)
 async def test_light_strip(hass: HomeAssistant) -> None:
     """Test a light strip."""
     already_migrated_config_entry = MockConfigEntry(

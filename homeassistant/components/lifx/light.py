@@ -46,7 +46,7 @@ from .manager import (
 )
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
-COLOR_ZONE_POPULATE_DELAY = 0.3
+LIFX_STATE_SETTLE_DELAY = 0.3
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -252,6 +252,9 @@ class LIFXLight(LIFXEntity, LightEntity):
                 if power_off:
                     await self.set_power(False, duration=fade)
 
+            # Avoid state ping-pong by holding off updates as the state settles
+            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
+
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
 
@@ -374,7 +377,7 @@ class LIFXStrip(LIFXColor):
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
             await self.set_power(True)
-            await asyncio.sleep(COLOR_ZONE_POPULATE_DELAY)
+            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
             await self.update_color_zones()
             await self.set_power(False)
 
