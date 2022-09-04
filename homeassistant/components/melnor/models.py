@@ -43,6 +43,7 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -59,8 +60,6 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
             model=self._device.model,
             name=self._device.name,
         )
-        self._attr_name = self._device.name
-        self._attr_unique_id = self._device.mac
 
     @callback
     def _handle_coordinator_update(self) -> None:
