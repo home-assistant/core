@@ -413,6 +413,7 @@ async def config_entries_get(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config_entries/subscribe",
+        vol.Optional("type_filter"): str,
     }
 )
 @websocket_api.async_response
@@ -420,12 +421,17 @@ async def config_entries_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to config entry updates."""
+    type_filter = msg.get("type_filter")
 
-    @callback
-    def forward_config_entry_changes(
+    async def forward_config_entry_changes(
         change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
     ) -> None:
         """Forward config entry state events to websocket."""
+        if type_filter:
+            integration = await async_get_integration(hass, entry.domain)
+            if integration.integration_type != type_filter:
+                return
+
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
@@ -438,7 +444,7 @@ async def config_entries_subscribe(
             )
         )
 
-    current_entries = await async_matching_config_entries(hass, None, None)
+    current_entries = await async_matching_config_entries(hass, type_filter, None)
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
         hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, forward_config_entry_changes
     )
