@@ -387,8 +387,6 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     if gateway_id.endswith("-gateway"):
         hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
     try:
@@ -444,6 +442,8 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
 
 async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Xiaomi Miio device component from a config entry."""
@@ -453,9 +453,9 @@ async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     if not platforms:
         return False
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 

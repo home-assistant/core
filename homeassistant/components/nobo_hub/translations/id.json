@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_ip": "Alamat IP tidak valid",
+            "invalid_serial": "Nomor seri tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "Alamat IP"
+                }
+            }
+        }
+    }
+}
