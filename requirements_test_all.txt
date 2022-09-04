@@ -1743,7 +1743,7 @@ xknx==1.0.2
 xmltodict==0.13.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.8
+yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
 yalexs-ble==1.6.4
