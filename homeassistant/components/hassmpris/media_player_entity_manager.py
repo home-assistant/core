@@ -28,12 +28,9 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
+from homeassistant.util.enum import intenum_to_string
 
-from .const import (
-    ATTR_PLAYBACK_RATE,
-    DOMAIN,
-    LOGGER as _LOGGER,
-)
+from .const import ATTR_PLAYBACK_RATE, DOMAIN, LOGGER as _LOGGER
 
 PLATFORM = "media_player"
 
@@ -59,17 +56,6 @@ SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
 # integration, since there is no value in keeping them
 # around.
 REMOVE_CLONES_WHILE_RUNNING = False
-
-
-def _feat2bitfield(bitfield: int, obj: object) -> str:
-    fields = []
-    for feat in dir(obj):
-        val = getattr(obj, feat)
-        if not isinstance(val, int):
-            continue
-        if bitfield & val:
-            fields.append(feat)
-    return ",".join(fields)
 
 
 def _get_player_id(
@@ -288,10 +274,9 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
         if feats != self._attr_supported_features:
             _LOGGER.debug(
-                "%s: new feature bitfield: (%s) %s",
+                "%s: new feature bitfield: %s",
                 self.name,
-                feats,
-                _feat2bitfield(feats, MediaPlayerEntityFeature),
+                intenum_to_string(feats, MediaPlayerEntityFeature),
             )
             self._attr_supported_features = feats
             update_state = True
