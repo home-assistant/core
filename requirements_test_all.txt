@@ -706,7 +706,7 @@ lacrosse-view==0.0.9
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.5.4
+led-ble==0.6.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
