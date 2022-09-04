@@ -1,8 +1,6 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dis import disco
 from typing import Any, cast
 
 from aiohttp import ClientError

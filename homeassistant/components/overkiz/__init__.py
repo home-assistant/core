@@ -65,6 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
+
+        # Verify SSL blocked by https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/5
+        # Somfy (self-signed) SSL cert uses the wrong common name
         session = async_create_clientsession(hass, verify_ssl=False)
 
         client = OverkizClient(
