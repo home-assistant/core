@@ -354,7 +354,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     device_type = esd
                     break
             if device_type.unique_id == "":
-                errors[ENOCEAN_DEVICE_TYPE] = "invalid_device_type"
+                errors[ENOCEAN_DEVICE_TYPE] = ENOCEAN_ERROR_INVALID_DEVICE_TYPE
 
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
