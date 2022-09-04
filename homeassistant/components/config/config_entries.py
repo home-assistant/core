@@ -423,7 +423,7 @@ async def config_entries_subscribe(
     """Subscribe to config entry updates."""
     type_filter = msg.get("type_filter")
 
-    async def forward_config_entry_changes(
+    async def async_forward_config_entry_changes(
         change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
     ) -> None:
         """Forward config entry state events to websocket."""
@@ -446,7 +446,9 @@ async def config_entries_subscribe(
 
     current_entries = await async_matching_config_entries(hass, type_filter, None)
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, forward_config_entry_changes
+        hass,
+        config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
+        async_forward_config_entry_changes,
     )
     connection.send_result(
         msg["id"], [{"type": None, "entry": entry} for entry in current_entries]
