@@ -52,9 +52,9 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # RTDIndoorSiren / RTDOutdoorSiren
-    ButtonEntityDescription(key="dingDong", name="Ding dong", icon="mdi:bell-ring"),
-    ButtonEntityDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
-    ButtonEntityDescription(
+    OverkizButtonDescription(key="dingDong", name="Ding dong", icon="mdi:bell-ring"),
+    OverkizButtonDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
+    OverkizButtonDescription(
         key="fastBipSequence", name="Fast bip sequence", icon="mdi:bell-ring"
     ),
     OverkizButtonDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
