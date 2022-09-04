@@ -266,6 +266,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "tilt_ble",
+        "manufacturer_id": 76
+    },
+    {
         "domain": "xiaomi_ble",
         "connectable": False,
         "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
