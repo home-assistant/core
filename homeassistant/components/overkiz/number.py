@@ -207,14 +207,15 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
+        if self.entity_description.inverted:
+            value = self.native_max_value - value
+
         if self.entity_description.set_native_value:
             await self.entity_description.set_native_value(
                 value, self.executor.async_execute_command
             )
-        else:
-            if self.entity_description.inverted:
-                value = self.native_max_value - value
+            return
 
-            await self.executor.async_execute_command(
-                self.entity_description.command, value
-            )
+        await self.executor.async_execute_command(
+            self.entity_description.command, value
+        )
