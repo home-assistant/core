@@ -50,23 +50,20 @@ LIFX_STATE_SETTLE_DELAY = 0.3
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
-LIFX_SET_STATE_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIGHT_TURN_ON_SCHEMA,
-        ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-        ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
-        ATTR_POWER: cv.boolean,
-    }
-)
+LIFX_SET_STATE_SCHEMA = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_POWER: cv.boolean,
+}
+
 
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
-LIFX_SET_HEV_CYCLE_STATE_SCHEMA = cv.make_entity_service_schema(
-    {
-        ATTR_POWER: vol.Required(cv.boolean),
-        ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
-    }
-)
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA = {
+    ATTR_POWER: vol.Required(cv.boolean),
+    ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
+}
 
 HSBK_HUE = 0
 HSBK_SATURATION = 1
