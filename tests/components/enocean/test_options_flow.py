@@ -10,7 +10,9 @@ from homeassistant.components.enocean.config_flow import (
     CONF_ENOCEAN_MODEL,
     CONF_ENOCEAN_SENDER_ID,
     ENOCEAN_DEVICE_TYPE,
+    ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED,
     ENOCEAN_ERROR_INVALID_DEVICE_ID,
+    ENOCEAN_ERROR_INVALID_SENDER_ID,
 )
 from homeassistant.components.enocean.const import (
     DOMAIN,
@@ -183,9 +185,8 @@ async def test_add_device(hass: HomeAssistant):
     assert {CONF_ENOCEAN_DEVICES: [TEST_DIMMER, TEST_SWITCH]} == result["data"]
 
 
-async def test_add_invalid_device_id(hass: HomeAssistant):
-    """Test that adding a device with invalid id will not proceed."""
-
+async def test_add_device_with_invalid_device_id_fails(hass: HomeAssistant):
+    """Test that adding a device with invalid id will be prevented."""
     mock_config_entry = MockConfigEntry(
         title="",
         domain=DOMAIN,
@@ -229,9 +230,52 @@ async def test_add_invalid_device_id(hass: HomeAssistant):
     assert result["errors"][CONF_ENOCEAN_DEVICE_ID] == ENOCEAN_ERROR_INVALID_DEVICE_ID
 
 
-async def test_add_existing_device(hass: HomeAssistant):
-    """Test to be defined."""
-    assert 1 == 1
+async def test_add_device_with_existing_device_id_fails(hass: HomeAssistant):
+    """Test that adding a device which is already configured will be prevented."""
+    mock_config_entry = MockConfigEntry(
+        title="",
+        domain=DOMAIN,
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
+        options={CONF_ENOCEAN_DEVICES: [TEST_DIMMER]},
+    )
+
+    result = None
+
+    with patch(
+        "homeassistant.components.enocean.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = True
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"next_step_id": "add_device"}
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
+                CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
+                CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
+            },
+        )
+
+    assert result is not None
+    assert result["type"] == FlowResultType.FORM
+    assert CONF_ENOCEAN_DEVICE_ID in result["errors"]
+    assert (
+        result["errors"][CONF_ENOCEAN_DEVICE_ID]
+        == ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
+    )
 
 
 async def test_add_empty_name(hass: HomeAssistant):
@@ -240,8 +284,48 @@ async def test_add_empty_name(hass: HomeAssistant):
 
 
 async def test_add_invalid_sender_id(hass: HomeAssistant):
-    """Test to be defined."""
-    assert 1 == 1
+    """Test that adding a device with an invalid sender id fails."""
+    mock_config_entry = MockConfigEntry(
+        title="",
+        domain=DOMAIN,
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
+        options={CONF_ENOCEAN_DEVICES: [TEST_DIMMER]},
+    )
+
+    result = None
+
+    with patch(
+        "homeassistant.components.enocean.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = True
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"next_step_id": "add_device"}
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
+                CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
+                CONF_ENOCEAN_SENDER_ID: "AB:AB:AB",
+            },
+        )
+
+    assert result is not None
+    assert result["type"] == FlowResultType.FORM
+    assert CONF_ENOCEAN_SENDER_ID in result["errors"]
+    assert result["errors"][CONF_ENOCEAN_SENDER_ID] == ENOCEAN_ERROR_INVALID_SENDER_ID
 
 
 async def test_delete_device(hass: HomeAssistant):

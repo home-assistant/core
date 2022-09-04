@@ -465,7 +465,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Check that the supplied string is a valid EnOcean id."""
         parts = id_string.split(":")
 
-        if len(parts) < 3:
+        if len(parts) < 4:
             return False
         try:
             for part in parts:
