@@ -18,6 +18,7 @@ from homeassistant.components.enocean.const import (
 )
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -66,7 +67,73 @@ TEST_SWITCH_INVALID_SENDER_ID = {
     CONF_ENOCEAN_SENDER_ID: "AB:123:AB:AB",
 }
 
+FAKE_DONGLE_PATH = "/fake/dongle"
+
 DONGLE_DETECT_METHOD = "homeassistant.components.enocean.dongle.detect"
+
+
+async def test_menu_is_small_for_no_devices(hass: HomeAssistant):
+    """Test that the menu contains only 'add device' when no device is configured."""
+    mock_config_entry = MockConfigEntry(
+        title="",
+        domain=DOMAIN,
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
+        options={CONF_ENOCEAN_DEVICES: []},
+    )
+
+    result = None
+
+    with patch(
+        "homeassistant.components.enocean.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = True
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+    assert result is not None
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == ["add_device"]
+
+
+async def test_menu_is_large_for_devices(hass: HomeAssistant):
+    """Test that the menu contains 'add_device', 'select_device_to_edit' and 'delete_device' when at least one device is configured."""
+    mock_config_entry = MockConfigEntry(
+        title="",
+        domain=DOMAIN,
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
+        options={CONF_ENOCEAN_DEVICES: [TEST_DIMMER]},
+    )
+
+    result = None
+
+    with patch(
+        "homeassistant.components.enocean.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = True
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+    assert result is not None
+    assert result["type"] == FlowResultType.MENU
+    assert result["menu_options"] == [
+        "add_device",
+        "select_device_to_edit",
+        "delete_device",
+    ]
 
 
 async def test_add_device(hass: HomeAssistant):
@@ -75,7 +142,7 @@ async def test_add_device(hass: HomeAssistant):
     mock_config_entry = MockConfigEntry(
         title="",
         domain=DOMAIN,
-        data={CONF_DEVICE: "/fake/dongle"},
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
         options={CONF_ENOCEAN_DEVICES: [TEST_DIMMER]},
     )
 
@@ -110,8 +177,7 @@ async def test_add_device(hass: HomeAssistant):
         )
 
     assert result is not None
-    assert "create_entry" == result["type"]
-    assert "" == result["title"]
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["result"] is True
     assert {CONF_ENOCEAN_DEVICES: [TEST_DIMMER, TEST_SWITCH]} == result["data"]
 
@@ -141,6 +207,16 @@ async def test_delete_device(hass: HomeAssistant):
     assert 1 == 1
 
 
-async def test_delete_last_device(hass: HomeAssistant):
+async def test_edit_device_name(hass: HomeAssistant):
+    """Test that a device name can be edited."""
+    assert 1 == 1
+
+
+async def test_edit_device_type(hass: HomeAssistant):
+    """Test to be defined."""
+    assert 1 == 1
+
+
+async def test_edit_sender_id(hass: HomeAssistant):
     """Test to be defined."""
     assert 1 == 1
