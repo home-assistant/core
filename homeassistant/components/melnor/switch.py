@@ -30,13 +30,12 @@ async def async_setup_entry(
         if coordinator.data[f"zone{i}"] is not None:
             switches.append(MelnorSwitch(coordinator, i))
 
-    async_add_devices(switches, True)
+    async_add_devices(switches)
 
 
 class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
     """A switch implementation for a melnor device."""
 
-    _valve_index: int
     _attr_icon = "mdi:sprinkler"
 
     def __init__(
@@ -48,8 +47,9 @@ class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
         super().__init__(coordinator)
         self._valve_index = valve_index
 
-        self._attr_unique_id = f"{self._attr_unique_id}-zone{self._valve().id}-manual"
-        self._attr_name = f"{self._device.name} Zone {self._valve().id+1}"
+        valve_id = self._valve().id
+        self._attr_name = f"Zone {valve_id+1}"
+        self._attr_unique_id = f"{self._device.mac}-zone{valve_id}-manual"
 
     @property
     def is_on(self) -> bool:
