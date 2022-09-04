@@ -2,7 +2,10 @@
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -88,6 +91,7 @@ def create_binary_sensor(
         unique_id=f"proxmox_{config_entry.data[CONF_HOST]}{config_entry.data[CONF_PORT]}{node}{vm_id}_running",
         name=f"{node} {name} running",
         icon="",
+        device_class=BinarySensorDeviceClass.RUNNING,
         vm_id=vm_id,
         info_device=info_device,
     )
@@ -102,12 +106,14 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         unique_id,
         name,
         icon,
+        device_class,
         vm_id,
         info_device,
     ):
         """Create the binary sensor for vms or containers."""
         super().__init__(coordinator, unique_id, name, icon, vm_id)
 
+        self._attr_device_class = device_class
         self._attr_device_info = info_device
 
     @property
