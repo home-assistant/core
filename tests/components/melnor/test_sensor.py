@@ -44,7 +44,7 @@ async def test_rssi_sensor(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = f"sensor.{mock_melnor_device().name}_rssi"
+        entity_id = f"sensor.{device.name}_rssi"
 
         # Ensure the entity is disabled by default by checking the registry
         ent_registry = entity_registry.async_get(hass)
