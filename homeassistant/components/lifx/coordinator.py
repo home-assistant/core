@@ -103,6 +103,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 self.device.get_hostfirmware()
             if self.device.product is None:
                 self.device.get_version()
+
             response = await async_execute_lifx(self.device.get_color)
 
             if self.device.product is None:
@@ -114,11 +115,15 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
 
+            # Update model-specific configuration
             if lifx_features(self.device)["multizone"]:
                 await self.async_update_color_zones()
 
             if lifx_features(self.device)["hev"]:
                 await self.async_get_hev_cycle()
+
+            if lifx_features(self.device)["infrared"]:
+                response = await async_execute_lifx(self.device.get_infrared)
 
     async def async_update_color_zones(self) -> None:
         """Get updated color information for each zone."""
@@ -199,3 +204,31 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             await async_execute_lifx(
                 partial(self.device.set_hev_cycle, enable=enable, duration=duration)
             )
+
+    def async_current_infrared_brightness(self) -> str | None:
+        """Return the current infrared brightness as a string."""
+        if self.device.infrared_brightness == 0:
+            option = "Disabled"
+        elif self.device.infrared_brightness == 16383:
+            option = "25%"
+        elif self.device.infrared_brightness == 32767:
+            option = "50%"
+        elif self.device.infrared_brightness == 65535:
+            option = "100%"
+        else:
+            option = None
+
+        return option
+
+    async def async_set_infrared_brightness(self, option: str) -> None:
+        """Set infrared brightness."""
+        if option == "Disabled":
+            infrared_brightness = 0
+        elif option == "25%":
+            infrared_brightness = 16383
+        elif option == "50%":
+            infrared_brightness = 32767
+        elif option == "100%":
+            infrared_brightness = 65535
+
+        await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))

@@ -37,6 +37,7 @@ ATTR_REMAINING = "remaining"
 ATTR_ZONES = "zones"
 
 HEV_CYCLE_STATE = "hev_cycle_state"
+INFRARED_BRIGHTNESS = "infrared_brightness"
 
 DATA_LIFX_MANAGER = "lifx_manager"
 

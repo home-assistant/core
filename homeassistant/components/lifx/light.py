@@ -29,6 +29,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
 from .const import (
+    _LOGGER,
     ATTR_DURATION,
     ATTR_INFRARED,
     ATTR_POWER,
@@ -212,6 +213,9 @@ class LIFXLight(LIFXEntity, LightEntity):
                 return
 
             if ATTR_INFRARED in kwargs:
+                _LOGGER.warning(
+                    "The infrared attribute of the lifx.set_state service is deprecated and will be removed in a future version"
+                )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
             if ATTR_TRANSITION in kwargs:
