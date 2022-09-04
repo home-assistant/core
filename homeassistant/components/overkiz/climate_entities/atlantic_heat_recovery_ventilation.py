@@ -42,6 +42,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     """Representation of a AtlanticHeatRecoveryVentilation device."""
 
     _attr_fan_modes = [*FAN_MODES_TO_OVERKIZ]
+    _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_hvac_modes = [HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
     _attr_temperature_unit = TEMP_CELSIUS
@@ -65,11 +66,6 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
             return cast(float, temperature.value)
 
         return None
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HVACMode.FAN_ONLY
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Not implemented since there is only one hvac_mode."""
