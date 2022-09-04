@@ -1351,6 +1351,9 @@ py-nightscout==1.2.2
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
+# homeassistant.components.ecovacs
+py-sucks==0.9.8
+
 # homeassistant.components.synology_dsm
 py-synologydsm-api==1.0.8
 
@@ -2310,9 +2313,6 @@ stringcase==1.2.0
 
 # homeassistant.components.subaru
 subarulink==0.5.0
-
-# homeassistant.components.ecovacs
-sucks==0.9.4
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
