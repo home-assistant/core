@@ -157,6 +157,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "LEDBlue*"
     },
     {
+        "domain": "led_ble",
+        "local_name": "Dream~*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "QHM-*"
+    },
+    {
         "domain": "melnor",
         "manufacturer_data_start": [
             89
