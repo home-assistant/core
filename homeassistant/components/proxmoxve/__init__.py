@@ -318,16 +318,19 @@ def device_info(
     if proxmox_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
         name = f"{node} {vm_name} ({vm_id})"
         host_port_node_vm = f"{host}_{port}_{node}_{vm_id}"
+        url = f"/#v1:0:={proxmox_type}/{vm_id}"
     elif proxmox_type is ProxmoxType.Node:
         name = node
         host_port_node_vm = f"{host}_{port}_{node}"
+        url = "/#v1:0:=node/{node}"
     else:
         name = f"{host}"
         host_port_node_vm = f"{host}_{port}"
+        url = "/#v1:0"
 
     return DeviceInfo(
         entry_type=device_registry.DeviceEntryType.SERVICE,
-        configuration_url=f"https://{host}:{port}",
+        configuration_url=f"https://{host}:{port}{url}",
         identifiers={(DOMAIN, host_port_node_vm)},
         default_manufacturer=INTEGRATION_NAME,
         name=name,
