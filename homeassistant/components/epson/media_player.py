@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from epson_projector import Projector
+from epson_projector import Projector, ProjectorUnavailableError
 from epson_projector.const import (
     BACK,
     BUSY,
@@ -123,7 +123,11 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Update state of device."""
-        power_state = await self._projector.get_power()
+        try:
+            power_state = await self._projector.get_power()
+        except ProjectorUnavailableError as ex:
+            self._attr_available = False
+            return
         _LOGGER.debug("Projector status: %s", power_state)
         if not power_state or power_state == EPSON_STATE_UNAVAILABLE:
             self._attr_available = False
