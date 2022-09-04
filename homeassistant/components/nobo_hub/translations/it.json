@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi - controllare il numero di serie",
+            "invalid_ip": "Indirizzo IP non valido",
+            "invalid_serial": "Numero di serie non valido",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "Indirizzo IP",
+                    "serial": "Numero di serie (12 cifre)"
+                }
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Suffisso del numero di serie (3 cifre)"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Hub scoperti"
+                }
+            }
+        }
+    }
+}
