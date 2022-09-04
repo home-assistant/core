@@ -640,15 +640,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_MQTT_RELOAD_ENTRY] = True
     # Reload the legacy yaml platform to make entities unavailable
     await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
+    # cleanup
+    hooks: dict[tuple, Callable] = hass.data[DATA_MQTT_DISCOVERY_REGISTRY_HOOKS]
+    while hooks:
+        hooks.popitem()[1]()
     # Wait for all ACKs and stop the loop
     await mqtt_client.async_disconnect()
     # Store remaining subscriptions to be able to restore or reload them
     # when the entry is set up again
     if mqtt_client.subscriptions:
         hass.data[DATA_MQTT_SUBSCRIPTIONS_TO_RESTORE] = mqtt_client.subscriptions
-    # cleanup
-    hooks: dict[tuple, Callable] = hass.data[DATA_MQTT_DISCOVERY_REGISTRY_HOOKS]
-    for _, hook in hooks.items():
-        hook()
 
     return True

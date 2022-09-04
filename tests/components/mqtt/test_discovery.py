@@ -23,6 +23,8 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
+from .test_common import help_test_unload_config_entry
+
 from tests.common import (
     MockConfigEntry,
     async_capture_events,
@@ -1398,3 +1400,53 @@ async def test_clear_config_topic_disabled_entity(
     mqtt_mock.async_publish.assert_called_once_with(
         "homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True
     )
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_clean_up_registry_monitoring(
+    hass, mqtt_mock_entry_no_yaml_config, device_reg, tmp_path
+):
+    """Test registry monitoring hook is removed after a reload."""
+    await mqtt_mock_entry_no_yaml_config()
+    hooks: dict = hass.data[mqtt.const.DATA_MQTT_DISCOVERY_REGISTRY_HOOKS]
+    # discover an entity that is not enabled by default
+    config1 = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "unique_id": "sbfspot_12345",
+        "enabled_by_default": False,
+        "device": {
+            "identifiers": ["sbfspot_12345"],
+            "name": "sbfspot_12345",
+            "sw_version": "1.0",
+            "connections": [["mac", "12:34:56:AB:CD:EF"]],
+        },
+    }
+    # Publish it config
+    # Since it is not enabled_by_default the sensor will not be loaded
+    # it should register a hook for monitoring the entiry registry
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        json.dumps(config1),
+    )
+    await hass.async_block_till_done()
+    assert len(hooks) == 1
+
+    # Publish it again no new monitor should be started
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        json.dumps(config1),
+    )
+    await hass.async_block_till_done()
+    assert len(hooks) == 1
+
+    # Verify device is created
+    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    assert device_entry is not None
+
+    # Enload the entry
+    # The monitoring should be cleared
+    await help_test_unload_config_entry(hass, tmp_path, {})
+    assert len(hooks) == 0
