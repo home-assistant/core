@@ -8,6 +8,11 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
+        "domain": "bluemaestro",
+        "manufacturer_id": 307,
+        "connectable": False
+    },
+    {
         "domain": "bthome",
         "connectable": False,
         "service_data_uuid": "0000181c-0000-1000-8000-00805f9b34fb"
@@ -19,6 +24,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "fjaraskupan",
+        "connectable": False,
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
             79,
@@ -76,6 +82,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "govee_ble",
+        "manufacturer_id": 63585,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "govee_ble",
         "manufacturer_id": 14474,
         "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
         "connectable": False
@@ -84,6 +96,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "govee_ble",
         "manufacturer_id": 10032,
         "service_uuid": "00008251-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 19506,
+        "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
         "connectable": False
     },
     {
@@ -137,6 +155,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "led_ble",
         "local_name": "LEDBlue*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "Dream~*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "QHM-*"
     },
     {
         "domain": "melnor",

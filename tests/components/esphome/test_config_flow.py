@@ -81,6 +81,7 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
         CONF_NOISE_PSK: "",
     }
     assert result["title"] == "test"
+    assert result["result"].unique_id == "test"
 
     assert len(mock_client.connect.mock_calls) == 1
     assert len(mock_client.device_info.mock_calls) == 1
@@ -89,6 +90,35 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
     assert mock_client.port == 80
     assert mock_client.password == ""
     assert mock_client.noise_psk is None
+
+
+async def test_user_connection_updates_host(hass, mock_client, mock_zeroconf):
+    """Test setup up the same name updates the host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="test",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={"source": config_entries.SOURCE_USER},
+        data=None,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "127.0.0.1"
 
 
 async def test_user_resolve_error(hass, mock_client, mock_zeroconf):
