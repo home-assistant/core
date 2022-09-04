@@ -370,8 +370,43 @@ async def test_add_invalid_sender_id(hass: HomeAssistant):
 
 
 async def test_delete_device(hass: HomeAssistant):
-    """Test to be defined."""
-    assert 1 == 1
+    """Test deleting a device."""
+
+    mock_config_entry = MockConfigEntry(
+        title="",
+        domain=DOMAIN,
+        data={CONF_DEVICE: FAKE_DONGLE_PATH},
+        options={CONF_ENOCEAN_DEVICES: [TEST_DIMMER]},
+    )
+
+    result = None
+
+    with patch(
+        "homeassistant.components.enocean.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = True
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"next_step_id": "delete_device"}
+        )
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"id": "01:02:03:04"}
+        )
+
+    assert result is not None
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"] is True
+    assert {CONF_ENOCEAN_DEVICES: []} == result["data"]
 
 
 async def test_edit_device_name(hass: HomeAssistant):
