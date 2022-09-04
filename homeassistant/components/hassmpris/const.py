@@ -7,10 +7,6 @@ from homeassistant.const import CONF_HOST as _CONF_HOST
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "hassmpris"
-ENTRY_CLIENT = "client"
-ENTRY_MEDIA_PLAYER_ENTITY_MANAGER = "media_player_entity_manager"
-ENTRY_UNLOADERS = "unloaders"
-ENTRY_UNLOAD_FUNC = "unload_func"
 
 CONF_HOST = _CONF_HOST
 CONF_CAKES_PORT = "cakes_port"
