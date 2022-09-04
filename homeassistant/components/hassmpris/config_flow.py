@@ -228,17 +228,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        # Sample:
-        # ZeroconfServiceInfo(
-        #   host='10.250.4.12',
-        #   addresses=['10.250.4.12', '127.0.0.1'],
-        #   port=40051,
-        #   hostname='hassmpris-f7ca73ec-ab9d-32b3-9c6d-e01a3b218451.local.',
-        #   type='_hassmpris._tcp.local.',
-        #   name='MPRIS on user@projects._hassmpris._tcp.local.',
-        #   properties={'cakes_port': '40051'}
-        # )
-
         try:
             assert discovery_info.host
             assert discovery_info.port
