@@ -234,7 +234,7 @@ async def _async_provide_implementation(
     ]
 
 
-async def _async_config_entry_app_credentails(
+async def _async_config_entry_app_credentials(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
 ) -> str | None:
@@ -355,7 +355,7 @@ async def handle_config_entry(
         )
         return
     result = {}
-    if application_credentials_id := await _async_config_entry_app_credentails(
+    if application_credentials_id := await _async_config_entry_app_credentials(
         hass, config_entry
     ):
         result["application_credentials_id"] = application_credentials_id
