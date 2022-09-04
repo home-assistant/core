@@ -43,6 +43,7 @@ ENOCEAN_ERROR_INVALID_DEVICE_ID = "invalid_device_id"
 ENOCEAN_ERROR_INVALID_SENDER_ID = "invalid_sender_id"
 ENOCEAN_ERROR_DEVICE_NAME_EMPTY = "device_name_empty"
 ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED = "device_already_configured"
+ENOCEAN_ERROR_INVALID_DEVICE_TYPE = "invalid_device_type"
 
 # others
 ENOCEAN_DEVICE_DEFAULT_NAME = "EnOcean device"
@@ -183,9 +184,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 for dev in devices:
                     if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
-                        errors["base"] = ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
+                        errors[
+                            CONF_ENOCEAN_DEVICE_ID
+                        ] = ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
             else:
-                errors["base"] = ENOCEAN_ERROR_INVALID_DEVICE_ID
+                errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
 
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE]
             device_type = EnOceanSupportedDeviceType("", "", "")
@@ -194,18 +197,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     device_type = esd
                     break
             if device_type.unique_id == "":
-                errors["base"] = "invalid_device_type"
+                errors[ENOCEAN_DEVICE_TYPE] = ENOCEAN_ERROR_INVALID_DEVICE_TYPE
 
             sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
             if sender_id != "":
                 if self.validate_enocean_id_string(sender_id):
                     sender_id = self.normalize_enocean_id_string(sender_id)
                 else:
-                    errors["base"] = ENOCEAN_ERROR_INVALID_SENDER_ID
+                    errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
             if device_name == "":
-                errors["base"] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
+                errors[CONF_ENOCEAN_DEVICE_NAME] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
 
             if not errors:
                 devices.append(
