@@ -42,6 +42,7 @@ def async_handle_api_call(
             setattr(entity.device_data, kwargs["key"], kwargs["value"])
             LOGGER.debug("Debug check key %s is now %s", kwargs["key"], kwargs["value"])
             entity.async_write_ha_state()
+            await entity.coordinator.async_request_refresh()
 
     return wrap_api_call
 

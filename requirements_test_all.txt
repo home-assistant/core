@@ -504,7 +504,6 @@ fjaraskupan==2.0.0
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-# homeassistant.components.led_ble
 flux_led==0.28.32
 
 # homeassistant.components.homekit
@@ -1375,7 +1374,7 @@ python-nest==4.2.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.32
+python-smarttub==0.0.33
 
 # homeassistant.components.songpal
 python-songpal==0.15
@@ -1624,6 +1623,9 @@ thermobeacon-ble==0.3.1
 # homeassistant.components.thermopro
 thermopro-ble==0.4.0
 
+# homeassistant.components.tilt_ble
+tilt-ble==0.2.2
+
 # homeassistant.components.todoist
 todoist-python==8.0.0
 
@@ -1750,7 +1752,7 @@ xknx==1.0.2
 xmltodict==0.13.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.8
+yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
 yalexs-ble==1.6.4

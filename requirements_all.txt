@@ -685,7 +685,6 @@ fjaraskupan==2.0.0
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-# homeassistant.components.led_ble
 flux_led==0.28.32
 
 # homeassistant.components.homekit
@@ -1355,6 +1354,9 @@ py-nightscout==1.2.2
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
+# homeassistant.components.ecovacs
+py-sucks==0.9.8
+
 # homeassistant.components.synology_dsm
 py-synologydsm-api==1.0.8
 
@@ -2000,7 +2002,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.32
+python-smarttub==0.0.33
 
 # homeassistant.components.songpal
 python-songpal==0.15
@@ -2315,9 +2317,6 @@ stringcase==1.2.0
 # homeassistant.components.subaru
 subarulink==0.5.0
 
-# homeassistant.components.ecovacs
-sucks==0.9.4
-
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
@@ -2383,6 +2382,9 @@ thingspeak==1.0.0
 
 # homeassistant.components.tikteck
 tikteck==0.4
+
+# homeassistant.components.tilt_ble
+tilt-ble==0.2.2
 
 # homeassistant.components.tmb
 tmb==0.0.4
@@ -2546,7 +2548,7 @@ xmltodict==0.13.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.8
+yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
 yalexs-ble==1.6.4
