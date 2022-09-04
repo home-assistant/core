@@ -1083,6 +1083,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core
 /tests/components/switch_as_x/ @home-assistant/core
+/homeassistant/components/switchbee/ @jafar-atili
+/tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
 /tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
@@ -1308,8 +1310,6 @@ build.json @home-assistant/supervisor
 /tests/components/zwave_js/ @home-assistant/z-wave
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me
 /tests/components/zwave_me/ @lawfulchaos @Z-Wave-Me
-/homeassistant/components/switchbee/ @jafar-atili
-/tests/components/switchbee/ @jafar-atili
 
 # Individual files
 /homeassistant/components/demo/weather.py @fabaff

@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.switchbee.config_flow import SwitchBeeError
-from homeassistant.components.switchbee.const import DOMAIN
+from homeassistant.components.switchbee.const import CONF_SWITCHES_AS_LIGHTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import RESULT_TYPE_FORM, FlowResultType
 
 from .test_data import (
     MOCK_FAILED_TO_LOGIN_MSG,
@@ -26,11 +26,16 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("switchbee.SwitchBeeAPI.login", return_value=None), patch(
+    with patch(
+        "switchbee.api.CentralUnitAPI.get_configuration",
+        return_value=MOCK_GET_CONFIGURATION,
+    ), patch(
         "homeassistant.components.switchbee.async_setup_entry",
         return_value=True,
     ), patch(
-        "switchbee.SwitchBeeAPI.get_configuration", return_value=MOCK_GET_CONFIGURATION
+        "switchbee.api.CentralUnitAPI.fetch_states", return_value=None
+    ), patch(
+        "switchbee.api.CentralUnitAPI._login", return_value=None
     ):
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -39,16 +44,19 @@ async def test_form(hass):
                 CONF_HOST: "1.1.1.1",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
+                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    print(result2)
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
+        CONF_SWITCHES_AS_LIGHTS: False,
     }
 
 
@@ -59,15 +67,16 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "switchbee.SwitchBeeAPI.login",
+        "switchbee.api.CentralUnitAPI._login",
         side_effect=SwitchBeeError(MOCK_FAILED_TO_LOGIN_MSG),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
@@ -82,15 +91,16 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "switchbee.SwitchBeeAPI.login",
+        "switchbee.api.CentralUnitAPI._login",
         side_effect=SwitchBeeError(MOCK_INVALID_TOKEN_MGS),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
@@ -105,15 +115,16 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "switchbee.SwitchBeeAPI.login",
+        "switchbee.api.CentralUnitAPI._login",
         side_effect=Exception,
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
@@ -124,34 +135,39 @@ async def test_form_unknown_error(hass):
 async def test_form_entry_exists(hass):
     """Test we handle an already existing entry."""
     MockConfigEntry(
-        unique_id="XX-XX-XX-XX-XX-XX",
+        unique_id="a8:21:08:e7:67:b6",
         domain=DOMAIN,
         data={
-            "host": "1.1.1.1",
-            "username": "test-username",
-            "password": "test-password",
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_SWITCHES_AS_LIGHTS: False,
         },
-        title="test-username",
+        title="1.1.1.1",
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("switchbee.SwitchBeeAPI.login", return_value=None), patch(
+    with patch("switchbee.api.CentralUnitAPI._login", return_value=None), patch(
         "homeassistant.components.switchbee.async_setup_entry",
         return_value=True,
     ), patch(
-        "switchbee.SwitchBeeAPI.get_configuration", return_value=MOCK_GET_CONFIGURATION
+        "switchbee.api.CentralUnitAPI.get_configuration",
+        return_value=MOCK_GET_CONFIGURATION,
+    ), patch(
+        "switchbee.api.CentralUnitAPI.fetch_states", return_value=None
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.2.2.2",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
-    assert form_result["type"] == RESULT_TYPE_ABORT
+    assert form_result["type"] == FlowResultType.ABORT
     assert form_result["reason"] == "already_configured"

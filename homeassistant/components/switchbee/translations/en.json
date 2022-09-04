@@ -1,34 +1,34 @@
 {
-    "config": {
-        "abort": {
-            "already_configured_device": "Device is already configured"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Failed to Authenticate with the Central Unit",
-            "unknown": "Unexpected error"
-        },
-        "flow_title": "{name}",
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Central Unit IP address",
-                    "username": "User",
-                    "password": "Password"
-                },
-                "title": "Setup SwitchBee Central Unit"
-            }
-        }
-    },
-    "options": {
-        "step": {
-          "init": {
-            "data": {
-              "scan_interval": "Polling interval in seconds",
-              "expose_group_switches": "Expose Group Scenarios as Switch entity",
-              "expose_scenarios": "Expose Scenarios as Button entity "
-            }
+  "config": {
+      "abort": {
+          "already_configured_device": "Device is already configured"
+      },
+      "error": {
+          "cannot_connect": "Failed to connect",
+          "invalid_auth": "Failed to Authenticate with the Central Unit",
+          "unknown": "Unexpected error"
+      },
+      "flow_title": "{name}",
+      "step": {
+          "user": {
+              "data": {
+                  "host": "Central Unit IP address",
+                  "username": "User (e-mail)",
+                  "password": "Password",
+                  "switch_as_light": "Initialize switches as light entities"
+              },
+              "title": "Setup SwitchBee Central Unit"
+          }
+      }
+  },
+  "options": {
+      "step": {
+        "init": {
+          "data": {
+            "scan_interval": "Polling interval in seconds",
+            "devices": "Devices to include"
           }
         }
       }
+    }
 }

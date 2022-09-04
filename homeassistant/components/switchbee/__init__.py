@@ -18,11 +18,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_EXPOSE_GROUP_SWITCHES,
-    CONF_EXPOSE_SCENARIOS,
+    CONF_DEFUALT_ALLOWED,
+    CONF_DEVICES,
+    CONF_SWITCHES_AS_LIGHTS,
     DOMAIN,
     SCAN_INTERVAL_SEC,
 )
@@ -39,10 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     central_unit = entry.data[CONF_HOST]
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-
+    devices_map: dict[str, DeviceType] = {s.display: s for s in DeviceType}
+    allowed_devices = [
+        devices_map[device]
+        for device in entry.options.get(CONF_DEVICES, CONF_DEFUALT_ALLOWED)
+    ]
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SEC)
-    expose_group_switches = entry.options.get(CONF_EXPOSE_GROUP_SWITCHES)
-    expose_scenarios = entry.options.get(CONF_EXPOSE_SCENARIOS)
 
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = CentralUnitAPI(central_unit, user, password, websession)
@@ -52,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     coordinator = SwitchBeeCoordinator(
-        hass, api, scan_interval, expose_group_switches, expose_scenarios
+        hass, api, scan_interval, allowed_devices, entry.data[CONF_SWITCHES_AS_LIGHTS]
     )
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -80,15 +84,20 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Freedompro data API."""
 
     def __init__(
-        self, hass, swb_api, scan_interval, expose_group_switches, expose_scenarios
+        self,
+        hass,
+        swb_api,
+        scan_interval,
+        devices: list[DeviceType],
+        switch_as_light: bool,
     ):
         """Initialize."""
         self._api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
-        self._expose_group_switches: bool = expose_group_switches
-        self._prev_expose_group_switches: bool = False
-        self._expose_scenarios: bool = expose_scenarios
-        self._prev_expose_scenarios: bool = False
+        self._devices_to_include: list[DeviceType] = devices
+        self._prev_devices_to_include_to_include: list[DeviceType] = []
+        self._mac_addr_fmt: str = format_mac(swb_api.mac)
+        self._switch_as_light = switch_as_light
         super().__init__(
             hass,
             _LOGGER,
@@ -101,7 +110,18 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         """Return SwitchBee API object."""
         return self._api
 
+    @property
+    def mac_formated(self) -> str:
+        """Return formatted MAC address."""
+        return self._mac_addr_fmt
+
+    @property
+    def switch_as_light(self) -> bool:
+        """Return switch_as_ligh config."""
+        return self._switch_as_light
+
     async def _async_update_data(self):
+
         if self._reconnect_counts != self._api.reconnect_count:
             self._reconnect_counts = self._api.reconnect_count
             _LOGGER.debug(
@@ -109,34 +129,19 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
                 self._reconnect_counts,
             )
 
-        include_devices = [
-            DeviceType.Switch,
-            DeviceType.Dimmer,
-            DeviceType.TimedPowerSwitch,
-            DeviceType.Shutter,
-        ]
-
         config_changed = False
 
-        if self._expose_group_switches != self._prev_expose_group_switches:
-            self._prev_expose_group_switches = self._expose_group_switches
+        if set(self._prev_devices_to_include_to_include) != set(
+            self._devices_to_include
+        ):
+            self._prev_devices_to_include_to_include = self._devices_to_include
             config_changed = True
-
-        if self._expose_scenarios != self._prev_expose_scenarios:
-            self._prev_expose_scenarios = self._expose_scenarios
-            config_changed = True
-
-        if self._expose_group_switches:
-            include_devices.append(DeviceType.GroupSwitch)
-
-        if self._expose_scenarios:
-            include_devices.append(DeviceType.Scenario)
 
         # The devices are loaded once during the config_entry
         if not self._api.devices or config_changed:
             # Try to load the devices from the CU for the first time
             try:
-                await self._api.fetch_configuration(include_devices)
+                await self._api.fetch_configuration(self._devices_to_include)
             except SwitchBeeError as exp:
                 raise UpdateFailed(
                     f"Error communicating with API: {exp}"
