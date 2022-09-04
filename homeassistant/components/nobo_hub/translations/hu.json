@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni - ellen\u0151rizze a sorozatsz\u00e1mot",
+            "invalid_ip": "\u00c9rv\u00e9nytelen IP-c\u00edm",
+            "invalid_serial": "\u00c9rv\u00e9nytelen sorozatsz\u00e1m",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "IP c\u00edm",
+                    "serial": "Sorsz\u00e1m (12 sz\u00e1mjegy)"
+                },
+                "description": "Konfigur\u00e1ljon egy Nob\u00f8 Ecohubot, amely nem tal\u00e1lhat\u00f3 a helyi h\u00e1l\u00f3zaton. Ha a hub egy m\u00e1sik h\u00e1l\u00f3zaton van, tov\u00e1bbra is csatlakozhat hozz\u00e1 a teljes sorozatsz\u00e1m (12 sz\u00e1mjegy) \u00e9s IP-c\u00edm\u00e9nek megad\u00e1s\u00e1val."
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Sorozatsz\u00e1m ut\u00f3tag (3 sz\u00e1mjegy)"
+                },
+                "description": "{hub} konfigur\u00e1l\u00e1sa. A hubhoz val\u00f3 csatlakoz\u00e1shoz meg kell adnia a hub sorozatsz\u00e1m\u00e1nak utols\u00f3 3 sz\u00e1mjegy\u00e9t."
+            },
+            "user": {
+                "data": {
+                    "device": "Felfedezett hub-ok"
+                },
+                "description": "V\u00e1lassza ki a Nob\u00f8 Ecohubot a konfigur\u00e1l\u00e1shoz."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "T\u00edpus fel\u00fclb\u00edr\u00e1l\u00e1sa"
+                },
+                "description": "V\u00e1lassza a \"Most\" fel\u00fclb\u00edr\u00e1l\u00e1si t\u00edpust a fel\u00fclb\u00edr\u00e1l\u00e1s megsz\u00fcntet\u00e9s\u00e9hez a k\u00f6vetkez\u0151 heti profilv\u00e1lt\u00e1skor."
+            }
+        }
+    }
+}
