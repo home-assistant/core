@@ -368,7 +368,7 @@ brunt==1.2.0
 bsblan==0.5.0
 
 # homeassistant.components.bthome
-bthome-ble==0.5.2
+bthome-ble==1.0.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -521,7 +521,7 @@ freebox-api==0.0.10
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.8.0
+fritzconnection==1.10.1
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
