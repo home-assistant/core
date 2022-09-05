@@ -54,6 +54,7 @@ def setup_platform(
 class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_FAHRENHEIT
 
@@ -71,15 +72,6 @@ class ProliphixThermostat(ClimateEntity):
     def name(self):
         """Return the name of the thermostat."""
         return self._name
-
-    @property
-    def precision(self):
-        """Return the precision of the system.
-
-        Proliphix temperature values are passed back and forth in the
-        API as tenths of degrees F (i.e. 690 for 69 degrees).
-        """
-        return PRECISION_TENTHS
 
     @property
     def extra_state_attributes(self):

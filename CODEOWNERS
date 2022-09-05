@@ -137,6 +137,8 @@ build.json @home-assistant/supervisor
 /tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
+/homeassistant/components/bluemaestro/ @bdraco
+/tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
@@ -275,7 +277,9 @@ build.json @home-assistant/supervisor
 /tests/components/ecobee/ @marthoc
 /homeassistant/components/econet/ @vangorra @w1ll1am23
 /tests/components/econet/ @vangorra @w1ll1am23
-/homeassistant/components/ecovacs/ @OverloadUT
+/homeassistant/components/ecovacs/ @OverloadUT @mib1185
+/homeassistant/components/ecowitt/ @pvizeli
+/tests/components/ecowitt/ @pvizeli
 /homeassistant/components/edl21/ @mtdcr
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
@@ -655,6 +659,8 @@ build.json @home-assistant/supervisor
 /tests/components/melcloud/ @vilppuvuorinen
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
+/homeassistant/components/melnor/ @vanstinator
+/tests/components/melnor/ @vanstinator
 /homeassistant/components/met/ @danielhiversen @thimic
 /tests/components/met/ @danielhiversen @thimic
 /homeassistant/components/met_eireann/ @DylanGore
@@ -746,6 +752,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/nmbs/ @thibmaek
 /homeassistant/components/noaa_tides/ @jdelaney72
+/homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
+/tests/components/nobo_hub/ @echoromeo @oyvindwe
 /homeassistant/components/notify/ @home-assistant/core
 /tests/components/notify/ @home-assistant/core
 /homeassistant/components/notify_events/ @matrozov @papajojo
@@ -848,6 +856,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/prosegur/ @dgomes
 /tests/components/prosegur/ @dgomes
 /homeassistant/components/proxmoxve/ @jhollowe @Corbeno
+/homeassistant/components/prusalink/ @balloob
+/tests/components/prusalink/ @balloob
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pure_energie/ @klaasnicolaas
@@ -963,6 +973,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
 /homeassistant/components/sensor/ @home-assistant/core
 /tests/components/sensor/ @home-assistant/core
+/homeassistant/components/sensorpro/ @bdraco
+/tests/components/sensorpro/ @bdraco
 /homeassistant/components/sensorpush/ @bdraco
 /tests/components/sensorpush/ @bdraco
 /homeassistant/components/sentry/ @dcramer @frenck

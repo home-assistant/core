@@ -622,7 +622,7 @@ def list_statistic_ids(
     """Return all or filtered statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
-    result = {}
+    result: dict[str, StatisticMetaData] = {}
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
@@ -647,7 +647,9 @@ def list_statistic_ids(
             result[state.entity_id] = {
                 "has_mean": "mean" in provided_statistics,
                 "has_sum": "sum" in provided_statistics,
+                "name": None,
                 "source": RECORDER_DOMAIN,
+                "statistic_id": state.entity_id,
                 "unit_of_measurement": native_unit,
             }
             continue
@@ -659,7 +661,9 @@ def list_statistic_ids(
         result[state.entity_id] = {
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
+            "name": None,
             "source": RECORDER_DOMAIN,
+            "statistic_id": state.entity_id,
             "unit_of_measurement": statistics_unit,
         }
 

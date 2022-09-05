@@ -269,7 +269,7 @@ class NWSWeather(WeatherEntity):
         return f"{base_unique_id(self.latitude, self.longitude)}_{self.mode}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if state is available."""
         last_success = (
             self.coordinator_observation.last_update_success
@@ -289,7 +289,7 @@ class NWSWeather(WeatherEntity):
             last_success_time = False
         return last_success or last_success_time
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.

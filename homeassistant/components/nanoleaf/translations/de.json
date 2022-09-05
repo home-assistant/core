@@ -15,7 +15,7 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Halte die Ein-/Aus-Taste an deinem Nanoleaf 5 Sekunden lang gedr\u00fcckt, bis die LEDs der Tasten zu blinken beginnen, und klicke dann innerhalb von 30 Sekunden auf **SENDEN**.",
+                "description": "Halte die Ein-/Aus-Taste an deinem Nanoleaf 5 Sekunden lang gedr\u00fcckt, bis die LEDs der Tasten zu blinken beginnen, und dr\u00fccke dann innerhalb von 30 Sekunden auf **SENDEN**.",
                 "title": "Nanoleaf verkn\u00fcpfen"
             },
             "user": {

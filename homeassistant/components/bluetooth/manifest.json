@@ -5,9 +5,9 @@
   "dependencies": ["usb"],
   "quality_scale": "internal",
   "requirements": [
-    "bleak==0.15.1",
-    "bluetooth-adapters==0.3.2",
-    "bluetooth-auto-recovery==0.2.2"
+    "bleak==0.16.0",
+    "bluetooth-adapters==0.3.4",
+    "bluetooth-auto-recovery==0.3.0"
   ],
   "codeowners": ["@bdraco"],
   "config_flow": true,

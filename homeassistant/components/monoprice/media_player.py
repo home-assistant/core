@@ -142,7 +142,7 @@ class MonopriceZone(MediaPlayerEntity):
         self._mute = None
         self._update_success = True
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         try:
             state = self._monoprice.zone_status(self._zone_id)
@@ -165,7 +165,7 @@ class MonopriceZone(MediaPlayerEntity):
             self._source = None
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._zone_id < 20 or self._update_success
 
@@ -231,36 +231,36 @@ class MonopriceZone(MediaPlayerEntity):
             self._monoprice.restore_zone(self._snapshot)
             self.schedule_update_ha_state(True)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]
         self._monoprice.set_source(self._zone_id, idx)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._monoprice.set_power(self._zone_id, True)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._monoprice.set_power(self._zone_id, False)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self._monoprice.set_mute(self._zone_id, mute)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._monoprice.set_volume(self._zone_id, int(volume * 38))
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         if self._volume is None:
             return
         self._monoprice.set_volume(self._zone_id, min(self._volume + 1, 38))
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         if self._volume is None:
             return

@@ -73,14 +73,13 @@ def test_get_or_create_updates_data(registry):
         "light",
         "hue",
         "5678",
-        area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=orig_config_entry,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
         has_entity_name=True,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -92,17 +91,16 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
-        area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
         device_class=None,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
         icon=None,
         id=orig_entry.id,
-        has_entity_name=True,
         name=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -117,14 +115,13 @@ def test_get_or_create_updates_data(registry):
         "light",
         "hue",
         "5678",
-        area_id="new-mock-area-id",
-        capabilities={"new-max": 100},
+        capabilities={"new-max": 150},
         config_entry=new_config_entry,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.USER,
-        entity_category=None,
-        hidden_by=er.RegistryEntryHider.USER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=False,
+        hidden_by=er.RegistryEntryHider.USER,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
@@ -136,23 +133,64 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
-        area_id="new-mock-area-id",
-        capabilities={"new-max": 100},
+        area_id=None,
+        capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
         device_class=None,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
-        entity_category=EntityCategory.CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=False,
         hidden_by=er.RegistryEntryHider.INTEGRATION,  # Should not be updated
         icon=None,
         id=orig_entry.id,
-        has_entity_name=False,
         name=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
         unit_of_measurement="updated-unit_of_measurement",
+    )
+
+    new_entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        capabilities=None,
+        config_entry=None,
+        device_id=None,
+        disabled_by=None,
+        entity_category=None,
+        has_entity_name=None,
+        hidden_by=None,
+        original_device_class=None,
+        original_icon=None,
+        original_name=None,
+        supported_features=None,
+        unit_of_measurement=None,
+    )
+
+    assert new_entry == er.RegistryEntry(
+        "light.hue_5678",
+        "5678",
+        "hue",
+        area_id=None,
+        capabilities=None,
+        config_entry_id=None,
+        device_class=None,
+        device_id=None,
+        disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
+        entity_category=None,
+        has_entity_name=None,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,  # Should not be updated
+        icon=None,
+        id=orig_entry.id,
+        name=None,
+        original_device_class=None,
+        original_icon=None,
+        original_name=None,
+        supported_features=0,  # supported_features is stored as an int
+        unit_of_measurement=None,
     )
 
 
@@ -193,7 +231,6 @@ async def test_loading_saving_data(hass, registry):
         "light",
         "hue",
         "5678",
-        area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=mock_config,
         device_id="mock-dev-id",
@@ -209,6 +246,7 @@ async def test_loading_saving_data(hass, registry):
     )
     registry.async_update_entity(
         orig_entry2.entity_id,
+        area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
         icon="hass:user-icon",
@@ -484,6 +522,78 @@ async def test_migration_1_1(hass, hass_storage):
 
     assert entry.device_class is None
     assert entry.original_device_class == "best_class"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_7(hass, hass_storage):
+    """Test migration from version 1.7.
+
+    This tests cleanup after frontend bug which incorrectly updated device_class
+    """
+    entity_dict = {
+        "area_id": None,
+        "capabilities": {},
+        "config_entry_id": None,
+        "device_id": None,
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "id": "12345",
+        "name": None,
+        "options": None,
+        "original_icon": None,
+        "original_name": None,
+        "platform": "super_platform",
+        "supported_features": 0,
+        "unique_id": "very_unique",
+        "unit_of_measurement": None,
+    }
+
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 7,
+        "data": {
+            "entities": [
+                {
+                    **entity_dict,
+                    "device_class": "original_class_by_integration",
+                    "entity_id": "test.entity",
+                    "original_device_class": "new_class_by_integration",
+                },
+                {
+                    **entity_dict,
+                    "device_class": "class_by_user",
+                    "entity_id": "binary_sensor.entity",
+                    "original_device_class": "class_by_integration",
+                },
+                {
+                    **entity_dict,
+                    "device_class": "class_by_user",
+                    "entity_id": "cover.entity",
+                    "original_device_class": "class_by_integration",
+                },
+            ]
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+    assert entry.device_class is None
+    assert entry.original_device_class == "new_class_by_integration"
+
+    entry = registry.async_get_or_create(
+        "binary_sensor", "super_platform", "very_unique"
+    )
+    assert entry.device_class == "class_by_user"
+    assert entry.original_device_class == "class_by_integration"
+
+    entry = registry.async_get_or_create("cover", "super_platform", "very_unique")
+    assert entry.device_class == "class_by_user"
+    assert entry.original_device_class == "class_by_integration"
 
 
 @pytest.mark.parametrize("load_registries", [False])
