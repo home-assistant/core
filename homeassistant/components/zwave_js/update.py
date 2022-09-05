@@ -19,11 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
-from .helpers import get_device_id, get_valueless_base_unique_id
+from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(days=1)
@@ -75,14 +75,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
         # device may not be precreated in main handler yet
-        self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(driver, node)},
-            sw_version=node.firmware_version,
-            name=node.name or node.device_config.description or f"Node {node.node_id}",
-            model=node.device_config.label,
-            manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location if node.location else None,
-        )
+        self._attr_device_info = get_device_info(driver, node)
 
         self._attr_installed_version = self._attr_latest_version = node.firmware_version
 
