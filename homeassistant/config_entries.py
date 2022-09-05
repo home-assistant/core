@@ -1185,7 +1185,7 @@ class ConfigEntries:
     ) -> None:
         """Dispatch a config entry change."""
         async_dispatcher_send(
-            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, entry
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
         )
 
     @callback
