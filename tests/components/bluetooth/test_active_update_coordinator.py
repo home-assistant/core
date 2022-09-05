@@ -164,8 +164,9 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
     cancel()
 
 
-
-async def test_bleak_error_and_recover(hass: HomeAssistant, mock_bleak_scanner_start, caplog):
+async def test_bleak_error_and_recover(
+    hass: HomeAssistant, mock_bleak_scanner_start, caplog
+):
     """Test bleak error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -223,7 +224,10 @@ async def test_bleak_error_and_recover(hass: HomeAssistant, mock_bleak_scanner_s
     await hass.async_block_till_done()
     assert async_handle_update.mock_calls[-1] == call({"testdata": None})
 
-    assert "aa:bb:cc:dd:ee:ff: Bluetooth error whilst polling: Connection was aborted" in caplog.text
+    assert (
+        "aa:bb:cc:dd:ee:ff: Bluetooth error whilst polling: Connection was aborted"
+        in caplog.text
+    )
 
     # Second poll works
     flag = False
@@ -232,6 +236,7 @@ async def test_bleak_error_and_recover(hass: HomeAssistant, mock_bleak_scanner_s
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
+
 
 async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_start):
     """Test error handling and recovery."""
