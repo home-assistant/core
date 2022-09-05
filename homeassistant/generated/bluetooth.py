@@ -270,13 +270,13 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
-        "domain": "tilt_ble",
-        "manufacturer_id": 76
-    },
-    {
         "domain": "thermopro",
         "local_name": "TP39*",
         "connectable": False
+    },
+    {
+        "domain": "tilt_ble",
+        "manufacturer_id": 76
     },
     {
         "domain": "xiaomi_ble",
