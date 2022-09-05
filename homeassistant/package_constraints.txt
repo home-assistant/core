@@ -19,7 +19,7 @@ cryptography==37.0.4
 fnvhash==0.1.0
 hass-nabucasa==0.55.0
 home-assistant-bluetooth==1.3.0
-home-assistant-frontend==20220902.0
+home-assistant-frontend==20220905.0
 httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
@@ -40,7 +40,7 @@ typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.7.2
-zeroconf==0.39.0
+zeroconf==0.39.1
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
