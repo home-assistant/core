@@ -122,7 +122,7 @@ async def test_missing_required_scopes_requires_reauth(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.parametrize("expires_at", [time.time() - 3600])
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
