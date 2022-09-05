@@ -1,4 +1,6 @@
 """Support for Subaru sensors."""
+from __future__ import annotations
+
 import logging
 
 import subarulink.const as sc
@@ -22,14 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
-from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM,
-    LENGTH_UNITS,
-    PRESSURE_UNITS,
-    TEMPERATURE_UNITS,
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, LENGTH_UNITS, PRESSURE_UNITS
 
 from . import get_device_info
@@ -166,7 +165,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def create_vehicle_sensors(vehicle_info, coordinator):
+def create_vehicle_sensors(
+    vehicle_info, coordinator: DataUpdateCoordinator
+) -> list[SubaruSensor]:
     """Instantiate all available sensors for the vehicle."""
     sensor_descriptions_to_add = []
     if vehicle_info[VEHICLE_HAS_SAFETY_SERVICE]:
@@ -193,10 +194,10 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        vehicle_info,
-        coordinator,
-        description,
-    ):
+        vehicle_info: dict,
+        coordinator: DataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.vin = vehicle_info[VEHICLE_VIN]
@@ -206,7 +207,7 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{self.vin}_{description.name}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> None | int | float:
         """Return the state of the sensor."""
         current_value = self.get_current_value()
         unit = self.entity_description.native_unit_of_measurement
@@ -230,7 +231,7 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         return current_value
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the device."""
         unit = self.entity_description.native_unit_of_measurement
 
@@ -255,9 +256,12 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
             return False
         return last_update_success
 
-    def get_current_value(self):
+    def get_current_value(self) -> None | int | float:
         """Get raw value from the coordinator."""
+        value = None
         if isinstance(data := self.coordinator.data, dict):
-            value = data.get(self.vin)[VEHICLE_STATUS].get(self.entity_description.key)
+            value = data.get(self.vin)
+            assert value is not None
+            value = value[VEHICLE_STATUS].get(self.entity_description.key)
             _LOGGER.debug("Raw value for %s: %s", self.name, value)
-            return value
+        return value
