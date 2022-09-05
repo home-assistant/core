@@ -569,9 +569,9 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except proxmoxer.backends.https.AuthenticationError:
                 errors[CONF_USERNAME] = "auth_error"
             except SSLError:
-                errors[CONF_VERIFY_SSL] = "ssl_rejection"
+                errors[CONF_BASE] = "ssl_rejection"
             except ConnectTimeout:
-                errors[CONF_HOST] = "cant_connect"
+                errors[CONF_BASE] = "cant_connect"
             except Exception:  # pylint: disable=broad-except
                 errors[CONF_BASE] = "general_error"
 
@@ -629,7 +629,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Async step of host config flow for proxmoxve."""
         errors = {}
 
-        if user_input is not None:
+        if user_input:
 
             host = user_input.get(CONF_HOST, "")
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
@@ -679,61 +679,50 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_node()
 
             if errors:
-                data_schema = vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_HOST, default=user_input.get(CONF_HOST, "")
-                        ): str,
-                        vol.Required(
-                            CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                        ): str,
-                        vol.Required(
-                            CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                        ): str,
-                        vol.Optional(
-                            CONF_REALM,
-                            default=user_input.get(CONF_REALM, DEFAULT_REALM),
-                        ): str,
-                        vol.Optional(
-                            CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
-                        ): int,
-                        vol.Required(
-                            CONF_VERIFY_SSL,
-                            default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                        ): bool,
-                    }
-                )
-
                 return self.async_show_form(
-                    step_id="host", data_schema=data_schema, errors=errors
+                    step_id="host",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_HOST, default=user_input.get(CONF_HOST, "")
+                            ): str,
+                            vol.Required(
+                                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                            ): str,
+                            vol.Required(
+                                CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                            ): str,
+                            vol.Optional(
+                                CONF_REALM,
+                                default=user_input.get(CONF_REALM, DEFAULT_REALM),
+                            ): str,
+                            vol.Optional(
+                                CONF_PORT,
+                                default=user_input.get(CONF_PORT, DEFAULT_PORT),
+                            ): int,
+                            vol.Required(
+                                CONF_VERIFY_SSL,
+                                default=user_input.get(
+                                    CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                                ),
+                            ): bool,
+                        }
+                    ),
+                    errors=errors,
                 )
-
-        user_input = {}
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                vol.Required(
-                    CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                ): str,
-                vol.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                ): str,
-                vol.Optional(
-                    CONF_REALM, default=user_input.get(CONF_REALM, DEFAULT_REALM)
-                ): str,
-                vol.Optional(
-                    CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
-                ): int,
-                vol.Required(
-                    CONF_VERIFY_SSL,
-                    default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                ): bool,
-            }
-        )
 
         return self.async_show_form(
-            step_id="host", data_schema=data_schema, errors=errors
+            step_id="host",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_REALM, default=DEFAULT_REALM): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                }
+            ),
         )
 
     async def async_step_node(
@@ -754,25 +743,15 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._config[CONF_NODE] = node
             return await self.async_step_selection_qemu_lxc(node=node)
 
-        if (proxmox_cliente := self._proxmox_client) is not None:
-            proxmox = proxmox_cliente.get_api_client()
-
-        proxmox_nodes = await self.hass.async_add_executor_job(proxmox.nodes.get)
-
         nodes = []
-        for node in proxmox_nodes:
-            nodes.append(node["node"])
+        if (proxmox_cliente := self._proxmox_client) is not None:
+            if proxmox := (proxmox_cliente.get_api_client()):
+                proxmox_nodes = await self.hass.async_add_executor_job(
+                    proxmox.nodes.get
+                )
 
-        if errors:
-            return self.async_show_form(
-                step_id="node",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_NODE): vol.In(nodes),
-                    }
-                ),
-                errors=errors,
-            )
+                for node in proxmox_nodes:
+                    nodes.append(node["node"])
 
         return self.async_show_form(
             step_id="node",
@@ -781,6 +760,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NODE): vol.In(nodes),
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_selection_qemu_lxc(
