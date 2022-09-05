@@ -1,5 +1,4 @@
 """Rabbit Air Update Coordinator."""
-import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
 import logging
@@ -9,7 +8,7 @@ from rabbitair import Client, State
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +53,7 @@ class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
         )
 
     async def _async_update_data(self) -> State:
-        try:
-            return await self.device.get_state()
-        except asyncio.TimeoutError:
-            raise
-        except Exception as err:
-            raise UpdateFailed from err
+        return await self.device.get_state()
 
     async def _async_refresh(
         self,

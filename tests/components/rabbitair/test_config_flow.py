@@ -17,7 +17,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers.device_registry import format_mac
 
 TEST_HOST = "1.1.1.1"
 TEST_NAME = "abcdef1234_123456789012345678"
@@ -25,8 +24,8 @@ TEST_TOKEN = "0123456789abcdef0123456789abcdef"
 TEST_MAC = "01:23:45:67:89:AB"
 TEST_FIRMWARE = "2.3.17"
 TEST_HARDWARE = "1.0.0.4"
-TEST_UNIQUE_ID = format_mac(TEST_MAC)
-TEST_TITLE = f"RabbitAir-{TEST_MAC.replace(':', '')}"
+TEST_UNIQUE_ID = TEST_MAC
+TEST_TITLE = "Rabbit Air"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host=TEST_HOST,

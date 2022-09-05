@@ -49,7 +49,6 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
     _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
-    _power: bool | None = None
 
     def __init__(
         self,
@@ -81,7 +80,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         data = self.coordinator.data
 
         # Power on/off
-        self._power = data.power
+        self._attr_is_on = data.power
 
         # Speed as a percentage
         if data.speed is None:
@@ -129,7 +128,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         if percentage is not None:
             speed_value = percentage_to_ordered_list_item(SPEED_LIST, percentage)
         await self._set_state(power=True, mode=mode_value, speed=speed_value)
-        self._power = True
+        self._attr_is_on = True
         if percentage is not None:
             self._attr_percentage = percentage
         if preset_mode is not None:
@@ -139,10 +138,10 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._set_state(power=False)
-        self._power = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self._power
+        return self._attr_is_on
