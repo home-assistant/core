@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
-from urllib.parse import quote_plus
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseMedia
@@ -64,7 +63,7 @@ def get_thumbnail_url_full(
 
     return get_browse_image_url(
         media_content_type,
-        quote_plus(media_content_id),
+        media_content_id,
         media_image_id,
     )
 
