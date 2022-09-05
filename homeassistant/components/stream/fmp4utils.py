@@ -162,7 +162,7 @@ FLIP = (ONE32 + ZERO32 + ZERO32) + (ZERO32 + NEGONE32 + ZERO32)
 ROTATE_LEFT_FLIP = (ZERO32 + NEGONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
 ROTATE_RIGHT_FLIP = (ZERO32 + ONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)
 
-TRANSFORM_MATRIX_TOP = [
+TRANSFORM_MATRIX_TOP = (
     # The first two entries are just to align the indices with the EXIF orientation tags
     b"",
     b"",
@@ -173,7 +173,7 @@ TRANSFORM_MATRIX_TOP = [
     ROTATE_LEFT,
     ROTATE_RIGHT_FLIP,
     ROTATE_RIGHT,
-]
+)
 
 
 def transform_init(init: bytes, orientation: int) -> bytes:
