@@ -344,10 +344,14 @@ def async_track_entity_registry_updated_event(
 ) -> CALLBACK_TYPE:
     """Track specific entity registry updated events indexed by entity_id.
 
+    Entities must be lower case.
+
     Similar to async_track_state_change_event.
     """
-    if not (entity_ids := _async_string_to_lower_list(entity_ids)):
+    if not entity_ids:
         return _remove_empty_listener
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
 
     entity_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
         TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {}
