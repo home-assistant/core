@@ -158,7 +158,7 @@ class KulerskyLight(LightEntity):
         if not brightness:
             self._attr_rgbw_color = (0, 0, 0, 0)
         else:
-            rgbw_normalized = tuple(round(x * 255 / brightness) for x in rgbw)
+            rgbw_normalized = [round(x * 255 / brightness) for x in rgbw]
             self._attr_rgbw_color = (
                 rgbw_normalized[0],
                 rgbw_normalized[1],
