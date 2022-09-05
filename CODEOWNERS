@@ -129,6 +129,8 @@ build.json @home-assistant/supervisor
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1
 /tests/components/balboa/ @garbled1
+/homeassistant/components/bayesian/ @HarvsG
+/tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
