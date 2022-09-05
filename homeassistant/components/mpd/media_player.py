@@ -6,6 +6,7 @@ from datetime import timedelta
 import hashlib
 import logging
 import os
+from typing import Any
 
 import mpd
 from mpd.asyncio import MPDClient
@@ -18,6 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -164,7 +166,7 @@ class MpdDevice(MediaPlayerEntity):
         """Return true if MPD is available and connected."""
         return self._is_connected
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the state."""
         try:
             if not self._is_connected:
@@ -273,7 +275,7 @@ class MpdDevice(MediaPlayerEntity):
         """Hash value for media image."""
         return self._media_image_hash
 
-    async def async_get_media_image(self):
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
         if not (file := self._currentsong.get("file")):
             return None, None
@@ -380,12 +382,12 @@ class MpdDevice(MediaPlayerEntity):
         """Return the list of available input sources."""
         return self._playlists
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Choose a different available playlist and play it."""
         await self.async_play_media(MEDIA_TYPE_PLAYLIST, source)
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
-    async def _update_playlists(self, **kwargs):
+    async def _update_playlists(self, **kwargs: Any) -> None:
         """Update available MPD playlists."""
         try:
             self._playlists = []
@@ -395,12 +397,12 @@ class MpdDevice(MediaPlayerEntity):
             self._playlists = None
             _LOGGER.warning("Playlists could not be updated: %s:", error)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume of media player."""
         if "volume" in self._status:
             await self._client.setvol(int(volume * 100))
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Service to send the MPD the command for volume up."""
         if "volume" in self._status:
             current_volume = int(self._status["volume"])
@@ -408,7 +410,7 @@ class MpdDevice(MediaPlayerEntity):
             if current_volume <= 100:
                 self._client.setvol(current_volume + 5)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Service to send the MPD the command for volume down."""
         if "volume" in self._status:
             current_volume = int(self._status["volume"])
@@ -416,30 +418,30 @@ class MpdDevice(MediaPlayerEntity):
             if current_volume >= 0:
                 await self._client.setvol(current_volume - 5)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Service to send the MPD the command for play/pause."""
         if self._status["state"] == "pause":
             await self._client.pause(0)
         else:
             await self._client.play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Service to send the MPD the command for play/pause."""
         await self._client.pause(1)
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Service to send the MPD the command for stop."""
         await self._client.stop()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Service to send the MPD the command for next track."""
         await self._client.next()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Service to send the MPD the command for previous track."""
         await self._client.previous()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute. Emulated with set_volume_level."""
         if "volume" in self._status:
             if mute:
@@ -449,7 +451,9 @@ class MpdDevice(MediaPlayerEntity):
                 await self.async_set_volume_level(self._muted_volume)
             self._muted = mute
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the media player the command for playing a playlist."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
@@ -483,7 +487,7 @@ class MpdDevice(MediaPlayerEntity):
             return REPEAT_MODE_ALL
         return REPEAT_MODE_OFF
 
-    async def async_set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         if repeat == REPEAT_MODE_OFF:
             await self._client.repeat(0)
@@ -500,28 +504,30 @@ class MpdDevice(MediaPlayerEntity):
         """Boolean if shuffle is enabled."""
         return bool(int(self._status["random"]))
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._client.random(int(shuffle))
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Service to send the MPD the command to stop playing."""
         await self._client.stop()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Service to send the MPD the command to start playing."""
         await self._client.play()
         await self._update_playlists(no_throttle=True)
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._client.clear()
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self._client.seekcur(position)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
             self.hass,

@@ -112,7 +112,7 @@ class MoldIndicator(SensorEntity):
         self._indoor_hum = None
         self._crit_temp = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
@@ -273,7 +273,7 @@ class MoldIndicator(SensorEntity):
 
         return hum
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Calculate latest state."""
         _LOGGER.debug("Update state for %s", self.entity_id)
         # check all sensors

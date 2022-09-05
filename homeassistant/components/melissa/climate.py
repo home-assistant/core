@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -135,12 +136,12 @@ class MelissaClimate(ClimateEntity):
         """Return the maximum supported temperature for the thermostat."""
         return 30
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_send({self._api.TEMP: temp})
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
         await self.async_send({self._api.FAN: melissa_fan_mode})
@@ -168,7 +169,7 @@ class MelissaClimate(ClimateEntity):
         ):
             self._cur_settings = old_value
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get latest data from Melissa."""
         try:
             self._data = (await self._api.async_status(cached=True))[
