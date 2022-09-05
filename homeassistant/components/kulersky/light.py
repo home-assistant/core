@@ -139,7 +139,7 @@ class KulerskyLight(LightEntity):
         """Instruct the light to turn off."""
         await self._light.set_color(0, 0, 0, 0)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
             if not self._available:
@@ -156,8 +156,8 @@ class KulerskyLight(LightEntity):
         self._available = True
         brightness = max(rgbw)
         if not brightness:
-            rgbw_normalized = [0, 0, 0, 0]
+            self._attr_rgbw_color = (0, 0, 0, 0)
         else:
-            rgbw_normalized = [round(x * 255 / brightness) for x in rgbw]
+            rgbw_normalized = tuple(round(x * 255 / brightness) for x in rgbw)
+            self._attr_rgbw_color = rgbw_normalized  # type:ignore[assignment]
         self._attr_brightness = brightness
-        self._attr_rgbw_color = tuple(rgbw_normalized)
