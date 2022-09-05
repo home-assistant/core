@@ -66,7 +66,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: dict[str, Any], ac_key, action) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, action: str) -> None:
         """Initialize the Advantage Air timer control."""
         super().__init__(instance, ac_key)
         self.action = action
@@ -86,7 +86,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
             return "mdi:timer-outline"
         return "mdi:timer-off-outline"
 
-    async def set_time_to(self, **kwargs):
+    async def set_time_to(self, **kwargs) -> None:
         """Set the timer value."""
         value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
         await self.aircon({self.ac_key: {"info": {self._time_key: value}}})
