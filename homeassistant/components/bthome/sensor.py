@@ -150,7 +150,7 @@ SENSOR_DESCRIPTIONS = {
     # Used for moisture sensor
     (None, Units.PERCENTAGE,): SensorEntityDescription(
         key=f"{DeviceClass.MOISTURE}_{Units.PERCENTAGE}",
-        device_class=SensorDeviceClass.MOISTURE,
+        device_class=None,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
