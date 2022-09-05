@@ -86,7 +86,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
             return "mdi:timer-outline"
         return "mdi:timer-off-outline"
 
-    async def set_time_to(self, **kwargs) -> None:
+    async def set_time_to(self, **kwargs: Any) -> None:
         """Set the timer value."""
         value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
         await self.aircon({self.ac_key: {"info": {self._time_key: value}}})
