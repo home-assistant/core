@@ -158,7 +158,7 @@ class NMBSLiveBoard(SensorEntity):
 
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
@@ -278,7 +278,7 @@ class NMBSSensor(SensorEntity):
 
         return "vias" in self._attrs and int(self._attrs["vias"]["number"]) > 0
 
-    def update(self):
+    def update(self) -> None:
         """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
             self._station_from, self._station_to

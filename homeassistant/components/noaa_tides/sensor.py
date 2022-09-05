@@ -130,7 +130,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
             return f"Low tide at {tidetime}"
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
         begin = datetime.now()
         delta = timedelta(days=2)
