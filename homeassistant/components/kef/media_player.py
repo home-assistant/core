@@ -218,7 +218,6 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._speaker_type = speaker_type
 
         self._muted = None
-        self._volume = None
         self._attr_available = False
         self._dsp = None
         self._update_dsp_task_remover = None
@@ -244,7 +243,7 @@ class KefMediaPlayer(MediaPlayerEntity):
             self._attr_available = await self._speaker.is_online()
             if self.available:
                 (
-                    self._volume,
+                    self._attr_volume_level,
                     self._muted,
                 ) = await self._speaker.get_volume_and_is_muted()
                 state = await self._speaker.get_state()
@@ -258,16 +257,11 @@ class KefMediaPlayer(MediaPlayerEntity):
             else:
                 self._muted = None
                 self._attr_source = None
-                self._volume = None
+                self._attr_volume_level = None
                 self._attr_state = MediaPlayerState.OFF
         except (ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
             self._attr_state = None
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
 
     @property
     def is_volume_muted(self):
