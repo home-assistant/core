@@ -386,6 +386,19 @@ class StreamView(HomeAssistantView):
         raise NotImplementedError()
 
 
+TRANSFORM_IMAGE_FUNCTION = (
+    lambda image: image,  # Unused
+    lambda image: image,  # No transform
+    lambda image: np.fliplr(image).copy(),  # Mirror
+    lambda image: np.rot90(image, 2).copy(),  # Rotate 180
+    lambda image: np.flipud(image).copy(),  # Flip
+    lambda image: np.flipud(np.rot90(image)).copy(),  # Rotate left and flip
+    lambda image: np.rot90(image).copy(),  # Rotate left
+    lambda image: np.flipud(np.rot90(image, -1)).copy(),  # Rotate right and flip
+    lambda image: np.rot90(image, -1).copy(),  # Rotate right
+)
+
+
 class KeyFrameConverter:
     """
     Enables generating and getting an image from the last keyframe seen in the stream.
@@ -440,21 +453,7 @@ class KeyFrameConverter:
 
         Adapted from https://github.com/lilohuang/PyTurboJPEG.
         """
-        if orientation == 1:
-            return image
-        if orientation == 2:
-            return np.fliplr(image).copy()
-        if orientation == 3:
-            return np.rot90(image, 2).copy()
-        if orientation == 4:
-            return np.flipud(image).copy()
-        if orientation == 5:
-            return np.rot90(np.flipud(image), -1).copy()
-        if orientation == 6:
-            return np.rot90(image).copy()
-        if orientation == 7:
-            return np.rot90(np.flipud(image)).copy()
-        return np.rot90(image, -1).copy()
+        return TRANSFORM_IMAGE_FUNCTION[orientation](image)
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
         """
