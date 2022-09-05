@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     PERCENTAGE,
-    TIME_HOURS,
+    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -46,7 +46,7 @@ CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
-    CONF_TYPE_TIME: TIME_HOURS,
+    CONF_TYPE_TIME: TIME_SECONDS,
     CONF_TYPE_RATIO: PERCENTAGE,
     CONF_TYPE_COUNT: "",
 }
@@ -162,13 +162,13 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
     def _process_update(self) -> None:
         """Process an update from the coordinator."""
         state = self.coordinator.data
-        if state is None or state.hours_matched is None:
+        if state is None or state.seconds_matched is None:
             self._attr_native_value = None
             return
 
         if self._type == CONF_TYPE_TIME:
-            self._attr_native_value = round(state.hours_matched, 2)
+            self._attr_native_value = state.seconds_matched
         elif self._type == CONF_TYPE_RATIO:
-            self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
+            self._attr_native_value = pretty_ratio(state.seconds_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.match_count
