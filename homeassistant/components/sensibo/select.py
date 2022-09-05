@@ -108,15 +108,12 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
             )
 
         await self.async_send_api_call(
-            device_data=self.device_data,
             key=self.entity_description.data_key,
             value=option,
         )
 
     @async_handle_api_call
-    async def async_send_api_call(
-        self, device_data: SensiboDevice, key: Any, value: Any
-    ) -> bool:
+    async def async_send_api_call(self, key: str, value: Any) -> bool:
         """Make service call to api."""
         data = {
             "name": self.entity_description.key,

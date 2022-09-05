@@ -4,8 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from pysensibo.model import SensiboDevice
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -77,15 +75,12 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.async_send_api_call(
-            device_data=self.device_data,
             key=self.entity_description.data_key,
             value=False,
         )
 
     @async_handle_api_call
-    async def async_send_api_call(
-        self, device_data: SensiboDevice, key: Any, value: Any
-    ) -> bool:
+    async def async_send_api_call(self, key: str, value: Any) -> bool:
         """Make service call to api."""
         result = await self._client.async_reset_filter(
             self._device_id,
