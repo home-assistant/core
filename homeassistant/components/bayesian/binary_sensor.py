@@ -327,7 +327,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                 continue
             observations_by_entity.setdefault(obs["entity_id"], []).append(obs)
 
-        for _, li_of_dicts in observations_by_entity.items():
+        for li_of_dicts in observations_by_entity.values():
             if len(li_of_dicts) == 1:
                 continue
             for ord_dict in li_of_dicts:
