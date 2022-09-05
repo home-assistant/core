@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import cast
 
 from melnor_bluetooth.device import Device, Valve
 
@@ -83,18 +82,18 @@ class MelnorZoneEntity(MelnorBluetoothBaseEntity):
     def __init__(
         self,
         coordinator: MelnorDataUpdateCoordinator,
-        index: int,
+        valve: Valve,
     ) -> None:
         """Initialize a valve entity."""
         super().__init__(coordinator)
 
-        self._valve = cast(Valve, self._device[f"zone{index}"])
+        self._valve = valve
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{self._device.mac}-zone{index}")},
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.identifier}")},
             manufacturer="Melnor",
-            model=f"Zone {index}",  # easy reference after the user has changed the name
-            name=f"Zone {index}",
+            model=f"Zone {self._valve.identifier}",  # easy reference after the user has changed the name
+            name=f"Zone {self._valve.identifier}",
             via_device=(DOMAIN, self._device.mac),
         )

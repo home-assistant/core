@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -83,12 +83,10 @@ def mock_melnor_device():
         device.name = "test_melnor"
         device.rssi = -50
 
-        device.zone1 = Mock(spec=Valve, return_value=Valve(0, device))
-        device.zone1.is_watering = False
-
-        device.zone2 = Mock(spec=Valve, return_value=Valve(1, device))
-        device.zone3 = Mock(spec=Valve, return_value=Valve(2, device))
-        device.zone4 = Mock(spec=Valve, return_value=Valve(3, device))
+        device.zone1 = Valve(0, device)
+        device.zone2 = Valve(1, device)
+        device.zone3 = Valve(2, device)
+        device.zone4 = Valve(3, device)
 
         device.__getitem__.side_effect = lambda key: getattr(device, key)
 

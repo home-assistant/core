@@ -44,18 +44,19 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    switches: list[MelnorZoneSwitch] = []
+    entities: list[MelnorZoneSwitch] = []
 
     coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # This device may not have 4 valves total, but the library will only expose the right number of valves
     for i in range(1, 5):
-        if coordinator.data[f"zone{i}"] is not None:
+        valve = coordinator.data[f"zone{i}"]
+        if valve is not None:
 
-            switches.append(
+            entities.append(
                 MelnorZoneSwitch(
                     coordinator,
-                    i,
+                    valve,
                     MelnorSwitchEntityDescription(
                         device_class=SwitchDeviceClass.SWITCH,
                         icon="mdi:sprinkler",
@@ -68,7 +69,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_devices(switches)
+    async_add_devices(entities)
 
 
 class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
@@ -79,13 +80,13 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: MelnorDataUpdateCoordinator,
-        zone_id: int,
+        valve: Valve,
         entity_description: MelnorSwitchEntityDescription,
     ) -> None:
         """Initialize a switch for a melnor device."""
-        super().__init__(coordinator, zone_id)
+        super().__init__(coordinator, valve)
 
-        self._attr_unique_id = f"{self._device.mac}-zone{zone_id}-manual"
+        self._attr_unique_id = f"{self._device.mac}-zone{valve.identifier}-manual"
         self.entity_id = ENTITY_ID_FORMAT.format(self._attr_unique_id)
         self.entity_description = entity_description
 
