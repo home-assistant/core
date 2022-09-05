@@ -203,7 +203,7 @@ class KefMediaPlayer(MediaPlayerEntity):
     ):
         """Initialize the media player."""
         self._attr_name = name
-        self._sources = sources
+        self._attr_source_list = sources
         self._speaker = AsyncKefSpeaker(
             host,
             port,
@@ -262,11 +262,6 @@ class KefMediaPlayer(MediaPlayerEntity):
             _LOGGER.debug("Error in `update`: %s", err)
             self._attr_state = None
 
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._sources
-
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._speaker.turn_off()
@@ -298,7 +293,7 @@ class KefMediaPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source in self.source_list:
+        if self.source_list is not None and source in self.source_list:
             await self._speaker.set_source(source)
         else:
             raise ValueError(f"Unknown input source: {source}.")
