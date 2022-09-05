@@ -89,7 +89,7 @@ def create_binary_sensor(
     return ProxmoxBinarySensor(
         coordinator=coordinator,
         unique_id=f"proxmox_{config_entry.data[CONF_HOST]}{config_entry.data[CONF_PORT]}{node}{vm_id}_running",
-        name=f"{node} {name} running",
+        name="Status",
         icon="",
         device_class=BinarySensorDeviceClass.RUNNING,
         vm_id=vm_id,
@@ -99,6 +99,8 @@ def create_binary_sensor(
 
 class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     """A binary sensor for reading Proxmox VE data."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

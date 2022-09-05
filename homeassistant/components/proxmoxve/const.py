@@ -2,20 +2,25 @@
 from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "proxmoxve"
+PLATFORMS = ["binary_sensor"]
+UPDATE_INTERVAL = 60
 INTEGRATION_NAME = "Proxmox VE"
 
+CONF_CONTAINERS = "containers"
+CONF_LXC = "lxc"
+CONF_NODE = "node"
+CONF_NODES = "nodes"
+CONF_QEMU = "qemu"
 CONF_REALM = "realm"
-
-PLATFORMS = ["binary_sensor"]
-PROXMOX_CLIENTS = "proxmox_clients"
-PROXMOX_CLIENT = "proxmox_client"
+CONF_VMS = "vms"
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pve"
 DEFAULT_VERIFY_SSL = False
 
+ID = "vmid"
 COORDINATORS = "coordinators"
-API_DATA = "api_data"
+PROXMOX_CLIENT = "proxmox_client"
 
 
 class ProxmoxType(StrEnum):
@@ -25,16 +30,3 @@ class ProxmoxType(StrEnum):
     Node = "node"
     QEMU = "qemu"
     LXC = "lxc"
-
-
-TYPE_VM = 0
-TYPE_CONTAINER = 1
-UPDATE_INTERVAL = 60
-
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
-CONF_QEMU = "qemu"
-CONF_LXC = "lxc"
-ID = "vmid"
