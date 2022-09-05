@@ -118,9 +118,9 @@ def _mocked_brightness_bulb() -> Light:
 
 def _mocked_clean_bulb() -> Light:
     bulb = _mocked_bulb()
-    bulb.get_hev_cycle = MockLifxCommand(
-        bulb, duration=7200, remaining=0, last_power=False
-    )
+    bulb.get_hev_cycle = MockLifxCommand(bulb)
+    bulb.set_hev_cycle = MockLifxCommand(bulb)
+    bulb.hev_cycle_configuration = {"duration": 7200, "indication": False}
     bulb.hev_cycle = {
         "duration": 7200,
         "remaining": 30,
