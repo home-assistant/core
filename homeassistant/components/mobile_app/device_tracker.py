@@ -112,7 +112,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         """Return the device info."""
         return device_info(self._entry.data)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
         self._dispatch_unsub = async_dispatcher_connect(
@@ -138,7 +138,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
         self._data = data
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Call when entity is being removed from hass."""
         await super().async_will_remove_from_hass()
 

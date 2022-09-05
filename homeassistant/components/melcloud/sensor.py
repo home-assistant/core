@@ -165,7 +165,7 @@ class MelDeviceSensor(SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._api)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
 
