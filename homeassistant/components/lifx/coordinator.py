@@ -25,6 +25,7 @@ from .const import (
 from .util import async_execute_lifx, get_real_mac_addr, lifx_features
 
 REQUEST_REFRESH_DELAY = 0.35
+LIFX_IDENTIFY_DELAY = 3.0
 
 
 class LIFXUpdateCoordinator(DataUpdateCoordinator):
@@ -92,7 +93,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         # Turn the bulb on first, flash for 3 seconds, then turn off
         await self.async_set_power(state=True, duration=1)
         await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
-        await asyncio.sleep(3)
+        await asyncio.sleep(LIFX_IDENTIFY_DELAY)
         await self.async_set_power(state=False, duration=1)
 
     async def _async_update_data(self) -> None:
@@ -117,9 +118,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 await self.async_update_color_zones()
 
             if lifx_features(self.device)["hev"]:
-                if self.device.hev_cycle_configuration is None:
-                    self.device.get_hev_configuration()
-
                 await self.async_get_hev_cycle()
 
     async def async_update_color_zones(self) -> None:
@@ -194,3 +192,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 apply=apply,
             )
         )
+
+    async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
+        """Start or stop an HEV cycle on a LIFX Clean bulb."""
+        if lifx_features(self.device)["hev"]:
+            await async_execute_lifx(
+                partial(self.device.set_hev_cycle, enable=enable, duration=duration)
+            )

@@ -501,7 +501,7 @@ fjaraskupan==2.0.0
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-flux_led==0.28.31
+flux_led==0.28.32
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -706,7 +706,7 @@ lacrosse-view==0.0.9
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.5.4
+led-ble==0.6.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1288,7 +1288,7 @@ pyruckus==0.16
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.18
+pysensibo==1.0.19
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1746,7 +1746,7 @@ xknx==1.0.2
 xmltodict==0.13.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.8
+yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
 yalexs-ble==1.6.4
