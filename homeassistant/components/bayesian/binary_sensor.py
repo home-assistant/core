@@ -188,6 +188,11 @@ class BayesianBinarySensor(BinarySensorEntity):
             then calculate the new probability.
             """
 
+            new_state = event.data.get("new_state")
+
+            if new_state is None or new_state.state == STATE_UNKNOWN:
+                return
+
             entity = event.data.get("entity_id")
 
             self.current_observations.update(self._record_entity_observations(entity))
