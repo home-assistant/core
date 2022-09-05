@@ -368,6 +368,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         entity = entity_observation["entity_id"]
 
         try:
+            if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
+                return None
             return condition.async_numeric_state(
                 self.hass,
                 entity,

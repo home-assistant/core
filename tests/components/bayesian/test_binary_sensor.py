@@ -316,7 +316,14 @@ async def test_threshold(hass):
 
 
 async def test_multiple_observations(hass):
-    """Test sensor with multiple observations of same entity."""
+    """
+    Test sensor with multiple observations of same entity.
+
+    these entries should be labelled as 'multi_state' and negative observations ignored - as the outcome is not known to be binary.
+    Before the merge of #67631 this practice was a common work-around for bayesian's ignoring of negative observations,
+    this also preserves that function
+    """
+
     config = {
         "binary_sensor": {
             "name": "Test_Binary",
@@ -380,6 +387,76 @@ async def test_multiple_observations(hass):
     assert state.state == "off"
     assert state.attributes.get("observations")[0]["platform"] == "multi_state"
     assert state.attributes.get("observations")[1]["platform"] == "multi_state"
+
+
+async def test_multiple_numeric_observations(hass):
+    """Test sensor with multiple numeric observations of same entity."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "Test_Binary",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored",
+                    "below": 10,
+                    "above": 0,
+                    "prob_given_true": 0.4,
+                    "prob_given_false": 0.0001,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored",
+                    "below": 100,
+                    "above": 30,
+                    "prob_given_true": 0.6,
+                    "prob_given_false": 0.0001,
+                },
+            ],
+            "prior": 0.1,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_binary")
+
+    for _, attrs in state.attributes.items():
+        json.dumps(attrs)
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.attributes.get("probability") == 0.1
+
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_monitored", 20)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_binary")
+
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
+    assert round(abs(0.03 - state.attributes.get("probability")), 7) == 0
+
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_monitored", 35)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_binary")
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
+    assert abs(1 - state.attributes.get("probability")) < 0.01
+
+    assert state.state == "on"
+    assert state.attributes.get("observations")[0]["platform"] == "numeric_state"
+    assert state.attributes.get("observations")[1]["platform"] == "numeric_state"
 
 
 async def test_probability_updates(hass):
