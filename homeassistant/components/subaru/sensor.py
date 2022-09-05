@@ -41,7 +41,6 @@ from .const import (
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_SAFETY_SERVICE,
-    VEHICLE_NAME,
     VEHICLE_STATUS,
     VEHICLE_VIN,
 )
@@ -162,7 +161,7 @@ async def async_setup_entry(
     coordinator = entry[ENTRY_COORDINATOR]
     vehicle_info = entry[ENTRY_VEHICLES]
     entities = []
-    for _, info in vehicle_info.items():
+    for info in vehicle_info.values():
         entities.extend(create_vehicle_sensors(info, coordinator))
     async_add_entities(entities)
 
@@ -203,7 +202,6 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         self.vin = vehicle_info[VEHICLE_VIN]
         self.entity_description = description
         self._attr_device_info = get_device_info(vehicle_info)
-        self._attr_name = f"{vehicle_info[VEHICLE_NAME]} {description.name}"
         self._attr_should_poll = False
         self._attr_unique_id = f"{self.vin}_{description.name}"
 
