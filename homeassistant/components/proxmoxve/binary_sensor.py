@@ -30,17 +30,17 @@ async def async_setup_entry(
 
     for vm_id in config_entry.data[CONF_QEMU]:
         coordinator = coordinators[config_entry.data[CONF_NODE]][vm_id]
-        coordinator_data = coordinator.data
 
         # unfound vm case
-        if (coordinator_data := coordinator.data) is None:
+        if coordinator.data is None:
             continue
 
         vm_sensor = create_binary_sensor(
             coordinator=coordinator,
             node=config_entry.data[CONF_NODE],
             vm_id=vm_id,
-            name=coordinator_data["name"],
+            key="status",
+            name="Status",
             config_entry=config_entry,
             info_device=device_info(
                 hass=hass,
@@ -53,17 +53,17 @@ async def async_setup_entry(
 
     for container_id in config_entry.data[CONF_LXC]:
         coordinator = coordinators[config_entry.data[CONF_NODE]][container_id]
-        coordinator_data = coordinator.data
 
         # unfound container case
-        if (coordinator_data := coordinator.data) is None:
+        if coordinator.data is None:
             continue
 
         container_sensor = create_binary_sensor(
             coordinator=coordinator,
             node=config_entry.data[CONF_NODE],
             vm_id=container_id,
-            name=coordinator_data["name"],
+            key="status",
+            name="Status",
             config_entry=config_entry,
             info_device=device_info(
                 hass=hass,
@@ -81,6 +81,7 @@ def create_binary_sensor(
     coordinator,
     node,
     vm_id,
+    key,
     name,
     config_entry,
     info_device,
@@ -88,8 +89,8 @@ def create_binary_sensor(
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
-        unique_id=f"proxmox_{config_entry.data[CONF_HOST]}{config_entry.data[CONF_PORT]}{node}{vm_id}_running",
-        name="Status",
+        unique_id=f"proxmox_{config_entry.data[CONF_HOST]}{config_entry.data[CONF_PORT]}{node}{vm_id}{key}",
+        name=name,
         icon="",
         device_class=BinarySensorDeviceClass.RUNNING,
         vm_id=vm_id,
