@@ -1,4 +1,6 @@
 """Support for mill wifi-enabled home heaters."""
+from typing import Any
+
 import mill
 import voluptuous as vol
 
@@ -123,7 +125,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
 
         self._update_attr(heater)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -132,7 +134,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         fan_status = 1 if fan_mode == FAN_ON else 0
         await self.coordinator.mill_data_connection.heater_control(
@@ -221,7 +223,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
 
         self._update_attr()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return

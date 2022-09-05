@@ -109,7 +109,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if state is available."""
         if self.coordinator.last_update_success_time:
             last_success_time = (
