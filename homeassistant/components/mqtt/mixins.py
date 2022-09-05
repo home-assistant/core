@@ -28,7 +28,13 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -60,7 +66,6 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
-    CONF_DISCOVERY_PREFIX,
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
@@ -790,15 +795,18 @@ class MqttDiscoveryUpdate(Entity):
 
     def __init__(
         self,
-        discovery_data: dict,
+        hass: HomeAssistant,
+        discovery_data: dict | None,
         discovery_update: Callable | None = None,
     ) -> None:
         """Initialize the discovery update mixin."""
-        self._unsubscibe_cleanup_discovery = None
-        self._discovery_data = discovery_data
+        self._discovery_data: dict = discovery_data or {}
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
         self._removed_from_hass = False
+        self._registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
+            DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
+        ]
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
@@ -869,37 +877,39 @@ class MqttDiscoveryUpdate(Entity):
             # Clear the discovery topic so the entity is not rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
 
+    async def _async_clear_discovery_topic_if_entity_removed(
+        self,
+        discovery_data: dict[str, Any],
+        event: Event,
+    ) -> None:
+        """Clear the discovery topic if the entity is removed."""
+        hass = async_get_hass()
+        if event.data["action"] == "remove":
+            # publish empty payload to config topic to avoid re-adding
+            discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+            hass.async_create_task(
+                async_publish(
+                    hass, discovery_data[ATTR_DISCOVERY_TOPIC], "", retain=True
+                )
+            )
+            self._registry_hooks.pop(discovery_hash)()
+
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        hook_register: dict[tuple, Callable] = self.hass.data[
-            DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
-        ]
-
-        async def _async_clear_discovery_topic_if_entity_removed(
-            discovery_data: dict[str, Any],
-            event: Event,
-        ) -> None:
-            """Clear the discovery topic when the entiy is removed."""
-            if event.data["action"] == "remove":
-                # publish empty payload to config topic to avoid re-adding
-                hass = async_get_hass()
-                discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
-                discovery_prefix: str = hass.data[DATA_MQTT].conf[CONF_DISCOVERY_PREFIX]
-                topic = f"{discovery_prefix}/{discovery_hash[0]}/{discovery_hash[1].replace(' ','/')}/config"
-                hass.async_create_task(async_publish(hass, topic, "", retain=True))
-                hook_register.pop(discovery_hash)()
-
         if self._discovery_data:
             discovery_hash: tuple = self._discovery_data[ATTR_DISCOVERY_HASH]
-            if discovery_hash not in hook_register:
-                hook_register[
+            if (
+                self.registry_entry is not None
+                and discovery_hash not in self._registry_hooks
+            ):
+                self._registry_hooks[
                     discovery_hash
                 ] = async_track_entity_registry_updated_event(
                     self.hass,
                     self.entity_id,
                     partial(
-                        _async_clear_discovery_topic_if_entity_removed,
+                        self._async_clear_discovery_topic_if_entity_removed,
                         self._discovery_data,
                     ),
                 )
@@ -1010,7 +1020,7 @@ class MqttEntity(
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, hass, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
 
     def _init_entity_id(self):

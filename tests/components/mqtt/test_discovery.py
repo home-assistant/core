@@ -1363,7 +1363,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_clear_config_topic_disabled_entity(
-    hass, mqtt_mock_entry_no_yaml_config, device_reg
+    hass, mqtt_mock_entry_no_yaml_config, device_reg, caplog
 ):
     """Test the discovery topic is removed when a disabled entity is removed."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -1385,6 +1385,7 @@ async def test_clear_config_topic_disabled_entity(
         "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
         json.dumps(config),
     )
+    await hass.async_block_till_done()
     # discover an entity that is not unique (part 1), will be added
     config_not_unique1 = copy.deepcopy(config)
     config_not_unique1["name"] = "sbfspot_12345_1"
@@ -1393,7 +1394,7 @@ async def test_clear_config_topic_disabled_entity(
     async_fire_mqtt_message(
         hass,
         "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
-        json.dumps(config),
+        json.dumps(config_not_unique1),
     )
     # discover an entity that is not unique (part 2), will not be added
     config_not_unique2 = copy.deepcopy(config_not_unique1)
@@ -1401,9 +1402,14 @@ async def test_clear_config_topic_disabled_entity(
     async_fire_mqtt_message(
         hass,
         "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
-        json.dumps(config),
+        json.dumps(config_not_unique2),
     )
     await hass.async_block_till_done()
+    assert "Platform mqtt does not generate unique IDs" in caplog.text
+
+    assert hass.states.get("sensor.sbfspot_12345") is None  # disabled
+    assert hass.states.get("sensor.sbfspot_12345_1") is not None  # enabled
+    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
 
     # Verify device is created
     device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
@@ -1414,13 +1420,15 @@ async def test_clear_config_topic_disabled_entity(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    # Assert the discovery topics are all cleared
-    mqtt_mock.async_publish.assert_has_calls(
-        [
-            call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True),
-            call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True),
-            call("homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config", "", 0, True),
-        ]
+    # Assert all valid discovery topics are cleared
+    assert mqtt_mock.async_publish.call_count == 2
+    assert (
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
+        in mqtt_mock.async_publish.mock_calls
+    )
+    assert (
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
+        in mqtt_mock.async_publish.mock_calls
     )
 
 
