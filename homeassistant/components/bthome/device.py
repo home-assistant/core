@@ -1,4 +1,4 @@
-"""Support for BThome Bluetooth devices."""
+"""Support for BTHome Bluetooth devices."""
 from __future__ import annotations
 
 from bthome_ble import DeviceKey, SensorDeviceInfo

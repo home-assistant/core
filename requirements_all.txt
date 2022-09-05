@@ -464,7 +464,7 @@ bsblan==0.5.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==0.5.2
+bthome-ble==1.0.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -705,7 +705,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.8.0
+fritzconnection==1.10.1
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -772,7 +772,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.1
+govee-ble==0.17.2
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -851,7 +851,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220902.0
+home-assistant-frontend==20220905.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -968,7 +968,7 @@ lakeside==0.12
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.6.0
+led-ble==0.7.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1443,7 +1443,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.2.0
+pybravia==0.2.1
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.13
