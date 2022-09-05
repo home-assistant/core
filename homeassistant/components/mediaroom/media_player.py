@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pymediaroom import (
     COMMANDS,
@@ -189,27 +190,31 @@ class MediaroomDevice(MediaPlayerEntity):
             )
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
 
         _LOGGER.debug(
             "STB(%s) Play media: %s (%s)", self.stb.stb_ip, media_id, media_type
         )
+        command: str | int
         if media_type == MEDIA_TYPE_CHANNEL:
             if not media_id.isdigit():
                 _LOGGER.error("Invalid media_id %s: Must be a channel number", media_id)
                 return
-            media_id = int(media_id)
+            command = int(media_id)
         elif media_type == MEDIA_TYPE_MEDIAROOM:
             if media_id not in COMMANDS:
                 _LOGGER.error("Invalid media_id %s: Must be a command", media_id)
                 return
+            command = media_id
         else:
             _LOGGER.error("Invalid media type %s", media_type)
             return
 
         try:
-            await self.stb.send_cmd(media_id)
+            await self.stb.send_cmd(command)
             if self._optimistic:
                 self._state = STATE_PLAYING
             self._available = True
