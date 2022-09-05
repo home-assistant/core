@@ -259,12 +259,5 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         """Get raw value from the coordinator."""
         if isinstance(data := self.coordinator.data, dict):
             value = data.get(self.vin)[VEHICLE_STATUS].get(self.entity_description.key)
-            if value in sc.BAD_SENSOR_VALUES:
-                value = None
-            if isinstance(value, str):
-                if "." in value:
-                    value = float(value)
-                elif value.isdigit():
-                    value = int(value)
-            _LOGGER.debug("Raw value for %s: %s", self._attr_name, value)
+            _LOGGER.debug("Raw value for %s: %s", self.name, value)
             return value
