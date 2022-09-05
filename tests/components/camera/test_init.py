@@ -374,7 +374,7 @@ async def test_websocket_update_orientation_prefs(hass, hass_ws_client, mock_cam
         {"id": 12, "type": "camera/get_prefs", "entity_id": "camera.demo_uniquecamera"}
     )
     msg = await client.receive_json()
-    # preload_stream entry for this camera should have been added
+    # orientation entry for this camera should have been added
     assert msg["result"]["orientation"] == 3
 
 
