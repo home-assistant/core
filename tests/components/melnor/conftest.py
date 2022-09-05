@@ -65,14 +65,6 @@ def mock_config_entry(hass: HomeAssistant):
     return entry
 
 
-def mock_melnor_valve(identifier: int):
-    """Return a mocked Melnor valve."""
-    valve = Mock(spec=Valve)
-    valve.id = identifier
-
-    return valve
-
-
 def mock_melnor_device():
     """Return a mocked Melnor device."""
 
@@ -83,6 +75,7 @@ def mock_melnor_device():
         device.connect = AsyncMock(return_value=True)
         device.disconnect = AsyncMock(return_value=True)
         device.fetch_state = AsyncMock(return_value=device)
+        device.push_state = AsyncMock(return_value=None)
 
         device.battery_level = 80
         device.mac = FAKE_ADDRESS_1
@@ -90,10 +83,12 @@ def mock_melnor_device():
         device.name = "test_melnor"
         device.rssi = -50
 
-        device.zone1 = mock_melnor_valve(1)
-        device.zone2 = mock_melnor_valve(2)
-        device.zone3 = mock_melnor_valve(3)
-        device.zone4 = mock_melnor_valve(4)
+        device.zone1 = Mock(spec=Valve, return_value=Valve(0, device))
+        device.zone1.is_watering = False
+
+        device.zone2 = Mock(spec=Valve, return_value=Valve(1, device))
+        device.zone3 = Mock(spec=Valve, return_value=Valve(2, device))
+        device.zone4 = Mock(spec=Valve, return_value=Valve(3, device))
 
         device.__getitem__.side_effect = lambda key: getattr(device, key)
 

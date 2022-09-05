@@ -2,10 +2,12 @@
 
 from datetime import timedelta
 import logging
+from typing import cast
 
-from melnor_bluetooth.device import Device
+from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -71,3 +73,28 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.is_connected
+
+
+class MelnorZoneEntity(MelnorBluetoothBaseEntity):
+    """Base class for valves that define themselves as child devices."""
+
+    _valve: Valve
+
+    def __init__(
+        self,
+        coordinator: MelnorDataUpdateCoordinator,
+        index: int,
+    ) -> None:
+        """Initialize a valve entity."""
+        super().__init__(coordinator)
+
+        self._valve = cast(Valve, self._device[f"zone{index}"])
+
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{index}")},
+            manufacturer="Melnor",
+            model=f"Zone {index}",  # easy reference after the user has changed the name
+            name=f"Zone {index}",
+            via_device=(DOMAIN, self._device.mac),
+        )
