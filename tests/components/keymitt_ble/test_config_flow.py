@@ -153,3 +153,20 @@ async def test_no_link(hass):
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
     assert result2["errors"] == {"linking"}
+
+    with patch(
+        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
+        MockMicroBotApiClient,
+    ), patch_async_setup_entry() as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["result"].data == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ACCESS_TOKEN: ANY,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
