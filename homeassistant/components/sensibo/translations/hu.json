@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API kulcs"
+                },
+                "data_description": {
+                    "api_key": "K\u00f6vesse a dokument\u00e1ci\u00f3t az \u00faj API-kulcs beszerz\u00e9s\u00e9hez."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API kulcs"
+                },
+                "data_description": {
+                    "api_key": "K\u00f6vesse a dokument\u00e1ci\u00f3t az API-kulcs beszerz\u00e9s\u00e9hez."
                 }
             }
         }
