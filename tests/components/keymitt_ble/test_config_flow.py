@@ -128,3 +128,28 @@ async def test_user_no_devices(hass):
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_unconfigured_devices"
+
+
+async def test_no_link(hass):
+    """Test the user initiated form with invalid response."""
+
+    with patch(
+        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+        return_value=[SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "link"
+    assert result2["errors"] == {"linking"}
