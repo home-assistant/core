@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "connection_type": "Select connection type",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "local": {
+        "data": {
+          "ip": "Device IP address"
+        },
+        "description": "Please enter the IP address of the device to view the data"
+      },
+      "cloud": {
+        "title": "Fill in your information",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "app_key": "Application Key",
+          "mac": "MAC"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
