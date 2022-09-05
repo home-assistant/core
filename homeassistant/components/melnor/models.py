@@ -6,7 +6,6 @@ import logging
 from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -89,12 +88,9 @@ class MelnorZoneEntity(MelnorBluetoothBaseEntity):
 
         self._valve = valve
 
-        zone_name = f"{self._device.mac} Zone {valve.id + 1}"
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.id}")},
             manufacturer="Melnor",
-            model=zone_name,  # easy reference after the user has changed the name
-            name=zone_name,
+            name=f"Zone {valve.id + 1}",
             via_device=(DOMAIN, self._device.mac),
         )

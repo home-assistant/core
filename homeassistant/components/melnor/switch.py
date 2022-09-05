@@ -21,12 +21,16 @@ from .const import DOMAIN
 from .models import MelnorDataUpdateCoordinator, MelnorZoneEntity
 
 
+def set_is_watering(valve: Valve, value: bool) -> None:
+    """Set the is_watering state of a valve."""
+    valve.is_watering = value
+
+
 @dataclass
 class MelnorSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    on_fn: Callable[[Valve], Any]
-    off_fn: Callable[[Valve], Any]
+    on_off_fn: Callable[[Valve, bool], Any]
     state_fn: Callable[[Valve], Any]
 
 
@@ -61,8 +65,7 @@ async def async_setup_entry(
                         icon="mdi:sprinkler",
                         key="manual",
                         name="Manual",
-                        on_fn=lambda valve: setattr(valve, "is_watering", True),
-                        off_fn=lambda valve: setattr(valve, "is_watering", False),
+                        on_off_fn=set_is_watering,
                         state_fn=lambda valve: valve.is_watering,
                     ),
                 )
@@ -95,12 +98,12 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self.entity_description.on_fn(self._valve)
+        self.entity_description.on_off_fn(self._valve, True)
         await self._device.push_state()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.entity_description.off_fn(self._valve)
+        self.entity_description.on_off_fn(self._valve, False)
         await self._device.push_state()
         self.async_write_ha_state()
