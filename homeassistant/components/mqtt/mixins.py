@@ -889,11 +889,7 @@ class MqttDiscoveryUpdate(Entity):
         if event.data["action"] == "remove":
             # publish empty payload to config topic to avoid re-adding
             discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
-            hass.async_create_task(
-                async_publish(
-                    hass, discovery_data[ATTR_DISCOVERY_TOPIC], "", retain=True
-                )
-            )
+            hass.async_create_task(async_remove_discovery_payload(hass, discovery_data))
             self._registry_hooks.pop(discovery_hash)()
 
     @callback
