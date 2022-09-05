@@ -12,7 +12,7 @@
             "oauth_error": "Received invalid token data.",
             "reauth_successful": "Re-authentication was successful",
             "timeout_connect": "Timeout establishing connection",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "unknown": "Unexpected error"
         },
         "create_entry": {
             "default": "Successfully authenticated"
