@@ -908,9 +908,9 @@ class ConfigEntries:
             )
         self._entries[entry.entry_id] = entry
         self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
+        self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
-        self._async_dispatch(ConfigEntryChange.ADDED, entry)
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
         """Remove an entry."""
