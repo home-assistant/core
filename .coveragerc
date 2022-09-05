@@ -455,7 +455,6 @@ omit =
     homeassistant/components/goodwe/select.py
     homeassistant/components/goodwe/sensor.py
     homeassistant/components/google_cloud/tts.py
-    homeassistant/components/google_drive/__init__.py
     homeassistant/components/google_maps/device_tracker.py
     homeassistant/components/google_pubsub/__init__.py
     homeassistant/components/gpsd/sensor.py
