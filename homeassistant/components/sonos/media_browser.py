@@ -6,7 +6,6 @@ from contextlib import suppress
 from functools import partial
 import logging
 from typing import cast
-from urllib.parse import quote_plus, unquote
 
 from soco.data_structures import DidlFavorite, DidlObject
 from soco.ms_data_structures import MusicServiceItem
@@ -64,7 +63,7 @@ def get_thumbnail_url_full(
 
     return get_browse_image_url(
         media_content_type,
-        quote_plus(media_content_id),
+        media_content_id,
         media_image_id,
     )
 
@@ -201,7 +200,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = unquote(payload["idstring"].split("/")[1])
+            title = payload["idstring"].split("/")[1]
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
