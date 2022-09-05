@@ -9,7 +9,6 @@ from typing import Any
 from melnor_bluetooth.device import Valve
 
 from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
@@ -86,8 +85,7 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
         """Initialize a switch for a melnor device."""
         super().__init__(coordinator, valve)
 
-        self._attr_unique_id = f"{self._device.mac}-zone{valve.identifier}-manual"
-        self.entity_id = ENTITY_ID_FORMAT.format(self._attr_unique_id)
+        self._attr_unique_id = f"{self._device.mac}-zone{valve.id}-manual"
         self.entity_description = entity_description
 
     @property

@@ -89,11 +89,12 @@ class MelnorZoneEntity(MelnorBluetoothBaseEntity):
 
         self._valve = valve
 
+        zone_name = f"{self._device.mac} Zone {valve.id + 1}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.identifier}")},
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.id}")},
             manufacturer="Melnor",
-            model=f"Zone {self._valve.identifier}",  # easy reference after the user has changed the name
-            name=f"Zone {self._valve.identifier}",
+            model=zone_name,  # easy reference after the user has changed the name
+            name=zone_name,
             via_device=(DOMAIN, self._device.mac),
         )
