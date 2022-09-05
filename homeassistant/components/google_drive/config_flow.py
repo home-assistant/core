@@ -5,13 +5,15 @@ import logging
 from typing import Any
 
 from google.oauth2.credentials import Credentials
-from gspread import Client
+from gspread import Client, GSpreadException
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OAuth2FlowHandler(
@@ -39,6 +41,13 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
         service = Client(Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
-        doc = await self.hass.async_add_executor_job(service.create, "Home Assistant")
+        try:
+            doc = await self.hass.async_add_executor_job(
+                service.create, "Home Assistant"
+            )
+        except GSpreadException as err:
+            _LOGGER.error("Error creating spreadsheet: %s", str(err))
+            return self.async_abort(reason="unknown")
+
         await self.async_set_unique_id(doc.id)
         return self.async_create_entry(title=DEFAULT_NAME, data=data)
