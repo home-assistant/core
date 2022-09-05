@@ -772,7 +772,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.1
+govee-ble==0.17.2
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -854,7 +854,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220902.0
+home-assistant-frontend==20220905.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -971,7 +971,7 @@ lakeside==0.12
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.6.0
+led-ble==0.7.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
