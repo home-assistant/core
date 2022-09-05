@@ -11,6 +11,7 @@
             "is_gas": "Gaz actuel de {entity_name}",
             "is_humidity": "Humidit\u00e9 actuelle de {entity_name}",
             "is_illuminance": "\u00c9clairement lumineux actuel de {entity_name}",
+            "is_moisture": "Humidit\u00e9 actuelle de {entity_name}",
             "is_nitrogen_dioxide": "Niveau actuel de concentration en dioxyde d'azote de {entity_name}",
             "is_nitrogen_monoxide": "Niveau actuel de concentration en monoxyde d'azote de {entity_name}",
             "is_nitrous_oxide": "Niveau actuel de concentration d'oxyde nitreux de {entity_name}",
