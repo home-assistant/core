@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Final, Union, cast
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -64,7 +65,7 @@ class CameraPreferences:
         preload_stream: bool | UndefinedType = UNDEFINED,
         orientation: int | UndefinedType = UNDEFINED,
         stream_options: dict[str, str] | UndefinedType = UNDEFINED,
-    ) -> dict[str, bool | int] | str:
+    ) -> dict[str, bool | int]:
         """Update camera preferences.
 
         Returns a dict with the preferences on success or a string on error.
@@ -83,7 +84,9 @@ class CameraPreferences:
                     entity_id, DOMAIN, {PREF_ORIENTATION: orientation}
                 )
             else:
-                return "Orientation is only supported on entities set up through config flows"
+                raise HomeAssistantError(
+                    "Orientation is only supported on entities set up through config flows"
+                )
         return self.get(entity_id).as_dict()
 
     def get(self, entity_id: str) -> CameraEntityPreferences:

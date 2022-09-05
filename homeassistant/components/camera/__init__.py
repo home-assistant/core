@@ -891,10 +891,12 @@ async def websocket_update_prefs(
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
-    if isinstance(entity_prefs := await prefs.async_update(entity_id, **changes), dict):
+    try:
+        entity_prefs = await prefs.async_update(entity_id, **changes)
         connection.send_result(msg["id"], entity_prefs)
-    else:
-        connection.send_error(msg["id"], "update_failed", entity_prefs)
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error setting camera preferences: %s", ex)
+        connection.send_error(msg["id"], "update_failed", str(ex))
 
 
 async def async_handle_snapshot_service(
