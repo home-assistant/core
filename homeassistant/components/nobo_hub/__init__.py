@@ -1,8 +1,6 @@
 """The Nobø Ecohub integration."""
 from __future__ import annotations
 
-import logging
-
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,9 +23,7 @@ from .const import (
     NOBO_MANUFACTURER,
 )
 
-PLATFORMS = [Platform.CLIMATE]
-
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
