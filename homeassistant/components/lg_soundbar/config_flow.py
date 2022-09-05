@@ -21,7 +21,10 @@ def test_connect(host, port):
     name_q = Queue(maxsize=1)
 
     def msg_callback(response):
-        if response["msg"] == "MAC_INFO_DEV" and "s_uuid" in response["data"]:
+        if (
+            response["msg"] in ["MAC_INFO_DEV", "PRODUCT_INFO"]
+            and "s_uuid" in response["data"]
+        ):
             uuid_q.put_nowait(response["data"]["s_uuid"])
         if (
             response["msg"] == "SPK_LIST_VIEW_INFO"
@@ -32,6 +35,7 @@ def test_connect(host, port):
     try:
         connection = temescal.temescal(host, port=port, callback=msg_callback)
         connection.get_mac_info()
+        connection.get_product_info()
         connection.get_info()
         details = {"name": name_q.get(timeout=10), "uuid": uuid_q.get(timeout=10)}
         return details

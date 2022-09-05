@@ -1,5 +1,5 @@
 """Test the lg_soundbar config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import DEFAULT, MagicMock, Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
@@ -26,6 +26,50 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "name"
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_PORT,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_uuid_missing_from_mac_info(hass):
+    """Test we get the form, but uuid is missing from the initial get_mac_info function call."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.lg_soundbar.config_flow.temescal", return_value=Mock()
+    ) as mock_temescal, patch(
+        "homeassistant.components.lg_soundbar.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        tmock = mock_temescal.temescal
+        tmock.return_value = Mock()
+        instance = tmock.return_value
+
+        def temescal_side_effect(addr, port, callback):
+            product_info = {"msg": "PRODUCT_INFO", "data": {"s_uuid": "uuid"}}
+            instance.get_product_info.side_effect = lambda: callback(product_info)
+            info = {"msg": "SPK_LIST_VIEW_INFO", "data": {"s_user_name": "name"}}
+            instance.get_info.side_effect = lambda: callback(info)
+            return DEFAULT
+
+        tmock.side_effect = temescal_side_effect
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
