@@ -399,14 +399,21 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant, recorder_mock) -> 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "query": "SELECT 5 as size",
-            "column": "size",
-            "unit_of_measurement": "MiB",
-        },
-    )
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "query": "SELECT 5 as size",
+                "column": "size",
+                "unit_of_measurement": "MiB",
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
