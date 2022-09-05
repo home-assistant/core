@@ -5,7 +5,6 @@ add_product:
     The search string and product ID are exclusive.
 
   fields:
-    # Device/service selector
     device_id:
       name: Picnic service
       description: The product will be added to the selected service, defaults to the first registered one.
@@ -13,7 +12,6 @@ add_product:
       selector:
         device:
           integration: picnic
-    # Product id text input
     product_id:
       name: Product ID
       description: The product ID of a Picnic product.
@@ -22,12 +20,10 @@ add_product:
       selector:
         text:
     product_name:
-      # Product name text input
       name: Product name
       description: Search for a product and add the first result
       required: false
       example: "Yoghurt"
-      # Input is a text string
       selector:
         text:
     amount:

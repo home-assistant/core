@@ -31,7 +31,6 @@ async def async_register_services(hass: HomeAssistant) -> None:
         return
 
     async def async_add_product_service(call: ServiceCall):
-        # Get the picnic API client and call the handler with api client and hass
         api_client = await get_api_client(hass, call.data.get("device_id"))
         await handle_add_product(hass, api_client, call)
 
@@ -60,19 +59,13 @@ async def get_api_client(
         default_config_id = list(hass.data[DOMAIN].keys())[0]
         return hass.data[DOMAIN][default_config_id][CONF_API]
 
-    # Get device from registry
     registry = device_registry.async_get(hass)
     if not (device := registry.async_get(device_id)):
         raise PicnicServiceException(f"Device with id {device_id} not found!")
 
-    # Get Picnic API client for the config entry id
-    try:
-        config_entry_id = next(iter(device.config_entries))
+    if config_entry_id := next(iter(device.config_entries), None):
         return hass.data[DOMAIN][config_entry_id][CONF_API]
-    except StopIteration as error:
-        raise PicnicServiceException(
-            f"Device with id {device_id} not found!"
-        ) from error
+    raise PicnicServiceException(f"Device with id {device_id} not found!")
 
 
 async def handle_add_product(
@@ -97,7 +90,6 @@ def _product_search(api_client: PicnicAPI, product_name: str) -> None | str:
     """Query the api client for the product name."""
     search_result = api_client.search(product_name)
 
-    # Return empty list if the result doesn't contain items
     if not search_result or "items" not in search_result[0]:
         return None
 
