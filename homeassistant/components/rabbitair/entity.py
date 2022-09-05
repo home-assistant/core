@@ -7,6 +7,7 @@ from typing import Any
 from rabbitair import Model
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -36,7 +37,7 @@ class RabbitAirBaseEntity(CoordinatorEntity[RabbitAirDataUpdateCoordinator]):
         self._attr_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, entry.data[CONF_MAC])},
             manufacturer="Rabbit Air",
             model=MODELS.get(coordinator.data.model),
             name=entry.title,

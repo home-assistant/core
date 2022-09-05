@@ -11,6 +11,7 @@ from rabbitair import Mode, Model, Speed
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.rabbitair.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -94,8 +95,8 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": TEST_HOST,
-                "access_token": TEST_TOKEN,
+                CONF_HOST: TEST_HOST,
+                CONF_ACCESS_TOKEN: TEST_TOKEN,
             },
         )
         await hass.async_block_till_done()
@@ -103,8 +104,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == TEST_TITLE
     assert result2["data"] == {
-        "host": TEST_HOST,
-        "access_token": TEST_TOKEN,
+        CONF_HOST: TEST_HOST,
+        CONF_ACCESS_TOKEN: TEST_TOKEN,
+        CONF_MAC: TEST_MAC,
     }
     assert result2["result"].unique_id == TEST_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
@@ -136,8 +138,8 @@ async def test_form_cannot_connect(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": TEST_HOST,
-                "access_token": TEST_TOKEN,
+                CONF_HOST: TEST_HOST,
+                CONF_ACCESS_TOKEN: TEST_TOKEN,
             },
         )
 
@@ -160,8 +162,8 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": TEST_HOST,
-                "access_token": TEST_TOKEN,
+                CONF_HOST: TEST_HOST,
+                CONF_ACCESS_TOKEN: TEST_TOKEN,
             },
         )
 
@@ -186,8 +188,8 @@ async def test_zeroconf_discovery(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": TEST_NAME + ".local",
-                "access_token": TEST_TOKEN,
+                CONF_HOST: TEST_NAME + ".local",
+                CONF_ACCESS_TOKEN: TEST_TOKEN,
             },
         )
         await hass.async_block_till_done()
@@ -195,8 +197,9 @@ async def test_zeroconf_discovery(hass):
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == TEST_TITLE
     assert result2["data"] == {
-        "host": TEST_NAME + ".local",
-        "access_token": TEST_TOKEN,
+        CONF_HOST: TEST_NAME + ".local",
+        CONF_ACCESS_TOKEN: TEST_TOKEN,
+        CONF_MAC: TEST_MAC,
     }
     assert result2["result"].unique_id == TEST_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
