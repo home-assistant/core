@@ -16,8 +16,6 @@ import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
@@ -37,7 +35,6 @@ from homeassistant.helpers.entity import generate_entity_id
 
 from .api import ApiAuthImpl, get_feature_access
 from .const import (
-    CONF_CALENDAR_ACCESS,
     DATA_SERVICE,
     DOMAIN,
     EVENT_DESCRIPTION,
@@ -76,24 +73,8 @@ YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 PLATFORMS = [Platform.CALENDAR]
 
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                    vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
-                    vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
-                        FeatureAccess
-                    ),
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = vol.Schema(cv.removed(DOMAIN), extra=vol.ALLOW_EXTRA)
+
 
 _SINGLE_CALSEARCH_CONFIG = vol.All(
     cv.deprecated(CONF_MAX_RESULTS),
