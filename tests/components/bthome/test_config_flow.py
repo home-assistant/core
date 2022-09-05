@@ -1,8 +1,8 @@
-"""Test the BThome config flow."""
+"""Test the BTHome config flow."""
 
 from unittest.mock import patch
 
-from bthome_ble import BThomeBluetoothDeviceData as DeviceData
+from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
@@ -167,7 +167,7 @@ async def test_async_step_user_no_devices_found_2(hass):
     """
     Test setup from service info cache with no devices found.
 
-    This variant tests with a non-BThome device known to us.
+    This variant tests with a non-BTHome device known to us.
     """
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
