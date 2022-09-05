@@ -81,7 +81,7 @@ class SynologyPhotosMediaSource(MediaSource):
                         identifier=entry.unique_id,
                         media_class=MEDIA_CLASS_DIRECTORY,
                         media_content_type=MEDIA_TYPE_IMAGE,
-                        title=entry.title,
+                        title=f"{entry.title} - {entry.unique_id}",
                         can_play=False,
                         can_expand=True,
                     )
