@@ -11,11 +11,10 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -129,6 +128,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         # features
         self._brightness = None
+        self._color_mode = None
         self._color_temp = None
         self._hs = None
         self._effect = None
@@ -165,6 +165,21 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._topics[CONF_STATE_TOPIC] is None
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
+
+        color_modes = {ColorMode.ONOFF}
+        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
+            color_modes.add(ColorMode.BRIGHTNESS)
+        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
+            color_modes.add(ColorMode.COLOR_TEMP)
+        if (
+            self._templates[CONF_RED_TEMPLATE] is not None
+            and self._templates[CONF_GREEN_TEMPLATE] is not None
+            and self._templates[CONF_BLUE_TEMPLATE] is not None
+        ):
+            color_modes.add(ColorMode.HS)
+        self._supported_color_modes = filter_supported_color_modes(color_modes)
+        if len(self._supported_color_modes) == 1:
+            self._color_mode = next(iter(self._supported_color_modes))
 
     def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -205,6 +220,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                             CONF_COLOR_TEMP_TEMPLATE
                         ].async_render_with_possible_json_value(msg.payload)
                     )
+                    self._color_mode = ColorMode.COLOR_TEMP
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
@@ -230,6 +246,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         ].async_render_with_possible_json_value(msg.payload)
                     )
                     self._hs = color_util.color_RGB_to_hs(red, green, blue)
+                    self._color_mode = ColorMode.HS
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
@@ -339,6 +356,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])
 
             if self._optimistic:
+                self._color_mode = ColorMode.COLOR_TEMP
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
@@ -363,6 +381,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["sat"] = hs_color[1]
 
             if self._optimistic:
+                self._color_mode = ColorMode.HS
                 self._hs = kwargs[ATTR_HS_COLOR]
 
         if ATTR_EFFECT in kwargs:
@@ -416,20 +435,20 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
     @property
+    def color_mode(self):
+        """Return current color mode."""
+        return self._color_mode
+
+    @property
+    def supported_color_modes(self):
+        """Flag supported color modes."""
+        return self._supported_color_modes
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
-        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
-            features = features | SUPPORT_BRIGHTNESS
-        if (
-            self._templates[CONF_RED_TEMPLATE] is not None
-            and self._templates[CONF_GREEN_TEMPLATE] is not None
-            and self._templates[CONF_BLUE_TEMPLATE] is not None
-        ):
-            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | LightEntityFeature.EFFECT
-        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
-            features = features | SUPPORT_COLOR_TEMP
 
         return features

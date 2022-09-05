@@ -237,8 +237,8 @@ async def test_fail_setup_if_color_modes_invalid(
     assert error in caplog.text
 
 
-async def test_rgb_light(hass, mqtt_mock_entry_with_yaml_config):
-    """Test RGB light flags brightness support."""
+async def test_legacy_rgb_light(hass, mqtt_mock_entry_with_yaml_config):
+    """Test legacy RGB light flags expected features and color modes."""
     assert await async_setup_component(
         hass,
         mqtt.DOMAIN,
@@ -257,12 +257,9 @@ async def test_rgb_light(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
-    expected_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_FLASH
-        | light.SUPPORT_TRANSITION
-    )
+    color_modes = [light.ColorMode.HS]
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
 
@@ -348,13 +345,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
+    color_modes = [light.ColorMode.COLOR_TEMP, light.ColorMode.HS]
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
     expected_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_COLOR_TEMP
-        | light.SUPPORT_EFFECT
-        | light.SUPPORT_FLASH
-        | light.SUPPORT_TRANSITION
+        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     )
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
@@ -380,10 +374,33 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 155
+    assert state.attributes.get("color_temp") is None  # rgb color has priority
     assert state.attributes.get("effect") == "colorloop"
     assert state.attributes.get("xy_color") == (0.323, 0.329)
     assert state.attributes.get("hs_color") == (0.0, 0.0)
+
+    # Turn on the light
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"ON",'
+        '"brightness":255,'
+        '"color_temp":155,'
+        '"effect":"colorloop"}',
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (
+        255,
+        253,
+        248,
+    )  # temp converted to color
+    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("color_temp") == 155
+    assert state.attributes.get("effect") == "colorloop"
+    assert state.attributes.get("xy_color") == (0.328, 0.334)  # temp converted to color
+    assert state.attributes.get("hs_color") == (44.098, 2.43)  # temp converted to color
 
     # Turn the light off
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"OFF"}')
@@ -421,7 +438,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color":null}')
 
     light_state = hass.states.get("light.test")
-    assert "hs_color" in light_state.attributes
+    assert "hs_color" not in light_state.attributes
 
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":155}')
 
@@ -472,12 +489,7 @@ async def test_controlling_state_via_topic2(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
     expected_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_COLOR_TEMP
-        | light.SUPPORT_EFFECT
-        | light.SUPPORT_FLASH
-        | light.SUPPORT_TRANSITION
+        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     )
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("brightness") is None
@@ -660,14 +672,11 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get("brightness") == 95
     assert state.attributes.get("hs_color") == (100, 100)
     assert state.attributes.get("effect") == "random"
-    assert state.attributes.get("color_temp") == 100
+    assert state.attributes.get("color_temp") is None  # hs_color has priority
+    color_modes = [light.ColorMode.COLOR_TEMP, light.ColorMode.HS]
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
     expected_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_COLOR_TEMP
-        | light.SUPPORT_EFFECT
-        | light.SUPPORT_FLASH
-        | light.SUPPORT_TRANSITION
+        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     )
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get(ATTR_ASSUMED_STATE)
@@ -794,12 +803,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     expected_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_COLOR_TEMP
-        | light.SUPPORT_EFFECT
-        | light.SUPPORT_FLASH
-        | light.SUPPORT_TRANSITION
+        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     )
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("brightness") == 95
@@ -1682,7 +1686,9 @@ async def test_white_scale(hass, mqtt_mock_entry_with_yaml_config):
 
     # Turn on the light with brightness
     async_fire_mqtt_message(
-        hass, "test_light_bright_scale", '{"state":"ON", "brightness": 99}'
+        hass,
+        "test_light_bright_scale",
+        '{"state":"ON", "brightness": 99, "color_mode":"hs", "color":{"h":180,"s":50}}',
     )
 
     state = hass.states.get("light.test")
@@ -1726,13 +1732,9 @@ async def test_invalid_values(hass, mqtt_mock_entry_with_yaml_config):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
-    expected_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_COLOR_TEMP
-        | light.SUPPORT_FLASH
-        | light.SUPPORT_TRANSITION
-    )
+    color_modes = [light.ColorMode.COLOR_TEMP, light.ColorMode.HS]
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
@@ -1754,8 +1756,7 @@ async def test_invalid_values(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 100
-
+    assert state.attributes.get("color_temp") is None
     # Empty color value
     async_fire_mqtt_message(
         hass,
@@ -1813,6 +1814,12 @@ async def test_invalid_values(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") == 255
+
+    # Set a valid color temperature
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp": 100}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("color_temp") == 100
 
     # Bad color temperature
     async_fire_mqtt_message(
@@ -2199,7 +2206,7 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     [
         (
             "state_topic",
-            '{ "state": "ON", "brightness": 200 }',
+            '{ "state": "ON", "brightness": 200, "color_mode":"hs", "color":{"h":180,"s":50} }',
             "brightness",
             200,
             None,
