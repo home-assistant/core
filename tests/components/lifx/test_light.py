@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx.const import ATTR_POWER
 from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import SERVICE_EFFECT_COLORLOOP
 from homeassistant.components.light import (
@@ -40,6 +41,7 @@ from . import (
     _mocked_brightness_bulb,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
+    _mocked_clean_bulb,
     _mocked_light_strip,
     _mocked_white_bulb,
     _patch_config_flow_try_connect,
@@ -997,3 +999,61 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
     )
     assert bulb.set_color.calls[0][0][0] == [0, 0, 25700, 3500]
     assert len(bulb.set_power.calls) == 1
+
+
+async def test_clean_bulb(hass: HomeAssistant) -> None:
+    """Test setting HEV cycle state on Clean bulbs."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_clean_bulb()
+    bulb.power_level = 0
+    bulb.hev_cycle = {"duration": 7200, "remaining": 0, "last_power": False}
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+    await hass.services.async_call(
+        DOMAIN,
+        "set_hev_cycle_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_POWER: True},
+        blocking=True,
+    )
+
+    call_dict = bulb.set_hev_cycle.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {"duration": 0, "enable": True}
+    bulb.set_hev_cycle.reset_mock()
+
+
+async def test_set_hev_cycle_state_fails_for_color_bulb(hass: HomeAssistant) -> None:
+    """Test that set_hev_cycle_state fails for a non-Clean bulb."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.power_level = 0
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_hev_cycle_state",
+            {ATTR_ENTITY_ID: entity_id, ATTR_POWER: True},
+            blocking=True,
+        )
