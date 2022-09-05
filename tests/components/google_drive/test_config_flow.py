@@ -91,10 +91,20 @@ async def test_full_flow(
     with patch(
         "homeassistant.components.google_drive.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == "Google Drive"
+    assert "result" in result
+    assert result.get("result").unique_id == SHEET_ID
+    assert "token" in result.get("result").data
+    assert result.get("result").data["token"].get("access_token") == "mock-access-token"
+    assert (
+        result.get("result").data["token"].get("refresh_token") == "mock-refresh-token"
+    )
 
 
 async def test_create_sheet_error(
