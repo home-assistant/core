@@ -775,7 +775,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.1
+govee-ble==0.17.2
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1446,7 +1446,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.2.0
+pybravia==0.2.1
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.13
