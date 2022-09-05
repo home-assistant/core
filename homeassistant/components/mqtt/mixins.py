@@ -800,7 +800,7 @@ class MqttDiscoveryUpdate(Entity):
         discovery_update: Callable | None = None,
     ) -> None:
         """Initialize the discovery update mixin."""
-        self._discovery_data: dict = discovery_data or {}
+        self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
         self._removed_from_hass = False
@@ -875,7 +875,9 @@ class MqttDiscoveryUpdate(Entity):
             self._cleanup_discovery_on_remove()
 
             # Clear the discovery topic so the entity is not rediscovered after a restart
-            await async_remove_discovery_payload(self.hass, self._discovery_data)
+            await async_remove_discovery_payload(
+                self.hass, cast(dict, self._discovery_data)
+            )
 
     async def _async_clear_discovery_topic_if_entity_removed(
         self,

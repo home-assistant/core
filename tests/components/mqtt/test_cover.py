@@ -2047,8 +2047,9 @@ async def test_tilt_position_altered_range(hass, mqtt_mock_entry_with_yaml_confi
     )
 
 
-async def test_find_percentage_in_range_defaults(hass):
+async def test_find_percentage_in_range_defaults(hass, mqtt_mock_entry_no_yaml_config):
     """Test find percentage in range with default range."""
+    await mqtt_mock_entry_no_yaml_config()
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2090,8 +2091,10 @@ async def test_find_percentage_in_range_defaults(hass):
     assert mqtt_cover.find_percentage_in_range(44, "cover") == 44
 
 
-async def test_find_percentage_in_range_altered(hass):
+async def test_find_percentage_in_range_altered(hass, mqtt_mock_entry_no_yaml_config):
     """Test find percentage in range with altered range."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2133,8 +2136,12 @@ async def test_find_percentage_in_range_altered(hass):
     assert mqtt_cover.find_percentage_in_range(120, "cover") == 40
 
 
-async def test_find_percentage_in_range_defaults_inverted(hass):
+async def test_find_percentage_in_range_defaults_inverted(
+    hass, mqtt_mock_entry_no_yaml_config
+):
     """Test find percentage in range with default range but inverted."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2176,8 +2183,12 @@ async def test_find_percentage_in_range_defaults_inverted(hass):
     assert mqtt_cover.find_percentage_in_range(44, "cover") == 56
 
 
-async def test_find_percentage_in_range_altered_inverted(hass):
+async def test_find_percentage_in_range_altered_inverted(
+    hass, mqtt_mock_entry_no_yaml_config
+):
     """Test find percentage in range with altered range and inverted."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2219,8 +2230,10 @@ async def test_find_percentage_in_range_altered_inverted(hass):
     assert mqtt_cover.find_percentage_in_range(120, "cover") == 60
 
 
-async def test_find_in_range_defaults(hass):
+async def test_find_in_range_defaults(hass, mqtt_mock_entry_no_yaml_config):
     """Test find in range with default range."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2262,8 +2275,10 @@ async def test_find_in_range_defaults(hass):
     assert mqtt_cover.find_in_range_from_percent(44, "cover") == 44
 
 
-async def test_find_in_range_altered(hass):
+async def test_find_in_range_altered(hass, mqtt_mock_entry_no_yaml_config):
     """Test find in range with altered range."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2305,8 +2320,10 @@ async def test_find_in_range_altered(hass):
     assert mqtt_cover.find_in_range_from_percent(40, "cover") == 120
 
 
-async def test_find_in_range_defaults_inverted(hass):
+async def test_find_in_range_defaults_inverted(hass, mqtt_mock_entry_no_yaml_config):
     """Test find in range with default range but inverted."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
@@ -2348,8 +2365,10 @@ async def test_find_in_range_defaults_inverted(hass):
     assert mqtt_cover.find_in_range_from_percent(56, "cover") == 44
 
 
-async def test_find_in_range_altered_inverted(hass):
+async def test_find_in_range_altered_inverted(hass, mqtt_mock_entry_no_yaml_config):
     """Test find in range with altered range and inverted."""
+    await mqtt_mock_entry_no_yaml_config()
+
     mqtt_cover = MqttCover(
         hass,
         {
