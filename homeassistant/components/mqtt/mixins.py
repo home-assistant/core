@@ -881,11 +881,11 @@ class MqttDiscoveryUpdate(Entity):
 
     async def _async_clear_discovery_topic_if_entity_removed(
         self,
+        hass: HomeAssistant,
         discovery_data: dict[str, Any],
         event: Event,
     ) -> None:
         """Clear the discovery topic if the entity is removed."""
-        hass = async_get_hass()
         if event.data["action"] == "remove":
             # publish empty payload to config topic to avoid re-adding
             discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
@@ -912,6 +912,7 @@ class MqttDiscoveryUpdate(Entity):
                     self.entity_id,
                     partial(
                         self._async_clear_discovery_topic_if_entity_removed,
+                        self.hass,
                         self._discovery_data,
                     ),
                 )
