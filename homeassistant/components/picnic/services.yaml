@@ -7,8 +7,8 @@ add_product:
   fields:
     device_id:
       name: Picnic service
-      description: The product will be added to the selected service, defaults to the first registered one.
-      required: false
+      description: The product will be added to the selected service.
+      required: true
       selector:
         device:
           integration: picnic

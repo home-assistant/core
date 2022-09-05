@@ -1,11 +1,11 @@
 """Tests for the Picnic services."""
-
+from functools import lru_cache
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.components.picnic.const import CONF_API, SERVICE_ADD_PRODUCT_TO_CART
+from homeassistant.components.picnic.const import SERVICE_ADD_PRODUCT_TO_CART
 from homeassistant.components.picnic.services import PicnicServiceException
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -20,6 +20,7 @@ def picnic_api_client():
         "homeassistant.components.picnic.create_picnic_client"
     ) as create_picnic_client_mock:
 
+        @lru_cache(maxsize=2, typed=True)
         def picnic_api_generator(entry: MockConfigEntry):
             auth_token = "af3wh738j3fa28l9fa23lhiufahu7l"
             auth_data = {
@@ -42,7 +43,7 @@ def picnic_api_client():
 
 
 @pytest.fixture
-def generate_config_entry(hass: HomeAssistant, picnic_api_client: MagicMock):
+def generate_config_entry(hass: HomeAssistant):
     """Generate Picnic config entries."""
 
     async def config_entry_generator(unique_id="295-6y3-1nf4"):
@@ -64,22 +65,21 @@ def generate_config_entry(hass: HomeAssistant, picnic_api_client: MagicMock):
     return config_entry_generator
 
 
-def _get_picnic_api_mock(hass: HomeAssistant, entry: MockConfigEntry):
-    """Return the Picnic api client from the HASS data for the config entry."""
-    return hass.data[DOMAIN][entry.entry_id][CONF_API]
-
-
 async def test_add_product_using_id(
-    hass: HomeAssistant, generate_config_entry: MagicMock
+    hass: HomeAssistant, generate_config_entry: MagicMock, picnic_api_client: MagicMock
 ):
     """Test adding a product by id."""
-    config_entry = await generate_config_entry()
-    picnic_api = _get_picnic_api_mock(hass, config_entry)
+    config_entry = await generate_config_entry("f8slk-37fh-s8e")
+    picnic_api = picnic_api_client(config_entry)
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    picnic_service = device_registry.async_get_device(
+        identifiers={(DOMAIN, "f8slk-37fh-s8e")}
+    )
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
-        {"product_id": "5109348572", "amount": 3},
+        {"device_id": picnic_service.id, "product_id": "5109348572", "amount": 3},
         blocking=True,
     )
 
@@ -88,11 +88,15 @@ async def test_add_product_using_id(
 
 
 async def test_add_product_using_name(
-    hass: HomeAssistant, generate_config_entry: MagicMock
+    hass: HomeAssistant, generate_config_entry: MagicMock, picnic_api_client: MagicMock
 ):
     """Test adding a product by name."""
-    config_entry = await generate_config_entry()
-    picnic_api = _get_picnic_api_mock(hass, config_entry)
+    config_entry = await generate_config_entry("3fhw-aafs-5sf")
+    picnic_api = picnic_api_client(config_entry)
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    picnic_service = device_registry.async_get_device(
+        identifiers={(DOMAIN, "3fhw-aafs-5sf")}
+    )
 
     # Set the return value of the search api endpoint
     picnic_api.search.return_value = [
@@ -117,7 +121,7 @@ async def test_add_product_using_name(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
-        {"product_name": "Tea"},
+        {"device_id": picnic_service.id, "product_name": "Tea"},
         blocking=True,
     )
 
@@ -126,11 +130,15 @@ async def test_add_product_using_name(
 
 
 async def test_add_product_using_name_no_results(
-    hass: HomeAssistant, generate_config_entry: MagicMock
+    hass: HomeAssistant, generate_config_entry: MagicMock, picnic_api_client: MagicMock
 ):
     """Test adding a product by name that can't be found."""
-    config_entry = await generate_config_entry()
-    picnic_api = _get_picnic_api_mock(hass, config_entry)
+    config_entry = await generate_config_entry("asdjn-38fjw-ah3of")
+    picnic_api = picnic_api_client(config_entry)
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    picnic_service = device_registry.async_get_device(
+        identifiers={(DOMAIN, "asdjn-38fjw-ah3of")}
+    )
 
     # Set the search return value and check that the right exception is raised during the service call
     picnic_api.search.return_value = []
@@ -138,17 +146,22 @@ async def test_add_product_using_name_no_results(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_PRODUCT_TO_CART,
-            {"product_name": "Random non existing product"},
+            {
+                "device_id": picnic_service.id,
+                "product_name": "Random non existing product",
+            },
             blocking=True,
         )
 
 
 async def test_add_product_multiple_config_entries(
-    hass: HomeAssistant, generate_config_entry: MagicMock
+    hass: HomeAssistant, generate_config_entry: MagicMock, picnic_api_client: MagicMock
 ):
     """Test adding a product for a specific Picnic service while multiple are configured."""
     config_entry_1 = await generate_config_entry("158g-ahf7-aks")
     config_entry_2 = await generate_config_entry("3fj9-9gju-236")
+    picnic_client_1 = picnic_api_client(config_entry_1)
+    picnic_client_2 = picnic_api_client(config_entry_2)
 
     device_registry = hass.helpers.device_registry.async_get(hass)
     picnic_service = device_registry.async_get_device(
@@ -163,17 +176,16 @@ async def test_add_product_multiple_config_entries(
     )
 
     # Check that the right method is called on the api
-    _get_picnic_api_mock(hass, config_entry_1).add_product.assert_not_called()
-    _get_picnic_api_mock(hass, config_entry_2).add_product.assert_called_with(
-        "5109348572", 1
-    )
+    picnic_client_1.add_product.assert_not_called()
+    picnic_client_2.add_product.assert_called_with("5109348572", 1)
 
 
 async def test_add_product_config_entry_doesnt_exist(
-    hass: HomeAssistant, generate_config_entry: MagicMock
+    hass: HomeAssistant, generate_config_entry: MagicMock, picnic_api_client: MagicMock
 ):
     """Test adding a product for a specific Picnic service, which doesn't exist."""
     config_entry = await generate_config_entry("158g-ahf7-aks")
+    picnic_api = picnic_api_client(config_entry)
 
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
@@ -184,4 +196,4 @@ async def test_add_product_config_entry_doesnt_exist(
         )
 
     # Check that the right method is called on the api
-    _get_picnic_api_mock(hass, config_entry).add_product.assert_not_called()
+    picnic_api.add_product.assert_not_called()

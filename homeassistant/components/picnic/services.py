@@ -31,7 +31,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         return
 
     async def async_add_product_service(call: ServiceCall):
-        api_client = await get_api_client(hass, call.data.get("device_id"))
+        api_client = await get_api_client(hass, call.data["device_id"])
         await handle_add_product(hass, api_client, call)
 
     hass.services.async_register(
@@ -40,7 +40,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         async_add_product_service,
         schema=vol.Schema(
             {
-                vol.Optional(ATTR_DEVICE_ID): cv.string,
+                vol.Required(ATTR_DEVICE_ID): cv.string,
                 vol.Exclusive(
                     ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
                 ): cv.positive_int,
@@ -51,14 +51,8 @@ async def async_register_services(hass: HomeAssistant) -> None:
     )
 
 
-async def get_api_client(
-    hass: HomeAssistant, device_id: str | None = None
-) -> PicnicAPI:
+async def get_api_client(hass: HomeAssistant, device_id: str) -> PicnicAPI:
     """Get the right Picnic API client based on the device id, else get the default one."""
-    if device_id is None:
-        default_config_id = list(hass.data[DOMAIN].keys())[0]
-        return hass.data[DOMAIN][default_config_id][CONF_API]
-
     registry = device_registry.async_get(hass)
     if not (device := registry.async_get(device_id)):
         raise PicnicServiceException(f"Device with id {device_id} not found!")
