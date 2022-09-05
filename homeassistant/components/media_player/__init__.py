@@ -13,7 +13,7 @@ from http import HTTPStatus
 import logging
 import secrets
 from typing import Any, cast, final
-from urllib.parse import urlparse
+from urllib.parse import quote, unquote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
@@ -1089,7 +1089,7 @@ class MediaPlayerEntity(Entity):
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
-            f"/{media_content_type}/{media_content_id}"
+            f"/{media_content_type}/{quote(quote(media_content_id,safe=''))}"
         )
 
         url_query = {"token": self.access_token}
@@ -1106,7 +1106,7 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
-        url + "/browse_media/{media_content_type}/{media_content_id}",
+        url + "/browse_media/{media_content_type}/{quoted_media_content_id}",
     ]
 
     def __init__(self, component: EntityComponent) -> None:
@@ -1118,7 +1118,7 @@ class MediaPlayerImageView(HomeAssistantView):
         request: web.Request,
         entity_id: str,
         media_content_type: str | None = None,
-        media_content_id: str | None = None,
+        quoted_media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
@@ -1138,7 +1138,8 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
-        if media_content_type and media_content_id:
+        if media_content_type and quoted_media_content_id:
+            media_content_id = unquote(quoted_media_content_id)
             media_image_id = request.query.get("media_image_id")
             data, content_type = await player.async_get_browse_image(
                 media_content_type, media_content_id, media_image_id
