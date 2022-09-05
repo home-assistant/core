@@ -1,12 +1,12 @@
 """Config flow for Google integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException
-from oauth2client.client import Credentials
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -91,14 +91,17 @@ class OAuth2FlowHandler(
                     self.flow_impl.client_secret,
                     calendar_access,
                 )
+            except TimeoutError as err:
+                _LOGGER.error("Timeout initializing device flow: %s", str(err))
+                return self.async_abort(reason="timeout_connect")
             except OAuthError as err:
                 _LOGGER.error("Error initializing device flow: %s", str(err))
                 return self.async_abort(reason="oauth_error")
             self._device_flow = device_flow
 
-            async def _exchange_finished(creds: Credentials | None) -> None:
+            def _exchange_finished() -> None:
                 self.external_data = {
-                    DEVICE_AUTH_CREDS: creds
+                    DEVICE_AUTH_CREDS: device_flow.creds
                 }  # is None on timeout/expiration
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_configure(
@@ -106,7 +109,8 @@ class OAuth2FlowHandler(
                     )
                 )
 
-            await device_flow.start_exchange_task(_exchange_finished)
+            device_flow.async_set_listener(_exchange_finished)
+            device_flow.async_start_exchange()
 
         return self.async_show_progress(
             step_id="auth",
@@ -155,9 +159,7 @@ class OAuth2FlowHandler(
             },
         )
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

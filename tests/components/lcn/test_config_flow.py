@@ -43,7 +43,7 @@ async def test_step_import(hass):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "pchk"
         assert result["data"] == IMPORT_DATA
 
@@ -65,7 +65,7 @@ async def test_step_import_existing_host(hass):
         await hass.async_block_till_done()
 
         # Check if config entry was updated
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "existing_configuration_updated"
         assert mock_entry.source == config_entries.SOURCE_IMPORT
         assert mock_entry.data == IMPORT_DATA
@@ -91,5 +91,5 @@ async def test_step_import_error(hass, error, reason):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == reason

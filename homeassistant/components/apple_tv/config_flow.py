@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
 from random import randrange
+from typing import Any
 
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
@@ -13,10 +15,11 @@ from pyatv.convert import model_str, protocol_str
 from pyatv.helpers import get_unique_id
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.network import is_ipv6_address
@@ -118,10 +121,10 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return entry.unique_id
         return None
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initial step when updating invalid credentials."""
         self.context["title_placeholders"] = {
-            "name": user_input[CONF_NAME],
+            "name": entry_data[CONF_NAME],
             "type": "Apple TV",
         }
         self.scan_filter = self.unique_id
@@ -166,7 +169,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle device found via zeroconf."""
         host = discovery_info.host
         if is_ipv6_address(host):
@@ -250,7 +253,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 # Add potentially new identifiers from this device to the existing flow
                 context["all_identifiers"].append(unique_id)
-            raise data_entry_flow.AbortFlow("already_in_progress")
+            raise AbortFlow("already_in_progress")
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""

@@ -18,6 +18,7 @@ from miio import (
     CleaningDetails,
     CleaningSummary,
     ConsumableStatus,
+    Device as MiioDevice,
     DeviceException,
     DNDStatus,
     Fan,
@@ -283,10 +284,10 @@ async def async_create_miio_device_and_coordinator(
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
-    device = None
+    device: MiioDevice | None = None
     migrate = False
     update_method = _async_update_data_default
-    coordinator_class = DataUpdateCoordinator
+    coordinator_class: type[DataUpdateCoordinator] = DataUpdateCoordinator
 
     if (
         model not in MODELS_HUMIDIFIER
@@ -345,10 +346,13 @@ async def async_create_miio_device_and_coordinator(
     if migrate:
         # Removing fan platform entity for humidifiers and migrate the name to the config entry for migration
         entity_registry = er.async_get(hass)
+        assert entry.unique_id
         entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
         if entity_id:
             # This check is entities that have a platform migration only and should be removed in the future
-            if migrate_entity_name := entity_registry.async_get(entity_id).name:
+            if (entity := entity_registry.async_get(entity_id)) and (
+                migrate_entity_name := entity.name
+            ):
                 hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
             entity_registry.async_remove(entity_id)
 
@@ -377,11 +381,11 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     name = entry.title
     gateway_id = entry.unique_id
 
-    # For backwards compat
-    if entry.unique_id.endswith("-gateway"):
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
+    assert gateway_id
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    # For backwards compat
+    if gateway_id.endswith("-gateway"):
+        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
@@ -419,7 +423,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
 
         return async_update_data
 
-    coordinator_dict = {}
+    coordinator_dict: dict[str, DataUpdateCoordinator] = {}
     for sub_device in gateway.gateway_device.devices.values():
         # Create update coordinator
         coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
@@ -436,10 +440,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         KEY_COORDINATOR: coordinator_dict,
     }
 
-    for platform in GATEWAY_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
 
 async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -450,9 +453,9 @@ async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     if not platforms:
         return False
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 

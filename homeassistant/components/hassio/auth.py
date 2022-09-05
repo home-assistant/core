@@ -43,6 +43,7 @@ class HassIOBaseAuth(HomeAssistantView):
         """Check if this call is from Supervisor."""
         # Check caller IP
         hassio_ip = os.environ["SUPERVISOR"].split(":")[0]
+        assert request.transport
         if ip_address(request.transport.get_extra_info("peername")[0]) != ip_address(
             hassio_ip
         ):

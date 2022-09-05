@@ -92,7 +92,7 @@ class IasAce(ZigbeeChannel):
         )
         self.command_map[command_id](*args)
 
-    def arm(self, arm_mode: int, code: str, zone_id: int):
+    def arm(self, arm_mode: int, code: str | None, zone_id: int) -> None:
         """Handle the IAS ACE arm command."""
         mode = AceCluster.ArmMode(arm_mode)
 

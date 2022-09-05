@@ -3,7 +3,6 @@ from http import HTTPStatus
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -23,7 +22,7 @@ BASE_API_URL = "https://rest.clicksend.com/v3"
 DEFAULT_SENDER = "hass"
 TIMEOUT = 5
 
-HEADERS = {CONTENT_TYPE: CONTENT_TYPE_JSON}
+HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 
 PLATFORM_SCHEMA = vol.Schema(

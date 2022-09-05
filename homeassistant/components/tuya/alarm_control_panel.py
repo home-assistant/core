@@ -116,7 +116,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         if not (status := self.device.status.get(self.entity_description.key)):
             return None

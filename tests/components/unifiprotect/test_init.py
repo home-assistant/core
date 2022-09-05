@@ -7,16 +7,21 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import NVR, Bootstrap, Light
+from pyunifiprotect.data import NVR, Bootstrap, Doorlock, Light, Sensor
 
-from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_DISABLE_RTSP,
+    CONF_IGNORED,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, get_device_from_ufp_device, init_entry, time_changed
 
 from tests.common import MockConfigEntry
 
@@ -109,11 +114,10 @@ async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture):
     assert ufp.api.async_disconnect_ws.called
 
 
-async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     """Test unloading of unifiprotect entry."""
 
-    await hass.config_entries.async_setup(ufp.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [light])
     assert ufp.entry.state == ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(ufp.entry.entry_id)
@@ -146,12 +150,23 @@ async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture):
 async def test_setup_failed_update_reauth(hass: HomeAssistant, ufp: MockUFPFixture):
     """Test setup of unifiprotect entry with update that gives unauthroized error."""
 
-    ufp.api.update = AsyncMock(side_effect=NotAuthorized)
-
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.SETUP_RETRY
-    assert ufp.api.update.called
+    assert ufp.entry.state == ConfigEntryState.LOADED
+
+    # reauth should not be triggered until there are 10 auth failures in a row
+    # to verify it is not transient
+    ufp.api.update = AsyncMock(side_effect=NotAuthorized)
+    for _ in range(10):
+        await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+        assert len(hass.config_entries.flow._progress) == 0
+
+    assert ufp.api.update.call_count == 10
+    assert ufp.entry.state == ConfigEntryState.LOADED
+
+    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    assert ufp.api.update.call_count == 11
+    assert len(hass.config_entries.flow._progress) == 1
 
 
 async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture):
@@ -197,27 +212,37 @@ async def test_device_remove_devices(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     light: Light,
+    doorlock: Doorlock,
+    sensor: Sensor,
     hass_ws_client: Callable[
         [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
     ],
 ) -> None:
     """Test we can only remove a device that no longer exists."""
 
-    await init_entry(hass, ufp, [light])
-    assert await async_setup_component(hass, "config", {})
-    entity_id = "light.test_light"
-    entry_id = ufp.entry.entry_id
+    sensor.mac = "FFFFFFFFFFFF"
 
-    registry: er.EntityRegistry = er.async_get(hass)
-    entity = registry.async_get(entity_id)
-    assert entity is not None
+    await init_entry(hass, ufp, [light, doorlock, sensor], regenerate_ids=False)
+    assert await async_setup_component(hass, "config", {})
+
+    entry_id = ufp.entry.entry_id
     device_registry = dr.async_get(hass)
 
-    live_device_entry = device_registry.async_get(entity.device_id)
+    light_device = get_device_from_ufp_device(hass, light)
+    assert light_device is not None
     assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
+        await remove_device(await hass_ws_client(hass), light_device.id, entry_id)
+        is True
     )
+
+    doorlock_device = get_device_from_ufp_device(hass, doorlock)
+    assert (
+        await remove_device(await hass_ws_client(hass), doorlock_device.id, entry_id)
+        is True
+    )
+
+    sensor_device = get_device_from_ufp_device(hass, sensor)
+    assert sensor_device is None
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=entry_id,
@@ -227,6 +252,10 @@ async def test_device_remove_devices(
         await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
         is True
     )
+
+    await time_changed(hass, 60)
+    entry = hass.config_entries.async_get_entry(entry_id)
+    entry.options[CONF_IGNORED] == f"{light.mac},{doorlock.mac}"
 
 
 async def test_device_remove_devices_nvr(

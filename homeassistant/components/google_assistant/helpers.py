@@ -51,7 +51,7 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+) -> tuple[device_registry.DeviceEntry | None, area_registry.AreaEntry | None]:
     """Get registry entries."""
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
@@ -160,7 +160,9 @@ class AbstractConfig(ABC):
 
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        if data := self._store.agent_user_ids.get(agent_user_id):
+            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        return None
 
     @abstractmethod
     def get_agent_user_id(self, context):

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "existing_instance_updated": "Configura\u00e7\u00e3o existente atualizada."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                }
+            }
+        }
+    }
+}

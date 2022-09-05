@@ -275,7 +275,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     custom_component = entity_sources(hass).get(entity_id, {}).get("custom_component")
     report_issue = ""
     if custom_component:
-        report_issue = "report it to the custom component author."
+        report_issue = "report it to the custom integration author."
     else:
         report_issue = (
             "create a bug report at "
@@ -622,7 +622,7 @@ def list_statistic_ids(
     """Return all or filtered statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
-    result = {}
+    result: dict[str, StatisticMetaData] = {}
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
@@ -647,7 +647,9 @@ def list_statistic_ids(
             result[state.entity_id] = {
                 "has_mean": "mean" in provided_statistics,
                 "has_sum": "sum" in provided_statistics,
+                "name": None,
                 "source": RECORDER_DOMAIN,
+                "statistic_id": state.entity_id,
                 "unit_of_measurement": native_unit,
             }
             continue
@@ -659,7 +661,9 @@ def list_statistic_ids(
         result[state.entity_id] = {
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
+            "name": None,
             "source": RECORDER_DOMAIN,
+            "statistic_id": state.entity_id,
             "unit_of_measurement": statistics_unit,
         }
 

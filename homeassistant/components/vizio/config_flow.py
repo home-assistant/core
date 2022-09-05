@@ -49,7 +49,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
+def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
     """
     Return schema defaults for init step based on user input/config dict.
 
@@ -81,7 +81,7 @@ def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
     )
 
 
-def _get_pairing_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
+def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
     """
     Return schema defaults for pairing data based on user input.
 
@@ -112,7 +112,9 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize vizio options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the vizio options."""
         if user_input is not None:
             if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
@@ -204,7 +206,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -381,7 +385,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_pair_tv(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_pair_tv(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """
         Start pairing process for TV.
 
@@ -460,7 +466,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_pairing_complete(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """
         Complete non-import sourced config flow.
@@ -470,7 +476,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._pairing_complete("pairing_complete")
 
     async def async_step_pairing_complete_import(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """
         Complete import sourced config flow.

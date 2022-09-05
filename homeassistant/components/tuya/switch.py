@@ -73,6 +73,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:water-sync",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            name="UV Sterilization",
+            icon="mdi:lightbulb",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Light
     # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
@@ -266,6 +272,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            icon="mdi:pot-steam",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

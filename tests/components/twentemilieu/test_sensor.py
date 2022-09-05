@@ -22,57 +22,72 @@ async def test_waste_pickup_sensors(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.christmas_tree_pickup")
-    entry = entity_registry.async_get("sensor.christmas_tree_pickup")
+    state = hass.states.get("sensor.twente_milieu_christmas_tree_pickup")
+    entry = entity_registry.async_get("sensor.twente_milieu_christmas_tree_pickup")
     assert entry
     assert state
     assert entry.unique_id == "twentemilieu_12345_tree"
     assert state.state == "2022-01-06"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Christmas Tree Pickup"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Twente Milieu Christmas tree pickup"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:pine-tree"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
-    state = hass.states.get("sensor.non_recyclable_waste_pickup")
-    entry = entity_registry.async_get("sensor.non_recyclable_waste_pickup")
+    state = hass.states.get("sensor.twente_milieu_non_recyclable_waste_pickup")
+    entry = entity_registry.async_get(
+        "sensor.twente_milieu_non_recyclable_waste_pickup"
+    )
     assert entry
     assert state
     assert entry.unique_id == "twentemilieu_12345_Non-recyclable"
     assert state.state == "2021-11-01"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Non-recyclable Waste Pickup"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Twente Milieu Non-recyclable waste pickup"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
-    state = hass.states.get("sensor.organic_waste_pickup")
-    entry = entity_registry.async_get("sensor.organic_waste_pickup")
+    state = hass.states.get("sensor.twente_milieu_organic_waste_pickup")
+    entry = entity_registry.async_get("sensor.twente_milieu_organic_waste_pickup")
     assert entry
     assert state
     assert entry.unique_id == "twentemilieu_12345_Organic"
     assert state.state == "2021-11-02"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Organic Waste Pickup"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Twente Milieu Organic waste pickup"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
-    state = hass.states.get("sensor.packages_waste_pickup")
-    entry = entity_registry.async_get("sensor.packages_waste_pickup")
+    state = hass.states.get("sensor.twente_milieu_packages_waste_pickup")
+    entry = entity_registry.async_get("sensor.twente_milieu_packages_waste_pickup")
     assert entry
     assert state
     assert entry.unique_id == "twentemilieu_12345_Plastic"
     assert state.state == "2021-11-03"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Packages Waste Pickup"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Twente Milieu Packages waste pickup"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
-    state = hass.states.get("sensor.paper_waste_pickup")
-    entry = entity_registry.async_get("sensor.paper_waste_pickup")
+    state = hass.states.get("sensor.twente_milieu_paper_waste_pickup")
+    entry = entity_registry.async_get("sensor.twente_milieu_paper_waste_pickup")
     assert entry
     assert state
     assert entry.unique_id == "twentemilieu_12345_Paper"
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Paper Waste Pickup"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Twente Milieu Paper waste pickup"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes

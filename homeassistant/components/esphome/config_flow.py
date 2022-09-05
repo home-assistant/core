@@ -16,7 +16,7 @@ from aioesphomeapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
@@ -25,6 +25,7 @@ from homeassistant.data_entry_flow import FlowResult
 from . import CONF_NOISE_PSK, DOMAIN, DomainData
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
+ESPHOME_URL = "https://esphome.io/"
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -55,7 +56,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+            description_placeholders={"esphome_url": ESPHOME_URL},
         )
 
     async def async_step_user(
@@ -64,7 +68,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         return await self._async_step_user_base(user_input=user_input)
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
@@ -189,6 +193,49 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle DHCP discovery."""
+        node_name = discovery_info.hostname
+
+        await self.async_set_unique_id(node_name)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        for entry in self._async_current_entries():
+            found = False
+
+            if CONF_HOST in entry.data and entry.data[CONF_HOST] in (
+                discovery_info.ip,
+                f"{node_name}.local",
+            ):
+                # Is this address or IP address already configured?
+                found = True
+            elif DomainData.get(self.hass).is_entry_loaded(entry):
+                # Does a config entry with this name already exist?
+                data = DomainData.get(self.hass).get_entry_data(entry)
+
+                # Node names are unique in the network
+                if data.device_info is not None:
+                    found = data.device_info.name == node_name
+
+            if found:
+                # Backwards compat, we update old entries
+                if not entry.unique_id:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={
+                            **entry.data,
+                            CONF_HOST: discovery_info.ip,
+                        },
+                        unique_id=node_name,
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+
+                break
+
+        return self.async_abort(reason="already_configured")
+
     @callback
     def _async_get_entry(self) -> FlowResult:
         config_data = {
@@ -284,6 +331,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             await cli.disconnect(force=True)
 
         self._name = self._device_info.name
+        await self.async_set_unique_id(self._name, raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return None
 

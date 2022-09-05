@@ -97,6 +97,8 @@ class ThermostatEntity(ClimateEntity):
 
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
+    _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""
@@ -105,20 +107,10 @@ class ThermostatEntity(ClimateEntity):
         self._attr_supported_features = 0
 
     @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
-
-    @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return self._device.name
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._device_info.device_name
 
     @property
     def device_info(self) -> DeviceInfo:

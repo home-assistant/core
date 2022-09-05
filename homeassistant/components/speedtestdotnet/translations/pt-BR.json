@@ -9,6 +9,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam este servi\u00e7o para usar o servi\u00e7o `homeassistant.update_entity` com um ID de entidade do Speedtest. Em seguida, clique em ENVIAR abaixo para marcar este problema como resolvido.",
+                        "title": "O servi\u00e7o speedtest est\u00e1 sendo removido"
+                    }
+                }
+            },
+            "title": "O servi\u00e7o speedtest est\u00e1 sendo removido"
+        }
+    },
     "options": {
         "step": {
             "init": {

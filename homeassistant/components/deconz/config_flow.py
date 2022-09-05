@@ -205,12 +205,12 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
-        self.context["title_placeholders"] = {CONF_HOST: config[CONF_HOST]}
+        self.context["title_placeholders"] = {CONF_HOST: entry_data[CONF_HOST]}
 
-        self.host = config[CONF_HOST]
-        self.port = config[CONF_PORT]
+        self.host = entry_data[CONF_HOST]
+        self.port = entry_data[CONF_PORT]
 
         return await self.async_step_link()
 

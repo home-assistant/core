@@ -4,13 +4,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     NVR,
     Camera,
     Event,
     Light,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     ProtectModelWithId,
@@ -36,10 +37,11 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
     EventThumbnailMixin,
@@ -48,7 +50,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectRequiredKeysMixin, T
-from .utils import async_get_light_motion_current
+from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -200,13 +202,22 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
+        key="lens_type",
+        name="Lens Type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:camera-iris",
+        ufp_required_field="has_removable_lens",
+        ufp_value="feature_flags.lens_type",
+    ),
+    ProtectSensorEntityDescription(
         key="mic_level",
         name="Microphone Level",
         icon="mdi:microphone",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -594,6 +605,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities = async_all_device_entities(
+            data,
+            ProtectDeviceSensor,
+            all_descs=ALL_DEVICES_SENSORS,
+            camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
+            sense_descs=SENSE_SENSORS,
+            light_descs=LIGHT_SENSORS,
+            lock_descs=DOORLOCK_SENSORS,
+            chime_descs=CHIME_SENSORS,
+            viewer_descs=VIEWER_SENSORS,
+            ufp_device=device,
+        )
+        if device.is_adopted_by_us and isinstance(device, Camera):
+            entities += _async_motion_entities(data, ufp_device=device)
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectDeviceSensor,
@@ -614,13 +647,15 @@ async def async_setup_entry(
 @callback
 def _async_motion_entities(
     data: ProtectData,
+    ufp_device: Camera | None = None,
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
-    for device in data.api.bootstrap.cameras.values():
+    devices = (
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
+    )
+    for device in devices:
+        device = cast(Camera, device)
         for description in MOTION_TRIP_SENSORS:
-            if not device.is_adopted_by_us:
-                continue
-
             entities.append(ProtectDeviceSensor(data, device, description))
             _LOGGER.debug(
                 "Adding trip sensor entity %s for %s",

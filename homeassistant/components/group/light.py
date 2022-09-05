@@ -25,10 +25,8 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_WHITE_VALUE,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -46,7 +44,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -71,10 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    LightEntityFeature.EFFECT
-    | LightEntityFeature.FLASH
-    | LightEntityFeature.TRANSITION
-    | SUPPORT_WHITE_VALUE
+    LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +123,6 @@ FORWARDED_ATTRIBUTES = frozenset(
         ATTR_RGBWW_COLOR,
         ATTR_TRANSITION,
         ATTR_WHITE,
-        ATTR_WHITE_VALUE,
         ATTR_XY_COLOR,
     }
 )
@@ -148,7 +142,6 @@ class LightGroup(GroupEntity, LightEntity):
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
-        self._white_value: int | None = None
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
@@ -173,11 +166,6 @@ class LightGroup(GroupEntity, LightEntity):
         )
 
         await super().async_added_to_hass()
-
-    @property
-    def white_value(self) -> int | None:
-        """Return the white value of this light group between 0..255."""
-        return self._white_value
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all lights in the light group."""
@@ -214,15 +202,15 @@ class LightGroup(GroupEntity, LightEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
-        all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states: list[State] = list(filter(None, all_states))
+        states = [
+            state
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
         on_states = [state for state in states if state.state == STATE_ON]
 
-        # filtered_states are members currently in the state machine
-        filtered_states: list[str] = [x.state for x in all_states if x is not None]
-
         valid_state = self.mode(
-            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in filtered_states
+            state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
 
         if not valid_state:
@@ -230,9 +218,7 @@ class LightGroup(GroupEntity, LightEntity):
             self._attr_is_on = None
         else:
             # Set as ON if any / all member is ON
-            self._attr_is_on = self.mode(
-                list(map(lambda x: x == STATE_ON, filtered_states))
-            )
+            self._attr_is_on = self.mode(state.state == STATE_ON for state in states)
 
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
         self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
@@ -252,8 +238,6 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_xy_color = reduce_attribute(
             on_states, ATTR_XY_COLOR, reduce=mean_tuple
         )
-
-        self._white_value = reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
         self._attr_color_temp = reduce_attribute(on_states, ATTR_COLOR_TEMP)
         self._attr_min_mireds = reduce_attribute(

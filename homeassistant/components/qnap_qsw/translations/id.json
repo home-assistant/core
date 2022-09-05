@@ -9,6 +9,12 @@
             "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Kata Sandi",

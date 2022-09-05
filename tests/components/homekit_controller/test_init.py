@@ -1,23 +1,30 @@
 """Tests for homekit_controller init."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from aiohomekit import AccessoryNotFoundError
+from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.testing import FakePairing
 
-from homeassistant.components.homekit_controller.const import ENTITY_MAP
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.homekit_controller.const import DOMAIN, ENTITY_MAP
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from .common import Helper, remove_device
+from .common import Helper, remove_device, setup_test_accessories_with_controller
 
+from tests.common import async_fire_time_changed
 from tests.components.homekit_controller.common import setup_test_component
 
-ALIVE_DEVICE_NAME = "Light Bulb"
-ALIVE_DEEVICE_ENTITY_ID = "light.testdevice"
+ALIVE_DEVICE_NAME = "testdevice"
+ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
 
 
 def create_motion_sensor_service(accessory):
@@ -72,7 +79,7 @@ async def test_device_remove_devices(hass, hass_ws_client):
     entry_id = config_entry.entry_id
 
     registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities[ALIVE_DEEVICE_ENTITY_ID]
+    entity = registry.entities[ALIVE_DEVICE_ENTITY_ID]
     device_registry = dr.async_get(hass)
 
     live_device_entry = device_registry.async_get(entity.device_id)
@@ -89,3 +96,117 @@ async def test_device_remove_devices(hass, hass_ws_client):
         await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
         is True
     )
+
+
+async def test_offline_device_raises(hass, controller):
+    """Test an offline device raises ConfigEntryNotReady."""
+
+    is_connected = False
+
+    class OfflineFakePairing(FakePairing):
+        """Fake pairing that can flip is_connected."""
+
+        @property
+        def is_connected(self):
+            nonlocal is_connected
+            return is_connected
+
+        @property
+        def is_available(self):
+            return self.is_connected
+
+        async def async_populate_accessories_state(self, *args, **kwargs):
+            nonlocal is_connected
+            if not is_connected:
+                raise AccessoryNotFoundError("any")
+            await super().async_populate_accessories_state(*args, **kwargs)
+
+        async def get_characteristics(self, chars, *args, **kwargs):
+            nonlocal is_connected
+            if not is_connected:
+                raise AccessoryNotFoundError("any")
+            return {}
+
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
+    with patch("aiohomekit.testing.FakePairing", OfflineFakePairing):
+        await async_setup_component(hass, DOMAIN, {})
+        config_entry, _ = await setup_test_accessories_with_controller(
+            hass, [accessory], controller
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    is_connected = True
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.get("light.testdevice").state == STATE_OFF
+
+
+async def test_ble_device_only_checks_is_available(hass, controller):
+    """Test a BLE device only checks is_available."""
+
+    is_available = False
+
+    class FakeBLEPairing(FakePairing):
+        """Fake BLE pairing that can flip is_available."""
+
+        @property
+        def transport(self):
+            return Transport.BLE
+
+        @property
+        def is_connected(self):
+            return False
+
+        @property
+        def is_available(self):
+            nonlocal is_available
+            return is_available
+
+        async def async_populate_accessories_state(self, *args, **kwargs):
+            nonlocal is_available
+            if not is_available:
+                raise AccessoryNotFoundError("any")
+            await super().async_populate_accessories_state(*args, **kwargs)
+
+        async def get_characteristics(self, chars, *args, **kwargs):
+            nonlocal is_available
+            if not is_available:
+                raise AccessoryNotFoundError("any")
+            return {}
+
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
+        await async_setup_component(hass, DOMAIN, {})
+        config_entry, _ = await setup_test_accessories_with_controller(
+            hass, [accessory], controller
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    is_available = True
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.get("light.testdevice").state == STATE_OFF
+
+    is_available = False
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
+
+    is_available = True
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    assert hass.states.get("light.testdevice").state == STATE_OFF

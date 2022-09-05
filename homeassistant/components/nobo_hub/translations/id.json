@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_ip": "Alamat IP tidak valid",
+            "invalid_serial": "Nomor seri tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "Alamat IP",
+                    "serial": "Nomor seri (12 digit)"
+                }
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Akhiran nomor seri (3 digit)"
+                },
+                "description": "Mengonfigurasi {hub}.\n\nUntuk terhubung ke hub, Anda harus memasukkan 3 digit terakhir dari nomor seri hub."
+            },
+            "user": {
+                "data": {
+                    "device": "Hub yang ditemukan"
+                },
+                "description": "Pilih Nob\u00f8 Ecohub untuk dikonfigurasi."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "Tipe penimpaan"
+                },
+                "description": "Pilih tipe penimpaan \"Now\" untuk mengakhiri penimpaan pada perubahan profil minggu depan."
+            }
+        }
+    }
+}

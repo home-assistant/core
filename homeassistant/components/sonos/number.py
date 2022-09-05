@@ -72,8 +72,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         """Initialize the level entity."""
         super().__init__(speaker)
         self._attr_unique_id = f"{self.soco.uid}-{level_type}"
-        name_suffix = level_type.replace("_", " ").title()
-        self._attr_name = f"{self.speaker.zone_name} {name_suffix}"
+        self._attr_name = level_type.replace("_", " ").capitalize()
         self.level_type = level_type
         self._attr_native_min_value, self._attr_native_max_value = valid_range
 

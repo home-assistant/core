@@ -12,11 +12,12 @@ from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, statistics
-from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
+    async_import_statistics,
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
     get_last_short_term_statistics,
@@ -30,6 +31,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -44,7 +46,7 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 def test_compile_hourly_statistics(hass_recorder):
     """Test compiling hourly statistics."""
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
+    instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
@@ -141,7 +143,7 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
     assert stats == {}
 
-    recorder.get_session().query(StatisticsShortTerm).delete()
+    instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
     stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {}
@@ -159,6 +161,7 @@ def mock_sensor_statistics():
                 "unit_of_measurement": "dogs",
                 "has_mean": True,
                 "has_sum": False,
+                "name": None,
             },
             "stat": {"start": start},
         }
@@ -437,26 +440,45 @@ def test_statistics_duplicated(hass_recorder, caplog):
         caplog.clear()
 
 
-async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
-    """Test inserting external statistics."""
+@pytest.mark.parametrize("last_reset_str", ("2022-01-01T00:00:00+02:00", None))
+@pytest.mark.parametrize(
+    "source, statistic_id, import_fn",
+    (
+        ("test", "test:total_energy_import", async_add_external_statistics),
+        ("recorder", "sensor.total_energy_import", async_import_statistics),
+    ),
+)
+async def test_import_statistics(
+    hass,
+    hass_ws_client,
+    recorder_mock,
+    caplog,
+    source,
+    statistic_id,
+    import_fn,
+    last_reset_str,
+):
+    """Test importing statistics and inserting external statistics."""
     client = await hass_ws_client()
 
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
     zero = dt_util.utcnow()
+    last_reset = dt_util.parse_datetime(last_reset_str) if last_reset_str else None
+    last_reset_utc_str = dt_util.as_utc(last_reset).isoformat() if last_reset else None
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
     external_statistics1 = {
         "start": period1,
-        "last_reset": None,
+        "last_reset": last_reset,
         "state": 0,
         "sum": 2,
     }
     external_statistics2 = {
         "start": period2,
-        "last_reset": None,
+        "last_reset": last_reset,
         "state": 1,
         "sum": 3,
     }
@@ -465,37 +487,35 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
-        "source": "test",
-        "statistic_id": "test:total_energy_import",
+        "source": source,
+        "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(
-        hass, external_metadata, (external_statistics1, external_statistics2)
-    )
+    import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
     await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
-        "test:total_energy_import": [
+        statistic_id: [
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(0.0),
                 "sum": approx(2.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period2.isoformat(),
                 "end": (period2 + timedelta(hours=1)).isoformat(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
@@ -504,39 +524,40 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
-            "statistic_id": "test:total_energy_import",
+            "statistic_id": statistic_id,
             "name": "Total imported energy",
-            "source": "test",
-            "unit_of_measurement": "kWh",
+            "source": source,
+            "statistics_unit_of_measurement": "kWh",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=("test:total_energy_import",))
+    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
     assert metadata == {
-        "test:total_energy_import": (
+        statistic_id: (
             1,
             {
                 "has_mean": False,
                 "has_sum": True,
                 "name": "Total imported energy",
-                "source": "test",
-                "statistic_id": "test:total_energy_import",
+                "source": source,
+                "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
         )
     }
-    last_stats = get_last_statistics(hass, 1, "test:total_energy_import", True)
+    last_stats = get_last_statistics(hass, 1, statistic_id, True)
     assert last_stats == {
-        "test:total_energy_import": [
+        statistic_id: [
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period2.isoformat(),
                 "end": (period2 + timedelta(hours=1)).isoformat(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
@@ -550,13 +571,13 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
         "state": 5,
         "sum": 6,
     }
-    async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
-        "test:total_energy_import": [
+        statistic_id: [
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
                 "max": None,
@@ -567,64 +588,92 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
                 "sum": approx(6.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period2.isoformat(),
                 "end": (period2 + timedelta(hours=1)).isoformat(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
         ]
     }
 
-    # Update the previously inserted statistics
+    # Update the previously inserted statistics + rename
     external_statistics = {
         "start": period1,
         "max": 1,
         "mean": 2,
         "min": 3,
-        "last_reset": None,
+        "last_reset": last_reset,
         "state": 4,
         "sum": 5,
     }
-    async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    external_metadata["name"] = "Total imported energy renamed"
+    import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "display_unit_of_measurement": "kWh",
+            "has_mean": False,
+            "has_sum": True,
+            "statistic_id": statistic_id,
+            "name": "Total imported energy renamed",
+            "source": source,
+            "statistics_unit_of_measurement": "kWh",
+        }
+    ]
+    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    assert metadata == {
+        statistic_id: (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "name": "Total imported energy renamed",
+                "source": source,
+                "statistic_id": statistic_id,
+                "unit_of_measurement": "kWh",
+            },
+        )
+    }
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
-        "test:total_energy_import": [
+        statistic_id: [
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
                 "max": approx(1.0),
                 "mean": approx(2.0),
                 "min": approx(3.0),
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(4.0),
                 "sum": approx(5.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period2.isoformat(),
                 "end": (period2 + timedelta(hours=1)).isoformat(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
                 "sum": approx(3.0),
             },
         ]
     }
 
+    # Adjust the statistics
     await client.send_json(
         {
             "id": 1,
             "type": "recorder/adjust_sum_statistics",
-            "statistic_id": "test:total_energy_import",
+            "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
         }
@@ -635,26 +684,26 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
-        "test:total_energy_import": [
+        statistic_id: [
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
                 "max": approx(1.0),
                 "mean": approx(2.0),
                 "min": approx(3.0),
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(4.0),
                 "sum": approx(5.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
+                "statistic_id": statistic_id,
                 "start": period2.isoformat(),
                 "end": (period2 + timedelta(hours=1)).isoformat(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
+                "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
                 "sum": approx(1003.0),
             },
@@ -670,11 +719,12 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert "Statistics already compiled" not in caplog.text
 
     zero = dt_util.utcnow()
+    last_reset = zero.replace(minute=0, second=0, microsecond=0) - timedelta(days=1)
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
 
     _external_statistics = {
         "start": period1,
-        "last_reset": None,
+        "last_reset": last_reset,
         "state": 0,
         "sum": 2,
     }
@@ -711,7 +761,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
-    # Attempt to insert statistics for an naive starting time
+    # Attempt to insert statistics for a naive starting time
     external_metadata = {**_external_metadata}
     external_statistics = {
         **_external_statistics,
@@ -733,6 +783,106 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+
+    # Attempt to insert statistics with a naive last_reset
+    external_metadata = {**_external_metadata}
+    external_statistics = {
+        **_external_statistics,
+        "last_reset": last_reset.replace(tzinfo=None),
+    }
+    with pytest.raises(HomeAssistantError):
+        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+
+
+def test_import_statistics_errors(hass_recorder, caplog):
+    """Test validation of imported statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    last_reset = zero.replace(minute=0, second=0, microsecond=0) - timedelta(days=1)
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+
+    _external_statistics = {
+        "start": period1,
+        "last_reset": last_reset,
+        "state": 0,
+        "sum": 2,
+    }
+
+    _external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import",
+        "unit_of_measurement": "kWh",
+    }
+
+    # Attempt to insert statistics for an external source
+    external_metadata = {
+        **_external_metadata,
+        "statistic_id": "test:total_energy_import",
+    }
+    external_statistics = {**_external_statistics}
+    with pytest.raises(HomeAssistantError):
+        async_import_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+
+    # Attempt to insert statistics for the wrong domain
+    external_metadata = {**_external_metadata, "source": "sensor"}
+    external_statistics = {**_external_statistics}
+    with pytest.raises(HomeAssistantError):
+        async_import_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
+
+    # Attempt to insert statistics for a naive starting time
+    external_metadata = {**_external_metadata}
+    external_statistics = {
+        **_external_statistics,
+        "start": period1.replace(tzinfo=None),
+    }
+    with pytest.raises(HomeAssistantError):
+        async_import_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
+
+    # Attempt to insert statistics for an invalid starting time
+    external_metadata = {**_external_metadata}
+    external_statistics = {**_external_statistics, "start": period1.replace(minute=1)}
+    with pytest.raises(HomeAssistantError):
+        async_import_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
+
+    # Attempt to insert statistics with a naive last_reset
+    external_metadata = {**_external_metadata}
+    external_statistics = {
+        **_external_statistics,
+        "last_reset": last_reset.replace(tzinfo=None),
+    }
+    with pytest.raises(HomeAssistantError):
+        async_import_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
 
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
@@ -1009,6 +1159,7 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
         "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
     ):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -1039,6 +1190,7 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
 
     # Test that the duplicates are removed during migration from schema 28
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -1098,6 +1250,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
         "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
     ):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -1130,6 +1283,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
 
     # Test that the duplicates are removed during migration from schema 28
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)

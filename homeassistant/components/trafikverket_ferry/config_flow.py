@@ -60,7 +60,7 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ferry_api = TrafikverketFerry(web_session, api_key)
         await ferry_api.async_get_next_ferry_stop(ferry_from, ferry_to)
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])

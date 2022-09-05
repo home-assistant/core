@@ -23,7 +23,7 @@ async def test_flow_user(
         result["flow_id"],
         user_input=CONF_INPUT,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEAM_NAME
     assert result["data"] == CONF_DATA
 
@@ -42,7 +42,7 @@ async def test_flow_user_already_configured(
         result["flow_id"],
         user_input=CONF_INPUT,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -56,7 +56,7 @@ async def test_flow_user_invalid_auth(
         context={"source": config_entries.SOURCE_USER},
         data=CONF_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -71,7 +71,7 @@ async def test_flow_user_cannot_connect(
         context={"source": config_entries.SOURCE_USER},
         data=CONF_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -87,7 +87,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -103,7 +103,7 @@ async def test_flow_import(
         data=CONF_DATA,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEAM_NAME
     assert result["data"] == CONF_DATA
 
@@ -119,7 +119,7 @@ async def test_flow_import_no_name(
         data=CONF_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEAM_NAME
     assert result["data"] == CONF_DATA
 
@@ -136,5 +136,5 @@ async def test_flow_import_already_configured(
         data=CONF_DATA,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"

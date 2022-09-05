@@ -19,6 +19,7 @@ from .const import (
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
+    DEPRECATED_URLS,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
 )
@@ -62,11 +63,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Growatt sensor."""
-    config = config_entry.data
+    config = {**config_entry.data}
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     url = config.get(CONF_URL, DEFAULT_URL)
     name = config[CONF_NAME]
+
+    # If the URL has been deprecated then change to the default instead
+    if url in DEPRECATED_URLS:
+        _LOGGER.info(
+            "URL: %s has been deprecated, migrating to the latest default: %s",
+            url,
+            DEFAULT_URL,
+        )
+        url = DEFAULT_URL
+        config[CONF_URL] = url
+        hass.config_entries.async_update_entry(config_entry, data=config)
 
     api = growattServer.GrowattApi()
     api.server_url = url
@@ -159,7 +171,7 @@ class GrowattInverter(SensorEntity):
             return self.probe.get_data("currency")
         return super().native_unit_of_measurement
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the Growat API and updates the state."""
         self.probe.update()
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
@@ -33,6 +33,10 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+
+_ZCLEnumSelectEntitySelfT = TypeVar(
+    "_ZCLEnumSelectEntitySelfT", bound="ZCLEnumSelectEntity"
+)
 
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
@@ -72,7 +76,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attr_name = self._enum.__name__
@@ -154,12 +158,12 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZCLEnumSelectEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZCLEnumSelectEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -183,7 +187,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
@@ -225,9 +229,59 @@ class AqaraMotionSensitivities(types.enum8):
     High = 0x03
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+)
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
     """Representation of a ZHA on off transition time configuration entity."""
 
     _select_attr = "motion_sensitivity"
     _enum = AqaraMotionSensitivities
+
+
+class AqaraMonitoringModess(types.enum8):
+    """Aqara monitoring modes."""
+
+    Undirected = 0x00
+    Left_Right = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
+    """Representation of a ZHA monitoring mode configuration entity."""
+
+    _select_attr = "monitoring_mode"
+    _enum = AqaraMonitoringModess
+
+
+class AqaraApproachDistances(types.enum8):
+    """Aqara approach distances."""
+
+    Far = 0x00
+    Medium = 0x01
+    Near = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
+    """Representation of a ZHA approach distance configuration entity."""
+
+    _select_attr = "approach_distance"
+    _enum = AqaraApproachDistances
+
+
+class AqaraE1ReverseDirection(types.enum8):
+    """Aqara curtain reversal."""
+
+    Normal = 0x00
+    Inverted = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="window_covering", models={"lumi.curtain.agl001"}
+)
+class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _select_attr = "window_covering_mode"
+    _enum = AqaraE1ReverseDirection

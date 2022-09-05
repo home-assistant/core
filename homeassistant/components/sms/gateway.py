@@ -154,6 +154,10 @@ class Gateway:
         """Get the current signal level of the modem."""
         return await self._worker.get_signal_quality_async()
 
+    async def get_network_info_async(self):
+        """Get the current network info of the modem."""
+        return await self._worker.get_network_info_async()
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
@@ -163,8 +167,13 @@ async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
         gateway = Gateway(config, hass)
-        await gateway.init_async()
+        try:
+            await gateway.init_async()
+        except gammu.GSMError as exc:
+            _LOGGER.error("Failed to initialize, error %s", exc)
+            await gateway.terminate_async()
+            return None
         return gateway
     except gammu.GSMError as exc:
-        _LOGGER.error("Failed to initialize, error %s", exc)
+        _LOGGER.error("Failed to create async worker, error %s", exc)
         return None

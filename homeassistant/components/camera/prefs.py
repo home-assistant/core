@@ -36,14 +36,14 @@ class CameraPreferences:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize camera prefs."""
         self._hass = hass
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store[dict[str, dict[str, bool]]](
+            hass, STORAGE_VERSION, STORAGE_KEY
+        )
         self._prefs: dict[str, dict[str, bool]] | None = None
 
     async def async_initialize(self) -> None:
         """Finish initializing the preferences."""
-        if (prefs := await self._store.async_load()) is None or not isinstance(
-            prefs, dict
-        ):
+        if (prefs := await self._store.async_load()) is None:
             prefs = {}
 
         self._prefs = prefs

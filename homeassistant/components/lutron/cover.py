@@ -66,7 +66,7 @@ class LutronCover(LutronDevice, CoverEntity):
             position = kwargs[ATTR_POSITION]
             self._lutron_device.level = position
 
-    def update(self):
+    def update(self) -> None:
         """Call when forcing a refresh of the device."""
         # Reading the property (rather than last_level()) fetches value
         level = self._lutron_device.level

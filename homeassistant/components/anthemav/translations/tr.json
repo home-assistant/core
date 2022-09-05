@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "cannot_receive_deviceinfo": "MAC Adresi al\u0131namad\u0131. Cihaz\u0131n a\u00e7\u0131k oldu\u011fundan emin olun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Anthem A/V Al\u0131c\u0131lar\u0131n\u0131 YAML kullanarak yap\u0131land\u0131rma kald\u0131r\u0131l\u0131yor.\n\nMevcut YAML yap\u0131land\u0131rman\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131ld\u0131.\n\nAnthem A/V Al\u0131c\u0131lar\u0131 YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Anthem A/V Al\u0131c\u0131lar\u0131 YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
+        }
+    }
+}

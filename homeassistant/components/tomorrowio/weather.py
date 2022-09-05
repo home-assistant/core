@@ -8,13 +8,13 @@ from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -74,11 +74,11 @@ async def async_setup_entry(
 class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
-    _attr_pressure_unit = PRESSURE_HPA
-    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
-    _attr_visibility_unit = LENGTH_KILOMETERS
-    _attr_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_visibility_unit = LENGTH_KILOMETERS
+    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
 
     def __init__(
         self,
@@ -119,12 +119,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
-            ATTR_FORECAST_PRECIPITATION: precipitation,
+            ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
-            ATTR_FORECAST_TEMP: temp,
-            ATTR_FORECAST_TEMP_LOW: temp_low,
+            ATTR_FORECAST_NATIVE_TEMP: temp,
+            ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
             ATTR_FORECAST_WIND_BEARING: wind_direction,
-            ATTR_FORECAST_WIND_SPEED: wind_speed,
+            ATTR_FORECAST_NATIVE_WIND_SPEED: wind_speed,
         }
 
         return {k: v for k, v in data.items() if v is not None}
@@ -145,12 +145,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         return CONDITIONS[condition]
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the platform temperature."""
         return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the raw pressure."""
         return self._get_current_property(TMRW_ATTR_PRESSURE)
 
@@ -160,7 +160,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the raw wind speed."""
         return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
@@ -183,7 +183,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         )
 
     @property
-    def visibility(self):
+    def native_visibility(self):
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
 

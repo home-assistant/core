@@ -137,7 +137,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
             return
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve state from the lock."""
         await super().async_update()
         await self.async_get_state()

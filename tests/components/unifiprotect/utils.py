@@ -2,14 +2,19 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
+from unittest.mock import Mock
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     Bootstrap,
     Camera,
+    Event,
+    EventType,
+    ModelType,
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
@@ -18,7 +23,7 @@ from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
@@ -166,3 +171,71 @@ async def init_entry(
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def remove_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    ufp_devices: list[ProtectAdoptableDeviceModel],
+) -> None:
+    """Remove all entities for given Protect devices."""
+
+    for ufp_device in ufp_devices:
+        if not ufp_device.is_adopted_by_us:
+            continue
+
+        devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
+        del devices[ufp_device.id]
+
+        mock_msg = Mock()
+        mock_msg.changed_data = {}
+        mock_msg.old_obj = ufp_device
+        mock_msg.new_obj = None
+        ufp.ws_msg(mock_msg)
+
+    await time_changed(hass, 30)
+
+
+async def adopt_devices(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    ufp_devices: list[ProtectAdoptableDeviceModel],
+    fully_adopt: bool = False,
+):
+    """Emit WS to re-adopt give Protect devices."""
+
+    for ufp_device in ufp_devices:
+        if fully_adopt:
+            ufp_device.is_adopted = True
+            ufp_device.is_adopted_by_other = False
+            ufp_device.can_adopt = False
+
+        devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
+        devices[ufp_device.id] = ufp_device
+
+        mock_msg = Mock()
+        mock_msg.changed_data = {}
+        mock_msg.new_obj = Event(
+            api=ufp_device.api,
+            id=random_hex(24),
+            smart_detect_types=[],
+            smart_detect_event_ids=[],
+            type=EventType.DEVICE_ADOPTED,
+            start=dt_util.utcnow(),
+            score=100,
+            metadata={"device_id": ufp_device.id},
+            model=ModelType.EVENT,
+        )
+        ufp.ws_msg(mock_msg)
+
+    await hass.async_block_till_done()
+
+
+def get_device_from_ufp_device(
+    hass: HomeAssistant, device: ProtectAdoptableDeviceModel
+) -> dr.DeviceEntry | None:
+    """Return all device by type."""
+    registry = dr.async_get(hass)
+    return registry.async_get_device(
+        identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+    )

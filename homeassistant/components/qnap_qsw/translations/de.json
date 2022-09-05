@@ -9,6 +9,12 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwort",

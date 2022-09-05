@@ -100,7 +100,7 @@ class HueBridge:
         if self.api_version == 1:
             if self.api.sensors is not None:
                 self.sensor_manager = SensorManager(self)
-            self.hass.config_entries.async_setup_platforms(
+            await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v1
             )
 
@@ -108,7 +108,7 @@ class HueBridge:
         else:
             await async_setup_devices(self)
             await async_setup_hue_events(self)
-            self.hass.config_entries.async_setup_platforms(
+            await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v2
             )
 

@@ -6,6 +6,11 @@
             "is_on": "{entity_name} je zapnuto",
             "is_paused": "{entity_name} je pozastaven",
             "is_playing": "{entity_name} p\u0159ehr\u00e1v\u00e1"
+        },
+        "trigger_type": {
+            "changed_states": "{entity_name} zm\u011bnil stavy",
+            "paused": "{entity_name} je pozastaveno",
+            "turned_on": "{entity_name} bylo zapnuto"
         }
     },
     "state": {

@@ -21,10 +21,51 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    remove_entities,
 )
+
+
+async def test_number_sensor_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, unadopted_camera: Camera
+):
+    """Test removing and re-adding a camera device."""
+
+    await init_entry(hass, ufp, [camera, unadopted_camera])
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
+    await remove_entities(hass, ufp, [camera, unadopted_camera])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, ufp, [camera, unadopted_camera])
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
+
+
+async def test_number_sensor_light_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.NUMBER, 2, 2)
+    await remove_entities(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.NUMBER, 2, 2)
+
+
+async def test_number_lock_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
+    await remove_entities(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
 
 
 async def test_number_setup_light(
@@ -112,7 +153,7 @@ async def test_number_light_sensitivity(
     description = LIGHT_NUMBERS[0]
     assert description.ufp_set_method is not None
 
-    light.__fields__["set_sensitivity"] = Mock()
+    light.__fields__["set_sensitivity"] = Mock(final=False)
     light.set_sensitivity = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
@@ -134,7 +175,7 @@ async def test_number_light_duration(
 
     description = LIGHT_NUMBERS[1]
 
-    light.__fields__["set_duration"] = Mock()
+    light.__fields__["set_duration"] = Mock(final=False)
     light.set_duration = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
@@ -160,7 +201,7 @@ async def test_number_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_method] = Mock()
+    camera.__fields__[description.ufp_set_method] = Mock(final=False)
     setattr(camera, description.ufp_set_method, AsyncMock())
     set_method = getattr(camera, description.ufp_set_method)
 
@@ -183,7 +224,7 @@ async def test_number_lock_auto_close(
 
     description = DOORLOCK_NUMBERS[0]
 
-    doorlock.__fields__["set_auto_close_time"] = Mock()
+    doorlock.__fields__["set_auto_close_time"] = Mock(final=False)
     doorlock.set_auto_close_time = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, doorlock, description)

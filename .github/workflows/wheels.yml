@@ -50,6 +50,10 @@ jobs:
 
             # Fix out of memory issues with rust
             echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
+
+            # OpenCV headless installation
+            echo "CI_BUILD=1"
+            echo "ENABLE_HEADLESS=1"
           ) > .env_file
 
       - name: Upload env_file
@@ -138,13 +142,23 @@ jobs:
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+            sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
           done
 
-      - name: Adjust ENV
+      - name: Adjust build env
         run: |
           if [ "${{ matrix.arch }}" = "i386" ]; then
             echo "NPY_DISABLE_SVML=1" >> .env_file
           fi
+
+          (
+            # cmake > 3.22.2 have issue on arm
+            # Tested until 3.22.5
+            echo "cmake==3.22.2"
+          ) >> homeassistant/package_constraints.txt
+
+          # Do not pin numpy in wheels building
+          sed -i "/numpy/d" homeassistant/package_constraints.txt
 
       - name: Build wheels
         uses: home-assistant/wheels@2022.06.7
@@ -154,7 +168,7 @@ jobs:
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran"
+          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev"
           skip-binary: aiohttp;grpcio
           legacy: true
           constraints: "homeassistant/package_constraints.txt"

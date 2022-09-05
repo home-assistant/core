@@ -1,6 +1,9 @@
 """Binary sensor platform for hvv_departures."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectorError
 import async_timeout
@@ -136,12 +139,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self.coordinator.data[self.idx]["state"]
 
     @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         return (
             self.coordinator.last_update_success
@@ -180,7 +178,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return BinarySensorDeviceClass.PROBLEM
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not (
             self.coordinator.last_update_success
@@ -193,13 +191,13 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if v is not None
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
