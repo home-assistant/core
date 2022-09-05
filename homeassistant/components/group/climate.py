@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from statistics import mean
 from typing import Any
 
 import voluptuous as vol
@@ -42,8 +43,6 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -70,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_CELSIUS): cv.string,
+        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
     }
 )
@@ -92,7 +91,6 @@ HVAC_ACTIONS_PRIORITY = [
     HVACAction.FAN,
     HVACAction.IDLE,
     HVACAction.OFF,
-    None,
 ]
 
 
@@ -109,7 +107,7 @@ async def async_setup_platform(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
-                config[CONF_TEMPERATURE_UNIT],
+                config.get(CONF_TEMPERATURE_UNIT, hass.config.units.temperature_unit),
             )
         ]
     )
@@ -120,7 +118,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Light Group config entry."""
+    """Initialize Climate Group config entry."""
     registry = er.async_get(hass)
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
@@ -132,7 +130,9 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
-                config_entry.options[CONF_TEMPERATURE_UNIT],
+                config_entry.options.get(
+                    CONF_TEMPERATURE_UNIT, hass.config.units.temperature_unit
+                ),
             )
         ]
     )
@@ -145,7 +145,11 @@ class ClimateGroup(GroupEntity, ClimateEntity):
     _attr_assumed_state: bool = True
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], unit: str
+        self,
+        unique_id: str | None,
+        name: str,
+        entity_ids: list[str],
+        temperature_unit: str,
     ) -> None:
         """Initialize a climate group."""
         self._entity_ids = entity_ids
@@ -154,10 +158,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         self._attr_unique_id = unique_id
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
 
-        if "c" in unit.lower():
-            self._attr_temperature_unit = TEMP_CELSIUS
-        else:
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
+        self._attr_temperature_unit = temperature_unit
 
         # Set some defaults (will be overwritten on update)
         self._attr_supported_features = 0
@@ -206,13 +207,9 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
 
-        def _mean(*args: float) -> float:
-            """Return the mean of the supplied values."""
-            return sum(args) / len(args)
-
         # Temperature settings
         self._attr_target_temperature = reduce_attribute(
-            states, ATTR_TEMPERATURE, reduce=_mean
+            states, ATTR_TEMPERATURE, reduce=lambda *data: mean(data)
         )
 
         self._attr_target_temperature_step = reduce_attribute(
@@ -220,14 +217,14 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         )
 
         self._attr_target_temperature_low = reduce_attribute(
-            states, ATTR_TARGET_TEMP_LOW, reduce=_mean
+            states, ATTR_TARGET_TEMP_LOW, reduce=lambda *data: mean(data)
         )
         self._attr_target_temperature_high = reduce_attribute(
-            states, ATTR_TARGET_TEMP_HIGH, reduce=_mean
+            states, ATTR_TARGET_TEMP_HIGH, reduce=lambda *data: mean(data)
         )
 
         self._attr_current_temperature = reduce_attribute(
-            states, ATTR_CURRENT_TEMPERATURE, reduce=_mean
+            states, ATTR_CURRENT_TEMPERATURE, reduce=lambda *data: mean(data)
         )
 
         self._attr_min_temp = reduce_attribute(states, ATTR_MIN_TEMP, reduce=max)
