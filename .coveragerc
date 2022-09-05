@@ -728,7 +728,6 @@ omit =
     homeassistant/components/melnor/__init__.py
     homeassistant/components/melnor/const.py
     homeassistant/components/melnor/models.py
-    homeassistant/components/melnor/switch.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/met_eireann/__init__.py
