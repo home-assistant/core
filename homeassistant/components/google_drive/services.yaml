@@ -1,0 +1,24 @@
+append_sheet:
+  name: Append to Sheet
+  description: Append data to a worksheet in Google Sheets.
+  fields:
+    config_entry:
+      name: Config entry
+      description: Config entry to use.
+      required: true
+      selector:
+        config_entry:
+          integration: google_drive
+    worksheet:
+      name: Worksheet
+      description: Name of the worksheet. Defaults to the first one in the document.
+      example: "Sheet1"
+      selector:
+        text:
+    data:
+      name: Data
+      description: Data to be appended to the worksheet. This puts the data on a new row, one value per column.
+      required: true
+      example: '- "foo" or ["foo"]'
+      selector:
+        object:
