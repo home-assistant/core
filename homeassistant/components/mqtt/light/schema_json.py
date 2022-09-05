@@ -197,6 +197,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._color_mode = None
         self._color_temp = None
         self._effect = None
+        self._fixed_color_mode = None
         self._flash_times = None
         self._hs = None
         self._rgb = None
@@ -237,10 +238,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if config[CONF_HS] or config[CONF_RGB] or config[CONF_XY]:
                 color_modes.add(ColorMode.HS)
             self._supported_color_modes = filter_supported_color_modes(color_modes)
+            if len(self._supported_color_modes) == 1:
+                self._fixed_color_mode = next(iter(self._supported_color_modes))
         else:
             self._supported_color_modes = self._config[CONF_SUPPORTED_COLOR_MODES]
-        if len(self._supported_color_modes) == 1:
-            self._color_mode = next(iter(self._supported_color_modes))
+            if len(self._supported_color_modes) == 1:
+                self._color_mode = next(iter(self._supported_color_modes))
 
     def _update_color(self, values):
         if not self._config[CONF_COLOR_MODE]:
@@ -337,22 +340,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._state = None
 
             if (
-                ColorMode.COLOR_TEMP in self._supported_color_modes
-                and not self._config[CONF_COLOR_MODE]
-            ):
-                # Deprecated color handling
-                try:
-                    if values["color_temp"] is None:
-                        self._color_temp = None
-                    else:
-                        self._hs = None
-                        self._color_temp = int(values["color_temp"])
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid color temp value received")
-
-            if (
                 not self._config[CONF_COLOR_MODE]
                 and color_supported(self._supported_color_modes)
                 and "color" in values
@@ -361,7 +348,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 if values["color"] is None:
                     self._hs = None
                 else:
-                    self._color_temp = None
                     self._update_color(values)
 
             if self._config[CONF_COLOR_MODE] and "color_mode" in values:
@@ -378,6 +364,21 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     pass
                 except (TypeError, ValueError):
                     _LOGGER.warning("Invalid brightness value received")
+
+            if (
+                ColorMode.COLOR_TEMP in self._supported_color_modes
+                and not self._config[CONF_COLOR_MODE]
+            ):
+                # Deprecated color handling
+                try:
+                    if values["color_temp"] is None:
+                        self._color_temp = None
+                    else:
+                        self._color_temp = int(values["color_temp"])
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning("Invalid color temp value received")
 
             if self._supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
@@ -485,7 +486,15 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @property
     def color_mode(self):
         """Return current color mode."""
-        return self._color_mode
+        if self._config[CONF_COLOR_MODE]:
+            return self._color_mode
+        if self._fixed_color_mode:
+            # Legacy light with support for a single color mode
+            return self._fixed_color_mode
+        # Legacy light with support for ct + hs, prioritize hs
+        if self._hs is not None:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
 
     @property
     def supported_color_modes(self):
@@ -536,6 +545,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_HS_COLOR in kwargs and (
             self._config[CONF_HS] or self._config[CONF_RGB] or self._config[CONF_XY]
         ):
+            # Legacy color handling
             hs_color = kwargs[ATTR_HS_COLOR]
             message["color"] = {}
             if self._config[CONF_RGB]:
@@ -560,7 +570,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 message["color"]["s"] = hs_color[1]
 
             if self._optimistic:
-                self._color_mode = ColorMode.HS
+                self._color_temp = None
                 self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
@@ -632,6 +642,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if self._optimistic:
                 self._color_mode = ColorMode.COLOR_TEMP
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
+                self._hs = None
                 should_update = True
 
         if ATTR_EFFECT in kwargs:
