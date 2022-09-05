@@ -1,4 +1,5 @@
 """The tests for the MQTT discovery."""
+import copy
 import json
 from pathlib import Path
 import re
@@ -1384,6 +1385,24 @@ async def test_clear_config_topic_disabled_entity(
         "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
         json.dumps(config),
     )
+    # discover an entity that is not unique (part 1), will be added
+    config_not_unique1 = copy.deepcopy(config)
+    config_not_unique1["name"] = "sbfspot_12345_1"
+    config_not_unique1["unique_id"] = "not_unique"
+    config_not_unique1.pop("enabled_by_default")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+        json.dumps(config),
+    )
+    # discover an entity that is not unique (part 2), will not be added
+    config_not_unique2 = copy.deepcopy(config_not_unique1)
+    config_not_unique2["name"] = "sbfspot_12345_2"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
+        json.dumps(config),
+    )
     await hass.async_block_till_done()
 
     # Verify device is created
@@ -1395,10 +1414,13 @@ async def test_clear_config_topic_disabled_entity(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    # Assert the discovery topic is cleared
-
-    mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True
+    # Assert the discovery topics are all cleared
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True),
+            call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True),
+            call("homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config", "", 0, True),
+        ]
     )
 
 
