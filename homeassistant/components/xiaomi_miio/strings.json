@@ -61,5 +61,33 @@
         }
       }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "alarm_triggering": "Alarm triggering",
+      "open": "Open",
+      "close": "Close",
+      "motion": "Motion",
+      "no_motion": "No motion",
+      "move": "Move",
+      "flip90": "Flip 90 degrees",
+      "flip180": "Flip 180 degrees",
+      "taptap": "Tap twice",
+      "shakeair": "Shake in the air",
+      "shake": "Shake",
+      "rotate": "Rotate",
+      "vibrate": "Vibrate",
+      "tilt": "Tilt",
+      "free_fall": "Free fall",
+      "click_ch0": "Click channel 0",
+      "d_click_ch0": "Double click channel 0",
+      "l_click_ch0": "Long click channel 0",
+      "click_ch1": "Click channel 1",
+      "d_click_ch1": "Double click channel 1",
+      "l_click_ch1": "Long click channel 1",
+      "both_click": "Both click",
+      "both_d_click": "Both double click",
+      "both_l_click": "Both long click",
+      "l_click_pres": "Release after long click"
   }
 }
