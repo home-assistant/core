@@ -17,13 +17,13 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.components.update.const import UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, Event as HAEvent, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
@@ -71,7 +71,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, driver: Driver, node: ZwaveNode, semaphore: Semaphore) -> None:
+    def __init__(
+        self, driver: Driver, node: ZwaveNode, semaphore: asyncio.Semaphore
+    ) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
@@ -79,7 +81,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
-        self._started_unsub: Callable[[], None] | None = None
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -89,23 +90,24 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         # device may not be precreated in main handler yet
         self._attr_device_info = get_device_info(driver, node)
 
+    @callback
     def _update_on_status_change(self, _: dict[str, Any]) -> None:
         """Update the entity when node is awake."""
         self._status_unsub = None
         self.hass.async_create_task(self._async_update())
 
-    async def _async_update(self, _: HAEvent | datetime | None = None) -> None:
+    async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
         for status, event_name in (
             (NodeStatus.ASLEEP, "wake up"),
             (NodeStatus.DEAD, "alive"),
         ):
             if self.node.status == status:
-                if self._status_unsub:
-                    return
-                self._status_unsub = self.node.once(
-                    event_name, self._update_on_status_change
-                )
+                if not self._status_unsub:
+                    self._status_unsub = self.node.once(
+                        event_name, self._update_on_status_change
+                    )
+                return
 
         async with self.semaphore:
             if available_firmware_updates := (
@@ -120,15 +122,11 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 # If we have an available firmware update that is a higher version than
                 # what's on the node, we should advertise it, otherwise we are on the
                 # latest version
-                if (
-                    firmware := self._latest_version_firmware
-                ) is None or AwesomeVersion(firmware.version) <= AwesomeVersion(
-                    self.node.firmware_version
-                ):
-                    return
-
-                self._attr_latest_version = firmware.version
-                self.async_write_ha_state()
+                if (firmware := self._latest_version_firmware) and AwesomeVersion(
+                    firmware.version
+                ) > AwesomeVersion(self.node.firmware_version):
+                    self._attr_latest_version = firmware.version
+                    self.async_write_ha_state()
 
         self._poll_unsub = async_call_later(
             self.hass, timedelta(days=1), self._async_update
@@ -187,12 +185,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
-        if self.hass.state == CoreState.running:
-            self.hass.async_create_task(self._async_update())
-        elif self.hass.state == CoreState.starting:
-            self._started_unsub = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, self._async_update
-            )
+        self.async_on_remove(async_at_start(self.hass, self._async_update))
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
@@ -203,7 +196,3 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None
-
-        if self._started_unsub:
-            self._started_unsub()
-            self._started_unsub = None

@@ -16,13 +16,7 @@ from homeassistant.components.update.const import (
 )
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_STARTED,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import CoreState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import datetime as dt_util
@@ -277,7 +271,7 @@ async def test_update_entity_ha_not_running(
     zen_31,
 ):
     """Test update occurs after HA starts."""
-    hass.state = CoreState.starting
+    await hass.async_stop()
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -286,12 +280,9 @@ async def test_update_entity_ha_not_running(
 
     assert len(client.async_send_command.call_args_list) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
+    await hass.async_start()
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
-
-    await hass.config_entries.async_unload(entry.entry_id)
