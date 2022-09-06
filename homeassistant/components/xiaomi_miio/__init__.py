@@ -452,8 +452,10 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hw_version=gateway_info.hardware_version,
     )
 
-    gateway.gateway_device.register_callback(f"{gateway_id}_event", event_callback_factory(gateway_entry.id))
-    await gateway.gateway_device.subscribe_events()
+    gateway.gateway_device.register_callback(
+        f"{gateway_id}_event", event_callback_factory(gateway_entry.id)
+    )
+    await gateway.gateway_device.alarm.subscribe_events()
 
     # Register subdevices and event callbacks
     for sub_device in gateway.gateway_device.devices.values():
@@ -467,8 +469,10 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
             sw_version=sub_device.firmware_version,
             hw_version=sub_device.zigbee_model,
         )
-        
-        sub_device.register_callback(f"{sub_device.sid}_event", event_callback_factory(device_entry.id))
+
+        sub_device.register_callback(
+            f"{sub_device.sid}_event", event_callback_factory(device_entry.id)
+        )
         await sub_device.subscribe_events()
 
     def update_data_factory(sub_device):
