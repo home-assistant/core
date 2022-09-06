@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from math import floor
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -11,7 +12,7 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import FirmwareUpdateInfo
+from zwave_js_server.model.firmware import FirmwareUpdateInfo, FirmwareUpdateProgress
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
@@ -63,7 +64,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.RELEASE_NOTES
+        | UpdateEntityFeature.PROGRESS
     )
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -78,6 +81,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
+        self._progress_unsub: Callable[[], None] | None = None
+        self._num_files_installed: int = 0
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -92,6 +97,22 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         """Update the entity when node is awake."""
         self._status_unsub = None
         self.hass.async_create_task(self._async_update())
+
+    @callback
+    def _update_progress(self, evt: dict[str, Any]) -> None:
+        """Update install progress on event."""
+        progress: FirmwareUpdateProgress = evt["firmware_update_progress"]
+        if not self._latest_version_firmware:
+            return
+        self._attr_in_progress = floor(
+            100
+            * (
+                self._num_files_installed
+                + (progress.sent_fragments / progress.total_fragments)
+            )
+            / len(self._latest_version_firmware.files)
+        )
+        self.async_write_ha_state()
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
@@ -153,15 +174,31 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         firmware = self._latest_version_firmware
         assert firmware
         try:
+            self._attr_in_progress = 0
+            self.async_write_ha_state()
+            self._progress_unsub = self.node.on(
+                "firmware update progress", self._update_progress
+            )
             for file in firmware.files:
                 await self.driver.controller.async_begin_ota_firmware_update(
                     self.node, file
                 )
+                self._num_files_installed += 1
+                self._attr_in_progress = floor(
+                    100 * self._num_files_installed / len(firmware.files)
+                )
+                self.async_write_ha_state()
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(err) from err
         else:
             self._attr_installed_version = self._attr_latest_version = firmware.version
             self._latest_version_firmware = None
+        finally:
+            if self._progress_unsub:
+                self._progress_unsub()
+                self._progress_unsub = None
+            self._num_files_installed = 0
+            self._attr_in_progress = False
             self.async_write_ha_state()
 
     async def async_poll_value(self, _: bool) -> None:
@@ -200,3 +237,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None
+
+        if self._progress_unsub:
+            self._progress_unsub()
+            self._progress_unsub = None
