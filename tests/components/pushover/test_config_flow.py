@@ -48,12 +48,12 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_CONFIG
 
 
-async def test_flow_user_key_already_configured(hass: HomeAssistant) -> None:
-    """Test user initialized flow with duplicate user key."""
+async def test_flow_user_key_api_key_exists(hass: HomeAssistant) -> None:
+    """Test user initialized flow with duplicate user key / api key pair."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        unique_id="MYUSERKEY",
+        unique_id="MYUSERKEY-MYAPIKEY",
     )
 
     entry.add_to_hass(hass)

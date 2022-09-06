@@ -87,7 +87,9 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USER_KEY])
+            await self.async_set_unique_id(
+                f"{user_input[CONF_USER_KEY]}-{user_input[CONF_API_KEY]}"
+            )
             self._abort_if_unique_id_configured()
 
             self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
