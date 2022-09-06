@@ -8,7 +8,6 @@ from datetime import datetime as dt, timedelta
 import logging
 from typing import Any
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -32,7 +31,6 @@ from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
 EVENT_COALESCE_TIME = 0.35
-MAX_RECORDER_WAIT = 60
 # minimum size that we will split the query
 BIG_QUERY_HOURS = 25
 # how many hours to deliver in the first chunk when we split the query
@@ -57,17 +55,6 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the logbook websocket API."""
     websocket_api.async_register_command(hass, ws_get_events)
     websocket_api.async_register_command(hass, ws_event_stream)
-
-
-async def _async_wait_for_recorder_sync(hass: HomeAssistant) -> None:
-    """Wait for the recorder to sync."""
-    try:
-        async with async_timeout.timeout(MAX_RECORDER_WAIT):
-            await get_instance(hass).async_block_till_done()
-    except asyncio.TimeoutError:
-        _LOGGER.debug(
-            "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
-        )
 
 
 @callback
@@ -410,7 +397,7 @@ async def ws_event_stream(
     )
 
     live_stream.wait_sync_task = asyncio.create_task(
-        _async_wait_for_recorder_sync(hass)
+        get_instance(hass).async_block_till_done()
     )
     if msg_id not in connection.subscriptions:
         # Unsubscribe happened while waiting for recorder
@@ -423,20 +410,13 @@ async def ws_event_stream(
     # so we can switch over to using the subscriptions
     #
     # We only want events that happened after the last event
-    # we had from the last database query or the maximum
-    # time we allow the recorder to be behind
+    # we had from the last database query
     #
-    max_recorder_behind = subscriptions_setup_complete_time - timedelta(
-        seconds=MAX_RECORDER_WAIT
-    )
-    second_fetch_start_time = max(
-        last_event_time or max_recorder_behind, max_recorder_behind
-    )
     await _async_send_historical_events(
         hass,
         connection,
         msg_id,
-        second_fetch_start_time,
+        last_event_time or start_time,
         subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,
