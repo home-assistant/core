@@ -1,10 +1,12 @@
 """The base entity for the rest component."""
+from __future__ import annotations
 
 from abc import abstractmethod
 from typing import Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .data import RestData
@@ -15,29 +17,20 @@ class RestEntity(Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[Any] | None,
         rest: RestData,
-        resource_template,
-        force_update,
+        resource_template: Template | None,
+        force_update: bool,
     ) -> None:
         """Create the entity that may have a coordinator."""
         self.coordinator = coordinator
         self.rest = rest
         self._resource_template = resource_template
-        self._force_update = force_update
+        self._attr_should_poll = not self.coordinator
+        self._attr_force_update = force_update
 
     @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll only if we do not have a coordinator."""
-        return not self.coordinator
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return the availability of this sensor."""
         if self.coordinator and not self.coordinator.last_update_success:
             return False
@@ -58,7 +51,7 @@ class RestEntity(Entity):
         self._update_from_rest_data()
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from REST API and update the state."""
         if self.coordinator:
             await self.coordinator.async_request_refresh()
@@ -70,5 +63,5 @@ class RestEntity(Entity):
         self._update_from_rest_data()
 
     @abstractmethod
-    def _update_from_rest_data(self):
+    def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
