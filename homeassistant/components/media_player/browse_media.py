@@ -19,12 +19,7 @@ from homeassistant.helpers.network import (
     is_hass_url,
 )
 
-from .const import (
-    CONTENT_AUTH_EXPIRY_TIME,
-    MEDIA_CLASS_DIRECTORY,
-    MediaClass,
-    MediaType,
-)
+from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
@@ -120,7 +115,7 @@ class BrowseMedia:
         self.thumbnail = thumbnail
         self.not_shown = not_shown
 
-    def as_dict(self, *, parent: bool = True) -> dict:
+    def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert Media class to browse media dictionary."""
         if self.children_media_class is None and self.children:
             self.calculate_children_class()
@@ -152,7 +147,7 @@ class BrowseMedia:
 
     def calculate_children_class(self) -> None:
         """Count the children media classes and calculate the correct class."""
-        self.children_media_class = MEDIA_CLASS_DIRECTORY
+        self.children_media_class = MediaClass.DIRECTORY
         assert self.children is not None
         proposed_class = self.children[0].media_class
         if all(child.media_class == proposed_class for child in self.children):
