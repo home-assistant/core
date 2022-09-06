@@ -112,7 +112,7 @@ class VultrSensor(SensorEntity):
         except (TypeError, ValueError):
             return self.data.get(self.entity_description.key)
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]
