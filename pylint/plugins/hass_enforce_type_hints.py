@@ -2561,7 +2561,6 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
 
 
 def _check_ancestry(infer_node: nodes.FunctionDef, valid_types: set[str]) -> bool:
-    ancestor: nodes.ClassDef
     if isinstance(infer_node, nodes.ClassDef):
         if infer_node.name in valid_types:
             return True
