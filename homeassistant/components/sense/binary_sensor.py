@@ -126,7 +126,7 @@ class SenseDevice(BinarySensorEntity):
         """Return the device class of the binary sensor."""
         return BinarySensorDeviceClass.POWER
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
