@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from scsgate.messages import ScenarioTriggeredMessage, StateMessage
 from scsgate.tasks import ToggleStatusTask
@@ -116,7 +117,7 @@ class SCSGateSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self._toggled
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
 
         self._scsgate.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
@@ -124,7 +125,7 @@ class SCSGateSwitch(SwitchEntity):
         self._toggled = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
 
         self._scsgate.append_task(ToggleStatusTask(target=self._scs_id, toggled=False))
