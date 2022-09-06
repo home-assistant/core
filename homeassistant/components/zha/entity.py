@@ -54,7 +54,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
         self._name: str = ""
-        self._force_update: bool = False
         self._unique_id: str = unique_id
         if self.unique_id_suffix:
             self._unique_id += f"-{self.unique_id_suffix}"
@@ -83,11 +82,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return self._extra_state_attributes
-
-    @property
-    def force_update(self) -> bool:
-        """Force update this entity."""
-        return self._force_update
 
     @property
     def device_info(self) -> entity.DeviceInfo:
