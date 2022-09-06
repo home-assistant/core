@@ -91,8 +91,8 @@ DEFAULT_CONFIG = {
 
 DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 DEFAULT_CONFIG_LEGACY = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
 DEFAULT_CONFIG_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
 DEFAULT_CONFIG_2_LEGACY = deepcopy(DEFAULT_CONFIG_2[mqtt.DOMAIN])
@@ -1014,8 +1014,8 @@ async def test_setup_manual_entity_from_yaml(hass):
     assert hass.states.get(f"{platform}.test") is not None
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
     """Test a setup with deprecated yaml platform schema."""
     domain = vacuum.DOMAIN

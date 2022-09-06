@@ -2707,8 +2707,8 @@ async def test_subscribe_connection_status(
     assert mqtt_connected_calls[1] is False
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_one_deprecation_warning_per_platform(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
@@ -2802,8 +2802,8 @@ async def test_reload_entry_with_new_config(hass, tmp_path):
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
         },
-        # YAML configuration under the platform key is deprecated.
-        # Support and will be removed as with HA 2022.12
+        # Test deprecated YAML configuration under the platform key
+        # Scheduled to be removed in HA core 2022.12
         "light": [
             {
                 "platform": "mqtt",
@@ -2829,8 +2829,8 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
         "mqtt": {
             "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
         },
-        # YAML configuration under the platform key is deprecated.
-        # Support and will be removed as with HA 2022.12
+        # Test deprecated YAML configuration under the platform key
+        # Scheduled to be removed in HA core 2022.12
         "light": [
             {
                 "platform": "mqtt",

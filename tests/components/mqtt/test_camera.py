@@ -45,8 +45,8 @@ from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
 DEFAULT_CONFIG_LEGACY[camera.DOMAIN]["platform"] = mqtt.DOMAIN
 
@@ -450,8 +450,8 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     )
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
     """Test a setup with deprecated yaml platform schema."""
     domain = camera.DOMAIN
