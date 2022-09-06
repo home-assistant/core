@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.network import is_host_valid
@@ -24,7 +25,6 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
-    CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     CONF_USE_PSK,
     DOMAIN,
@@ -68,8 +68,9 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if use_psk:
             await self.client.connect(psk=pin)
         else:
+            clientid, nickname = await self.gen_instance_id()
             await self.client.connect(
-                pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                pin=pin, clientid=clientid, nickname=nickname
             )
         await self.client.set_wol_mode(True)
 
@@ -110,6 +111,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Authorize Bravia TV device."""
         errors: dict[str, str] = {}
+        clientid, nickname = await self.gen_instance_id()
 
         if user_input is not None:
             self.device_config[CONF_PIN] = user_input[CONF_PIN]
@@ -126,7 +128,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self.client
 
         try:
-            await self.client.pair(CLIENTID_PREFIX, NICKNAME)
+            await self.client.pair(clientid, nickname)
         except BraviaTVError:
             return self.async_abort(reason="no_ip_control")
 
@@ -201,8 +203,9 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if use_psk:
                     await self.client.connect(psk=pin)
                 else:
+                    clientid, nickname = await self.gen_instance_id()
                     await self.client.connect(
-                        pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                        pin=pin, clientid=clientid, nickname=nickname
                     )
                 await self.client.set_wol_mode(True)
             except BraviaTVError:
@@ -229,6 +232,10 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def gen_instance_id(self) -> tuple[str, str]:
+        """Generate clientid and nickname."""
+        uuid = await instance_id.async_get(self.hass)
+        return uuid, NICKNAME.format(instance_id=uuid[:6]
 
 class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options for Bravia TV."""

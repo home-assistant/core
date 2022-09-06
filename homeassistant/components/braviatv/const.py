@@ -11,6 +11,5 @@ ATTR_MODEL: Final = "model"
 CONF_IGNORED_SOURCES: Final = "ignored_sources"
 CONF_USE_PSK: Final = "use_psk"
 
-CLIENTID_PREFIX: Final = "HomeAssistant"
 DOMAIN: Final = "braviatv"
-NICKNAME: Final = "Home Assistant"
+NICKNAME: Final = "Home Assistant {instance_id}"
