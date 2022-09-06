@@ -19,7 +19,7 @@ from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import datetime as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -168,7 +168,6 @@ async def test_update_entity_install_failure(
     climate_radio_thermostat_ct100_plus_different_endpoints,
     controller_node,
     integration,
-    hass_ws_client,
 ):
     """Test update entity failed install."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -268,6 +267,7 @@ async def test_update_entity_ha_not_running(
     hass,
     client,
     zen_31,
+    hass_ws_client,
 ):
     """Test update occurs after HA starts."""
     await hass.async_stop()
@@ -293,7 +293,6 @@ async def test_update_entity_failure(
     climate_radio_thermostat_ct100_plus_different_endpoints,
     controller_node,
     integration,
-    hass_ws_client,
 ):
     """Test update entity update failed."""
     assert len(client.async_send_command.call_args_list) == 0
@@ -305,3 +304,4 @@ async def test_update_entity_failure(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     assert state.state == STATE_OFF
+    assert len(client.async_send_command.call_args_list) == 1
