@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "invalid_ip": "Adre\u00e7a IP inv\u00e0lida",
+            "invalid_serial": "N\u00famero de s\u00e8rie inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP",
+                    "serial": "N\u00famero de s\u00e8rie (12 d\u00edgits)"
+                }
+            }
+        }
+    }
+}

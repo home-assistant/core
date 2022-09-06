@@ -125,9 +125,16 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 
     def __init__(self, group, uid_part):
         """Initialize the Snapcast group device."""
-        group.set_callback(self.schedule_update_ha_state)
         self._group = group
         self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to group events."""
+        self._group.set_callback(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect group object when removed."""
+        self._group.set_callback(None)
 
     @property
     def state(self):
@@ -213,9 +220,16 @@ class SnapcastClientDevice(MediaPlayerEntity):
 
     def __init__(self, client, uid_part):
         """Initialize the Snapcast client device."""
-        client.set_callback(self.schedule_update_ha_state)
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to client events."""
+        self._client.set_callback(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect client object when removed."""
+        self._client.set_callback(None)
 
     @property
     def unique_id(self):

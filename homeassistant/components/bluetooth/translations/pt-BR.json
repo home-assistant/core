@@ -34,7 +34,7 @@
             "init": {
                 "data": {
                     "adapter": "O adaptador Bluetooth a ser usado para escaneamento",
-                    "passive": "Escuta passiva"
+                    "passive": "Varredura passiva"
                 },
                 "description": "A escuta passiva requer BlueZ 5.63 ou posterior com recursos experimentais ativados."
             }

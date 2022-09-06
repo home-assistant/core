@@ -137,6 +137,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     DEFAULT_MAX_TEMP = 35
     DEFAULT_MIN_TEMP = 7
 
+    _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
@@ -263,11 +264,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC operation modes."""
         return SEQ_OF_OPERATION.get(self._thrm.ctrl_sequence_of_oper, [HVACMode.OFF])
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def preset_mode(self) -> str:

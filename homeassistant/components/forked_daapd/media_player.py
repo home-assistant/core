@@ -1,4 +1,6 @@
 """This library brings support for forked_daapd to Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
@@ -8,7 +10,7 @@ from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -35,6 +37,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     CALLBACK_TIMEOUT,
+    CAN_PLAY_TYPE,
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
@@ -769,6 +772,18 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             )()
         _LOGGER.warning("No pipe control available for %s", pipe_name)
 
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda bm: bm.media_content_type in CAN_PLAY_TYPE,
+        )
+
 
 class ForkedDaapdUpdater:
     """Manage updates for the forked-daapd device."""
@@ -885,11 +900,3 @@ class ForkedDaapdUpdater:
                 self._api,
                 outputs_to_add,
             )
-
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
-        """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
-        )

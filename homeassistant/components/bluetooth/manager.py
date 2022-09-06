@@ -54,6 +54,10 @@ if TYPE_CHECKING:
 
 FILTER_UUIDS: Final = "UUIDs"
 
+APPLE_MFR_ID: Final = 76
+APPLE_HOMEKIT_START_BYTE: Final = 0x06  # homekit_controller
+APPLE_DEVICE_ID_START_BYTE: Final = 0x10  # bluetooth_le_tracker
+APPLE_START_BYTES_WANTED: Final = {APPLE_DEVICE_ID_START_BYTE, APPLE_HOMEKIT_START_BYTE}
 
 RSSI_SWITCH_THRESHOLD = 6
 
@@ -221,10 +225,14 @@ class BluetoothManager:
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""
-        return itertools.chain.from_iterable(
-            scanner.discovered_devices
-            for scanner in self._get_scanners_by_type(connectable)
+        yield from itertools.chain.from_iterable(
+            scanner.discovered_devices for scanner in self._get_scanners_by_type(True)
         )
+        if not connectable:
+            yield from itertools.chain.from_iterable(
+                scanner.discovered_devices
+                for scanner in self._get_scanners_by_type(False)
+            )
 
     @hass_callback
     def async_discovered_devices(self, connectable: bool) -> list[BLEDevice]:
@@ -286,6 +294,19 @@ class BluetoothManager:
           than the source from the history or the timestamp
           in the history is older than 180s
         """
+
+        # Pre-filter noisy apple devices as they can account for 20-35% of the
+        # traffic on a typical network.
+        advertisement_data = service_info.advertisement
+        manufacturer_data = advertisement_data.manufacturer_data
+        if (
+            len(manufacturer_data) == 1
+            and (apple_data := manufacturer_data.get(APPLE_MFR_ID))
+            and apple_data[0] not in APPLE_START_BYTES_WANTED
+            and not advertisement_data.service_data
+        ):
+            return
+
         device = service_info.device
         connectable = service_info.connectable
         address = device.address
@@ -295,7 +316,6 @@ class BluetoothManager:
             return
 
         self._history[address] = service_info
-        advertisement_data = service_info.advertisement
         source = service_info.source
 
         if connectable:

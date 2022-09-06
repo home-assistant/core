@@ -844,6 +844,8 @@ async def integration_fixture(hass, client):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    client.async_send_command.reset_mock()
+
     return entry
 
 

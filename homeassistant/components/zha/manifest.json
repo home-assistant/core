@@ -7,7 +7,7 @@
     "bellows==0.33.1",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.78",
+    "zha-quirks==0.0.79",
     "zigpy-deconz==0.18.0",
     "zigpy==0.50.2",
     "zigpy-xbee==0.15.0",
@@ -20,6 +20,12 @@
       "pid": "EA60",
       "description": "*2652*",
       "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "1A86",
+      "pid": "55D4",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus v2"]
     },
     {
       "vid": "10C4",
@@ -87,6 +93,7 @@
       "name": "*zigate*"
     }
   ],
+  "dependencies": ["file_upload"],
   "after_dependencies": ["onboarding", "usb", "zeroconf"],
   "iot_class": "local_polling",
   "loggers": [
