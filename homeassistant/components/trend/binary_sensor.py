@@ -169,7 +169,7 @@ class SensorTrend(BinarySensorEntity):
             ATTR_SAMPLE_DURATION: self._sample_duration,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Complete device setup after being added to hass."""
 
         @callback
@@ -195,7 +195,7 @@ class SensorTrend(BinarySensorEntity):
             )
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the states."""
         # Remove outdated samples
         if self._sample_duration > 0:
