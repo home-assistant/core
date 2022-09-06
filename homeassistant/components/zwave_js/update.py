@@ -9,7 +9,7 @@ from typing import Any
 from awesomeversion import AwesomeVersion
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
-from zwave_js_server.exceptions import BaseZwaveJSServerError
+from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import FirmwareUpdateInfo
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -114,10 +114,23 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
                 )
             ):
-                self._latest_version_firmware = max(
-                    available_firmware_updates,
-                    key=lambda x: AwesomeVersion(x.version),
-                )
+                try:
+                    self._latest_version_firmware = max(
+                        available_firmware_updates,
+                        key=lambda x: AwesomeVersion(x.version),
+                    )
+                except FailedZWaveCommand as err:
+                    LOGGER.debug(
+                        "Failed to get firmware updates for node %s: %s",
+                        self.node.node_id,
+                        err,
+                    )
+                    if err.zwave_error_code == 260:
+                        self._poll_unsub = async_call_later(
+                            self.hass, timedelta(hours=1), self._async_update
+                        )
+                    return
+
                 # If we have an available firmware update that is a higher version than
                 # what's on the node, we should advertise it, otherwise we are on the
                 # latest version
