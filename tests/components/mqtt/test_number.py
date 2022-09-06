@@ -66,8 +66,13 @@ from .test_common import (
 from tests.common import async_fire_mqtt_message, mock_restore_cache_with_extra_data
 
 DEFAULT_CONFIG = {
-    number.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    mqtt.DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[number.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -82,16 +87,17 @@ async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
     topic = "test/number"
     await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "device_class": "temperature",
-                "unit_of_measurement": TEMP_FAHRENHEIT,
-                "payload_reset": "reset!",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "device_class": "temperature",
+                    "unit_of_measurement": TEMP_FAHRENHEIT,
+                    "payload_reset": "reset!",
+                }
             }
         },
     )
@@ -131,14 +137,15 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     topic = "test/number"
     await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "value_template": "{{ value_json.val }}",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "value_template": "{{ value_json.val }}",
+                }
             }
         },
     )
@@ -184,14 +191,15 @@ async def test_restore_native_value(hass, mqtt_mock_entry_with_yaml_config):
     )
     assert await async_setup_component(
         hass,
-        number.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "command_topic": topic,
-                "device_class": "temperature",
-                "unit_of_measurement": TEMP_FAHRENHEIT,
-                "name": "Test Number",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "command_topic": topic,
+                    "device_class": "temperature",
+                    "unit_of_measurement": TEMP_FAHRENHEIT,
+                    "name": "Test Number",
+                }
             }
         },
     )
@@ -220,12 +228,13 @@ async def test_run_number_service_optimistic(hass, mqtt_mock_entry_with_yaml_con
     )
     assert await async_setup_component(
         hass,
-        number.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "command_topic": topic,
-                "name": "Test Number",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "command_topic": topic,
+                    "name": "Test Number",
+                }
             }
         },
     )
@@ -295,13 +304,14 @@ async def test_run_number_service_optimistic_with_command_template(
     )
     assert await async_setup_component(
         hass,
-        number.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "command_topic": topic,
-                "name": "Test Number",
-                "command_template": '{"number": {{ value }} }',
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "command_template": '{"number": {{ value }} }',
+                }
             }
         },
     )
@@ -361,13 +371,14 @@ async def test_run_number_service(hass, mqtt_mock_entry_with_yaml_config):
 
     assert await async_setup_component(
         hass,
-        number.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "command_topic": cmd_topic,
-                "state_topic": state_topic,
-                "name": "Test Number",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "command_topic": cmd_topic,
+                    "state_topic": state_topic,
+                    "name": "Test Number",
+                }
             }
         },
     )
@@ -398,14 +409,15 @@ async def test_run_number_service_with_command_template(
 
     assert await async_setup_component(
         hass,
-        number.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "command_topic": cmd_topic,
-                "state_topic": state_topic,
-                "name": "Test Number",
-                "command_template": '{"number": {{ value }} }',
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "command_topic": cmd_topic,
+                    "state_topic": state_topic,
+                    "name": "Test Number",
+                    "command_template": '{"number": {{ value }} }',
+                }
             }
         },
     )
@@ -434,28 +446,28 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -464,7 +476,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -476,7 +488,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         number.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         MQTT_NUMBER_ATTRIBUTES_BLOCKED,
     )
 
@@ -484,7 +496,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -493,7 +505,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, number.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        number.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -502,14 +518,22 @@ async def test_update_with_json_attrs_bad_JSON(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, number.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        number.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, number.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        number.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -540,7 +564,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_number(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered number."""
-    data = json.dumps(DEFAULT_CONFIG[number.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG_LEGACY[number.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, number.DOMAIN, data
     )
@@ -600,42 +624,42 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT number device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT number device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, number.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -645,7 +669,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         number.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         SERVICE_SET_VALUE,
         service_parameters={ATTR_VALUE: 45},
         command_payload="45",
@@ -658,16 +682,17 @@ async def test_min_max_step_attributes(hass, mqtt_mock_entry_with_yaml_config):
     topic = "test/number"
     await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "min": 5,
-                "max": 110,
-                "step": 20,
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "min": 5,
+                    "max": 110,
+                    "step": 20,
+                }
             }
         },
     )
@@ -680,25 +705,24 @@ async def test_min_max_step_attributes(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get(ATTR_STEP) == 20
 
 
-async def test_invalid_min_max_attributes(hass, caplog, mqtt_mock_entry_no_yaml_config):
+async def test_invalid_min_max_attributes(hass, caplog):
     """Test invalid min/max attributes."""
     topic = "test/number"
-    await async_setup_component(
+    assert not await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "min": 35,
-                "max": 10,
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "min": 35,
+                    "max": 10,
+                }
             }
         },
     )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
 
     assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
 
@@ -779,15 +803,16 @@ async def test_mqtt_payload_not_a_number_warning(
 ):
     """Test warning for MQTT payload which is not a number."""
     topic = "test/number"
-    await async_setup_component(
+    assert await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                }
             }
         },
     )
@@ -808,15 +833,16 @@ async def test_mqtt_payload_out_of_range_error(
     topic = "test/number"
     await async_setup_component(
         hass,
-        "number",
+        mqtt.DOMAIN,
         {
-            "number": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Number",
-                "min": 5,
-                "max": 110,
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Number",
+                    "min": 5,
+                    "max": 110,
+                }
             }
         },
     )
@@ -856,7 +882,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = NUMBER_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -875,7 +901,7 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = number.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
@@ -884,7 +910,7 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = number.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
@@ -910,7 +936,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         "number",
-        DEFAULT_CONFIG["number"],
+        DEFAULT_CONFIG_LEGACY["number"],
         topic,
         value,
         attribute,
@@ -921,7 +947,7 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = number.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
     config["name"] = "test"
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
@@ -931,7 +957,20 @@ async def test_setup_manual_entity_from_yaml(hass):
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = number.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = number.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None
