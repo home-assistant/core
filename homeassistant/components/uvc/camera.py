@@ -107,7 +107,7 @@ class UnifiVideoCamera(Camera):
         return self._name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return supported features."""
         channels = self._caminfo["channels"]
         for channel in channels:
@@ -127,7 +127,7 @@ class UnifiVideoCamera(Camera):
         return attr
 
     @property
-    def is_recording(self):
+    def is_recording(self) -> bool:
         """Return true if the camera is recording."""
         recording_state = "DISABLED"
         if "recordingIndicator" in self._caminfo:
@@ -138,7 +138,7 @@ class UnifiVideoCamera(Camera):
         ] or recording_state in ("MOTION_INPROGRESS", "MOTION_FINISHED")
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Camera Motion Detection Status."""
         return self._caminfo["recordingSettings"]["motionRecordEnabled"]
 
@@ -230,11 +230,11 @@ class UnifiVideoCamera(Camera):
             _LOGGER.error("Unable to set recordmode to %s", set_mode)
             _LOGGER.debug(err)
 
-    def enable_motion_detection(self):
+    def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         self.set_motion_detection(True)
 
-    def disable_motion_detection(self):
+    def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
 
@@ -255,7 +255,7 @@ class UnifiVideoCamera(Camera):
 
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Update the info."""
         self._caminfo = self._nvr.get_camera(self._uuid)
 
