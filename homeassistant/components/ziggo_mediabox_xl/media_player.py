@@ -107,7 +107,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
         self._available = available
         self._state = None
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the state of the device."""
         try:
             if self._mediabox.test_connection():
@@ -153,25 +153,25 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
             for c in sorted(self._mediabox.channels().keys())
         ]
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.send_keys(["POWER"])
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.send_keys(["POWER"])
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self.send_keys(["PLAY"])
         self._state = STATE_PLAYING
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self.send_keys(["PAUSE"])
         self._state = STATE_PAUSED
 
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self.send_keys(["PAUSE"])
         if self._state == STATE_PAUSED:
@@ -179,12 +179,12 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
         else:
             self._state = STATE_PAUSED
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Channel up."""
         self.send_keys(["CHAN_UP"])
         self._state = STATE_PLAYING
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Channel down."""
         self.send_keys(["CHAN_DOWN"])
         self._state = STATE_PLAYING

@@ -50,7 +50,7 @@ class ZoneMinderCamera(MjpegCamera):
         self._is_available = None
         self._monitor = monitor
 
-    def update(self):
+    def update(self) -> None:
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor.id)
         self._is_recording = self._monitor.is_recording
