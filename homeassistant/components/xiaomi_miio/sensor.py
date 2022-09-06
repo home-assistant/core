@@ -367,10 +367,12 @@ SENSOR_TYPES = {
     ATTR_LAST_EVENT: XiaomiMiioSensorDescription(
         key=ATTR_LAST_EVENT,
         name="Last Event",
+        entity_registry_enabled_default=False,
     ),
     ATTR_LAST_PRESS: XiaomiMiioSensorDescription(
         key=ATTR_LAST_PRESS,
         name="Last Press",
+        entity_registry_enabled_default=False,
     ),
 }
 
