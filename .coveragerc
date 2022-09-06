@@ -587,7 +587,7 @@ omit =
     homeassistant/components/iqvia/sensor.py
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/__init__.py
-    homeassistant/components/iss/binary_sensor.py
+    homeassistant/components/iss/sensor.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
     homeassistant/components/isy994/climate.py
@@ -728,7 +728,6 @@ omit =
     homeassistant/components/melnor/__init__.py
     homeassistant/components/melnor/const.py
     homeassistant/components/melnor/models.py
-    homeassistant/components/melnor/switch.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/met_eireann/__init__.py
@@ -838,6 +837,8 @@ omit =
     homeassistant/components/nmap_tracker/__init__.py
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/nobo_hub/__init__.py
+    homeassistant/components/nobo_hub/climate.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
@@ -1216,7 +1217,7 @@ omit =
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/entity.py
     homeassistant/components/switchbot/cover.py
-    homeassistant/components/switchbot/light.py    
+    homeassistant/components/switchbot/light.py
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py

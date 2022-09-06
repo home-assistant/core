@@ -24,7 +24,6 @@ from homeassistant.helpers.selector import (
     EntitySelector,
     LocationSelector,
     TimeSelector,
-    selector,
 )
 
 from .const import (
@@ -361,28 +360,30 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
                 menu_options=["departure_time", "no_time"],
             )
 
-        options = {
-            vol.Optional(
-                CONF_TRAFFIC_MODE,
-                default=self.config_entry.options.get(
-                    CONF_TRAFFIC_MODE, TRAFFIC_MODE_ENABLED
-                ),
-            ): vol.In(TRAFFIC_MODES),
-            vol.Optional(
-                CONF_ROUTE_MODE,
-                default=self.config_entry.options.get(
-                    CONF_ROUTE_MODE, ROUTE_MODE_FASTEST
-                ),
-            ): vol.In(ROUTE_MODES),
-            vol.Optional(
-                CONF_UNIT_SYSTEM,
-                default=self.config_entry.options.get(
-                    CONF_UNIT_SYSTEM, self.hass.config.units.name
-                ),
-            ): vol.In(UNITS),
-        }
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_TRAFFIC_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_TRAFFIC_MODE, TRAFFIC_MODE_ENABLED
+                    ),
+                ): vol.In(TRAFFIC_MODES),
+                vol.Optional(
+                    CONF_ROUTE_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_ROUTE_MODE, ROUTE_MODE_FASTEST
+                    ),
+                ): vol.In(ROUTE_MODES),
+                vol.Optional(
+                    CONF_UNIT_SYSTEM,
+                    default=self.config_entry.options.get(
+                        CONF_UNIT_SYSTEM, self.hass.config.units.name
+                    ),
+                ): vol.In(UNITS),
+            }
+        )
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(step_id="init", data_schema=schema)
 
     async def async_step_no_time(
         self, user_input: dict[str, Any] | None = None
@@ -398,11 +399,11 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
             self._config[CONF_ARRIVAL_TIME] = user_input[CONF_ARRIVAL_TIME]
             return self.async_create_entry(title="", data=self._config)
 
-        options = {"arrival_time": selector({TimeSelector.selector_type: {}})}
-
-        return self.async_show_form(
-            step_id="arrival_time", data_schema=vol.Schema(options)
+        schema = vol.Schema(
+            {vol.Required(CONF_ARRIVAL_TIME, default="00:00:00"): TimeSelector()}
         )
+
+        return self.async_show_form(step_id="arrival_time", data_schema=schema)
 
     async def async_step_departure_time(
         self, user_input: dict[str, Any] | None = None
@@ -412,8 +413,8 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
             self._config[CONF_DEPARTURE_TIME] = user_input[CONF_DEPARTURE_TIME]
             return self.async_create_entry(title="", data=self._config)
 
-        options = {"departure_time": selector({TimeSelector.selector_type: {}})}
-
-        return self.async_show_form(
-            step_id="departure_time", data_schema=vol.Schema(options)
+        schema = vol.Schema(
+            {vol.Required(CONF_DEPARTURE_TIME, default="00:00:00"): TimeSelector()}
         )
+
+        return self.async_show_form(step_id="departure_time", data_schema=schema)
