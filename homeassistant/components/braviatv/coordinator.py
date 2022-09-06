@@ -7,7 +7,7 @@ from functools import wraps
 import logging
 from typing import Any, Final, TypeVar
 
-from pybravia import BraviaTV, BraviaTVError, BraviaTVNotFound
+from pybravia import BraviaTV, BraviaTVAuthError, BraviaTVError, BraviaTVNotFound
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player.const import (
@@ -123,6 +123,10 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
+        except BraviaTVAuthError as err:
+            self.is_on = False
+            self.connected = False
+            raise UpdateFailed("Error communicating with device") from err
         except BraviaTVNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
@@ -130,10 +134,10 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except BraviaTVError as err:
+        except BraviaTVError:
             self.is_on = False
             self.connected = False
-            raise UpdateFailed("Error communicating with device") from err
+            _LOGGER.debug("Update skipped, Bravia TV is off")
 
     async def async_update_sources(self) -> None:
         """Update sources."""
