@@ -122,10 +122,10 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 # If we have an available firmware update that is a higher version than
                 # what's on the node, we should advertise it, otherwise we are on the
                 # latest version
-                if AwesomeVersion(
-                    self._latest_version_firmware.version
-                ) > AwesomeVersion(self.node.firmware_version):
-                    self._attr_latest_version = self._latest_version_firmware.version
+                new_version = self._latest_version_firmware.version
+                current_version = self.node.firmware_version
+                if AwesomeVersion(new_version) > AwesomeVersion(current_version):
+                    self._attr_latest_version = new_version
                     self.async_write_ha_state()
 
         self._poll_unsub = async_call_later(
