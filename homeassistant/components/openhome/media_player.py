@@ -19,6 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
@@ -133,7 +134,7 @@ class OpenhomeDevice(MediaPlayerEntity):
         """Device is available."""
         return self._available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state of device."""
         try:
             self._in_standby = await self._device.is_in_standby()
@@ -195,17 +196,19 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._available = False
 
     @catch_request_errors()
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Bring device out of standby."""
         await self._device.set_standby(False)
 
     @catch_request_errors()
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Put device in standby."""
         await self._device.set_standby(True)
 
     @catch_request_errors()
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
@@ -228,32 +231,32 @@ class OpenhomeDevice(MediaPlayerEntity):
         await self._device.play_media(track_details)
 
     @catch_request_errors()
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._device.pause()
 
     @catch_request_errors()
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.stop()
 
     @catch_request_errors()
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._device.play()
 
     @catch_request_errors()
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._device.skip(1)
 
     @catch_request_errors()
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._device.skip(-1)
 
     @catch_request_errors()
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._device.set_source(self._source_index[source])
 
@@ -325,26 +328,28 @@ class OpenhomeDevice(MediaPlayerEntity):
         return self._volume_muted
 
     @catch_request_errors()
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self._device.increase_volume()
 
     @catch_request_errors()
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._device.decrease_volume()
 
     @catch_request_errors()
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
     @catch_request_errors()
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.set_mute(mute)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
             self.hass,
