@@ -356,6 +356,7 @@ class CalendarEventView(http.HomeAssistantView):
                     "location": event.location,
                     "start": _get_api_date(event.start),
                     "end": _get_api_date(event.end),
+                    "status": event.status,
                 }
                 for event in calendar_event_list
             ]
