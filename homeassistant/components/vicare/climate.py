@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
+from typing import Any
 
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -179,7 +180,7 @@ class ViCareClimate(ClimateEntity):
             configuration_url="https://developer.viessmann.com/",
         )
 
-    def update(self):
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             _room_temperature = None
@@ -326,7 +327,7 @@ class ViCareClimate(ClimateEntity):
         """Set target temperature step to wholes."""
         return PRECISION_WHOLE
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._circuit.setProgramTemperature(self._current_program, temp)
@@ -342,7 +343,7 @@ class ViCareClimate(ClimateEntity):
         """Return the available preset mode."""
         return list(HA_TO_VICARE_PRESET_HEATING)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
         vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
         if vicare_program is None:
