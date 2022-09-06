@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from brother import Brother, DictToObj, SnmpError, UnsupportedModel
+from brother import Brother, BrotherSensors, SnmpError, UnsupportedModel
 import pysnmp.hlapi.asyncio as SnmpEngine
 
 from homeassistant.config_entries import ConfigEntry
@@ -74,7 +74,7 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> DictToObj:
+    async def _async_update_data(self) -> BrotherSensors:
         """Update data via library."""
         try:
             async with async_timeout.timeout(20):

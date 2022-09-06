@@ -28,7 +28,7 @@ ATTR_BLACK_DRUM_REMAINING_LIFE = "black_drum_remaining_life"
 ATTR_BLACK_DRUM_REMAINING_PAGES = "black_drum_remaining_pages"
 ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
 ATTR_BLACK_TONER_REMAINING = "black_toner_remaining"
-ATTR_BW_COUNTER = "b/w_counter"
+ATTR_BW_COUNTER = "bw_counter"
 ATTR_COLOR_COUNTER = "color_counter"
 ATTR_COUNTER = "counter"
 ATTR_CYAN_DRUM_COUNTER = "cyan_drum_counter"
@@ -97,11 +97,11 @@ async def async_setup_entry(
         manufacturer=ATTR_MANUFACTURER,
         model=coordinator.data.model,
         name=coordinator.data.model,
-        sw_version=getattr(coordinator.data, "firmware", None),
+        sw_version=coordinator.data.firmware,
     )
 
     for description in SENSOR_TYPES:
-        if description.key in coordinator.data:
+        if getattr(coordinator.data, description.key) is not None:
             sensors.append(
                 description.entity_class(coordinator, description, device_info)
             )
