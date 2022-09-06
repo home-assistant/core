@@ -232,7 +232,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         if client.switch_port and self.port.poe_mode != "off":
             self.poe_mode = self.port.poe_mode
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
 
@@ -256,7 +256,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         return self.port.poe_mode != "off"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if switch is available.
 
         Poe_mode None means its POE state is unknown.
@@ -270,11 +270,11 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
             and self.client.switch_mac in self.controller.api.devices
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable POE for client."""
         await self.device.set_port_poe_mode(self.client.switch_port, self.poe_mode)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable POE for client."""
         await self.device.set_port_poe_mode(self.client.switch_port, "off")
 
@@ -335,16 +335,16 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
         """Return true if client is allowed to connect."""
         return not self._is_blocked
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on connectivity for client."""
         await self.controller.api.clients.unblock(self.client.mac)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off connectivity for client."""
         await self.controller.api.clients.block(self.client.mac)
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
         if self._is_blocked:
             return "mdi:network-off"
@@ -445,7 +445,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
         """Return true if DPI group app restriction is enabled."""
         return self._is_enabled
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Restrict access of apps related to DPI group."""
         return await asyncio.gather(
             *[
@@ -454,7 +454,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             ]
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Remove restriction of apps related to DPI group."""
         return await asyncio.gather(
             *[
@@ -503,15 +503,15 @@ class UniFiOutletSwitch(UniFiBase, SwitchEntity):
         return self._item.outlets[self._outlet_index].relay_state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if switch is available."""
         return not self._item.disabled and self.controller.available
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable outlet relay."""
         await self._item.set_outlet_relay_state(self._outlet_index, True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable outlet relay."""
         await self._item.set_outlet_relay_state(self._outlet_index, False)
 
