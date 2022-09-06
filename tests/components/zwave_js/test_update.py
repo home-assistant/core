@@ -194,15 +194,15 @@ async def test_update_entity_failure(
 async def test_update_entity_sleep(
     hass,
     client,
-    multisensor_6,
+    zen_31,
     integration,
 ):
     """Test update occurs when device is asleep after it wakes up."""
     event = Event(
         "sleep",
-        data={"source": "node", "event": "sleep", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "sleep", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     client.async_send_command.reset_mock()
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -215,9 +215,9 @@ async def test_update_entity_sleep(
 
     event = Event(
         "wake up",
-        data={"source": "node", "event": "wake up", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "wake up", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     await hass.async_block_till_done()
 
     # Now that the node is up we can check for updates
@@ -225,21 +225,21 @@ async def test_update_entity_sleep(
 
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == multisensor_6.node_id
+    assert args["nodeId"] == zen_31.node_id
 
 
 async def test_update_entity_dead(
     hass,
     client,
-    multisensor_6,
+    zen_31,
     integration,
 ):
     """Test update occurs when device is dead after it becomes alive."""
     event = Event(
         "dead",
-        data={"source": "node", "event": "dead", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "dead", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     client.async_send_command.reset_mock()
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -252,9 +252,9 @@ async def test_update_entity_dead(
 
     event = Event(
         "alive",
-        data={"source": "node", "event": "alive", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "alive", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     await hass.async_block_till_done()
 
     # Now that the node is up we can check for updates
@@ -262,4 +262,4 @@ async def test_update_entity_dead(
 
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == multisensor_6.node_id
+    assert args["nodeId"] == zen_31.node_id
