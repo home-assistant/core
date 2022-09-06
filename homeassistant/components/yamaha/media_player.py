@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import requests
 import rxv
@@ -215,7 +216,7 @@ class YamahaDevice(MediaPlayerEntity):
         self._name = name
         self._zone = receiver.zone
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         try:
             self._play_status = self.receiver.play_status()
@@ -335,42 +336,42 @@ class YamahaDevice(MediaPlayerEntity):
                 supported_features |= feature
         return supported_features
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.receiver.on = False
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         receiver_vol = 100 - (volume * 100)
         negative_receiver_vol = -receiver_vol
         self.receiver.volume = negative_receiver_vol
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.receiver.mute = mute
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.receiver.on = True
         self._volume = (self.receiver.volume / 100) + 1
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._call_playback_function(self.receiver.play, "play")
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._call_playback_function(self.receiver.pause, "pause")
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self._call_playback_function(self.receiver.stop, "stop")
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command."""
         self._call_playback_function(self.receiver.previous, "previous track")
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._call_playback_function(self.receiver.next, "next track")
 
@@ -380,11 +381,11 @@ class YamahaDevice(MediaPlayerEntity):
         except rxv.exceptions.ResponseException:
             _LOGGER.warning("Failed to execute %s on %s", function_text, self._name)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.receiver.input = self._reverse_mapping.get(source, source)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media from an ID.
 
         This exposes a pass through for various input sources in the
@@ -421,7 +422,7 @@ class YamahaDevice(MediaPlayerEntity):
         except AssertionError:
             _LOGGER.warning("Scene '%s' does not exist!", scene)
 
-    def select_sound_mode(self, sound_mode):
+    def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self.receiver.surround_program = sound_mode
 
