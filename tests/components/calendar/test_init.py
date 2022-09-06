@@ -89,3 +89,4 @@ async def test_events_http_api_shim(hass, hass_client):
     assert events[0]["summary"] == "Future Event"
     assert events[0]["description"] == "Future Description"
     assert events[0]["location"] == "Future Location"
+    assert events[0]["status"] == "tentative"

@@ -84,6 +84,7 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
+    status: str | None = None
 
     @property
     def start_datetime_local(self) -> datetime.datetime:
@@ -112,6 +113,8 @@ class CalendarEvent:
             data["description"] = self.description
         if self.location:
             data["location"] = self.location
+        if self.status:
+            data["status"] = self.status
         return data
 
 

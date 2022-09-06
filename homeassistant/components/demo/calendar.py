@@ -41,6 +41,7 @@ def calendar_data_future() -> CalendarEvent:
         summary="Future Event",
         description="Future Description",
         location="Future Location",
+        status="tentative",
     )
 
 
@@ -99,6 +100,7 @@ class LegacyDemoCalendar(CalendarEventDevice):
             "summary": "Future Event",
             "description": "Future Description",
             "location": "Future Location",
+            "status": "tentative",
         }
 
     @property

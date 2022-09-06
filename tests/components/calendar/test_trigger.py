@@ -64,6 +64,7 @@ class FakeSchedule:
         end: datetime.timedelta,
         description: str = None,
         location: str = None,
+        status: str = None,
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event = calendar.CalendarEvent(
@@ -71,7 +72,7 @@ class FakeSchedule:
             end=end,
             summary=f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
             description=description,
-            location=location,
+            status=status,
         )
         self.events.append(event)
         return event.as_dict()
@@ -541,6 +542,7 @@ async def test_event_payload(hass, calls, fake_schedule):
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
         description="Description",
         location="Location",
+        status="confirmed",
     )
     await create_automation(hass, EVENT_START)
     assert len(calls()) == 0
