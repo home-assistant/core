@@ -234,8 +234,8 @@ DEFAULT_CONFIG = {
     mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
 DEFAULT_CONFIG_LEGACY[light.DOMAIN]["platform"] = mqtt.DOMAIN
 
@@ -2222,8 +2222,8 @@ async def test_discovery_removal_light(hass, mqtt_mock_entry_no_yaml_config, cap
     )
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_discovery_deprecated(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
     await mqtt_mock_entry_no_yaml_config()
@@ -3154,8 +3154,8 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     )
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
     """Test a setup with deprecated yaml platform schema."""
     domain = light.DOMAIN
