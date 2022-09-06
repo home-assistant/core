@@ -14,6 +14,21 @@
                     "ip_address": "Adre\u00e7a IP",
                     "serial": "N\u00famero de s\u00e8rie (12 d\u00edgits)"
                 }
+            },
+            "user": {
+                "data": {
+                    "device": "Hubs descoberts"
+                },
+                "description": "Selecciona el Nob\u00f8 Ecohub a configurar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "Tipus de substituci\u00f3"
+                }
             }
         }
     }

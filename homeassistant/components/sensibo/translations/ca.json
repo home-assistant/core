@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Clau API"
+                },
+                "data_description": {
+                    "api_key": "Consulta la documentaci\u00f3 per obtenir una nova clau API."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "Clau API"
+                },
+                "data_description": {
+                    "api_key": "Consulta la documentaci\u00f3 per obtenir la teva clau API."
                 }
             }
         }

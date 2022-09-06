@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-n\u00f8kkel"
+                },
+                "data_description": {
+                    "api_key": "F\u00f8lg dokumentasjonen for \u00e5 f\u00e5 en ny api-n\u00f8kkel."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel"
+                },
+                "data_description": {
+                    "api_key": "F\u00f8lg dokumentasjonen for \u00e5 f\u00e5 api-n\u00f8kkelen din."
                 }
             }
         }
