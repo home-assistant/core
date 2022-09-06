@@ -128,6 +128,7 @@ from .const import (  # noqa: F401
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntityFeature,
+    RepeatMode,
 )
 from .errors import BrowseError
 
@@ -410,7 +411,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_REPEAT_SET,
-        {vol.Required(ATTR_MEDIA_REPEAT): vol.In(REPEAT_MODES)},
+        {vol.Required(ATTR_MEDIA_REPEAT): vol.Coerce(RepeatMode)},
         "async_set_repeat",
         [MediaPlayerEntityFeature.REPEAT_SET],
     )
@@ -801,11 +802,11 @@ class MediaPlayerEntity(Entity):
         """Enable/disable shuffle mode."""
         await self.hass.async_add_executor_job(self.set_shuffle, shuffle)
 
-    def set_repeat(self, repeat: str) -> None:
+    def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         raise NotImplementedError()
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self.hass.async_add_executor_job(self.set_repeat, repeat)
 
