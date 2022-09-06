@@ -180,7 +180,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_TODAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
+    hc.SENSOR_TODAY: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    },
     hc.SENSOR_TOTAL: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
