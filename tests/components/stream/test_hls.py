@@ -21,7 +21,11 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import FAKE_TIME, DefaultSegment as Segment
+from tests.components.stream.common import (
+    FAKE_TIME,
+    DefaultSegment as Segment,
+    assert_mp4_has_transform_matrix,
+)
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"init"
@@ -180,6 +184,7 @@ async def test_hls_stream(
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
         "keepalive": False,
+        "orientation": 1,
         "start_worker": 1,
         "video_codec": "h264",
         "worker_error": 1,
@@ -514,4 +519,43 @@ async def test_remove_incomplete_segment_on_exit(
         await hass.async_block_till_done()
         assert segments[-1].complete
         assert len(segments) == 2
+    await stream.stop()
+
+
+async def test_hls_stream_rotate(
+    hass, setup_component, hls_stream, stream_worker_sync, h264_video
+):
+    """
+    Test hls stream with rotation applied.
+
+    Purposefully not mocking anything here to test full
+    integration with the stream component.
+    """
+
+    stream_worker_sync.pause()
+
+    # Setup demo HLS track
+    stream = create_stream(hass, h264_video, {})
+
+    # Request stream
+    stream.add_provider(HLS_PROVIDER)
+    await stream.start()
+
+    hls_client = await hls_stream(stream)
+
+    # Fetch master playlist
+    master_playlist_response = await hls_client.get()
+    assert master_playlist_response.status == HTTPStatus.OK
+
+    # Fetch rotated init
+    stream.orientation = 6
+    init_response = await hls_client.get("/init.mp4")
+    assert init_response.status == HTTPStatus.OK
+    init = await init_response.read()
+
+    stream_worker_sync.resume()
+
+    assert_mp4_has_transform_matrix(init, stream.orientation)
+
+    # Stop stream, if it hasn't quit already
     await stream.stop()
