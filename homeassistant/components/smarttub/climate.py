@@ -1,6 +1,8 @@
 """Platform for climate integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from smarttub import Spa
 
 from homeassistant.components.climate import ClimateEntity
@@ -72,7 +74,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the current running hvac operation."""
         return HVAC_ACTIONS.get(self.spa_status.heater)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
 
         As with hvac_mode, we don't really have an option here.
@@ -113,13 +115,13 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
         await self.coordinator.async_refresh()
 
-    async def async_set_preset_mode(self, preset_mode: str):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Activate the specified preset mode."""
         heat_mode = HEAT_MODES[preset_mode]
         await self.spa.set_heat_mode(heat_mode)
