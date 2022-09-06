@@ -1,7 +1,7 @@
 """Platform for Roth Touchline floor heating controller."""
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from pytouchline import PyTouchline
 import voluptuous as vol
@@ -75,7 +75,7 @@ class Touchline(ClimateEntity):
         self._current_operation_mode = None
         self._preset_mode = None
 
-    def update(self):
+    def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
         self._name = self.unit.get_name()
@@ -120,7 +120,7 @@ class Touchline(ClimateEntity):
         """Set new target hvac mode."""
         self._current_operation_mode = HVACMode.HEAT
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)

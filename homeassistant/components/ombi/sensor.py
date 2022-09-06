@@ -45,7 +45,7 @@ class OmbiSensor(SensorEntity):
 
         self._attr_name = f"Ombi {description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         try:
             sensor_type = self.entity_description.key

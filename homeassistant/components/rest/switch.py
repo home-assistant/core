@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -153,7 +154,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         body_on_t = self._body_on.async_render(parse_result=False)
 
@@ -169,7 +170,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         body_off_t = self._body_off.async_render(parse_result=False)
 
@@ -201,7 +202,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             )
             return req
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the current state, catching errors."""
         try:
             await self.get_device_state(self.hass)

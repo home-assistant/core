@@ -379,6 +379,18 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=_Special.UNDEFINED,
         ),
     ],
+    "notify": [
+        TypeHintMatch(
+            function_name="get_service",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "DiscoveryInfoType | None",
+            },
+            return_type=_Special.UNDEFINED,
+            has_async_counterpart=True,
+        ),
+    ],
 }
 
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
@@ -1857,6 +1869,20 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_get_last_number_data",
                     return_type=["NumberExtraStoredData", None],
+                ),
+            ],
+        ),
+    ],
+    "notify": [
+        ClassTypeHintMatch(
+            base_class="BaseNotificationService",
+            matches=[
+                TypeHintMatch(
+                    function_name="send_message",
+                    arg_types={1: "str"},
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
                 ),
             ],
         ),

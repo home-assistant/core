@@ -184,7 +184,7 @@ class MinMaxSensor(SensorEntity):
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(

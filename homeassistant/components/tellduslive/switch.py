@@ -1,4 +1,6 @@
 """Support for Tellstick switches using Tellstick Net."""
+from typing import Any
+
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -37,12 +39,12 @@ class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.device.is_on
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.device.turn_on()
         self._update_callback()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.device.turn_off()
         self._update_callback()

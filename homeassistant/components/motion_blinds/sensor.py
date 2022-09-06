@@ -61,7 +61,7 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{blind.mac}-battery"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         if self.coordinator.data is None:
             return False
@@ -81,12 +81,12 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
         """Return device specific state attributes."""
         return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to multicast pushes."""
         self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
@@ -145,7 +145,7 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         if self.coordinator.data is None:
             return False
@@ -164,12 +164,12 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
         return self._device.RSSI
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to multicast pushes."""
         self._device.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._device.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()

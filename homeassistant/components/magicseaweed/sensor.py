@@ -157,7 +157,7 @@ class MagicSeaweedSensor(SensorEntity):
         """Return the unit system of this entity."""
         return self._unit_system
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Magicseaweed and updates the states."""
         self.data.update()
         if self.hour is None:

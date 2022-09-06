@@ -4,6 +4,7 @@ from __future__ import annotations
 from concurrent import futures
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pytfiac import Tfiac
 import voluptuous as vol
@@ -94,7 +95,7 @@ class TfiacClimate(ClimateEntity):
         """Return if the device is available."""
         return self._available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update status via socket polling."""
         try:
             await self._client.update()
@@ -167,7 +168,7 @@ class TfiacClimate(ClimateEntity):
         """List of available swing modes."""
         return SUPPORT_SWING
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._client.set_state(TARGET_TEMP, temp)
@@ -179,18 +180,18 @@ class TfiacClimate(ClimateEntity):
         else:
             await self._client.set_state(OPERATION_MODE, HVAC_MAP[hvac_mode])
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         await self._client.set_state(FAN_MODE, fan_mode.capitalize())
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         await self._client.set_swing(swing_mode.capitalize())
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn device on."""
         await self._client.set_state(OPERATION_MODE)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn device off."""
         await self._client.set_state(ON_MODE, "off")

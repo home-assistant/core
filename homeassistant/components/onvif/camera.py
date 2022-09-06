@@ -109,7 +109,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
         )
-        self._stream_uri = None
+        self._stream_uri: str | None = None
 
     @property
     def name(self) -> str:
@@ -185,7 +185,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         finally:
             await stream.close()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         uri_no_auth = await self.device.async_get_stream_uri(self.profile)
         url = URL(uri_no_auth)
