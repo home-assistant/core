@@ -99,11 +99,11 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             (NodeStatus.DEAD, "alive"),
         ):
             if self.node.status == status:
-                if not self._status_unsub:
-                    self._status_unsub = self.node.once(
-                        event_name, self._update_on_status_change
-                    )
-                return
+                if self._status_unsub:
+                    return
+                self._status_unsub = self.node.once(
+                    event_name, self._update_on_status_change
+                )
 
         async with self.semaphore:
             if available_firmware_updates := (
@@ -118,11 +118,15 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 # If we have an available firmware update that is a higher version than
                 # what's on the node, we should advertise it, otherwise we are on the
                 # latest version
-                if (firmware := self._latest_version_firmware) and AwesomeVersion(
-                    firmware.version
-                ) > AwesomeVersion(self.node.firmware_version):
-                    self._attr_latest_version = firmware.version
-                    self.async_write_ha_state()
+                if (
+                    firmware := self._latest_version_firmware
+                ) is None or AwesomeVersion(firmware.version) <= AwesomeVersion(
+                    self.node.firmware_version
+                ):
+                    return
+
+                self._attr_latest_version = firmware.version
+                self.async_write_ha_state()
 
         self._poll_unsub = async_call_later(
             self.hass, timedelta(days=1), self._async_update
