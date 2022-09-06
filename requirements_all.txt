@@ -470,7 +470,7 @@ bthome-ble==1.0.0
 bthomehub5-devicelist==0.1.1
 
 # homeassistant.components.bt_smarthub
-btsmarthub_devicelist==0.2.0
+btsmarthub_devicelist==0.2.2
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
