@@ -1704,8 +1704,8 @@ async def help_test_reloadable(
     old_config_2 = copy.deepcopy(config)
     old_config_2["name"] = "test_old_2"
 
-    # YAML configuration under the platform key is deprecated.
-    # Support and will be removed as with HA 2022.12
+    # Test deprecated YAML configuration under the platform key
+    # Scheduled to be removed in HA core 2022.12
     old_config_3 = copy.deepcopy(config)
     old_config_3["name"] = "test_old_3"
     old_config_3["platform"] = mqtt.DOMAIN
@@ -1738,8 +1738,8 @@ async def help_test_reloadable(
     new_config_extra = copy.deepcopy(config)
     new_config_extra["name"] = "test_new_5"
 
-    # YAML configuration under the platform key is deprecated.
-    # Support and will be removed as with HA 2022.12
+    # Test deprecated YAML configuration under the platform key
+    # Scheduled to be removed in HA core 2022.12
     new_config_3 = copy.deepcopy(config)
     new_config_3["name"] = "test_new_3"
     new_config_3["platform"] = mqtt.DOMAIN
@@ -1767,8 +1767,8 @@ async def help_test_reloadable(
     assert hass.states.get(f"{domain}.test_new_6")
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     """Test reloading an MQTT platform when config entry is setup is late."""
     # Create and test an old config of 2 entities based on the config supplied

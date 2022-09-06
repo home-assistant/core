@@ -726,8 +726,8 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
     )
 
 
-# YAML configuration under the platform key is deprecated.
-# Support and will be removed as with HA 2022.12
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = lock.DOMAIN

@@ -2805,8 +2805,8 @@ async def test_publish_or_subscribe_without_valid_config_entry(hass, caplog):
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_reload_entry_with_new_config(hass, tmp_path):
     """Test reloading the config entry with a new yaml config."""
-    # YAML configuration under the platform key is deprecated.
-    # Support and will be removed as with HA 2022.12
+    # Test deprecated YAML configuration under the platform key
+    # Scheduled to be removed in HA core 2022.12
     config_old = {
         "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
     }
