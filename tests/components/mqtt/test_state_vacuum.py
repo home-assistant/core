@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import vacuum
+from homeassistant.components import mqtt, vacuum
 from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
 from homeassistant.components.mqtt.vacuum.const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
@@ -73,19 +73,27 @@ SEND_COMMAND_TOPIC = "vacuum/send_command"
 STATE_TOPIC = "vacuum/state"
 
 DEFAULT_CONFIG = {
-    CONF_PLATFORM: "mqtt",
-    CONF_SCHEMA: "state",
-    CONF_NAME: "mqtttest",
-    CONF_COMMAND_TOPIC: COMMAND_TOPIC,
-    mqttvacuum.CONF_SEND_COMMAND_TOPIC: SEND_COMMAND_TOPIC,
-    CONF_STATE_TOPIC: STATE_TOPIC,
-    mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: "vacuum/set_fan_speed",
-    mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
+    mqtt.DOMAIN: {
+        vacuum.DOMAIN: {
+            CONF_SCHEMA: "state",
+            CONF_NAME: "mqtttest",
+            CONF_COMMAND_TOPIC: COMMAND_TOPIC,
+            mqttvacuum.CONF_SEND_COMMAND_TOPIC: SEND_COMMAND_TOPIC,
+            CONF_STATE_TOPIC: STATE_TOPIC,
+            mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: "vacuum/set_fan_speed",
+            mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
+        }
+    }
 }
 
-DEFAULT_CONFIG_2 = {
-    vacuum.DOMAIN: {"platform": "mqtt", "schema": "state", "name": "test"}
-}
+DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"schema": "state", "name": "test"}}}
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
+DEFAULT_CONFIG_2_LEGACY = deepcopy(DEFAULT_CONFIG_2[mqtt.DOMAIN])
+DEFAULT_CONFIG_2_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -97,9 +105,7 @@ def vacuum_platform_only():
 
 async def test_default_supported_features(hass, mqtt_mock_entry_with_yaml_config):
     """Test that the correct supported features."""
-    assert await async_setup_component(
-        hass, vacuum.DOMAIN, {vacuum.DOMAIN: DEFAULT_CONFIG}
-    )
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
     entity = hass.states.get("vacuum.mqtttest")
@@ -111,12 +117,14 @@ async def test_default_supported_features(hass, mqtt_mock_entry_with_yaml_config
 
 async def test_all_commands(hass, mqtt_mock_entry_with_yaml_config):
     """Test simple commands send to the vacuum."""
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
     )
 
-    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    assert await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
+    )
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -185,13 +193,15 @@ async def test_commands_without_supported_features(
     hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test commands which are not supported by the vacuum."""
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
     services = mqttvacuum.STRING_TO_SERVICE["status"]
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         services, SERVICE_TO_STRING
     )
 
-    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    assert await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
+    )
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -243,12 +253,14 @@ async def test_commands_without_supported_features(
 
 async def test_status(hass, mqtt_mock_entry_with_yaml_config):
     """Test status updates from the vacuum."""
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
     )
 
-    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    assert await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
+    )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
     state = hass.states.get("vacuum.mqtttest")
@@ -288,13 +300,15 @@ async def test_status(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_no_fan_vacuum(hass, mqtt_mock_entry_with_yaml_config):
     """Test status updates from the vacuum when fan is not supported."""
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
     del config[mqttvacuum.CONF_FAN_SPEED_LIST]
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING
     )
 
-    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    assert await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
+    )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -340,12 +354,14 @@ async def test_no_fan_vacuum(hass, mqtt_mock_entry_with_yaml_config):
 @pytest.mark.no_fail_on_log_exception
 async def test_status_invalid_json(hass, mqtt_mock_entry_with_yaml_config):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
     )
 
-    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    assert await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {vacuum.DOMAIN: config}}
+    )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -359,28 +375,28 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
@@ -389,7 +405,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
@@ -401,7 +417,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        DEFAULT_CONFIG_2_LEGACY,
         MQTT_VACUUM_ATTRIBUTES_BLOCKED,
     )
 
@@ -409,7 +425,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
@@ -418,7 +434,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        vacuum.DOMAIN,
+        DEFAULT_CONFIG_2_LEGACY,
     )
 
 
@@ -427,14 +447,22 @@ async def test_update_with_json_attrs_bad_json(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        vacuum.DOMAIN,
+        DEFAULT_CONFIG_2_LEGACY,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        vacuum.DOMAIN,
+        DEFAULT_CONFIG_2_LEGACY,
     )
 
 
@@ -511,42 +539,42 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT vacuum device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT vacuum device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN, DEFAULT_CONFIG_2_LEGACY
     )
 
 
@@ -556,7 +584,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        DEFAULT_CONFIG_2_LEGACY,
         vacuum.SERVICE_START,
         command_payload="start",
         state_payload="{}",
@@ -615,7 +643,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = vacuum.DOMAIN
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG_LEGACY[domain])
     config["supported_features"] = [
         "battery",
         "clean_spot",
@@ -646,7 +674,7 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN
-    config = DEFAULT_CONFIG
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
@@ -655,7 +683,7 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = vacuum.DOMAIN
-    config = DEFAULT_CONFIG
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
@@ -691,7 +719,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         vacuum.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY[vacuum.DOMAIN],
         topic,
         value,
         attribute,
@@ -703,8 +731,21 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = vacuum.DOMAIN
-    config = deepcopy(DEFAULT_CONFIG)
+    config = deepcopy(DEFAULT_CONFIG_LEGACY[platform])
     config["name"] = "test"
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = vacuum.DOMAIN
+    config = deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None
