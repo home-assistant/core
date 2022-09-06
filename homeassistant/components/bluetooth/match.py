@@ -237,7 +237,11 @@ class BluetoothMatcherIndexBase(Generic[_T]):
     def match(self, service_info: BluetoothServiceInfoBleak) -> list[_T]:
         """Check for a match."""
         matches = []
-        if service_info.name and len(service_info.name) >= LOCAL_NAME_MIN_MATCH_LENGTH:
+        if (
+            service_info.name
+            and service_info.name != service_info.address
+            and len(service_info.name) >= LOCAL_NAME_MIN_MATCH_LENGTH
+        ):
             for matcher in self.local_name.get(
                 service_info.name[:LOCAL_NAME_MIN_MATCH_LENGTH], []
             ):
