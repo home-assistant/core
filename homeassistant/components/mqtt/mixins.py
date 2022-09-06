@@ -662,6 +662,17 @@ async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: di
     await async_publish(hass, discovery_topic, "", retain=True)
 
 
+async def async_clear_discovery_topic_if_entity_removed(
+    hass: HomeAssistant,
+    discovery_data: dict[str, Any],
+    event: Event,
+) -> None:
+    """Clear the discovery topic if the entity is removed."""
+    if event.data["action"] == "remove":
+        # publish empty payload to config topic to avoid re-adding
+        await async_remove_discovery_payload(hass, discovery_data)
+
+
 class MqttDiscoveryDeviceUpdate:
     """Add support for auto discovery for platforms without an entity."""
 
@@ -804,9 +815,14 @@ class MqttDiscoveryUpdate(Entity):
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
         self._removed_from_hass = False
+        if not discovery_data:
+            return
         self._registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
             DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
         ]
+        discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+        if discovery_hash in self._registry_hooks:
+            self._registry_hooks.pop(discovery_hash)()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
@@ -879,19 +895,6 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass, cast(dict, self._discovery_data)
             )
 
-    async def _async_clear_discovery_topic_if_entity_removed(
-        self,
-        hass: HomeAssistant,
-        discovery_data: dict[str, Any],
-        event: Event,
-    ) -> None:
-        """Clear the discovery topic if the entity is removed."""
-        if event.data["action"] == "remove":
-            # publish empty payload to config topic to avoid re-adding
-            discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
-            hass.async_create_task(async_remove_discovery_payload(hass, discovery_data))
-            self._registry_hooks.pop(discovery_hash)()
-
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
@@ -907,7 +910,7 @@ class MqttDiscoveryUpdate(Entity):
                     self.hass,
                     self.entity_id,
                     partial(
-                        self._async_clear_discovery_topic_if_entity_removed,
+                        async_clear_discovery_topic_if_entity_removed,
                         self.hass,
                         self._discovery_data,
                     ),
