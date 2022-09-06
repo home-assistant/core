@@ -115,30 +115,18 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     available_firmware_updates,
                     key=lambda x: AwesomeVersion(x.version),
                 )
-                self._async_process_available_updates()
+                # If we have an available firmware update that is a higher version than
+                # what's on the node, we should advertise it, otherwise we are on the
+                # latest version
+                if (firmware := self._latest_version_firmware) and AwesomeVersion(
+                    firmware.version
+                ) > AwesomeVersion(self.node.firmware_version):
+                    self._attr_latest_version = firmware.version
+                    self.async_write_ha_state()
 
         self._poll_unsub = async_call_later(
             self.hass, timedelta(days=1), self._async_update
         )
-
-    @callback
-    def _async_process_available_updates(self, not_in_progress: bool = False) -> None:
-        """
-        Process available firmware updates.
-
-        Sets latest version attribute and FirmwareUpdateInfo instance.
-        """
-        # If we have an available firmware update that is a higher version than what's
-        # on the node, we should advertise it, otherwise we are on the latest version
-        if (firmware := self._latest_version_firmware) and AwesomeVersion(
-            firmware.version
-        ) > AwesomeVersion(self.node.firmware_version):
-            self._attr_latest_version = firmware.version
-        else:
-            self._attr_latest_version = self._attr_installed_version
-        if not_in_progress:
-            self._attr_in_progress = False
-        self.async_write_ha_state()
 
     async def async_release_notes(self) -> str | None:
         """Get release notes."""
@@ -160,13 +148,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, file
                 )
         except BaseZwaveJSServerError as err:
-            self._attr_in_progress = False
-            self.async_write_ha_state()
             raise HomeAssistantError(err) from err
         else:
-            self._attr_installed_version = firmware.version
+            self._attr_installed_version = self._attr_latest_version = firmware.version
             self._latest_version_firmware = None
-            self._async_process_available_updates(True)
+        finally:
+            self._attr_in_progress = False
+            self.async_write_ha_state()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
