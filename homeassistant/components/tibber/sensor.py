@@ -350,7 +350,7 @@ class TibberSensorElPrice(TibberSensor):
 
         self._device_name = self._home_name
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         now = dt_util.now()
         if (
@@ -448,7 +448,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             self._attr_native_unit_of_measurement = tibber_home.currency
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
 

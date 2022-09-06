@@ -120,7 +120,7 @@ class TransportNSWSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transport NSW and update the states."""
         self.data.update()
         self._times = self.data.info

@@ -174,7 +174,7 @@ class TravisCISensor(SensorEntity):
 
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor %s", self.name)
 
