@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API \u91d1\u9470"
+                },
+                "data_description": {
+                    "api_key": "\u8acb\u8ddf\u96a8\u6587\u4ef6\u4ee5\u53d6\u5f97\u65b0 API \u91d1\u9470\u3002"
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API \u91d1\u9470"
+                },
+                "data_description": {
+                    "api_key": "\u8acb\u8ddf\u96a8\u6587\u4ef6\u4ee5\u53d6\u5f97 API \u91d1\u9470\u3002"
                 }
             }
         }
