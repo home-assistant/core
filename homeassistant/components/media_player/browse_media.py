@@ -19,7 +19,12 @@ from homeassistant.helpers.network import (
     is_hass_url,
 )
 
-from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
+from .const import (
+    CONTENT_AUTH_EXPIRY_TIME,
+    MEDIA_CLASS_DIRECTORY,
+    MediaClass,
+    MediaType,
+)
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
@@ -92,14 +97,14 @@ class BrowseMedia:
     def __init__(
         self,
         *,
-        media_class: str,
+        media_class: MediaClass | str,
         media_content_id: str,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         title: str,
         can_play: bool,
         can_expand: bool,
         children: Sequence[BrowseMedia] | None = None,
-        children_media_class: str | None = None,
+        children_media_class: MediaClass | str | None = None,
         thumbnail: str | None = None,
         not_shown: int = 0,
     ) -> None:
