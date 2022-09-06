@@ -77,7 +77,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
 
     def __init__(
         self,
-        device_id,
+        device_id: str,
         device_class: BinarySensorDeviceClass | None = None,
         force_update: bool = False,
         off_delay: int | None = None,
