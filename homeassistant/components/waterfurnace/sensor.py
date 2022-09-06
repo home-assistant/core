@@ -133,7 +133,7 @@ class WaterFurnaceSensor(SensorEntity):
         """Return the units of measurement."""
         return self._unit_of_measurement
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
