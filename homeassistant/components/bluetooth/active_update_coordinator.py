@@ -6,6 +6,8 @@ import logging
 import time
 from typing import Any, Generic, TypeVar
 
+from bleak import BleakError
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 
@@ -109,6 +111,13 @@ class ActiveBluetoothProcessorCoordinator(
 
         try:
             update = await self._async_poll_data(self._last_service_info)
+        except BleakError as exc:
+            if self.last_poll_successful:
+                self.logger.error(
+                    "%s: Bluetooth error whilst polling: %s", self.address, str(exc)
+                )
+                self.last_poll_successful = False
+                return
         except Exception:  # pylint: disable=broad-except
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)

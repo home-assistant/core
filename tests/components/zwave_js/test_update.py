@@ -24,6 +24,31 @@ from homeassistant.util import datetime as dt_util
 from tests.common import async_fire_time_changed
 
 UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
+FIRMWARE_UPDATES = {
+    "updates": [
+        {
+            "version": "10.11.1",
+            "changelog": "blah 1",
+            "files": [
+                {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
+            ],
+        },
+        {
+            "version": "11.2.4",
+            "changelog": "blah 2",
+            "files": [
+                {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
+            ],
+        },
+        {
+            "version": "11.1.5",
+            "changelog": "blah 3",
+            "files": [
+                {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+        },
+    ]
+}
 
 
 async def test_update_entity_success(
@@ -60,31 +85,7 @@ async def test_update_entity_success(
     result = await ws_client.receive_json()
     assert result["result"] is None
 
-    client.async_send_command.return_value = {
-        "updates": [
-            {
-                "version": "10.11.1",
-                "changelog": "blah 1",
-                "files": [
-                    {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
-                ],
-            },
-            {
-                "version": "11.2.4",
-                "changelog": "blah 2",
-                "files": [
-                    {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
-                ],
-            },
-            {
-                "version": "11.1.5",
-                "changelog": "blah 3",
-                "files": [
-                    {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
-                ],
-            },
-        ]
-    }
+    client.async_send_command.return_value = FIRMWARE_UPDATES
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
     await hass.async_block_till_done()
@@ -171,31 +172,7 @@ async def test_update_entity_failure(
     hass_ws_client,
 ):
     """Test update entity failed install."""
-    client.async_send_command.return_value = {
-        "updates": [
-            {
-                "version": "10.11.1",
-                "changelog": "blah 1",
-                "files": [
-                    {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
-                ],
-            },
-            {
-                "version": "11.2.4",
-                "changelog": "blah 2",
-                "files": [
-                    {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
-                ],
-            },
-            {
-                "version": "11.1.5",
-                "changelog": "blah 3",
-                "files": [
-                    {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
-                ],
-            },
-        ]
-    }
+    client.async_send_command.return_value = FIRMWARE_UPDATES
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
     await hass.async_block_till_done()
@@ -228,31 +205,7 @@ async def test_update_entity_sleep(
     multisensor_6.receive_event(event)
     client.async_send_command.reset_mock()
 
-    client.async_send_command.return_value = {
-        "updates": [
-            {
-                "version": "10.11.1",
-                "changelog": "blah 1",
-                "files": [
-                    {"target": 0, "url": "https://example1.com", "integrity": "sha1"}
-                ],
-            },
-            {
-                "version": "11.2.4",
-                "changelog": "blah 2",
-                "files": [
-                    {"target": 0, "url": "https://example2.com", "integrity": "sha2"}
-                ],
-            },
-            {
-                "version": "11.1.5",
-                "changelog": "blah 3",
-                "files": [
-                    {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
-                ],
-            },
-        ]
-    }
+    client.async_send_command.return_value = FIRMWARE_UPDATES
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
     await hass.async_block_till_done()
@@ -263,6 +216,43 @@ async def test_update_entity_sleep(
     event = Event(
         "wake up",
         data={"source": "node", "event": "wake up", "nodeId": multisensor_6.node_id},
+    )
+    multisensor_6.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Now that the node is up we can check for updates
+    assert len(client.async_send_command.call_args_list) > 0
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "controller.get_available_firmware_updates"
+    assert args["nodeId"] == multisensor_6.node_id
+
+
+async def test_update_entity_dead(
+    hass,
+    client,
+    multisensor_6,
+    integration,
+):
+    """Test update occurs when device is dead after it becomes alive."""
+    event = Event(
+        "dead",
+        data={"source": "node", "event": "dead", "nodeId": multisensor_6.node_id},
+    )
+    multisensor_6.receive_event(event)
+    client.async_send_command.reset_mock()
+
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    # Because node is asleep we shouldn't attempt to check for firmware updates
+    assert len(client.async_send_command.call_args_list) == 0
+
+    event = Event(
+        "alive",
+        data={"source": "node", "event": "alive", "nodeId": multisensor_6.node_id},
     )
     multisensor_6.receive_event(event)
     await hass.async_block_till_done()

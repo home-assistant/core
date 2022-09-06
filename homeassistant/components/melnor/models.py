@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from melnor_bluetooth.device import Device
+from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -43,6 +43,7 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -59,8 +60,6 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
             model=self._device.model,
             name=self._device.name,
         )
-        self._attr_name = self._device.name
-        self._attr_unique_id = self._device.mac
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -72,3 +71,26 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.is_connected
+
+
+class MelnorZoneEntity(MelnorBluetoothBaseEntity):
+    """Base class for valves that define themselves as child devices."""
+
+    _valve: Valve
+
+    def __init__(
+        self,
+        coordinator: MelnorDataUpdateCoordinator,
+        valve: Valve,
+    ) -> None:
+        """Initialize a valve entity."""
+        super().__init__(coordinator)
+
+        self._valve = valve
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.id}")},
+            manufacturer="Melnor",
+            name=f"Zone {valve.id + 1}",
+            via_device=(DOMAIN, self._device.mac),
+        )
