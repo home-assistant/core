@@ -8,6 +8,7 @@ from datetime import datetime as dt, timedelta
 import logging
 from typing import Any
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -31,7 +32,7 @@ from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
 EVENT_COALESCE_TIME = 0.35
-MAX_RECORDER_WAIT = 10
+MAX_RECORDER_WAIT = 60
 # minimum size that we will split the query
 BIG_QUERY_HOURS = 25
 # how many hours to deliver in the first chunk when we split the query
@@ -48,6 +49,7 @@ class LogbookLiveStream:
     subscriptions: list[CALLBACK_TYPE]
     end_time_unsub: CALLBACK_TYPE | None = None
     task: asyncio.Task | None = None
+    wait_sync_task: asyncio.Task | None = None
 
 
 @callback
@@ -60,9 +62,8 @@ def async_setup(hass: HomeAssistant) -> None:
 async def _async_wait_for_recorder_sync(hass: HomeAssistant) -> None:
     """Wait for the recorder to sync."""
     try:
-        await asyncio.wait_for(
-            get_instance(hass).async_block_till_done(), MAX_RECORDER_WAIT
-        )
+        async with async_timeout.timeout(MAX_RECORDER_WAIT):
+            await get_instance(hass).async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.debug(
             "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
@@ -347,8 +348,11 @@ async def ws_event_stream(
         subscriptions.clear()
         if live_stream.task:
             live_stream.task.cancel()
+        if live_stream.wait_sync_task:
+            live_stream.wait_sync_task.cancel()
         if live_stream.end_time_unsub:
             live_stream.end_time_unsub()
+            live_stream.end_time_unsub = None
 
     if end_time:
         live_stream.end_time_unsub = async_track_point_in_utc_time(
@@ -395,9 +399,22 @@ async def ws_event_stream(
         partial=True,
     )
 
-    await _async_wait_for_recorder_sync(hass)
+    live_stream.task = asyncio.create_task(
+        _async_events_consumer(
+            subscriptions_setup_complete_time,
+            connection,
+            msg_id,
+            stream_queue,
+            event_processor,
+        )
+    )
+
+    live_stream.wait_sync_task = asyncio.create_task(
+        _async_wait_for_recorder_sync(hass)
+    )
     if msg_id not in connection.subscriptions:
         # Unsubscribe happened while waiting for recorder
+        _unsub()
         return
 
     #
@@ -424,22 +441,6 @@ async def ws_event_stream(
         messages.event_message,
         event_processor,
         partial=False,
-    )
-
-    if not subscriptions:
-        # Unsubscribe happened while waiting for formatted events
-        # or there are no supported entities (all UOM or state class)
-        # or devices
-        return
-
-    live_stream.task = asyncio.create_task(
-        _async_events_consumer(
-            subscriptions_setup_complete_time,
-            connection,
-            msg_id,
-            stream_queue,
-            event_processor,
-        )
     )
 
 
