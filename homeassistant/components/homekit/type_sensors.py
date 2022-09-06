@@ -56,7 +56,6 @@ from .util import (
     convert_to_float,
     density_to_air_quality,
     density_to_air_quality_pm10,
-    density_to_air_quality_pm25,
     temperature_to_homekit,
 )
 
@@ -239,7 +238,7 @@ class PM25Sensor(AirQualitySensor):
         if self.char_density.value != density:
             self.char_density.set_value(density)
             _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
-        air_quality = density_to_air_quality_pm25(density)
+        air_quality = density_to_air_quality(density)
         if self.char_quality.value != air_quality:
             self.char_quality.set_value(air_quality)
             _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)

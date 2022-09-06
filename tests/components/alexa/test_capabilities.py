@@ -590,7 +590,7 @@ async def test_report_climate_state(hass):
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in (climate.HVAC_MODE_OFF, climate.HVAC_MODE_FAN_ONLY):
+    for off_modes in [climate.HVAC_MODE_OFF]:
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
@@ -624,6 +624,23 @@ async def test_report_climate_state(hass):
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
     properties.assert_equal(
         "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
+
+    # assert fan_only is reported as CUSTOM
+    hass.states.async_set(
+        "climate.downstairs",
+        "fan_only",
+        {
+            "friendly_name": "Climate Downstairs",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 31,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    properties = await reported_properties(hass, "climate.downstairs")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 31.0, "scale": "CELSIUS"}
     )
 
     hass.states.async_set(

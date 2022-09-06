@@ -1,6 +1,8 @@
 """Tests for the Ambee integration."""
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientWebSocketResponse
 from ambee import AmbeeConnectionError
 from ambee.exceptions import AmbeeAuthenticationError
 import pytest
@@ -10,12 +12,14 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.repairs import get_repairs
 
 
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ambee: AsyncMock,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test the Ambee configuration entry loading/unloading."""
     mock_config_entry.add_to_hass(hass)
@@ -24,8 +28,15 @@ async def test_load_unload_config_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == "pending_removal"
+
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 0
 
     assert not hass.data.get(DOMAIN)
 

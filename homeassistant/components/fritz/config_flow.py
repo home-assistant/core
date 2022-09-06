@@ -90,7 +90,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
-
+        assert self._host
         current_host = await self.hass.async_add_executor_job(
             socket.gethostbyname, self._host
         )

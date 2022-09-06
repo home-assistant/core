@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -21,17 +22,19 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    DATA_ACCOUNT,
-    DATA_COORDINATOR,
-    DOMAIN,
-    LOGGER,
-    SENSOR_TYPE_NEXT_PICKUP,
-)
+from .const import DOMAIN, LOGGER, SENSOR_TYPE_NEXT_PICKUP
 
 DEFAULT_UPDATE_INTERVAL = timedelta(hours=1)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+
+
+@dataclass
+class RidwellData:
+    """Define an object to be stored in `hass.data`."""
+
+    accounts: dict[str, RidwellAccount]
+    coordinator: DataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -77,10 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_ACCOUNT: accounts,
-        DATA_COORDINATOR: coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = RidwellData(
+        accounts=accounts, coordinator=coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

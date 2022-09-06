@@ -17,5 +17,18 @@
                 "description": "Konfiguriere ein lokales Elexa Guardian Ger\u00e4t."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, um stattdessen den Dienst `{alternate_service}` mit einer Zielentit\u00e4ts-ID von `{alternate_target}` zu verwenden. Dr\u00fccke dann unten auf SENDEN, um dieses Problem als behoben zu markieren.",
+                        "title": "Der Dienst {deprecated_service} wird entfernt"
+                    }
+                }
+            },
+            "title": "Der Dienst {deprecated_service} wird entfernt"
+        }
     }
 }

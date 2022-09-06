@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
@@ -15,7 +14,7 @@ import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import async_timeout
 import attr
 import voluptuous as vol
@@ -40,7 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -66,6 +65,8 @@ from .const import (  # noqa: F401
     DATA_CAMERA_PREFS,
     DATA_RTSP_TO_WEB_RTC,
     DOMAIN,
+    PREF_ORIENTATION,
+    PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
@@ -129,14 +130,6 @@ CAMERA_SERVICE_RECORD: Final = {
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
-
-WS_TYPE_CAMERA_THUMBNAIL: Final = "camera_thumbnail"
-SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CAMERA_THUMBNAIL,
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
 
 
 @dataclass
@@ -362,12 +355,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_CAMERA_THUMBNAIL,
-        websocket_camera_thumbnail,
-        SCHEMA_WS_CAMERA_THUMBNAIL,
-    )
+
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
@@ -388,7 +376,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
@@ -729,7 +717,12 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            raise web.HTTPUnauthorized()
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
+                raise web.HTTPUnauthorized()
+            # Invalid sigAuth or camera access token
+            raise web.HTTPForbidden()
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
@@ -791,32 +784,6 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
-
-
-@websocket_api.async_response
-async def websocket_camera_thumbnail(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Handle get camera thumbnail websocket command.
-
-    Async friendly.
-    """
-    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated")
-    try:
-        image = await async_get_image(hass, msg["entity_id"])
-        connection.send_big_result(
-            msg["id"],
-            {
-                "content_type": image.content_type,
-                "content": base64.b64encode(image.content).decode("utf-8"),
-            },
-        )
-    except HomeAssistantError:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "image_fetch_failed", "Unable to fetch image"
-            )
-        )
 
 
 @websocket_api.websocket_command(
@@ -909,7 +876,8 @@ async def websocket_get_prefs(
     {
         vol.Required("type"): "camera/update_prefs",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Optional("preload_stream"): bool,
+        vol.Optional(PREF_PRELOAD_STREAM): bool,
+        vol.Optional(PREF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
     }
 )
 @websocket_api.async_response
@@ -923,9 +891,13 @@ async def websocket_update_prefs(
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
-    await prefs.async_update(entity_id, **changes)
-
-    connection.send_result(msg["id"], prefs.get(entity_id).as_dict())
+    try:
+        entity_prefs = await prefs.async_update(entity_id, **changes)
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error setting camera preferences: %s", ex)
+        connection.send_error(msg["id"], "update_failed", str(ex))
+    else:
+        connection.send_result(msg["id"], entity_prefs)
 
 
 async def async_handle_snapshot_service(
@@ -994,6 +966,7 @@ async def _async_stream_endpoint_url(
     # Update keepalive setting which manages idle shutdown
     camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
     stream.keepalive = camera_prefs.preload_stream
+    stream.orientation = camera_prefs.orientation
 
     stream.add_provider(fmt)
     await stream.start()

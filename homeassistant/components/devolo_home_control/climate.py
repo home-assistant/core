@@ -88,7 +88,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         """Return the target temperature."""
         return self._value
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
     def set_temperature(self, **kwargs: Any) -> None:

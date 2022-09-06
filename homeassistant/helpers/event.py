@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable, Sequence
+from collections.abc import Callable, Coroutine, Iterable, Sequence
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -141,7 +141,7 @@ def threaded_listener_factory(
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[str, State, State], Awaitable[None] | None],
+    action: Callable[[str, State | None, State], Coroutine[Any, Any, None] | None],
     from_state: None | str | Iterable[str] = None,
     to_state: None | str | Iterable[str] = None,
 ) -> CALLBACK_TYPE:
@@ -197,9 +197,9 @@ def async_track_state_change(
         """Handle specific state changes."""
         hass.async_run_hass_job(
             job,
-            event.data.get("entity_id"),
+            event.data["entity_id"],
             event.data.get("old_state"),
-            event.data.get("new_state"),
+            event.data["new_state"],
         )
 
     @callback
@@ -344,10 +344,14 @@ def async_track_entity_registry_updated_event(
 ) -> CALLBACK_TYPE:
     """Track specific entity registry updated events indexed by entity_id.
 
+    Entities must be lower case.
+
     Similar to async_track_state_change_event.
     """
-    if not (entity_ids := _async_string_to_lower_list(entity_ids)):
+    if not entity_ids:
         return _remove_empty_listener
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
 
     entity_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
         TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {}
@@ -714,7 +718,9 @@ def async_track_state_change_filtered(
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
-    action: Callable[[str, State | None, State | None], Awaitable[None] | None],
+    action: Callable[
+        [str, State | None, State | None], Coroutine[Any, Any, None] | None
+    ],
     variables: TemplateVarsType | None = None,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires when a a template evaluates to 'true'.
@@ -1188,7 +1194,7 @@ def async_track_template_result(
 def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
-    action: Callable[[], Awaitable[None] | None],
+    action: Callable[[], Coroutine[Any, Any, None] | None],
     async_check_same_func: Callable[[str, State | None, State | None], bool],
     entity_ids: str | Iterable[str] = MATCH_ALL,
 ) -> CALLBACK_TYPE:
@@ -1257,8 +1263,8 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob[[datetime], Awaitable[None] | None]
-    | Callable[[datetime], Awaitable[None] | None],
+    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    | Callable[[datetime], Coroutine[Any, Any, None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
@@ -1279,8 +1285,8 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob[[datetime], Awaitable[None] | None]
-    | Callable[[datetime], Awaitable[None] | None],
+    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    | Callable[[datetime], Coroutine[Any, Any, None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
@@ -1293,7 +1299,7 @@ def async_track_point_in_utc_time(
     cancel_callback: asyncio.TimerHandle | None = None
 
     @callback
-    def run_action(job: HassJob[[datetime], Awaitable[None] | None]) -> None:
+    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
         """Call the action."""
         nonlocal cancel_callback
         # Depending on the available clock support (including timer hardware
@@ -1330,8 +1336,8 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
-    action: HassJob[[datetime], Awaitable[None] | None]
-    | Callable[[datetime], Awaitable[None] | None],
+    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    | Callable[[datetime], Coroutine[Any, Any, None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     if not isinstance(delay, timedelta):
@@ -1346,7 +1352,7 @@ call_later = threaded_listener_factory(async_call_later)
 @bind_hass
 def async_track_time_interval(
     hass: HomeAssistant,
-    action: Callable[[datetime], Awaitable[None] | None],
+    action: Callable[[datetime], Coroutine[Any, Any, None] | None],
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
@@ -1388,7 +1394,7 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass: HomeAssistant = attr.ib()
-    job: HassJob[[], Awaitable[None] | None] = attr.ib()
+    job: HassJob[[], Coroutine[Any, Any, None] | None] = attr.ib()
     event: str = attr.ib()
     offset: timedelta | None = attr.ib()
     _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
@@ -1479,7 +1485,7 @@ time_tracker_timestamp = time.time
 @bind_hass
 def async_track_utc_time_change(
     hass: HomeAssistant,
-    action: Callable[[datetime], Awaitable[None] | None],
+    action: Callable[[datetime], Coroutine[Any, Any, None] | None],
     hour: Any | None = None,
     minute: Any | None = None,
     second: Any | None = None,
@@ -1544,7 +1550,7 @@ track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 @bind_hass
 def async_track_time_change(
     hass: HomeAssistant,
-    action: Callable[[datetime], Awaitable[None] | None],
+    action: Callable[[datetime], Coroutine[Any, Any, None] | None],
     hour: Any | None = None,
     minute: Any | None = None,
     second: Any | None = None,

@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Spotify'\u0131 YAML kullanarak yap\u0131land\u0131rma kald\u0131r\u0131ld\u0131.\n\nMevcut YAML yap\u0131land\u0131rman\u0131z Home Assistant taraf\u0131ndan kullan\u0131lmaz.\n\nYAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Spotify YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131ld\u0131"
+        }
+    },
     "system_health": {
         "info": {
             "api_endpoint_reachable": "Spotify API u\u00e7 noktas\u0131na ula\u015f\u0131labilir"

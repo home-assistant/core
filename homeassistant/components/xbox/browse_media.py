@@ -1,7 +1,7 @@
 """Support for media browsing."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+from typing import NamedTuple
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
@@ -56,6 +56,7 @@ async def build_item_response(
     apps: InstalledPackagesList = await client.smartglass.get_installed_apps(device_id)
 
     if media_content_type in (None, "library"):
+        children: list[BrowseMedia] = []
         library_info = BrowseMedia(
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="library",
@@ -63,10 +64,8 @@ async def build_item_response(
             title="Installed Applications",
             can_play=False,
             can_expand=True,
-            children=[],
+            children=children,
         )
-        if TYPE_CHECKING:
-            assert library_info.children is not None
 
         # Add Home
         id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
@@ -78,7 +77,7 @@ async def build_item_response(
         home_thumb = _find_media_image(
             home_catalog.products[0].localized_properties[0].images
         )
-        library_info.children.append(
+        children.append(
             BrowseMedia(
                 media_class=MEDIA_CLASS_APP,
                 media_content_id="Home",
@@ -101,7 +100,7 @@ async def build_item_response(
             tv_thumb = _find_media_image(
                 tv_catalog.products[0].localized_properties[0].images
             )
-            library_info.children.append(
+            children.append(
                 BrowseMedia(
                     media_class=MEDIA_CLASS_APP,
                     media_content_id="TV",
@@ -117,7 +116,7 @@ async def build_item_response(
             {app.content_type for app in apps.result if app.content_type in TYPE_MAP}
         )
         for c_type in content_types:
-            library_info.children.append(
+            children.append(
                 BrowseMedia(
                     media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id=c_type,

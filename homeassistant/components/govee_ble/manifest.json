@@ -1,0 +1,60 @@
+{
+  "domain": "govee_ble",
+  "name": "Govee Bluetooth",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/govee_ble",
+  "bluetooth": [
+    { "local_name": "Govee*", "connectable": false },
+    { "local_name": "GVH5*", "connectable": false },
+    { "local_name": "B5178*", "connectable": false },
+    {
+      "manufacturer_id": 6966,
+      "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 26589,
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 18994,
+      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 818,
+      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 59970,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 63585,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 14474,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 10032,
+      "service_uuid": "00008251-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 19506,
+      "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    }
+  ],
+  "requirements": ["govee-ble==0.17.2"],
+  "dependencies": ["bluetooth"],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_push"
+}

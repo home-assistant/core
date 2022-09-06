@@ -48,6 +48,7 @@ from .const import (
     FEATURE_FLAGS_AIRFRESH_T2017,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
+    FEATURE_FLAGS_AIRPURIFIER_4,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -68,6 +69,8 @@ from .const import (
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -82,6 +85,7 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
+    SPEEDS_FAN_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -231,9 +235,13 @@ async def async_setup_entry(
     elif model in MODELS_FAN_MIIO:
         entity = XiaomiFan(device, config_entry, unique_id, coordinator)
     elif model == MODEL_FAN_ZA5:
-        entity = XiaomiFanZA5(device, config_entry, unique_id, coordinator)
+        speed_count = SPEEDS_FAN_MIOT[model]
+        entity = XiaomiFanZA5(device, config_entry, unique_id, coordinator, speed_count)
     elif model in MODELS_FAN_MIOT:
-        entity = XiaomiFanMiot(device, config_entry, unique_id, coordinator)
+        speed_count = SPEEDS_FAN_MIOT[model]
+        entity = XiaomiFanMiot(
+            device, config_entry, unique_id, coordinator, speed_count
+        )
     else:
         return
 
@@ -411,6 +419,14 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
             self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
+        elif self._model in [MODEL_AIRPURIFIER_4, MODEL_AIRPURIFIER_4_PRO]:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_4
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
+            self._attr_supported_features = (
+                FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+            )
+            self._speed_count = 3
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
@@ -1033,6 +1049,11 @@ class XiaomiFanP5(XiaomiGenericFan):
 class XiaomiFanMiot(XiaomiGenericFan):
     """Representation of a Xiaomi Fan Miot."""
 
+    def __init__(self, device, entry, unique_id, coordinator, speed_count):
+        """Initialize MIOT fan with speed count."""
+        super().__init__(device, entry, unique_id, coordinator)
+        self._speed_count = speed_count
+
     @property
     def operation_mode_class(self):
         """Hold operation mode class."""
@@ -1050,7 +1071,9 @@ class XiaomiFanMiot(XiaomiGenericFan):
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:
-            self._percentage = self.coordinator.data.speed
+            self._percentage = ranged_value_to_percentage(
+                (1, self._speed_count), self.coordinator.data.speed
+            )
         else:
             self._percentage = 0
 
@@ -1076,16 +1099,22 @@ class XiaomiFanMiot(XiaomiGenericFan):
             await self.async_turn_off()
             return
 
-        await self._try_command(
-            "Setting fan speed percentage of the miio device failed.",
-            self._device.set_speed,
-            percentage,
+        speed = math.ceil(
+            percentage_to_ranged_value((1, self._speed_count), percentage)
         )
-        self._percentage = percentage
 
+        # if the fan is not on, we have to turn it on first
         if not self.is_on:
             await self.async_turn_on()
-        else:
+
+        result = await self._try_command(
+            "Setting fan speed percentage of the miio device failed.",
+            self._device.set_speed,
+            speed,
+        )
+
+        if result:
+            self._percentage = ranged_value_to_percentage((1, self._speed_count), speed)
             self.async_write_ha_state()
 
 

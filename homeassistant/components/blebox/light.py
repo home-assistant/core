@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
@@ -55,11 +56,14 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity, LightEntity):
     """Representation of BleBox lights."""
 
-    def __init__(self, feature):
+    _feature: blebox_uniapi.light.Light
+
+    def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
         self._attr_supported_color_modes = {self.color_mode}
-        self._attr_supported_features = LightEntityFeature.EFFECT
+        if feature.effect_list:
+            self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
     def is_on(self) -> bool:
@@ -90,7 +94,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         return color_mode_tmp
 
     @property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._feature.effect_list
 
@@ -124,7 +128,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbww_hex))
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
@@ -175,6 +179,6 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
                     f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
                 ) from exc
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._feature.async_off()

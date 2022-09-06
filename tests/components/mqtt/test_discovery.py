@@ -46,7 +46,7 @@ def entity_reg(hass):
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
 async def test_subscribing_config_topic(hass, mqtt_mock_entry_no_yaml_config):
@@ -947,6 +947,7 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -999,6 +1000,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1037,6 +1039,7 @@ async def test_discovery_expansion_3(hass, mqtt_mock_entry_no_yaml_config, caplo
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1076,6 +1079,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1124,6 +1128,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1181,6 +1186,8 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_SCHEMA",
     "CONF_SWING_MODE_LIST",
     "CONF_TEMP_STEP",
+    # Removed
+    "CONF_WHITE_VALUE",
 ]
 
 
@@ -1238,19 +1245,27 @@ async def test_no_implicit_state_topic_switch(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
         }
     ],
 )
 async def test_complex_discovery_topic_prefix(
-    hass, mqtt_mock_entry_no_yaml_config, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Tests handling of discovery topic prefix with multiple slashes."""
-    await mqtt_mock_entry_no_yaml_config()
+    assert await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+            }
+        },
+    )
+
     async_fire_mqtt_message(
         hass,
         ("my_home/homeassistant/register/binary_sensor/node1/object1/config"),

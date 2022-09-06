@@ -4,23 +4,23 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import functools
-from typing import TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
 _T = TypeVar("_T")
 
-FUNC = Callable[[HomeAssistant], _T]
+_FuncType = Callable[[HomeAssistant], _T]
 
 
-def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
+def singleton(data_key: str) -> Callable[[_FuncType[_T]], _FuncType[_T]]:
     """Decorate a function that should be called once per instance.
 
     Result will be cached and simultaneous calls will be handled.
     """
 
-    def wrapper(func: FUNC) -> FUNC:
+    def wrapper(func: _FuncType[_T]) -> _FuncType[_T]:
         """Wrap a function with caching logic."""
         if not asyncio.iscoroutinefunction(func):
 
@@ -35,10 +35,10 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
 
         @bind_hass
         @functools.wraps(func)
-        async def async_wrapped(hass: HomeAssistant) -> _T:
+        async def async_wrapped(hass: HomeAssistant) -> Any:
             if data_key not in hass.data:
                 evt = hass.data[data_key] = asyncio.Event()
-                result = await func(hass)
+                result = await func(hass)  # type: ignore[misc]
                 hass.data[data_key] = result
                 evt.set()
                 return cast(_T, result)
@@ -51,6 +51,6 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
 
             return cast(_T, obj_or_evt)
 
-        return async_wrapped
+        return async_wrapped  # type: ignore[return-value]
 
     return wrapper

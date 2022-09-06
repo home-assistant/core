@@ -1,0 +1,21 @@
+{
+    "state": {
+        "homekit_controller__thread_node_capabilities": {
+            "border_router_capable": "Border Router \u80fd\u529b",
+            "full": "\u6240\u6709\u7d42\u7aef\u88dd\u7f6e",
+            "minimal": "\u6700\u4f4e\u7d42\u7aef\u88dd\u7f6e",
+            "none": "\u7121",
+            "router_eligible": "Router \u7d42\u7aef\u88dd\u7f6e",
+            "sleepy": "\u5f85\u547d\u7d42\u7aef\u88dd\u7f6e"
+        },
+        "homekit_controller__thread_status": {
+            "border_router": "Border Router",
+            "child": "Child",
+            "detached": "Detached",
+            "disabled": "\u95dc\u9589",
+            "joining": "\u52a0\u5165",
+            "leader": "Leader",
+            "router": "Router"
+        }
+    }
+}

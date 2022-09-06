@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aioguardian import Client
 from aioguardian.errors import GuardianError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -13,9 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ValveControllerEntity, ValveControllerEntityDescription
-from .const import API_VALVE_STATUS, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-from .util import GuardianDataUpdateCoordinator
+from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
+from .const import API_VALVE_STATUS, DOMAIN
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -46,12 +44,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    client = entry_data[DATA_CLIENT]
-    valve_controller_coordinators = entry_data[DATA_COORDINATOR]
+    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        ValveControllerSwitch(entry, valve_controller_coordinators, description, client)
+        ValveControllerSwitch(entry, data, description)
         for description in VALVE_CONTROLLER_DESCRIPTIONS
     )
 
@@ -71,15 +67,14 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: dict[str, GuardianDataUpdateCoordinator],
+        data: GuardianData,
         description: ValveControllerSwitchDescription,
-        client: Client,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinators, description)
+        super().__init__(entry, data.valve_controller_coordinators, description)
 
         self._attr_is_on = True
-        self._client = client
+        self._client = data.client
 
     @callback
     def _async_update_from_latest_data(self) -> None:

@@ -277,10 +277,8 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     """Bring a config entry up to current standards."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed(
-            "New SimpliSafe OAuth standard requires re-authentication"
+            "SimpliSafe OAuth standard requires re-authentication"
         )
-    if CONF_USERNAME not in entry.data:
-        raise ConfigEntryAuthFailed("Need to re-auth with username/password")
 
     entry_updates = {}
     if not entry.unique_id:
