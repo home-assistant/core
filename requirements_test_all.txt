@@ -477,7 +477,7 @@ envoy_reader==0.20.1
 ephem==4.1.2
 
 # homeassistant.components.epson
-epson-projector==0.4.6
+epson-projector==0.5.0
 
 # homeassistant.components.faa_delays
 faadelays==0.0.7
