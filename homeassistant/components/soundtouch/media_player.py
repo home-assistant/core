@@ -4,6 +4,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 import re
+from typing import Any
 
 from libsoundtouch.device import SoundTouchDevice
 from libsoundtouch.utils import Source
@@ -17,6 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
+    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -154,7 +156,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Return SoundTouch device."""
         return self._device
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest data."""
         self._status = self._device.status()
         self._volume = self._device.volume()
@@ -194,47 +196,47 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._volume.muted
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self._device.power_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on media player."""
         self._device.power_on()
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self._device.volume_up()
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self._device.volume_down()
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._device.set_volume(int(volume * 100))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._device.mute()
 
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self._device.play_pause()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._device.play()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._device.pause()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._device.next_track()
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._device.previous_track()
 
@@ -273,7 +275,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Album name of current playing media."""
         return self._status.album
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Populate zone info which requires entity_id."""
 
         @callback
@@ -285,7 +287,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             EVENT_HOMEASSISTANT_START, async_update_on_start
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
             play_item = await media_source.async_resolve_media(
@@ -297,7 +301,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             partial(self.play_media, media_type, media_id, **kwargs)
         )
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r"http?://", str(media_id)):
@@ -319,7 +323,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             else:
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         if source == Source.AUX.value:
             _LOGGER.debug("Selecting source AUX")
@@ -399,7 +403,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
         return attributes
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)
 
