@@ -352,8 +352,6 @@ def ble_device_matches(
     service_info: BluetoothServiceInfoBleak,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
-    device = service_info.device
-
     # Don't check address here since all callers already
     # check the address and we don't want to double check
     # since it would result in an unreachable reject case.
@@ -384,7 +382,8 @@ def ble_device_matches(
                 return False
 
     if (local_name := matcher.get(LOCAL_NAME)) and (
-        (device_name := advertisement_data.local_name or device.name) is None
+        (device_name := advertisement_data.local_name or service_info.device.name)
+        is None
         or not _memorized_fnmatch(
             device_name,
             local_name,
