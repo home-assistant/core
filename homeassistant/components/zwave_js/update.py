@@ -63,9 +63,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL
-        | UpdateEntityFeature.RELEASE_NOTES
-        | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -154,8 +152,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         """Install an update."""
         firmware = self._latest_version_firmware
         assert firmware
-        self._attr_in_progress = True
-        self.async_write_ha_state()
         try:
             for file in firmware.files:
                 await self.driver.controller.async_begin_ota_firmware_update(
@@ -166,8 +162,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         else:
             self._attr_installed_version = self._attr_latest_version = firmware.version
             self._latest_version_firmware = None
-        finally:
-            self._attr_in_progress = False
             self.async_write_ha_state()
 
     async def async_poll_value(self, _: bool) -> None:
