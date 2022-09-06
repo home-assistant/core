@@ -462,13 +462,9 @@ class NodeEvents:
             node.on("notification", self.async_on_notification)
         )
 
-        if (
-            not node.is_controller_node
-            and node.command_classes
-            and any(
-                CommandClass.FIRMWARE_UPDATE_MD.value == cc.id
-                for cc in node.command_classes
-            )
+        if not node.is_controller_node and any(
+            CommandClass.FIRMWARE_UPDATE_MD.value == cc.id
+            for cc in node.command_classes
         ):
             # Create a firmware update entity for each non-controller device that
             # supports firmware updates
