@@ -116,7 +116,7 @@ class ZMSensorMonitors(SensorEntity):
         """Return True if Monitor is available."""
         return self._is_available
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         if not (state := self._monitor.function):
             self._state = None
@@ -143,7 +143,7 @@ class ZMSensorEvents(SensorEntity):
         """Return the name of the sensor."""
         return f"{self._monitor.name} {self.time_period.title}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         self._attr_native_value = self._monitor.get_events(
             self.time_period, self._include_archived
@@ -174,7 +174,7 @@ class ZMSensorRunState(SensorEntity):
         """Return True if ZoneMinder is available."""
         return self._is_available
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         self._state = self._client.get_active_state()
         self._is_available = self._client.is_available
