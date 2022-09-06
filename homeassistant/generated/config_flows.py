@@ -390,6 +390,7 @@ FLOWS = {
         "squeezebox",
         "srp_energy",
         "starline",
+        "starlink",
         "steam_online",
         "steamist",
         "stookalert",

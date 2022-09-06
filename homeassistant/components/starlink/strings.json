@@ -1,0 +1,17 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Starlink terminal is already configured"
+    },
+    "error": {
+      "server_error": "Could not reach Starlink terminal."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    }
+  }
+}

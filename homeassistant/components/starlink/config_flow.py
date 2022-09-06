@@ -1,0 +1,55 @@
+"""Config flow for Starlink."""
+from __future__ import annotations
+
+from typing import Any
+
+from starlink_grpc import ChannelContext, GrpcError, get_id
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.data_entry_flow import FlowResult
+
+from .const import DOMAIN
+
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Required(CONF_IP_ADDRESS, default="192.168.100.1:9200"): str}
+)
+
+
+class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
+    """The configuration flow for a Starlink system."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask the user for a server address and a name for the system."""
+        errors = {}
+        if user_input:
+            # Input validation. If everything looks good, create the entry
+            uid = await self.get_device_id(url=user_input[CONF_IP_ADDRESS])
+            print(f"UID: {uid}")
+            if uid:
+                # Make sure we're not configuring the same device
+                await self.async_set_unique_id(uid)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title="Starlink",
+                    data=user_input,
+                )
+            errors[CONF_IP_ADDRESS] = "server_error"
+        return self.async_show_form(
+            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+        )
+
+    async def get_device_id(self, url: str) -> str | None:
+        """Get the device UID."""
+        try:
+            context = ChannelContext(target=url)
+            response: str = await self.hass.async_add_executor_job(
+                lambda: get_id(context)
+            )
+            return response
+        except GrpcError:
+            return None
