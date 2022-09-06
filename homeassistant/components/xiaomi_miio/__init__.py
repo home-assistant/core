@@ -427,6 +427,21 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         raise ConfigEntryNotReady() from error
     gateway_info = gateway.gateway_info
 
+    def event_callback_factory(device_id):
+        """Create event callback for a subdevice."""
+
+        @callback
+        def event_callback(action, params):
+            """Event from subdevice."""
+            _LOGGER.debug("Got new event_callback: %s, %s", action, params)
+            hass.bus.fire(
+                f"{DOMAIN}_event",
+                {"device_id": device_id, "type": action},
+            )
+            #{"entity_id": self.entity_id, "action": action, "params": params},
+
+        return event_callback
+
     device_registry = dr.async_get(hass)
     # Register gateway
     device_registry.async_get_or_create(
@@ -439,9 +454,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         sw_version=gateway_info.firmware_version,
         hw_version=gateway_info.hardware_version,
     )
-    # Register subdevices (for trigger only devices)
-    for sub_device in gateway.devices.values():
-        device_registry.async_get_or_create(
+    # Register subdevices and event callbacks
+    for sub_device in gateway.gateway_device.devices.values():
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, sub_device.sid)},
             via_device=(DOMAIN, gateway_id),
@@ -451,6 +466,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
             sw_version=sub_device.firmware_version,
             hw_version=sub_device.zigbee_model,
         )
+        
+        sub_device.register_callback(f"{sub_device.sid}_event", event_callback_factory(device_entry.id))
+        #await sub_device.subscribe_events()
 
     def update_data_factory(sub_device):
         """Create update function for a subdevice."""
