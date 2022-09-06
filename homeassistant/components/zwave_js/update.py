@@ -97,6 +97,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
+        self._poll_unsub = None
         for status, event_name in (
             (NodeStatus.ASLEEP, "wake up"),
             (NodeStatus.DEAD, "alive"),
@@ -125,6 +126,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                         self.node.node_id,
                         err,
                     )
+                    # If error code is 260, the node didn't respond to the get request
+                    # for either the Version or Manufacturer CCs. We should try again in
+                    # an hour.
                     if err.zwave_error_code == 260:
                         self._poll_unsub = async_call_later(
                             self.hass, timedelta(hours=1), self._async_update
