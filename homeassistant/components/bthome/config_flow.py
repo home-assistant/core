@@ -1,11 +1,11 @@
-"""Config flow for BThome Bluetooth integration."""
+"""Config flow for BTHome Bluetooth integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
 import dataclasses
 from typing import Any
 
-from bthome_ble import BThomeBluetoothDeviceData as DeviceData
+from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
 from bthome_ble.parser import EncryptionScheme
 import voluptuous as vol
 
@@ -34,8 +34,8 @@ def _title(discovery_info: BluetoothServiceInfo, device: DeviceData) -> str:
     return device.title or device.get_device_name() or discovery_info.name
 
 
-class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for BThome Bluetooth."""
+class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for BTHome Bluetooth."""
 
     VERSION = 1
 
@@ -68,7 +68,7 @@ class BThomeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_get_encryption_key(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Enter a bindkey for an encrypted BThome device."""
+        """Enter a bindkey for an encrypted BTHome device."""
         assert self._discovery_info
         assert self._discovered_device
 
