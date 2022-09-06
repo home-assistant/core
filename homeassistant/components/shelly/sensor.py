@@ -281,7 +281,7 @@ SENSORS: Final = {
         key="adc|adc",
         name="ADC",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        value=lambda value: round(value, 1),
+        value=lambda value: round(value, 2),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
