@@ -107,7 +107,7 @@ class PjLinkDevice(MediaPlayerEntity):
         projector.authenticate(self._password)
         return projector
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state from the device."""
 
         with self.projector() as projector:
@@ -161,22 +161,22 @@ class PjLinkDevice(MediaPlayerEntity):
         """Return all available input sources."""
         return self._source_list
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn projector off."""
         with self.projector() as projector:
             projector.set_power("off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn projector on."""
         with self.projector() as projector:
             projector.set_power("on")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
             projector.set_mute(MUTE_AUDIO, mute)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         source = self._source_name_mapping[source]
         with self.projector() as projector:

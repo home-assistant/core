@@ -1,6 +1,8 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
 from __future__ import annotations
 
+from typing import Any
+
 from haphilipsjs import ConnectionFailure
 
 from homeassistant.components.media_player import (
@@ -135,7 +137,7 @@ class PhilipsTVMediaPlayer(
         """List of available input sources."""
         return list(self._sources.values())
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         if source_id := _inverted(self._sources).get(source):
             await self._tv.setSource(source_id)
@@ -151,7 +153,7 @@ class PhilipsTVMediaPlayer(
         """Boolean if volume is currently muted."""
         return self._tv.muted
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the device."""
         if self._tv.on and self._tv.powerstate:
             await self._tv.setPowerState("On")
@@ -160,7 +162,7 @@ class PhilipsTVMediaPlayer(
             await self.coordinator.turn_on.async_run(self.hass, self._context)
         await self._async_update_soon()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the device."""
         if self._state == STATE_ON:
             await self._tv.sendKey("Standby")
@@ -169,17 +171,17 @@ class PhilipsTVMediaPlayer(
         else:
             _LOGGER.debug("Ignoring turn off when already in expected state")
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Send volume up command."""
         await self._tv.sendKey("VolumeUp")
         await self._async_update_soon()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Send volume down command."""
         await self._tv.sendKey("VolumeDown")
         await self._async_update_soon()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         if self._tv.muted != mute:
             await self._tv.sendKey("Mute")
@@ -187,22 +189,22 @@ class PhilipsTVMediaPlayer(
         else:
             _LOGGER.debug("Ignoring request when already in expected state")
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._tv.setVolume(volume, self._tv.muted)
         await self._async_update_soon()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send rewind command."""
         await self._tv.sendKey("Previous")
         await self._async_update_soon()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send fast forward command."""
         await self._tv.sendKey("Next")
         await self._async_update_soon()
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Send pause command to media player."""
         if self._tv.quirk_playpause_spacebar:
             await self._tv.sendUnicode(" ")
@@ -210,17 +212,17 @@ class PhilipsTVMediaPlayer(
             await self._tv.sendKey("PlayPause")
         await self._async_update_soon()
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send pause command to media player."""
         await self._tv.sendKey("Play")
         await self._async_update_soon()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send play command to media player."""
         await self._tv.sendKey("Pause")
         await self._async_update_soon()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send play command to media player."""
         await self._tv.sendKey("Stop")
         await self._async_update_soon()
@@ -268,7 +270,9 @@ class PhilipsTVMediaPlayer(
         if app := self._tv.applications.get(self._tv.application_id):
             return app.get("label")
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
@@ -460,7 +464,7 @@ class PhilipsTVMediaPlayer(
             _LOGGER.warning("Failed to fetch image")
         return None, None
 
-    async def async_get_media_image(self):
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Serve album art. Returns (content, content_type)."""
         return await self.async_get_browse_image(
             self.media_content_type, self.media_content_id, None
