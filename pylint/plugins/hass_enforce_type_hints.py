@@ -2542,10 +2542,8 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
     ):
         if isinstance(match.return_type, str):
             valid_types = {match.return_type}
-        elif isinstance(match.return_type, list):
-            valid_types = {el for el in match.return_type if isinstance(el, str)}
         else:
-            pass
+            valid_types = {el for el in match.return_type if isinstance(el, str)}
 
         try:
             for infer_node in node.infer():
