@@ -37,7 +37,6 @@ async def async_setup_entry(
 
         vm_sensor = create_binary_sensor(
             coordinator=coordinator,
-            node=config_entry.data[CONF_NODE],
             vm_id=vm_id,
             key="status",
             name="Status",
@@ -60,7 +59,6 @@ async def async_setup_entry(
 
         container_sensor = create_binary_sensor(
             coordinator=coordinator,
-            node=config_entry.data[CONF_NODE],
             vm_id=container_id,
             key="status",
             name="Status",
@@ -79,7 +77,6 @@ async def async_setup_entry(
 
 def create_binary_sensor(
     coordinator,
-    node,
     vm_id,
     key,
     name,
@@ -89,7 +86,7 @@ def create_binary_sensor(
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
-        unique_id=f"proxmox_{config_entry.data[CONF_HOST]}{config_entry.data[CONF_PORT]}{node}{vm_id}{key}",
+        unique_id=f"proxmox_{config_entry.data[CONF_HOST]}_{config_entry.data[CONF_PORT]}_{config_entry.data[CONF_NODE]}_{vm_id}_{key}",
         name=name,
         icon="",
         device_class=BinarySensorDeviceClass.RUNNING,
