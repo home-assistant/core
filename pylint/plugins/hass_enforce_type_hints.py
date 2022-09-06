@@ -1729,7 +1729,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="set_repeat",
                     arg_types={
-                        1: "str",
+                        1: "RepeatMode",
                     },
                     return_type=None,
                     has_async_counterpart=True,
