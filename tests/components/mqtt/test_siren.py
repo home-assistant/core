@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import siren
+from homeassistant.components import mqtt, siren
 from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -53,8 +53,13 @@ from .test_common import (
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
-    siren.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    mqtt.DOMAIN: {siren.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[siren.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -83,15 +88,16 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
+        mqtt.DOMAIN,
         {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_on": 1,
-                "payload_off": 0,
+            mqtt.DOMAIN: {
+                siren.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_on": 1,
+                    "payload_off": 0,
+                }
             }
         },
     )
@@ -119,15 +125,16 @@ async def test_sending_mqtt_commands_and_optimistic(
     """Test the sending MQTT commands in optimistic mode."""
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
+        mqtt.DOMAIN,
         {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "payload_on": "beer on",
-                "payload_off": "beer off",
-                "qos": "2",
+            mqtt.DOMAIN: {
+                siren.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "payload_on": "beer on",
+                    "payload_off": "beer off",
+                    "qos": "2",
+                }
             }
         },
     )
@@ -162,16 +169,17 @@ async def test_controlling_state_via_topic_and_json_message(
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
+        mqtt.DOMAIN,
         {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_on": "beer on",
-                "payload_off": "beer off",
-                "state_value_template": "{{ value_json.val }}",
+            mqtt.DOMAIN: {
+                siren.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_on": "beer on",
+                    "payload_off": "beer off",
+                    "state_value_template": "{{ value_json.val }}",
+                }
             }
         },
     )
@@ -202,16 +210,17 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     """Test the controlling state via topic and JSON message without a value template."""
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
+        mqtt.DOMAIN,
         {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_on": "beer on",
-                "payload_off": "beer off",
-                "available_tones": ["ping", "siren", "bell"],
+            mqtt.DOMAIN: {
+                siren.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_on": "beer on",
+                    "payload_off": "beer off",
+                    "available_tones": ["ping", "siren", "bell"],
+                }
             }
         },
     )
@@ -284,7 +293,6 @@ async def test_filtering_not_supported_attributes_optimistic(
 ):
     """Test setting attributes with support flags optimistic."""
     config = {
-        "platform": "mqtt",
         "command_topic": "command-topic",
         "available_tones": ["ping", "siren", "bell"],
     }
@@ -300,8 +308,8 @@ async def test_filtering_not_supported_attributes_optimistic(
 
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
-        {siren.DOMAIN: [config1, config2, config3]},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {siren.DOMAIN: [config1, config2, config3]}},
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
@@ -370,7 +378,6 @@ async def test_filtering_not_supported_attributes_via_state(
 ):
     """Test setting attributes with support flags via state."""
     config = {
-        "platform": "mqtt",
         "command_topic": "command-topic",
         "available_tones": ["ping", "siren", "bell"],
     }
@@ -389,8 +396,8 @@ async def test_filtering_not_supported_attributes_via_state(
 
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
-        {siren.DOMAIN: [config1, config2, config3]},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {siren.DOMAIN: [config1, config2, config3]}},
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
@@ -450,14 +457,14 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -513,17 +520,18 @@ async def test_custom_state_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test the state payload."""
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
+        mqtt.DOMAIN,
         {
-            siren.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_on": 1,
-                "payload_off": 0,
-                "state_on": "HIGH",
-                "state_off": "LOW",
+            mqtt.DOMAIN: {
+                siren.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_on": 1,
+                    "payload_off": 0,
+                    "state_on": "HIGH",
+                    "state_off": "LOW",
+                }
             }
         },
     )
@@ -550,7 +558,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -559,14 +567,14 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG, {}
+        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY, {}
     )
 
 
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -575,7 +583,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, siren.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        siren.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -584,14 +596,22 @@ async def test_update_with_json_attrs_bad_JSON(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, siren.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        siren.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, siren.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        siren.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -636,8 +656,8 @@ async def test_discovery_update_siren_topic_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered siren."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
@@ -673,8 +693,8 @@ async def test_discovery_update_siren_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered siren."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[siren.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
@@ -706,7 +726,7 @@ async def test_discovery_update_siren_template(
 
 async def test_command_templates(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test siren with command templates optimistic."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
     config1["name"] = "Beer"
     config1["available_tones"] = ["ping", "chimes"]
     config1[
@@ -719,8 +739,8 @@ async def test_command_templates(hass, mqtt_mock_entry_with_yaml_config, caplog)
 
     assert await async_setup_component(
         hass,
-        siren.DOMAIN,
-        {siren.DOMAIN: [config1, config2]},
+        mqtt.DOMAIN,
+        {mqtt.DOMAIN: {siren.DOMAIN: [config1, config2]}},
     )
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
@@ -824,42 +844,42 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT siren device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT siren device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, siren.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -869,7 +889,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         siren.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         siren.SERVICE_TURN_ON,
         command_payload='{"state":"ON"}',
     )
@@ -906,7 +926,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with command templates and different encoding."""
     domain = siren.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
     config[siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
 
     await help_test_publishing_with_custom_encoding(
@@ -926,7 +946,7 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = siren.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
@@ -935,7 +955,7 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = siren.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
@@ -960,7 +980,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         siren.DOMAIN,
-        DEFAULT_CONFIG[siren.DOMAIN],
+        DEFAULT_CONFIG_LEGACY[siren.DOMAIN],
         topic,
         value,
         attribute,
@@ -971,7 +991,7 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = siren.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
     config["name"] = "test"
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
@@ -981,7 +1001,20 @@ async def test_setup_manual_entity_from_yaml(hass):
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = siren.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = siren.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None
