@@ -10,7 +10,7 @@ from . import (
     SERVICE_INFO,
     USER_INPUT,
     MockMicroBotApiClient,
-    MockMicroBotApiClient2,
+    MockMicroBotApiClientFail,
     patch_async_setup_entry,
 )
 
@@ -161,8 +161,8 @@ async def test_no_link(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient2",
-        MockMicroBotApiClient2,
+        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClientFail",
+        MockMicroBotApiClientFail,
     ), patch_async_setup_entry() as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],

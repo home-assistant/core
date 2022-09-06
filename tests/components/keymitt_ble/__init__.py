@@ -66,7 +66,7 @@ class MockMicroBotApiClient:
         return True
 
 
-class MockMicroBotApiClient2:
+class MockMicroBotApiClientFail:
     """Mock MicroBotApiClient."""
 
     def __init__(self, device, token):
@@ -79,5 +79,5 @@ class MockMicroBotApiClient2:
         """Mock disconnect."""
 
     def is_connected(self):
-        """Mock connected."""
+        """Mock disconnected."""
         return False
