@@ -2176,7 +2176,6 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
-@patch("homeassistant.components.logbook.websocket_api.MAX_RECORDER_WAIT", 0.15)
 async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplog):
     """Test we still start live streaming if the recorder is far behind."""
     now = dt_util.utcnow()
@@ -2249,8 +2248,6 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
     assert msg["id"] == 8
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-
-    assert "Recorder is behind" in caplog.text
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2426,6 +2423,17 @@ async def test_subscribe_entities_some_have_uom_multiple(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"entity_id": "sensor.keep", "state": "on", "when": ANY},
+        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
+    ]
+    assert "partial" not in msg["event"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
     assert msg["event"]["events"] == []
     assert "partial" not in msg["event"]
 
@@ -2437,11 +2445,8 @@ async def test_subscribe_entities_some_have_uom_multiple(
         {"entity_id": "sensor.keep", "state": "off", "when": ANY},
         {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
         {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep", "state": "on", "when": ANY},
-        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
     ]
+
     assert "partial" not in msg["event"]
 
     await websocket_client.close()
