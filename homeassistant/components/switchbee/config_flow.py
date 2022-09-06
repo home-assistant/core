@@ -121,7 +121,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             DeviceType.TimedSwitch,
             DeviceType.GroupSwitch,
             DeviceType.TimedPowerSwitch,
-            DeviceType.TwoWay,
         ]
 
         data_schema = {
