@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -14,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -82,12 +85,30 @@ ATTRS_MAP: dict[str, tuple[str, str]] = {
     ),
 }
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add Brother entities from a config_entry."""
     coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+
+    # Due to the change of the attribute name of one sensor, it is necessary to migrate
+    # the unique_id to the new one.
+    entity_registry = er.async_get(hass)
+    old_unique_id = f"{coordinator.data.serial.lower()}_b/w_counter"
+    if entity_id := entity_registry.async_get_entity_id(
+        PLATFORM, DOMAIN, old_unique_id
+    ):
+        new_unique_id = f"{coordinator.data.serial.lower()}_bw_counter"
+        _LOGGER.debug(
+            "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+            entity_id,
+            old_unique_id,
+            new_unique_id,
+        )
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     sensors = []
 

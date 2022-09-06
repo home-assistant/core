@@ -326,3 +326,22 @@ async def test_manual_update_entity(hass):
         )
 
         assert len(mock_update.mock_calls) == 1
+
+
+async def test_unique_id_migration(hass):
+    """Test states of the unique_id migration."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "0123456789_b/w_counter",
+        suggested_object_id="hl_l2340dw_b_w_counter",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("sensor.hl_l2340dw_b_w_counter")
+    assert entry
+    assert entry.unique_id == "0123456789_bw_counter"
