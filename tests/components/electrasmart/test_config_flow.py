@@ -29,7 +29,7 @@ async def test_user(hass: HomeAssistant):
     """Test user config."""
 
     with patch(
-        "electra.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         return_value=MOCK_DATA_GENERATE_TOKEN_RESP,
     ):
         # test with required
@@ -45,12 +45,13 @@ async def test_user(hass: HomeAssistant):
 async def test_one_time_password(hass: HomeAssistant):
     """Test one time password."""
     with patch(
-        "electra.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         return_value=MOCK_DATA_GENERATE_TOKEN_RESP,
     ), patch(
-        "electra.ElectraAPI.validate_one_time_password", return_value=MOCK_DATA_OTP_RESP
+        "electrasmart.api.ElectraAPI.validate_one_time_password",
+        return_value=MOCK_DATA_OTP_RESP,
     ), patch(
-        "electra.ElectraAPI.get_devices", return_value=[]
+        "electrasmart.api.ElectraAPI.get_devices", return_value=[]
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -69,7 +70,7 @@ async def test_cannot_connect(hass: HomeAssistant):
     """Test cannot connect."""
 
     with patch(
-        "electra.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         side_effect=ElectraApiError,
     ):
         # test with required
@@ -87,7 +88,7 @@ async def test_invalid_phone_number(hass: HomeAssistant):
     """Test invalid phone number."""
 
     with patch(
-        "electra.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         return_value=MOCK_DATA_INVALID_PHONE_NUMBER,
     ):
         # test with required
@@ -106,10 +107,10 @@ async def test_invalid_auth(hass: HomeAssistant):
     """Test invalid auth."""
 
     with patch(
-        "electra.ElectraAPI.generate_new_token",
+        "electrasmart.api.ElectraAPI.generate_new_token",
         return_value=MOCK_DATA_GENERATE_TOKEN_RESP,
     ), patch(
-        "electra.ElectraAPI.validate_one_time_password",
+        "electrasmart.api.ElectraAPI.validate_one_time_password",
         return_value=MOCK_DATA_INVALID_OTP,
     ):
         # test with required

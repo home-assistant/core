@@ -1,7 +1,7 @@
 """The Electra Air Conditioner integration."""
 from __future__ import annotations
 
-import electra
+from electrasmart.api import ElectraAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
@@ -21,7 +21,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = entry.data[CONF_TOKEN]
 
     websession = async_get_clientsession(hass)
-    electra_api = electra.ElectraAPI(websession, imei, token)
+
+    electra_api = ElectraAPI(websession, imei, token)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
     hass.data[DOMAIN][entry.entry_id] = electra_api
