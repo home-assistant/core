@@ -9,7 +9,7 @@ from homeassistant.components.homeassistant.triggers import event as event_trigg
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
-#from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KEY_DEVICE
@@ -27,7 +27,6 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(hass, device_id):
     """Return a list of triggers."""
-    _LOGGER.error("TEST TEST TEST")
     device_registry = dr.async_get(hass)
     device = device_registry.devices[device_id]
 
@@ -44,8 +43,16 @@ async def async_get_triggers(hass, device_id):
 
     miio_device = entry_data[KEY_DEVICE]
     if isinstance(miio_device, Gateway):
-        # check if it is a subdevice
-        if device.via_device_id is not None:
+        if device.via_device_id is None:  # gateway
+            triggers.append(
+                {
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_PLATFORM: "device",
+                    CONF_TYPE: "alarm_triggering",
+                }
+            )
+        else:  # subdevice
             for identifier in device.identifiers:
                 if identifier[0] == DOMAIN:
                     sid = identifier[1]
@@ -61,7 +68,7 @@ async def async_get_triggers(hass, device_id):
                         CONF_TYPE: trigger,
                     }
                 )
-    _LOGGER.error(triggers)
+
     return triggers
 
 
@@ -72,8 +79,6 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    _LOGGER.error("TEST 2")
-
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",

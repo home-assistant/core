@@ -182,21 +182,14 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
     @callback
     def push_callback(self, action, params):
         """Push from subdevice."""
-        _LOGGER.debug("Got new push_callback: %s, %s", action, params)
         self.schedule_update_ha_state()
-        self.hass.bus.fire(
-            f"{DOMAIN}.{self._sub_device.device_type}",
-            {"entity_id": self.entity_id, "action": action, "params": params},
-        )
 
     async def async_added_to_hass(self):
         """Subscribe to push server callbacks and install the callbacks on the gateway."""
         self._sub_device.register_callback(self.unique_id, self.push_callback)
-        await self._sub_device.subscribe_events()
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe callbacks and remove from gateway memory when removed."""
-        await self._sub_device.unsubscribe_events()
         self._sub_device.remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()

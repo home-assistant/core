@@ -434,15 +434,14 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
             _LOGGER.debug("Got new event_callback: %s, %s", action, params)
             hass.bus.fire(
                 f"{DOMAIN}_event",
-                {"device_id": device_id, "type": action},
+                {"device_id": device_id, "type": action, "params": params},
             )
-            #{"entity_id": self.entity_id, "action": action, "params": params},
 
         return event_callback
 
     device_registry = dr.async_get(hass)
-    # Register gateway
-    device_registry.async_get_or_create(
+    # Register gateway and event callbacks
+    gateway_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
         identifiers={(DOMAIN, gateway_id)},
@@ -452,6 +451,10 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         sw_version=gateway_info.firmware_version,
         hw_version=gateway_info.hardware_version,
     )
+
+    gateway.gateway_device.register_callback(f"{gateway_id}_event", event_callback_factory(gateway_entry.id))
+    await gateway.gateway_device.subscribe_events()
+
     # Register subdevices and event callbacks
     for sub_device in gateway.gateway_device.devices.values():
         device_entry = device_registry.async_get_or_create(
@@ -466,7 +469,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         )
         
         sub_device.register_callback(f"{sub_device.sid}_event", event_callback_factory(device_entry.id))
-        #await sub_device.subscribe_events()
+        await sub_device.subscribe_events()
 
     def update_data_factory(sub_device):
         """Create update function for a subdevice."""
