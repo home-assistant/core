@@ -1480,3 +1480,49 @@ async def test_clean_up_registry_monitoring(
     # The monitoring should be cleared
     await help_test_unload_config_entry(hass, tmp_path, {})
     assert len(hooks) == 0
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_unique_id_collission_has_priority(
+    hass, mqtt_mock_entry_no_yaml_config, entity_reg
+):
+    """Test tehe unique_id collision detection has priority over registry disabled items."""
+    await mqtt_mock_entry_no_yaml_config()
+    config = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "unique_id": "sbfspot_12345",
+        "enabled_by_default": False,
+        "device": {
+            "identifiers": ["sbfspot_12345"],
+            "name": "sbfspot_12345",
+            "sw_version": "1.0",
+            "connections": [["mac", "12:34:56:AB:CD:EF"]],
+        },
+    }
+    # discover an entity that is not unique and disabled by default (part 1), will be added
+    config_not_unique1 = copy.deepcopy(config)
+    config_not_unique1["name"] = "sbfspot_12345_1"
+    config_not_unique1["unique_id"] = "not_unique"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+        json.dumps(config_not_unique1),
+    )
+    # discover an entity that is not unique (part 2), will not be added, and the registry entry is cleared
+    config_not_unique2 = copy.deepcopy(config_not_unique1)
+    config_not_unique2["name"] = "sbfspot_12345_2"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
+        json.dumps(config_not_unique2),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sbfspot_12345_1") is None  # not enabled
+    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+
+    # Verify the first entity is created
+    assert entity_reg.async_get("sensor.sbfspot_12345_1") is not None
+    # Verify the second entity is not created because it is not unique
+    assert entity_reg.async_get("sensor.sbfspot_12345_2") is None
