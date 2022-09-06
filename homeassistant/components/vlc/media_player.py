@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import vlc
 import voluptuous as vol
@@ -134,37 +135,39 @@ class VlcDevice(MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         return self._media_position_updated_at
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         track_length = self._vlc.get_length() / 1000
         self._vlc.set_position(position / track_length)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._vlc.audio_set_mute(mute)
         self._muted = mute
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._vlc.audio_set_volume(int(volume * 100))
         self._volume = volume
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._vlc.play()
         self._state = STATE_PLAYING
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._vlc.pause()
         self._state = STATE_PAUSED
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self._vlc.stop()
         self._state = STATE_IDLE
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
@@ -191,7 +194,7 @@ class VlcDevice(MediaPlayerEntity):
         self._state = STATE_PLAYING
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self, media_content_type: str | None = None, media_content_id: str | None = None
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
