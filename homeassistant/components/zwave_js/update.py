@@ -109,44 +109,38 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     )
                 return
 
-        async with self.semaphore:
-            if available_firmware_updates := (
-                await self.driver.controller.async_get_available_firmware_updates(
-                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+        try:
+            async with self.semaphore:
+                available_firmware_updates = (
+                    await self.driver.controller.async_get_available_firmware_updates(
+                        self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+                    )
                 )
-            ):
-                try:
-                    self._latest_version_firmware = max(
-                        available_firmware_updates,
-                        key=lambda x: AwesomeVersion(x.version),
-                    )
-                except FailedZWaveCommand as err:
-                    LOGGER.debug(
-                        "Failed to get firmware updates for node %s: %s",
-                        self.node.node_id,
-                        err,
-                    )
-                    # If error code is 260, the node didn't respond to the get request
-                    # for either the Version or Manufacturer CCs. We should try again in
-                    # an hour.
-                    if err.zwave_error_code == 260:
-                        self._poll_unsub = async_call_later(
-                            self.hass, timedelta(hours=1), self._async_update
-                        )
-                    return
+        except FailedZWaveCommand as err:
+            LOGGER.debug(
+                "Failed to get firmware updates for node %s: %s",
+                self.node.node_id,
+                err,
+            )
+        else:
+            if available_firmware_updates:
+                self._latest_version_firmware = max(
+                    available_firmware_updates,
+                    key=lambda x: AwesomeVersion(x.version),
+                )
 
                 # If we have an available firmware update that is a higher version than
-                # what's on the node, we should advertise it, otherwise we are on the
-                # latest version
+                # what's on the node, we should advertise it, otherwise there is
+                # nothing to do.
                 new_version = self._latest_version_firmware.version
                 current_version = self.node.firmware_version
                 if AwesomeVersion(new_version) > AwesomeVersion(current_version):
                     self._attr_latest_version = new_version
                     self.async_write_ha_state()
-
-        self._poll_unsub = async_call_later(
-            self.hass, timedelta(days=1), self._async_update
-        )
+        finally:
+            self._poll_unsub = async_call_later(
+                self.hass, timedelta(days=1), self._async_update
+            )
 
     async def async_release_notes(self) -> str | None:
         """Get release notes."""

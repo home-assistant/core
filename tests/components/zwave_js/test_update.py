@@ -162,13 +162,12 @@ async def test_update_entity_success(
     client.async_send_command.reset_mock()
 
 
-async def test_update_entity_failure(
+async def test_update_entity_install_failure(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     controller_node,
     integration,
-    caplog,
     hass_ws_client,
 ):
     """Test update entity failed install."""
@@ -286,3 +285,23 @@ async def test_update_entity_ha_not_running(
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
+
+
+async def test_update_entity_failure(
+    hass,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    controller_node,
+    integration,
+    hass_ws_client,
+):
+    """Test update entity update failed."""
+    assert len(client.async_send_command.call_args_list) == 0
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 260, "test")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
