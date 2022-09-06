@@ -1,4 +1,4 @@
-"""Support for Melnor RainCloud sprinkler water timer."""
+"""Sensor support for Melnor Bluetooth water timer."""
 from __future__ import annotations
 
 from collections.abc import Callable

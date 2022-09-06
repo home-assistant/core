@@ -23,6 +23,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ENQUEUE,
@@ -715,7 +716,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None
-    ) -> Any:
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_browser.async_browse_media(
             self.hass,

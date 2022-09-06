@@ -19,9 +19,9 @@ from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import datetime as dt_util
+from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 FIRMWARE_UPDATES = {
@@ -162,14 +162,12 @@ async def test_update_entity_success(
     client.async_send_command.reset_mock()
 
 
-async def test_update_entity_failure(
+async def test_update_entity_install_failure(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     controller_node,
     integration,
-    caplog,
-    hass_ws_client,
 ):
     """Test update entity failed install."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -194,15 +192,15 @@ async def test_update_entity_failure(
 async def test_update_entity_sleep(
     hass,
     client,
-    multisensor_6,
+    zen_31,
     integration,
 ):
     """Test update occurs when device is asleep after it wakes up."""
     event = Event(
         "sleep",
-        data={"source": "node", "event": "sleep", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "sleep", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     client.async_send_command.reset_mock()
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -215,9 +213,9 @@ async def test_update_entity_sleep(
 
     event = Event(
         "wake up",
-        data={"source": "node", "event": "wake up", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "wake up", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     await hass.async_block_till_done()
 
     # Now that the node is up we can check for updates
@@ -225,21 +223,21 @@ async def test_update_entity_sleep(
 
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == multisensor_6.node_id
+    assert args["nodeId"] == zen_31.node_id
 
 
 async def test_update_entity_dead(
     hass,
     client,
-    multisensor_6,
+    zen_31,
     integration,
 ):
     """Test update occurs when device is dead after it becomes alive."""
     event = Event(
         "dead",
-        data={"source": "node", "event": "dead", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "dead", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     client.async_send_command.reset_mock()
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
@@ -252,9 +250,9 @@ async def test_update_entity_dead(
 
     event = Event(
         "alive",
-        data={"source": "node", "event": "alive", "nodeId": multisensor_6.node_id},
+        data={"source": "node", "event": "alive", "nodeId": zen_31.node_id},
     )
-    multisensor_6.receive_event(event)
+    zen_31.receive_event(event)
     await hass.async_block_till_done()
 
     # Now that the node is up we can check for updates
@@ -262,4 +260,54 @@ async def test_update_entity_dead(
 
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == multisensor_6.node_id
+    assert args["nodeId"] == zen_31.node_id
+
+
+async def test_update_entity_ha_not_running(
+    hass,
+    client,
+    zen_31,
+    hass_ws_client,
+):
+    """Test update occurs after HA starts."""
+    await hass.async_stop()
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command.call_args_list) == 0
+
+    await hass.async_start()
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "controller.get_available_firmware_updates"
+    assert args["nodeId"] == zen_31.node_id
+
+
+async def test_update_entity_failure(
+    hass,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    controller_node,
+    integration,
+):
+    """Test update entity update failed."""
+    assert len(client.async_send_command.call_args_list) == 0
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 260, "test")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "controller.get_available_firmware_updates"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
