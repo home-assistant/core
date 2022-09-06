@@ -166,7 +166,11 @@ class Life360DeviceTracker(
 
     @property
     def force_update(self) -> bool:
-        """Return True if state updates should be forced."""
+        """Return True if state updates should be forced.
+
+        Overridden because CoordinatorEntity sets `should_poll` to False,
+        which causes TrackerEntity to set `force_update` to True.
+        """
         return False
 
     @property
