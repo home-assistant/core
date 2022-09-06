@@ -48,7 +48,87 @@
       "nodeId": 60,
       "index": 0,
       "installerIcon": 768,
-      "userIcon": 768
+      "userIcon": 768,
+      "commandClasses": [
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 98,
+          "name": "Door Lock",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 99,
+          "name": "User Code",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
     }
   ],
   "values": [
@@ -2836,85 +2916,5 @@
     "mandatorySupportedCCs": [32, 98, 99, 114, 152, 134],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 98,
-      "name": "Door Lock",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 99,
-      "name": "User Code",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 113,
-      "name": "Notification",
-      "version": 4,
-      "isSecure": true
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 128,
-      "name": "Battery",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 2,
-      "isSecure": true
-    },
-    {
-      "id": 152,
-      "name": "Security",
-      "version": 1,
-      "isSecure": true
-    }
-  ],
   "isControllerNode": false
 }
