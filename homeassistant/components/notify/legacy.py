@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from functools import partial
-from typing import Any, cast
+from typing import Any, Optional, Protocol, cast
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -33,6 +33,26 @@ NOTIFY_SERVICES = "notify_services"
 NOTIFY_DISCOVERY_DISPATCHER = "notify_discovery_dispatcher"
 
 
+class LegacyNotifyPlatform(Protocol):
+    """Define the format of legacy notify platforms."""
+
+    async def async_get_service(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = ...,
+    ) -> BaseNotificationService:
+        """Set up notification service."""
+
+    def get_service(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = ...,
+    ) -> BaseNotificationService:
+        """Set up notification service."""
+
+
 @callback
 def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
@@ -50,8 +70,9 @@ def async_setup_legacy(
         if p_config is None:
             p_config = {}
 
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, integration_name
+        platform = cast(
+            Optional[LegacyNotifyPlatform],
+            await async_prepare_setup_platform(hass, config, DOMAIN, integration_name),
         )
 
         if platform is None:
