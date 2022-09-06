@@ -49,6 +49,6 @@ class ZMAvailabilitySensor(BinarySensorEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return BinarySensorDeviceClass.CONNECTIVITY
 
-    def update(self):
+    def update(self) -> None:
         """Update the state of this sensor (availability of ZoneMinder)."""
         self._state = self._client.is_available
