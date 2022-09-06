@@ -72,6 +72,7 @@ class FakeSchedule:
             end=end,
             summary=f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
             description=description,
+            location=location,
             status=status,
         )
         self.events.append(event)
