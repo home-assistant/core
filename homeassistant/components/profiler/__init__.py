@@ -17,6 +17,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN
@@ -55,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall) -> None:
-        _LOGGER.warning("Modules: %s", sys.modules)
+        _LOGGER.warning("Modules: %s", json_dumps(sys.modules))
         async with lock:
             await _async_generate_profile(hass, call)
 
