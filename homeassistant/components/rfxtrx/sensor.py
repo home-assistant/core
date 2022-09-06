@@ -284,7 +284,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         self.entity_description = entity_description
         self._attr_unique_id = "_".join(x for x in (*device_id, entity_description.key))
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
 

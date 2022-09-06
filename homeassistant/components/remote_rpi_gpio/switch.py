@@ -1,6 +1,8 @@
 """Allows to configure a switch using RPi GPIO."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -75,13 +77,13 @@ class RemoteRPiGPIOSwitch(SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         remote_rpi_gpio.write_output(self._switch, 1)
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         remote_rpi_gpio.write_output(self._switch, 0)
         self._state = False

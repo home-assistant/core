@@ -115,7 +115,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
         if source_id == current:
             self.schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         self._russ.add_zone_callback(self._zone_callback_handler)
         self._russ.add_source_callback(self._source_callback_handler)
@@ -178,20 +178,20 @@ class RussoundZoneDevice(MediaPlayerEntity):
         """
         return float(self._zone_var("volume", 0)) / 50.0
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the zone."""
         await self._russ.send_zone_event(self._zone_id, "ZoneOff")
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the zone."""
         await self._russ.send_zone_event(self._zone_id, "ZoneOn")
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
         await self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume", rvol)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
         for source_id, name in self._sources:
             if name.lower() != source.lower():
