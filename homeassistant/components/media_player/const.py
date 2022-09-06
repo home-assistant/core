@@ -90,13 +90,6 @@ SERVICE_SELECT_SOUND_MODE = "select_sound_mode"
 SERVICE_SELECT_SOURCE = "select_source"
 SERVICE_UNJOIN = "unjoin"
 
-# These REPEAT_MODE_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the RepeatMode enum instead.
-REPEAT_MODE_ALL = "all"
-REPEAT_MODE_OFF = "off"
-REPEAT_MODE_ONE = "one"
-REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
-
 
 class RepeatMode(StrEnum):
     """Repeat mode for media player entities."""
@@ -104,6 +97,14 @@ class RepeatMode(StrEnum):
     ALL = "all"
     OFF = "off"
     ONE = "one"
+
+
+# These REPEAT_MODE_* constants are deprecated as of Home Assistant 2022.10.
+# Please use the RepeatMode enum instead.
+REPEAT_MODE_ALL = "all"
+REPEAT_MODE_OFF = "off"
+REPEAT_MODE_ONE = "one"
+REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
 
 
 class MediaPlayerEntityFeature(IntEnum):
