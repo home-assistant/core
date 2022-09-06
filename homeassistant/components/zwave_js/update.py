@@ -122,7 +122,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
 
     @callback
-    def _async_process_available_updates(self) -> None:
+    def _async_process_available_updates(self, not_in_progress: bool = False) -> None:
         """
         Process available firmware updates.
 
@@ -136,6 +136,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._attr_latest_version = firmware.version
         else:
             self._attr_latest_version = self._attr_installed_version
+        if not_in_progress:
+            self._attr_in_progress = False
         self.async_write_ha_state()
 
     async def async_release_notes(self) -> str | None:
@@ -158,13 +160,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, file
                 )
         except BaseZwaveJSServerError as err:
+            self._attr_in_progress = False
+            self.async_write_ha_state()
             raise HomeAssistantError(err) from err
         else:
             self._attr_installed_version = firmware.version
             self._latest_version_firmware = None
-            self._async_process_available_updates()
-        finally:
-            self._attr_in_progress = False
+            self._async_process_available_updates(True)
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
