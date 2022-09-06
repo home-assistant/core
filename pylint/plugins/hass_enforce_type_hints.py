@@ -7,6 +7,7 @@ import re
 
 from astroid import nodes
 from astroid.exceptions import NameInferenceError
+from astroid.typing import InferenceResult
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
@@ -2560,7 +2561,7 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
     return False
 
 
-def _check_ancestry(infer_node: nodes.FunctionDef, valid_types: set[str]) -> bool:
+def _check_ancestry(infer_node: InferenceResult, valid_types: set[str]) -> bool:
     if isinstance(infer_node, nodes.ClassDef):
         if infer_node.name in valid_types:
             return True
