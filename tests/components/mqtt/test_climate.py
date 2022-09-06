@@ -6,7 +6,7 @@ from unittest.mock import call, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate
+from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
     ATTR_AUX_HEAT,
@@ -16,10 +16,9 @@ from homeassistant.components.climate.const import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_ACTIONS,
-    DOMAIN as CLIMATE_DOMAIN,
     PRESET_ECO,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
@@ -62,29 +61,36 @@ from tests.components.climate import common
 
 ENTITY_CLIMATE = "climate.test"
 
+
 DEFAULT_CONFIG = {
-    CLIMATE_DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "mode_command_topic": "mode-topic",
-        "temperature_command_topic": "temperature-topic",
-        "temperature_low_command_topic": "temperature-low-topic",
-        "temperature_high_command_topic": "temperature-high-topic",
-        "fan_mode_command_topic": "fan-mode-topic",
-        "swing_mode_command_topic": "swing-mode-topic",
-        "aux_command_topic": "aux-topic",
-        "preset_mode_command_topic": "preset-mode-topic",
-        "preset_modes": [
-            "eco",
-            "away",
-            "boost",
-            "comfort",
-            "home",
-            "sleep",
-            "activity",
-        ],
+    mqtt.DOMAIN: {
+        climate.DOMAIN: {
+            "name": "test",
+            "mode_command_topic": "mode-topic",
+            "temperature_command_topic": "temperature-topic",
+            "temperature_low_command_topic": "temperature-low-topic",
+            "temperature_high_command_topic": "temperature-high-topic",
+            "fan_mode_command_topic": "fan-mode-topic",
+            "swing_mode_command_topic": "swing-mode-topic",
+            "aux_command_topic": "aux-topic",
+            "preset_mode_command_topic": "preset-mode-topic",
+            "preset_modes": [
+                "eco",
+                "away",
+                "boost",
+                "comfort",
+                "home",
+                "sleep",
+                "activity",
+            ],
+        }
     }
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[climate.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -96,7 +102,7 @@ def climate_platform_only():
 
 async def test_setup_params(hass, mqtt_mock_entry_with_yaml_config):
     """Test the initial parameters."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -109,18 +115,14 @@ async def test_setup_params(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
 
 
-async def test_preset_none_in_preset_modes(
-    hass, mqtt_mock_entry_no_yaml_config, caplog
-):
+async def test_preset_none_in_preset_modes(hass, caplog):
     """Test the preset mode payload reset configuration."""
-    config = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
     config["preset_modes"].append("none")
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-    assert "Invalid config for [climate.mqtt]: not a valid value" in caplog.text
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state is None
+    assert not await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {climate.DOMAIN: config}}
+    )
+    assert "Invalid config for [mqtt]: not a valid value" in caplog.text
 
 
 # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
@@ -136,22 +138,19 @@ async def test_preset_none_in_preset_modes(
         ("hold_mode_state_template", "{{ value_json }}"),
     ],
 )
-async def test_preset_modes_deprecation_guard(
-    hass, mqtt_mock_entry_no_yaml_config, caplog, parameter, config_value
-):
+async def test_preset_modes_deprecation_guard(hass, caplog, parameter, config_value):
     """Test the configuration for invalid legacy parameters."""
-    config = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
     config[parameter] = config_value
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state is None
+    assert not await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {climate.DOMAIN: config}}
+    )
+    assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
 
 
 async def test_supported_features(hass, mqtt_mock_entry_with_yaml_config):
     """Test the supported_features."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -170,7 +169,7 @@ async def test_supported_features(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_get_hvac_modes(hass, mqtt_mock_entry_with_yaml_config):
     """Test that the operation list returns the correct modes."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -193,7 +192,7 @@ async def test_set_operation_bad_attr_and_state(
 
     Also check the state.
     """
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -210,7 +209,7 @@ async def test_set_operation_bad_attr_and_state(
 
 async def test_set_operation(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new operation mode."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -225,9 +224,9 @@ async def test_set_operation(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_set_operation_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting operation mode in pessimistic mode."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["mode_state_topic"] = "mode-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -249,9 +248,9 @@ async def test_set_operation_pessimistic(hass, mqtt_mock_entry_with_yaml_config)
 
 async def test_set_operation_with_power_command(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new operation mode with power command enabled."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["power_command_topic"] = "power-command"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -276,7 +275,7 @@ async def test_set_operation_with_power_command(hass, mqtt_mock_entry_with_yaml_
 
 async def test_set_fan_mode_bad_attr(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test setting fan mode without required attribute."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -293,9 +292,9 @@ async def test_set_fan_mode_bad_attr(hass, mqtt_mock_entry_with_yaml_config, cap
 
 async def test_set_fan_mode_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new fan mode in pessimistic mode."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["fan_mode_state_topic"] = "fan-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -317,7 +316,7 @@ async def test_set_fan_mode_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_set_fan_mode(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new fan mode."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -331,7 +330,7 @@ async def test_set_fan_mode(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_set_swing_mode_bad_attr(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test setting swing mode without required attribute."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -348,9 +347,9 @@ async def test_set_swing_mode_bad_attr(hass, mqtt_mock_entry_with_yaml_config, c
 
 async def test_set_swing_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting swing mode in pessimistic mode."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["swing_mode_state_topic"] = "swing-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -372,7 +371,7 @@ async def test_set_swing_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_set_swing(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new swing mode."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -386,7 +385,7 @@ async def test_set_swing(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_set_target_temperature(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting the target temperature."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -425,9 +424,9 @@ async def test_set_target_temperature_pessimistic(
     hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test setting the target temperature."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["temperature_state_topic"] = "temperature-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -449,7 +448,7 @@ async def test_set_target_temperature_pessimistic(
 
 async def test_set_target_temperature_low_high(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting the low/high target temperature."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -467,10 +466,10 @@ async def test_set_target_temperature_low_highpessimistic(
     hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test setting the low/high target temperature."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["temperature_low_state_topic"] = "temperature-low-state"
     config["climate"]["temperature_high_state_topic"] = "temperature-high-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -505,9 +504,9 @@ async def test_set_target_temperature_low_highpessimistic(
 
 async def test_receive_mqtt_temperature(hass, mqtt_mock_entry_with_yaml_config):
     """Test getting the current temperature via MQTT."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["current_temperature_topic"] = "current_temperature"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -518,9 +517,9 @@ async def test_receive_mqtt_temperature(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_handle_action_received(hass, mqtt_mock_entry_with_yaml_config):
     """Test getting the action received via MQTT."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["action_topic"] = "action"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -531,7 +530,7 @@ async def test_handle_action_received(hass, mqtt_mock_entry_with_yaml_config):
     assert hvac_action is None
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
     actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
-    assert all(elem in actions for elem in CURRENT_HVAC_ACTIONS)
+    assert all(elem in actions for elem in HVACAction)
     for action in actions:
         async_fire_mqtt_message(hass, "action", action)
         state = hass.states.get(ENTITY_CLIMATE)
@@ -543,8 +542,8 @@ async def test_set_preset_mode_optimistic(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test setting of the preset mode."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -591,9 +590,9 @@ async def test_set_preset_mode_pessimistic(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test setting of the preset mode."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["preset_mode_state_topic"] = "preset-mode-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -636,9 +635,9 @@ async def test_set_preset_mode_pessimistic(
 
 async def test_set_aux_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of the aux heating in pessimistic mode."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["aux_state_topic"] = "aux-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -664,7 +663,7 @@ async def test_set_aux_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_set_aux(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of the aux heating."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -687,28 +686,28 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -716,13 +715,13 @@ async def test_get_target_temperature_low_high_with_templates(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test getting temperature high/low with templates."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["temperature_low_state_topic"] = "temperature-state"
     config["climate"]["temperature_high_state_topic"] = "temperature-state"
     config["climate"]["temperature_low_state_template"] = "{{ value_json.temp_low }}"
     config["climate"]["temperature_high_state_template"] = "{{ value_json.temp_high }}"
 
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -751,7 +750,7 @@ async def test_get_target_temperature_low_high_with_templates(
 
 async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test getting various attributes with templates."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     # By default, just unquote the JSON-strings
     config["climate"]["value_template"] = "{{ value_json }}"
     config["climate"]["action_template"] = "{{ value_json }}"
@@ -768,7 +767,7 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     config["climate"]["aux_state_topic"] = "aux-state"
     config["climate"]["current_temperature_topic"] = "current-temperature"
     config["climate"]["preset_mode_state_topic"] = "current-preset-mode"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -850,7 +849,7 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
 
 async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test setting various attributes with templates."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     # Create simple templates
     config["climate"]["fan_mode_command_template"] = "fan_mode: {{ value }}"
     config["climate"]["preset_mode_command_template"] = "preset_mode: {{ value }}"
@@ -860,7 +859,7 @@ async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog)
     config["climate"]["temperature_high_command_template"] = "temp_hi: {{ value }}"
     config["climate"]["temperature_low_command_template"] = "temp_lo: {{ value }}"
 
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -928,10 +927,10 @@ async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog)
 
 async def test_min_temp_custom(hass, mqtt_mock_entry_with_yaml_config):
     """Test a custom min temp."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["min_temp"] = 26
 
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -944,10 +943,10 @@ async def test_min_temp_custom(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_max_temp_custom(hass, mqtt_mock_entry_with_yaml_config):
     """Test a custom max temp."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["max_temp"] = 60
 
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -960,10 +959,10 @@ async def test_max_temp_custom(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_temp_step_custom(hass, mqtt_mock_entry_with_yaml_config):
     """Test a custom temp step."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["temp_step"] = 0.01
 
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -976,11 +975,11 @@ async def test_temp_step_custom(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_temperature_unit(hass, mqtt_mock_entry_with_yaml_config):
     """Test that setting temperature unit converts temperature values."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["temperature_unit"] = "F"
     config["climate"]["current_temperature_topic"] = "current_temperature"
 
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -995,7 +994,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -1006,8 +1005,8 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
-        CLIMATE_DOMAIN,
-        DEFAULT_CONFIG,
+        climate.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
         MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     )
 
@@ -1015,7 +1014,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
@@ -1024,7 +1023,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        climate.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -1033,21 +1036,29 @@ async def test_update_with_json_attrs_bad_JSON(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        climate.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        climate.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one climate per unique_id."""
     config = {
-        CLIMATE_DOMAIN: [
+        climate.DOMAIN: [
             {
                 "platform": "mqtt",
                 "name": "Test 1",
@@ -1065,7 +1076,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
         ]
     }
     await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, CLIMATE_DOMAIN, config
+        hass, mqtt_mock_entry_with_yaml_config, climate.DOMAIN, config
     )
 
 
@@ -1095,12 +1106,12 @@ async def test_encoding_subscribable_topics(
     attribute_value,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[climate.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry_with_yaml_config,
         caplog,
-        CLIMATE_DOMAIN,
+        climate.DOMAIN,
         config,
         topic,
         value,
@@ -1111,9 +1122,9 @@ async def test_encoding_subscribable_topics(
 
 async def test_discovery_removal_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered climate."""
-    data = json.dumps(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG_LEGACY[climate.DOMAIN])
     await help_test_discovery_removal(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, CLIMATE_DOMAIN, data
+        hass, mqtt_mock_entry_no_yaml_config, caplog, climate.DOMAIN, data
     )
 
 
@@ -1122,7 +1133,7 @@ async def test_discovery_update_climate(hass, mqtt_mock_entry_no_yaml_config, ca
     config1 = {"name": "Beer"}
     config2 = {"name": "Milk"}
     await help_test_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, CLIMATE_DOMAIN, config1, config2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, climate.DOMAIN, config1, config2
     )
 
 
@@ -1138,7 +1149,7 @@ async def test_discovery_update_unchanged_climate(
             hass,
             mqtt_mock_entry_no_yaml_config,
             caplog,
-            CLIMATE_DOMAIN,
+            climate.DOMAIN,
             data1,
             discovery_update,
         )
@@ -1150,42 +1161,42 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     data1 = '{ "name": "Beer", "power_command_topic": "test_topic#" }'
     data2 = '{ "name": "Milk", "power_command_topic": "test_topic" }'
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, CLIMATE_DOMAIN, data1, data2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, climate.DOMAIN, data1, data2
     )
 
 
 async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT climate device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT climate device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        CLIMATE_DOMAIN: {
+        climate.DOMAIN: {
             "platform": "mqtt",
             "name": "test",
             "mode_state_topic": "test-topic",
@@ -1195,7 +1206,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
     await help_test_entity_id_update_subscriptions(
         hass,
         mqtt_mock_entry_with_yaml_config,
-        CLIMATE_DOMAIN,
+        climate.DOMAIN,
         config,
         ["test-topic", "avty-topic"],
     )
@@ -1204,14 +1215,14 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, CLIMATE_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, climate.DOMAIN, DEFAULT_CONFIG_LEGACY
     )
 
 
 async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     config = {
-        CLIMATE_DOMAIN: {
+        climate.DOMAIN: {
             "platform": "mqtt",
             "name": "test",
             "mode_command_topic": "command-topic",
@@ -1221,7 +1232,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     await help_test_entity_debug_info_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
-        CLIMATE_DOMAIN,
+        climate.DOMAIN,
         config,
         climate.SERVICE_TURN_ON,
         command_topic="command-topic",
@@ -1232,7 +1243,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
 
 async def test_precision_default(hass, mqtt_mock_entry_with_yaml_config):
     """Test that setting precision to tenths works as intended."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -1246,9 +1257,9 @@ async def test_precision_default(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_precision_halves(hass, mqtt_mock_entry_with_yaml_config):
     """Test that setting precision to halves works as intended."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["precision"] = 0.5
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -1262,9 +1273,9 @@ async def test_precision_halves(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_precision_whole(hass, mqtt_mock_entry_with_yaml_config):
     """Test that setting precision to whole works as intended."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
     config["climate"]["precision"] = 1.0
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
@@ -1364,7 +1375,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = climate.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[domain])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
     if topic != "preset_mode_command_topic":
         del config["preset_mode_command_topic"]
         del config["preset_modes"]
@@ -1385,8 +1396,8 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
-    domain = CLIMATE_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    domain = climate.DOMAIN
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
@@ -1394,15 +1405,15 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
 
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
-    domain = CLIMATE_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    domain = climate.DOMAIN
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
-    platform = CLIMATE_DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    platform = climate.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
     config["name"] = "test"
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
@@ -1412,7 +1423,20 @@ async def test_setup_manual_entity_from_yaml(hass):
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = climate.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = climate.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None
