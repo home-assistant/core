@@ -6,6 +6,7 @@ from enum import Enum
 import re
 
 from astroid import nodes
+from astroid.exceptions import NameInferenceError
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
@@ -2545,16 +2546,31 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
         else:
             pass
 
-        # Check ancestors
-        ancestor: nodes.ClassDef
-        for infer_node in node.infer():
-            if isinstance(infer_node, nodes.ClassDef):
-                if infer_node.name in valid_types:
+        try:
+            for infer_node in node.infer():
+                if _check_ancestry(infer_node, valid_types):
                     return True
-                for ancestor in infer_node.ancestors():
-                    if ancestor.name in valid_types:
-                        return True
+        except NameInferenceError:
+            for class_node in node.root().get_children():
+                if (
+                    isinstance(class_node, nodes.ClassDef)
+                    and class_node.name == node.name
+                ):
+                    for infer_node in class_node.infer():
+                        if _check_ancestry(infer_node, valid_types):
+                            return True
 
+    return False
+
+
+def _check_ancestry(infer_node: nodes.FunctionDef, valid_types: set[str]) -> bool:
+    ancestor: nodes.ClassDef
+    if isinstance(infer_node, nodes.ClassDef):
+        if infer_node.name in valid_types:
+            return True
+        for ancestor in infer_node.ancestors():
+            if ancestor.name in valid_types:
+                return True
     return False
 
 
