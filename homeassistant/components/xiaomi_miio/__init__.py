@@ -428,6 +428,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     gateway_info = gateway.gateway_info
 
     device_registry = dr.async_get(hass)
+    # Register gateway
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
@@ -438,6 +439,18 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         sw_version=gateway_info.firmware_version,
         hw_version=gateway_info.hardware_version,
     )
+    # Register subdevices (for trigger only devices)
+    for sub_device in gateway.devices.values():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, sub_device.sid)},
+            via_device=(DOMAIN, gateway_id),
+            manufacturer="Xiaomi",
+            name=sub_device.name,
+            model=sub_device.model,
+            sw_version=sub_device.firmware_version,
+            hw_version=sub_device.zigbee_model,
+        )
 
     def update_data_factory(sub_device):
         """Create update function for a subdevice."""
