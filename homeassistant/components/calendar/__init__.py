@@ -279,6 +279,7 @@ class CalendarEntity(Entity):
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
             "location": event.location if event.location else "",
             "description": event.description if event.description else "",
+            "status": event.status if event.status else "",
         }
 
     @final
