@@ -40,6 +40,34 @@ ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
 DOMAIN = "media_player"
 
+
+class MediaClass(StrEnum):
+    """Media class for media player entities."""
+
+    ALBUM = "album"
+    APP = "app"
+    ARTIST = "artist"
+    CHANNEL = "channel"
+    COMPOSER = "composer"
+    CONTRIBUTING_ARTIST = "contributing_artist"
+    DIRECTORY = "directory"
+    EPISODE = "episode"
+    GAME = "game"
+    GENRE = "genre"
+    IMAGE = "image"
+    MOVIE = "movie"
+    MUSIC = "music"
+    PLAYLIST = "playlist"
+    PODCAST = "podcast"
+    SEASON = "season"
+    TRACK = "track"
+    TV_SHOW = "tv_show"
+    URL = "url"
+    VIDEO = "video"
+
+
+# These MEDIA_CLASS_* constants are deprecated as of Home Assistant 2022.10.
+# Please use the MediaClass enum instead.
 MEDIA_CLASS_ALBUM = "album"
 MEDIA_CLASS_APP = "app"
 MEDIA_CLASS_ARTIST = "artist"
@@ -61,6 +89,35 @@ MEDIA_CLASS_TV_SHOW = "tv_show"
 MEDIA_CLASS_URL = "url"
 MEDIA_CLASS_VIDEO = "video"
 
+
+class MediaType(StrEnum):
+    """Media type for media player entities."""
+
+    ALBUM = "album"
+    APP = "app"
+    APPS = "apps"
+    ARTIST = "artist"
+    CHANNEL = "channel"
+    CHANNELS = "channels"
+    COMPOSER = "composer"
+    CONTRIBUTING_ARTIST = "contributing_artist"
+    EPISODE = "episode"
+    GAME = "game"
+    GENRE = "genre"
+    IMAGE = "image"
+    MOVIE = "movie"
+    MUSIC = "music"
+    PLAYLIST = "playlist"
+    PODCAST = "podcast"
+    SEASON = "season"
+    TRACK = "track"
+    TVSHOW = "tvshow"
+    URL = "url"
+    VIDEO = "video"
+
+
+# These MEDIA_TYPE_* constants are deprecated as of Home Assistant 2022.10.
+# Please use the MediaType enum instead.
 MEDIA_TYPE_ALBUM = "album"
 MEDIA_TYPE_APP = "app"
 MEDIA_TYPE_APPS = "apps"
