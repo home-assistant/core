@@ -27,7 +27,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> LaMetricNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the LaMetric notification service."""
     if discovery_info is None:
         return None

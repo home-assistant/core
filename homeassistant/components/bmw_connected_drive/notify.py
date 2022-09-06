@@ -37,7 +37,7 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> BMWNotificationService:
+) -> BaseNotificationService:
     """Get the BMW notification service."""
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][
         (discovery_info or {})[CONF_ENTITY_ID]

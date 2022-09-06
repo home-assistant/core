@@ -30,7 +30,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SimplePushNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the Simplepush notification service."""
     if discovery_info is None:
         async_create_issue(

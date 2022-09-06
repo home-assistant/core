@@ -30,7 +30,7 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CommandLineNotificationService:
+) -> BaseNotificationService:
     """Get the Command Line notification service."""
     command: str = config[CONF_COMMAND]
     timeout: int = config[CONF_COMMAND_TIMEOUT]

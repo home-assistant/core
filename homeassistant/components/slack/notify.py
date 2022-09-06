@@ -114,7 +114,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SlackNotificationService | None:
+) -> BaseNotificationService | None:
     """Set up the Slack notification service."""
     if discovery_info is None:
         return None

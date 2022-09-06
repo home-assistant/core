@@ -50,7 +50,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> PushoverNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the Pushover notification service."""
     if discovery_info is None:
 

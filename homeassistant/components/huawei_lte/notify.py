@@ -23,7 +23,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> HuaweiLteSmsNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the notification service."""
     if discovery_info is None:
         return None

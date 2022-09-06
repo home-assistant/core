@@ -36,7 +36,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> DiscordNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the Discord notification service."""
     if discovery_info is None:
         return None

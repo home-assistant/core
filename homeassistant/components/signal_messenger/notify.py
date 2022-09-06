@@ -55,7 +55,7 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SignalNotificationService:
+) -> BaseNotificationService:
     """Get the SignalMessenger notification service."""
 
     sender_nr = config[CONF_SENDER_NR]

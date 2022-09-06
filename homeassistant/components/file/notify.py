@@ -32,7 +32,7 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> FileNotificationService:
+) -> BaseNotificationService:
     """Get the file notification service."""
     filename: str = config[CONF_FILENAME]
     timestamp: bool = config[CONF_TIMESTAMP]

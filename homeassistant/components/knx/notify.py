@@ -19,7 +19,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> KNXNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the KNX notification service."""
     if discovery_info is None:
         return None

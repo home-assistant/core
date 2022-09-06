@@ -52,7 +52,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> NFAndroidTVNotificationService | None:
+) -> BaseNotificationService | None:
     """Get the NFAndroidTV notification service."""
     if discovery_info is None:
         return None
