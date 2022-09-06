@@ -1,11 +1,14 @@
 """Support for Rflink binary sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -73,12 +76,17 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
     """Representation of an Rflink binary sensor."""
 
     def __init__(
-        self, device_id, device_class=None, force_update=False, off_delay=None, **kwargs
-    ):
+        self,
+        device_id: str,
+        device_class: BinarySensorDeviceClass | None = None,
+        force_update: bool = False,
+        off_delay: int | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Handle sensor specific args and super init."""
         self._state = None
-        self._device_class = device_class
-        self._force_update = force_update
+        self._attr_device_class = device_class
+        self._attr_force_update = force_update
         self._off_delay = off_delay
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
@@ -119,13 +127,3 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
