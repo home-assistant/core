@@ -815,7 +815,7 @@ class MqttDiscoveryUpdate(Entity):
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
         self._removed_from_hass = False
-        if not discovery_data:
+        if discovery_data is None:
             return
         self._registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
             DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
@@ -885,25 +885,20 @@ class MqttDiscoveryUpdate(Entity):
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
-        if not self._removed_from_hass:
+        if not self._removed_from_hass and self._discovery_data is not None:
             # Stop subscribing to discovery updates to not trigger when we clear the
             # discovery topic
             self._cleanup_discovery_on_remove()
 
             # Clear the discovery topic so the entity is not rediscovered after a restart
-            await async_remove_discovery_payload(
-                self.hass, cast(dict, self._discovery_data)
-            )
+            await async_remove_discovery_payload(self.hass, self._discovery_data)
 
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        if self._discovery_data:
+        if self._discovery_data is not None:
             discovery_hash: tuple = self._discovery_data[ATTR_DISCOVERY_HASH]
-            if (
-                self.registry_entry is not None
-                and discovery_hash not in self._registry_hooks
-            ):
+            if self.registry_entry is not None:
                 self._registry_hooks[
                     discovery_hash
                 ] = async_track_entity_registry_updated_event(
