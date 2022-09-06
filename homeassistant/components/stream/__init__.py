@@ -229,6 +229,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
+            orientation=1,
         )
     else:
         hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
@@ -280,7 +281,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._keyframe_converter = KeyFrameConverter(hass)
+        self._keyframe_converter = KeyFrameConverter(hass, stream_settings)
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -289,6 +290,16 @@ class Stream:
             else _LOGGER
         )
         self._diagnostics = Diagnostics()
+
+    @property
+    def orientation(self) -> int:
+        """Return the current orientation setting."""
+        return self._stream_settings.orientation
+
+    @orientation.setter
+    def orientation(self, value: int) -> None:
+        """Set the stream orientation setting."""
+        self._stream_settings.orientation = value
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -401,6 +412,7 @@ class Stream:
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
             self._diagnostics.set_value("keepalive", self.keepalive)
+            self._diagnostics.set_value("orientation", self.orientation)
             self._diagnostics.increment("start_worker")
             try:
                 stream_worker(

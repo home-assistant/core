@@ -24,7 +24,7 @@ from .core import (
     StreamSettings,
     StreamView,
 )
-from .fmp4utils import get_codec_string
+from .fmp4utils import get_codec_string, transform_init
 
 if TYPE_CHECKING:
     from . import Stream
@@ -339,7 +339,7 @@ class HlsInitView(StreamView):
         if not (segments := track.get_segments()) or not (body := segments[0].init):
             return web.HTTPNotFound()
         return web.Response(
-            body=body,
+            body=transform_init(body, stream.orientation),
             headers={"Content-Type": "video/mp4"},
         )
 
