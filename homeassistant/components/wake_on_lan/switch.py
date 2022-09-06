@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import subprocess as sp
+from typing import Any
 
 import voluptuous as vol
 import wakeonlan
@@ -125,7 +126,7 @@ class WolSwitch(SwitchEntity):
         """Return the unique id of this switch."""
         return self._unique_id
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         service_kwargs = {}
         if self._broadcast_address is not None:
@@ -146,7 +147,7 @@ class WolSwitch(SwitchEntity):
             self._state = True
             self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run(context=self._context)
@@ -155,7 +156,7 @@ class WolSwitch(SwitchEntity):
             self._state = False
             self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Check if device is on and update the state. Only called if assumed state is false."""
         ping_cmd = [
             "ping",
