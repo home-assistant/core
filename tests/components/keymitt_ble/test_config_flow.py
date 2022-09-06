@@ -158,7 +158,7 @@ async def test_no_link(hass):
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
-    assert result2["errors"] == {}
+    assert result2["errors"] == {"linking"}
 
     with patch(
         "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClientFail",
