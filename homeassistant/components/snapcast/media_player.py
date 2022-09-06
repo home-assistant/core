@@ -181,19 +181,19 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set input source."""
         streams = self._group.streams_by_name()
         if source in streams:
             await self._group.set_stream(streams[source].identifier)
             self.async_write_ha_state()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
         await self._group.set_muted(mute)
         self.async_write_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self._group.set_volume(round(volume * 100))
         self.async_write_ha_state()
@@ -292,19 +292,19 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Latency for Client."""
         return self._client.latency
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set input source."""
         streams = self._client.group.streams_by_name()
         if source in streams:
             await self._client.group.set_stream(streams[source].identifier)
             self.async_write_ha_state()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
         await self._client.set_muted(mute)
         self.async_write_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self._client.set_volume(round(volume * 100))
         self.async_write_ha_state()
