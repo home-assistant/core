@@ -106,7 +106,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             return
         # We will assume that each file in the firmware update represents an equal
         # percentage of the overall progress. This is likely not true because each file
-        # may be a different size, but it's the best we can do.
+        # may be a different size, but it's the best we can do since we don't know the
+        # total number of fragments across all files.
         self._attr_in_progress = floor(
             100
             * (
