@@ -180,12 +180,14 @@ class BluetoothMatcherIndexBase(Generic[_T]):
 
         We put them in the bucket that they are most likely to match.
         """
+        # Local name is the cheapest to match since its just a dict lookup
         if LOCAL_NAME in matcher:
             self.local_name.setdefault(
                 _local_name_to_index_key(matcher[LOCAL_NAME]), []
             ).append(matcher)
             return
 
+        # Manufacturer data is 2nd cheapest since its all ints
         if MANUFACTURER_ID in matcher:
             self.manufacturer_id.setdefault(matcher[MANUFACTURER_ID], []).append(
                 matcher
