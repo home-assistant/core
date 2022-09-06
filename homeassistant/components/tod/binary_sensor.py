@@ -225,7 +225,7 @@ class TodSensor(BinarySensorEntity):
             # Offset is already there
             self._time_before += timedelta(days=1)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         self._calculate_boundary_time()
         self._calculate_next_update()

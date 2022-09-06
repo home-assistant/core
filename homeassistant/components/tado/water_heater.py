@@ -1,5 +1,6 @@
 """Support for Tado hot water zones."""
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -152,7 +153,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
         self._tado_zone_data = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(
@@ -211,7 +212,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         """Return the maximum temperature."""
         return self._max_temperature
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         mode = None
 
@@ -233,7 +234,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
         )
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if not self._supports_temperature_control or temperature is None:
