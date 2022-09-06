@@ -103,7 +103,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 
     @toon_exception_handler
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.coordinator.toon.set_current_setpoint(temperature)

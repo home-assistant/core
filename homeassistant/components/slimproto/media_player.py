@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from aioslimproto.client import PlayerState, SlimClient
 from aioslimproto.const import EventType, SlimEvent
@@ -175,7 +176,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         """Turn off device."""
         await self.player.power(False)
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         to_send_media_type: str | None = media_type
         # Handle media_source
@@ -193,7 +196,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         await self.player.play_url(media_id, mime_type=to_send_media_type)
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self, media_content_type: str | None = None, media_content_id: str | None = None
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

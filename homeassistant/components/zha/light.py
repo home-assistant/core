@@ -168,7 +168,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._attr_brightness = value
         self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (

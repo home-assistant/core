@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import functools
 from random import randint
+from typing import Any
 
 from zigpy.zcl.clusters.hvac import Fan as F, Thermostat as T
 
@@ -276,7 +277,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._presets
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         features = self._supported_flags
         if HVACMode.HEAT_COOL in self.hvac_modes:
@@ -358,7 +359,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             return self.DEFAULT_MIN_TEMP
         return round(min(temps) / ZCL_TEMP, 1)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -427,7 +428,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._preset = preset_mode
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -533,7 +534,7 @@ class SinopeTechnologiesThermostat(Thermostat):
             )
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to Hass."""
         await super().async_added_to_hass()
         async_track_time_interval(

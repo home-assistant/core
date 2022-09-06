@@ -146,14 +146,14 @@ class TelnetSwitch(SwitchEntity):
             return None
         self._attr_is_on = rendered == "True"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._telnet_command(self._command_on)
         if self.assumed_state:
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._telnet_command(self._command_off)
         if self.assumed_state:

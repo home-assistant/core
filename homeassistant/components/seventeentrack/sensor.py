@@ -134,7 +134,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
         """Return the state."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor."""
         await self._data.async_update()
 
@@ -189,7 +189,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the entity is available."""
         return self._data.packages.get(self._tracking_number) is not None
 
@@ -205,7 +205,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         """Return the state."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor."""
         await self._data.async_update()
 

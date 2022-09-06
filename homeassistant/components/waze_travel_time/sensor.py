@@ -161,7 +161,7 @@ class WazeTravelTime(SensorEntity):
         await self.hass.async_add_executor_job(self.update)
         self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         self._waze_data.origin = find_coordinates(self.hass, self._origin)

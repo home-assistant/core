@@ -130,12 +130,12 @@ class PS4Device(MediaPlayerEntity):
                 self._region,
             )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe PS4 events."""
         self.hass.data[PS4_DATA].devices.append(self)
         self.check_region()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve the latest data."""
         if self._ps4.ddp_protocol is not None:
             # Request Status with asyncio transport.
@@ -365,7 +365,7 @@ class PS4Device(MediaPlayerEntity):
 
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Remove Entity from Home Assistant."""
         # Close TCP Transport.
         if self._ps4.connected:
@@ -439,27 +439,27 @@ class PS4Device(MediaPlayerEntity):
         """List of available input sources."""
         return self._source_list
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._ps4.standby()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the media player."""
         self._ps4.wakeup()
 
-    async def async_toggle(self):
+    async def async_toggle(self) -> None:
         """Toggle media player."""
         await self._ps4.toggle()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send keypress ps to return to menu."""
         await self.async_send_remote_control("ps")
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send keypress ps to return to menu."""
         await self.async_send_remote_control("ps")
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         for title_id, data in self._games.items():
             game = data[ATTR_MEDIA_TITLE]
