@@ -305,3 +305,9 @@ async def test_update_entity_failure(
     assert state
     assert state.state == STATE_OFF
     assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "controller.get_available_firmware_updates"
+    assert (
+        args["nodeId"]
+        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
+    )
