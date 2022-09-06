@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.1
+aiohomekit==1.5.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -473,7 +473,7 @@ bthome-ble==1.0.0
 bthomehub5-devicelist==0.1.1
 
 # homeassistant.components.bt_smarthub
-btsmarthub_devicelist==0.2.0
+btsmarthub_devicelist==0.2.2
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
