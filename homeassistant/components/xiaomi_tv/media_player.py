@@ -87,7 +87,7 @@ class XiaomiTV(MediaPlayerEntity):
         """Indicate that state is assumed."""
         return True
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """
         Instruct the TV to turn sleep.
 
@@ -100,17 +100,17 @@ class XiaomiTV(MediaPlayerEntity):
 
             self._state = STATE_OFF
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Wake the TV back up from sleep."""
         if self._state != STATE_ON:
             self._tv.wake()
 
             self._state = STATE_ON
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume by one."""
         self._tv.volume_up()
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume by one."""
         self._tv.volume_down()

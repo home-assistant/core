@@ -153,7 +153,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         """Return the class of binary sensor."""
         return self._device_class
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor state."""
         _LOGGER.debug("Updating xiaomi sensor (%s) by polling", self._sid)
         self._get_from_hub(self._sid)

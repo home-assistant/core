@@ -329,7 +329,10 @@ class MiroboVacuum(
         await self._try_command("Unable to locate the botvac: %s", self._device.find)
 
     async def async_send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send raw command."""
         await self._try_command(
