@@ -163,7 +163,7 @@ class StartcaSensor(SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Start.ca and update the state."""
         await self.startcadata.async_update()
         sensor_type = self.entity_description.key

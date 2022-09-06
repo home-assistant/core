@@ -265,7 +265,7 @@ class SubaruSensor(SubaruEntity, SensorEntity):
         return self.api_unit
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         last_update_success = super().available
         if last_update_success and self.vin not in self.coordinator.data:
