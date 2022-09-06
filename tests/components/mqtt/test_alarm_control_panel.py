@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import alarm_control_panel
+from homeassistant.components import alarm_control_panel, mqtt
 from homeassistant.components.mqtt.alarm_control_panel import (
     MQTT_ALARM_ATTRIBUTES_BLOCKED,
 )
@@ -65,53 +65,64 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import assert_setup_component, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
 
 CODE_NUMBER = "1234"
 CODE_TEXT = "HELLO_CODE"
 
 DEFAULT_CONFIG = {
-    alarm_control_panel.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "alarm/state",
-        "command_topic": "alarm/command",
+    mqtt.DOMAIN: {
+        alarm_control_panel.DOMAIN: {
+            "name": "test",
+            "state_topic": "alarm/state",
+            "command_topic": "alarm/command",
+        }
     }
 }
 
 DEFAULT_CONFIG_CODE = {
-    alarm_control_panel.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "alarm/state",
-        "command_topic": "alarm/command",
-        "code": "0123",
-        "code_arm_required": True,
+    mqtt.DOMAIN: {
+        alarm_control_panel.DOMAIN: {
+            "name": "test",
+            "state_topic": "alarm/state",
+            "command_topic": "alarm/command",
+            "code": "0123",
+            "code_arm_required": True,
+        }
     }
 }
 
 DEFAULT_CONFIG_REMOTE_CODE = {
-    alarm_control_panel.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "alarm/state",
-        "command_topic": "alarm/command",
-        "code": "REMOTE_CODE",
-        "code_arm_required": True,
+    mqtt.DOMAIN: {
+        alarm_control_panel.DOMAIN: {
+            "name": "test",
+            "state_topic": "alarm/state",
+            "command_topic": "alarm/command",
+            "code": "REMOTE_CODE",
+            "code_arm_required": True,
+        }
     }
 }
 
 DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
-    alarm_control_panel.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "alarm/state",
-        "command_topic": "alarm/command",
-        "code": "REMOTE_CODE_TEXT",
-        "code_arm_required": True,
+    mqtt.DOMAIN: {
+        alarm_control_panel.DOMAIN: {
+            "name": "test",
+            "state_topic": "alarm/state",
+            "command_topic": "alarm/command",
+            "code": "REMOTE_CODE_TEXT",
+            "code_arm_required": True,
+        }
     }
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN]["platform"] = mqtt.DOMAIN
+DEFAULT_CONFIG_CODE_LEGACY = copy.deepcopy(DEFAULT_CONFIG_CODE[mqtt.DOMAIN])
+DEFAULT_CONFIG_CODE_LEGACY[alarm_control_panel.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -123,47 +134,62 @@ def alarm_control_panel_platform_only():
         yield
 
 
-async def test_fail_setup_without_state_topic(hass, mqtt_mock_entry_no_yaml_config):
-    """Test for failing with no state topic."""
-    with assert_setup_component(0, alarm_control_panel.DOMAIN) as config:
-        assert await async_setup_component(
-            hass,
-            alarm_control_panel.DOMAIN,
+@pytest.mark.parametrize(
+    "config,valid",
+    [
+        (
             {
-                alarm_control_panel.DOMAIN: {
-                    "platform": "mqtt",
-                    "command_topic": "alarm/command",
+                mqtt.DOMAIN: {
+                    alarm_control_panel.DOMAIN: {
+                        "name": "test",
+                        "command_topic": "alarm/command",
+                    }
                 }
             },
-        )
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_no_yaml_config()
-        assert not config[alarm_control_panel.DOMAIN]
-
-
-async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry_no_yaml_config):
-    """Test failing with no command topic."""
-    with assert_setup_component(0, alarm_control_panel.DOMAIN) as config:
-        assert await async_setup_component(
-            hass,
-            alarm_control_panel.DOMAIN,
+            False,
+        ),
+        (
             {
-                alarm_control_panel.DOMAIN: {
-                    "platform": "mqtt",
-                    "state_topic": "alarm/state",
+                mqtt.DOMAIN: {
+                    alarm_control_panel.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "alarm/state",
+                    }
                 }
             },
+            False,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    alarm_control_panel.DOMAIN: {
+                        "name": "test",
+                        "command_topic": "alarm/command",
+                        "state_topic": "alarm/state",
+                    }
+                }
+            },
+            True,
+        ),
+    ],
+)
+async def test_fail_setup_without_state_or_command_topic(hass, config, valid):
+    """Test for failing setup with no state or command topic."""
+    assert (
+        await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            config,
         )
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_no_yaml_config()
-        assert not config[alarm_control_panel.DOMAIN]
+        is valid
+    )
 
 
 async def test_update_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test updating with via state topic."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
@@ -195,7 +221,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
     """Test ignoring updates via state topic."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
@@ -227,7 +253,7 @@ async def test_publish_mqtt_no_code(
     """Test publishing of MQTT messages when no code is configured."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         DEFAULT_CONFIG,
     )
     await hass.async_block_till_done()
@@ -261,7 +287,7 @@ async def test_publish_mqtt_with_code(
     """Test publishing of MQTT messages when code is configured."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
     await hass.async_block_till_done()
@@ -314,7 +340,7 @@ async def test_publish_mqtt_with_remote_code(
     """Test publishing of MQTT messages when remode code is configured."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         DEFAULT_CONFIG_REMOTE_CODE,
     )
     await hass.async_block_till_done()
@@ -358,7 +384,7 @@ async def test_publish_mqtt_with_remote_code_text(
     """Test publishing of MQTT messages when remote text code is configured."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         DEFAULT_CONFIG_REMOTE_CODE_TEXT,
     )
     await hass.async_block_till_done()
@@ -405,10 +431,10 @@ async def test_publish_mqtt_with_code_required_false(
     code_trigger_required = False
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
-    config[alarm_control_panel.DOMAIN][disable_code] = False
+    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN][disable_code] = False
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -453,13 +479,13 @@ async def test_disarm_publishes_mqtt_with_template(
     When command_template set to output json
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
-    config[alarm_control_panel.DOMAIN]["code"] = "0123"
-    config[alarm_control_panel.DOMAIN][
+    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = "0123"
+    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN][
         "command_template"
     ] = '{"action":"{{ action }}","code":"{{ code }}"}'
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         config,
     )
     await hass.async_block_till_done()
@@ -477,19 +503,20 @@ async def test_update_state_via_state_topic_template(
     """Test updating with template_value via state topic."""
     assert await async_setup_component(
         hass,
-        alarm_control_panel.DOMAIN,
+        mqtt.DOMAIN,
         {
-            alarm_control_panel.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "test-topic",
-                "state_topic": "test-topic",
-                "value_template": "\
+            mqtt.DOMAIN: {
+                alarm_control_panel.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test-topic",
+                    "state_topic": "test-topic",
+                    "value_template": "\
                 {% if (value | int)  == 100 %}\
                   armed_away\
                 {% else %}\
                    disarmed\
                 {% endif %}",
+                }
             }
         },
     )
@@ -508,9 +535,9 @@ async def test_update_state_via_state_topic_template(
 async def test_attributes_code_number(hass, mqtt_mock_entry_with_yaml_config):
     """Test attributes which are not supported by the vacuum."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config[alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
+    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
 
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -524,9 +551,9 @@ async def test_attributes_code_number(hass, mqtt_mock_entry_with_yaml_config):
 async def test_attributes_remote_code_number(hass, mqtt_mock_entry_with_yaml_config):
     """Test attributes which are not supported by the vacuum."""
     config = copy.deepcopy(DEFAULT_CONFIG_REMOTE_CODE)
-    config[alarm_control_panel.DOMAIN]["code"] = "REMOTE_CODE"
+    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = "REMOTE_CODE"
 
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -540,9 +567,9 @@ async def test_attributes_remote_code_number(hass, mqtt_mock_entry_with_yaml_con
 async def test_attributes_code_text(hass, mqtt_mock_entry_with_yaml_config):
     """Test attributes which are not supported by the vacuum."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config[alarm_control_panel.DOMAIN]["code"] = CODE_TEXT
+    config[mqtt.DOMAIN][alarm_control_panel.DOMAIN]["code"] = CODE_TEXT
 
-    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+    assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
@@ -561,7 +588,7 @@ async def test_availability_when_connection_lost(
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE,
+        DEFAULT_CONFIG_CODE_LEGACY,
     )
 
 
@@ -571,7 +598,7 @@ async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE,
+        DEFAULT_CONFIG_CODE_LEGACY,
     )
 
 
@@ -581,7 +608,7 @@ async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_conf
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE,
+        DEFAULT_CONFIG_CODE_LEGACY,
     )
 
 
@@ -591,7 +618,7 @@ async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_confi
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG_CODE,
+        DEFAULT_CONFIG_CODE_LEGACY,
     )
 
 
@@ -603,7 +630,7 @@ async def test_setting_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -615,7 +642,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         MQTT_ALARM_ATTRIBUTES_BLOCKED,
     )
 
@@ -626,7 +653,7 @@ async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_c
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -639,7 +666,7 @@ async def test_update_with_json_attrs_not_dict(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -652,7 +679,7 @@ async def test_update_with_json_attrs_bad_JSON(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -663,7 +690,7 @@ async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplo
         mqtt_mock_entry_no_yaml_config,
         caplog,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -694,7 +721,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_alarm(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered alarm_control_panel."""
-    data = json.dumps(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, alarm_control_panel.DOMAIN, data
     )
@@ -704,8 +731,8 @@ async def test_discovery_update_alarm_topic_and_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "alarm/state1"
@@ -739,8 +766,8 @@ async def test_discovery_update_alarm_template(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "alarm/state1"
@@ -772,7 +799,7 @@ async def test_discovery_update_unchanged_alarm(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
 
     data1 = json.dumps(config1)
@@ -824,7 +851,7 @@ async def test_encoding_subscribable_topics(
         mqtt_mock_entry_with_yaml_config,
         caplog,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG[alarm_control_panel.DOMAIN],
+        DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN],
         topic,
         value,
     )
@@ -836,7 +863,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -846,21 +873,27 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -870,14 +903,17 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_co
         hass,
         mqtt_mock_entry_with_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_LEGACY,
     )
 
 
@@ -887,7 +923,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
         hass,
         mqtt_mock_entry_no_yaml_config,
         alarm_control_panel.DOMAIN,
-        DEFAULT_CONFIG,
+        DEFAULT_CONFIG_LEGACY,
         alarm_control_panel.SERVICE_ALARM_DISARM,
         command_payload="DISARM",
     )
@@ -930,7 +966,7 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = alarm_control_panel.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -951,7 +987,7 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = alarm_control_panel.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
@@ -960,14 +996,14 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = alarm_control_panel.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = alarm_control_panel.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
     config["name"] = "test"
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
@@ -977,7 +1013,20 @@ async def test_setup_manual_entity_from_yaml(hass):
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = alarm_control_panel.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = alarm_control_panel.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None
