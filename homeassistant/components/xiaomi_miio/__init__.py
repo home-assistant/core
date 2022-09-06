@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def stop_push_server(event):
             """Stop push server."""
             _LOGGER.debug("Shutting down Xiaomi Miio push server")
-            push_server.stop()
+            hass.loop.create_task(push_server.stop())
 
         unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_push_server)
         hass.data[DOMAIN][KEY_PUSH_SERVER_STOP] = unsub
@@ -499,7 +499,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     _LOGGER.debug("Removing subscribtions from miio device memory")
     push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    await hass.async_add_executor_job(push_server.unregister_miio_device, device)
+    await push_server.unregister_miio_device(device)
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -515,7 +515,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         unsub_stop()
         _LOGGER.debug("Shutting down Xiaomi Miio push server")
         push_server = hass.data[DOMAIN].pop(KEY_PUSH_SERVER)
-        push_server.stop()
+        await push_server.stop()
 
     return unload_ok
 
