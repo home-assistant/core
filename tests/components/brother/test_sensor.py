@@ -235,7 +235,7 @@ async def test_sensors(hass):
 
     entry = registry.async_get("sensor.hl_l2340dw_b_w_counter")
     assert entry
-    assert entry.unique_id == "0123456789_b/w_counter"
+    assert entry.unique_id == "0123456789_bw_counter"
 
     state = hass.states.get("sensor.hl_l2340dw_color_counter")
     assert state
