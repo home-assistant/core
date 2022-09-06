@@ -379,6 +379,18 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=_Special.UNDEFINED,
         ),
     ],
+    "notify": [
+        TypeHintMatch(
+            function_name="get_service",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "DiscoveryInfoType | None",
+            },
+            return_type=_Special.UNDEFINED,
+            has_async_counterpart=True,
+        ),
+    ],
 }
 
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
