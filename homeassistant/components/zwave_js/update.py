@@ -1,8 +1,9 @@
 """Representation of Z-Wave updates."""
 from __future__ import annotations
 
+from asyncio.locks import Semaphore
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -16,11 +17,13 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.components.update.const import UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, Event as HAEvent, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_info, get_valueless_base_unique_id
@@ -37,12 +40,14 @@ async def async_setup_entry(
     """Set up Z-Wave button from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
+    semaphore = Semaphore(5)
+
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node)], True)
+        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, semaphore)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -62,29 +67,32 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
-    def __init__(self, driver: Driver, node: ZwaveNode) -> None:
+    def __init__(self, driver: Driver, node: ZwaveNode, semaphore: Semaphore) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
+        self.semaphore = semaphore
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
+        self._poll_unsub: Callable[[], None] | None = None
+        self._started_unsub: Callable[[], None] | None = None
 
         # Entity class attributes
         self._attr_name = "Firmware"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
+        self._attr_installed_version = self._attr_latest_version = node.firmware_version
         # device may not be precreated in main handler yet
         self._attr_device_info = get_device_info(driver, node)
-
-        self._attr_installed_version = self._attr_latest_version = node.firmware_version
 
     def _update_on_status_change(self, _: dict[str, Any]) -> None:
         """Update the entity when node is awake."""
         self._status_unsub = None
-        self.hass.async_create_task(self.async_update(True))
+        self.hass.async_create_task(self._async_update())
 
-    async def async_update(self, write_state: bool = False) -> None:
+    async def _async_update(self, _: HAEvent | datetime | None = None) -> None:
         """Update the entity."""
         for status, event_name in (
             (NodeStatus.ASLEEP, "wake up"),
@@ -97,19 +105,24 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     )
                 return
 
-        if available_firmware_updates := (
-            await self.driver.controller.async_get_available_firmware_updates(
-                self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
-            )
-        ):
-            self._latest_version_firmware = max(
-                available_firmware_updates,
-                key=lambda x: AwesomeVersion(x.version),
-            )
-            self._async_process_available_updates(write_state)
+        async with self.semaphore:
+            if available_firmware_updates := (
+                await self.driver.controller.async_get_available_firmware_updates(
+                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+                )
+            ):
+                self._latest_version_firmware = max(
+                    available_firmware_updates,
+                    key=lambda x: AwesomeVersion(x.version),
+                )
+                self._async_process_available_updates()
+
+        self._poll_unsub = async_call_later(
+            self.hass, timedelta(days=1), self._async_update
+        )
 
     @callback
-    def _async_process_available_updates(self, write_state: bool = True) -> None:
+    def _async_process_available_updates(self) -> None:
         """
         Process available firmware updates.
 
@@ -123,8 +136,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._attr_latest_version = firmware.version
         else:
             self._attr_latest_version = self._attr_installed_version
-        if write_state:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_release_notes(self) -> str | None:
         """Get release notes."""
@@ -179,8 +191,23 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
+        if self.hass.state == CoreState.running:
+            self.hass.async_create_task(self._async_update())
+        elif self.hass.state == CoreState.starting:
+            self._started_unsub = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self._async_update
+            )
+
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
         if self._status_unsub:
             self._status_unsub()
             self._status_unsub = None
+
+        if self._poll_unsub:
+            self._poll_unsub()
+            self._poll_unsub = None
+
+        if self._started_unsub:
+            self._started_unsub()
+            self._started_unsub = None
