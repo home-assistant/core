@@ -40,7 +40,7 @@ async def async_setup_entry(
     """Set up Z-Wave button from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
-    semaphore = Semaphore(5)
+    semaphore = Semaphore(3)
 
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
