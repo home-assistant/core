@@ -332,7 +332,7 @@ bimmer_connected==0.10.2
 bleak==0.16.0
 
 # homeassistant.components.blebox
-blebox_uniapi==2.0.2
+blebox_uniapi==2.1.0
 
 # homeassistant.components.blink
 blinkpy==0.19.0

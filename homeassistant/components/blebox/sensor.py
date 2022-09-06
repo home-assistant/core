@@ -1,15 +1,23 @@
 """BleBox sensor entities."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
-BLEBOX_TO_UNIT_MAP = {"celsius": TEMP_CELSIUS}
+BLEBOX_TO_UNIT_MAP = {
+    "celsius": TEMP_CELSIUS,
+    "concentration_of_mp": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+}
 
-BLEBOX_TO_SENSOR_DEVICE_CLASS = {"temperature": SensorDeviceClass.TEMPERATURE}
+BLEBOX_TO_SENSOR_DEVICE_CLASS = {
+    "temperature": SensorDeviceClass.TEMPERATURE,
+    "pm1": SensorDeviceClass.PM1,
+    "pm2_5": SensorDeviceClass.PM25,
+    "pm10": SensorDeviceClass.PM10,
+}
 
 
 async def async_setup_entry(
@@ -36,4 +44,4 @@ class BleBoxSensorEntity(BleBoxEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state."""
-        return self._feature.current
+        return self._feature.native_value

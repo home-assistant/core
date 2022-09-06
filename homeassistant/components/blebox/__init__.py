@@ -18,7 +18,7 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.AIR_QUALITY,
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
@@ -96,6 +96,7 @@ class BleBoxEntity(Entity):
             model=product.model,
             name=product.name,
             sw_version=product.firmware_version,
+            configuration_url=f"http://{product.address}",
         )
 
     async def async_update(self) -> None:
