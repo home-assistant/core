@@ -646,7 +646,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_MQTT_RELOAD_ENTRY] = True
     # Reload the legacy yaml platform to make entities unavailable
     await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
-    # cleanup
+    # Cleanup entity registry hooks
     registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
         DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
     ]
