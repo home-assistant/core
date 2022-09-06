@@ -27,8 +27,7 @@
             "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",
             "device_name_empty": "Device name is empty.",
             "invalid_device_id": "Device ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
-            "invalid_device_type": "Invalid device type.",
-            "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7')."
+            "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7'). Even though it is possible to set any valid EnOcean ID here, only the dongle's base IDs or its chip ID can be used for actual sending."
         },
         "step": {
             "add_device": {
@@ -56,7 +55,7 @@
                     "name": "Name",
                     "sender_id": "Sender ID (can be left empty for sensors)"
                 },
-                "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean id which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities.",
+                "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean ID which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities.",
                 "title": "Edit EnOcean device"
             },
             "init": {

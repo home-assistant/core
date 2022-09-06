@@ -9,7 +9,9 @@ class EnOceanSupportedDeviceType:
     model: str
     eep: str
 
-    def __init__(self, manufacturer: str = "", model: str = "", eep: str = "") -> None:
+    def __init__(
+        self, manufacturer: str = "Generic", model: str = "", eep: str = ""
+    ) -> None:
         """Construct an EnOcean device type."""
         self.manufacturer = manufacturer
         self.model = model

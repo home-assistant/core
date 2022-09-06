@@ -17,8 +17,8 @@ from homeassistant.components.enocean.config_flow import (
 )
 from homeassistant.components.enocean.const import (
     DOMAIN,
+    EEP_A5_12_01,
     ENOCEAN_TEST_DIMMER,
-    ENOCEAN_TEST_SWITCH,
 )
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -38,45 +38,45 @@ TEST_DIMMER = {
 TEST_DIMMER_EDITED = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
     CONF_ENOCEAN_DEVICE_NAME: "Test Switch 1",
-    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_SWITCH.manufacturer,
-    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_SWITCH.model,
-    CONF_ENOCEAN_EEP: ENOCEAN_TEST_SWITCH.eep,
+    CONF_ENOCEAN_MANUFACTURER: EEP_A5_12_01.manufacturer,
+    CONF_ENOCEAN_MODEL: EEP_A5_12_01.model,
+    CONF_ENOCEAN_EEP: EEP_A5_12_01.eep,
     CONF_ENOCEAN_SENDER_ID: "BA:BA:BA:BA",
 }
 
 TEST_SWITCH = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
     CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
-    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_SWITCH.manufacturer,
-    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_SWITCH.model,
-    CONF_ENOCEAN_EEP: ENOCEAN_TEST_SWITCH.eep,
+    CONF_ENOCEAN_MANUFACTURER: EEP_A5_12_01.manufacturer,
+    CONF_ENOCEAN_MODEL: EEP_A5_12_01.model,
+    CONF_ENOCEAN_EEP: EEP_A5_12_01.eep,
     CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
 }
 
 TEST_SWITCH_INVALID_ID = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:G",
     CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
-    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_SWITCH.manufacturer,
-    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_SWITCH.model,
-    CONF_ENOCEAN_EEP: ENOCEAN_TEST_SWITCH.eep,
+    CONF_ENOCEAN_MANUFACTURER: EEP_A5_12_01.manufacturer,
+    CONF_ENOCEAN_MODEL: EEP_A5_12_01.model,
+    CONF_ENOCEAN_EEP: EEP_A5_12_01.eep,
     CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
 }
 
 TEST_SWITCH_EMPTY_NAME = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
     CONF_ENOCEAN_DEVICE_NAME: "",
-    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_SWITCH.manufacturer,
-    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_SWITCH.model,
-    CONF_ENOCEAN_EEP: ENOCEAN_TEST_SWITCH.eep,
+    CONF_ENOCEAN_MANUFACTURER: EEP_A5_12_01.manufacturer,
+    CONF_ENOCEAN_MODEL: EEP_A5_12_01.model,
+    CONF_ENOCEAN_EEP: EEP_A5_12_01.eep,
     CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
 }
 
 TEST_SWITCH_INVALID_SENDER_ID = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
     CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
-    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_SWITCH.manufacturer,
-    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_SWITCH.model,
-    CONF_ENOCEAN_EEP: ENOCEAN_TEST_SWITCH.eep,
+    CONF_ENOCEAN_MANUFACTURER: EEP_A5_12_01.manufacturer,
+    CONF_ENOCEAN_MODEL: EEP_A5_12_01.model,
+    CONF_ENOCEAN_EEP: EEP_A5_12_01.eep,
     CONF_ENOCEAN_SENDER_ID: "AB:123:AB:AB",
 }
 
@@ -182,7 +182,7 @@ async def test_add_device(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
                 CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
                 CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
@@ -227,7 +227,7 @@ async def test_add_device_with_invalid_device_id_fails(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:G:03:05",
                 CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
                 CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
@@ -272,7 +272,7 @@ async def test_add_device_with_existing_device_id_fails(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
                 CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
                 CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
@@ -320,7 +320,7 @@ async def test_add_device_with_empty_name_fails(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
                 CONF_ENOCEAN_DEVICE_NAME: "  ",
                 CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
@@ -333,7 +333,7 @@ async def test_add_device_with_empty_name_fails(hass: HomeAssistant):
     assert result["errors"][CONF_ENOCEAN_DEVICE_NAME] == ENOCEAN_ERROR_DEVICE_NAME_EMPTY
 
 
-async def test_add_invalid_sender_id(hass: HomeAssistant):
+async def test_add_device_with_invalid_sender_id_fails(hass: HomeAssistant):
     """Test that adding a device with an invalid sender id fails."""
     mock_config_entry = MockConfigEntry(
         title="",
@@ -365,7 +365,7 @@ async def test_add_invalid_sender_id(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:05",
                 CONF_ENOCEAN_DEVICE_NAME: "Test Switch",
                 CONF_ENOCEAN_SENDER_ID: "AB:AB:AB",
@@ -454,7 +454,7 @@ async def test_edit_device(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
                 CONF_ENOCEAN_DEVICE_NAME: "Test Switch 1",
                 CONF_ENOCEAN_SENDER_ID: "BA:BA:BA:BA",
@@ -503,7 +503,7 @@ async def test_edit_device_with_invalid_sender_id_fails(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
                 CONF_ENOCEAN_DEVICE_NAME: "Test Switch 1",
                 CONF_ENOCEAN_SENDER_ID: "BA:BA:BA:BZ",
@@ -518,7 +518,7 @@ async def test_edit_device_with_invalid_sender_id_fails(hass: HomeAssistant):
 
 
 async def test_edit_device_with_empty_name_fails(hass: HomeAssistant):
-    """Test that adding a device with invalid sender id will be prevented."""
+    """Test that editing a device with empyt name will be prevented."""
     mock_config_entry = MockConfigEntry(
         title="",
         domain=DOMAIN,
@@ -553,7 +553,7 @@ async def test_edit_device_with_empty_name_fails(hass: HomeAssistant):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                ENOCEAN_DEVICE_TYPE: ENOCEAN_TEST_SWITCH.unique_id,
+                ENOCEAN_DEVICE_TYPE: EEP_A5_12_01.unique_id,
                 CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
                 CONF_ENOCEAN_DEVICE_NAME: "  ",
                 CONF_ENOCEAN_SENDER_ID: "BA:BA:BA:BA",
