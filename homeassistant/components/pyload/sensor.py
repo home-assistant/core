@@ -111,7 +111,7 @@ class PyLoadSensor(SensorEntity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         try:
             self.api.update()
