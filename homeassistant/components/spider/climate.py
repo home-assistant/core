@@ -1,4 +1,6 @@
 """Support for Spider thermostats."""
+from typing import Any
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -59,7 +61,7 @@ class SpiderThermostat(ClimateEntity):
         )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         if self.thermostat.has_fan_mode:
             return (
@@ -112,7 +114,7 @@ class SpiderThermostat(ClimateEntity):
         """Return the list of available operation modes."""
         return self.support_hvac
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -128,7 +130,7 @@ class SpiderThermostat(ClimateEntity):
         """Return the fan setting."""
         return self.thermostat.current_fan_speed
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         self.thermostat.set_fan_speed(fan_mode)
 
@@ -137,6 +139,6 @@ class SpiderThermostat(ClimateEntity):
         """List of available fan modes."""
         return self.support_fan
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.thermostat = self.api.get_thermostat(self.unique_id)

@@ -892,7 +892,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -958,7 +958,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         """Return the state of the device."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
             self._state = await self.hass.async_add_executor_job(

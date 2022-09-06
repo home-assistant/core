@@ -146,8 +146,12 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(step_id="link", errors=errors)
 
-        user_input[CONF_ADDRESS] = self._bdaddr
-        user_input[CONF_ACCESS_TOKEN] = token
-
         assert self._name is not None
-        return self.async_create_entry(title=self._name, data=user_input)
+        return self.async_create_entry(
+            title=self._name,
+            data=user_input
+            | {
+                CONF_ADDRESS: self._bdaddr,
+                CONF_ACCESS_TOKEN: token,
+            },
+        )

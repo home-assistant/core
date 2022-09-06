@@ -100,7 +100,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         return self._position_valid
 
-    def update(self):
+    def update(self) -> None:
         """Update the internal state by querying the device."""
         # This can take 5+ seconds to complete
         state = self._device.get_play_status()
@@ -125,7 +125,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         self._position_valid = utcnow()
         self._duration = state[2]
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """
         Instruct the device to turn standby.
 
@@ -139,21 +139,21 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._state = STATE_OFF
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Wake the device back up from standby."""
         if self._state == STATE_OFF:
             self._device.send_key("POWER")
 
         self._state = STATE_IDLE
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._device.send_key("PLAYBACK")
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._device.send_key("PAUSE")
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self._device.send_key("STOP")
