@@ -327,12 +327,13 @@ class BluetoothManager:
 
         matched_domains = self._integration_matcher.match_domains(service_info)
         _LOGGER.debug(
-            "%s: %s %s connectable: %s match: %s",
+            "%s: %s %s connectable: %s match: %s rssi: %s",
             source,
             address,
             advertisement_data,
             connectable,
             matched_domains,
+            device.rssi,
         )
 
         for match in self._callback_index.match_callbacks(service_info):
