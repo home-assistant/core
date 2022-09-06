@@ -6,7 +6,13 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import SERVICE_INFO, USER_INPUT, MockMicroBotApiClient, patch_async_setup_entry
+from . import (
+    SERVICE_INFO,
+    USER_INPUT,
+    MockMicroBotApiClient,
+    MockMicroBotApiClient2,
+    patch_async_setup_entry,
+)
 
 from tests.common import MockConfigEntry
 
@@ -152,11 +158,11 @@ async def test_no_link(hass):
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
-    assert result2["errors"] == {"linking"}
+    assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient",
-        MockMicroBotApiClient,
+        "homeassistant.components.keymitt_ble.config_flow.MicroBotApiClient2",
+        MockMicroBotApiClient2,
     ), patch_async_setup_entry() as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
