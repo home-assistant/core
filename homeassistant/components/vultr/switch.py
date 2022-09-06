@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -108,17 +109,17 @@ class VultrSwitch(SwitchEntity):
             ATTR_VCPUS: self.data.get("vcpu_count"),
         }
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the subscription."""
         if self.data["power_status"] != "running":
             self._vultr.start(self.subscription)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Halt the subscription."""
         if self.data["power_status"] == "running":
             self._vultr.halt(self.subscription)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the device and update the data."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

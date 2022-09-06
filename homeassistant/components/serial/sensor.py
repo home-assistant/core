@@ -143,7 +143,7 @@ class SerialSensor(SensorEntity):
         self._template = value_template
         self._attributes = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._serial_loop_task = self.hass.loop.create_task(
             self.serial_read(

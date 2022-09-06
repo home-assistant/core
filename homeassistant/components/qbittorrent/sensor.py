@@ -113,7 +113,7 @@ class QBittorrentSensor(SensorEntity):
         self._attr_name = f"{client_name} {description.name}"
         self._attr_available = False
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from qBittorrent and updates the state."""
         try:
             data = self.client.sync_main_data()

@@ -131,7 +131,7 @@ class SwissPublicTransportSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from opendata.ch and update the states."""
 
         try:

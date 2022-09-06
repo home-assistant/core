@@ -104,7 +104,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         """Return the state of the player."""
         return self._player_state
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         if self._player_state != STATE_OFF:
             return
@@ -134,7 +134,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._player_state = STATE_IDLE
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         if self._pianobar is None:
             _LOGGER.info("Pianobar subprocess already stopped")
@@ -151,19 +151,19 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PLAYING
         self.schedule_update_ha_state()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PAUSED
         self.schedule_update_ha_state()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Go to next track."""
         self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
         self.schedule_update_ha_state()
@@ -204,7 +204,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         """Duration of current playing media in seconds."""
         return self._media_duration
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Choose a different Pandora station and play it."""
         try:
             station_index = self._stations.index(source)

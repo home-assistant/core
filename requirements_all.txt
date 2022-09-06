@@ -433,7 +433,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.3.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.0
+bluetooth-auto-recovery==0.3.1
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -1443,7 +1443,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.2.1
+pybravia==0.2.2
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.13
@@ -2369,7 +2369,7 @@ tesla-wall-connector==1.0.2
 thermobeacon-ble==0.3.1
 
 # homeassistant.components.thermopro
-thermopro-ble==0.4.0
+thermopro-ble==0.4.3
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
@@ -2569,7 +2569,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.39.0
+zeroconf==0.39.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.79

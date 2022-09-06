@@ -5,6 +5,7 @@ from asyncio import run_coroutine_threadsafe
 import datetime as dt
 from datetime import timedelta
 import logging
+from typing import Any
 
 import requests
 from spotipy import SpotifyException
@@ -273,7 +274,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return REPEAT_MODE_MAPPING_TO_HA.get(repeat_state)
 
     @spotify_exception_handler
-    def set_volume_level(self, volume: int) -> None:
+    def set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         self.data.client.volume(int(volume * 100))
 
@@ -298,12 +299,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.next_track()
 
     @spotify_exception_handler
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.data.client.seek_track(int(position * 1000))
 
     @spotify_exception_handler
-    def play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media."""
         if media_type.startswith(MEDIA_PLAYER_PREFIX):
             media_type = media_type[len(MEDIA_PLAYER_PREFIX) :]

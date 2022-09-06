@@ -166,7 +166,7 @@ class SnmpSensor(TemplateSensor):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         await self.data.async_update()
 

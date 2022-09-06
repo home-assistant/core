@@ -3,13 +3,17 @@ Volumio Platform.
 
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
+from __future__ import annotations
+
 from datetime import timedelta
 import json
+from typing import Any
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     REPEAT_MODE_ALL,
@@ -83,7 +87,7 @@ class Volumio(MediaPlayerEntity):
         self._currentplaylist = None
         self.thumbnail_cache = {}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state."""
         self._state = await self._volumio.get_state()
         await self._async_update_playlists()
@@ -191,65 +195,65 @@ class Volumio(MediaPlayerEntity):
         """Name of the current input source."""
         return self._currentplaylist
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
         await self._volumio.next()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
         await self._volumio.previous()
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send media_play command to media player."""
         await self._volumio.play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
         if self._state.get("trackType") == "webradio":
             await self._volumio.stop()
         else:
             await self._volumio.pause()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send media_stop command to media player."""
         await self._volumio.stop()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
         await self._volumio.set_volume_level(int(volume * 100))
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Service to send the Volumio the command for volume up."""
         await self._volumio.volume_up()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Service to send the Volumio the command for volume down."""
         await self._volumio.volume_down()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command to media player."""
         if mute:
             await self._volumio.mute()
         else:
             await self._volumio.unmute()
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._volumio.set_shuffle(shuffle)
 
-    async def async_set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         if repeat == REPEAT_MODE_OFF:
             await self._volumio.repeatAll("false")
         else:
             await self._volumio.repeatAll("true")
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Choose an available playlist and play it."""
         await self._volumio.play_playlist(source)
         self._currentplaylist = source
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._volumio.clear_playlist()
         self._currentplaylist = None
@@ -259,11 +263,15 @@ class Volumio(MediaPlayerEntity):
         """Update available Volumio playlists."""
         self._playlists = await self._volumio.get_playlists()
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         await self._volumio.replace_and_play(json.loads(media_id))
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         self.thumbnail_cache = {}
         if media_content_type in (None, "library"):
@@ -274,8 +282,11 @@ class Volumio(MediaPlayerEntity):
         )
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Get album art from Volumio."""
         cached_url = self.thumbnail_cache.get(media_content_id)
         image_url = self._volumio.canonic_url(cached_url)

@@ -1,6 +1,8 @@
 """Support for Proliphix NT10e Thermostats."""
 from __future__ import annotations
 
+from typing import Any
+
 import proliphix
 import voluptuous as vol
 
@@ -63,7 +65,7 @@ class ProliphixThermostat(ClimateEntity):
         self._pdp = pdp
         self._name = None
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the thermostat."""
         self._pdp.update()
         self._name = self._pdp.name
@@ -114,7 +116,7 @@ class ProliphixThermostat(ClimateEntity):
         """Return available HVAC modes."""
         return []
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
