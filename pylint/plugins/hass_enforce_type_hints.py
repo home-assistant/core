@@ -1514,7 +1514,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="state",
-                    return_type=["str", None],
+                    return_type=["MediaPlayerState", None],
                 ),
                 TypeHintMatch(
                     function_name="access_token",
@@ -1534,7 +1534,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="media_content_type",
-                    return_type=["str", None],
+                    return_type=["MediaType", "str", None],
                 ),
                 TypeHintMatch(
                     function_name="media_duration",
@@ -1643,7 +1643,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="repeat",
-                    return_type=["str", None],
+                    return_type=["RepeatMode", None],
                 ),
                 TypeHintMatch(
                     function_name="group_members",
@@ -1711,7 +1711,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="play_media",
                     arg_types={
-                        1: "str",
+                        1: "MediaType | str",
                         2: "str",
                     },
                     kwargs_type="Any",
