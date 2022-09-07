@@ -118,6 +118,16 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
         self.async_write_ha_state()
 
+    @callback
+    def _reset_progress(self) -> None:
+        """Reset update install progress."""
+        if self._progress_unsub:
+            self._progress_unsub()
+            self._progress_unsub = None
+        self._num_files_installed = 0
+        self._attr_in_progress = False
+        self.async_write_ha_state()
+
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
         self._poll_unsub = None
@@ -171,15 +181,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             return None
         return self._latest_version_firmware.changelog
 
-    def reset_progress(self) -> None:
-        """Reset progress."""
-        if self._progress_unsub:
-            self._progress_unsub()
-            self._progress_unsub = None
-        self._num_files_installed = 0
-        self._attr_in_progress = False
-        self.async_write_ha_state()
-
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -197,7 +198,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, file
                 )
             except BaseZwaveJSServerError as err:
-                self.reset_progress()
+                self._reset_progress()
                 raise HomeAssistantError(err) from err
             self._num_files_installed += 1
             self._attr_in_progress = floor(
@@ -207,7 +208,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         self._attr_installed_version = self._attr_latest_version = firmware.version
         self._latest_version_firmware = None
-        self.reset_progress()
+        self._reset_progress()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
