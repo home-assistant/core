@@ -2381,7 +2381,7 @@ thingspeak==1.0.0
 tikteck==0.4
 
 # homeassistant.components.tilt_ble
-tilt-ble==0.2.2
+tilt-ble==0.2.3
 
 # homeassistant.components.tmb
 tmb==0.0.4
