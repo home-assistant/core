@@ -6,6 +6,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
@@ -87,7 +88,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         return self.coordinator.media_content_id
 
     @property
-    def media_content_type(self) -> str | None:
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         return self.coordinator.media_content_type
 

@@ -16,10 +16,7 @@ from pybravia import (
 )
 from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
-)
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -74,7 +71,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source_map: dict[str, dict] = {}
         self.media_title: str | None = None
         self.media_content_id: str | None = None
-        self.media_content_type: str | None = None
+        self.media_content_type: MediaType | None = None
         self.media_uri: str | None = None
         self.media_duration: int | None = None
         self.volume_level: float | None = None
@@ -182,7 +179,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.is_channel = self.media_uri[:2] == "tv"
             if self.is_channel:
                 self.media_content_id = playing_info.get("dispNum")
-                self.media_content_type = MEDIA_TYPE_CHANNEL
+                self.media_content_type = MediaType.CHANNEL
             else:
                 self.media_content_id = self.media_uri
                 self.media_content_type = None
@@ -193,7 +190,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.media_content_type = None
         if not playing_info:
             self.media_title = "Smart TV"
-            self.media_content_type = MEDIA_TYPE_APP
+            self.media_content_type = MediaType.APP
 
     @catch_braviatv_errors
     async def async_turn_on(self) -> None:
