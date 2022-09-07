@@ -75,7 +75,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     """This is Fan entity for the fireplace."""
 
     entity_description: IntellifireFanEntityDescription
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     @property
     def is_on(self) -> bool:
@@ -112,7 +112,15 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        await self.entity_description.set_fn(self.coordinator.control_api, 1)
+        if percentage:
+            int_value = math.ceil(
+                percentage_to_ranged_value(
+                    self.entity_description.speed_range, percentage
+                )
+            )
+        else:
+            int_value = 1
+        await self.entity_description.set_fn(self.coordinator.control_api, int_value)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
