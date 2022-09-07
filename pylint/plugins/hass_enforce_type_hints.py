@@ -1505,7 +1505,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="state",
-                    return_type=["MediaPlayerState", "str", None],
+                    return_type=["MediaPlayerState", None],
                 ),
                 TypeHintMatch(
                     function_name="access_token",
