@@ -99,9 +99,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.hass.async_create_task(self._async_update())
 
     @callback
-    def _update_progress(self, evt: dict[str, Any]) -> None:
+    def _update_progress(self, event: dict[str, Any]) -> None:
         """Update install progress on event."""
-        progress: FirmwareUpdateProgress = evt["firmware_update_progress"]
+        progress: FirmwareUpdateProgress = event["firmware_update_progress"]
         if not self._latest_version_firmware:
             return
         # We will assume that each file in the firmware update represents an equal
