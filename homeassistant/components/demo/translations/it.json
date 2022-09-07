@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Premere INVIA per confermare che l'alimentatore \u00e8 stato sostituito",
+                        "title": "L'alimentatore deve essere sostituito"
+                    }
+                }
+            },
+            "title": "L'alimentazione non \u00e8 stabile"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Premere OK quando il liquido delle frecce \u00e8 stato riempito",
+                        "description": "Premere INVIA quando il liquido delle frecce \u00e8 stato riempito",
                         "title": "Il liquido delle frecce deve essere rabboccato"
                     }
                 }

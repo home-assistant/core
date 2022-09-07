@@ -100,7 +100,7 @@ class FreeboxSensor(SensorEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
         self.async_on_remove(

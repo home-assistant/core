@@ -1,9 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -43,6 +43,7 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
+    ServiceNotFound,
     TemplateError,
 )
 from homeassistant.helpers import condition, extract_domain_configs
@@ -52,6 +53,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -73,8 +75,13 @@ from homeassistant.helpers.trace import (
     trace_get,
     trace_path,
 )
-from homeassistant.helpers.trigger import async_initialize_triggers
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.trigger import (
+    TriggerActionType,
+    TriggerData,
+    TriggerInfo,
+    async_initialize_triggers,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -111,24 +118,13 @@ ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
 _LOGGER = logging.getLogger(__name__)
-AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 
-class AutomationTriggerData(TypedDict):
-    """Automation trigger data."""
-
-    id: str
-    idx: str
-
-
-class AutomationTriggerInfo(TypedDict):
-    """Information about automation trigger."""
-
-    domain: str
-    name: str
-    home_assistant_start: bool
-    variables: TemplateVarsType
-    trigger_data: AutomationTriggerData
+# AutomationActionType, AutomationTriggerData,
+# and AutomationTriggerInfo are deprecated as of 2022.9.
+AutomationActionType = TriggerActionType
+AutomationTriggerData = TriggerData
+AutomationTriggerInfo = TriggerInfo
 
 
 @bind_hass
@@ -438,15 +434,24 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             await self.async_disable()
 
-    async def async_trigger(self, run_variables, context=None, skip_condition=False):
+    async def async_trigger(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> None:
         """Trigger automation.
 
         This method is a coroutine.
         """
         reason = ""
-        if "trigger" in run_variables and "description" in run_variables["trigger"]:
-            reason = f' by {run_variables["trigger"]["description"]}'
-        self._logger.debug("Automation triggered%s", reason)
+        alias = ""
+        if "trigger" in run_variables:
+            if "description" in run_variables["trigger"]:
+                reason = f' by {run_variables["trigger"]["description"]}'
+            if "alias" in run_variables["trigger"]:
+                alias = f' trigger \'{run_variables["trigger"]["alias"]}\''
+        self._logger.debug("Automation%s triggered%s", alias, reason)
 
         # Create a new context referring to the old context.
         parent_id = None if context is None else context.id
@@ -463,7 +468,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             this = None
             if state := self.hass.states.get(self.entity_id):
                 this = state.as_dict()
-            variables = {"this": this, **(run_variables or {})}
+            variables: dict[str, Any] = {"this": this, **(run_variables or {})}
             if self._variables:
                 try:
                     variables = self._variables.async_render(self.hass, variables)
@@ -522,6 +527,23 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
+            except ServiceNotFound as err:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="service_not_found",
+                    translation_placeholders={
+                        "service": f"{err.domain}.{err.service}",
+                        "entity_id": self.entity_id,
+                        "name": self.name or self.entity_id,
+                        "edit": f"/config/automation/edit/{self.unique_id}",
+                    },
+                )
+                automation_trace.set_error(err)
             except (vol.Invalid, HomeAssistantError) as err:
                 self._logger.error(
                     "Error while executing automation %s: %s",

@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextDnsUpdateCoordinator, TCoordinatorData
+from . import CoordinatorDataT, NextDnsUpdateCoordinator
 from .const import (
     ATTR_DNSSEC,
     ATTR_ENCRYPTION,
@@ -40,17 +40,17 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass
-class NextDnsSensorRequiredKeysMixin(Generic[TCoordinatorData]):
+class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
     coordinator_type: str
-    value: Callable[[TCoordinatorData], StateType]
+    value: Callable[[CoordinatorDataT], StateType]
 
 
 @dataclass
 class NextDnsSensorEntityDescription(
     SensorEntityDescription,
-    NextDnsSensorRequiredKeysMixin[TCoordinatorData],
+    NextDnsSensorRequiredKeysMixin[CoordinatorDataT],
 ):
     """NextDNS sensor entity description."""
 
@@ -108,6 +108,17 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         value=lambda data: data.doh_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
+        key="doh3_queries",
+        coordinator_type=ATTR_PROTOCOLS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:dns",
+        name="DNS-over-HTTP/3 queries",
+        native_unit_of_measurement="queries",
+        state_class=SensorStateClass.TOTAL,
+        value=lambda data: data.doh3_queries,
+    ),
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="dot_queries",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -161,6 +172,17 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doh_queries_ratio,
+    ),
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
+        key="doh3_queries_ratio",
+        coordinator_type=ATTR_PROTOCOLS,
+        entity_registry_enabled_default=False,
+        icon="mdi:dns",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="DNS-over-HTTP/3 queries ratio",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.doh3_queries_ratio,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="dot_queries_ratio",
@@ -326,7 +348,7 @@ async def async_setup_entry(
 
 
 class NextDnsSensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[TCoordinatorData]], SensorEntity
+    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SensorEntity
 ):
     """Define an NextDNS sensor."""
 
@@ -334,7 +356,7 @@ class NextDnsSensor(
 
     def __init__(
         self,
-        coordinator: NextDnsUpdateCoordinator[TCoordinatorData],
+        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
         description: NextDnsSensorEntityDescription,
     ) -> None:
         """Initialize."""

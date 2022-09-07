@@ -113,7 +113,7 @@ class SensorDeviceClass(StrEnum):
     # gas (m³ or ft³)
     GAS = "gas"
 
-    # % of humidity in the air
+    # Relative humidity (%)
     HUMIDITY = "humidity"
 
     # current light level (lx/lm)

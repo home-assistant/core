@@ -112,7 +112,7 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self._target_temperature = int(temperature)
         self.therm.set_target_temp(self._target_temperature)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.uh1.reopen()
         if not self.uh1.status:

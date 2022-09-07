@@ -3,7 +3,7 @@ import json
 
 import voluptuous as vol
 
-from homeassistant.components import trace, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
@@ -23,6 +23,8 @@ from homeassistant.helpers.script import (
     debug_step,
     debug_stop,
 )
+
+from .. import trace
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

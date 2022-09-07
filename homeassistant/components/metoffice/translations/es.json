@@ -14,8 +14,8 @@
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 },
-                "description": "La latitud y la longitud se utilizar\u00e1n para encontrar la estaci\u00f3n meteorol\u00f3gica m\u00e1s cercana.",
-                "title": "Con\u00e9ctar con la Oficina Meteorol\u00f3gica del Reino Unido"
+                "description": "La latitud y la longitud se usar\u00e1n para encontrar la estaci\u00f3n meteorol\u00f3gica m\u00e1s cercana.",
+                "title": "Conectar con la UK Met Office"
             }
         }
     }

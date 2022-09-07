@@ -8,6 +8,7 @@ from aiosenseme import SensemeDevice, SensemeDiscovery
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 
 from .const import DISCOVERY, DOMAIN
 
@@ -55,10 +56,9 @@ def async_trigger_discovery(
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
         if device.uuid:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                    data={CONF_ID: device.uuid},
-                )
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={CONF_ID: device.uuid},
             )

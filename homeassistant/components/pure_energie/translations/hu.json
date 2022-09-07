@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "C\u00edm"
+                },
+                "data_description": {
+                    "host": "A Pure Energie Meter IP-c\u00edme vagy hostneve."
                 }
             },
             "zeroconf_confirm": {

@@ -1,6 +1,7 @@
 """Provides a light for Home Connect."""
 import logging
 from math import ceil
+from typing import Any
 
 from homeconnect.api import HomeConnectError
 
@@ -153,7 +154,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
         self.async_entity_update()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the light off."""
         _LOGGER.debug("Switching light off for: %s", self.name)
         try:

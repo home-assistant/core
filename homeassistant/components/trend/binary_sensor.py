@@ -112,6 +112,8 @@ def setup_platform(
 class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -166,11 +168,6 @@ class SensorTrend(BinarySensorEntity):
             ATTR_SAMPLE_COUNT: len(self.samples),
             ATTR_SAMPLE_DURATION: self._sample_duration,
         }
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     async def async_added_to_hass(self):
         """Complete device setup after being added to hass."""

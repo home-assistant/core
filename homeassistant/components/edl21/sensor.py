@@ -368,6 +368,8 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
+    _attr_should_poll = False
+
     def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
@@ -386,7 +388,7 @@ class EDL21Entity(SensorEntity):
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
         @callback
@@ -411,15 +413,10 @@ class EDL21Entity(SensorEntity):
             self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._async_remove_dispatcher:
             self._async_remove_dispatcher()
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
 
     @property
     def unique_id(self) -> str:

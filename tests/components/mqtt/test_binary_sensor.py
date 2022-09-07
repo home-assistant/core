@@ -53,6 +53,7 @@ from tests.common import (
     assert_setup_component,
     async_fire_mqtt_message,
     async_fire_time_changed,
+    mock_restore_cache,
 )
 
 DEFAULT_CONFIG = {
@@ -1062,10 +1063,9 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
         {},
         last_changed=datetime.fromisoformat("2022-02-02 12:01:35+01:00"),
     )
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ), assert_setup_component(1, domain):
+    mock_restore_cache(hass, (fake_state,))
+
+    with assert_setup_component(1, domain):
         assert await async_setup_component(hass, domain, {domain: config3})
         await hass.async_block_till_done()
         await mqtt_mock_entry_with_yaml_config()

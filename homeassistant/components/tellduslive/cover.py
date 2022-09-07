@@ -1,7 +1,7 @@
 """Support for Tellstick covers using Tellstick Net."""
 from typing import Any
 
-from homeassistant.components import cover, tellduslive
+from homeassistant.components import cover
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -9,6 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TelldusLiveClient
+from .. import tellduslive
 from .entry import TelldusLiveEntity
 
 

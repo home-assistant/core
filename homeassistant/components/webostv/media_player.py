@@ -340,7 +340,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         await self._client.volume_down()
 
     @cmd
-    async def async_set_volume_level(self, volume: int) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         tv_volume = int(round(volume * 100))
         await self._client.set_volume(tv_volume)

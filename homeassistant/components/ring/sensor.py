@@ -42,7 +42,6 @@ class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription
-    _attr_should_poll = False  # updates are controlled via the hub
 
     def __init__(
         self,

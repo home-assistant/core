@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import lw12
 import voluptuous as vol
@@ -58,6 +59,7 @@ class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
@@ -114,11 +116,6 @@ class LW12WiFi(LightEntity):
         """Return True if unable to access real state of the entity."""
         return True
 
-    @property
-    def should_poll(self) -> bool:
-        """Return False to not poll the state of this entity."""
-        return False
-
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         self._light.light_on()
@@ -146,7 +143,7 @@ class LW12WiFi(LightEntity):
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()
         self._state = False

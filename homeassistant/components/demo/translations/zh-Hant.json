@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "\u6309\u4e0b\u300c\u50b3\u9001\u300d\u4ee5\u78ba\u8a8d\u96fb\u6e90\u4f9b\u61c9\u5df2\u7d93\u66f4\u63db",
+                        "title": "\u96fb\u6e90\u4f9b\u61c9\u9700\u8981\u66f4\u63db"
+                    }
+                }
+            },
+            "title": "\u96fb\u6e90\u4f9b\u61c9\u4e0d\u7a69\u5b9a"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "\u65bc\u8a0a\u865f\u5291\u88dc\u5145\u5f8c\u6309\u4e0b OK",
+                        "description": "\u65bc\u88dc\u5145\u8a0a\u865f\u5291\u5f8c\u6309\u4e0b\u300c\u50b3\u9001\u300d",
                         "title": "\u8a0a\u865f\u5291\u9700\u8981\u88dc\u5145"
                     }
                 }

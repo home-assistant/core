@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, cast
+from uuid import UUID
 
 import voluptuous as vol
 
@@ -10,7 +11,7 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
-from homeassistant.util.yaml.dumper import add_representer, represent_odict
+from homeassistant.util.yaml import dumper
 
 from . import config_validation as cv
 
@@ -205,10 +206,11 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-class AttributeSelectorConfig(TypedDict):
+class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
     entity_id: str
+    hide_attributes: list[str]
 
 
 @SELECTORS.register("attribute")
@@ -217,7 +219,14 @@ class AttributeSelector(Selector):
 
     selector_type = "attribute"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            # hide_attributes is used to hide attributes in the frontend.
+            # A hidden attribute can still be provided manually.
+            vol.Optional("hide_attributes"): [str],
+        }
+    )
 
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
@@ -307,6 +316,34 @@ class ColorTempSelector(Selector):
             ),
         )(data)
         return value
+
+
+class ConfigEntrySelectorConfig(TypedDict, total=False):
+    """Class to represent a config entry selector config."""
+
+    integration: str
+
+
+@SELECTORS.register("config_entry")
+class ConfigEntrySelector(Selector):
+    """Selector of a config entry."""
+
+    selector_type = "config_entry"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("integration"): str,
+        }
+    )
+
+    def __init__(self, config: ConfigEntrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        config: str = vol.Schema(str)(data)
+        return config
 
 
 class DateSelectorConfig(TypedDict):
@@ -740,6 +777,39 @@ class TargetSelectorConfig(TypedDict, total=False):
     device: SingleDeviceSelectorConfig
 
 
+class StateSelectorConfig(TypedDict, total=False):
+    """Class to represent an state selector config."""
+
+    entity_id: str
+
+
+@SELECTORS.register("state")
+class StateSelector(Selector):
+    """Selector for an entity state."""
+
+    selector_type = "state"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            # The attribute to filter on, is currently deliberately not
+            # configurable/exposed. We are considering separating state
+            # selectors into two types: one for state and one for attribute.
+            # Limiting the public use, prevents breaking changes in the future.
+            # vol.Optional("attribute"): str,
+        }
+    )
+
+    def __init__(self, config: StateSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        state: str = vol.Schema(str)(data)
+        return state
+
+
 @SELECTORS.register("target")
 class TargetSelector(Selector):
     """Selector of a target value (area ID, device ID, entity ID etc).
@@ -888,9 +958,42 @@ class TimeSelector(Selector):
         return cast(str, data)
 
 
-add_representer(
+class FileSelectorConfig(TypedDict):
+    """Class to represent a file selector config."""
+
+    accept: str  # required
+
+
+@SELECTORS.register("file")
+class FileSelector(Selector):
+    """Selector of a file."""
+
+    selector_type = "file"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
+            vol.Required("accept"): str,
+        }
+    )
+
+    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
+
+        UUID(data)
+
+        return data
+
+
+dumper.add_representer(
     Selector,
-    lambda dumper, value: represent_odict(
+    lambda dumper, value: dumper.represent_odict(
         dumper, "tag:yaml.org,2002:map", value.serialize()
     ),
 )

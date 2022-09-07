@@ -584,7 +584,8 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
-            await asyncio.sleep(30)
+            listen_block = asyncio.Event()
+            await listen_block.wait()
             assert False, "Listen wasn't canceled!"
 
         async def disconnect():
@@ -843,6 +844,8 @@ async def integration_fixture(hass, client):
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    client.async_send_command.reset_mock()
 
     return entry
 

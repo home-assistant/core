@@ -16,5 +16,18 @@
                 "title": "Konfigurasikan Flu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Sumber data eksternal yang mendukung integrasi Flu Near You tidak lagi tersedia, sehingga integrasi tidak lagi berfungsi. \n\nTekan KIRIM untuk menghapus integrasi Flu Near You dari instans Home Assistant Anda.",
+                        "title": "Hapus Integrasi Flu Near You"
+                    }
+                }
+            },
+            "title": "Integrasi Flu Year You tidak lagi tersedia"
+        }
     }
 }

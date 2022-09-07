@@ -503,6 +503,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             f"{self.URL}/{path}",
             params=params,
             headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
         )
         return response.json()
 
@@ -911,6 +912,8 @@ async def async_get_entity_id(
 class BaseWithingsSensor(Entity):
     """Base class for withings sensors."""
 
+    _attr_should_poll = False
+
     def __init__(self, data_manager: DataManager, attribute: WithingsAttribute) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
@@ -920,11 +923,6 @@ class BaseWithingsSensor(Entity):
         self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
         self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
         self._state_data: Any | None = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False to indicate HA should not poll for changes."""
-        return False
 
     @property
     def name(self) -> str:

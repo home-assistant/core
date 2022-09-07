@@ -144,7 +144,7 @@ class AquaLogicSensor(SensorEntity):
         self._processor = processor
         self._attr_name = f"AquaLogic {description.name}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
