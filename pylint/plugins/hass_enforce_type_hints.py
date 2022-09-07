@@ -4,14 +4,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 import re
+from typing import TYPE_CHECKING
 
 from astroid import nodes
 from astroid.exceptions import NameInferenceError
-from astroid.typing import InferenceResult
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
+
+if TYPE_CHECKING:
+    # available only from astroid >= 2.12.0
+    from astroid.typing import InferenceResult
 
 
 class _Special(Enum):
