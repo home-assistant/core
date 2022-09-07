@@ -4,12 +4,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 import re
+from typing import TYPE_CHECKING
 
 from astroid import nodes
+from astroid.exceptions import NameInferenceError
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
+
+if TYPE_CHECKING:
+    # InferenceResult is available only from astroid >= 2.12.0
+    # pre-commit should still work on out of date environments
+    from astroid.typing import InferenceResult
 
 
 class _Special(Enum):
@@ -387,7 +394,8 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
                 2: "DiscoveryInfoType | None",
             },
-            return_type=_Special.UNDEFINED,
+            return_type=["BaseNotificationService", None],
+            check_return_type_inheritance=True,
             has_async_counterpart=True,
         ),
     ],
@@ -2534,18 +2542,36 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
 
     if (
         match.check_return_type_inheritance
-        and isinstance(match.return_type, str)
+        and isinstance(match.return_type, (str, list))
         and isinstance(node, nodes.Name)
     ):
-        ancestor: nodes.ClassDef
-        for infer_node in node.infer():
-            if isinstance(infer_node, nodes.ClassDef):
-                if infer_node.name == match.return_type:
+        if isinstance(match.return_type, str):
+            valid_types = {match.return_type}
+        else:
+            valid_types = {el for el in match.return_type if isinstance(el, str)}
+
+        try:
+            for infer_node in node.infer():
+                if _check_ancestry(infer_node, valid_types):
                     return True
-                for ancestor in infer_node.ancestors():
-                    if ancestor.name == match.return_type:
+        except NameInferenceError:
+            for class_node in node.root().nodes_of_class(nodes.ClassDef):
+                if class_node.name != node.name:
+                    continue
+                for infer_node in class_node.infer():
+                    if _check_ancestry(infer_node, valid_types):
                         return True
 
+    return False
+
+
+def _check_ancestry(infer_node: InferenceResult, valid_types: set[str]) -> bool:
+    if isinstance(infer_node, nodes.ClassDef):
+        if infer_node.name in valid_types:
+            return True
+        for ancestor in infer_node.ancestors():
+            if ancestor.name in valid_types:
+                return True
     return False
 
 
