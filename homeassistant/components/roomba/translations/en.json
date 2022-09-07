@@ -12,7 +12,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
+                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds. Ensure that the iRobot app is not open on any device.",
                 "title": "Retrieve Password"
             },
             "link_manual": {
