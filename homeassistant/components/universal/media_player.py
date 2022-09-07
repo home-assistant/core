@@ -183,7 +183,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._state_template_result = None
         self._state_template = state_template
         self._device_class = device_class
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Subscribe to children and template state changes."""
@@ -303,11 +303,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def name(self):
         """Return the name of universal player."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of universal player."""
-        return self._unique_id
 
     @property
     def state(self):
