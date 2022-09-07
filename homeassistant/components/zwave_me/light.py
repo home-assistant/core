@@ -95,7 +95,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     @property
     def brightness(self) -> int:
-        """Return the brightness of a d evice."""
+        """Return the brightness of a device."""
         return max(self.device.color.values())
 
     @property
