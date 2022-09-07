@@ -8,6 +8,7 @@ from typing import Any
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import CommandClass
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -312,14 +313,6 @@ class ControllerEvents:
                 node,
             )
 
-            # Create a firmware update entity for each device
-            await self.driver_events.async_setup_platform(Platform.UPDATE)
-            async_dispatcher_send(
-                self.hass,
-                f"{DOMAIN}_{self.config_entry.entry_id}_add_firmware_update_entity",
-                node,
-            )
-
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:
@@ -463,10 +456,26 @@ class NodeEvents:
                 ),
             )
         )
+
         # add listener for stateless node notification events
         self.config_entry.async_on_unload(
             node.on("notification", self.async_on_notification)
         )
+
+        # Create a firmware update entity for each non-controller device that
+        # supports firmware updates
+        if not node.is_controller_node and any(
+            CommandClass.FIRMWARE_UPDATE_MD.value == cc.id
+            for cc in node.command_classes
+        ):
+            await self.controller_events.driver_events.async_setup_platform(
+                Platform.UPDATE
+            )
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_firmware_update_entity",
+                node,
+            )
 
     async def async_handle_discovery_info(
         self,

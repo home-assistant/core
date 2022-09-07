@@ -6,7 +6,8 @@
             "usb_probe_failed": "No s'ha pogut provar el dispositiu USB"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_backup_json": "JSON de c\u00f2pia de seguretat inv\u00e0lid"
         },
         "flow_title": "{name}",
         "step": {
@@ -176,7 +177,8 @@
             "usb_probe_failed": "No s'ha pogut provar el dispositiu USB"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_backup_json": "JSON de c\u00f2pia de seguretat inv\u00e0lid"
         },
         "flow_title": "{name}",
         "step": {

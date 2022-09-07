@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -65,14 +65,6 @@ def mock_config_entry(hass: HomeAssistant):
     return entry
 
 
-def mock_melnor_valve(identifier: int):
-    """Return a mocked Melnor valve."""
-    valve = Mock(spec=Valve)
-    valve.id = identifier
-
-    return valve
-
-
 def mock_melnor_device():
     """Return a mocked Melnor device."""
 
@@ -83,6 +75,7 @@ def mock_melnor_device():
         device.connect = AsyncMock(return_value=True)
         device.disconnect = AsyncMock(return_value=True)
         device.fetch_state = AsyncMock(return_value=device)
+        device.push_state = AsyncMock(return_value=None)
 
         device.battery_level = 80
         device.mac = FAKE_ADDRESS_1
@@ -90,10 +83,10 @@ def mock_melnor_device():
         device.name = "test_melnor"
         device.rssi = -50
 
-        device.zone1 = mock_melnor_valve(1)
-        device.zone2 = mock_melnor_valve(2)
-        device.zone3 = mock_melnor_valve(3)
-        device.zone4 = mock_melnor_valve(4)
+        device.zone1 = Valve(0, device)
+        device.zone2 = Valve(1, device)
+        device.zone3 = Valve(2, device)
+        device.zone4 = Valve(3, device)
 
         device.__getitem__.side_effect = lambda key: getattr(device, key)
 

@@ -173,7 +173,7 @@ class FolderSensor(SensorEntity):
             self._unsub_timer()
             self._unsub_timer = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
         @callback
