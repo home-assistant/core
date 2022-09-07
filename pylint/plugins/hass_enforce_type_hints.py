@@ -1702,7 +1702,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="play_media",
                     arg_types={
-                        1: "str",
+                        1: "MediaType | str",
                         2: "str",
                     },
                     kwargs_type="Any",

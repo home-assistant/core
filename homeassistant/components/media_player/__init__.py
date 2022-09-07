@@ -759,12 +759,14 @@ class MediaPlayerEntity(Entity):
         """Send seek command."""
         await self.hass.async_add_executor_job(self.media_seek, position)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         raise NotImplementedError()
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         await self.hass.async_add_executor_job(
