@@ -23,16 +23,16 @@ class RestEntity(Entity):
         force_update: bool,
     ) -> None:
         """Create the entity that may have a coordinator."""
-        self.coordinator = coordinator
+        self._coordinator = coordinator
         self.rest = rest
         self._resource_template = resource_template
-        self._attr_should_poll = not self.coordinator
+        self._attr_should_poll = not coordinator
         self._attr_force_update = force_update
 
     @property
     def available(self) -> bool:
         """Return the availability of this sensor."""
-        if self.coordinator and not self.coordinator.last_update_success:
+        if self._coordinator and not self._coordinator.last_update_success:
             return False
         return self.rest.data is not None
 
@@ -40,9 +40,9 @@ class RestEntity(Entity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._update_from_rest_data()
-        if self.coordinator:
+        if self._coordinator:
             self.async_on_remove(
-                self.coordinator.async_add_listener(self._handle_coordinator_update)
+                self._coordinator.async_add_listener(self._handle_coordinator_update)
             )
 
     @callback
@@ -53,8 +53,8 @@ class RestEntity(Entity):
 
     async def async_update(self) -> None:
         """Get the latest data from REST API and update the state."""
-        if self.coordinator:
-            await self.coordinator.async_request_refresh()
+        if self._coordinator:
+            await self._coordinator.async_request_refresh()
             return
 
         if self._resource_template is not None:
