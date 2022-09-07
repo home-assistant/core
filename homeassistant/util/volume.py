@@ -14,6 +14,8 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
+from .distance import FOOT_TO_M
+
 VALID_UNITS: tuple[str, ...] = (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
@@ -23,25 +25,28 @@ VALID_UNITS: tuple[str, ...] = (
     VOLUME_CUBIC_FEET,
 )
 
+CUBIC_FOOT_TO_CUBIC_M = pow(FOOT_TO_M, 3)
+GALLON_TO_L = 3.785
+
 
 def liter_to_gallon(liter: float) -> float:
     """Convert a volume measurement in Liter to Gallon."""
-    return liter * 0.2642
+    return liter / GALLON_TO_L
 
 
 def gallon_to_liter(gallon: float) -> float:
     """Convert a volume measurement in Gallon to Liter."""
-    return gallon * 3.785
+    return gallon * GALLON_TO_L
 
 
 def cubic_meter_to_cubic_feet(cubic_meter: float) -> float:
     """Convert a volume measurement in cubic meter to cubic feet."""
-    return cubic_meter * 35.3146667
+    return cubic_meter / CUBIC_FOOT_TO_CUBIC_M
 
 
 def cubic_feet_to_cubic_meter(cubic_feet: float) -> float:
     """Convert a volume measurement in cubic feet to cubic meter."""
-    return cubic_feet * 0.0283168466
+    return cubic_feet * CUBIC_FOOT_TO_CUBIC_M
 
 
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
