@@ -400,7 +400,7 @@ async def ws_event_stream(
         get_instance(hass).async_block_till_done()
     )
     if msg_id not in connection.subscriptions:
-        # Unsubscribe happened while waiting for recorder
+        # Unsubscribe happened while sending historical events
         _unsub()
         return
 
