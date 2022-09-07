@@ -42,7 +42,9 @@ def test_convert_nonnumeric_value():
 def test_convert_from_liters():
     """Test conversion from liters to other units."""
     liters = 5
-    assert volume_util.convert(liters, VOLUME_LITERS, VOLUME_GALLONS) == 1.321
+    assert volume_util.convert(liters, VOLUME_LITERS, VOLUME_GALLONS) == pytest.approx(
+        1.321004
+    )
 
 
 def test_convert_from_gallons():
@@ -54,16 +56,14 @@ def test_convert_from_gallons():
 def test_convert_from_cubic_meters():
     """Test conversion from cubic meter to other units."""
     cubic_meters = 5
-    assert (
-        volume_util.convert(cubic_meters, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET)
-        == 176.5733335
-    )
+    assert volume_util.convert(
+        cubic_meters, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET
+    ) == pytest.approx(176.5733335)
 
 
 def test_convert_from_cubic_feet():
     """Test conversion from cubic feet to cubic meters to other units."""
     cubic_feets = 500
-    assert (
-        volume_util.convert(cubic_feets, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS)
-        == 14.1584233
-    )
+    assert volume_util.convert(
+        cubic_feets, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS
+    ) == pytest.approx(14.1584233)
