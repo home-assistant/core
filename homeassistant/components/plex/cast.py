@@ -6,7 +6,7 @@ from pychromecast.controllers.plex import PlexController
 
 from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import MEDIA_CLASS_APP
+from homeassistant.components.media_player.const import MediaClass, MediaType
 from homeassistant.core import HomeAssistant
 
 from . import async_browse_media as async_browse_plex_media, is_plex_media_id
@@ -20,7 +20,7 @@ async def async_get_media_browser_root_object(
     return [
         BrowseMedia(
             title="Plex",
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_id="",
             media_content_type="plex",
             thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
@@ -32,7 +32,7 @@ async def async_get_media_browser_root_object(
 
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_type: str,
+    media_content_type: MediaType | str,
     media_content_id: str,
     cast_type: str,
 ) -> BrowseMedia | None:
@@ -59,7 +59,7 @@ def _play_media(
 
 async def async_play_media(
     hass: HomeAssistant,
-    cast_entity_id: str,
+    cast_entity_id: MediaType | str,
     chromecast: Chromecast,
     media_type: str,
     media_id: str,
