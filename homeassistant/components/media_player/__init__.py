@@ -128,6 +128,7 @@ from .const import (  # noqa: F401
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntityFeature,
+    MediaType,
     RepeatMode,
 )
 from .errors import BrowseError
@@ -454,7 +455,7 @@ class MediaPlayerEntity(Entity):
     _attr_media_artist: str | None = None
     _attr_media_channel: str | None = None
     _attr_media_content_id: str | None = None
-    _attr_media_content_type: str | None = None
+    _attr_media_content_type: MediaType | str | None = None
     _attr_media_duration: int | None = None
     _attr_media_episode: str | None = None
     _attr_media_image_hash: str | None
@@ -467,7 +468,7 @@ class MediaPlayerEntity(Entity):
     _attr_media_series_title: str | None = None
     _attr_media_title: str | None = None
     _attr_media_track: int | None = None
-    _attr_repeat: str | None = None
+    _attr_repeat: RepeatMode | str | None = None
     _attr_shuffle: bool | None = None
     _attr_sound_mode_list: list[str] | None = None
     _attr_sound_mode: str | None = None
@@ -515,7 +516,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_media_content_id
 
     @property
-    def media_content_type(self) -> str | None:
+    def media_content_type(self) -> MediaType | str | None:
         """Content type of current playing media."""
         return self._attr_media_content_type
 
@@ -664,7 +665,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_shuffle
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | str | None:
         """Return current repeat mode."""
         return self._attr_repeat
 
