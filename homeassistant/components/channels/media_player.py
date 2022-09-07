@@ -11,12 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_TVSHOW,
-)
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.const import (
     ATTR_SECONDS,
     CONF_HOST,
@@ -191,9 +186,9 @@ class ChannelsPlayer(MediaPlayerEntity):
         return self.channel_number
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
-        return MEDIA_TYPE_CHANNEL
+        return MediaType.CHANNEL
 
     @property
     def media_image_url(self):
@@ -255,10 +250,10 @@ class ChannelsPlayer(MediaPlayerEntity):
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the player."""
-        if media_type == MEDIA_TYPE_CHANNEL:
+        if media_type == MediaType.CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in (MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW):
+        elif media_type in (MediaType.MOVIE, MediaType.EPISODE, MediaType.TVSHOW):
             response = self.client.play_recording(media_id)
             self.update_state(response)
 

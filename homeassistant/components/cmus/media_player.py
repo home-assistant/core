@@ -12,10 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-)
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -92,7 +89,7 @@ class CmusRemote:
 class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
-    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -189,14 +186,14 @@ class CmusDevice(MediaPlayerEntity):
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play command."""
-        if media_type in [MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST]:
+        if media_type in [MediaType.MUSIC, MediaType.PLAYLIST]:
             self._remote.cmus.player_play_file(media_id)
         else:
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
                 media_type,
-                MEDIA_TYPE_MUSIC,
-                MEDIA_TYPE_PLAYLIST,
+                MediaType.MUSIC,
+                MediaType.PLAYLIST,
             )
 
     def media_pause(self) -> None:

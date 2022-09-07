@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -62,7 +62,7 @@ def setup_platform(
 class ClementineDevice(MediaPlayerEntity):
     """Representation of Clementine Player."""
 
-    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_STEP
