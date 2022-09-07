@@ -9,6 +9,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     _LOGGER,
     BRIDGE_NOTIFICATION_KEY,
+    BRIDGE_NOTIFICATION_RULE,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     NOTIFICATION_SCAN_INTERVAL,
@@ -69,7 +70,10 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         # multiple notifications of the same type (such as High Flow). The only special
         # case here is bridge notifications: NOTIFICATION_BRIDGE_DISCONNECT, which will be either True
         # or False as indicated in the ["extra"][BRIDGE_NOTIFICATION_KEY].
-        full_notification_info = {}
+        # full_notification_info = {}
+
+        notifications_by_device: dict[str, set[str]] = {}
+
         for item in self.notifications:
 
             device_id = item["device_id"]
@@ -79,20 +83,26 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             # all other notifications will be not False ... aka True
             value = not item["extra"].get(BRIDGE_NOTIFICATION_KEY, False)
 
-            full_notification_info.setdefault(device_id, {})
-            full_notification_info[device_id][rule] = value
+            if value:
+                notifications_by_device.setdefault(
+                    device_id, {BRIDGE_NOTIFICATION_RULE}
+                ).add(rule)
 
-        # Next preserve only notifications that are present in a set
-        notifications_by_device = {}
-        for device_id in full_notification_info.items():
-            notifications_by_device[device_id] = set(
-                dict(
-                    filter(
-                        lambda x: x[1] is True,
-                        full_notification_info[device_id].items(),
+            if rule == BRIDGE_NOTIFICATION_RULE:
+                # If bridge is connected the rule should be present in the notification list
+                # if disconnected the rule should not be present
+                if value:
+                    notifications_by_device[device_id].discard(rule)
+                    _LOGGER.debug(
+                        "Processed bridge disconnect event - removing %s from notification list",
+                        BRIDGE_NOTIFICATION_RULE,
                     )
-                )
-            )
+                else:
+                    notifications_by_device[device_id].add(BRIDGE_NOTIFICATION_RULE)
+                    _LOGGER.debug(
+                        "Processed bridge connect event - adding %s from notification list",
+                        BRIDGE_NOTIFICATION_RULE,
+                    )
 
         self.active_notifications_by_device = notifications_by_device
 
