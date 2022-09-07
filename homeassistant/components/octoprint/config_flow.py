@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _schema_with_defaults(
-    username="", host="", port=80, path="/", ssl=False, verify_ssl=True
+    username="", host="", port=80, path="/", ssl=False, verify_ssl=True, apikey=None,
 ):
     return vol.Schema(
         {
@@ -35,6 +35,7 @@ def _schema_with_defaults(
             vol.Required(CONF_PATH, default=path): str,
             vol.Required(CONF_SSL, default=ssl): bool,
             vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+            vol.Optional(CONF_API_KEY, default=apikey): str,
         },
         extra=vol.ALLOW_EXTRA,
     )
