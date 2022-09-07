@@ -27,16 +27,13 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MediaType, RepeatMode
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
+from homeassistant.components.media_player.const import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -170,26 +167,26 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         self._attr_supported_features = SUPPORT_APPLE_TV
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self.manager.is_connecting:
             return None
         if self.atv is None:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if (
             self._is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state == PowerState.Off
         ):
-            return STATE_STANDBY
+            return MediaPlayerState.STANDBY
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
-                return STATE_IDLE
+                return MediaPlayerState.IDLE
             if state == DeviceState.Playing:
-                return STATE_PLAYING
+                return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
-                return STATE_PAUSED
-            return STATE_STANDBY  # Bad or unknown state?
+                return MediaPlayerState.PAUSED
+            return MediaPlayerState.STANDBY  # Bad or unknown state?
         return None
 
     @callback
@@ -271,7 +268,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @property
     def media_position_updated_at(self) -> datetime | None:
         """Last valid time of media position."""
-        if self.state in (STATE_PLAYING, STATE_PAUSED):
+        if self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
             return dt_util.utcnow()
         return None
 
@@ -310,7 +307,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         if (
             self._playing
             and self._is_feature_available(FeatureName.Artwork)
-            and state not in [None, STATE_OFF, STATE_IDLE]
+            and state not in {None, MediaPlayerState.OFF, MediaPlayerState.IDLE}
         ):
             return self.atv.metadata.artwork_id
         return None
@@ -318,7 +315,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing image."""
         state = self.state
-        if self._playing and state not in [STATE_OFF, STATE_IDLE]:
+        if self._playing and state not in {MediaPlayerState.OFF, MediaPlayerState.IDLE}:
             artwork = await self.atv.metadata.artwork()
             if artwork:
                 return artwork.bytes, artwork.mimetype
