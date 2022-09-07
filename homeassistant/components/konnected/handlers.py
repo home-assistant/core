@@ -4,10 +4,9 @@ import logging
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
     ATTR_STATE,
     ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
-    CONF_STATE,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
@@ -18,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = decorator.Registry()  # type: ignore[var-annotated]
 
 
-@HANDLERS.register(CONF_STATE)
+@HANDLERS.register("state")
 async def async_handle_state_update(hass, context, msg):
     """Handle a binary sensor or switch state update."""
     _LOGGER.debug("[state handler] context: %s  msg: %s", context, msg)
-    entity_id = context.get(CONF_ENTITY_ID)
+    entity_id = context.get(ATTR_ENTITY_ID)
     state = bool(int(msg.get(ATTR_STATE)))
     if context.get(CONF_INVERSE):
         state = not state

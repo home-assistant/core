@@ -338,14 +338,14 @@ class AlarmPanel:
         desired_api_endpoint = desired_api_host + ENDPOINT_ROOT
 
         return {
-            CONF_SENSORS: self.async_binary_sensor_configuration(),
+            "sensors": self.async_binary_sensor_configuration(),
             "actuators": self.async_actuator_configuration(),
             "dht_sensors": self.async_dht_sensor_configuration(),
             "ds18b20_sensors": self.async_ds18b20_sensor_configuration(),
             "auth_token": self.config.get(CONF_ACCESS_TOKEN),
             "endpoint": desired_api_endpoint,
             "blink": self.options.get(CONF_BLINK, True),
-            CONF_DISCOVERY: self.options.get(CONF_DISCOVERY, True),
+            "discovery": self.options.get(CONF_DISCOVERY, True),
         }
 
     @callback
@@ -354,9 +354,9 @@ class AlarmPanel:
         settings = self.status["settings"] or {}
 
         return {
-            CONF_SENSORS: [
+            "sensors": [
                 {self.api_version: s[self.api_version]}
-                for s in self.status.get(CONF_SENSORS)
+                for s in self.status.get("sensors")
             ],
             "actuators": self.status.get("actuators"),
             "dht_sensors": self.status.get(CONF_DHT_SENSORS),
@@ -364,7 +364,7 @@ class AlarmPanel:
             "auth_token": settings.get("token"),
             "endpoint": settings.get("endpoint"),
             "blink": settings.get(CONF_BLINK),
-            CONF_DISCOVERY: settings.get(CONF_DISCOVERY),
+            "discovery": settings.get(CONF_DISCOVERY),
         }
 
     async def async_sync_device_config(self):

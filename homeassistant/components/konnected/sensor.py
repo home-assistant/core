@@ -24,14 +24,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    SensorDeviceClass.TEMPERATURE: SensorEntityDescription(
-        key=SensorDeviceClass.TEMPERATURE,
+    "temperature": SensorEntityDescription(
+        key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    SensorDeviceClass.HUMIDITY: SensorEntityDescription(
-        key=SensorDeviceClass.HUMIDITY,
+    "humidity": SensorEntityDescription(
+        key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -79,7 +79,7 @@ async def async_setup_entry(
                 KonnectedSensor(
                     device_id,
                     sensor_config,
-                    SENSOR_TYPES[SensorDeviceClass.TEMPERATURE],
+                    SENSOR_TYPES["temperature"],
                     addr=attrs.get("addr"),
                     initial_state=attrs.get("temp"),
                 )
@@ -138,7 +138,7 @@ class KonnectedSensor(SensorEntity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        if self.entity_description.key == SensorDeviceClass.HUMIDITY:
+        if self.entity_description.key == "humidity":
             self._state = int(float(state))
         else:
             self._state = round(float(state), 1)
