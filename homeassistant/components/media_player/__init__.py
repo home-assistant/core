@@ -906,11 +906,11 @@ class MediaPlayerEntity(Entity):
             )
             return
 
-        if self.state in (
+        if self.state in {
             MediaPlayerState.OFF,
             MediaPlayerState.IDLE,
             MediaPlayerState.STANDBY,
-        ):
+        }:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
