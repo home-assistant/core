@@ -746,15 +746,16 @@ async def test_monitored_sensor_goes_away(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.test_binary").state == "on"
+    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.9, P(B|notA) = 0.4 -> 0.36 (>0.32)
 
     hass.states.async_remove("sensor.test_monitored")
 
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.test_binary").state == "off"
     assert (
         hass.states.get("binary_sensor.test_binary").attributes.get("probability")
         == 0.2
     )
+    assert hass.states.get("binary_sensor.test_binary").state == "off"
 
 
 async def test_reload(hass):
