@@ -173,10 +173,10 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ARTIST
-            result.children = await self._build_artists(library_id)  # type: ignore[assignment]
+            result.children = await self._build_artists(library_id)
             if not result.children:
                 result.children_media_class = MEDIA_CLASS_ALBUM
-                result.children = await self._build_albums(library_id)  # type: ignore[assignment]
+                result.children = await self._build_albums(library_id)
 
         return result
 
@@ -207,7 +207,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ALBUM
-            result.children = await self._build_albums(artist_id)  # type: ignore[assignment]
+            result.children = await self._build_albums(artist_id)
 
         return result
 
@@ -238,7 +238,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_TRACK
-            result.children = await self._build_tracks(album_id)  # type: ignore[assignment]
+            result.children = await self._build_tracks(album_id)
 
         return result
 
@@ -293,7 +293,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_MOVIE
-            result.children = await self._build_movies(library_id)  # type: ignore[assignment]
+            result.children = await self._build_movies(library_id)
 
         return result
 

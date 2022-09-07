@@ -16,5 +16,10 @@
                 "title": "Kies een authenticatie methode"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De nVent RAYCHEM SENZ YAML-configuratie is verwijderd"
+        }
     }
 }

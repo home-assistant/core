@@ -43,6 +43,7 @@ from tests.common import (
     async_fire_time_changed,
     mock_device_registry,
     mock_registry,
+    mock_restore_cache,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
 
@@ -284,27 +285,24 @@ async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config
     """Test the rendering of entity variables."""
     topic = "test/select"
 
-    fake_state = ha.State("select.test", "milk")
+    fake_state = ha.State("select.test_select", "milk")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            "select",
-            {
-                "select": {
-                    "platform": "mqtt",
-                    "command_topic": topic,
-                    "name": "Test Select",
-                    "options": ["milk", "beer"],
-                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}"}',
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        "select",
+        {
+            "select": {
+                "platform": "mqtt",
+                "command_topic": topic,
+                "name": "Test Select",
+                "options": ["milk", "beer"],
+                "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("select.test_select")
     assert state.state == "milk"
@@ -319,13 +317,27 @@ async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config
 
     mqtt_mock.async_publish.assert_called_once_with(
         topic,
-        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select"}',
+        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select", "this_object_state": "milk"}',
         0,
         False,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
+
+    # Test that TemplateStateFromEntityId is not called again
+    with patch(
+        "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
+    ) as template_state_calls:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": "select.test_select", "option": "milk"},
+            blocking=True,
+        )
+        assert template_state_calls.call_count == 0
+        state = hass.states.get("select.test_select")
+        assert state.state == "milk"
 
 
 async def test_value_template_value(hass):
@@ -359,9 +371,24 @@ async def test_value_template_value(hass):
     # test value template with entity
     entity = Entity()
     entity.hass = hass
+    entity.entity_id = "select.test"
     tpl = template.Template("{{ value_json.id }}")
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+
+    # test this object in a template
+    tpl2 = template.Template("{{ this.entity_id }}")
+    val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
+    assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
+
+    with patch(
+        "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
+    ) as template_state_calls:
+        tpl3 = template.Template("{{ this.entity_id }}")
+        val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
+        val_tpl3.async_render_with_possible_json_value("call1")
+        val_tpl3.async_render_with_possible_json_value("call2")
+        assert template_state_calls.call_count == 1
 
 
 async def test_service_call_without_topic_does_not_publish(

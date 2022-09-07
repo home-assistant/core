@@ -248,7 +248,10 @@ IKEA_NAME_TO_PRESET_MODE = {v: k for k, v in IKEA_PRESET_MODES_TO_NAME.items()}
 IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
+)
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 

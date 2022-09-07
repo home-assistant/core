@@ -8,6 +8,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant.components.homeassistant_alerts import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -26,6 +27,12 @@ title: Title for {filename}
 Content for {filename}
 """,
     )
+
+
+@pytest.fixture(autouse=True)
+async def setup_repairs(hass):
+    """Set up the repairs integration."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
 
 
 @pytest.mark.parametrize(

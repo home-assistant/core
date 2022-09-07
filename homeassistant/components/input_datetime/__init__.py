@@ -234,6 +234,8 @@ class DateTimeStorageCollection(collection.StorageCollection):
 class InputDatetime(RestoreEntity):
     """Representation of a datetime input."""
 
+    _attr_should_poll = False
+
     def __init__(self, config: dict) -> None:
         """Initialize a select input."""
         self._config = config
@@ -302,11 +304,6 @@ class InputDatetime(RestoreEntity):
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.DEFAULT_TIME_ZONE
         )
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self):

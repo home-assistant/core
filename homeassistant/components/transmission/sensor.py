@@ -49,6 +49,8 @@ async def async_setup_entry(
 class TransmissionSensor(SensorEntity):
     """A base class for all Transmission sensors."""
 
+    _attr_should_poll = False
+
     def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
         """Initialize the sensor."""
         self._tm_client: TransmissionClient = tm_client
@@ -71,11 +73,6 @@ class TransmissionSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
 
     @property
     def available(self):

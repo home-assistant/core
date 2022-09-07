@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Failed to connect",
+            "reauth_successful": "Re-authentication was successful",
+            "timeout_connect": "Timeout establishing connection"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "timeout_connect": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "base": "Base currency"
+                },
+                "data_description": {
+                    "base": "Using another base currency than USD requires a [paid plan]({signup})."
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Open Exchange Rates using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Open Exchange Rates YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Open Exchange Rates YAML configuration is being removed"
+        }
+    }
+}

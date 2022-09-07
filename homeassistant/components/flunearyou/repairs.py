@@ -36,7 +36,9 @@ class FluNearYouFixFlow(RepairsFlow):
 
 
 async def async_create_fix_flow(
-    hass: HomeAssistant, issue_id: str
-) -> FluNearYouFixFlow:
+    hass: HomeAssistant,
+    issue_id: str,
+    data: dict[str, str | int | float | None] | None,
+) -> RepairsFlow:
     """Create flow."""
     return FluNearYouFixFlow()

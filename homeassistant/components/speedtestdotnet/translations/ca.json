@@ -9,6 +9,18 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "El servei speedtest est\u00e0 sent eliminat"
+                    }
+                }
+            },
+            "title": "El servei speedtest est\u00e0 sent eliminat"
+        }
+    },
     "options": {
         "step": {
             "init": {

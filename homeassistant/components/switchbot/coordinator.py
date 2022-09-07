@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
+import async_timeout
 import switchbot
 
 from homeassistant.components import bluetooth
@@ -18,6 +20,8 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+DEVICE_STARTUP_TIMEOUT = 30
 
 
 def flatten_sensors_data(sensor):
@@ -37,14 +41,25 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
+        base_unique_id: str,
+        device_name: str,
+        connectable: bool,
+        model: str,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
-            hass, logger, ble_device.address, bluetooth.BluetoothScanningMode.ACTIVE
+            hass,
+            logger,
+            ble_device.address,
+            bluetooth.BluetoothScanningMode.ACTIVE,
+            connectable,
         )
         self.ble_device = ble_device
         self.device = device
         self.data: dict[str, Any] = {}
+        self.device_name = device_name
+        self.base_unique_id = base_unique_id
+        self.model = model
         self._ready_event = asyncio.Event()
 
     @callback
@@ -54,7 +69,6 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        super()._async_handle_bluetooth_event(service_info, change)
         if adv := switchbot.parse_advertisement_data(
             service_info.device, service_info.advertisement
         ):
@@ -63,12 +77,12 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 self._ready_event.set()
             _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
             self.device.update_from_advertisement(adv)
-        self.async_update_listeners()
+        super()._async_handle_bluetooth_event(service_info, change)
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
-        try:
-            await asyncio.wait_for(self._ready_event.wait(), timeout=55)
-        except asyncio.TimeoutError:
-            return False
-        return True
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(DEVICE_STARTUP_TIMEOUT):
+                await self._ready_event.wait()
+                return True
+        return False

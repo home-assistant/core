@@ -6,10 +6,11 @@ import async_timeout
 import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICE, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,6 +20,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     GATEWAY,
+    HASS_CONFIG,
     NETWORK_COORDINATOR,
     SIGNAL_COORDINATOR,
     SMS_GATEWAY,
@@ -49,17 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    if not (sms_config := config.get(DOMAIN, {})):
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=sms_config,
-        )
-    )
-
+    hass.data[HASS_CONFIG] = config
     return True
 
 
@@ -75,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Connecting mode:%s", connection_mode)
     gateway = await create_sms_gateway(config, hass)
     if not gateway:
-        return False
+        raise ConfigEntryNotReady(f"Cannot find device {device}")
 
     signal_coordinator = SignalCoordinator(hass, gateway)
     network_coordinator = NetworkCoordinator(hass, gateway)
@@ -93,6 +85,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # set up notify platform, no entry support for notify component yet,
+    # have to use discovery to load platform.
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: DOMAIN},
+            hass.data[HASS_CONFIG],
+        )
+    )
     return True
 
 

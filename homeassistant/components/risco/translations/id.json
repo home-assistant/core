@@ -9,11 +9,29 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "pin": "Kode PIN",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "Kode PIN",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Kata Sandi",
                     "pin": "Kode PIN",
                     "username": "Nama Pengguna"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (disarankan)",
+                    "local": "Panel Risco Lokal (lanjutan)"
                 }
             }
         }

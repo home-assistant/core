@@ -5,7 +5,6 @@
   "requirements": ["simplepush==1.1.4"],
   "codeowners": ["@engrbm87"],
   "config_flow": true,
-  "dependencies": ["repairs"],
   "iot_class": "cloud_polling",
   "loggers": ["simplepush"]
 }

@@ -89,6 +89,7 @@ async def async_setup_entry(
 class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
@@ -117,11 +118,6 @@ class SongpalEntity(MediaPlayerEntity):
 
         self._active_source = None
         self._sources = {}
-
-    @property
-    def should_poll(self):
-        """Return True if the device should be polled."""
-        return False
 
     async def async_added_to_hass(self):
         """Run when entity is added to hass."""

@@ -90,6 +90,8 @@ async def test_preserve_new_tracked_device_name(
             source="local",
             device=BLEDevice(address, None),
             advertisement=AdvertisementData(local_name="empty"),
+            time=0,
+            connectable=False,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -113,6 +115,8 @@ async def test_preserve_new_tracked_device_name(
             source="local",
             device=BLEDevice(address, None),
             advertisement=AdvertisementData(local_name="empty"),
+            time=0,
+            connectable=False,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -155,6 +159,8 @@ async def test_tracking_battery_times_out(
             source="local",
             device=BLEDevice(address, None),
             advertisement=AdvertisementData(local_name="empty"),
+            time=0,
+            connectable=False,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -219,6 +225,8 @@ async def test_tracking_battery_fails(hass, mock_bluetooth, mock_device_tracker_
             source="local",
             device=BLEDevice(address, None),
             advertisement=AdvertisementData(local_name="empty"),
+            time=0,
+            connectable=False,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -285,6 +293,8 @@ async def test_tracking_battery_successful(
             source="local",
             device=BLEDevice(address, None),
             advertisement=AdvertisementData(local_name="empty"),
+            time=0,
+            connectable=True,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]

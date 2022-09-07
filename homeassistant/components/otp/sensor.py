@@ -44,6 +44,8 @@ async def async_setup_platform(
 class TOTPSensor(SensorEntity):
     """Representation of a TOTP sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, token):
         """Initialize the sensor."""
         self._name = name
@@ -74,11 +76,6 @@ class TOTPSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def icon(self):

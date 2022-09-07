@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    CONF_WHITE_VALUE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -45,6 +44,7 @@ CONF_DIMMING = "dimming"
 CONF_GATEWAYS = "gateways"
 CONF_PLUGINS = "plugins"
 CONF_RESET_COLOR = "reset_color"
+CONF_WHITE_VALUE = "white_value"
 FIBARO_CONTROLLER = "fibaro_controller"
 FIBARO_DEVICES = "fibaro_devices"
 PLATFORMS = [
@@ -540,6 +540,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FibaroDevice(Entity):
     """Representation of a Fibaro device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, fibaro_device):
         """Initialize the device."""
         self.fibaro_device = fibaro_device
@@ -632,11 +634,6 @@ class FibaroDevice(Entity):
             or int(self.fibaro_device.properties.value) > 0
         ):
             return True
-        return False
-
-    @property
-    def should_poll(self):
-        """Get polling requirement from fibaro device."""
         return False
 
     @property

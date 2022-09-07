@@ -2,9 +2,6 @@
   "config": {
     "flow_title": "{name}",
     "step": {
-      "enable_bluetooth": {
-        "description": "Do you want to setup Bluetooth?"
-      },
       "user": {
         "description": "Choose a device to setup",
         "data": {
@@ -13,18 +10,27 @@
       },
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
+      },
+      "multiple_adapters": {
+        "description": "Select a Bluetooth adapter to setup",
+        "data": {
+          "adapter": "Adapter"
+        }
+      },
+      "single_adapter": {
+        "description": "Do you want to setup the Bluetooth adapter {name}?"
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "no_adapters": "No Bluetooth adapters found"
+      "no_adapters": "No unconfigured Bluetooth adapters found"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "adapter": "The Bluetooth Adapter to use for scanning"
+          "passive": "Passive scanning"
         }
       }
     }

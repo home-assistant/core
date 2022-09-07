@@ -578,7 +578,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device.async_stop()
 
     @catch_request_errors
-    async def async_media_seek(self, position: int | float) -> None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         assert self._device is not None
         time = timedelta(seconds=position)

@@ -148,7 +148,6 @@ async def test_state(hass, setup_comp):
     for state_1 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
         for state_2 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             for state_3 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-                print("meh")
                 hass.states.async_set(CEILING_FAN_ENTITY_ID, state_1, {})
                 hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, state_2, {})
                 hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, state_3, {})

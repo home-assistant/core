@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import math
 from typing import Any
 
-from aiolifx import products
 import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
@@ -20,20 +19,18 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL, ATTR_SW_VERSION
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
-from .const import DATA_LIFX_MANAGER, DOMAIN
+from .const import ATTR_INFRARED, ATTR_POWER, ATTR_ZONES, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_PULSE,
@@ -42,13 +39,7 @@ from .manager import (
 )
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
-SERVICE_LIFX_SET_STATE = "set_state"
-
-COLOR_ZONE_POPULATE_DELAY = 0.3
-
-ATTR_INFRARED = "infrared"
-ATTR_ZONES = "zones"
-ATTR_POWER = "power"
+LIFX_STATE_SETTLE_DELAY = 0.3
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -92,7 +83,7 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
+class LIFXLight(LIFXEntity, LightEntity):
     """Representation of a LIFX light."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
@@ -105,10 +96,9 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
-        bulb = coordinator.device
-        self.mac_addr = bulb.mac_addr
-        self.bulb = bulb
-        bulb_features = lifx_features(bulb)
+
+        self.mac_addr = self.bulb.mac_addr
+        bulb_features = lifx_features(self.bulb)
         self.manager = manager
         self.effects_conductor: aiolifx_effects_module.Conductor = (
             manager.effects_conductor
@@ -116,25 +106,13 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
         self._attr_unique_id = self.coordinator.serial_number
-        self._attr_name = bulb.label
+        self._attr_name = self.bulb.label
         self._attr_min_mireds = math.floor(
             color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
         )
         self._attr_max_mireds = math.ceil(
             color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
         )
-        info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)},
-            manufacturer="LIFX",
-            name=self.name,
-        )
-        _map = products.product_map
-        if (model := (_map.get(bulb.product) or bulb.product)) is not None:
-            info[ATTR_MODEL] = str(model)
-        if (version := bulb.host_firmware_version) is not None:
-            info[ATTR_SW_VERSION] = version
-        self._attr_device_info = info
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
             color_mode = ColorMode.COLOR_TEMP
         else:
@@ -253,6 +231,9 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
                 if power_off:
                     await self.set_power(False, duration=fade)
 
+            # Avoid state ping-pong by holding off updates as the state settles
+            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
+
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
 
@@ -360,7 +341,7 @@ class LIFXStrip(LIFXColor):
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
             await self.set_power(True)
-            await asyncio.sleep(COLOR_ZONE_POPULATE_DELAY)
+            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
             await self.update_color_zones()
             await self.set_power(False)
 

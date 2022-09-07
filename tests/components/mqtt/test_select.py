@@ -53,7 +53,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, mock_restore_cache
 
 DEFAULT_CONFIG = {
     select.DOMAIN: {
@@ -152,26 +152,23 @@ async def test_run_select_service_optimistic(hass, mqtt_mock_entry_with_yaml_con
     """Test that set_value service works in optimistic mode."""
     topic = "test/select"
 
-    fake_state = ha.State("select.test", "milk")
+    fake_state = ha.State("select.test_select", "milk")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            select.DOMAIN,
-            {
-                "select": {
-                    "platform": "mqtt",
-                    "command_topic": topic,
-                    "name": "Test Select",
-                    "options": ["milk", "beer"],
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        select.DOMAIN,
+        {
+            "select": {
+                "platform": "mqtt",
+                "command_topic": topic,
+                "name": "Test Select",
+                "options": ["milk", "beer"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("select.test_select")
     assert state.state == "milk"
@@ -196,27 +193,24 @@ async def test_run_select_service_optimistic_with_command_template(
     """Test that set_value service works in optimistic mode and with a command_template."""
     topic = "test/select"
 
-    fake_state = ha.State("select.test", "milk")
+    fake_state = ha.State("select.test_select", "milk")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            select.DOMAIN,
-            {
-                "select": {
-                    "platform": "mqtt",
-                    "command_topic": topic,
-                    "name": "Test Select",
-                    "options": ["milk", "beer"],
-                    "command_template": '{"option": "{{ value }}"}',
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert await async_setup_component(
+        hass,
+        select.DOMAIN,
+        {
+            "select": {
+                "platform": "mqtt",
+                "command_topic": topic,
+                "name": "Test Select",
+                "options": ["milk", "beer"],
+                "command_template": '{"option": "{{ value }}"}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("select.test_select")
     assert state.state == "milk"
