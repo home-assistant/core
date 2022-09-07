@@ -12,7 +12,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Houd de Home-knop op {name} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden), bevestig vervolgens binnen 30 seconden.",
+                "description": "Houd de Home-knop op {name} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden), bevestig vervolgens binnen 30 seconden. Zorg ervoor dat de iRobot-app op geen enkel apparaat is geopend.",
                 "title": "Wachtwoord opvragen"
             },
             "link_manual": {
