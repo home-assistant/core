@@ -4,8 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/twilio",
   "requirements": ["twilio==6.32.0"],
-  "dependencies": ["webhook"],
-  "codeowners": [],
+  "dependencies": ["cloud", "webhook"],
+  "codeowners": ["@engrbm87"],
   "iot_class": "cloud_push",
   "loggers": ["twilio"]
 }
