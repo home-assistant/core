@@ -201,7 +201,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.0
+aiopvapi==2.0.1
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
@@ -763,7 +763,7 @@ micloud==0.5
 mill-local==0.1.1
 
 # homeassistant.components.mill
-millheater==0.9.0
+millheater==0.10.0
 
 # homeassistant.components.minio
 minio==5.0.10
@@ -983,7 +983,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.24.0
+pyTibber==0.25.2
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1791,7 +1791,7 @@ zigpy-znp==0.8.2
 zigpy==0.50.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.41.0
+zwave-js-server-python==0.41.1
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4
