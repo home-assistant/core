@@ -8,13 +8,18 @@ from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    DOMAIN as PLATFORM,
+    SelectEntity,
+    SelectEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TIME_MINUTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity, _RobotT
+from .entity import LitterRobotConfigEntity, _RobotT, async_update_unique_id
 from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float)
@@ -40,9 +45,10 @@ class RobotSelectEntityDescription(
 
 
 LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
-    key="clean_cycle_wait_time_minutes",
+    key="cycle_delay",
     name="Clean Cycle Wait Time Minutes",
     icon="mdi:timer-outline",
+    unit_of_measurement=TIME_MINUTES,
     current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
     select_fn=lambda robot, option: (robot.set_wait_time, int(option)),
@@ -65,7 +71,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
+    entities: list[LitterRobotSelect] = list(
         itertools.chain(
             (
                 LitterRobotSelect(robot=robot, hub=hub, description=LITTER_ROBOT_SELECT)
@@ -77,6 +83,8 @@ async def async_setup_entry(
             ),
         )
     )
+    async_update_unique_id(hass, PLATFORM, entities)
+    async_add_entities(entities)
 
 
 class LitterRobotSelect(
@@ -93,9 +101,7 @@ class LitterRobotSelect(
         description: RobotSelectEntityDescription[_RobotT, _CastTypeT],
     ) -> None:
         """Initialize a Litter-Robot select entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
+        super().__init__(robot, hub, description)
         options = self.entity_description.options_fn(self.robot)
         self._attr_options = list(map(str, options))
 

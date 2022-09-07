@@ -479,6 +479,9 @@ async def test_local_setup(hass, two_part_local_alarm, setup_risco_local):
     device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1_local")})
     assert device is not None
     assert device.manufacturer == "Risco"
+    with patch("homeassistant.components.risco.RiscoLocal.disconnect") as mock_close:
+        await hass.config_entries.async_unload(setup_risco_local.entry_id)
+        mock_close.assert_awaited_once()
 
 
 async def _check_local_state(

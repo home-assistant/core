@@ -17,7 +17,7 @@ import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
 from zigpy.types.named import EUI64, NWK
-from zigpy.zcl.clusters.general import Groups
+from zigpy.zcl.clusters.general import Groups, Identify
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.const import ATTR_COMMAND, ATTR_NAME
@@ -65,8 +65,6 @@ from .const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
-    EFFECT_DEFAULT_VARIANT,
-    EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -488,7 +486,8 @@ class ZHADevice(LogMixin):
             and not self.skip_configuration
         ):
             await self._channels.identify_ch.trigger_effect(
-                EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
+                effect_id=Identify.EffectIdentifier.Okay,
+                effect_variant=Identify.EffectVariant.Default,
             )
 
     async def async_initialize(self, from_cache: bool = False) -> None:

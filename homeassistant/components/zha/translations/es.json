@@ -173,6 +173,7 @@
     "options": {
         "abort": {
             "not_zha_device": "Este dispositivo no es un dispositivo zha",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "usb_probe_failed": "Error al sondear el dispositivo USB"
         },
         "error": {

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -273,7 +274,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._async_update_zone_data()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(
@@ -349,7 +350,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """List of available fan modes."""
         return self._supported_fan_modes
 
-    def set_fan_mode(self, fan_mode: str):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
         self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
 
@@ -365,7 +366,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         self._tado.set_presence(preset_mode)
 
@@ -406,7 +407,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._tado.set_temperature_offset(self._device_id, offset)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -428,7 +429,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the device is available."""
         return self._tado_zone_data.available
 
@@ -482,7 +483,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         ] = self._tado_zone_data.default_overlay_termination_duration
         return state_attr
 
-    def set_swing_mode(self, swing_mode):
+    def set_swing_mode(self, swing_mode: str) -> None:
         """Set swing modes for the device."""
         self._control_hvac(swing_mode=swing_mode)
 

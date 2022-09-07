@@ -65,6 +65,7 @@ from .const import (
     DATA_MQTT,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_DISPATCHERS,
+    DATA_MQTT_RELOAD_ENTRY,
     DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -363,6 +364,12 @@ async def async_setup_platform_helper(
     async_setup_entities: SetupEntity,
 ) -> None:
     """Help to set up the platform for manual configured MQTT entities."""
+    if DATA_MQTT_RELOAD_ENTRY in hass.data:
+        _LOGGER.debug(
+            "MQTT integration is %s, skipping setup of manually configured MQTT items while unloading the config entry",
+            platform_domain,
+        )
+        return
     if not (entry_status := mqtt_config_entry_enabled(hass)):
         _LOGGER.warning(
             "MQTT integration is %s, skipping setup of manually configured MQTT %s",

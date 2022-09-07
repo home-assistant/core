@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -87,7 +88,7 @@ class StiebelEltron(ClimateEntity):
         self._force_update = False
         self._ste_data = ste_data
 
-    def update(self):
+    def update(self) -> None:
         """Update unit attributes."""
         self._ste_data.update(no_throttle=self._force_update)
         self._force_update = False
@@ -168,7 +169,7 @@ class StiebelEltron(ClimateEntity):
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if target_temperature is not None:
@@ -176,7 +177,7 @@ class StiebelEltron(ClimateEntity):
             self._ste_data.api.set_target_temp(target_temperature)
             self._force_update = True
 
-    def set_preset_mode(self, preset_mode: str):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         new_mode = HA_TO_STE_PRESET.get(preset_mode)
         _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)

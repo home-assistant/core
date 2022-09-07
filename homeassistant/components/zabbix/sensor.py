@@ -117,7 +117,7 @@ class ZabbixTriggerCountSensor(SensorEntity):
             output="extend", only_true=1, monitored=1, filter={"value": 1}
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         _LOGGER.debug("Updating ZabbixTriggerCountSensor: %s", str(self._name))
         triggers = self._call_zabbix_api()

@@ -260,7 +260,7 @@ class IkeaFan(BaseFan, ZhaEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._fan_channel = self.cluster_channels.get("ikea_airpurifier")
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -317,7 +317,7 @@ class IkeaFan(BaseFan, ZhaEntity):
             ]
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_set_percentage(0)
 

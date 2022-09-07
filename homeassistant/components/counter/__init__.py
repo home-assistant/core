@@ -110,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Counter.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Counter
     )
 
     storage_collection = CounterStorageCollection(
@@ -170,19 +170,26 @@ class CounterStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-class Counter(RestoreEntity):
+class Counter(collection.CollectionEntity, RestoreEntity):
     """Representation of a counter."""
 
     _attr_should_poll: bool = False
+    editable: bool
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a counter."""
-        self._config: dict = config
+        self._config: ConfigType = config
         self._state: int | None = config[CONF_INITIAL]
-        self.editable: bool = True
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Counter:
+    def from_storage(cls, config: ConfigType) -> Counter:
+        """Create counter instance from storage."""
+        counter = cls(config)
+        counter.editable = True
+        return counter
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Counter:
         """Create counter instance from yaml config."""
         counter = cls(config)
         counter.editable = False
@@ -273,7 +280,7 @@ class Counter(RestoreEntity):
         self._state = self.compute_next_state(new_state)
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Change the counter's settings WS CRUD."""
         self._config = config
         self._state = self.compute_next_state(self._state)

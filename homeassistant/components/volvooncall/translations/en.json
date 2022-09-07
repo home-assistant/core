@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "You have successfully re-authenticated to Volvo On Call",
-            "cant_reauth": "Could not find original configuration that needs reauthentication"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
@@ -17,10 +17,6 @@
                     "scandinavian_miles": "Use Scandinavian Miles",
                     "username": "Username"
                 }
-            },
-            "reauth_confirm": {
-                "title": "Re-authentication Required",
-                "description": "The Volvo On Call integration needs to re-authenticate your account"
             }
         }
     },
