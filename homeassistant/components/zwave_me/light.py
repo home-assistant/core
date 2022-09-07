@@ -5,13 +5,18 @@ from typing import Any
 
 from zwave_me_ws import ZWaveMeData
 
-from homeassistant.components.light import ATTR_RGB_COLOR, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_RGB_COLOR,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeEntity
+from . import ZWaveMeController, ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
 
 
@@ -40,13 +45,26 @@ async def async_setup_entry(
     async_dispatcher_connect(
         hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGBW_LIGHT.upper()}", add_new_device
     )
+    async_dispatcher_connect(
+        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.BRIGHTNESS_LIGHT.upper()}", add_new_device
+    )
 
 
 class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     """Representation of a ZWaveMe light."""
 
-    _attr_supported_color_modes = {ColorMode.RGB}
-    _attr_color_mode = ColorMode.RGB
+    def __init__(
+        self,
+        controller: ZWaveMeController,
+        device: ZWaveMeData,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(controller=controller, device=device)
+        if device.deviceType in [ZWaveMePlatform.RGB_LIGHT, ZWaveMePlatform.RGBW_LIGHT]:
+            self._color_mode = ColorMode.RGB
+        else:
+            self._color_mode = ColorMode.BRIGHTNESS
+        self._supported_color_modes = {self._color_mode}
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -57,8 +75,17 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         color = kwargs.get(ATTR_RGB_COLOR)
 
         if color is None:
-            color = (122, 122, 122)
-        cmd = "exact?red={}&green={}&blue={}".format(*color)
+            brightness = kwargs.get(ATTR_BRIGHTNESS)
+            if brightness is None:
+                self.controller.zwave_api.send_command(self.device.id, "on")
+            else:
+                self.controller.zwave_api.send_command(
+                    self.device.id, "exact?level={}".format(round(brightness / 2.55))
+                )
+            return
+        cmd = "exact?red={}&green={}&blue={}".format(
+            *color if any(color) else 255, 255, 255
+        )
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property
@@ -68,7 +95,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
     @property
     def brightness(self) -> int:
-        """Return the brightness of a device."""
+        """Return the brightness of a d evice."""
         return max(self.device.color.values())
 
     @property
@@ -76,3 +103,13 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         """Return the rgb color value [int, int, int]."""
         rgb = self.device.color
         return rgb["r"], rgb["g"], rgb["b"]
+
+    @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        return self._color_mode
+
+    @property
+    def supported_color_modes(self) -> set | None:
+        """Flag supported features."""
+        return self._supported_color_modes
