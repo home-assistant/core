@@ -67,7 +67,7 @@ from tests.common import MockConfigEntry
             None,
             None,
             "30",
-            "23.903",
+            23.903,
             "31",
         ),
         (
@@ -77,7 +77,7 @@ from tests.common import MockConfigEntry
             None,
             None,
             "30",
-            "23.903",
+            23.903,
             "30",
         ),
         (
@@ -87,7 +87,7 @@ from tests.common import MockConfigEntry
             None,
             None,
             "30",
-            "14.852631013",
+            14.85263,
             "30",
         ),
         (
@@ -97,7 +97,7 @@ from tests.common import MockConfigEntry
             "08:00:00",
             None,
             "30",
-            "14.852631013",
+            14.85263,
             "30",
         ),
         (
@@ -107,7 +107,7 @@ from tests.common import MockConfigEntry
             None,
             "08:00:00",
             "30",
-            "23.903",
+            23.903,
             "31",
         ),
     ],
@@ -163,7 +163,9 @@ async def test_sensor(
         hass.states.get("sensor.test_duration_in_traffic").state
         == expected_duration_in_traffic
     )
-    assert hass.states.get("sensor.test_distance").state == expected_distance
+    assert float(hass.states.get("sensor.test_distance").state) == pytest.approx(
+        expected_distance
+    )
     assert hass.states.get("sensor.test_route").state == (
         "US-29 - K St NW; US-29 - Whitehurst Fwy; "
         "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"

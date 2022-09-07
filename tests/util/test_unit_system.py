@@ -177,13 +177,17 @@ def test_length_unknown_unit():
 def test_length_to_metric():
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.length(100, METRIC_SYSTEM.length_unit) == 100
-    assert METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit) == 8.04672
+    assert METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit) == pytest.approx(
+        8.04672
+    )
 
 
 def test_length_to_imperial():
     """Test length conversion to imperial system."""
     assert IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit) == 100
-    assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == 3.106855
+    assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == pytest.approx(
+        3.106855
+    )
 
 
 def test_wind_speed_unknown_unit():
