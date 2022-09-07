@@ -1089,6 +1089,8 @@ class MediaPlayerEntity(Entity):
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
+            # aiohttp unquotes the path once before matching the paths. Quoting twice
+            # prevents a '/' in the media_content_id from breaking the matching.
             f"/{media_content_type}/{quote(quote(media_content_id,safe=''))}"
         )
 
