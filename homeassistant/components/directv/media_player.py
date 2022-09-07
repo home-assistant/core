@@ -11,12 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-)
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
@@ -34,7 +29,7 @@ from .entity import DIRECTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_MEDIA_TYPES = [MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW]
+KNOWN_MEDIA_TYPES = [MediaType.MOVIE, MediaType.MUSIC, MediaType.TVSHOW]
 
 SUPPORT_DTV = (
     MediaPlayerEntityFeature.PAUSE
@@ -156,7 +151,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         return self._program.program_id
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Return the content type of current playing media."""
         if self._is_standby or self._program is None:
             return None
@@ -164,7 +159,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         if self._program.program_type in KNOWN_MEDIA_TYPES:
             return self._program.program_type
 
-        return MEDIA_TYPE_MOVIE
+        return MediaType.MOVIE
 
     @property
     def media_duration(self):
@@ -196,7 +191,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         if self._is_standby or self._program is None:
             return None
 
-        if self.media_content_type == MEDIA_TYPE_MUSIC:
+        if self.media_content_type == MediaType.MUSIC:
             return self._program.music_title
 
         return self._program.title
@@ -323,11 +318,11 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Select input source."""
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type != MediaType.CHANNEL:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
-                MEDIA_TYPE_CHANNEL,
+                MediaType.CHANNEL,
             )
             return
 

@@ -23,10 +23,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MUSIC,
-)
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -297,11 +294,11 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
         if self._receiver.state in (STATE_PLAYING, STATE_PAUSED):
-            return MEDIA_TYPE_MUSIC
-        return MEDIA_TYPE_CHANNEL
+            return MediaType.MUSIC
+        return MediaType.CHANNEL
 
     @property
     def media_duration(self):
