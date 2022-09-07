@@ -32,6 +32,7 @@ from homeassistant.components.humidifier import const as humidifier
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SERVICE_PLAY_MEDIA,
+    MediaPlayerState,
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -1876,7 +1877,7 @@ async def test_inputselector(hass):
         hass,
         State(
             "media_player.living_room",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             attributes={
                 media_player.ATTR_INPUT_SOURCE_LIST: [
                     "media",
@@ -1941,7 +1942,7 @@ async def test_inputselector_nextprev(hass, sources, source, source_next, source
         hass,
         State(
             "media_player.living_room",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             attributes={
                 media_player.ATTR_INPUT_SOURCE_LIST: sources,
                 media_player.ATTR_INPUT_SOURCE: source,
@@ -1989,7 +1990,7 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
         hass,
         State(
             "media_player.living_room",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             attributes={
                 media_player.ATTR_INPUT_SOURCE_LIST: sources,
                 media_player.ATTR_INPUT_SOURCE: source,
@@ -2263,7 +2264,7 @@ async def test_sound_modes(hass):
         hass,
         State(
             "media_player.living_room",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             attributes={
                 media_player.ATTR_SOUND_MODE_LIST: ["stereo", "prologic"],
                 media_player.ATTR_SOUND_MODE: "stereo",
@@ -2709,7 +2710,7 @@ async def test_volume_media_player(hass):
         hass,
         State(
             "media_player.bla",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             {
                 ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_SET,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
@@ -2759,7 +2760,7 @@ async def test_volume_media_player_relative(hass):
         hass,
         State(
             "media_player.bla",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             {
                 ATTR_ASSUMED_STATE: True,
                 ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_STEP,
@@ -2827,7 +2828,7 @@ async def test_media_player_mute(hass):
         hass,
         State(
             "media_player.bla",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             {
                 ATTR_SUPPORTED_FEATURES: (
                     media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE
@@ -2983,7 +2984,7 @@ async def test_transport_control(hass):
         hass,
         State(
             "media_player.bla",
-            media_player.STATE_PLAYING,
+            MediaPlayerState.PLAYING,
             {
                 media_player.ATTR_MEDIA_POSITION: 100,
                 media_player.ATTR_MEDIA_DURATION: 200,
