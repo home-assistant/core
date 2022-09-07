@@ -16,6 +16,7 @@ class SupportedModels(StrEnum):
 
     BOT = "bot"
     BULB = "bulb"
+    CEILING_LIGHT = "ceiling_light"
     CURTAIN = "curtain"
     HYGROMETER = "hygrometer"
     LIGHT_STRIP = "light_strip"
@@ -30,6 +31,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
     SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
     SwitchbotModel.LIGHT_STRIP: SupportedModels.LIGHT_STRIP,
+    SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
