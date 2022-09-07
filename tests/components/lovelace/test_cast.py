@@ -116,7 +116,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     child_2 = top_level_items.children[1]
     assert child_2.title == "YAML Title"
-    assert child_2.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert child_2.media_class == MediaClass.APP
     assert child_2.media_content_id == "yaml-with-views"
     assert child_2.media_content_type == lovelace_cast.DOMAIN
     assert child_2.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
@@ -131,7 +131,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     grandchild_1 = child_2.children[0]
     assert grandchild_1.title == "Hello"
-    assert grandchild_1.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert grandchild_1.media_class == MediaClass.APP
     assert grandchild_1.media_content_id == "yaml-with-views/0"
     assert grandchild_1.media_content_type == lovelace_cast.DOMAIN
     assert (
@@ -142,7 +142,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     grandchild_2 = child_2.children[1]
     assert grandchild_2.title == "second-view"
-    assert grandchild_2.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert grandchild_2.media_class == MediaClass.APP
     assert grandchild_2.media_content_id == "yaml-with-views/second-view"
     assert grandchild_2.media_content_type == lovelace_cast.DOMAIN
     assert (
