@@ -612,16 +612,18 @@ class Light(BaseLight, ZhaEntity):
                     and self._color_channel.enhanced_current_hue is not None
                 ):
                     curr_hue = self._color_channel.enhanced_current_hue * 65535 / 360
-                else:
+                elif self._color_channel.current_hue is not None:
                     curr_hue = self._color_channel.current_hue * 254 / 360
-                curr_saturation = self._color_channel.current_saturation
-                if curr_hue is not None and curr_saturation is not None:
-                    self._attr_hs_color = (
-                        int(curr_hue),
-                        int(curr_saturation * 2.54),
-                    )
                 else:
-                    self._attr_hs_color = (0, 0)
+                    curr_hue = 0
+
+                if (curr_saturation := self._color_channel.current_saturation) is None:
+                    curr_saturation = 0
+
+                self._attr_hs_color = (
+                    int(curr_hue),
+                    int(curr_saturation * 2.54),
+                )
 
             if self._color_channel.color_loop_supported:
                 self._attr_supported_features |= light.LightEntityFeature.EFFECT
