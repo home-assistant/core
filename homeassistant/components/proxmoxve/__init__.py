@@ -1,8 +1,6 @@
 """Support for Proxmox VE."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
@@ -143,14 +141,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await hass.async_add_executor_job(proxmox_client.build_client)
     except AuthenticationError as error:
         raise ConfigEntryAuthFailed from error
-    except SSLError:
-        LOGGER.error(
-            "Unable to verify proxmox server SSL. "
-            'Try using "verify_ssl: false" for proxmox instance %s:%d',
-            host,
-            port,
-        )
-        return False
+    except SSLError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance {host}:{port}"
+        ) from err
     except ConnectTimeout as err:
         raise ConfigEntryNotReady(
             f"Connection to host {host} timed out during setup"
@@ -241,16 +235,17 @@ def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_ty
 
         def poll_api():
             """Call the api."""
-            vm_status = call_api_proxmox(proxmox, node_name, vm_id, vm_type)
-            return vm_status
+            try:
+                api_status = call_api_proxmox(proxmox, node_name, vm_id, vm_type)
+            except AuthenticationError as error:
+                raise ConfigEntryAuthFailed from error
+            except Exception as error:
+                raise ConfigEntryNotReady from error
 
-        vm_status = await hass.async_add_executor_job(poll_api)
+            return api_status
 
-        if vm_status is None:
-            LOGGER.warning(
-                "Vm/Container %s unable to be found in node %s", vm_id, node_name
-            )
-            return None
+        if (vm_status := await hass.async_add_executor_job(poll_api)) is None:
+            raise ConfigEntryNotReady("Error fetching data from API")
 
         return parse_api_proxmox(vm_status, vm_type)
 
@@ -259,7 +254,7 @@ def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_ty
         LOGGER,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        update_interval=UPDATE_INTERVAL,
     )
 
 
@@ -270,17 +265,30 @@ def parse_api_proxmox(status, info_type):
     in the future.
     """
     if info_type == ProxmoxType.Proxmox:
+        if version := status["version"] is None:
+            version = None
+
         return {
-            "version": status["version"],
+            "version": version,
         }
+
     if info_type is ProxmoxType.Node:
+        if uptime := status["uptime"] is None:
+            uptime = None
+
         return {
-            "uptime": status["uptime"],
+            "uptime": uptime,
         }
+
     if info_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
+        if status_vm := status["status"] is None:
+            status_vm = None
+        if name_vm := status["name"] is None:
+            name_vm = None
+
         return {
-            "status": status["status"],
-            "name": status["name"],
+            "status": status_vm,
+            "name": name_vm,
         }
 
 
