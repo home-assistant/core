@@ -2,8 +2,8 @@
 
 from unittest.mock import Mock
 
+from homeassistant.components import media_player
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
-from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -32,7 +32,7 @@ async def test_resource_lifecycle(
     entity_id = entries[0].entity_id
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == MediaPlayerState.IDLE
+    assert mock_state.state == media_player.STATE_IDLE
 
     # Check update listeners and event notifiers are subscribed
     assert len(config_entry_mock.update_listeners) == 1
