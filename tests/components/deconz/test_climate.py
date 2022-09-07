@@ -921,6 +921,9 @@ async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
             }
         }
     }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
     assert len(hass.states.async_all()) == 2
 
     climate_thermostat = hass.states.get("climate.zen_01")
@@ -928,3 +931,6 @@ async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
     assert climate_thermostat.state is STATE_OFF
     assert climate_thermostat.attributes["preset_mode"] is DECONZ_PRESET_AUTO
     assert climate_thermostat.attributes["hvac_action"] is HVACAction.IDLE
+
+    # Verify service calls
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
