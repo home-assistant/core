@@ -2318,7 +2318,7 @@ subarulink==0.5.0
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.7.2
+surepy==0.8.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
