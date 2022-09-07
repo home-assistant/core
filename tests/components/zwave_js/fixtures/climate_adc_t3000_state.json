@@ -227,9 +227,7 @@
         "unit": "\u00b0F"
       },
       "value": 72,
-      "nodeId": 68,
-      "newValue": 73,
-      "prevValue": 72.5
+      "nodeId": 68
     },
     {
       "endpoint": 0,
@@ -250,9 +248,7 @@
         "unit": "%"
       },
       "value": 34,
-      "nodeId": 68,
-      "newValue": 34,
-      "prevValue": 34
+      "nodeId": 68
     },
     {
       "endpoint": 0,
@@ -448,9 +444,7 @@
           "8": "Quiet circulation mode"
         }
       },
-      "value": 0,
-      "newValue": 1,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -581,9 +575,7 @@
           "2": "De-humidifying"
         }
       },
-      "value": 0,
-      "newValue": 1,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1295,9 +1287,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1323,9 +1313,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1351,9 +1339,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1379,9 +1365,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1407,9 +1391,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 0
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1435,9 +1417,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1463,9 +1443,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1491,9 +1469,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1519,9 +1495,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1547,9 +1521,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1575,9 +1547,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1603,9 +1573,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1631,9 +1599,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1659,9 +1625,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1687,9 +1651,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1715,9 +1677,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1743,9 +1703,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1771,9 +1729,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1799,9 +1755,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1827,9 +1781,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1855,9 +1807,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1883,9 +1833,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 1,
-      "newValue": 1,
-      "prevValue": 1
+      "value": 1
     },
     {
       "endpoint": 0,
@@ -1911,9 +1859,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
@@ -1939,9 +1885,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0,
-      "newValue": 0,
-      "prevValue": 0
+      "value": 0
     },
     {
       "endpoint": 0,
