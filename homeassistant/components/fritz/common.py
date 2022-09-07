@@ -877,11 +877,6 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
             return self._avm_wrapper.devices[self._mac].hostname
         return None
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
     async def async_process_update(self) -> None:
         """Update device."""
         raise NotImplementedError()

@@ -37,6 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     if CONF_HOST in config_entry.data:
         coordinator = AwairLocalDataUpdateCoordinator(hass, config_entry, session)
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(_async_update_listener)
+        )
     else:
         coordinator = AwairCloudDataUpdateCoordinator(hass, config_entry, session)
 
@@ -48,6 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    coordinator: AwairLocalDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    if entry.title != coordinator.title:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -73,6 +83,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
         self._config_entry = config_entry
+        self.title = config_entry.title
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=update_interval)
 

@@ -39,6 +39,13 @@ def _reverse_dict(forward_dict: dict) -> dict:
     return {v: k for k, v in forward_dict.items()}
 
 
+LUTRON_MODEL_TO_TYPE = {
+    "RRST-W2B-XX": "SunnataKeypad_2Button",
+    "RRST-W3RL-XX": "SunnataKeypad_3ButtonRaiseLower",
+    "RRST-W4B-XX": "SunnataKeypad_4Button",
+}
+
+
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
 LUTRON_BUTTON_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -379,9 +386,13 @@ async def async_validate_trigger_config(
     if not device:
         return config
 
-    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
+    if not (
+        schema := DEVICE_TYPE_SCHEMA_MAP.get(
+            _lutron_model_to_device_type(device["model"], device["type"])
+        )
+    ):
         raise InvalidDeviceAutomationConfig(
-            f"Device type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
+            f"Device model {device['model']} with type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
         )
 
     return schema(config)
@@ -396,7 +407,9 @@ async def async_get_triggers(
     if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(device["type"], {})
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
+        _lutron_model_to_device_type(device["model"], device["type"]), {}
+    )
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
         for subtype in valid_buttons:
@@ -413,10 +426,16 @@ async def async_get_triggers(
     return triggers
 
 
-def _device_model_to_type(model: str) -> str:
+def _device_model_to_type(device_registry_model: str) -> str:
     """Convert a lutron_caseta device registry entry model to type."""
-    _, device_type = model.split(" ")
-    return device_type.replace("(", "").replace(")", "")
+    model, p_device_type = device_registry_model.split(" ")
+    device_type = p_device_type.replace("(", "").replace(")", "")
+    return _lutron_model_to_device_type(model, device_type)
+
+
+def _lutron_model_to_device_type(model: str, device_type: str) -> str:
+    """Get the mapped type based on the lutron model or type."""
+    return LUTRON_MODEL_TO_TYPE.get(model, device_type)
 
 
 async def async_attach_trigger(

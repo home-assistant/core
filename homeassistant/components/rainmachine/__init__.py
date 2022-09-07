@@ -159,11 +159,15 @@ def async_get_controller_for_service_call(
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-                return data.controller
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Invalid RainMachine device ID: {device_id}")
+
+    for entry_id in device_entry.config_entries:
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if entry.domain == DOMAIN:
+            data: RainMachineData = hass.data[DOMAIN][entry_id]
+            return data.controller
 
     raise ValueError(f"No controller for device ID: {device_id}")
 

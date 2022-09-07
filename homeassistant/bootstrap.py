@@ -24,7 +24,13 @@ from .const import (
     SIGNAL_BOOTSTRAP_INTEGRATONS,
 )
 from .exceptions import HomeAssistantError
-from .helpers import area_registry, device_registry, entity_registry, recorder
+from .helpers import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    issue_registry,
+    recorder,
+)
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
@@ -521,9 +527,10 @@ async def _async_set_up_integrations(
 
     # Load the registries and cache the result of platform.uname().processor
     await asyncio.gather(
+        area_registry.async_load(hass),
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
-        area_registry.async_load(hass),
+        issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
     )
 

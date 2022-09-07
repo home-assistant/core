@@ -112,7 +112,7 @@ class LogiSensor(SensorEntity):
             )
         return self.entity_description.icon
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
         _LOGGER.debug("Pulling data from %s sensor", self.name)
         await self._camera.update()

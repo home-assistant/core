@@ -74,6 +74,7 @@ def async_register_commands(
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_supported_brands)
+    async_reg(hass, handle_supported_features)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -723,3 +724,18 @@ async def handle_supported_brands(
             raise int_or_exc
         data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
     connection.send_result(msg["id"], data)
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "supported_features",
+        vol.Required("features"): {str: int},
+    }
+)
+def handle_supported_features(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle setting supported features."""
+    connection.supported_features = msg["features"]
+    connection.send_result(msg["id"])

@@ -267,12 +267,14 @@ def _update_or_add_metadata(
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
+        or old_metadata["name"] != new_metadata["name"]
         or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
     ):
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
                 StatisticsMeta.has_mean: new_metadata["has_mean"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
+                StatisticsMeta.name: new_metadata["name"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
             },
             synchronize_session=False,
@@ -824,8 +826,12 @@ def list_statistic_ids(
     a recorder platform for statistic_ids which will be added in the next statistics
     period.
     """
-    units = hass.config.units
     result = {}
+
+    def _display_unit(hass: HomeAssistant, unit: str | None) -> str | None:
+        if unit is None:
+            return None
+        return _configured_unit(unit, hass.config.units)
 
     # Query the database
     with session_scope(hass=hass) as session:
@@ -833,18 +839,15 @@ def list_statistic_ids(
             hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
-        for _, meta in metadata.values():
-            if (unit := meta["unit_of_measurement"]) is not None:
-                # Display unit according to user settings
-                unit = _configured_unit(unit, units)
-            meta["unit_of_measurement"] = unit
-
         result = {
             meta["statistic_id"]: {
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
+                "display_unit_of_measurement": _display_unit(
+                    hass, meta["unit_of_measurement"]
+                ),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
             for _, meta in metadata.values()
@@ -858,14 +861,19 @@ def list_statistic_ids(
             hass, statistic_ids=statistic_ids, statistic_type=statistic_type
         )
 
-        for statistic_id, info in platform_statistic_ids.items():
-            if (unit := info["unit_of_measurement"]) is not None:
-                # Display unit according to user settings
-                unit = _configured_unit(unit, units)
-            platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
-
-        for key, value in platform_statistic_ids.items():
-            result.setdefault(key, value)
+        for key, meta in platform_statistic_ids.items():
+            if key in result:
+                continue
+            result[key] = {
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
+                "name": meta["name"],
+                "source": meta["source"],
+                "display_unit_of_measurement": _display_unit(
+                    hass, meta["unit_of_measurement"]
+                ),
+                "unit_of_measurement": meta["unit_of_measurement"],
+            }
 
     # Return a list of statistic_id + metadata
     return [
@@ -875,7 +883,8 @@ def list_statistic_ids(
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
-            "unit_of_measurement": info["unit_of_measurement"],
+            "display_unit_of_measurement": info["display_unit_of_measurement"],
+            "statistics_unit_of_measurement": info["unit_of_measurement"],
         }
         for _id, info in result.items()
     ]

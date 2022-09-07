@@ -947,6 +947,7 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -999,6 +1000,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1037,6 +1039,7 @@ async def test_discovery_expansion_3(hass, mqtt_mock_entry_no_yaml_config, caplo
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1076,6 +1079,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1124,6 +1128,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
+        '    "hw":"rev1",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None",'
         '    "sa":"default_area"'
@@ -1181,6 +1186,8 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_SCHEMA",
     "CONF_SWING_MODE_LIST",
     "CONF_TEMP_STEP",
+    # Removed
+    "CONF_WHITE_VALUE",
 ]
 
 

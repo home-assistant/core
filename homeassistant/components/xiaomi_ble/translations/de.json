@@ -24,15 +24,15 @@
             },
             "get_encryption_key_4_5": {
                 "data": {
-                    "bindkey": "Bindungsschl\u00fcssel"
+                    "bindkey": "Bindkey"
                 },
-                "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 32-stelligen hexadezimalen Bindungsschl\u00fcssel."
+                "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 32-stelligen hexadezimalen Bindkey."
             },
             "get_encryption_key_legacy": {
                 "data": {
-                    "bindkey": "Bindungsschl\u00fcssel"
+                    "bindkey": "Bindkey"
                 },
-                "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 24-stelligen hexadezimalen Bindungsschl\u00fcssel."
+                "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 24-stelligen hexadezimalen Bindkey."
             },
             "slow_confirm": {
                 "description": "Von diesem Ger\u00e4t wurde in der letzten Minute kein Broadcast gesendet, so dass wir nicht sicher sind, ob dieses Ger\u00e4t Verschl\u00fcsselung verwendet oder nicht. Dies kann daran liegen, dass das Ger\u00e4t ein langsames Sendeintervall verwendet. Best\u00e4tige, dass du das Ger\u00e4t trotzdem hinzuf\u00fcgen m\u00f6chtest. Wenn das n\u00e4chste Mal ein Broadcast empfangen wird, wirst du aufgefordert, den Bindkey einzugeben, falls er ben\u00f6tigt wird."

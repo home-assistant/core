@@ -4,7 +4,7 @@
     },
     "config": {
         "abort": {
-            "already_configured": "Conta j\u00e1 configurada",
+            "already_configured": "A conta j\u00e1 foi configurada",
             "authorize_url_timeout": "Tempo limite gerando URL de autoriza\u00e7\u00e3o.",
             "invalid_access_token": "Token de acesso inv\u00e1lido",
             "missing_configuration": "O componente n\u00e3o est\u00e1 configurado. Por favor, siga a documenta\u00e7\u00e3o.",

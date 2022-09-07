@@ -9,7 +9,7 @@
             "invalid_access_token": "Token de acceso no v\u00e1lido",
             "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [revisa la secci\u00f3n de ayuda]({docs_url})",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
@@ -99,7 +99,7 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "La configuraci\u00f3n de Nest en configuration.yaml se eliminar\u00e1 en Home Assistant 2022.10. \n\nTus credenciales OAuth de aplicaci\u00f3n existentes y la configuraci\u00f3n de acceso se han importado a la IU autom\u00e1ticamente. Elimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "description": "Se va a eliminar la configuraci\u00f3n de Nest en configuration.yaml en Home Assistant 2022.10. \n\nTus credenciales OAuth de aplicaci\u00f3n existentes y la configuraci\u00f3n de acceso se han importado a la IU autom\u00e1ticamente. Elimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
             "title": "Se va a eliminar la configuraci\u00f3n YAML de Nest"
         },
         "removed_app_auth": {

@@ -29,7 +29,13 @@
                 "data": {
                     "host": "IP c\u00edm"
                 },
-                "description": "Az Awair lok\u00e1lis API-t az al\u00e1bbi l\u00e9p\u00e9sekkel kell enged\u00e9lyezni: {url}"
+                "description": "K\u00f6vesse [az utas\u00edt\u00e1sokat]({url}) az Awair lok\u00e1lis API enged\u00e9lyez\u00e9s\u00e9hez. \n\n Ha k\u00e9sz, kattintson a MEHET gombra."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Eszk\u00f6z",
+                    "host": "IP c\u00edm"
+                }
             },
             "reauth": {
                 "data": {

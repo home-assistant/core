@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from pydroid_ipcam import PyDroidIPCam
+from pydroid_ipcam.exceptions import PyDroidIPCamException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -37,6 +38,7 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Update Android IP Webcam entities."""
-        await self.cam.update()
-        if not self.cam.available:
-            raise UpdateFailed
+        try:
+            await self.cam.update()
+        except PyDroidIPCamException as err:
+            raise UpdateFailed(err) from err

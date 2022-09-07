@@ -112,6 +112,8 @@ def setup_platform(
 class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -167,12 +169,7 @@ class SensorTrend(BinarySensorEntity):
             ATTR_SAMPLE_DURATION: self._sample_duration,
         }
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Complete device setup after being added to hass."""
 
         @callback
@@ -198,7 +195,7 @@ class SensorTrend(BinarySensorEntity):
             )
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the states."""
         # Remove outdated samples
         if self._sample_duration > 0:

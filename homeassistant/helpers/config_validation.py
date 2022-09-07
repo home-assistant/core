@@ -1425,6 +1425,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ALIAS): str,
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,

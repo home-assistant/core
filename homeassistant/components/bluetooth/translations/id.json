@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Layanan sudah dikonfigurasi",
-            "no_adapters": "Tidak ada adaptor Bluetooth yang ditemukan"
+            "no_adapters": "Tidak ada adaptor Bluetooth yang belum dikonfigurasi yang ditemukan"
         },
         "flow_title": "{name}",
         "step": {
@@ -11,6 +11,15 @@
             },
             "enable_bluetooth": {
                 "description": "Ingin menyiapkan Bluetooth?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adaptor"
+                },
+                "description": "Pilih adaptor Bluetooth untuk disiapkan"
+            },
+            "single_adapter": {
+                "description": "Ingin menyiapkan adaptor Bluetooth {name}?"
             },
             "user": {
                 "data": {
@@ -24,8 +33,10 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Adaptor Bluetooth yang digunakan untuk pemindaian"
-                }
+                    "adapter": "Adaptor Bluetooth yang digunakan untuk pemindaian",
+                    "passive": "Memindai secara pasif"
+                },
+                "description": "Mendengarkan secara pasif memerlukan BlueZ 5.63 atau lebih baru dengan fitur eksperimental yang diaktifkan."
             }
         }
     }

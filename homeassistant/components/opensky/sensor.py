@@ -147,7 +147,7 @@ class OpenSkySensor(SensorEntity):
             }
             self._hass.bus.fire(event, data)
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
@@ -159,18 +159,17 @@ class OpenSkySensor(SensorEntity):
                 flight_metadata[callsign] = flight
             else:
                 continue
-            missing_location = (
-                flight.get(ATTR_LONGITUDE) is None or flight.get(ATTR_LATITUDE) is None
-            )
-            if missing_location:
-                continue
-            if flight.get(ATTR_ON_GROUND):
+            if (
+                (longitude := flight.get(ATTR_LONGITUDE)) is None
+                or (latitude := flight.get(ATTR_LATITUDE)) is None
+                or flight.get(ATTR_ON_GROUND)
+            ):
                 continue
             distance = util_location.distance(
                 self._latitude,
                 self._longitude,
-                flight.get(ATTR_LATITUDE),
-                flight.get(ATTR_LONGITUDE),
+                latitude,
+                longitude,
             )
             if distance is None or distance > self._radius:
                 continue

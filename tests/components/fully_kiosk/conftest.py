@@ -65,6 +65,9 @@ def mock_fully_kiosk() -> Generator[MagicMock, None, None]:
         client.getDeviceInfo.return_value = json.loads(
             load_fixture("deviceinfo.json", DOMAIN)
         )
+        client.getSettings.return_value = json.loads(
+            load_fixture("listsettings.json", DOMAIN)
+        )
         yield client
 
 

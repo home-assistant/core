@@ -140,14 +140,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
         self._device_class = device_class
-        self._should_poll = False
         self._density = 0
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return self._should_poll
 
     @property
     def is_on(self):
@@ -159,7 +153,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         """Return the class of binary sensor."""
         return self._device_class
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor state."""
         _LOGGER.debug("Updating xiaomi sensor (%s) by polling", self._sid)
         self._get_from_hub(self._sid)
@@ -340,7 +334,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        self._should_poll = False
+        self._attr_should_poll = False
         if NO_CLOSE in data:  # handle push from the hub
             self._open_since = data[NO_CLOSE]
             return True
@@ -350,7 +344,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
             return False
 
         if value == "open":
-            self._should_poll = True
+            self._attr_should_poll = True
             if self._state:
                 return False
             self._state = True
@@ -388,14 +382,14 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        self._should_poll = False
+        self._attr_should_poll = False
 
         value = data.get(self._data_key)
         if value is None:
             return False
 
         if value == "leak":
-            self._should_poll = True
+            self._attr_should_poll = True
             if self._state:
                 return False
             self._state = True

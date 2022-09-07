@@ -63,7 +63,7 @@
             "remote_double_button_long_press": "Kedua \"{subtype}\" dilepaskan setelah ditekan lama",
             "remote_double_button_short_press": "Kedua \"{subtype}\" dilepas",
             "repeat": "\"{subtype}\" ditekan terus",
-            "short_release": "Tombol \"{subtype}\" dilepaskan setelah ditekan sebentar",
+            "short_release": "\"{subtype}\" dilepaskan setelah ditekan sebentar",
             "start": "\"{subtype}\" awalnya ditekan"
         }
     },
