@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Kunci API"
+                },
+                "data_description": {
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API baru."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "Kunci API"
+                },
+                "data_description": {
+                    "api_key": "Ikuti petunjuk dalam dokumentasi untuk mendapatkan kunci API."
                 }
             }
         }

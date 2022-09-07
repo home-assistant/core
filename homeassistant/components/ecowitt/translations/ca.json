@@ -1,5 +1,8 @@
 {
     "config": {
+        "create_entry": {
+            "default": "Per acabar de configurar la integraci\u00f3, utilitza l'aplicaci\u00f3 Ecowitt (al m\u00f2bil) o v\u00e9s a Ecowitt WebUI a trav\u00e9s d'un navegador anant a l'adre\u00e7a IP de l'estaci\u00f3.\n\nTria la teva estaci\u00f3 -> Men\u00fa Altres -> Servidors de pujada DIY. Prem seg\u00fcent (next) i selecciona 'Personalitzat' ('Customized')\n\n- IP del servidor: `{servidor}`\n- Ruta: `{path}`\n- Port: `{port}`\n\nFes clic a 'Desa' ('Save')."
+        },
         "error": {
             "invalid_port": "Aquest port ja est\u00e0 en \u00fas.",
             "unknown": "Error inesperat"
@@ -10,7 +13,7 @@
                     "path": "Cam\u00ed amb testimoni de seguretat",
                     "port": "Escoltant el port"
                 },
-                "description": "S'han de completar els seg\u00fcents passos per configurar aquesta integraci\u00f3.\n\nUtilitza l'aplicaci\u00f3 Ecowitt (al teu tel\u00e8fon) o accedeix a la Web Ecowitt des d'un navegador a l'adre\u00e7a IP de l'estaci\u00f3.\nEscull la teva estaci\u00f3 -> Menu Others -> DIY Upload Servers.\nFes clic a Seg\u00fcent i selecciona \"Personalitzat\"\n\nEscull el protocol Ecowitt i estableix la IP o l'adre\u00e7a del teu servidor Home Assistant.\nLa ruta ha de conincidir, la pots copiar amb el testimoni de seguretat /.\nDesa la configuraci\u00f3. L'Ecowitt hauria de comen\u00e7ar a enviar dades al teu servidor."
+                "description": "Est\u00e0s segur que vols configurar Ecowitt?"
             }
         }
     }

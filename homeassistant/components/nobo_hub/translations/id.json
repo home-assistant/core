@@ -4,6 +4,7 @@
             "already_configured": "Perangkat sudah dikonfigurasi"
         },
         "error": {
+            "cannot_connect": "Gagal terhubung - periksa nomor seri",
             "invalid_ip": "Alamat IP tidak valid",
             "invalid_serial": "Nomor seri tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
@@ -13,7 +14,8 @@
                 "data": {
                     "ip_address": "Alamat IP",
                     "serial": "Nomor seri (12 digit)"
-                }
+                },
+                "description": "Konfigurasikan Nob\u00f8 Ecohub yang tidak ditemukan di jaringan lokal Anda. Jika hub Anda berada di jaringan lain, Anda masih dapat menyambungkannya dengan memasukkan nomor seri lengkap (12 digit) dan alamat IP-nya."
             },
             "selected": {
                 "data": {
