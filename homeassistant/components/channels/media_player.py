@@ -11,16 +11,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MediaType
-from homeassistant.const import (
-    ATTR_SECONDS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.components.media_player.const import MediaPlayerState, MediaType
+from homeassistant.const import ATTR_SECONDS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -151,16 +143,16 @@ class ChannelsPlayer(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self.status == "stopped":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         if self.status == "paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
         if self.status == "playing":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
 
         return None
 

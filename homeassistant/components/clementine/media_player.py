@@ -12,16 +12,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MediaType
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.components.media_player.const import MediaPlayerState, MediaType
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,16 +76,16 @@ class ClementineDevice(MediaPlayerEntity):
             client = self._client
 
             if client.state == "Playing":
-                self._attr_state = STATE_PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             elif client.state == "Paused":
-                self._attr_state = STATE_PAUSED
+                self._attr_state = MediaPlayerState.PAUSED
             elif client.state == "Disconnected":
-                self._attr_state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
             else:
-                self._attr_state = STATE_PAUSED
+                self._attr_state = MediaPlayerState.PAUSED
 
             if client.last_update and (time.time() - client.last_update > 40):
-                self._attr_state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
 
             volume = float(client.volume) if client.volume else 0.0
             self._attr_volume_level = volume / 100.0
@@ -112,7 +104,7 @@ class ClementineDevice(MediaPlayerEntity):
                 self._attr_media_image_hash = None
 
         except Exception:
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
             raise
 
     def select_source(self, source: str) -> None:
@@ -150,19 +142,19 @@ class ClementineDevice(MediaPlayerEntity):
 
     def media_play_pause(self) -> None:
         """Simulate play pause media player."""
-        if self.state == STATE_PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             self.media_pause()
         else:
             self.media_play()
 
     def media_play(self) -> None:
         """Send play command."""
-        self._attr_state = STATE_PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self._client.play()
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
-        self._attr_state = STATE_PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
         self._client.pause()
 
     def media_next_track(self) -> None:

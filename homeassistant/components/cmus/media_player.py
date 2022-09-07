@@ -12,16 +12,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MediaType
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.components.media_player.const import MediaPlayerState, MediaType
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -125,11 +117,11 @@ class CmusDevice(MediaPlayerEntity):
         else:
             self.status = status
             if self.status.get("status") == "playing":
-                self._attr_state = STATE_PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             elif self.status.get("status") == "paused":
-                self._attr_state = STATE_PAUSED
+                self._attr_state = MediaPlayerState.PAUSED
             else:
-                self._attr_state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
             self._attr_media_content_id = self.status.get("file")
             self._attr_media_duration = self.status.get("duration")
             self._attr_media_title = self.status["tag"].get("title")

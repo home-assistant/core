@@ -11,9 +11,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MediaType
+from homeassistant.components.media_player.const import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -129,18 +128,18 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
 
     # MediaPlayerEntity properties and methods
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._is_standby:
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         # For recorded media we can determine if it is paused or not.
         # For live media we're unable to determine and will always return
         # playing instead.
         if self._paused:
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
-        return STATE_PLAYING
+        return MediaPlayerState.PLAYING
 
     @property
     def media_content_id(self):

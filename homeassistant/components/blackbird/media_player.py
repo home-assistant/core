@@ -13,14 +13,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -163,7 +162,7 @@ class BlackbirdZone(MediaPlayerEntity):
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
             return
-        self._attr_state = STATE_ON if state.power else STATE_OFF
+        self._attr_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         idx = state.av
         if idx in self._source_id_name:
             self._attr_source = self._source_id_name[idx]

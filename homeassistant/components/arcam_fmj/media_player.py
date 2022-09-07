@@ -12,10 +12,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MediaClass, MediaType
+from homeassistant.components.media_player.const import (
+    MediaClass,
+    MediaPlayerState,
+    MediaType,
+)
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -87,11 +91,11 @@ class ArcamFmj(MediaPlayerEntity):
         self._attr_entity_registry_enabled_default = state.zn == 1
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._state.get_power():
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def device_info(self):

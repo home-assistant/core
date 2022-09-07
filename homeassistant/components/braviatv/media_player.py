@@ -6,9 +6,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import MediaType
+from homeassistant.components.media_player.const import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,11 +50,15 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     )
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.coordinator.is_on:
-            return STATE_PLAYING if self.coordinator.playing else STATE_PAUSED
-        return STATE_OFF
+            return (
+                MediaPlayerState.PLAYING
+                if self.coordinator.playing
+                else MediaPlayerState.PAUSED
+            )
+        return MediaPlayerState.OFF
 
     @property
     def source(self) -> str | None:
