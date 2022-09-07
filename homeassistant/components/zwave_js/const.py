@@ -21,7 +21,6 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
-DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
@@ -123,4 +122,6 @@ ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
 
 # This API key is only for use with Home Assistant. Reach out to Z-Wave JS to apply for
 # your own (https://github.com/zwave-js/firmware-updates/).
-API_KEY_FIRMWARE_UPDATE_SERVICE = "b48e74337db217f44e1e003abb1e9144007d260a17e2b2422e0a45d0eaf6f4ad86f2a9943f17fee6dde343941f238a64"
+API_KEY_FIRMWARE_UPDATE_SERVICE = (
+    "55eea74f055bef2ad893348112df6a38980600aaf82d2b02011297fc7ba495f830ca2b70"
+)

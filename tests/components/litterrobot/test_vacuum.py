@@ -52,6 +52,7 @@ async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID_OLD
 
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    assert len(ent_reg.entities) == 1
     assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
@@ -78,9 +79,15 @@ async def test_no_robots(
     hass: HomeAssistant, mock_account_with_no_robots: MagicMock
 ) -> None:
     """Tests the vacuum entity was set up."""
-    await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
+    entry = await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
 
     assert not hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
+
+    ent_reg = er.async_get(hass)
+    assert len(ent_reg.entities) == 0
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_vacuum_with_error(

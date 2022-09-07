@@ -1,9 +1,9 @@
-"""The BThome Bluetooth integration."""
+"""The BTHome Bluetooth integration."""
 from __future__ import annotations
 
 import logging
 
-from bthome_ble import BThomeBluetoothDeviceData, SensorUpdate
+from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 from bthome_ble.parser import EncryptionScheme
 
 from homeassistant.components.bluetooth import (
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 def process_service_info(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    data: BThomeBluetoothDeviceData,
+    data: BTHomeBluetoothDeviceData,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
@@ -40,14 +40,14 @@ def process_service_info(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up BThome Bluetooth from a config entry."""
+    """Set up BTHome Bluetooth from a config entry."""
     address = entry.unique_id
     assert address is not None
 
     kwargs = {}
     if bindkey := entry.data.get("bindkey"):
         kwargs["bindkey"] = bytes.fromhex(bindkey)
-    data = BThomeBluetoothDeviceData(**kwargs)
+    data = BTHomeBluetoothDeviceData(**kwargs)
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
