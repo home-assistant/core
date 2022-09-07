@@ -32,7 +32,7 @@ async def test_resource_lifecycle(
     entity_id = entries[0].entity_id
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == MediaPlayerState.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Check update listeners and event notifiers are subscribed
     assert len(config_entry_mock.update_listeners) == 1
