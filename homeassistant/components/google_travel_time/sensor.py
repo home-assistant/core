@@ -186,7 +186,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         await self.hass.async_add_executor_job(self.update)
         self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Google."""
         options_copy = self._config_entry.options.copy()
         dtime = options_copy.get(CONF_DEPARTURE_TIME)

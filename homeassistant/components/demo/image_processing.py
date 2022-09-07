@@ -39,7 +39,7 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
         """Initialize demo ALPR image processing entity."""
         super().__init__()
 
-        self._name = name
+        self._attr_name = name
         self._camera = camera_entity
 
     @property
@@ -51,11 +51,6 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
     def confidence(self) -> int:
         """Return minimum confidence for send events."""
         return 80
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     def process_image(self, image: Image) -> None:
         """Process image."""
@@ -76,7 +71,7 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
         """Initialize demo face image processing entity."""
         super().__init__()
 
-        self._name = name
+        self._attr_name = name
         self._camera = camera_entity
 
     @property
@@ -88,11 +83,6 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
     def confidence(self) -> int:
         """Return minimum confidence for send events."""
         return 80
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     def process_image(self, image: Image) -> None:
         """Process image."""

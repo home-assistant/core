@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "manual_entry": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "host": "Host"
+                }
+            },
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
+            }
+        }
+    }
+}

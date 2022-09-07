@@ -51,6 +51,8 @@ async def async_setup_platform(
 class SatelIntegraSwitch(SwitchEntity):
     """Representation of an Satel switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, controller, device_number, device_name, code):
         """Initialize the binary_sensor."""
         self._device_number = device_number
@@ -104,8 +106,3 @@ class SatelIntegraSwitch(SwitchEntity):
     def name(self):
         """Return the name of the switch."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Don't poll."""
-        return False

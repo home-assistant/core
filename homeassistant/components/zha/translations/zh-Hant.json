@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
             },
+            "confirm_hardware": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "\u7121\u7dda\u96fb\u985e\u5225"

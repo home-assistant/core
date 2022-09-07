@@ -52,11 +52,17 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
 
 
-class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
+class PassiveBluetoothProcessorCoordinator(
+    Generic[_T], BasePassiveBluetoothCoordinator
+):
     """Passive bluetooth processor coordinator for bluetooth advertisements.
 
     The coordinator is responsible for dispatching the bluetooth data,
     to each processor, and tracking devices.
+
+    The update_method should return the data that is dispatched to each processor.
+    This is normally a parsed form of the data, but you can just forward the
+    BluetoothServiceInfoBleak if needed.
     """
 
     def __init__(
@@ -65,10 +71,19 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         logger: logging.Logger,
         address: str,
         mode: BluetoothScanningMode,
+        update_method: Callable[[BluetoothServiceInfoBleak], _T],
+        connectable: bool = False,
     ) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, logger, address, mode)
+        super().__init__(hass, logger, address, mode, connectable)
         self._processors: list[PassiveBluetoothDataProcessor] = []
+        self._update_method = update_method
+        self.last_update_success = True
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.last_update_success
 
     @callback
     def async_register_processor(
@@ -102,8 +117,22 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         super()._async_handle_bluetooth_event(service_info, change)
         if self.hass.is_stopping:
             return
+
+        try:
+            update = self._update_method(service_info)
+        except Exception as err:  # pylint: disable=broad-except
+            self.last_update_success = False
+            self.logger.exception(
+                "Unexpected error updating %s data: %s", self.name, err
+            )
+            return
+
+        if not self.last_update_success:
+            self.last_update_success = True
+            self.logger.info("Coordinator %s recovered", self.name)
+
         for processor in self._processors:
-            processor.async_handle_bluetooth_event(service_info, change)
+            processor.async_handle_update(update)
 
 
 _PassiveBluetoothDataProcessorT = TypeVar(
@@ -123,9 +152,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     the appropriate format.
 
     The processor will call the update_method every time the bluetooth device
-    receives a new advertisement data from the coordinator with the following signature:
-
-    update_method(service_info: BluetoothServiceInfoBleak) -> PassiveBluetoothDataUpdate
+    receives a new advertisement data from the coordinator with the data
+    returned by he update_method of the coordinator.
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
@@ -138,9 +166,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     def __init__(
         self,
-        update_method: Callable[
-            [BluetoothServiceInfoBleak], PassiveBluetoothDataUpdate[_T]
-        ],
+        update_method: Callable[[_T], PassiveBluetoothDataUpdate[_T]],
     ) -> None:
         """Initialize the coordinator."""
         self.coordinator: PassiveBluetoothProcessorCoordinator
@@ -244,14 +270,10 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 update_callback(data)
 
     @callback
-    def async_handle_bluetooth_event(
-        self,
-        service_info: BluetoothServiceInfoBleak,
-        change: BluetoothChange,
-    ) -> None:
+    def async_handle_update(self, update: _T) -> None:
         """Handle a Bluetooth event."""
         try:
-            new_data = self.update_method(service_info)
+            new_data = self.update_method(update)
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
             self.coordinator.logger.exception(

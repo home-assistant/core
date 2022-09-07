@@ -112,6 +112,8 @@ async def async_setup_platform(
 class GenericHygrostat(HumidifierEntity, RestoreEntity):
     """Representation of a Generic Hygrostat device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -217,11 +219,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if self._saved_target_humidity:
             return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
         return None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def name(self):

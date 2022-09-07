@@ -12,6 +12,15 @@
             "enable_bluetooth": {
                 "description": "Vols configurar Bluetooth?"
             },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adaptador"
+                },
+                "description": "Selecciona un adaptador Bluetooth per configurar-lo"
+            },
+            "single_adapter": {
+                "description": "Vols configurar l'adaptador Bluetooth {name}?"
+            },
             "user": {
                 "data": {
                     "address": "Dispositiu"
@@ -24,7 +33,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Adaptador Bluetooth a utilitzar per escanejar"
+                    "adapter": "Adaptador Bluetooth a utilitzar per escanejar",
+                    "passive": "Escolta passiva"
                 }
             }
         }

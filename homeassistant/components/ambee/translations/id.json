@@ -24,5 +24,11 @@
                 "description": "Siapkan Ambee Anda untuk diintegrasikan dengan Home Assistant."
             }
         }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "Integrasi Ambee sedang menunggu penghapusan dari Home Assistant dan tidak akan lagi tersedia pada Home Assistant 2022.10.\n\nIntegrasi ini dalam proses penghapusan, karena Ambee telah menghapus akun versi gratis (terbatas) mereka dan tidak menyediakan cara bagi pengguna biasa untuk mendaftar paket berbayar lagi.\n\nHapus entri integrasi Ambee dari instans Anda untuk memperbaiki masalah ini.",
+            "title": "Integrasi Ambee dalam proses penghapusan"
+        }
     }
 }

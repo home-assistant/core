@@ -1,6 +1,7 @@
 """Support for the Hive climate devices."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -120,7 +121,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         await self.hive.heating.setMode(self.device, new_mode)
 
     @refresh_system
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         new_temperature = kwargs.get(ATTR_TEMPERATURE)
         if new_temperature is not None:
@@ -153,7 +154,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         """Handle boost heating service call."""
         await self.hive.heating.setBoostOff(self.device)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.heating.getClimate(self.device)

@@ -3,10 +3,10 @@
         "step": {
             "init": {
                 "data": {
-                    "timestep": "Min. Entre pron\u00f3sticos de NowCast"
+                    "timestep": "Min. entre pron\u00f3sticos de NowCast"
                 },
-                "description": "Si elige habilitar la entidad de pron\u00f3stico \"nowcast\", puede configurar el n\u00famero de minutos entre cada pron\u00f3stico. El n\u00famero de pron\u00f3sticos proporcionados depende del n\u00famero de minutos elegidos entre los pron\u00f3sticos.",
-                "title": "Actualizaci\u00f3n de opciones de ClimaCell"
+                "description": "Si eliges habilitar la entidad de pron\u00f3stico `nowcast`, puedes configurar la cantidad de minutos entre cada pron\u00f3stico. La cantidad de pron\u00f3sticos proporcionados depende de la cantidad de minutos elegidos entre los pron\u00f3sticos.",
+                "title": "Actualizar opciones de ClimaCell"
             }
         }
     }

@@ -9,6 +9,8 @@ from pymelcloud.atw_device import (
 from pymelcloud.device import PROPERTY_POWER
 
 from homeassistant.components.water_heater import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
@@ -122,11 +124,11 @@ class AtwWaterHeater(WaterHeaterEntity):
         await self._device.set({PROPERTY_OPERATION_MODE: operation_mode})
 
     @property
-    def min_temp(self) -> float | None:
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._device.target_tank_temperature_min
+        return self._device.target_tank_temperature_min or DEFAULT_MIN_TEMP
 
     @property
-    def max_temp(self) -> float | None:
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._device.target_tank_temperature_max
+        return self._device.target_tank_temperature_max or DEFAULT_MAX_TEMP

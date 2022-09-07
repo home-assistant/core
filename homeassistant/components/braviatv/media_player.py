@@ -1,4 +1,4 @@
-"""Support for interface with a Bravia TV."""
+"""Media player support for Bravia TV integration."""
 from __future__ import annotations
 
 from homeassistant.components.media_player import (
@@ -74,7 +74,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        return self.coordinator.muted
+        return self.coordinator.volume_muted
 
     @property
     def media_title(self) -> str | None:
@@ -84,12 +84,17 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.channel_name
+        return self.coordinator.media_content_id
+
+    @property
+    def media_content_type(self) -> str | None:
+        """Content type of current playing media."""
+        return self.coordinator.media_content_type
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.coordinator.duration
+        return self.coordinator.media_duration
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""

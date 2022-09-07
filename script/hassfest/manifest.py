@@ -51,12 +51,14 @@ NO_IOT_CLASS = [
     "discovery",
     "downloader",
     "ffmpeg",
+    "file_upload",
     "frontend",
     "hardkernel",
     "hardware",
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_sky_connect",
     "homeassistant_yellow",
     "image",
     "input_boolean",
@@ -83,6 +85,7 @@ NO_IOT_CLASS = [
     "raspberry_pi",
     "repairs",
     "safe_mode",
+    "schedule",
     "script",
     "search",
     "system_health",
@@ -135,7 +138,7 @@ def verify_version(value: str):
     try:
         AwesomeVersion(
             value,
-            [
+            ensure_strategy=[
                 AwesomeVersionStrategy.CALVER,
                 AwesomeVersionStrategy.SEMVER,
                 AwesomeVersionStrategy.SIMPLEVER,
@@ -194,6 +197,7 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("bluetooth"): [
             vol.Schema(
                 {
+                    vol.Optional("connectable"): bool,
                     vol.Optional("service_uuid"): vol.All(str, verify_lowercase),
                     vol.Optional("service_data_uuid"): vol.All(str, verify_lowercase),
                     vol.Optional("local_name"): vol.All(str),

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "homekit_controller__thread_node_capabilities": {
+            "full": "Perangkat Akhir Lengkap",
+            "minimal": "Perangkat Akhir Minimal",
+            "none": "Tidak Ada"
+        },
+        "homekit_controller__thread_status": {
+            "disabled": "Dinonaktifkan",
+            "router": "Router"
+        }
+    }
+}

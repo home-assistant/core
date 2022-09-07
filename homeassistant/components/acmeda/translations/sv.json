@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "V\u00e4rd-ID"
+                },
+                "title": "V\u00e4lj en hubb att l\u00e4gga till"
+            }
+        }
+    }
+}

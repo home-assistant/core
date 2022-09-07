@@ -57,7 +57,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         """Return true if the sensor is available."""
         return self._state is not None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor's status."""
         status = self.device.appliance.status
         if self._key not in status:

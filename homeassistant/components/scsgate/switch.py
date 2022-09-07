@@ -91,6 +91,8 @@ def _setup_scenario_switches(logger, config, scsgate, hass):
 class SCSGateSwitch(SwitchEntity):
     """Representation of a SCSGate switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the switch."""
         self._name = name
@@ -103,11 +105,6 @@ class SCSGateSwitch(SwitchEntity):
     def scs_id(self):
         """Return the SCS ID."""
         return self._scs_id
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
