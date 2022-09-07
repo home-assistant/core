@@ -8,7 +8,6 @@ from pychromecast import Chromecast
 import voluptuous as vol
 
 from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -75,7 +74,7 @@ class CastProtocol(Protocol):
     async def async_browse_media(
         self,
         hass: HomeAssistant,
-        media_content_type: MediaType | str,
+        media_content_type: str,
         media_content_id: str,
         cast_type: str,
     ) -> BrowseMedia | None:
@@ -89,7 +88,7 @@ class CastProtocol(Protocol):
         hass: HomeAssistant,
         cast_entity_id: str,
         chromecast: Chromecast,
-        media_type: MediaType | str,
+        media_type: str,
         media_id: str,
     ) -> bool:
         """Play media.

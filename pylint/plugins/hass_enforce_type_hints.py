@@ -196,7 +196,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             function_name="async_browse_media",
             arg_types={
                 0: "HomeAssistant",
-                1: "MediaType | str",
+                1: "str",
                 2: "str",
                 3: "str",
             },
@@ -206,7 +206,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             function_name="async_play_media",
             arg_types={
                 0: "HomeAssistant",
-                1: "MediaType | str",
+                1: "str",
                 2: "Chromecast",
                 3: "str",
                 4: "str",
