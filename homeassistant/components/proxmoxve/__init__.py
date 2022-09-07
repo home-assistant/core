@@ -31,7 +31,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    _LOGGER,
     CONF_CONTAINERS,
     CONF_LXC,
     CONF_NODE,
@@ -45,6 +44,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     INTEGRATION_NAME,
+    LOGGER,
     PROXMOX_CLIENT,
     UPDATE_INTERVAL,
     ProxmoxType,
@@ -95,7 +95,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
     # import to config flow
-    _LOGGER.warning(
+    LOGGER.warning(
         # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
         "Configuration of the Proxmox in YAML is deprecated and should "
         "be removed in 2022.12. Resolve the import issues and remove the "
@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationError as error:
         raise ConfigEntryAuthFailed from error
     except SSLError:
-        _LOGGER.error(
+        LOGGER.error(
             "Unable to verify proxmox server SSL. "
             'Try using "verify_ssl: false" for proxmox instance %s:%d',
             host,
@@ -247,7 +247,7 @@ def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_ty
         vm_status = await hass.async_add_executor_job(poll_api)
 
         if vm_status is None:
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Vm/Container %s unable to be found in node %s", vm_id, node_name
             )
             return None
@@ -256,7 +256,7 @@ def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_ty
 
     return DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),

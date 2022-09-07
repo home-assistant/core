@@ -25,7 +25,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from . import ProxmoxClient
 from .const import (
-    _LOGGER,
     CONF_CONTAINERS,
     CONF_LXC,
     CONF_NODE,
@@ -39,6 +38,7 @@ from .const import (
     DOMAIN,
     ID,
     INTEGRATION_NAME,
+    LOGGER,
 )
 
 
@@ -254,7 +254,7 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
-                _LOGGER.debug("Device %s removed", device.name)
+                LOGGER.debug("Device %s removed", device.name)
 
         for lxc in self.config_entry.data[CONF_LXC]:
             if lxc not in self._config[CONF_LXC]:
@@ -270,7 +270,7 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
-                _LOGGER.debug("Device %s removed", device.name)
+                LOGGER.debug("Device %s removed", device.name)
 
         self.hass.config_entries.async_update_entry(
             self.config_entry,
@@ -433,7 +433,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if import_nodes := (import_config.get(CONF_NODES)):
                     for node in import_nodes:
                         if node[CONF_NODE] not in proxmox_nodes_host:
-                            _LOGGER.warning(
+                            LOGGER.warning(
                                 "The node %s does not exist of instance %s:%s and will be ignored",
                                 node[CONF_NODE],
                                 self._config[CONF_HOST],
@@ -460,7 +460,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         if await self._async_endpoint_exists(
                             f"{self._config[CONF_HOST]}/{self._config[CONF_PORT]}/{node[CONF_NODE]}"
                         ):
-                            _LOGGER.warning(
+                            LOGGER.warning(
                                 "The node %s of instance %s:%s already configured, you can remove it from configuration.yaml if you still have it",
                                 node[CONF_NODE],
                                 self._config[CONF_HOST],
@@ -514,7 +514,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             data=self._config,
                         )
 
-        _LOGGER.error(
+        LOGGER.error(
             "Could not import ProxmoxVE configuration, please configure it manually from Integrations"
         )
         return self.async_abort(reason="import_failed")

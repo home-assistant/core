@@ -7,7 +7,7 @@ DOMAIN = "proxmoxve"
 UPDATE_INTERVAL = 60
 INTEGRATION_NAME = "Proxmox VE"
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 CONF_CONTAINERS = "containers"
 CONF_LXC = "lxc"
