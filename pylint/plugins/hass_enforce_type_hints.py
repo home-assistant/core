@@ -2556,10 +2556,11 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
                     return True
         except NameInferenceError:
             for class_node in node.root().nodes_of_class(nodes.ClassDef):
-                if class_node.name == node.name:
-                    for infer_node in class_node.infer():
-                        if _check_ancestry(infer_node, valid_types):
-                            return True
+                if class_node.name != node.name:
+                    continue
+                for infer_node in class_node.infer():
+                    if _check_ancestry(infer_node, valid_types):
+                        return True
 
     return False
 
