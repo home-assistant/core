@@ -656,7 +656,7 @@ class ZHADevice(LogMixin):
                 f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
                 exc,
             )
-            return None
+            raise exc
 
     async def issue_cluster_command(
         self,
