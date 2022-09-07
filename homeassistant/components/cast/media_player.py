@@ -38,8 +38,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
-    MediaClass,
-    MediaType,
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TVSHOW,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -588,7 +590,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         return BrowseMedia(
             title="Cast",
-            media_class=MediaClass.DIRECTORY,
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type="",
             can_play=False,
@@ -805,7 +807,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return media_status.content_id if media_status else None
 
     @property
-    def media_content_type(self) -> MediaType | None:
+    def media_content_type(self) -> str | None:
         """Content type of current playing media."""
         # The lovelace app loops media to prevent timing out, don't show that
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
@@ -813,11 +815,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.media_is_tvshow:
-            return MediaType.TVSHOW
+            return MEDIA_TYPE_TVSHOW
         if media_status.media_is_movie:
-            return MediaType.MOVIE
+            return MEDIA_TYPE_MOVIE
         if media_status.media_is_musictrack:
-            return MediaType.MUSIC
+            return MEDIA_TYPE_MUSIC
         return None
 
     @property
