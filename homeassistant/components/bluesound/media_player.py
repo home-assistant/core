@@ -26,7 +26,7 @@ from homeassistant.components.media_player.browse_media import (
     BrowseMedia,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
+from homeassistant.components.media_player.const import MediaType
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -552,9 +552,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
+        return MediaType.MUSIC
 
     @property
     def state(self):
