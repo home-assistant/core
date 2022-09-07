@@ -43,14 +43,16 @@ def test_convert_from_liters():
     """Test conversion from liters to other units."""
     liters = 5
     assert volume_util.convert(liters, VOLUME_LITERS, VOLUME_GALLONS) == pytest.approx(
-        1.321004
+        1.32086
     )
 
 
 def test_convert_from_gallons():
     """Test conversion from gallons to other units."""
     gallons = 5
-    assert volume_util.convert(gallons, VOLUME_GALLONS, VOLUME_LITERS) == 18.925
+    assert volume_util.convert(gallons, VOLUME_GALLONS, VOLUME_LITERS) == pytest.approx(
+        18.92706
+    )
 
 
 def test_convert_from_cubic_meters():
