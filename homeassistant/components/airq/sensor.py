@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     PRESSURE_HPA,
+    SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -24,7 +25,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQCoordinator
-from .const import DOMAIN
+from .const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    COUNT_PER_DECILITERS,
+    DOMAIN,
+    LENGTH_MICROMETERS,
+    SensorDeviceClass as CustomSensorDeviceClass,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +52,41 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="dewpt",
+        name="Dew point",
+        device_class=CustomSensorDeviceClass.DEWPOINT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:water-thermometer",
+    ),
+    SensorEntityDescription(
+        key="h2s",
+        name="H2S",
+        device_class=CustomSensorDeviceClass.H2S,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="health",
+        name="Health index",
+        device_class=CustomSensorDeviceClass.INDEX_HEALTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart-pulse",
+    ),
+    SensorEntityDescription(
         key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="humidity_abs",
+        name="Absolute humidity",
+        device_class=CustomSensorDeviceClass.HUMIDITY_ABS,
+        native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:water",
     ),
     SensorEntityDescription(
         key="no2",
@@ -66,11 +103,27 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="oxygen",
+        name="Oxygen",
+        device_class=CustomSensorDeviceClass.OXYGEN,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:leaf",
+    ),
+    SensorEntityDescription(
+        key="performance",
+        name="Performance",
+        device_class=CustomSensorDeviceClass.INDEX_PERFORMANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:head-check",
+    ),
+    SensorEntityDescription(
         key="pm1",
         name="PM1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:dots-hexagon",
     ),
     SensorEntityDescription(
         key="pm2_5",
@@ -78,12 +131,63 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:dots-hexagon",
     ),
     SensorEntityDescription(
         key="pm10",
         name="PM10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:dots-hexagon",
+    ),
+    SensorEntityDescription(
+        key="cnt0_3",
+        name="Particulates count 0.3",
+        device_class=CustomSensorDeviceClass.CNT0_3,
+        native_unit_of_measurement=COUNT_PER_DECILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="cnt0_5",
+        name="Particulates count 0.5",
+        device_class=CustomSensorDeviceClass.CNT0_5,
+        native_unit_of_measurement=COUNT_PER_DECILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="cnt1",
+        name="Particulates count 1",
+        device_class=CustomSensorDeviceClass.CNT1,
+        native_unit_of_measurement=COUNT_PER_DECILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="cnt2_5",
+        name="Particulates count 2.5",
+        device_class=CustomSensorDeviceClass.CNT2_5,
+        native_unit_of_measurement=COUNT_PER_DECILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="cnt5",
+        name="Particulates count 5",
+        device_class=CustomSensorDeviceClass.CNT5,
+        native_unit_of_measurement=COUNT_PER_DECILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="cnt10",
+        name="Particulates count 10",
+        device_class=CustomSensorDeviceClass.CNT10,
+        native_unit_of_measurement=COUNT_PER_DECILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="TypPS",
+        name="Mean particulates size",
+        device_class=CustomSensorDeviceClass.MEAN_PM_SIZE,
+        native_unit_of_measurement=LENGTH_MICROMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -99,6 +203,22 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="sound",
+        name="Sound",
+        device_class=CustomSensorDeviceClass.SOUND,
+        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:ear-hearing",
+    ),
+    SensorEntityDescription(
+        key="sound_max",
+        name="Loudest sound during the averaging interval",
+        device_class=CustomSensorDeviceClass.SOUND,
+        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:ear-hearing",
     ),
     SensorEntityDescription(
         key="temperature",
