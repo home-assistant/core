@@ -987,12 +987,16 @@ async def async_binding_operation(
             )
         )
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
+    errors = False
     for outcome, log_msg in zip(res, bind_tasks):
         if isinstance(outcome, Exception):
             fmt = f"{log_msg[1]} failed: %s"
+            errors = True
         else:
             fmt = f"{log_msg[1]} completed: %s"
         zdo.debug(fmt, *(log_msg[2] + (outcome,)))
+    if errors:
+        raise Exception("Binding operation failed")
 
 
 @websocket_api.require_admin
