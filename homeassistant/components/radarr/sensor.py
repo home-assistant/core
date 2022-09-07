@@ -4,8 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any
+from typing import Generic
 
+from aiopyarr import RootFolder
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -32,37 +33,68 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 
 from . import RadarrEntity
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import RadarrDataUpdateCoordinator
+from .coordinator import RadarrDataUpdateCoordinator, T
+
+
+def get_space(coordinator: RadarrDataUpdateCoordinator, name: str) -> str:
+    """Get space."""
+    space = [
+        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
+        for mount in coordinator.data
+        if name in mount.path
+    ]
+    return f"{space[0]:.2f}"
+
+
+def get_modified_description(
+    description: RadarrSensorEntityDescription, mount: RootFolder
+) -> tuple[RadarrSensorEntityDescription, str]:
+    """Return modified description and folder name."""
+    desc = deepcopy(description)
+    name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+    desc.key = f"{description.key}_{name}"
+    desc.name = f"{description.name} {name}".capitalize()
+    return desc, name
 
 
 @dataclass
-class RadarrSensorEntityDescription(SensorEntityDescription):
+class RadarrSensorEntityDescriptionMixIn(Generic[T]):
+    """Mixin for required keys."""
+
+    value: Callable[[RadarrDataUpdateCoordinator[T], str], str]
+
+
+@dataclass
+class RadarrSensorEntityDescription(
+    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
+):
     """Class to describe a Radarr sensor."""
 
-    value: Callable[[RadarrDataUpdateCoordinator, str], Any] = lambda val, _: val
+    description_fn: Callable[
+        [RadarrSensorEntityDescription, RootFolder], tuple[RadarrSensorEntityDescription, str] | None
+    ] = lambda _, __: None
 
 
-SENSOR_TYPES: tuple[RadarrSensorEntityDescription, ...] = (
-    RadarrSensorEntityDescription(
+SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
+    "disk_space": RadarrSensorEntityDescription(
         key="diskspace",
-        name="Disk Space",
+        name="Disk space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
-        value=lambda coordinator, name: get_space(  # pylint:disable=unnecessary-lambda
-            coordinator, name
-        ),
+        value=get_space,
+        description_fn=get_modified_description,
     ),
-    RadarrSensorEntityDescription(
+    "movie": RadarrSensorEntityDescription(
         key="movies",
         name="Movies",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
         entity_registry_enabled_default=False,
-        value=lambda coordinator, _: coordinator.movies,
+        value=lambda coordinator, _: coordinator.data,
     ),
-)
+}
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+SENSOR_KEYS: list[str] = [description.key for description in SENSOR_TYPES.values()]
 
 BYTE_SIZES = [
     DATA_BYTES,
@@ -90,7 +122,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 PARALLEL_UPDATES = 1
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
@@ -110,24 +142,27 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
-    coordinator: RadarrDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinators: dict[str, RadarrDataUpdateCoordinator] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     entities = []
-    for description in SENSOR_TYPES:
-        if description.key == "diskspace":
-            for mount in coordinator.disk_space:
-                desc = deepcopy(description)
-                name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
-                desc.key = f"{description.key}_{name}"
-                desc.name = f"{description.name} {name.capitalize()}"
-                entities.append(RadarrSensor(coordinator, desc, name))
-        else:
+    for coordinator_type, description in SENSOR_TYPES.items():
+        coordinator = coordinators[coordinator_type]
+        if coordinator_type != "disk_space":
             entities.append(RadarrSensor(coordinator, description))
+        else:
+            entities.extend(
+                RadarrSensor(coordinator, *get_modified_description(description, mount))
+                for mount in coordinator.data
+                if description.description_fn
+            )
     async_add_entities(entities)
 
 
 class RadarrSensor(RadarrEntity, SensorEntity):
     """Implementation of the Radarr sensor."""
 
+    coordinator: RadarrDataUpdateCoordinator
     entity_description: RadarrSensorEntityDescription
 
     def __init__(
@@ -147,13 +182,3 @@ class RadarrSensor(RadarrEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value(self.coordinator, self.folder_name)
-
-
-def get_space(coordinator: RadarrDataUpdateCoordinator, name: str) -> str:
-    """Get space."""
-    space = [
-        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
-        for mount in coordinator.disk_space
-        if name in mount.path
-    ]
-    return f"{space[0]:.2f}"

@@ -1,9 +1,9 @@
 """Data update coordinator for the Radarr integration."""
 from __future__ import annotations
 
-import asyncio
+from abc import abstractmethod
 from datetime import timedelta
-from typing import cast
+from typing import Generic, TypeVar, cast
 
 from aiopyarr import RootFolder, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -13,13 +13,14 @@ from aiopyarr.radarr_client import RadarrClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
+T = TypeVar("T", type[None], SystemStatus, list[RootFolder])
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
+
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: ConfigEntry
@@ -38,23 +39,14 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.api_client = api_client
-        self.disk_space: list[RootFolder] = []
         self.host_configuration = host_configuration
-        self.movies: int = 0
         self.system_status: SystemStatus = SystemStatus({"": ""})
+        self.system_version: str | None = None
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> T:
         """Get the latest data from Radarr."""
-        reg = er.async_get(self.hass)
         try:
-            [self.system_status, self.disk_space] = await asyncio.gather(
-                *[
-                    self.api_client.async_get_system_status(),
-                    self.api_client.async_get_root_folders(),
-                ]
-            )
-            if (entry := reg.async_get("sensor.radarr_movies")) and not entry.disabled:
-                self.movies = len(cast(list, await self.api_client.async_get_movies()))
+            return await self._fetch_data()
 
         except exceptions.ArrConnectionException as ex:
             raise UpdateFailed(ex) from ex
@@ -62,3 +54,32 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(
                 "API Key is no longer valid. Please reauthenticate"
             ) from ex
+
+    @abstractmethod
+    async def _fetch_data(self) -> T:
+        """Fetch the actual data."""
+        raise NotImplementedError
+
+
+class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Status update coordinator for Radarr."""
+
+    async def _fetch_data(self) -> None:
+        """Fetch the data."""
+        self.system_status = await self.api_client.async_get_system_status()
+
+
+class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Disk space update coordinator for Radarr."""
+
+    async def _fetch_data(self) -> list[RootFolder]:
+        """Fetch the data."""
+        return cast(list, await self.api_client.async_get_root_folders())
+
+
+class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Movies update coordinator."""
+
+    async def _fetch_data(self) -> int:
+        """Fetch the movies data."""
+        return len(cast(list, await self.api_client.async_get_movies()))

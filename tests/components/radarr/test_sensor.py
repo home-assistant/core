@@ -14,7 +14,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test for successfully setting up the Radarr platform."""
-    for description in SENSOR_TYPES:
+    for description in SENSOR_TYPES.values():
         description.entity_registry_enabled_default = True
     await setup_integration(hass, aioclient_mock)
 

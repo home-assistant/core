@@ -54,5 +54,5 @@ async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMoc
     assert device.configuration_url == "http://192.168.1.189:7887/test"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == DEFAULT_NAME
-    assert device.name == DEFAULT_NAME
+    assert device.name == "Mock Title"
     assert device.sw_version == "10.0.0.34882"

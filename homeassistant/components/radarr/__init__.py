@@ -13,7 +13,12 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import RadarrDataUpdateCoordinator
+from .coordinator import (
+    DiskSpaceDataUpdateCoordinator,
+    MoviesDataUpdateCoordinator,
+    RadarrDataUpdateCoordinator,
+    StatusDataUpdateCoordinator,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -29,10 +34,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host_configuration=host_configuration,
         session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
-    coordinator = RadarrDataUpdateCoordinator(hass, host_configuration, radarr)
-    await coordinator.async_config_entry_first_refresh()
+    coordinators: dict[str, RadarrDataUpdateCoordinator] = {
+        "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
+        "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
+        "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
+    }
+    # Temporary, until we add diagnostic entities
+    _version = None
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
+        if isinstance(coordinator, StatusDataUpdateCoordinator):
+            _version = coordinator.system_status.version
+        coordinator.system_version = _version
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -50,19 +65,19 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class RadarrEntity(CoordinatorEntity):
+class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     """Defines a base Radarr entity."""
 
     coordinator: RadarrDataUpdateCoordinator
 
-    def __init__(self, coordinator: RadarrDataUpdateCoordinator) -> None:
-        """Initialize the Radarr entity."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.host_configuration.url,
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about the Radarr instance."""
+        return DeviceInfo(
+            configuration_url=self.coordinator.host_configuration.url,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
-            sw_version=coordinator.system_status.version,
+            name=self.coordinator.config_entry.title,
+            sw_version=self.coordinator.system_version,
         )
