@@ -160,7 +160,7 @@ async def test_sensor_numeric_state(hass):
     assert state.attributes.get("observations")[1]["prob_given_false"] == 0.2
     assert abs(state.attributes.get("probability") - 0.663) < 0.01
     # Here we have two positive observations as both are in range. We do a 2-step bayes. The output of the first is used as the (updated) prior in the second.
-    # C1st step P(A) = 0.2, P(B|A) = 0.7, P(B|notA) = 0.4 -> 0.304
+    # 1st step P(A) = 0.2, P(B|A) = 0.7, P(B|notA) = 0.4 -> 0.304
     # 2nd update: P(A) = 0.304, P(B|A) = 0.9, P(B|notA) = 0.2 -> 0.663
 
     assert state.state == "on"
