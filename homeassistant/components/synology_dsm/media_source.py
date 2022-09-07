@@ -1,9 +1,13 @@
-"""Expose Radio Browser as a media source."""
+"""Expose Synology DSM as a media source."""
 from __future__ import annotations
 
-import asyncio
 import mimetypes
+from pathlib import Path
+import tempfile
 
+from aiohttp import web
+
+from homeassistant.components import http
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
@@ -17,7 +21,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 from .models import SynologyDSMData
@@ -28,6 +32,12 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     # Synology photos support only a single config entry
     entries = hass.config_entries.async_entries(DOMAIN)
     return SynologyPhotosMediaSource(hass, entries)
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up local media source."""
+    hass.http.register_view(SynologyDsmMediaView(hass))
 
 
 class SynologyPhotosMediaSource(MediaSource):
@@ -87,20 +97,21 @@ class SynologyPhotosMediaSource(MediaSource):
                     )
                 )
             return ret
-        identifier_parts = item.identifier.split(":")
+        identifier_parts = item.identifier.split("/")
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier_parts[0]]
 
         if len(identifier_parts) == 1:
             # Get Albums
             # The library works sync, and this expects async calls
-            loop = asyncio.get_event_loop()
-            albums = await loop.run_in_executor(None, diskstation.api.photos.get_albums)
+            albums = await self.hass.loop.run_in_executor(
+                None, diskstation.api.photos.get_albums
+            )
             ret = []
             for album in albums:
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f'{item.identifier}:{album["id"]}',
+                        identifier=f'{item.identifier}/{album["id"]}',
                         media_class=MEDIA_CLASS_DIRECTORY,
                         media_content_type=MEDIA_TYPE_IMAGE,
                         title=album["name"],
@@ -114,8 +125,7 @@ class SynologyPhotosMediaSource(MediaSource):
         # Request items of album
         # Get Items
         # The library works sync, and this expects async calls
-        loop = asyncio.get_event_loop()
-        items = await loop.run_in_executor(
+        items = await self.hass.loop.run_in_executor(
             None,
             diskstation.api.photos.get_items,
             identifier_parts[1],
@@ -132,7 +142,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f'{item.identifier}:{items_item["additional"]["thumbnail"]["cache_key"]}:{items_item["filename"]}',
+                        identifier=f'{item.identifier}/{items_item["additional"]["thumbnail"]["cache_key"]}/{items_item["filename"]}',
                         media_class=MEDIA_CLASS_IMAGE,
                         media_content_type=mime_type,
                         title=items_item["filename"],
@@ -150,13 +160,11 @@ class SynologyPhotosMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        parts = item.identifier.split(":")
+        parts = item.identifier.split("/")
         cache_key = parts[2]
-        image_id = cache_key.split("_")[0]
         mime_type, _ = mimetypes.guess_type(parts[3])
         assert isinstance(mime_type, str)
-        image = await self.async_get_thumbnail(cache_key, image_id, "xl", parts[0])
-        return PlayMedia(image, mime_type)
+        return PlayMedia(f"/synology_dsm/{parts[0]}/{cache_key}/{parts[3]}", mime_type)
 
     async def async_get_thumbnail(
         self, cache_key: str, image_id: str, size: str, diskstation_unique_id: str
@@ -166,8 +174,60 @@ class SynologyPhotosMediaSource(MediaSource):
             raise Unresolvable("Diskstation not initialized")
 
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][diskstation_unique_id]
-        loop = asyncio.get_event_loop()
-        thumbnail = await loop.run_in_executor(
+        thumbnail = await self.hass.loop.run_in_executor(
             None, diskstation.api.photos.get_thumbnail_url, image_id, cache_key, size
         )
         return str(thumbnail)
+
+
+class SynologyDsmMediaView(http.HomeAssistantView):
+    """Synology Media Finder View."""
+
+    url = "/synology_dsm/{source_dir_id}/{location:.*}"
+    name = "synology_dsm"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the media view."""
+        self.hass = hass
+        self.tempfile = tempfile.NamedTemporaryFile()
+        self.tempfile_in_buffer = ""
+
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
+        """Start a GET request."""
+        # We cache the image, so we don't need to ask for it multiple times
+        full_file_path = f"{source_dir_id}/{location}"
+        if full_file_path == self.tempfile_in_buffer:
+            path = Path(self.tempfile.name)
+            return web.FileResponse(path)
+
+        # Close the tempfile and clear it
+        self.tempfile.close()
+        self.tempfile_in_buffer = ""
+
+        parts = location.split("/")
+        cache_key = parts[0]
+        image_id = cache_key.split("_")[0]
+        mime_type, _ = mimetypes.guess_type(parts[1])
+        assert isinstance(mime_type, str)
+        if not self.hass.data.get(DOMAIN):
+            raise web.HTTPNotFound()
+
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
+        image = await self.hass.loop.run_in_executor(
+            None, diskstation.api.photos.get_thumbnail, image_id, cache_key, "xl"
+        )
+        file_parts = parts[1].split(".")
+        file_extension = file_parts[len(file_parts) - 1]
+        self.tempfile = tempfile.NamedTemporaryFile(
+            suffix=f".{file_extension}", delete=False
+        )
+        fname = self.tempfile.name
+        self.tempfile.write(image)
+        path = Path(fname)
+
+        # Store the file currently in buffer
+        self.tempfile_in_buffer = full_file_path
+
+        return web.FileResponse(path)
