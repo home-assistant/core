@@ -5,6 +5,8 @@ import asyncio
 import logging
 from unittest.mock import MagicMock, call, patch
 
+from bleak import BleakError
+
 from homeassistant.components.bluetooth import (
     DOMAIN,
     BluetoothChange,
@@ -158,6 +160,80 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
     assert async_handle_update.mock_calls[-1] == call({"testdata": True})
+
+    cancel()
+
+
+async def test_bleak_error_and_recover(
+    hass: HomeAssistant, mock_bleak_scanner_start, caplog
+):
+    """Test bleak error handling and recovery."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    flag = True
+
+    def _update_method(service_info: BluetoothServiceInfoBleak):
+        return {"testdata": None}
+
+    def _poll_needed(*args, **kwargs):
+        return True
+
+    async def _poll(*args, **kwargs):
+        nonlocal flag
+        if flag:
+            raise BleakError("Connection was aborted")
+        return {"testdata": flag}
+
+    coordinator = ActiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
+        poll_debouncer=Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=0,
+            immediate=True,
+        ),
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    processor = MagicMock()
+    coordinator.async_register_processor(processor)
+    async_handle_update = processor.async_handle_update
+
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        cancel = coordinator.async_start()
+
+    assert saved_callback is not None
+
+    # First poll fails
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    assert async_handle_update.mock_calls[-1] == call({"testdata": None})
+
+    assert (
+        "aa:bb:cc:dd:ee:ff: Bluetooth error whilst polling: Connection was aborted"
+        in caplog.text
+    )
+
+    # Second poll works
+    flag = False
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
 

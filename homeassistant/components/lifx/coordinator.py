@@ -118,9 +118,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 await self.async_update_color_zones()
 
             if lifx_features(self.device)["hev"]:
-                if self.device.hev_cycle_configuration is None:
-                    self.device.get_hev_configuration()
-
                 await self.async_get_hev_cycle()
 
     async def async_update_color_zones(self) -> None:
@@ -195,3 +192,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 apply=apply,
             )
         )
+
+    async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
+        """Start or stop an HEV cycle on a LIFX Clean bulb."""
+        if lifx_features(self.device)["hev"]:
+            await async_execute_lifx(
+                partial(self.device.set_hev_cycle, enable=enable, duration=duration)
+            )

@@ -14,7 +14,7 @@ NOT_GOVEE_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 GVH5075_SERVICE_INFO = BluetoothServiceInfo(
-    name="GVH5075_2762",
+    name="GVH5075 2762",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     rssi=-63,
     manufacturer_data={
@@ -26,7 +26,7 @@ GVH5075_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 GVH5177_SERVICE_INFO = BluetoothServiceInfo(
-    name="GVH5177_2EC8",
+    name="GVH5177 2EC8",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     rssi=-56,
     manufacturer_data={

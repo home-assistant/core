@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
+            "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lva van",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "discover_timeout": "Nem tal\u00e1lhat\u00f3 a Hue bridge",
             "invalid_host": "\u00c9rv\u00e9nytelen c\u00edm",
-            "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridget",
+            "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridge",
             "not_hue_bridge": "Nem egy Hue Bridge",
             "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "linking": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
-            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
+            "register_failed": "A regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
         },
         "step": {
             "init": {
