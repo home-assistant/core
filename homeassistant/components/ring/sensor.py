@@ -82,7 +82,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
 class HealthDataRingSensor(RingSensor):
     """Ring sensor that relies on health data."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -90,7 +90,7 @@ class HealthDataRingSensor(RingSensor):
             self._device, self._health_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -125,7 +125,7 @@ class HistoryRingSensor(RingSensor):
 
     _latest_event = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -133,7 +133,7 @@ class HistoryRingSensor(RingSensor):
             self._device, self._history_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 

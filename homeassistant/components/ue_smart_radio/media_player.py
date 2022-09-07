@@ -115,7 +115,7 @@ class UERadioDevice(MediaPlayerEntity):
             self._session,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         request = send_request(
             {
@@ -192,35 +192,35 @@ class UERadioDevice(MediaPlayerEntity):
         """Title of current playing media."""
         return self._media_title
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on specified media player or all."""
         self.send_command(["power", 1])
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off specified media player or all."""
         self.send_command(["power", 0])
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send the media player the command for play/pause."""
         self.send_command(["play"])
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send the media player the command for pause."""
         self.send_command(["pause"])
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send the media player the stop command."""
         self.send_command(["stop"])
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the media player the command for prev track."""
         self.send_command(["button", "rew"])
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send the media player the command for next track."""
         self.send_command(["button", "fwd"])
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         if mute:
             self._last_volume = self._volume
@@ -228,6 +228,6 @@ class UERadioDevice(MediaPlayerEntity):
         else:
             self.send_command(["mixer", "volume", self._last_volume * 100])
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.send_command(["mixer", "volume", volume * 100])
