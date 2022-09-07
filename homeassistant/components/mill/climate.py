@@ -92,7 +92,6 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
     _attr_fan_modes = [FAN_ON, FAN_OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, heater):
@@ -120,8 +119,10 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
             )
+            self._attr_target_temperature_step = PRECISION_WHOLE
         else:
             self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_target_temperature_step = PRECISION_HALVES
 
         self._update_attr(heater)
 
@@ -130,7 +131,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_heater_temp(
-            self._id, int(temperature)
+            self._id, float(temperature)
         )
         await self.coordinator.async_request_refresh()
 
