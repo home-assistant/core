@@ -171,39 +171,43 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             return None
         return self._latest_version_firmware.changelog
 
+    def reset_progress(self) -> None:
+        """Reset progress."""
+        if self._progress_unsub:
+            self._progress_unsub()
+            self._progress_unsub = None
+        self._num_files_installed = 0
+        self._attr_in_progress = False
+        self.async_write_ha_state()
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         firmware = self._latest_version_firmware
         assert firmware
-        try:
-            self._attr_in_progress = 0
-            self.async_write_ha_state()
-            self._progress_unsub = self.node.on(
-                "firmware update progress", self._update_progress
-            )
-            for file in firmware.files:
+        self._attr_in_progress = 0
+        self.async_write_ha_state()
+        self._progress_unsub = self.node.on(
+            "firmware update progress", self._update_progress
+        )
+        for file in firmware.files:
+            try:
                 await self.driver.controller.async_begin_ota_firmware_update(
                     self.node, file
                 )
-                self._num_files_installed += 1
-                self._attr_in_progress = floor(
-                    100 * self._num_files_installed / len(firmware.files)
-                )
-                self.async_write_ha_state()
-        except BaseZwaveJSServerError as err:
-            raise HomeAssistantError(err) from err
-        else:
-            self._attr_installed_version = self._attr_latest_version = firmware.version
-            self._latest_version_firmware = None
-        finally:
-            if self._progress_unsub:
-                self._progress_unsub()
-                self._progress_unsub = None
-            self._num_files_installed = 0
-            self._attr_in_progress = False
+            except BaseZwaveJSServerError as err:
+                self.reset_progress()
+                raise HomeAssistantError(err) from err
+            self._num_files_installed += 1
+            self._attr_in_progress = floor(
+                100 * self._num_files_installed / len(firmware.files)
+            )
             self.async_write_ha_state()
+
+        self._attr_installed_version = self._attr_latest_version = firmware.version
+        self._latest_version_firmware = None
+        self.reset_progress()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
