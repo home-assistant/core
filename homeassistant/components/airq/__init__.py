@@ -9,10 +9,12 @@ from datetime import timedelta
 import logging
 
 from aioairq import AirQ
+from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -72,7 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         passw=entry.data[CONF_PASSWORD],
     )
 
-    await coordinator.async_fetch_device_info()
+    try:
+        await coordinator.async_fetch_device_info()
+    except ClientConnectionError as ex:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to device {entry.data[CONF_IP_ADDRESS]}. "
+            "Check if the device is on and connected to the same WiFi as the host"
+        ) from ex
 
     # Query the device for the first time and initialise coordinator.data
     await coordinator.async_config_entry_first_refresh()
