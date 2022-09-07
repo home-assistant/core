@@ -211,6 +211,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=CustomSensorDeviceClass.PRESSURE_REL,
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
     ),
     SensorEntityDescription(
         key="c3h8_MIPEX",
