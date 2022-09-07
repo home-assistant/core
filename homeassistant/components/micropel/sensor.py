@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 micropelModule,
                 sensor.get(CONF_UNIQUE_ID),
                 sensor[CONF_NAME] if CONF_NAME in sensor else None,
-                sensor[CONF_PLC] if CONF_PLC in sensor else DEFAULT_PLC,
+                sensor.get(CONF_PLC, DEFAULT_PLC),
                 sensor[CONF_ADDRESS],
                 sensor[CONF_REGISTER_TYPE] if CONF_REGISTER_TYPE in sensor else None,
                 sensor[CONF_UNIT_OF_MEASUREMENT]
