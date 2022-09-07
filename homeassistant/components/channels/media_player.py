@@ -248,7 +248,9 @@ class ChannelsPlayer(MediaPlayerEntity):
                 self.update_state(response)
                 break
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the player."""
         if media_type == MediaType.CHANNEL:
             response = self.client.play_channel(media_id)

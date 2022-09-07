@@ -198,7 +198,9 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.set_power(False)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if media_content_id not in (None, "root"):
@@ -233,7 +235,7 @@ class ArcamFmj(MediaPlayerEntity):
         return root
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
 

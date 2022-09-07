@@ -1022,7 +1022,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         if self.is_grouped and not self.is_master:
@@ -1069,7 +1069,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         return await self.send_bluesound_command("Volume?mute=0")
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

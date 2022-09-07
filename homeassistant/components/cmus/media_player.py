@@ -184,7 +184,9 @@ class CmusDevice(MediaPlayerEntity):
         if current_volume <= 100:
             self._remote.cmus.set_volume(int(current_volume) - 5)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play command."""
         if media_type in [MediaType.MUSIC, MediaType.PLAYLIST]:
             self._remote.cmus.player_play_file(media_id)

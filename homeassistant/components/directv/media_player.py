@@ -315,7 +315,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         await self.dtv.remote("ffwd", self._address)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Select input source."""
         if media_type != MediaType.CHANNEL:
