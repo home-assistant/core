@@ -53,7 +53,6 @@ async def test_flow_user_key_api_key_exists(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        unique_id="MYUSERKEY-MYAPIKEY",
     )
 
     entry.add_to_hass(hass)

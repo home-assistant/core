@@ -75,7 +75,7 @@ async def test_unique_id_updated(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.unique_id == "MYUSERKEY-MYAPIKEY"
+    assert entry.unique_id is None
 
 
 async def test_async_setup_entry_failed_invalid_api_key(
