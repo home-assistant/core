@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensors.append(
             MicropelRegisterSensor(
                 micropelModule,
-                sensor[CONF_UNIQUE_ID] if CONF_UNIQUE_ID in sensor else None,
+                sensor.get(CONF_UNIQUE_ID),
                 sensor[CONF_NAME] if CONF_NAME in sensor else None,
                 sensor[CONF_PLC] if CONF_PLC in sensor else DEFAULT_PLC,
                 sensor[CONF_ADDRESS],
