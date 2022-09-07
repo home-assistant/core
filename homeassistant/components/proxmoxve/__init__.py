@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
@@ -19,11 +18,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -31,6 +31,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    _LOGGER,
     CONF_CONTAINERS,
     CONF_LXC,
     CONF_NODE,
@@ -44,13 +45,12 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     INTEGRATION_NAME,
-    PLATFORMS,
     PROXMOX_CLIENT,
     UPDATE_INTERVAL,
     ProxmoxType,
 )
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = ["binary_sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -95,6 +95,26 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
     # import to config flow
+    _LOGGER.warning(
+        # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
+        "Configuration of the Proxmox in YAML is deprecated and should "
+        "be removed in 2022.12. Resolve the import issues and remove the "
+        "YAML configuration from your configuration.yaml file",
+    )
+    async_create_issue(
+        async_get_hass(),
+        DOMAIN,
+        "yaml_deprecated",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+        translation_placeholders={
+            "integration": "Proxmox VE",
+            "platform": DOMAIN,
+        },
+    )
+
     if DOMAIN in config:
         for conf in config[DOMAIN]:
             hass.async_create_task(
@@ -117,9 +137,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     password = entry_data[CONF_PASSWORD]
     verify_ssl = entry_data[CONF_VERIFY_SSL]
 
+    # Construct an API client with the given data for the given host
+    proxmox_client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
     try:
-        # Construct an API client with the given data for the given host
-        proxmox_client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
         await hass.async_add_executor_job(proxmox_client.build_client)
     except AuthenticationError as error:
         raise ConfigEntryAuthFailed from error
@@ -131,67 +151,60 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             port,
         )
         return False
-    except ConnectTimeout:
-        _LOGGER.warning("Connection to host %s timed out during setup", host)
-        return False
+    except ConnectTimeout as err:
+        raise ConfigEntryNotReady(
+            f"Connection to host {host} timed out during setup"
+        ) from err
 
     coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
 
     proxmox = await hass.async_add_executor_job(proxmox_client.get_api_client)
 
-    node = entry_data[CONF_NODE]
-    node_coordinators = coordinators[node] = {}
+    node_coordinators = coordinators[entry_data[CONF_NODE]] = {}
 
     # Proxmox instance info
-    coordinator = create_coordinator_container_vm(
+    coordinator = create_coordinator_proxmox(
         hass, proxmox, entry_data[CONF_HOST], None, None, ProxmoxType.Proxmox
     )
-
-    # Fetch initial data
-    await coordinator.async_refresh()
-
+    await coordinator.async_config_entry_first_refresh()
     node_coordinators[ProxmoxType.Proxmox] = coordinator
 
     # Node info
-    coordinator = create_coordinator_container_vm(
-        hass, proxmox, entry_data[CONF_HOST], node, None, ProxmoxType.Node
+    coordinator = create_coordinator_proxmox(
+        hass,
+        proxmox,
+        entry_data[CONF_HOST],
+        entry_data[CONF_NODE],
+        None,
+        ProxmoxType.Node,
     )
-
-    # Fetch initial data
-    await coordinator.async_refresh()
-
+    await coordinator.async_config_entry_first_refresh()
     node_coordinators[ProxmoxType.Node] = coordinator
 
     # QEMU info
     for vm_id in entry_data[CONF_QEMU]:
-        coordinator = create_coordinator_container_vm(
+        coordinator = create_coordinator_proxmox(
             hass,
             proxmox,
             entry_data[CONF_HOST],
-            node,
+            entry_data[CONF_NODE],
             vm_id,
             ProxmoxType.QEMU,
         )
-
-        # Fetch initial data
-        await coordinator.async_refresh()
-
+        await coordinator.async_config_entry_first_refresh()
         node_coordinators[vm_id] = coordinator
 
     # LXC info
     for container_id in entry_data[CONF_LXC]:
-        coordinator = create_coordinator_container_vm(
+        coordinator = create_coordinator_proxmox(
             hass,
             proxmox,
             entry_data[CONF_HOST],
-            node,
+            entry_data[CONF_NODE],
             container_id,
             ProxmoxType.LXC,
         )
-
-        # Fetch initial data
-        await coordinator.async_refresh()
-
+        await coordinator.async_config_entry_first_refresh()
         node_coordinators[container_id] = coordinator
 
     hass.data.setdefault(DOMAIN, {})
@@ -220,9 +233,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def create_coordinator_container_vm(
-    hass, proxmox, host_name, node_name, vm_id, vm_type
-):
+def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_type):
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
     async def async_update_data():
@@ -230,7 +241,7 @@ def create_coordinator_container_vm(
 
         def poll_api():
             """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
+            vm_status = call_api_proxmox(proxmox, node_name, vm_id, vm_type)
             return vm_status
 
         vm_status = await hass.async_add_executor_job(poll_api)
@@ -241,7 +252,7 @@ def create_coordinator_container_vm(
             )
             return None
 
-        return parse_api_container_vm(vm_status, vm_type)
+        return parse_api_proxmox(vm_status, vm_type)
 
     return DataUpdateCoordinator(
         hass,
@@ -252,7 +263,7 @@ def create_coordinator_container_vm(
     )
 
 
-def parse_api_container_vm(status, info_type):
+def parse_api_proxmox(status, info_type):
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
@@ -273,7 +284,7 @@ def parse_api_container_vm(status, info_type):
         }
 
 
-def call_api_container_vm(proxmox, node_name, vm_id, info_type):
+def call_api_proxmox(proxmox, node_name, vm_id, info_type):
     """Make proper api calls."""
     status = None
 

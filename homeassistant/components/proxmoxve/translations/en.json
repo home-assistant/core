@@ -83,6 +83,10 @@
         "import_success": {
             "description": "The YAML configuration of node {node} of {host}:{port} instance of {integration} (`{platform}`) has been imported into the UI automatically.\n\nCan be safely removed from your configuration.yaml file.",
             "title": "Configuration in YAML file has been imported and can be removed"
+        },
+        "yaml_deprecated": {
+            "description": "Configuration of the {integration} (`{platform}`) in YAML is deprecated and should be removed in 2022.12. Resolve the import issues and remove the YAML configuration from your `configuration.yaml` file.",
+            "title": "Configuration of the {integration} in YAML is deprecated"
         }
     },
     "options": {

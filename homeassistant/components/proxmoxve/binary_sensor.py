@@ -1,7 +1,5 @@
 """Binary sensor to read Proxmox VE data."""
 
-import logging
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -14,8 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, ProxmoxEntity, device_info
 from .const import CONF_LXC, CONF_NODE, CONF_QEMU, ProxmoxType
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

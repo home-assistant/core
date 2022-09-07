@@ -1,10 +1,13 @@
 """Constants for ProxmoxVE."""
+import logging
+
 from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "proxmoxve"
-PLATFORMS = ["binary_sensor"]
 UPDATE_INTERVAL = 60
 INTEGRATION_NAME = "Proxmox VE"
+
+_LOGGER = logging.getLogger(__package__)
 
 CONF_CONTAINERS = "containers"
 CONF_LXC = "lxc"

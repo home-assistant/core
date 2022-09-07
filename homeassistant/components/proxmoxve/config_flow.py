@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 import proxmoxer
@@ -26,6 +25,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from . import ProxmoxClient
 from .const import (
+    _LOGGER,
     CONF_CONTAINERS,
     CONF_LXC,
     CONF_NODE,
@@ -40,8 +40,6 @@ from .const import (
     ID,
     INTEGRATION_NAME,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
@@ -320,7 +318,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 DOMAIN,
                 f"import_invalid_port_{DOMAIN}_{host}_{port}",
                 is_fixable=False,
-                severity=IssueSeverity.WARNING,
+                severity=IssueSeverity.ERROR,
                 translation_key="import_invalid_port",
                 breaks_in_ha_version="2022.12.0",
                 translation_placeholders={
@@ -354,7 +352,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     f"import_auth_error_{DOMAIN}_{host}_{port}",
                     breaks_in_ha_version="2022.12.0",
                     is_fixable=False,
-                    severity=IssueSeverity.WARNING,
+                    severity=IssueSeverity.ERROR,
                     translation_key="import_auth_error",
                     translation_placeholders={
                         "integration": INTEGRATION_NAME,
@@ -371,7 +369,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     f"import_ssl_rejection_{DOMAIN}_{host}_{port}",
                     breaks_in_ha_version="2022.12.0",
                     is_fixable=False,
-                    severity=IssueSeverity.WARNING,
+                    severity=IssueSeverity.ERROR,
                     translation_key="import_ssl_rejection",
                     translation_placeholders={
                         "integration": INTEGRATION_NAME,
@@ -388,7 +386,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     f"import_cant_connect_{DOMAIN}_{host}_{port}",
                     breaks_in_ha_version="2022.12.0",
                     is_fixable=False,
-                    severity=IssueSeverity.WARNING,
+                    severity=IssueSeverity.ERROR,
                     translation_key="import_cant_connect",
                     translation_placeholders={
                         "integration": INTEGRATION_NAME,
@@ -405,7 +403,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     f"import_general_error_{DOMAIN}_{host}_{port}",
                     breaks_in_ha_version="2022.12.0",
                     is_fixable=False,
-                    severity=IssueSeverity.WARNING,
+                    severity=IssueSeverity.ERROR,
                     translation_key="import_general_error",
                     translation_placeholders={
                         "integration": INTEGRATION_NAME,
@@ -494,16 +492,6 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         for container_id in node[CONF_CONTAINERS]:
                             self._config[CONF_LXC].append(container_id)
 
-                        _LOGGER.warning(
-                            # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
-                            "Configuration of the Proxmox in YAML is deprecated and "
-                            "will be removed in Home Assistant 2022.12; Your existing configuration of node"
-                            "%s of %s:%s instance has been imported into the UI automatically and "
-                            "can be safely removed from your configuration.yaml file",
-                            node[CONF_NODE],
-                            host,
-                            port,
-                        )
                         async_create_issue(
                             async_get_hass(),
                             DOMAIN,

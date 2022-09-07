@@ -83,6 +83,10 @@
     "import_node_not_exist": {
       "title": "Node {node} does not exist in {host}:{port}",
       "description": "The {node} of the {host}:{port} instance of {integration} (`{platform}`) present in the YAML configuration does not exist in this instance and was ignored in the import.\n\nYou must remove this configuration from your .yaml configuration and restart Home Assistant."
+    },
+    "yaml_deprecated": {
+      "title": "Configuration of the {integration} in YAML is deprecated",
+      "description": "Configuration of the {integration} (`{platform}`) in YAML is deprecated and should be removed in 2022.12. Resolve the import issues and remove the YAML configuration from your `configuration.yaml` file."
     }
   },
   "options": {
