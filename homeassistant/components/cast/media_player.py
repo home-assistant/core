@@ -39,17 +39,13 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
     MediaClass,
+    MediaPlayerState,
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_BUFFERING,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -772,27 +768,27 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return (media_status, media_status_received)
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         # The lovelace app loops media to prevent timing out, don't show that
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
-                return STATE_PLAYING
+                return MediaPlayerState.PLAYING
             if media_status.player_state == MEDIA_PLAYER_STATE_BUFFERING:
-                return STATE_BUFFERING
+                return MediaPlayerState.BUFFERING
             if media_status.player_is_paused:
-                return STATE_PAUSED
+                return MediaPlayerState.PAUSED
             if media_status.player_is_idle:
-                return STATE_IDLE
+                return MediaPlayerState.IDLE
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
             if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
                 # Some apps don't report media status, show the player as playing
-                return STATE_PLAYING
-            return STATE_IDLE
+                return MediaPlayerState.PLAYING
+            return MediaPlayerState.IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         return None
 
     @property
