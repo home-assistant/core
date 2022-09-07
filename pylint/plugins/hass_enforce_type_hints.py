@@ -1525,7 +1525,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="media_content_type",
-                    return_type=["str", None],
+                    return_type=["MediaType", "str", None],
                 ),
                 TypeHintMatch(
                     function_name="media_duration",
@@ -1634,7 +1634,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="repeat",
-                    return_type=["str", None],
+                    return_type=["RepeatMode", None],
                 ),
                 TypeHintMatch(
                     function_name="group_members",
