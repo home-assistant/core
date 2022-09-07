@@ -137,6 +137,7 @@ def _mocked_infrared_bulb() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 29  # LIFX A19 Night Vision
     bulb.infrared_brightness = 65535
+    bulb.set_infrared = MockLifxCommand(bulb)
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=65535)
     return bulb
 

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, INFRARED_BRIGHTNESS
+from .const import DOMAIN, INFRARED_BRIGHTNESS, INFRARED_BRIGHTNESS_VALUES_MAP
 from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .util import lifx_features
@@ -17,6 +17,8 @@ INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     name="Infrared brightness",
     entity_category=EntityCategory.CONFIG,
 )
+
+INFRARED_BRIGHTNESS_OPTIONS = list(INFRARED_BRIGHTNESS_VALUES_MAP.values())
 
 
 async def async_setup_entry(
@@ -39,7 +41,7 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
 
     _attr_has_entity_name = True
-    _attr_options = ["Disabled", "25%", "50%", "100%"]
+    _attr_options = INFRARED_BRIGHTNESS_OPTIONS
 
     def __init__(
         self, coordinator: LIFXUpdateCoordinator, description: SelectEntityDescription

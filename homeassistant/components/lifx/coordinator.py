@@ -22,7 +22,13 @@ from .const import (
     TARGET_ANY,
     UNAVAILABLE_GRACE,
 )
-from .util import async_execute_lifx, get_real_mac_addr, lifx_features
+from .util import (
+    async_execute_lifx,
+    get_real_mac_addr,
+    infrared_brightness_option_to_value,
+    infrared_brightness_value_to_option,
+    lifx_features,
+)
 
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
@@ -207,28 +213,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
 
     def async_current_infrared_brightness(self) -> str | None:
         """Return the current infrared brightness as a string."""
-        if self.device.infrared_brightness == 0:
-            option = "Disabled"
-        elif self.device.infrared_brightness == 16383:
-            option = "25%"
-        elif self.device.infrared_brightness == 32767:
-            option = "50%"
-        elif self.device.infrared_brightness == 65535:
-            option = "100%"
-        else:
-            option = None
-
-        return option
+        return infrared_brightness_value_to_option(self.device.infrared_brightness)
 
     async def async_set_infrared_brightness(self, option: str) -> None:
         """Set infrared brightness."""
-        if option == "Disabled":
-            infrared_brightness = 0
-        elif option == "25%":
-            infrared_brightness = 16383
-        elif option == "50%":
-            infrared_brightness = 32767
-        elif option == "100%":
-            infrared_brightness = 65535
-
+        infrared_brightness = infrared_brightness_option_to_value(option)
         await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))
