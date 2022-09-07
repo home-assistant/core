@@ -1621,7 +1621,7 @@ thermobeacon-ble==0.3.1
 thermopro-ble==0.4.3
 
 # homeassistant.components.tilt_ble
-tilt-ble==0.2.2
+tilt-ble==0.2.3
 
 # homeassistant.components.todoist
 todoist-python==8.0.0
