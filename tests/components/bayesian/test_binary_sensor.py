@@ -100,7 +100,7 @@ async def test_sensor_numeric_state(hass):
                     "entity_id": "sensor.test_monitored",
                     "below": 10,
                     "above": 5,
-                    "prob_given_true": 0.6,
+                    "prob_given_true": 0.7,
                     "prob_given_false": 0.4,
                 },
                 {
@@ -109,7 +109,7 @@ async def test_sensor_numeric_state(hass):
                     "below": 7,
                     "above": 5,
                     "prob_given_true": 0.9,
-                    "prob_given_false": 0.1,
+                    "prob_given_false": 0.2,
                 },
             ],
             "prior": 0.2,
@@ -119,6 +119,21 @@ async def test_sensor_numeric_state(hass):
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
+    hass.states.async_set("sensor.test_monitored", 6)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_binary")
+
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
+    assert abs(state.attributes.get("probability") - 0.304) < 0.01
+    # A = sensor.test_binary being ON
+    # B = sensor.test_monitored in the range [5, 10]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / P(B|A)*P(A) + P(B|~A)*P(~A).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.2, P(B|A) = 0.7, P(B|~A) = 0.4 -> 0.30
+
     hass.states.async_set("sensor.test_monitored", 4)
     await hass.async_block_till_done()
 
@@ -127,8 +142,10 @@ async def test_sensor_numeric_state(hass):
     assert state.attributes.get("occurred_observation_entities") == [
         "sensor.test_monitored"
     ]
-    assert abs(state.attributes.get("probability") - 0.14) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.4 (as negative observation), P(B|notA) = 0.6
+    assert abs(state.attributes.get("probability") - 0.111) < 0.01
+    # As abve but since the value is equal to 4 then this is a negative observation (~B) where P(~B) == 1 - P(B) because B is binary
+    # We therefore want to calculate P(A|~B) so we use P(~B|A) (1-0.6) and P(~B|~A) (1-0.4)
+    # Calculated using bayes theorum where P(A) = 0.2, P(~B|A) = 1-0.7 (as negative observation), P(~B|notA) = 1-0.4 -> 0.11
 
     assert state.state == "off"
 
@@ -138,12 +155,12 @@ async def test_sensor_numeric_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert state.attributes.get("observations")[0]["prob_given_true"] == 0.6
+    assert state.attributes.get("observations")[0]["prob_given_true"] == 0.7
     assert state.attributes.get("observations")[1]["prob_given_true"] == 0.9
-    assert state.attributes.get("observations")[1]["prob_given_false"] == 0.1
-    assert abs(state.attributes.get("probability") - 0.77) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.6, P(B|notA) = 0.4 -> 0.27
-    # 2nd update: P(A) = 0.2, P(B|A) = 0.9, P(B|notA) = 0.1
+    assert state.attributes.get("observations")[1]["prob_given_false"] == 0.2
+    assert abs(state.attributes.get("probability") - 0.663) < 0.01
+    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.7, P(B|notA) = 0.4 -> 0.304
+    # 2nd update: P(A) = 0.304, P(B|A) = 0.9, P(B|notA) = 0.2 -> 0.663
 
     assert state.state == "on"
 
@@ -153,9 +170,9 @@ async def test_sensor_numeric_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert abs(state.attributes.get("probability") - 0.0182) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.4, P(B|notA) = 0.6 -> 0.14
-    # 2nd update: P(A) = 0.2, P(B|A) = 0.1, P(B|notA) = 0.9
+    assert abs(state.attributes.get("probability") - 0.0153) < 0.01
+    # Calculated using bayes theorum where P(A) = 0.2, P(~B|A) = 0.3, P(~B|notA) = 0.6 -> 0.11
+    # 2nd update: P(A) = 0.111, P(~B|A) = 0.1, P(~B|notA) = 0.8
 
     assert state.state == "off"
 
@@ -201,7 +218,7 @@ async def test_sensor_state(hass):
     assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
     assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
     assert abs(0.0769 - state.attributes.get("probability")) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.2 (as negative observation), P(B|notA) = 0.6
+    # Calculated using bayes theorum where P(A) = 0.2, P(~B|A) = 0.2 (as negative observation), P(~B|notA) = 0.6
     assert state.state == "off"
 
     hass.states.async_set("sensor.test_monitored", "off")
@@ -212,7 +229,7 @@ async def test_sensor_state(hass):
         "sensor.test_monitored"
     ]
     assert abs(0.33 - state.attributes.get("probability")) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.8 (as negative observation), P(B|notA) = 0.4
+    # Calculated using bayes theorum where P(A) = 0.2, P(~B|A) = 0.8 (as negative observation), P(~B|notA) = 0.4
     assert state.state == "on"
 
     hass.states.async_remove("sensor.test_monitored")
@@ -268,7 +285,7 @@ async def test_sensor_value_template(hass):
 
     assert state.attributes.get("occurred_observation_entities") == []
     assert abs(0.0769 - state.attributes.get("probability")) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.2 (as negative observation), P(B|notA) = 0.6
+    # Calculated using bayes theorum where P(A) = 0.2, P(~B|A) = 0.2 (as negative observation), P(~B|notA) = 0.6
 
     assert state.state == "off"
 
@@ -288,7 +305,7 @@ async def test_sensor_value_template(hass):
 
     state = hass.states.get("binary_sensor.test_binary")
     assert abs(0.076923 - state.attributes.get("probability")) < 0.01
-    # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.2 (as negative observation), P(B|notA) = 0.6
+    # Calculated using bayes theorum where P(A) = 0.2, P(~B|A) = 0.2 (as negative observation), P(~B|notA) = 0.6
 
     assert state.state == "off"
 
@@ -456,7 +473,7 @@ async def test_multiple_numeric_observations(hass):
         "sensor.test_monitored"
     ]
     assert round(abs(0.026 - state.attributes.get("probability")), 7) < 0.01
-    # Step 1 Calculated where P(A) = 0.1, P(B|A) = 0.6 (negative obs), P(B|notA) = 0.9999 -> 0.0625
+    # Step 1 Calculated where P(A) = 0.1, P(~B|A) = 0.6 (negative obs), P(~B|notA) = 0.9999 -> 0.0625
     # Step 2 P(A) = 0.0625, P(B|A) = 0.4 (negative obs), P(B|notA) = 0.9999 -> 0.26
 
     assert state.state == "off"
@@ -469,7 +486,7 @@ async def test_multiple_numeric_observations(hass):
         "sensor.test_monitored"
     ]
     assert abs(1 - state.attributes.get("probability")) < 0.01
-    # Step 1 Calculated where P(A) = 0.1, P(B|A) = 0.6 (negative obs), P(B|notA) = 0.9999 -> 0.0625
+    # Step 1 Calculated where P(A) = 0.1, P(~B|A) = 0.6 (negative obs), P(~B|notA) = 0.9999 -> 0.0625
     # Step 2 P(A) = 0.0625, P(B|A) = 0.6, P(B|notA) = 0.0001 -> 0.9975
 
     assert state.state == "on"
