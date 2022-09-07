@@ -97,8 +97,12 @@ async def async_publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
+    from .mixins import MqttData
 
-    if DATA_MQTT not in hass.data or not mqtt_config_entry_enabled(hass):
+    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot publish to topic '{topic}', MQTT is not enabled"
         )
@@ -126,7 +130,9 @@ async def async_publish(
                 )
                 return
 
-    await hass.data[DATA_MQTT].async_publish(topic, outgoing_payload, qos, retain)
+    await mqtt_data.client.async_publish(
+        topic, outgoing_payload, qos or 0, retain or False
+    )
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -175,13 +181,18 @@ async def async_subscribe(
     | DeprecatedMessageCallbackType
     | AsyncDeprecatedMessageCallbackType,
     qos: int = DEFAULT_QOS,
-    encoding: str | None = "utf-8",
+    encoding: str | None = DEFAULT_ENCODING,
 ):
     """Subscribe to an MQTT topic.
 
     Call the return value to unsubscribe.
     """
-    if DATA_MQTT not in hass.data or not mqtt_config_entry_enabled(hass):
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
+    from .mixins import MqttData
+
+    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
@@ -206,9 +217,9 @@ async def async_subscribe(
             cast(DeprecatedMessageCallbackType, msg_callback)
         )
 
-    async_remove = await hass.data[DATA_MQTT].async_subscribe(
+    async_remove = await mqtt_data.client.async_subscribe(
         topic,
-        catch_log_exception(
+        catch_log_exception(  # type: ignore[arg-type]
             wrapped_msg_callback,
             lambda msg: (
                 f"Exception in {msg_callback.__name__} when handling msg on "
