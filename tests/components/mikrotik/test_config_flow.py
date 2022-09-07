@@ -89,14 +89,14 @@ async def test_flow_works(hass, api):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home router"
     assert result["data"][CONF_NAME] == "Home router"
     assert result["data"][CONF_HOST] == "0.0.0.0"
@@ -115,7 +115,7 @@ async def test_options(hass, api):
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
 
     result = await hass.config_entries.options.async_configure(
@@ -127,7 +127,7 @@ async def test_options(hass, api):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_DETECTION_TIME: 30,
         CONF_ARP_PING: True,
@@ -179,7 +179,7 @@ async def test_connection_error(hass, conn_error):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -193,7 +193,7 @@ async def test_wrong_credentials(hass, auth_error):
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {
         CONF_USERNAME: "invalid_auth",
         CONF_PASSWORD: "invalid_auth",

@@ -12,6 +12,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -72,11 +74,17 @@ class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
     _attr_device_class = "moon__phase"
+    _attr_has_entity_name = True
+    _attr_name = "Phase"
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the moon sensor."""
-        self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name="Moon",
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""

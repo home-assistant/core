@@ -1,6 +1,8 @@
 """Intellifire Climate Entities."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
@@ -70,7 +72,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             return HVACMode.HEAT
         return HVACMode.OFF
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Turn on thermostat by setting a target temperature."""
         raw_target_temp = kwargs[ATTR_TEMPERATURE]
         self.last_temp = int(raw_target_temp)
@@ -80,7 +82,6 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             (raw_target_temp * 9 / 5) + 32,
         )
         await self.coordinator.control_api.set_thermostat_c(
-            fireplace=self.coordinator.control_api.default_fireplace,
             temp_c=self.last_temp,
         )
 
@@ -94,27 +95,22 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         """Return target temperature."""
         return float(self.coordinator.read_api.data.thermostat_setpoint_c)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode to normal or thermostat control."""
         LOGGER.debug(
             "Setting mode to [%s] - using last temp: %s", hvac_mode, self.last_temp
         )
 
         if hvac_mode == HVACMode.OFF:
-            await self.coordinator.control_api.turn_off_thermostat(
-                fireplace=self.coordinator.control_api.default_fireplace
-            )
+            await self.coordinator.control_api.turn_off_thermostat()
             return
 
         # hvac_mode == HVACMode.HEAT
         # 1) Set the desired target temp
         await self.coordinator.control_api.set_thermostat_c(
-            fireplace=self.coordinator.control_api.default_fireplace,
             temp_c=self.last_temp,
         )
 
         # 2) Make sure the fireplace is on!
         if not self.coordinator.read_api.data.is_on:
-            await self.coordinator.control_api.flame_on(
-                fireplace=self.coordinator.control_api.default_fireplace,
-            )
+            await self.coordinator.control_api.flame_on()

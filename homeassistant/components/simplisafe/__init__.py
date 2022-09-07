@@ -113,8 +113,7 @@ ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
-DEFAULT_ENTITY_MODEL = "alarm_control_panel"
-DEFAULT_ENTITY_NAME = "Alarm Control Panel"
+DEFAULT_ENTITY_MODEL = "Alarm control panel"
 DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
@@ -278,10 +277,8 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     """Bring a config entry up to current standards."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed(
-            "New SimpliSafe OAuth standard requires re-authentication"
+            "SimpliSafe OAuth standard requires re-authentication"
         )
-    if CONF_USERNAME not in entry.data:
-        raise ConfigEntryAuthFailed("Need to re-auth with username/password")
 
     entry_updates = {}
     if not entry.unique_id:
@@ -327,7 +324,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = simplisafe
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def extract_system(func: Callable) -> Callable:
@@ -660,6 +657,8 @@ class SimpliSafe:
 class SimpliSafeEntity(CoordinatorEntity):
     """Define a base SimpliSafe entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         simplisafe: SimpliSafe,
@@ -679,12 +678,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._error_count = 0
 
         if device:
-            model = device.type.name
-            device_name = device.name
+            model = device.type.name.capitalize().replace("_", " ")
+            device_name = f"{device.name.capitalize()} {model}"
             serial = device.serial
         else:
-            model = DEFAULT_ENTITY_MODEL
-            device_name = DEFAULT_ENTITY_NAME
+            model = device_name = DEFAULT_ENTITY_MODEL
             serial = system.serial
 
         event = simplisafe.initial_event_to_use[system.system_id]
@@ -714,7 +712,6 @@ class SimpliSafeEntity(CoordinatorEntity):
             via_device=(DOMAIN, system.system_id),
         )
 
-        self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
         self._attr_unique_id = serial
         self._device = device
         self._online = True

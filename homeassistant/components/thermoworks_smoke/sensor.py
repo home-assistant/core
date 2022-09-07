@@ -127,7 +127,7 @@ class ThermoworksSmokeSensor(SensorEntity):
         else:
             self._attr_native_unit_of_measurement = self.mgr.units(self.serial, PROBE_1)
 
-    def update(self):
+    def update(self) -> None:
         """Get the monitored data from firebase."""
 
         try:

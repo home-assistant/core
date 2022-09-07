@@ -34,6 +34,8 @@ def setup_platform(
 class KiraReceiver(SensorEntity):
     """Implementation of a Kira Receiver."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, kira):
         """Initialize the sensor."""
         self._name = name
@@ -68,11 +70,6 @@ class KiraReceiver(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {CONF_DEVICE: self._device}
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity should not be polled."""
-        return False
 
     @property
     def force_update(self) -> bool:

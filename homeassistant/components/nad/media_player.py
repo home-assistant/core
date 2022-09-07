@@ -133,34 +133,34 @@ class NAD(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._mute
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._nad_receiver.main_power("=", "Off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.main_power("=", "On")
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self._nad_receiver.main_volume("+")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down the media player."""
         self._nad_receiver.main_volume("-")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._nad_receiver.main_volume("=", self.calc_db(volume))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._nad_receiver.main_mute("=", "On")
         else:
             self._nad_receiver.main_mute("=", "Off")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._nad_receiver.main_source("=", self._reverse_mapping.get(source))
 
@@ -175,7 +175,7 @@ class NAD(MediaPlayerEntity):
         return sorted(self._reverse_mapping)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if device is available."""
         return self._state is not None
 
@@ -257,37 +257,37 @@ class NADtcp(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._mute
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._nad_receiver.power_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.power_on()
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Step volume up in the configured increments."""
         self._nad_receiver.set_volume(self._nad_volume + 2 * self._volume_step)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Step volume down in the configured increments."""
         self._nad_receiver.set_volume(self._nad_volume - 2 * self._volume_step)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         nad_volume_to_set = int(
             round(volume * (self._max_vol - self._min_vol) + self._min_vol)
         )
         self._nad_receiver.set_volume(nad_volume_to_set)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._nad_receiver.mute()
         else:
             self._nad_receiver.unmute()
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._nad_receiver.select_source(source)
 
@@ -301,7 +301,7 @@ class NADtcp(MediaPlayerEntity):
         """List of available input sources."""
         return self._nad_receiver.available_sources()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         try:
             nad_status = self._nad_receiver.status()

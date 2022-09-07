@@ -12,7 +12,7 @@ demo <https://home-assistant.io/demo/>`__, `installation instructions <https://h
 Featured integrations
 ---------------------
 
-|screenshot-components|
+|screenshot-integrations|
 
 The system is built using a modular approach so support for other devices or actions can be implemented easily. See also the `section on architecture <https://developers.home-assistant.io/docs/architecture_index/>`__ and the `section on creating your own
 components <https://developers.home-assistant.io/docs/creating_component_index/>`__.
@@ -24,5 +24,5 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
    :target: https://discord.gg/c5DvZ4e
 .. |screenshot-states| image:: https://raw.githubusercontent.com/home-assistant/core/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/
-.. |screenshot-components| image:: https://raw.githubusercontent.com/home-assistant/core/dev/docs/screenshot-components.png
+.. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/docs/screenshot-integrations.png
    :target: https://home-assistant.io/integrations/

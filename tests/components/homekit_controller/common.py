@@ -9,12 +9,11 @@ import os
 from typing import Any, Final
 from unittest import mock
 
-from aiohomekit.model import Accessories, Accessory
+from aiohomekit.model import Accessories, AccessoriesState, Accessory
 from aiohomekit.testing import FakeController, FakePairing
+from aiohomekit.zeroconf import HomeKitService
 
-from homeassistant.components import zeroconf
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
     DOMAIN,
@@ -22,6 +21,7 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_SERIAL_NUMBER,
 )
+from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -175,17 +175,23 @@ async def setup_platform(hass):
     config = {"discovery": {}}
 
     with mock.patch(
-        "homeassistant.components.homekit_controller.utils.Controller"
-    ) as controller:
-        fake_controller = controller.return_value = FakeController()
+        "homeassistant.components.homekit_controller.utils.Controller", FakeController
+    ):
         await async_setup_component(hass, DOMAIN, config)
 
-    return fake_controller
+    return await async_get_controller(hass)
 
 
 async def setup_test_accessories(hass, accessories):
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
+    return await setup_test_accessories_with_controller(
+        hass, accessories, fake_controller
+    )
+
+
+async def setup_test_accessories_with_controller(hass, accessories, fake_controller):
+    """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
 
@@ -218,31 +224,26 @@ async def device_config_changed(hass, accessories):
     accessories_obj = Accessories()
     for accessory in accessories:
         accessories_obj.add_accessory(accessory)
-    pairing.accessories = accessories_obj
-
-    discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
-        hostname="mock_hostname",
-        name="TestDevice",
-        port=8080,
-        properties={
-            "md": "TestDevice",
-            "id": "00:00:00:00:00:00",
-            "c#": "2",
-            "sf": "0",
-        },
-        type="mock_type",
+    pairing._accessories_state = AccessoriesState(
+        accessories_obj, pairing.config_num + 1
     )
-
-    # Config Flow will abort and notify us if the discovery event is of
-    # interest - in this case c# has incremented
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-    result = await flow.async_step_zeroconf(discovery_info)
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    pairing._async_description_update(
+        HomeKitService(
+            name="TestDevice.local",
+            id="00:00:00:00:00:00",
+            model="",
+            config_num=2,
+            state_num=3,
+            feature_flags=0,
+            status_flags=0,
+            category=1,
+            protocol_version="1.0",
+            type="_hap._tcp.local.",
+            address="127.0.0.1",
+            addresses=["127.0.0.1"],
+            port=8080,
+        )
+    )
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()

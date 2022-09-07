@@ -4,6 +4,16 @@
       "bright": "Bright",
       "dim": "Dim",
       "off": "Off"
+    },
+    "xiaomi_miio__display_orientation": {
+      "forward": "Forward",
+      "left": "Left",
+      "right": "Right"
+    },
+    "xiaomi_miio__ptc_level": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
     }
   }
 }

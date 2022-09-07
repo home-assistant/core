@@ -61,6 +61,8 @@ async def async_setup_sdm_entry(
 class NestCamera(Camera):
     """Devices that support cameras."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device: Device) -> None:
         """Initialize the camera."""
         super().__init__()
@@ -73,20 +75,10 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-camera"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the camera."""
-        return self._device_info.device_name
 
     @property
     def device_info(self) -> DeviceInfo:

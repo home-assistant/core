@@ -5,6 +5,7 @@ from asyncio import run_coroutine_threadsafe
 import datetime as dt
 from datetime import timedelta
 import logging
+from typing import Any
 
 import requests
 from spotipy import SpotifyException
@@ -40,7 +41,7 @@ from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_SPOTIFY = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
@@ -107,10 +108,10 @@ def spotify_exception_handler(func):
 class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
+    _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_content_type = MEDIA_TYPE_MUSIC
     _attr_media_image_remotely_accessible = False
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
@@ -122,7 +123,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._id = user_id
         self.data = data
 
-        self._attr_name = f"Spotify {name}"
         self._attr_unique_id = user_id
 
         if self.data.current_user["product"] == "premium":
@@ -180,7 +180,10 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if not self._currently_playing:
+        if (
+            not self._currently_playing
+            or self._currently_playing.get("progress_ms") is None
+        ):
             return None
         return self._currently_playing["progress_ms"] / 1000
 
@@ -271,7 +274,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return REPEAT_MODE_MAPPING_TO_HA.get(repeat_state)
 
     @spotify_exception_handler
-    def set_volume_level(self, volume: int) -> None:
+    def set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         self.data.client.volume(int(volume * 100))
 
@@ -296,12 +299,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.next_track()
 
     @spotify_exception_handler
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.data.client.seek_track(int(position * 1000))
 
     @spotify_exception_handler
-    def play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media."""
         if media_type.startswith(MEDIA_PLAYER_PREFIX):
             media_type = media_type[len(MEDIA_PLAYER_PREFIX) :]

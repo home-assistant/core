@@ -9,7 +9,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     FAKE_DIMMABLE_BULB,
@@ -85,7 +85,7 @@ async def test_user_flow_enters_dns_name(hass):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "no_ip"}
 
     with _patch_wizlight(), patch(
@@ -179,7 +179,7 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -256,7 +256,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     with _patch_wizlight(
@@ -306,7 +306,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == FAKE_IP
 
@@ -335,7 +335,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
@@ -458,7 +458,7 @@ async def test_setup_via_discovery_exception_finds_nothing(hass):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -476,7 +476,7 @@ async def test_discovery_with_firmware_update(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     # In between discovery and when the user clicks to set it up the firmware

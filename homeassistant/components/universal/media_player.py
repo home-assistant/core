@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from copy import copy
+from typing import Any
 
 import voluptuous as vol
 
@@ -69,11 +70,13 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -101,10 +104,15 @@ STATES_ORDER = [
     STATE_UNAVAILABLE,
     STATE_OFF,
     STATE_IDLE,
+    STATE_STANDBY,
     STATE_ON,
     STATE_PAUSED,
+    STATE_BUFFERING,
     STATE_PLAYING,
 ]
+STATES_ORDER_LOOKUP = {state: idx for idx, state in enumerate(STATES_ORDER)}
+STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[STATE_IDLE]
+
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
@@ -148,6 +156,8 @@ async def async_setup_platform(
 class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -174,7 +184,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._state_template = state_template
         self._device_class = device_class
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to children and template state changes."""
 
         @callback
@@ -269,11 +279,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self) -> str | None:
@@ -525,95 +530,97 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_call_service(SERVICE_TURN_ON, allow_override=True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_call_service(SERVICE_TURN_OFF, allow_override=True)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         data = {ATTR_MEDIA_VOLUME_MUTED: mute}
         await self._async_call_service(SERVICE_VOLUME_MUTE, data, allow_override=True)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
         await self._async_call_service(SERVICE_VOLUME_SET, data, allow_override=True)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._async_call_service(SERVICE_MEDIA_PLAY, allow_override=True)
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._async_call_service(SERVICE_MEDIA_PAUSE, allow_override=True)
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._async_call_service(SERVICE_MEDIA_STOP, allow_override=True)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._async_call_service(
             SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True
         )
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK, allow_override=True)
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         data = {ATTR_MEDIA_SEEK_POSITION: position}
         await self._async_call_service(SERVICE_MEDIA_SEEK, data)
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
         await self._async_call_service(SERVICE_PLAY_MEDIA, data, allow_override=True)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._async_call_service(SERVICE_VOLUME_UP, allow_override=True)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         await self._async_call_service(SERVICE_VOLUME_DOWN, allow_override=True)
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE, allow_override=True)
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         data = {ATTR_SOUND_MODE: sound_mode}
         await self._async_call_service(
             SERVICE_SELECT_SOUND_MODE, data, allow_override=True
         )
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
         await self._async_call_service(SERVICE_SELECT_SOURCE, data, allow_override=True)
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._async_call_service(SERVICE_CLEAR_PLAYLIST, allow_override=True)
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffling."""
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
 
-    async def async_set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         data = {ATTR_MEDIA_REPEAT: repeat}
         await self._async_call_service(SERVICE_REPEAT_SET, data, allow_override=True)
 
-    async def async_toggle(self):
+    async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if SERVICE_TOGGLE in self._cmds:
             await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
@@ -621,16 +628,16 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             # Delegate to turn_on or turn_off by default
             await super().async_toggle()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state in HA."""
         self._child_state = None
         for child_name in self._children:
-            if (child_state := self.hass.states.get(child_name)) and STATES_ORDER.index(
-                child_state.state
-            ) >= STATES_ORDER.index(STATE_IDLE):
+            if (child_state := self.hass.states.get(child_name)) and (
+                child_state_order := STATES_ORDER_LOOKUP.get(child_state.state, 0)
+            ) >= STATES_ORDER_IDLE:
                 if self._child_state:
-                    if STATES_ORDER.index(child_state.state) > STATES_ORDER.index(
-                        self._child_state.state
+                    if child_state_order > STATES_ORDER_LOOKUP.get(
+                        self._child_state.state, 0
                     ):
                         self._child_state = child_state
                 else:

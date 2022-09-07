@@ -45,7 +45,7 @@
             "send_status": "\u00c1llapotfriss\u00edt\u00e9s k\u00fcld\u00e9se: {subtype}"
         },
         "trigger_type": {
-            "command": "Be\u00e9rkezett parancs: {alt\u00edpus}",
+            "command": "Be\u00e9rkezett parancs: {subtype}",
             "status": "Be\u00e9rkezett st\u00e1tusz: {subtype}"
         }
     },

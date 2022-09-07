@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "invalid_discovery_info": "Invalid discovery information received",
+            "link_local_address": "Link local addresses are not supported",
+            "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
+            "no_devices": "The authorized user has no LaMetric devices",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "choice_enter_manual_or_fetch_cloud": {
+                "description": "A LaMetric device can be set up in Home Assistant in two different ways.\n\nYou can enter all device information and API tokens yourself, or Home Asssistant can import them from your LaMetric.com account.",
+                "menu_options": {
+                    "manual_entry": "Enter manually",
+                    "pick_implementation": "Import from LaMetric.com (recommended)"
+                }
+            },
+            "manual_entry": {
+                "data": {
+                    "api_key": "API Key",
+                    "host": "Host"
+                },
+                "data_description": {
+                    "api_key": "You can find this API key in [devices page in your LaMetric developer account](https://developer.lametric.com/user/devices).",
+                    "host": "The IP address or hostname of your LaMetric TIME on your network."
+                }
+            },
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            },
+            "user_cloud_select_device": {
+                "data": {
+                    "device": "Select the LaMetric device to add"
+                }
+            }
+        }
+    },
+    "issues": {
+        "manual_migration": {
+            "description": "The LaMetric integration has been modernized: It is now configured and set up via the user interface and the communcations are now local.\n\nUnfortunately, there is no automatic migration path possible and thus requires you to re-setup your LaMetric with Home Assistant. Please consult the Home Assistant LaMetric integration documentation on how to set it up.\n\nRemove the old LaMetric YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "Manual migration required for LaMetric"
+        }
+    }
+}

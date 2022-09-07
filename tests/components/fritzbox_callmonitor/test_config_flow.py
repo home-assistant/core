@@ -22,11 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, patch
 
@@ -74,7 +70,7 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -104,7 +100,7 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONEBOOK_NAME_1
     assert result["data"] == MOCK_CONFIG_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
@@ -116,7 +112,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -140,7 +136,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "phonebook"
     assert result["errors"] == {}
 
@@ -156,7 +152,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
             {CONF_PHONEBOOK: MOCK_PHONEBOOK_NAME_2},
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONEBOOK_NAME_2
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
@@ -184,7 +180,7 @@ async def test_setup_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == ConnectResult.NO_DEVIES_FOUND
 
 
@@ -203,7 +199,7 @@ async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == ConnectResult.INSUFFICIENT_PERMISSIONS
 
 
@@ -222,7 +218,7 @@ async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": ConnectResult.INVALID_AUTH}
 
 
@@ -244,14 +240,14 @@ async def test_options_flow_correct_prefixes(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_PREFIXES: "+49, 491234"}
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_PREFIXES: ["+49", "491234"]}
 
 
@@ -273,14 +269,14 @@ async def test_options_flow_incorrect_prefixes(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_PREFIXES: ""}
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": ConnectResult.MALFORMED_PREFIXES}
 
 
@@ -302,12 +298,12 @@ async def test_options_flow_no_prefixes(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={}
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_PREFIXES: None}

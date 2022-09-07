@@ -157,6 +157,9 @@ jobs:
             echo "cmake==3.22.2"
           ) >> homeassistant/package_constraints.txt
 
+          # Do not pin numpy in wheels building
+          sed -i "/numpy/d" homeassistant/package_constraints.txt
+
       - name: Build wheels
         uses: home-assistant/wheels@2022.06.7
         with:

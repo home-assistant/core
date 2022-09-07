@@ -16,6 +16,10 @@ CONNECTED_STATIONS = {
     ],
 }
 
+NO_CONNECTED_STATIONS = {
+    "connected_stations": [],
+}
+
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host=IP,
     addresses=[IP],

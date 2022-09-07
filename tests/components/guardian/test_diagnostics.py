@@ -1,22 +1,16 @@
 """Test Guardian diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.guardian import (
-    DATA_PAIRED_SENSOR_MANAGER,
-    DOMAIN,
-    PairedSensorManager,
-)
+from homeassistant.components.guardian import DOMAIN, GuardianData
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian):
     """Test config entry diagnostics."""
-    paired_sensor_manager: PairedSensorManager = hass.data[DOMAIN][
-        config_entry.entry_id
-    ][DATA_PAIRED_SENSOR_MANAGER]
+    data: GuardianData = hass.data[DOMAIN][config_entry.entry_id]
 
     # Simulate the pairing of a paired sensor:
-    await paired_sensor_manager.async_pair_sensor("AABBCCDDEEFF")
+    await data.paired_sensor_manager.async_pair_sensor("AABBCCDDEEFF")
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {

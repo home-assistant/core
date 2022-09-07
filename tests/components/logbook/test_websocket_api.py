@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
@@ -51,7 +51,6 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
-@callback
 async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""

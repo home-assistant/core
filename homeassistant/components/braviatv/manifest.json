@@ -2,9 +2,9 @@
   "domain": "braviatv",
   "name": "Sony Bravia TV",
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
-  "requirements": ["bravia-tv==1.0.11"],
+  "requirements": ["pybravia==0.2.2"],
   "codeowners": ["@bieniu", "@Drafteed"],
   "config_flow": true,
   "iot_class": "local_polling",
-  "loggers": ["bravia_tv"]
+  "loggers": ["pybravia"]
 }

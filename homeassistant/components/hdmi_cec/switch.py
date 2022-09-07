@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -40,13 +41,13 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
         CecEntity.__init__(self, device, logical)
         self.entity_id = f"{SWITCH_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self._device.turn_on()
         self._state = STATE_ON
         self.schedule_update_ha_state(force_refresh=False)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self._device.turn_off()
         self._state = STATE_OFF

@@ -37,7 +37,7 @@ async def test_flow_user(hass):
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
         assert result["data"] == CONF_DATA
 
@@ -62,7 +62,7 @@ async def test_flow_user_already_configured(hass):
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -76,7 +76,7 @@ async def test_flow_user_cannot_connect(hass):
             context={"source": config_entries.SOURCE_USER},
             data=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -91,6 +91,6 @@ async def test_flow_user_unknown_error(hass):
             context={"source": config_entries.SOURCE_USER},
             data=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}

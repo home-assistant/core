@@ -10,6 +10,7 @@ from pyunifiprotect.data import (
     Camera,
     Event,
     Light,
+    ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
@@ -113,8 +114,9 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         name="System Sounds",
         icon="mdi:speaker",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_speaker",
+        ufp_required_field="has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
+        ufp_enabled="feature_flags.has_speaker",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -150,7 +152,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
-        key="motion",
+        key="motion_enabled",
         name="Detections: Motion",
         icon="mdi:run-fast",
         ufp_value="recording_settings.enable_motion_detection",
@@ -409,12 +411,9 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     devices = (
-        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
     )
     for device in devices:
-        if not device.is_adopted:
-            continue
-
         for description in MOTION_SENSORS:
             entities.append(ProtectEventBinarySensor(data, device, description))
             _LOGGER.debug(

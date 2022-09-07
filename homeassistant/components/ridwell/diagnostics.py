@@ -6,19 +6,17 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DATA_COORDINATOR, DOMAIN
+from . import RidwellData
+from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    data: RidwellData = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "data": [dataclasses.asdict(event) for event in coordinator.data.values()],
+        "data": [dataclasses.asdict(event) for event in data.coordinator.data.values()]
     }

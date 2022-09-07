@@ -1,10 +1,12 @@
 """Support for getting data from websites with scraping."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
 from bs4 import BeautifulSoup
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
@@ -15,9 +17,7 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
@@ -32,24 +32,28 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:web"
+SCAN_INTERVAL = timedelta(minutes=10)
+
+CONF_ATTR = "attribute"
+CONF_SELECT = "select"
+CONF_INDEX = "index"
+
+DEFAULT_NAME = "Web scrape"
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.string,
         vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
+        vol.Optional(CONF_ATTR): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
@@ -61,7 +65,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
@@ -74,47 +78,37 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    _LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.7, remove import flow in 2022.9
-        "Loading Scrape via platform setup has been deprecated in Home Assistant 2022.7 "
-        "Your configuration has been automatically imported and you can "
-        "remove it from your configuration.yaml"
-    )
+    name: str = config[CONF_NAME]
+    resource: str = config[CONF_RESOURCE]
+    method: str = "GET"
+    payload: str | None = None
+    headers: str | None = config.get(CONF_HEADERS)
+    verify_ssl: bool = config[CONF_VERIFY_SSL]
+    select: str | None = config.get(CONF_SELECT)
+    attr: str | None = config.get(CONF_ATTR)
+    index: int = config[CONF_INDEX]
+    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    state_class: str | None = config.get(CONF_STATE_CLASS)
+    username: str | None = config.get(CONF_USERNAME)
+    password: str | None = config.get(CONF_PASSWORD)
+    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
-    if config.get(CONF_VALUE_TEMPLATE):
-        template: Template = Template(config[CONF_VALUE_TEMPLATE])
-        template.ensure_valid()
-        config[CONF_VALUE_TEMPLATE] = template.template
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up the Scrape sensor entry."""
-    name: str = entry.options[CONF_NAME]
-    resource: str = entry.options[CONF_RESOURCE]
-    select: str | None = entry.options.get(CONF_SELECT)
-    attr: str | None = entry.options.get(CONF_ATTRIBUTE)
-    index: int = int(entry.options[CONF_INDEX])
-    unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class: str | None = entry.options.get(CONF_DEVICE_CLASS)
-    state_class: str | None = entry.options.get(CONF_STATE_CLASS)
-    value_template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
-    entry_id: str = entry.entry_id
-
-    val_template: Template | None = None
     if value_template is not None:
-        val_template = Template(value_template, hass)
+        value_template.hass = hass
 
-    rest = hass.data[DOMAIN][entry.entry_id]
+    auth: httpx.DigestAuth | tuple[str, str] | None = None
+    if username and password:
+        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+            auth = httpx.DigestAuth(username, password)
+        else:
+            auth = (username, password)
+
+    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
+    await rest.async_update()
+
+    if rest.data is None:
+        raise PlatformNotReady
 
     async_add_entities(
         [
@@ -124,12 +118,10 @@ async def async_setup_entry(
                 select,
                 attr,
                 index,
-                val_template,
+                value_template,
                 unit,
                 device_class,
                 state_class,
-                entry_id,
-                resource,
             )
         ],
         True,
@@ -138,8 +130,6 @@ async def async_setup_entry(
 
 class ScrapeSensor(SensorEntity):
     """Representation of a web scrape sensor."""
-
-    _attr_icon = ICON
 
     def __init__(
         self,
@@ -152,8 +142,6 @@ class ScrapeSensor(SensorEntity):
         unit: str | None,
         device_class: str | None,
         state_class: str | None,
-        entry_id: str,
-        resource: str,
     ) -> None:
         """Initialize a web scrape sensor."""
         self.rest = rest
@@ -166,14 +154,6 @@ class ScrapeSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
-        self._attr_unique_id = entry_id
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
-            manufacturer="Scrape",
-            name=name,
-            configuration_url=resource,
-        )
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""

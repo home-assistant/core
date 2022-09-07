@@ -28,6 +28,8 @@ TRIGGER_SUBTYPE = {
     "2": "second button",
     "3": "third button",
     "4": "fourth button",
+    "clock_wise": "Rotation clockwise",
+    "counter_clock_wise": "Rotation counter-clockwise",
 }
 TRIGGER_TYPE = {
     "remote_button_long_release": "{subtype} released after long press",
@@ -40,6 +42,7 @@ TRIGGER_TYPE = {
     "short_release": "{subtype} released after short press",
     "long_release": "{subtype} released after long press",
     "double_short_release": "both {subtype} released",
+    "start": '"{subtype}" pressed initially',
 }
 
 UNKNOWN_TYPE = "unknown type"

@@ -11,12 +11,12 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.components.lutron_caseta import (
     ATTR_ACTION,
     ATTR_AREA_NAME,
-    ATTR_BUTTON_NUMBER,
     ATTR_DEVICE_NAME,
     ATTR_SERIAL,
     ATTR_TYPE,
 )
 from homeassistant.components.lutron_caseta.const import (
+    ATTR_LEAP_BUTTON_NUMBER,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
@@ -51,7 +51,23 @@ MOCK_BUTTON_DEVICES = [
         "type": "Pico3ButtonRaiseLower",
         "model": "PJ2-3BRL-GXX-X01",
         "serial": 43845548,
-    }
+    },
+    {
+        "Name": "Front Steps Sunnata Keypad",
+        "ID": 3,
+        "Area": {"Name": "Front Steps"},
+        "Buttons": [
+            {"Number": 7},
+            {"Number": 8},
+            {"Number": 9},
+            {"Number": 10},
+            {"Number": 11},
+        ],
+        "leap_name": "Front Steps_Front Steps Sunnata Keypad",
+        "type": "SunnataKeypad",
+        "model": "RRST-W4B-XX",
+        "serial": 43845547,
+    },
 ]
 
 
@@ -144,12 +160,11 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg):
 
 async def test_if_fires_on_button_event(hass, calls, device_reg):
     """Test for press trigger firing."""
-
-    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
-    dr_button_devices = data.button_devices
-    device_id = list(dr_button_devices)[0]
-    device = dr_button_devices[device_id]
+    await _async_setup_lutron_with_picos(hass, device_reg)
+    device = MOCK_BUTTON_DEVICES[0]
+    dr = device_registry.async_get(hass)
+    dr_device = dr.async_get_device(identifiers={(DOMAIN, device["serial"])})
+    device_id = dr_device.id
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -175,7 +190,51 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
     message = {
         ATTR_SERIAL: device.get("serial"),
         ATTR_TYPE: device.get("type"),
-        ATTR_BUTTON_NUMBER: 2,
+        ATTR_LEAP_BUTTON_NUMBER: 0,
+        ATTR_DEVICE_NAME: device["Name"],
+        ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
+        ATTR_ACTION: "press",
+    }
+    hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_button_press"
+
+
+async def test_if_fires_on_button_event_without_lip(hass, calls, device_reg):
+    """Test for press trigger firing on a device that does not support lip."""
+    await _async_setup_lutron_with_picos(hass, device_reg)
+    device = MOCK_BUTTON_DEVICES[1]
+    dr = device_registry.async_get(hass)
+    dr_device = dr.async_get_device(identifiers={(DOMAIN, device["serial"])})
+    device_id = dr_device.id
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
+                        CONF_TYPE: "press",
+                        CONF_SUBTYPE: "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_button_press"},
+                    },
+                },
+            ]
+        },
+    )
+
+    message = {
+        ATTR_SERIAL: device.get("serial"),
+        ATTR_TYPE: device.get("type"),
+        ATTR_LEAP_BUTTON_NUMBER: 1,
         ATTR_DEVICE_NAME: device["Name"],
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
@@ -214,7 +273,7 @@ async def test_validate_trigger_config_no_device(hass, calls, device_reg):
     message = {
         ATTR_SERIAL: "123",
         ATTR_TYPE: "any",
-        ATTR_BUTTON_NUMBER: 3,
+        ATTR_LEAP_BUTTON_NUMBER: 0,
         ATTR_DEVICE_NAME: "any",
         ATTR_AREA_NAME: "area",
         ATTR_ACTION: "press",
@@ -259,7 +318,7 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
     message = {
         ATTR_SERIAL: "123",
         ATTR_TYPE: "any",
-        ATTR_BUTTON_NUMBER: 3,
+        ATTR_LEAP_BUTTON_NUMBER: 0,
         ATTR_DEVICE_NAME: "any",
         ATTR_AREA_NAME: "area",
         ATTR_ACTION: "press",
