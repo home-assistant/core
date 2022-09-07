@@ -47,10 +47,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -128,6 +124,7 @@ from .const import (  # noqa: F401
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
     RepeatMode,
 )
@@ -227,7 +224,8 @@ def is_on(hass, entity_id=None):
     """
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
     return any(
-        not hass.states.is_state(entity_id, STATE_OFF) for entity_id in entity_ids
+        not hass.states.is_state(entity_id, MediaPlayerState.OFF)
+        for entity_id in entity_ids
     )
 
 
@@ -474,7 +472,7 @@ class MediaPlayerEntity(Entity):
     _attr_sound_mode: str | None = None
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
-    _attr_state: str | None = None
+    _attr_state: MediaPlayerState | str | None = None
     _attr_supported_features: int = 0
     _attr_volume_level: float | None = None
 
@@ -489,7 +487,7 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | str | None:
         """State of the player."""
         return self._attr_state
 
@@ -908,7 +906,11 @@ class MediaPlayerEntity(Entity):
             )
             return
 
-        if self.state in (STATE_OFF, STATE_IDLE, STATE_STANDBY):
+        if self.state in (
+            MediaPlayerState.OFF,
+            MediaPlayerState.IDLE,
+            MediaPlayerState.STANDBY,
+        ):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -957,7 +959,7 @@ class MediaPlayerEntity(Entity):
             )
             return
 
-        if self.state == STATE_PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             await self.async_media_pause()
         else:
             await self.async_media_play()
@@ -965,7 +967,7 @@ class MediaPlayerEntity(Entity):
     @property
     def entity_picture(self) -> str | None:
         """Return image of the media playing."""
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             return None
 
         if self.media_image_remotely_accessible:
@@ -1011,7 +1013,7 @@ class MediaPlayerEntity(Entity):
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             return state_attr
 
         for attr in ATTR_TO_PROPERTY:
