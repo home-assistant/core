@@ -27,7 +27,7 @@ async def test_show_form(hass):
 
 async def test_create_entry_with_hostname(hass):
     """Test that the user step works with printer hostname."""
-    with patch(
+    with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
@@ -45,7 +45,7 @@ async def test_create_entry_with_hostname(hass):
 
 async def test_create_entry_with_ipv4_address(hass):
     """Test that the user step works with printer IPv4 address."""
-    with patch(
+    with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
@@ -61,7 +61,7 @@ async def test_create_entry_with_ipv4_address(hass):
 
 async def test_create_entry_with_ipv6_address(hass):
     """Test that the user step works with printer IPv6 address."""
-    with patch(
+    with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
@@ -90,7 +90,9 @@ async def test_invalid_hostname(hass):
 
 async def test_connection_error(hass):
     """Test connection to host error."""
-    with patch("brother.Brother._get_data", side_effect=ConnectionError()):
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data", side_effect=ConnectionError()
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
@@ -100,7 +102,9 @@ async def test_connection_error(hass):
 
 async def test_snmp_error(hass):
     """Test SNMP error."""
-    with patch("brother.Brother._get_data", side_effect=SnmpError("error")):
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data", side_effect=SnmpError("error")
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
@@ -110,7 +114,9 @@ async def test_snmp_error(hass):
 
 async def test_unsupported_model_error(hass):
     """Test unsupported printer model error."""
-    with patch("brother.Brother._get_data", side_effect=UnsupportedModel("error")):
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data", side_effect=UnsupportedModel("error")
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -122,7 +128,7 @@ async def test_unsupported_model_error(hass):
 
 async def test_device_exists_abort(hass):
     """Test we abort config flow if Brother printer already configured."""
-    with patch(
+    with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
@@ -139,7 +145,9 @@ async def test_device_exists_abort(hass):
 
 async def test_zeroconf_snmp_error(hass):
     """Test we abort zeroconf flow on SNMP error."""
-    with patch("brother.Brother._get_data", side_effect=SnmpError("error")):
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data", side_effect=SnmpError("error")
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -161,7 +169,9 @@ async def test_zeroconf_snmp_error(hass):
 
 async def test_zeroconf_unsupported_model(hass):
     """Test unsupported printer model error."""
-    with patch("brother.Brother._get_data") as mock_get_data:
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data"
+    ) as mock_get_data:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -183,7 +193,7 @@ async def test_zeroconf_unsupported_model(hass):
 
 async def test_zeroconf_device_exists_abort(hass):
     """Test we abort zeroconf flow if Brother printer already configured."""
-    with patch(
+    with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
@@ -219,7 +229,9 @@ async def test_zeroconf_no_probe_existing_device(hass):
     """Test we do not probe the device is the host is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
     entry.add_to_hass(hass)
-    with patch("brother.Brother._get_data") as mock_get_data:
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data"
+    ) as mock_get_data:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -242,7 +254,7 @@ async def test_zeroconf_no_probe_existing_device(hass):
 
 async def test_zeroconf_confirm_create_entry(hass):
     """Test zeroconf confirmation and create config entry."""
-    with patch(
+    with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):

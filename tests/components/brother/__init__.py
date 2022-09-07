@@ -20,7 +20,7 @@ async def init_integration(hass, skip_setup=False) -> MockConfigEntry:
     entry.add_to_hass(hass)
 
     if not skip_setup:
-        with patch(
+        with patch("brother.Brother.initialize"), patch(
             "brother.Brother._get_data",
             return_value=json.loads(load_fixture("printer_data.json", "brother")),
         ):

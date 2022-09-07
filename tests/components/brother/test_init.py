@@ -28,7 +28,9 @@ async def test_config_not_ready(hass):
         data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
     )
 
-    with patch("brother.Brother._get_data", side_effect=ConnectionError()):
+    with patch("brother.Brother.initialize"), patch(
+        "brother.Brother._get_data", side_effect=ConnectionError()
+    ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY

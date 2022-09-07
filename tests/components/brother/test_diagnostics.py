@@ -16,7 +16,9 @@ async def test_entry_diagnostics(hass, hass_client):
 
     diagnostics_data = json.loads(load_fixture("diagnostics_data.json", "brother"))
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
-    with patch("brother.datetime", utcnow=Mock(return_value=test_time)), patch(
+    with patch("brother.Brother.initialize"), patch(
+        "brother.datetime", utcnow=Mock(return_value=test_time)
+    ), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
