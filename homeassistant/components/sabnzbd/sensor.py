@@ -167,7 +167,7 @@ class SabnzbdSensor(SensorEntity):
             name=DEFAULT_NAME,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(

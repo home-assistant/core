@@ -1,5 +1,6 @@
 """Support for Netgear switches."""
 import logging
+from typing import Any
 
 from pynetgear import ALLOW, BLOCK
 
@@ -87,12 +88,12 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._router.async_allow_block_device(self._mac, ALLOW)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._router.async_allow_block_device(self._mac, BLOCK)
         await self.coordinator.async_request_refresh()

@@ -31,6 +31,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 PLATFORMS_BY_TYPE = {
     SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.LIGHT_STRIP.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.CEILING_LIGHT.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.CURTAIN.value: [
@@ -43,6 +44,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
+    SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
     SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
     SupportedModels.BOT.value: switchbot.Switchbot,
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,

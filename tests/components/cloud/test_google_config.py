@@ -197,9 +197,8 @@ async def test_google_device_registry_sync(hass, mock_cloud_login, cloud_prefs):
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
     ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get_or_create(
-        "light", "hue", "1234", device_id="1234", area_id="ABCD"
-    )
+    entity_entry = ent_reg.async_get_or_create("light", "hue", "1234", device_id="1234")
+    entity_entry = ent_reg.async_update_entity(entity_entry.entity_id, area_id="ABCD")
 
     with patch.object(config, "async_sync_entities_all"):
         await config.async_initialize()

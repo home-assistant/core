@@ -89,7 +89,7 @@ class PlexSensor(SensorEntity):
             function=self._async_refresh_sensor,
         ).async_call
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         server_id = self._server.machine_identifier
         self.async_on_remove(
@@ -100,7 +100,7 @@ class PlexSensor(SensorEntity):
             )
         )
 
-    async def _async_refresh_sensor(self):
+    async def _async_refresh_sensor(self) -> None:
         """Set instance object and trigger an entity state update."""
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
         self._attr_native_value = len(self._server.sensor_attributes)
@@ -147,7 +147,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
         self._attr_native_unit_of_measurement = "Items"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -158,7 +158,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         )
         await self.async_refresh_sensor()
 
-    async def async_refresh_sensor(self):
+    async def async_refresh_sensor(self) -> None:
         """Update state and attributes for the library sensor."""
         _LOGGER.debug("Refreshing library sensor for '%s'", self.name)
         try:
