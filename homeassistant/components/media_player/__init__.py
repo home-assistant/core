@@ -30,7 +30,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_UNKNOWN_ERROR,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -47,6 +47,10 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
