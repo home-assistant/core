@@ -12,11 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_TYPE_MUSIC,
-)
+from homeassistant.components.media_player.const import MediaClass, MediaType
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
@@ -215,9 +211,9 @@ class ArcamFmj(MediaPlayerEntity):
         radio = [
             BrowseMedia(
                 title=preset.name,
-                media_class=MEDIA_CLASS_MUSIC,
+                media_class=MediaClass.MUSIC,
                 media_content_id=f"preset:{preset.index}",
-                media_content_type=MEDIA_TYPE_MUSIC,
+                media_content_type=MediaType.MUSIC,
                 can_play=True,
                 can_expand=False,
             )
@@ -226,7 +222,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = BrowseMedia(
             title="Arcam FMJ Receiver",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id="root",
             media_content_type="library",
             can_play=False,
@@ -289,13 +285,13 @@ class ArcamFmj(MediaPlayerEntity):
         return value / 99.0
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         elif source == SourceCodes.FM:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         else:
             value = None
         return value
