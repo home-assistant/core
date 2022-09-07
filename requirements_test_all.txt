@@ -1594,7 +1594,7 @@ subarulink==0.5.0
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.7.2
+surepy==0.8.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.4.4
