@@ -14,7 +14,8 @@ from pylint.lint import PyLinter
 from homeassistant.const import Platform
 
 if TYPE_CHECKING:
-    # available only from astroid >= 2.12.0
+    # InferenceResult is available only from astroid >= 2.12.0
+    # pre-commit should still work on out of date environments
     from astroid.typing import InferenceResult
 
 
