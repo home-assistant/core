@@ -27,9 +27,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import AirQCoordinator
 from .const import (
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    COUNT_PER_DECILITERS,
     DOMAIN,
-    LENGTH_MICROMETERS,
     SensorDeviceClass as CustomSensorDeviceClass,
 )
 
@@ -70,6 +68,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         key="health",
         name="Health index",
         device_class=CustomSensorDeviceClass.INDEX_HEALTH,
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:heart-pulse",
     ),
@@ -114,6 +113,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         key="performance",
         name="Performance",
         device_class=CustomSensorDeviceClass.INDEX_PERFORMANCE,
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:head-check",
     ),
@@ -142,55 +142,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         icon="mdi:dots-hexagon",
     ),
     SensorEntityDescription(
-        key="cnt0_3",
-        name="Particulates count 0.3",
-        device_class=CustomSensorDeviceClass.CNT0_3,
-        native_unit_of_measurement=COUNT_PER_DECILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="cnt0_5",
-        name="Particulates count 0.5",
-        device_class=CustomSensorDeviceClass.CNT0_5,
-        native_unit_of_measurement=COUNT_PER_DECILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="cnt1",
-        name="Particulates count 1",
-        device_class=CustomSensorDeviceClass.CNT1,
-        native_unit_of_measurement=COUNT_PER_DECILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="cnt2_5",
-        name="Particulates count 2.5",
-        device_class=CustomSensorDeviceClass.CNT2_5,
-        native_unit_of_measurement=COUNT_PER_DECILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="cnt5",
-        name="Particulates count 5",
-        device_class=CustomSensorDeviceClass.CNT5,
-        native_unit_of_measurement=COUNT_PER_DECILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="cnt10",
-        name="Particulates count 10",
-        device_class=CustomSensorDeviceClass.CNT10,
-        native_unit_of_measurement=COUNT_PER_DECILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="TypPS",
-        name="Mean particulates size",
-        device_class=CustomSensorDeviceClass.MEAN_PM_SIZE,
-        native_unit_of_measurement=LENGTH_MICROMETERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
@@ -206,7 +157,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="sound",
-        name="Sound",
+        name="Noise",
         device_class=CustomSensorDeviceClass.SOUND,
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
         state_class=SensorStateClass.MEASUREMENT,
@@ -214,7 +165,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="sound_max",
-        name="Loudest sound during the averaging interval",
+        name="Noise (Maximum)",
         device_class=CustomSensorDeviceClass.SOUND,
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
         state_class=SensorStateClass.MEASUREMENT,
@@ -294,10 +245,12 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = coordinator.device_info
         self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        # the following two sensor units must be converted to %
+        self._factor = 0.1 if description.key in ["performance", "health"] else 1.0
 
     @property
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
         # While a sensor is warming up its key isn't present in the returned dict
         # => .get(key) returns None
-        return self.coordinator.data.get(self.entity_description.key)
+        return self.coordinator.data.get(self.entity_description.key) * self._factor
