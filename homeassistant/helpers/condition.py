@@ -609,7 +609,7 @@ def sun(
     # the following should be used instead:
     #
     #    condition:
-    #      condition: state 
+    #      condition: state
     #      entity_id: sun.sun
     #      state: 'above_horizon' (or 'below_horizon')
     #
