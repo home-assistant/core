@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Velocidad en baudios",
-                    "device": "Dispositivo"
+                    "device": "Dispositivo",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Conectar con el m\u00f3dem"
             }

@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Baud Speed",
-                    "device": "Device"
+                    "device": "Device",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Connect to the modem"
             }

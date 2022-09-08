@@ -11,7 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "device": "Apparat"
+                    "device": "Apparat",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Mam Modem verbannen"
             }

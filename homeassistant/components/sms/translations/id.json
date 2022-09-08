@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Kecepatan Baud",
-                    "device": "Perangkat"
+                    "device": "Perangkat",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Hubungkan ke modem"
             }

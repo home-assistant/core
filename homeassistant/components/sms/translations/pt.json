@@ -11,7 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "device": "Dispositivo"
+                    "device": "Dispositivo",
+                    "sms_state_config": "Accept SMS State"
                 }
             }
         }

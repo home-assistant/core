@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Velocit\u00e0 Baud",
-                    "device": "Dispositivo"
+                    "device": "Dispositivo",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Connettiti al modem"
             }

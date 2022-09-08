@@ -15,6 +15,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_SMS_STATE,
+    DEFAULT_SMS_STATE,
     CONF_BAUD_SPEED,
     DEFAULT_BAUD_SPEED,
     DEFAULT_SCAN_INTERVAL,
@@ -58,14 +60,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure Gammu state machine."""
 
+
     device = entry.data[CONF_DEVICE]
     connection_mode = "at"
     baud_speed = entry.data.get(CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED)
+    sms_state_config = entry.data.get(CONF_SMS_STATE, DEFAULT_SMS_STATE)
     if baud_speed != DEFAULT_BAUD_SPEED:
         connection_mode += baud_speed
     config = {"Device": device, "Connection": connection_mode}
     _LOGGER.debug("Connecting mode:%s", connection_mode)
-    gateway = await create_sms_gateway(config, hass)
+    gateway = await create_sms_gateway(config, hass, sms_state_config)
     if not gateway:
         raise ConfigEntryNotReady(f"Cannot find device {device}")
 

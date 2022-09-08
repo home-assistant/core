@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Baud H\u0131z\u0131",
-                    "device": "Cihaz"
+                    "device": "Cihaz",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Modeme ba\u011flan\u0131n"
             }

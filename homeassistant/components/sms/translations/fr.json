@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Vitesse en bauds",
-                    "device": "Appareil"
+                    "device": "Appareil",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Se connecter au modem"
             }

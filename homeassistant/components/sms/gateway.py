@@ -6,7 +6,7 @@ from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
 
 from homeassistant.core import callback
 
-from .const import DOMAIN, SMS_STATE_UNREAD
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,13 +14,14 @@ _LOGGER = logging.getLogger(__name__)
 class Gateway:
     """SMS gateway to interact with a GSM modem."""
 
-    def __init__(self, config, hass):
+    def __init__(self, config, hass, sms_state_config):
         """Initialize the sms gateway."""
         _LOGGER.debug("Init with connection mode:%s", config["Connection"])
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
         self._first_pull = True
+        self._sms_state_config = sms_state_config
 
     async def init_async(self):
         """Initialize the sms gateway asynchronously."""
@@ -35,10 +36,10 @@ class Gateway:
         state_machine.ReadDevice()
 
         _LOGGER.debug("Pulling modem")
-        self.sms_read_messages(state_machine, self._first_pull)
+        self.sms_read_messages(state_machine, self._first_pull, self._sms_state_config)
         self._first_pull = False
 
-    def sms_read_messages(self, state_machine, force=False):
+    def sms_read_messages(self, state_machine, force=False, sms_state_config="All"):
         """Read all received SMS messages.
 
         @param state_machine: state machine which invoked action
@@ -51,10 +52,10 @@ class Gateway:
         for entry in entries:
             decoded_entry = gammu.DecodeSMS(entry)
             message = entry[0]
-            _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
             sms_state = message["State"]
-            _LOGGER.debug("SMS state:%s", sms_state)
-            if sms_state == SMS_STATE_UNREAD:
+            _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
+            _LOGGER.debug("Accept SMS state:%s,Received SMS state:%s", sms_state_config, sms_state)
+            if sms_state == sms_state_config or sms_state_config == "All":
                 if decoded_entry is None:
                     text = message["Text"]
                 else:
@@ -163,10 +164,10 @@ class Gateway:
         return await self._worker.terminate_async()
 
 
-async def create_sms_gateway(config, hass):
+async def create_sms_gateway(config, hass, sms_state_config):
     """Create the sms gateway."""
     try:
-        gateway = Gateway(config, hass)
+        gateway = Gateway(config, hass, sms_state_config)
         try:
             await gateway.init_async()
         except gammu.GSMError as exc:

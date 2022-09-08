@@ -8,7 +8,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers import selector
 
-from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DEFAULT_BAUD_SPEEDS, DOMAIN
+from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DEFAULT_BAUD_SPEEDS, DOMAIN, CONF_SMS_STATE, DEFAULT_SMS_STATE, DEFAULT_SMS_STATES
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +19,9 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): selector.selector(
             {"select": {"options": DEFAULT_BAUD_SPEEDS}}
         ),
+        vol.Optional(CONF_SMS_STATE, default=DEFAULT_SMS_STATE): selector.selector(
+            {"select": {"options": DEFAULT_SMS_STATES}}
+        )
     }
 )
 
@@ -31,10 +34,11 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     device = data[CONF_DEVICE]
     connection_mode = "at"
     baud_speed = data.get(CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED)
+    sms_state_config = data.get(CONF_SMS_STATE, DEFAULT_SMS_STATE)
     if baud_speed != DEFAULT_BAUD_SPEED:
         connection_mode += baud_speed
     config = {"Device": device, "Connection": connection_mode}
-    gateway = await create_sms_gateway(config, hass)
+    gateway = await create_sms_gateway(config, hass, sms_state_config)
     if not gateway:
         raise CannotConnect
     try:

@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Velocitat en Baudis",
-                    "device": "Dispositiu"
+                    "device": "Dispositiu",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Connexi\u00f3 al m\u00f2dem"
             }

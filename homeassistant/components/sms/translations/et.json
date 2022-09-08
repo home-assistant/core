@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Pordi kiirus",
-                    "device": "Seade"
+                    "device": "Seade",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Modemiga \u00fchenduse loomine"
             }

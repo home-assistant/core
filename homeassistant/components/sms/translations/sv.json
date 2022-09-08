@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Baud-hastighet",
-                    "device": "Enhet"
+                    "device": "Enhet",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Anslut till modemet"
             }

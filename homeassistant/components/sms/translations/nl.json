@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Baud snelheid",
-                    "device": "Apparaat"
+                    "device": "Apparaat",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Maak verbinding met de modem"
             }

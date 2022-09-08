@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Szybko\u015b\u0107 transmisji (Baud)",
-                    "device": "Urz\u0105dzenie"
+                    "device": "Urz\u0105dzenie",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Po\u0142\u0105czenie z modemem"
             }

@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "\u9b91\u7387",
-                    "device": "\u88dd\u7f6e"
+                    "device": "\u88dd\u7f6e",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "\u9023\u7dda\u81f3\u6578\u64da\u6a5f"
             }

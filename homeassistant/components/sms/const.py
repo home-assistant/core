@@ -8,11 +8,11 @@ from homeassistant.helpers.entity import EntityCategory
 DOMAIN = "sms"
 SMS_GATEWAY = "SMS_GATEWAY"
 HASS_CONFIG = "sms_hass_config"
-SMS_STATE_UNREAD = "UnRead"
 SIGNAL_COORDINATOR = "signal_coordinator"
 NETWORK_COORDINATOR = "network_coordinator"
 GATEWAY = "gateway"
 DEFAULT_SCAN_INTERVAL = 30
+CONF_SMS_STATE = "sms_state_config"
 CONF_BAUD_SPEED = "baud_speed"
 CONF_UNICODE = "unicode"
 DEFAULT_BAUD_SPEED = "0"
@@ -37,6 +37,12 @@ DEFAULT_BAUD_SPEEDS = [
     {"value": "57600", "label": "57600"},
     {"value": "76800", "label": "76800"},
     {"value": "115200", "label": "115200"},
+]
+DEFAULT_SMS_STATE = "UnRead"
+DEFAULT_SMS_STATES = [
+    {"value": DEFAULT_SMS_STATE, "label": DEFAULT_SMS_STATE},
+    {"value": "Read", "label": "Read"},
+    {"value": "All", "label": "All"},
 ]
 
 SIGNAL_SENSORS: Final[dict[str, SensorEntityDescription]] = {

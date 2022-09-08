@@ -5,7 +5,8 @@
         "title": "Connect to the modem",
         "data": {
           "device": "Device",
-          "baud_speed": "Baud Speed"
+          "baud_speed": "Baud Speed",
+		      "sms_state_config": "Accept SMS State"
         }
       }
     },

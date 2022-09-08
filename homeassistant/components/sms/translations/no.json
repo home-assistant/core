@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Overf\u00f8ringshastighet",
-                    "device": "Enhet"
+                    "device": "Enhet",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Koble til modemet"
             }

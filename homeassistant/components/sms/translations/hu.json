@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Baud sebess\u00e9g",
-                    "device": "Eszk\u00f6z"
+                    "device": "Eszk\u00f6z",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Csatlakoz\u00e1s a modemhez"
             }

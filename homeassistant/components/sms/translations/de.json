@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "baud_speed": "Baud-Geschwindigkeit",
-                    "device": "Ger\u00e4t"
+                    "device": "Ger\u00e4t",
+                    "sms_state_config": "Accept SMS State"
                 },
                 "title": "Verbinden mit dem Modem"
             }
