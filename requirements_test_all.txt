@@ -341,10 +341,10 @@ blinkpy==0.19.0
 bluemaestro-ble==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.3.4
+bluetooth-adapters==0.3.5
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.1
+bluetooth-auto-recovery==0.3.2
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -1166,7 +1166,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.8.2
+pylitterbot==2022.9.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1454,7 +1454,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.08.0
+regenmaschine==2022.09.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1683,7 +1683,7 @@ vallox-websocket-api==2.12.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.6.2
+velbus-aio==2022.9.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.18

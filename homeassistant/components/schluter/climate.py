@@ -12,8 +12,6 @@ from homeassistant.components.climate import (
     SCAN_INTERVAL,
     TEMP_CELSIUS,
     ClimateEntity,
-)
-from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

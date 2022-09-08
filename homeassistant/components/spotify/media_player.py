@@ -15,18 +15,12 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
-    REPEAT_MODE_ALL,
-    REPEAT_MODE_OFF,
-    REPEAT_MODE_ONE,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -58,9 +52,9 @@ SUPPORT_SPOTIFY = (
 )
 
 REPEAT_MODE_MAPPING_TO_HA = {
-    "context": REPEAT_MODE_ALL,
-    "off": REPEAT_MODE_OFF,
-    "track": REPEAT_MODE_ONE,
+    "context": RepeatMode.ALL,
+    "off": RepeatMode.OFF,
+    "track": RepeatMode.ONE,
 }
 
 REPEAT_MODE_MAPPING_TO_SPOTIFY = {
@@ -110,7 +104,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
-    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_media_content_type = MediaType.MUSIC
     _attr_media_image_remotely_accessible = False
 
     def __init__(
@@ -144,13 +138,13 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._playlist: dict | None = None
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState:
         """Return the playback state."""
         if not self._currently_playing:
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
         if self._currently_playing["is_playing"]:
-            return STATE_PLAYING
-        return STATE_PAUSED
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.PAUSED
 
     @property
     def volume_level(self) -> float | None:
@@ -315,7 +309,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         # Yet, they do generate those types of URI in their official clients.
         media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
-        if media_type in (MEDIA_TYPE_TRACK, MEDIA_TYPE_EPISODE, MEDIA_TYPE_MUSIC):
+        if media_type in {MediaType.TRACK, MediaType.EPISODE, MediaType.MUSIC}:
             kwargs["uris"] = [media_id]
         elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
@@ -338,7 +332,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         for device in self.data.devices.data:
             if device["name"] == source:
                 self.data.client.transfer_playback(
-                    device["id"], self.state == STATE_PLAYING
+                    device["id"], self.state == MediaPlayerState.PLAYING
                 )
                 return
 
@@ -348,7 +342,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.shuffle(shuffle)
 
     @spotify_exception_handler
-    def set_repeat(self, repeat: str) -> None:
+    def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
             raise ValueError(f"Unsupported repeat mode: {repeat}")
@@ -374,7 +368,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             self._playlist is None or self._playlist["uri"] != context["uri"]
         ):
             self._playlist = None
-            if context["type"] == MEDIA_TYPE_PLAYLIST:
+            if context["type"] == MediaType.PLAYLIST:
                 self._playlist = self.data.client.playlist(current["context"]["uri"])
 
     async def async_browse_media(
