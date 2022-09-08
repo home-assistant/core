@@ -129,14 +129,14 @@ class PanasonicBluRay(MediaPlayerEntity):
         our favour as it means the device is still accepting commands and we
         can thus turn it back on when desired.
         """
-        if self.state != MediaPlayerState.OFF:
+        if self._state != MediaPlayerState.OFF:
             self._device.send_key("POWER")
 
         self._state = MediaPlayerState.OFF
 
     def turn_on(self) -> None:
         """Wake the device back up from standby."""
-        if self.state == MediaPlayerState.OFF:
+        if self._state == MediaPlayerState.OFF:
             self._device.send_key("POWER")
 
         self._state = MediaPlayerState.IDLE

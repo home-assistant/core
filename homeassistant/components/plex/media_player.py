@@ -275,7 +275,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def _active_media_plexapi_type(self):
         """Get the active media type required by PlexAPI commands."""
-        if self.media_content_type is MediaType.MUSIC:
+        if self.media_content_type == MediaType.MUSIC:
             return "music"
 
         return "video"

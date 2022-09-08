@@ -264,7 +264,7 @@ class PhilipsTVMediaPlayer(
             return app.get("label")
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)

@@ -186,10 +186,10 @@ class PS4Device(MediaPlayerEntity):
                         # Get data from PS Store.
                         asyncio.ensure_future(self.async_get_title_data(title_id, name))
                 else:
-                    if self.state != MediaPlayerState.IDLE:
+                    if self._state != MediaPlayerState.IDLE:
                         self.idle()
             else:
-                if self.state != MediaPlayerState.STANDBY:
+                if self._state != MediaPlayerState.STANDBY:
                     self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
@@ -377,7 +377,7 @@ class PS4Device(MediaPlayerEntity):
     def entity_picture(self):
         """Return picture."""
         if (
-            self.state == MediaPlayerState.PLAYING
+            self._state == MediaPlayerState.PLAYING
             and self._media_content_id is not None
             and (image_hash := self.media_image_hash) is not None
         ):

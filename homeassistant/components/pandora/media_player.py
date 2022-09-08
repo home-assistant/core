@@ -104,7 +104,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def turn_on(self) -> None:
         """Turn the media player on."""
-        if self.state != MediaPlayerState.OFF:
+        if self._player_state != MediaPlayerState.OFF:
             return
         self._pianobar = pexpect.spawn("pianobar")
         _LOGGER.info("Started pianobar subprocess")
@@ -306,7 +306,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
         if time_remaining not in (self._time_remaining, self._media_duration):
             self._player_state = MediaPlayerState.PLAYING
-        elif self.state == MediaPlayerState.PLAYING:
+        elif self._player_state == MediaPlayerState.PLAYING:
             self._player_state = MediaPlayerState.PAUSED
         self._time_remaining = time_remaining
 
