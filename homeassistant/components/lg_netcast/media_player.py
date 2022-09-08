@@ -13,16 +13,10 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -81,6 +75,7 @@ class LgTVDevice(MediaPlayerEntity):
     """Representation of a LG TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_media_content_type = MediaType.CHANNEL
 
     def __init__(self, client, name, on_action_script):
         """Initialize the LG TV device."""
@@ -105,14 +100,14 @@ class LgTVDevice(MediaPlayerEntity):
             with self._client as client:
                 client.send_command(command)
         except (LgNetCastError, RequestException):
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
 
     def update(self) -> None:
         """Retrieve the latest data from the LG TV."""
 
         try:
             with self._client as client:
-                self._state = STATE_PLAYING
+                self._state = MediaPlayerState.PLAYING
 
                 self.__update_volume()
 
@@ -147,7 +142,7 @@ class LgTVDevice(MediaPlayerEntity):
                     )
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
 
     def __update_volume(self):
         volume_info = self._client.get_volume()
@@ -190,11 +185,6 @@ class LgTVDevice(MediaPlayerEntity):
     def media_content_id(self):
         """Content id of current playing media."""
         return self._channel_id
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_CHANNEL
 
     @property
     def media_channel(self):
@@ -259,13 +249,13 @@ class LgTVDevice(MediaPlayerEntity):
     def media_play(self) -> None:
         """Send play command."""
         self._playing = True
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
         self.send_command(33)
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
-        self._state = STATE_PAUSED
+        self._state = MediaPlayerState.PAUSED
         self.send_command(34)
 
     def media_next_track(self) -> None:
@@ -278,7 +268,7 @@ class LgTVDevice(MediaPlayerEntity):
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Tune to channel."""
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type != MediaType.CHANNEL:
             raise ValueError(f"Invalid media type: {media_type}")
 
         for name, channel in self._sources.items():
