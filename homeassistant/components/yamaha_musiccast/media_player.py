@@ -145,7 +145,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return None
 
     @property
-    def state(self) -> MediaPlayerState:
+    def state(self):
         """Return the state of the player."""
         if self.coordinator.data.zones[self._zone_id].power == "on":
             if self._is_netusb and self.coordinator.data.netusb_playback == "pause":
@@ -263,7 +263,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             )
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):
@@ -333,7 +333,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             )
             add_media_source = True
 
-        def get_content_type(item) -> MediaClass:
+        def get_content_type(item):
             if item.can_play:
                 return MediaClass.TRACK
             return MediaClass.DIRECTORY

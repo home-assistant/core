@@ -107,7 +107,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return XBOX_STATE_MAP[status.power_state]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self):
         """Flag media player features that are supported."""
         if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
             return (
@@ -118,7 +118,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return SUPPORT_XBOX
 
     @property
-    def media_content_type(self) -> MediaType:
+    def media_content_type(self):
         """Media content type."""
         app_details = self.data.app_details
         if app_details and app_details.product_family == "Games":
@@ -205,7 +205,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         )
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Launch an app on the Xbox."""
         if media_id == "Home":

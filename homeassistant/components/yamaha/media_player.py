@@ -433,7 +433,7 @@ class YamahaDevice(MediaPlayerEntity):
             return self._play_status.album
 
     @property
-    def media_content_type(self) -> MediaType | None:
+    def media_content_type(self):
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
