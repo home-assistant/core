@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,7 +28,7 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 class EcobeeSensorEntityDescriptionMixin:
     """Represent the required ecobee entity description attributes."""
 
-    runtime_key: Optional[str]
+    runtime_key: str | None
 
 
 @dataclass
@@ -106,7 +105,7 @@ class EcobeeSensor(SensorEntity):
     """Representation of an Ecobee sensor."""
 
     entity_description: EcobeeSensorEntityDescription
-        
+
     def __init__(
         self,
         data,
