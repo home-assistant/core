@@ -363,7 +363,7 @@ class KefMediaPlayer(MediaPlayerEntity):
 
     async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
-        if self._speaker_type == "LS50" and self.state == MediaPlayerState.OFF:
+        if self._speaker_type == "LS50" and self._state == MediaPlayerState.OFF:
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
