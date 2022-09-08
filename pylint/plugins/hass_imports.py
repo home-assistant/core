@@ -330,6 +330,10 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         for module, _alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
+            if module.startswith("homeassistant.components.") and module.endswith(
+                "const"
+            ):
+                self.add_message("hass-component-root-import", node=node)
 
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
@@ -374,6 +378,12 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             ):
                 self.add_message("hass-relative-import", node=node)
                 return
+        if node.modname.startswith("homeassistant.components.") and (
+            node.modname.endswith(".const")
+            or "const" in {names[0] for names in node.names}
+        ):
+            self.add_message("hass-component-root-import", node=node)
+            return
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
             for name_tuple in node.names:
                 for obsolete_import in obsolete_imports:
