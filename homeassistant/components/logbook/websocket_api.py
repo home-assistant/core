@@ -397,12 +397,14 @@ async def ws_event_stream(
     )
 
     if msg_id not in connection.subscriptions:
-        # Unsubscribe happened while waiting for recorder
+        # Unsubscribe happened while sending historical events
         return
 
     live_stream.wait_sync_task = asyncio.create_task(
         get_instance(hass).async_block_till_done()
     )
+    await live_stream.wait_sync_task
+
     #
     # Fetch any events from the database that have
     # not been committed since the original fetch
