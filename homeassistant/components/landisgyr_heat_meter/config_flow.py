@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,9 +96,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reader = UltraheatReader(port)
         heat_meter = HeatMeterService(reader)
         try:
-            async with async_timeout.timeout(30):
+            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
-                # reading the IR port can take some time
                 data = await self.hass.async_add_executor_job(heat_meter.read)
                 _LOGGER.debug("Got data from Ultraheat API: %s", data)
 
