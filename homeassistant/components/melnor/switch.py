@@ -1,18 +1,44 @@
-"""Support for Melnor RainCloud sprinkler water timer."""
+"""Switch support for Melnor Bluetooth water timer."""
 
 from __future__ import annotations
 
-from typing import Any, cast
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 from melnor_bluetooth.device import Valve
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .models import MelnorBluetoothBaseEntity, MelnorDataUpdateCoordinator
+from .models import MelnorDataUpdateCoordinator, MelnorZoneEntity
+
+
+def set_is_watering(valve: Valve, value: bool) -> None:
+    """Set the is_watering state of a valve."""
+    valve.is_watering = value
+
+
+@dataclass
+class MelnorSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    on_off_fn: Callable[[Valve, bool], Any]
+    state_fn: Callable[[Valve], Any]
+
+
+@dataclass
+class MelnorSwitchEntityDescription(
+    SwitchEntityDescription, MelnorSwitchEntityDescriptionMixin
+):
+    """Describes Melnor switch entity."""
 
 
 async def async_setup_entry(
@@ -21,55 +47,63 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    switches = []
+    entities: list[MelnorZoneSwitch] = []
 
     coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # This device may not have 4 valves total, but the library will only expose the right number of valves
     for i in range(1, 5):
-        if coordinator.data[f"zone{i}"] is not None:
-            switches.append(MelnorSwitch(coordinator, i))
+        valve = coordinator.data[f"zone{i}"]
+        if valve is not None:
 
-    async_add_devices(switches, True)
+            entities.append(
+                MelnorZoneSwitch(
+                    coordinator,
+                    valve,
+                    MelnorSwitchEntityDescription(
+                        device_class=SwitchDeviceClass.SWITCH,
+                        icon="mdi:sprinkler",
+                        key="manual",
+                        name="Manual",
+                        on_off_fn=set_is_watering,
+                        state_fn=lambda valve: valve.is_watering,
+                    ),
+                )
+            )
+
+    async_add_devices(entities)
 
 
-class MelnorSwitch(MelnorBluetoothBaseEntity, SwitchEntity):
+class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
     """A switch implementation for a melnor device."""
 
-    _valve_index: int
-    _attr_icon = "mdi:sprinkler"
+    entity_description: MelnorSwitchEntityDescription
 
     def __init__(
         self,
         coordinator: MelnorDataUpdateCoordinator,
-        valve_index: int,
+        valve: Valve,
+        entity_description: MelnorSwitchEntityDescription,
     ) -> None:
         """Initialize a switch for a melnor device."""
-        super().__init__(coordinator)
-        self._valve_index = valve_index
+        super().__init__(coordinator, valve)
 
-        self._attr_unique_id = (
-            f"switch-{self._attr_unique_id}-zone{self._valve().id}-manual"
-        )
-
-        self._attr_name = f"{self._device.name} Zone {self._valve().id+1}"
+        self._attr_unique_id = f"{self._device.mac}-zone{valve.id}-manual"
+        self.entity_description = entity_description
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._valve().is_watering
+        return self.entity_description.state_fn(self._valve)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self._valve().is_watering = True
+        self.entity_description.on_off_fn(self._valve, True)
         await self._device.push_state()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._valve().is_watering = False
+        self.entity_description.on_off_fn(self._valve, False)
         await self._device.push_state()
         self.async_write_ha_state()
-
-    def _valve(self) -> Valve:
-        return cast(Valve, self._device[f"zone{self._valve_index}"])

@@ -3,8 +3,7 @@ from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import ClimateEntity, HVACMode
 from homeassistant.components.overkiz.entity import OverkizEntity
 from homeassistant.const import TEMP_CELSIUS
 

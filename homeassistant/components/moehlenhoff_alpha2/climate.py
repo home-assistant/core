@@ -1,8 +1,9 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -110,7 +111,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
             self.coordinator.data["heat_areas"][self.heat_area_id].get("T_TARGET", 0.0)
         )
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return

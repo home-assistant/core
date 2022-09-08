@@ -69,8 +69,14 @@ class Device:
         self.hass = hass
         self._igd_device = igd_device
         self.coordinator: DataUpdateCoordinator | None = None
-        self.mac_address: str | None = None
         self.original_udn: str | None = None
+
+    async def async_get_mac_address(self) -> str | None:
+        """Get mac address."""
+        if not self.host:
+            return None
+
+        return await async_get_mac_address_from_host(self.hass, self.host)
 
     @property
     def udn(self) -> str:

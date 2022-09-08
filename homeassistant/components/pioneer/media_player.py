@@ -210,31 +210,31 @@ class PioneerDevice(MediaPlayerEntity):
         """Title of current playing media."""
         return self._selected_source
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.telnet_command("PF")
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up media player."""
         self.telnet_command("VU")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self.telnet_command("VD")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # 60dB max
         self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.telnet_command("MO" if mute else "MF")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.telnet_command("PO")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.telnet_command(f"{self._source_name_to_number.get(source)}FN")

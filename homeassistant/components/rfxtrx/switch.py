@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import RFXtrx as rfxtrxmod
 
@@ -87,7 +88,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
 
@@ -134,7 +135,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
 
             self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._cmd_on is not None:
             await self._async_send(self._device.send_command, self._cmd_on)
@@ -143,7 +144,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._cmd_off is not None:
             await self._async_send(self._device.send_command, self._cmd_off)

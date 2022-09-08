@@ -342,7 +342,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, DOMAIN, entity_component, yaml_collection, Person
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, entity_component, storage_collection, Person.from_yaml
+        hass, DOMAIN, DOMAIN, entity_component, storage_collection, Person
     )
 
     await yaml_collection.async_load(
@@ -385,15 +385,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Person(RestoreEntity):
+class Person(collection.CollectionEntity, RestoreEntity):
     """Represent a tracked person."""
 
     _attr_should_poll = False
+    editable: bool
 
     def __init__(self, config):
         """Set up person."""
         self._config = config
-        self.editable = True
         self._latitude = None
         self._longitude = None
         self._gps_accuracy = None
@@ -402,8 +402,15 @@ class Person(RestoreEntity):
         self._unsub_track_device = None
 
     @classmethod
-    def from_yaml(cls, config):
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType):
+        """Return entity instance initialized from storage."""
+        person = cls(config)
+        person.editable = True
+        return person
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType):
+        """Return entity instance initialized from yaml."""
         person = cls(config)
         person.editable = False
         return person
@@ -468,7 +475,7 @@ class Person(RestoreEntity):
                 EVENT_HOMEASSISTANT_START, person_start_hass
             )
 
-    async def async_update_config(self, config):
+    async def async_update_config(self, config: ConfigType):
         """Handle when the config is updated."""
         self._config = config
 

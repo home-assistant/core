@@ -117,6 +117,10 @@
     },
     "options": {
         "step": {
+            "init": {
+                "description": "ZHA peatatakse.  Kas soovid j\u00e4tkata?",
+                "title": "Seadista ZHA uuesti"
+            },
             "upload_manual_backup": {
                 "title": "Lae k\u00e4sitsi loodud varukoopia \u00fcles"
             }
