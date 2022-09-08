@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -142,9 +142,9 @@ class ImageProcessingEntity(Entity):
 class ImageProcessingFaceEntity(ImageProcessingEntity):
     """Base entity class for face image processing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize base face identify/verify entity."""
-        self.faces = []
+        self.faces: list[dict[str, Any]] = []
         self.total_faces = 0
 
     @property
@@ -182,14 +182,14 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         """Return device specific state attributes."""
         return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
 
-    def process_faces(self, faces, total):
+    def process_faces(self, faces: list[dict[str, Any]], total: int) -> None:
         """Send event with detected faces and store data."""
         run_callback_threadsafe(
             self.hass.loop, self.async_process_faces, faces, total
         ).result()
 
     @callback
-    def async_process_faces(self, faces, total):
+    def async_process_faces(self, faces: list[dict[str, Any]], total: int) -> None:
         """Send event with detected faces and store data.
 
         known are a dict in follow format:
