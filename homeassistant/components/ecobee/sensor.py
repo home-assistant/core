@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
+from typing import Optional
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -29,7 +29,7 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 class EcobeeSensorEntityDescriptionMixin:
     """Represent the required ecobee entity description attributes."""
 
-    runtime_key: str
+    runtime_key: Optional[str]
 
 
 @dataclass
@@ -105,8 +105,6 @@ async def async_setup_entry(
 class EcobeeSensor(SensorEntity):
     """Representation of an Ecobee sensor."""
 
-    entity_description: EcobeeSensorEntityDescription
-
     def __init__(
         self,
         data,
@@ -165,7 +163,7 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
-    def available(self) -> bool:
+    def available(self):
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
@@ -185,7 +183,7 @@ class EcobeeSensor(SensorEntity):
 
         return self._state
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
