@@ -392,7 +392,7 @@ class Luminary(LightEntity):
         if ColorMode.HS in self._attr_supported_color_modes:
             self._rgb_color = self._luminary.rgb()
 
-        if len(self._attr_supported_color_modes > 1):
+        if len(self._attr_supported_color_modes) > 1:
             # The light supports hs + color temp, determine which one it is
             if self._rgb_color == (0, 0, 0):
                 self._attr_color_mode = ColorMode.COLOR_TEMP
