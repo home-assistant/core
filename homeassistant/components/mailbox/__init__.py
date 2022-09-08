@@ -144,13 +144,13 @@ class MailboxEntity(Entity):
 class Mailbox:
     """Represent a mailbox device."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize mailbox object."""
         self.hass = hass
         self.name = name
 
     @callback
-    def async_update(self):
+    def async_update(self) -> None:
         """Send event notification of updated mailbox."""
         self.hass.bus.async_fire(EVENT)
 

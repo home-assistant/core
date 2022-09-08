@@ -102,9 +102,9 @@ async def async_setup_platform(
 class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for ALPR image processing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize base ALPR entity."""
-        self.plates = {}
+        self.plates: dict[str, float] = {}
         self.vehicles = 0
 
     @property
@@ -130,18 +130,18 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
-    def process_plates(self, plates, vehicles):
+    def process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data."""
         run_callback_threadsafe(
             self.hass.loop, self.async_process_plates, plates, vehicles
         ).result()
 
     @callback
-    def async_process_plates(self, plates, vehicles):
+    def async_process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data.
 
         plates are a dict in follow format:
-          { 'plate': confidence }
+          { '<plate>': confidence }
 
         This method must be run in the event loop.
         """
