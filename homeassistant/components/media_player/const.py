@@ -51,6 +51,8 @@ class MediaPlayerState(StrEnum):
     PAUSED = "paused"
     STANDBY = "standby"
     BUFFERING = "buffering"
+    UNKNOWN = "unknown"
+    UNAVAILABLE = "unavailable"
 
 
 class MediaClass(StrEnum):
