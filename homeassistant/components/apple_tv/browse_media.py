@@ -1,8 +1,7 @@
 """Support for media browsing."""
 from typing import Any
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import MediaClass, MediaType
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 
 
 def build_app_list(app_list: dict[str, str]) -> BrowseMedia:

@@ -23,14 +23,12 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    async_process_play_media_url,
-)
-from homeassistant.components.media_player.const import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
