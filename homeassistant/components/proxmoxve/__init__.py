@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -188,16 +188,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await hass.async_add_executor_job(proxmox_client.build_client)
     except AuthenticationError as error:
         raise ConfigEntryAuthFailed from error
-    except SSLError as err:
+    except SSLError as error:
         raise ConfigEntryNotReady(
             f"Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance {host}:{port}"
-        ) from err
-    except ConnectTimeout as err:
+        ) from error
+    except ConnectTimeout as error:
         raise ConfigEntryNotReady(
             f"Connection to host {host} timed out during setup"
-        ) from err
-    except ResourceException as err:
-        raise ConfigEntryNotReady from err
+        ) from error
+    except ResourceException as error:
+        raise ConfigEntryNotReady from error
 
     proxmox = await hass.async_add_executor_job(proxmox_client.get_api_client)
 
@@ -210,6 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         def poll_api():
             """Call the api."""
+            api_status = {}
             try:
                 if api_category == ProxmoxType.Proxmox:
                     api_status = proxmox.version.get()
@@ -221,15 +222,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     api_status = proxmox.nodes(node).lxc(vm_id).status.current.get()
             except AuthenticationError as error:
                 raise ConfigEntryAuthFailed from error
+            except SSLError as error:
+                raise UpdateFailed from error
+            except ConnectTimeout as error:
+                raise UpdateFailed from error
             except ResourceException as error:
-                raise ConfigEntryNotReady from error
+                raise UpdateFailed from error
 
             return api_status
 
         try:
             status = await hass.async_add_executor_job(poll_api)
-        except ResourceException as err:
-            raise UpdateFailed(err) from err
+        except ResourceException as error:
+            raise UpdateFailed(error) from error
 
         return parse_api_proxmox(status, api_category)
 
@@ -278,6 +283,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         PROXMOX_CLIENT: proxmox_client,
         COORDINATORS: coordinators,
     }
+
+    device_info(
+        hass=hass,
+        config_entry=config_entry,
+        api_category=ProxmoxType.Proxmox,
+        create=True,
+    )
+
+    device_info(
+        hass=hass,
+        config_entry=config_entry,
+        api_category=ProxmoxType.Node,
+        create=True,
+    )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -334,10 +353,11 @@ def parse_api_proxmox(status, info_type):
 
 
 def device_info(
-    hass,
-    config_entry,
-    proxmox_type,
-    vm_id,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    api_category: ProxmoxType,
+    vm_id: int | None = None,
+    create: bool | None = False,
 ):
     """Return the Device Info."""
 
@@ -352,32 +372,50 @@ def device_info(
     if not (coordinator_data := coordinator.data) is None:
         proxmox_version = coordinator_data["version"]
 
-    coordinator = coordinators[vm_id]
-    if not (coordinator_data := coordinator.data) is None:
-        vm_name = coordinator_data["name"]
+    if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
+        coordinator = coordinators[vm_id]
+        if not (coordinator_data := coordinator.data) is None:
+            vm_name = coordinator_data["name"]
 
-    if proxmox_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
         name = f"{node} {vm_name} ({vm_id})"
         host_port_node_vm = f"{host}_{port}_{node}_{vm_id}"
-        url = f"https://{host}:{port}/#v1:0:={proxmox_type}/{vm_id}"
-    elif proxmox_type is ProxmoxType.Node:
-        name = node
+        url = f"https://{host}:{port}/#v1:0:={api_category}/{vm_id}"
+        via_device = f"{host}_{port}_{node}"
+    elif api_category is ProxmoxType.Node:
+        name = f"{node} - {host}"
         host_port_node_vm = f"{host}_{port}_{node}"
         url = f"https://{host}:{port}/#v1:0:=node/{node}"
+        via_device = f"{host}_{port}"
     else:
         name = f"{host}"
         host_port_node_vm = f"{host}_{port}"
         url = f"https://{host}:{port}/#v1:0"
+        via_device = "no_device"
 
+    if create:
+        device_registry = dr.async_get(hass)
+        return device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            entry_type=dr.DeviceEntryType.SERVICE,
+            configuration_url=url,
+            identifiers={(DOMAIN, host_port_node_vm)},
+            default_manufacturer=INTEGRATION_NAME,
+            name=name,
+            default_model=api_category.upper(),
+            sw_version=proxmox_version,
+            hw_version=None,
+            via_device=(DOMAIN, via_device),
+        )
     return DeviceInfo(
-        entry_type=device_registry.DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
         configuration_url=url,
         identifiers={(DOMAIN, host_port_node_vm)},
         default_manufacturer=INTEGRATION_NAME,
         name=name,
-        default_model=proxmox_type.upper(),
+        default_model=api_category.upper(),
         sw_version=proxmox_version,
         hw_version=None,
+        via_device=(DOMAIN, via_device),
     )
 
 

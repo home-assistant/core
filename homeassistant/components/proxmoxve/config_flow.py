@@ -459,7 +459,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_create_entry(
-            title=f"{import_config.get(CONF_NODE)} - {import_config.get(CONF_HOST)}",
+            title=f"{import_config.get(CONF_NODE)} - {import_config.get(CONF_HOST)}:{import_config.get(CONF_PORT)}",
             data=import_config,
         )
 
@@ -753,7 +753,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._config[CONF_LXC].append(lxc_selection)
 
         return self.async_create_entry(
-            title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}",
+            title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}:{self._config[CONF_PORT]}",
             data=self._config,
         )
 

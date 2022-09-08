@@ -40,7 +40,7 @@ async def async_setup_entry(
             info_device=device_info(
                 hass=hass,
                 config_entry=config_entry,
-                proxmox_type=ProxmoxType.QEMU,
+                api_category=ProxmoxType.QEMU,
                 vm_id=vm_id,
             ),
         )
@@ -62,7 +62,7 @@ async def async_setup_entry(
             info_device=device_info(
                 hass=hass,
                 config_entry=config_entry,
-                proxmox_type=ProxmoxType.LXC,
+                api_category=ProxmoxType.LXC,
                 vm_id=container_id,
             ),
         )
