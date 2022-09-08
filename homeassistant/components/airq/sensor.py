@@ -95,7 +95,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="health",
-        name="Health index",
+        name="Health Index",
         device_class=CustomSensorDeviceClass.INDEX_HEALTH,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -168,7 +168,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="performance",
-        name="Performance",
+        name="Performance Index",
         device_class=CustomSensorDeviceClass.INDEX_PERFORMANCE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
