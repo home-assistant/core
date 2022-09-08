@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from pydantic import ValidationError
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Chime
+from pyunifiprotect.data import Camera, Chime
 from pyunifiprotect.exceptions import ClientError
 import voluptuous as vol
 
@@ -24,18 +24,20 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .const import ATTR_MESSAGE, DOMAIN
+from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN
 from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_DEFAULT_DOORBELL_TEXT = "set_default_doorbell_text"
+SERVICE_SET_CHIME_DURATION = "set_chime_duration"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 
 ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+    SERVICE_SET_CHIME_DURATION,
     SERVICE_SET_CHIME_PAIRED,
 ]
 
@@ -44,6 +46,16 @@ DOORBELL_TEXT_SCHEMA = vol.All(
         {
             **cv.ENTITY_SERVICE_FIELDS,
             vol.Required(ATTR_MESSAGE): cv.string,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+)
+
+CHIME_DURATION_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(ATTR_DURATION): cv.positive_int,
         },
     ),
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
@@ -122,6 +134,26 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
     await _async_service_call_nvr(hass, call, "set_default_doorbell_message", message)
 
 
+async def set_chime_duration(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Set chime duration."""
+    duration: int = call.data[ATTR_DURATION]
+    ref = async_extract_referenced_entity_ids(hass, call)
+    entity_registry = er.async_get(hass)
+
+    entity_id = ref.indirectly_referenced.pop()
+    camera_entity = entity_registry.async_get(entity_id)
+    assert camera_entity is not None
+    assert camera_entity.device_id is not None
+    camera_mac = _async_unique_id_to_mac(camera_entity.unique_id)
+
+    instance = _async_get_ufp_instance(hass, camera_entity.device_id)
+    camera = instance.bootstrap.get_device_from_mac(camera_mac)
+    camera = cast(Camera, camera)
+    assert camera is not None
+
+    await camera.set_chime_duration(duration)
+
+
 @callback
 def _async_unique_id_to_mac(unique_id: str) -> str:
     """Extract the MAC address from the registry entry unique id."""
@@ -182,6 +214,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             SERVICE_SET_DEFAULT_DOORBELL_TEXT,
             functools.partial(set_default_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
+        ),
+        (
+            SERVICE_SET_CHIME_DURATION,
+            functools.partial(set_chime_duration, hass),
+            CHIME_DURATION_SCHEMA,
         ),
         (
             SERVICE_SET_CHIME_PAIRED,

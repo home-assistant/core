@@ -8,10 +8,15 @@ import pytest
 from pyunifiprotect.data import Camera, Chime, Light, ModelType
 from pyunifiprotect.exceptions import BadRequest
 
-from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    ATTR_DURATION,
+    ATTR_MESSAGE,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
+    SERVICE_SET_CHIME_DURATION,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_SET_DEFAULT_DOORBELL_TEXT,
 )
@@ -133,6 +138,24 @@ async def test_set_default_doorbell_text(
         blocking=True,
     )
     nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
+
+
+async def test_set_chime_duration(
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+):
+    """Test set_chime_duration service."""
+
+    nvr = ufp.api.bootstrap.nvr
+    nvr.__fields__["set_chime_duration"] = Mock(final=False)
+    nvr.set_chime_duration = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CHIME_DURATION,
+        {ATTR_DEVICE_ID: device.id, ATTR_DURATION: 500},
+        blocking=True,
+    )
+    nvr.set_chime_duration.assert_called_once_with(500)
 
 
 async def test_set_chime_paired_doorbells(

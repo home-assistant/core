@@ -84,6 +84,28 @@ set_doorbell_message:
           step: 1
           mode: slider
           unit_of_measurement: minutes
+set_chime_duration:
+  name: Set the chime duration attached to a doorbell
+  description: Set the duration for doorbell chime
+  fields:
+    device_id:
+      name: UniFi Protect Device
+      description: Any device from the UniFi Protect instance you want to change.
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    duration:
+      name: Duration
+      description: Number of milliseconds for the chime to ring. 0 means off.
+      example: 300
+      selector:
+        number:
+          min: 1
+          max: 10000
+          step: 100
+          mode: slider
+          unit_of_measurement: ms
 set_chime_paired_doorbells:
   name: Set Chime Paired Doorbells
   description: >
