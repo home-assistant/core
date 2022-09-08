@@ -219,7 +219,10 @@ async def ws_get_statistics_metadata(
 def ws_update_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Update statistics metadata for a statistic_id."""
+    """Update statistics metadata for a statistic_id.
+
+    Only the normalized unit of measurement can be updated.
+    """
     get_instance(hass).async_update_statistics_metadata(
         msg["statistic_id"], new_unit_of_measurement=msg["unit_of_measurement"]
     )
@@ -286,6 +289,7 @@ def ws_import_statistics(
     """Adjust sum statistics."""
     metadata = msg["metadata"]
     stats = msg["stats"]
+    metadata["state_unit_of_measurement"] = metadata["unit_of_measurement"]
 
     if valid_entity_id(metadata["statistic_id"]):
         async_import_statistics(hass, metadata, stats)

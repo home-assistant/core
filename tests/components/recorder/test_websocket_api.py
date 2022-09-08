@@ -431,7 +431,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_ATTRIBUTES
     state = 10
-    value = 10000
+    value = 10
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -575,7 +575,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "W",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -602,7 +602,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": new_unit,
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1016,6 +1016,7 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
+                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
