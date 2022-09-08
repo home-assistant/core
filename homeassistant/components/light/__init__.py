@@ -977,20 +977,3 @@ class LightEntity(ToggleEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._attr_supported_features
-
-
-def legacy_supported_features(
-    supported_features: int, supported_color_modes: list[str] | None
-) -> int:
-    """Calculate supported features with backwards compatibility."""
-    # Backwards compatibility for supported_color_modes added in 2021.4
-    if supported_color_modes is None:
-        return supported_features
-    if any(mode in supported_color_modes for mode in COLOR_MODES_COLOR):
-        supported_features |= SUPPORT_COLOR
-    if any(mode in supported_color_modes for mode in COLOR_MODES_BRIGHTNESS):
-        supported_features |= SUPPORT_BRIGHTNESS
-    if ColorMode.COLOR_TEMP in supported_color_modes:
-        supported_features |= SUPPORT_COLOR_TEMP
-
-    return supported_features
