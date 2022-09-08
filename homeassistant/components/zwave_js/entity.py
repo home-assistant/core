@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
-from .helpers import get_device_id, get_unique_id
+from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
 
 EVENT_VALUE_UPDATED = "value updated"
 EVENT_VALUE_REMOVED = "value removed"
@@ -95,6 +95,17 @@ class ZWaveBaseEntity(Entity):
         )
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_REMOVED, self._value_removed)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
+                    "remove_entity_on_ready_node"
+                ),
+                self.async_remove,
+            )
         )
 
         for status_event in (EVENT_ALIVE, EVENT_DEAD):
