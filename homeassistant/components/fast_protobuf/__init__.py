@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     @callback
-    def _async_build_wheel(hass: HomeAssistant) -> None:
+    def _async_build_wheel(_hass: HomeAssistant) -> None:
         # Create an untracked task to build the wheel in the background
         # so we don't block shutdown if its not done by the time we exit
         # since they can just try again next time.
