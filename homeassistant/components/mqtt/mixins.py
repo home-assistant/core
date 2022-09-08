@@ -277,6 +277,7 @@ class MqttData:
 
     client: MQTT | None = None
     config: ConfigType | None = None
+    discovery_registry_hooks: dict[tuple, CALLBACK_TYPE] = field(default_factory=dict)
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
     reload_needed: bool = False
