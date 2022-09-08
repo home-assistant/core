@@ -55,6 +55,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
+from . import CastProtocol
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
@@ -591,7 +592,9 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         content_filter = None
@@ -608,9 +611,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
             content_filter = audio_content_filter
 
-        if media_content_id is None:
+        if media_content_id is None or media_content_type is None:
             return await self._async_root_payload(content_filter)
 
+        platform: CastProtocol
         for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
             browse_media = await platform.async_browse_media(
                 self.hass,
@@ -626,7 +630,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         chromecast = self._get_chromecast()
