@@ -4,9 +4,9 @@ from pyws66i import WS66i, ZoneStatus
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -96,7 +96,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
     def _set_attrs_from_status(self) -> None:
         status = self._status
         sources = self._ws66i_data.sources.id_name
-        self._attr_state = STATE_ON if status.power else STATE_OFF
+        self._attr_state = MediaPlayerState.ON if status.power else MediaPlayerState.OFF
         self._attr_volume_level = status.volume / float(MAX_VOL)
         self._attr_is_volume_muted = status.mute
         self._attr_source = self._attr_media_title = sources[status.source]
