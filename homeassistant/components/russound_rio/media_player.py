@@ -126,14 +126,13 @@ class RussoundZoneDevice(MediaPlayerEntity):
         return self._zone_var("name", self._name)
 
     @property
-    def state(self) -> MediaPlayerState | None:
+    def state(self):
         """Return the state of the device."""
         status = self._zone_var("status", "OFF")
         if status == "ON":
             return MediaPlayerState.ON
         if status == "OFF":
             return MediaPlayerState.OFF
-        return None
 
     @property
     def source(self):
