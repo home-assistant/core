@@ -310,6 +310,12 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             "hass-absolute-import",
             "Used when relative import should be replaced with absolute import",
         ),
+        "W7424": (
+            "Import should be using the component root",
+            "hass-component-root-import",
+            "Used when an import from another component should be "
+            "from the component root",
+        ),
     }
     options = ()
 
