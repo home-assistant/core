@@ -84,6 +84,8 @@ MODEL_AIRFRESH_T2017 = "dmaker.airfresh.t2017"
 MODEL_FAN_1C = "dmaker.fan.1c"
 MODEL_FAN_P10 = "dmaker.fan.p10"
 MODEL_FAN_P11 = "dmaker.fan.p11"
+MODEL_FAN_P15 = "dmaker.fan.p15"
+MODEL_FAN_P18 = "dmaker.fan.p18"
 MODEL_FAN_P5 = "dmaker.fan.p5"
 MODEL_FAN_P9 = "dmaker.fan.p9"
 MODEL_FAN_SA1 = "zhimi.fan.sa1"
@@ -108,6 +110,8 @@ MODELS_FAN_MIOT = [
     MODEL_FAN_1C,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P15,
+    MODEL_FAN_P18,
     MODEL_FAN_P9,
     MODEL_FAN_ZA5,
 ]
@@ -117,6 +121,8 @@ SPEEDS_FAN_MIOT = {
     MODEL_FAN_1C: 3,
     MODEL_FAN_P10: 4,
     MODEL_FAN_P11: 4,
+    MODEL_FAN_P15: 4,
+    MODEL_FAN_P18: 4,
     MODEL_FAN_P9: 4,
     MODEL_FAN_ZA5: 4,
 }

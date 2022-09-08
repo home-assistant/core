@@ -72,6 +72,8 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P15,
+    MODEL_FAN_P18,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -244,6 +246,8 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
+    MODEL_FAN_P15: FEATURE_FLAGS_FAN_P10_P11,
+    MODEL_FAN_P18: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
     MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_SA1: FEATURE_FLAGS_FAN,
@@ -261,6 +265,8 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P15: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P18: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
 FAVORITE_LEVEL_VALUES = {
