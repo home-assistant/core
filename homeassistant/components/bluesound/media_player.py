@@ -205,6 +205,8 @@ async def async_setup_platform(
 class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
+    _attr_media_content_type = MediaType.MUSIC
+
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
         self.host = host
@@ -550,11 +552,6 @@ class BluesoundPlayer(MediaPlayerEntity):
                 _create_service_item(resp["services"]["service"])
 
         return self._services_items
-
-    @property
-    def media_content_type(self) -> MediaType:
-        """Content type of current playing media."""
-        return MediaType.MUSIC
 
     @property
     def state(self):

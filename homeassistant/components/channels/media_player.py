@@ -66,6 +66,7 @@ async def async_setup_platform(
 class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
 
+    _attr_media_content_type = MediaType.CHANNEL
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -177,11 +178,6 @@ class ChannelsPlayer(MediaPlayerEntity):
     def media_content_id(self):
         """Content ID of current playing channel."""
         return self.channel_number
-
-    @property
-    def media_content_type(self) -> MediaType:
-        """Content type of current playing media."""
-        return MediaType.CHANNEL
 
     @property
     def media_image_url(self):
