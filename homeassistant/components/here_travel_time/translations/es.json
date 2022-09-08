@@ -12,32 +12,39 @@
                 "data": {
                     "destination": "Destino como coordenadas GPS"
                 },
-                "title": "Elija el destino"
+                "title": "Elige el destino"
             },
             "destination_entity_id": {
                 "data": {
                     "destination_entity_id": "Destino usando una entidad"
                 },
-                "title": "Elija el destino"
+                "title": "Elige el destino"
             },
             "destination_menu": {
                 "menu_options": {
                     "destination_coordinates": "Usando una ubicaci\u00f3n en el mapa",
                     "destination_entity": "Usando una entidad"
                 },
-                "title": "Elija el destino"
+                "title": "Elige el destino"
             },
             "origin_coordinates": {
                 "data": {
                     "origin": "Origen como coordenadas GPS"
                 },
-                "title": "Elija el origen"
+                "title": "Elige el origen"
             },
             "origin_entity_id": {
                 "data": {
                     "origin_entity_id": "Origen usando una entidad"
                 },
-                "title": "Elija el origen"
+                "title": "Elige el origen"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Usando una ubicaci\u00f3n en el mapa",
+                    "origin_entity": "Usando una entidad"
+                },
+                "title": "Elige el origen"
             },
             "user": {
                 "data": {
@@ -54,13 +61,13 @@
                 "data": {
                     "arrival_time": "Hora de llegada"
                 },
-                "title": "Elija la hora de llegada"
+                "title": "Elige la hora de llegada"
             },
             "departure_time": {
                 "data": {
                     "departure_time": "Hora de salida"
                 },
-                "title": "Elija la hora de salida"
+                "title": "Elige la hora de salida"
             },
             "init": {
                 "data": {
@@ -75,7 +82,7 @@
                     "departure_time": "Configurar una hora de salida",
                     "no_time": "No configurar una hora"
                 },
-                "title": "Elija el tipo de hora"
+                "title": "Elige el tipo de hora"
             }
         }
     }

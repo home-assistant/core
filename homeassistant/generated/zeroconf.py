@@ -184,6 +184,10 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "awair",
+            "name": "awair*"
+        },
+        {
             "domain": "bosch_shc",
             "name": "bosch shc*"
         },

@@ -119,18 +119,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
+        discovered = self._discovered_device
         _LOGGER.debug(
             "Confirming discovery: %s with serial %s",
-            self._discovered_device.label,
+            discovered.label,
             self.unique_id,
         )
         if user_input is not None or self._async_discovered_pending_migration():
-            return self._async_create_entry_from_device(self._discovered_device)
+            return self._async_create_entry_from_device(discovered)
 
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovered.ip_addr})
         self._set_confirm_only()
         placeholders = {
-            "label": self._discovered_device.label,
-            "host": self._discovered_device.ip_addr,
+            "label": discovered.label,
+            "host": discovered.ip_addr,
             "serial": self.unique_id,
         }
         self.context["title_placeholders"] = placeholders

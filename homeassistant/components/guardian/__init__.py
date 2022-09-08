@@ -25,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -102,12 +103,16 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                return entry.entry_id
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Invalid Guardian device ID: {device_id}")
 
-    raise ValueError(f"No client for device ID: {device_id}")
+    for entry_id in device_entry.config_entries:
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if entry.domain == DOMAIN:
+            return entry_id
+
+    raise ValueError(f"No config entry for device ID: {device_id}")
 
 
 @callback
@@ -116,14 +121,34 @@ def async_log_deprecated_service_call(
     call: ServiceCall,
     alternate_service: str,
     alternate_target: str,
+    breaks_in_ha_version: str,
 ) -> None:
     """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
     LOGGER.warning(
         (
-            'The "%s" service is deprecated and will be removed in a future version; '
-            'use the "%s" service and pass it a target entity ID of "%s"'
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
         ),
-        f"{call.domain}.{call.service}",
+        deprecated_service,
+        breaks_in_ha_version,
         alternate_service,
         alternate_target,
     )
@@ -235,6 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "button.press",
             f"button.guardian_valve_controller_{data.entry.data[CONF_UID]}_reboot",
+            "2022.10.0",
         )
         await data.client.system.reboot()
 
@@ -248,6 +274,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "button.press",
             f"button.guardian_valve_controller_{data.entry.data[CONF_UID]}_reset_valve_diagnostics",
+            "2022.10.0",
         )
         await data.client.valve.reset()
 

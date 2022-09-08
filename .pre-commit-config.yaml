@@ -11,7 +11,7 @@ repos:
         args:
           - --safe
           - --quiet
-        files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.1.0
     hooks:
@@ -32,7 +32,7 @@ repos:
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
           - flake8-comprehensions==3.10.0
-          - flake8-noqa==1.2.5
+          - flake8-noqa==1.2.8
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit

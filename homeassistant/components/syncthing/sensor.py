@@ -57,6 +57,8 @@ async def async_setup_entry(
 class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
+    _attr_should_poll = False
+
     STATE_ATTRIBUTES = {
         "errors": "errors",
         "globalBytes": "global_bytes",
@@ -132,11 +134,6 @@ class FolderSensor(SensorEntity):
         return self._state
 
     @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
@@ -176,7 +173,7 @@ class FolderSensor(SensorEntity):
             self._unsub_timer()
             self._unsub_timer = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
         @callback

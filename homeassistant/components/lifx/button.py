@@ -19,13 +19,13 @@ RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=RESTART,
     name="Restart",
     device_class=ButtonDeviceClass.RESTART,
-    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_category=EntityCategory.CONFIG,
 )
 
 IDENTIFY_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=IDENTIFY,
     name="Identify",
-    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_category=EntityCategory.CONFIG,
 )
 
 

@@ -18,7 +18,6 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
     # we should have 5 entities for the valve
-    print(hass.states)
     assert (
         hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
         == "home"
@@ -59,7 +58,6 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     )
 
     # and 3 entities for the detector
-    print(hass.states)
     assert hass.states.get("sensor.kitchen_sink_temperature").state == "16"
     assert (
         hass.states.get("sensor.kitchen_sink_temperature").attributes[ATTR_STATE_CLASS]

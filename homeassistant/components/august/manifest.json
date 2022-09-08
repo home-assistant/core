@@ -24,5 +24,6 @@
   ],
   "config_flow": true,
   "iot_class": "cloud_push",
-  "loggers": ["pubnub", "yalexs"]
+  "loggers": ["pubnub", "yalexs"],
+  "after_dependencies": ["yalexs_ble"]
 }

@@ -177,7 +177,7 @@ class NeurioEnergy(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data, update state."""
         self.update_sensor()
 

@@ -63,7 +63,7 @@ def update_items(
     coordinator: MikrotikDataUpdateCoordinator,
     async_add_entities: AddEntitiesCallback,
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker],
-):
+) -> None:
     """Update tracked device state from the hub."""
     new_tracked: list[MikrotikDataUpdateCoordinatorTracker] = []
     for mac, device in coordinator.api.devices.items():

@@ -44,6 +44,8 @@
             "button_2": "Segundo bot\u00e3o",
             "button_3": "Terceiro bot\u00e3o",
             "button_4": "Quarto bot\u00e3o",
+            "clock_wise": "Rota\u00e7\u00e3o no sentido hor\u00e1rio",
+            "counter_clock_wise": "Rota\u00e7\u00e3o no sentido anti-hor\u00e1rio",
             "dim_down": "Diminuir a luminosidade",
             "dim_up": "Aumentar a luminosidade",
             "double_buttons_1_3": "Primeiro e terceiro bot\u00f5es",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Ambos \"{subtype}\" liberados",
-            "initial_press": "Bot\u00e3o \" {subtype} \" pressionado inicialmente",
-            "long_release": "Bot\u00e3o \" {subtype} \" liberado ap\u00f3s press\u00e3o longa",
-            "remote_button_long_release": "Bot\u00e3o \"{subtype}\" liberado ap\u00f3s longa press\u00e3o",
-            "remote_button_short_press": "Bot\u00e3o \"{subtype}\" pressionado",
-            "remote_button_short_release": "Bot\u00e3o \"{subtype}\" liberado",
+            "initial_press": "\"{subtype}\" pressionado inicialmente",
+            "long_release": "\"{subtype}\" liberado ap\u00f3s pressionar longamente",
+            "remote_button_long_release": "\"{subtype}\" liberado ap\u00f3s pressionar longamente",
+            "remote_button_short_press": "\"{subtype}\" pressionado",
+            "remote_button_short_release": "\"{subtype}\" lan\u00e7ado",
             "remote_double_button_long_press": "Ambos \"{subtype}\" lan\u00e7ados ap\u00f3s longa imprensa",
             "remote_double_button_short_press": "Ambos \"{subtype}\" lan\u00e7ados",
-            "repeat": "Bot\u00e3o \" {subtype} \" pressionado",
-            "short_release": "Bot\u00e3o \" {subtype} \" liberado ap\u00f3s pressionamento curto"
+            "repeat": "\"{subtype}\" pressionado",
+            "short_release": "\"{subtype}\" liberado ap\u00f3s pressionamento curto",
+            "start": "\"{subtype}\" pressionado inicialmente"
         }
     },
     "options": {

@@ -12,6 +12,7 @@ from pyoverkiz.exceptions import (
     MaintenanceException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
+    UnknownUserException,
 )
 from pyoverkiz.models import obfuscate_id
 import voluptuous as vol
@@ -83,6 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
+            except UnknownUserException:
+                errors["base"] = "unknown_user"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)

@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "a bateria {entity_name} est\u00e1 baixa",
+            "is_co": "{entity_name} est\u00e1 detectando mon\u00f3xido de carbono",
             "is_cold": "{entity_name} est\u00e1 frio",
             "is_connected": "{entity_name} est\u00e1 ligado",
             "is_gas": "{entity_name} est\u00e1 a detectar g\u00e1s",
@@ -90,6 +91,7 @@
         }
     },
     "device_class": {
+        "heat": "aquecer",
         "moisture": "humidade",
         "problem": "problema"
     },

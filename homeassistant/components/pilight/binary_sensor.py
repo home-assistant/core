@@ -5,7 +5,6 @@ import datetime
 
 import voluptuous as vol
 
-from homeassistant.components import pilight
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
@@ -20,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+
+from .. import pilight
 
 CONF_VARIABLE = "variable"
 CONF_RESET_DELAY_SEC = "reset_delay_sec"

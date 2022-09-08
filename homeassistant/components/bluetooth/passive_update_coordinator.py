@@ -28,9 +28,10 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         logger: logging.Logger,
         address: str,
         mode: BluetoothScanningMode,
+        connectable: bool = False,
     ) -> None:
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
-        super().__init__(hass, logger, address, mode)
+        super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
     @callback

@@ -17,13 +17,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_WHITE_VALUE,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -119,7 +114,6 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,
         ATTR_SUPPORTED_COLOR_MODES,
-        ATTR_WHITE_VALUE,
         ATTR_XY_COLOR,
     }
 )
@@ -129,7 +123,6 @@ DEFAULT_NAME = "MQTT LightEntity"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
-DEFAULT_WHITE_VALUE_SCALE = 255
 DEFAULT_WHITE_SCALE = 255
 DEFAULT_ON_COMMAND_TYPE = "last"
 
@@ -153,7 +146,6 @@ VALUE_TEMPLATE_KEYS = [
     CONF_RGBW_VALUE_TEMPLATE,
     CONF_RGBWW_VALUE_TEMPLATE,
     CONF_STATE_VALUE_TEMPLATE,
-    CONF_WHITE_VALUE_TEMPLATE,
     CONF_XY_VALUE_TEMPLATE,
 ]
 
@@ -207,12 +199,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
-            vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(
-                CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(CONF_WHITE_VALUE_STATE_TOPIC): valid_subscribe_topic,
-            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
@@ -224,26 +210,30 @@ _PLATFORM_SCHEMA_BASE = (
 
 # The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_BASIC = vol.All(
-    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.deprecated(CONF_WHITE_VALUE_SCALE),
-    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
     # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
     cv.removed(CONF_VALUE_TEMPLATE),
-    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.deprecated(CONF_WHITE_VALUE_SCALE),
-    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
+    cv.removed(CONF_WHITE_VALUE_SCALE),
+    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
+    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
-PLATFORM_SCHEMA_MODERN_BASIC = _PLATFORM_SCHEMA_BASE
+PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
+    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
+    cv.removed(CONF_VALUE_TEMPLATE),
+    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
+    cv.removed(CONF_WHITE_VALUE_SCALE),
+    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
+    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
 
 
 async def async_setup_entity_basic(
@@ -266,13 +256,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._color_temp = None
         self._effect = None
         self._hs_color = None
-        self._legacy_mode = False
         self._rgb_color = None
         self._rgbw_color = None
         self._rgbww_color = None
         self._state = None
         self._supported_color_modes = None
-        self._white_value = None
         self._xy_color = None
 
         self._topic = None
@@ -288,7 +276,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._optimistic_rgb_color = False
         self._optimistic_rgbw_color = False
         self._optimistic_rgbww_color = False
-        self._optimistic_white_value = False
         self._optimistic_xy_color = False
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -324,8 +311,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 CONF_RGBWW_STATE_TOPIC,
                 CONF_STATE_TOPIC,
                 CONF_WHITE_COMMAND_TOPIC,
-                CONF_WHITE_VALUE_COMMAND_TOPIC,
-                CONF_WHITE_VALUE_STATE_TOPIC,
                 CONF_XY_COMMAND_TOPIC,
                 CONF_XY_STATE_TOPIC,
             )
@@ -384,9 +369,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         )
         self._optimistic_effect = optimistic or topic[CONF_EFFECT_STATE_TOPIC] is None
         self._optimistic_hs_color = optimistic or topic[CONF_HS_STATE_TOPIC] is None
-        self._optimistic_white_value = (
-            optimistic or topic[CONF_WHITE_VALUE_STATE_TOPIC] is None
-        )
         self._optimistic_xy_color = optimistic or topic[CONF_XY_STATE_TOPIC] is None
         supported_color_modes = set()
         if topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
@@ -422,9 +404,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         # Validate the color_modes configuration
         self._supported_color_modes = valid_supported_color_modes(supported_color_modes)
-
-        if topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None:
-            self._legacy_mode = True
 
     def _is_optimistic(self, attribute):
         """Return True if the attribute is optimistically updated."""
@@ -513,10 +492,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             if not rgb:
                 return
-            if self._legacy_mode:
-                self._hs_color = color_util.color_RGB_to_hs(*rgb)
-            else:
-                self._rgb_color = rgb
+            self._rgb_color = rgb
             self.async_write_ha_state()
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
@@ -626,24 +602,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def white_value_received(msg):
-            """Handle new MQTT messages for white value."""
-            payload = self._value_templates[CONF_WHITE_VALUE_TEMPLATE](
-                msg.payload, None
-            )
-            if not payload:
-                _LOGGER.debug("Ignoring empty white value message from '%s'", msg.topic)
-                return
-
-            device_value = float(payload)
-            percent_white = device_value / self._config[CONF_WHITE_VALUE_SCALE]
-            self._white_value = percent_white * 255
-            self.async_write_ha_state()
-
-        add_topic(CONF_WHITE_VALUE_STATE_TOPIC, white_value_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
         def xy_received(msg):
             """Handle new MQTT messages for xy color."""
             payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](msg.payload, None)
@@ -654,10 +612,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             xy_color = tuple(float(val) for val in payload.split(","))
             if self._optimistic_color_mode:
                 self._color_mode = ColorMode.XY
-            if self._legacy_mode:
-                self._hs_color = color_util.color_xy_to_hs(*xy_color)
-            else:
-                self._xy_color = xy_color
+            self._xy_color = xy_color
             self.async_write_ha_state()
 
         add_topic(CONF_XY_STATE_TOPIC, xy_received)
@@ -690,7 +645,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_COLOR_TEMP)
         restore_state(ATTR_EFFECT)
         restore_state(ATTR_HS_COLOR)
-        restore_state(ATTR_WHITE_VALUE)
         restore_state(ATTR_XY_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
@@ -704,19 +658,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def color_mode(self):
         """Return current color mode."""
-        if self._legacy_mode:
-            return None
         return self._color_mode
 
     @property
     def hs_color(self):
         """Return the hs color value."""
-        if not self._legacy_mode:
-            return self._hs_color
-
-        # Legacy mode, gate color_temp with white_value == 0
-        if self._white_value:
-            return None
         return self._hs_color
 
     @property
@@ -742,18 +688,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def color_temp(self):
         """Return the color temperature in mired."""
-        if not self._legacy_mode:
-            return self._color_temp
-
-        # Legacy mode, gate color_temp with white_value > 0
-        supports_color = (
-            self._topic[CONF_RGB_COMMAND_TOPIC]
-            or self._topic[CONF_HS_COMMAND_TOPIC]
-            or self._topic[CONF_XY_COMMAND_TOPIC]
-        )
-        if self._white_value or not supports_color:
-            return self._color_temp
-        return None
+        return self._color_temp
 
     @property
     def min_mireds(self):
@@ -764,13 +699,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
-
-    @property
-    def white_value(self):
-        """Return the white property."""
-        if white_value := self._white_value:
-            return min(round(white_value), 255)
-        return None
 
     @property
     def is_on(self):
@@ -795,8 +723,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def supported_color_modes(self):
         """Flag supported color modes."""
-        if self._legacy_mode:
-            return None
         return self._supported_color_modes
 
     @property
@@ -807,32 +733,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None
             and LightEntityFeature.EFFECT
         )
-        if not self._legacy_mode:
-            return supported_features
-
-        # Legacy mode
-        supported_features |= self._topic[CONF_RGB_COMMAND_TOPIC] is not None and (
-            SUPPORT_COLOR | SUPPORT_BRIGHTNESS
-        )
-        supported_features |= (
-            self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None
-            and SUPPORT_BRIGHTNESS
-        )
-        supported_features |= (
-            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None
-            and SUPPORT_COLOR_TEMP
-        )
-        supported_features |= (
-            self._topic[CONF_HS_COMMAND_TOPIC] is not None and SUPPORT_COLOR
-        )
-        supported_features |= (
-            self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None
-            and SUPPORT_WHITE_VALUE
-        )
-        supported_features |= (
-            self._topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR
-        )
-
         return supported_features
 
     async def async_turn_on(self, **kwargs):  # noqa: C901
@@ -905,70 +805,38 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             kwargs[ATTR_BRIGHTNESS] = self._brightness if self._brightness else 255
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
-        if (
-            hs_color
-            and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
-            and self._legacy_mode
-        ):
-            # Legacy mode: Convert HS to RGB
-            rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100))
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
-            await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
-            should_update |= set_optimistic(
-                ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_RGB_COLOR
-            )
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
             await publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
-        if (
-            hs_color
-            and self._topic[CONF_XY_COMMAND_TOPIC] is not None
-            and self._legacy_mode
-        ):
-            # Legacy mode: Convert HS to XY
-            xy_color = color_util.color_hs_to_xy(*hs_color)
-            await publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
-            should_update |= set_optimistic(
-                ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_XY_COLOR
-            )
-
-        if (
-            (rgb := kwargs.get(ATTR_RGB_COLOR))
-            and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
-        ):
+        if (rgb := kwargs.get(ATTR_RGB_COLOR)) and self._topic[
+            CONF_RGB_COMMAND_TOPIC
+        ] is not None:
             scaled = scale_rgbx(rgb)
             rgb_s = render_rgbx(scaled, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_RGB_COLOR, rgb, ColorMode.RGB)
 
-        if (
-            (rgbw := kwargs.get(ATTR_RGBW_COLOR))
-            and self._topic[CONF_RGBW_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
-        ):
+        if (rgbw := kwargs.get(ATTR_RGBW_COLOR)) and self._topic[
+            CONF_RGBW_COMMAND_TOPIC
+        ] is not None:
             scaled = scale_rgbx(rgbw)
             rgbw_s = render_rgbx(scaled, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
             should_update |= set_optimistic(ATTR_RGBW_COLOR, rgbw, ColorMode.RGBW)
 
-        if (
-            (rgbww := kwargs.get(ATTR_RGBWW_COLOR))
-            and self._topic[CONF_RGBWW_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
-        ):
+        if (rgbww := kwargs.get(ATTR_RGBWW_COLOR)) and self._topic[
+            CONF_RGBWW_COMMAND_TOPIC
+        ] is not None:
             scaled = scale_rgbx(rgbww)
             rgbww_s = render_rgbx(scaled, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
             should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, ColorMode.RGBWW)
 
-        if (
-            (xy_color := kwargs.get(ATTR_XY_COLOR))
-            and self._topic[CONF_XY_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
-        ):
+        if (xy_color := kwargs.get(ATTR_XY_COLOR)) and self._topic[
+            CONF_XY_COMMAND_TOPIC
+        ] is not None:
             await publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
             should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, ColorMode.XY)
 
@@ -989,22 +857,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
             ATTR_BRIGHTNESS in kwargs
-            and ATTR_HS_COLOR not in kwargs
-            and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
-            and self._legacy_mode
-        ):
-            # Legacy mode
-            hs_color = self._hs_color if self._hs_color is not None else (0, 0)
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100), brightness)
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
-            await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
-            should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
-        elif (
-            ATTR_BRIGHTNESS in kwargs
             and ATTR_RGB_COLOR not in kwargs
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
         ):
             rgb_color = self._rgb_color if self._rgb_color is not None else (255,) * 3
             rgb = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
@@ -1015,7 +869,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             ATTR_BRIGHTNESS in kwargs
             and ATTR_RGBW_COLOR not in kwargs
             and self._topic[CONF_RGBW_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
         ):
             rgbw_color = (
                 self._rgbw_color if self._rgbw_color is not None else (255,) * 4
@@ -1028,7 +881,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             ATTR_BRIGHTNESS in kwargs
             and ATTR_RGBWW_COLOR not in kwargs
             and self._topic[CONF_RGBWW_COMMAND_TOPIC] is not None
-            and not self._legacy_mode
         ):
             rgbww_color = (
                 self._rgbww_color if self._rgbww_color is not None else (255,) * 5
@@ -1068,16 +920,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 kwargs[ATTR_WHITE],
                 ColorMode.WHITE,
             )
-
-        if (
-            ATTR_WHITE_VALUE in kwargs
-            and self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None
-        ):
-            percent_white = float(kwargs[ATTR_WHITE_VALUE]) / 255
-            white_scale = self._config[CONF_WHITE_VALUE_SCALE]
-            device_white_value = min(round(percent_white * white_scale), white_scale)
-            await publish(CONF_WHITE_VALUE_COMMAND_TOPIC, device_white_value)
-            should_update |= set_optimistic(ATTR_WHITE_VALUE, kwargs[ATTR_WHITE_VALUE])
 
         if on_command_type == "last":
             await publish(CONF_COMMAND_TOPIC, self._payload["on"])

@@ -27,7 +27,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "H5075_2762"
+    assert result2["title"] == "H5075 2762"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
 
@@ -73,9 +73,39 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "H5177_2EC8"
+    assert result2["title"] == "H5177 2EC8"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
+
+
+async def test_async_step_user_device_added_between_steps(hass):
+    """Test the device gets added via another flow between steps."""
+    with patch(
+        "homeassistant.components.govee_ble.config_flow.async_discovered_service_info",
+        return_value=[GVH5177_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
+        )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_async_step_user_with_found_devices_already_setup(hass):
@@ -162,7 +192,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
             user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "H5177_2EC8"
+    assert result2["title"] == "H5177 2EC8"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 

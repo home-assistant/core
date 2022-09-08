@@ -1,10 +1,8 @@
 """The repairs integration."""
 from __future__ import annotations
 
-import functools as ft
 from typing import Any
 
-from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -13,11 +11,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.util.async_ import run_callback_threadsafe
+
+# pylint: disable-next=unused-import
+from homeassistant.helpers.issue_registry import (
+    async_delete_issue,
+    async_get as async_get_issue_registry,
+)
 
 from .const import DOMAIN
-from .issue_registry import async_get as async_get_issue_registry
-from .models import IssueSeverity, RepairsFlow, RepairsProtocol
+from .models import RepairsFlow, RepairsProtocol
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -27,7 +29,6 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-
         return await (self.async_step_confirm())
 
     async def async_step_confirm(
@@ -37,7 +38,16 @@ class ConfirmRepairFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        issue_registry = async_get_issue_registry(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=description_placeholders,
+        )
 
 
 class RepairsFlowManager(data_entry_flow.FlowManager):
@@ -103,110 +113,3 @@ async def _register_repairs_platform(
     if not hasattr(platform, "async_create_fix_flow"):
         raise HomeAssistantError(f"Invalid repairs platform {platform}")
     hass.data[DOMAIN]["platforms"][integration_domain] = platform
-
-
-@callback
-def async_create_issue(
-    hass: HomeAssistant,
-    domain: str,
-    issue_id: str,
-    *,
-    issue_domain: str | None = None,
-    breaks_in_ha_version: str | None = None,
-    data: dict[str, str | int | float | None] | None = None,
-    is_fixable: bool,
-    is_persistent: bool = False,
-    learn_more_url: str | None = None,
-    severity: IssueSeverity,
-    translation_key: str,
-    translation_placeholders: dict[str, str] | None = None,
-) -> None:
-    """Create an issue, or replace an existing one."""
-    # Verify the breaks_in_ha_version is a valid version string
-    if breaks_in_ha_version:
-        AwesomeVersion(
-            breaks_in_ha_version,
-            ensure_strategy=AwesomeVersionStrategy.CALVER,
-            find_first_match=False,
-        )
-
-    issue_registry = async_get_issue_registry(hass)
-    issue_registry.async_get_or_create(
-        domain,
-        issue_id,
-        issue_domain=issue_domain,
-        breaks_in_ha_version=breaks_in_ha_version,
-        data=data,
-        is_fixable=is_fixable,
-        is_persistent=is_persistent,
-        learn_more_url=learn_more_url,
-        severity=severity,
-        translation_key=translation_key,
-        translation_placeholders=translation_placeholders,
-    )
-
-
-def create_issue(
-    hass: HomeAssistant,
-    domain: str,
-    issue_id: str,
-    *,
-    breaks_in_ha_version: str | None = None,
-    data: dict[str, str | int | float | None] | None = None,
-    is_fixable: bool,
-    is_persistent: bool = False,
-    learn_more_url: str | None = None,
-    severity: IssueSeverity,
-    translation_key: str,
-    translation_placeholders: dict[str, str] | None = None,
-) -> None:
-    """Create an issue, or replace an existing one."""
-    return run_callback_threadsafe(
-        hass.loop,
-        ft.partial(
-            async_create_issue,
-            hass,
-            domain,
-            issue_id,
-            breaks_in_ha_version=breaks_in_ha_version,
-            data=data,
-            is_fixable=is_fixable,
-            is_persistent=is_persistent,
-            learn_more_url=learn_more_url,
-            severity=severity,
-            translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
-        ),
-    ).result()
-
-
-@callback
-def async_delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
-    """Delete an issue.
-
-    It is not an error to delete an issue that does not exist.
-    """
-    issue_registry = async_get_issue_registry(hass)
-    issue_registry.async_delete(domain, issue_id)
-
-
-def delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
-    """Delete an issue.
-
-    It is not an error to delete an issue that does not exist.
-    """
-    return run_callback_threadsafe(
-        hass.loop, async_delete_issue, hass, domain, issue_id
-    ).result()
-
-
-@callback
-def async_ignore_issue(
-    hass: HomeAssistant, domain: str, issue_id: str, ignore: bool
-) -> None:
-    """Ignore an issue.
-
-    Will raise if the issue does not exist.
-    """
-    issue_registry = async_get_issue_registry(hass)
-    issue_registry.async_ignore(domain, issue_id, ignore)

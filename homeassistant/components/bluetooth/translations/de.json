@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Der Dienst ist bereits konfiguriert",
-            "no_adapters": "Keine Bluetooth-Adapter gefunden"
+            "no_adapters": "Keine unkonfigurierten Bluetooth-Adapter gefunden"
         },
         "flow_title": "{name}",
         "step": {
@@ -11,6 +11,15 @@
             },
             "enable_bluetooth": {
                 "description": "M\u00f6chtest du Bluetooth einrichten?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapter"
+                },
+                "description": "W\u00e4hle einen Bluetooth-Adapter zum Einrichten aus"
+            },
+            "single_adapter": {
+                "description": "M\u00f6chtest du den Bluetooth-Adapter {name} einrichten?"
             },
             "user": {
                 "data": {
@@ -24,8 +33,10 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Der zum Scannen zu verwendende Bluetooth-Adapter"
-                }
+                    "adapter": "Der zum Scannen zu verwendende Bluetooth-Adapter",
+                    "passive": "Passives Scannen"
+                },
+                "description": "Passives Mith\u00f6ren erfordert BlueZ 5.63 oder h\u00f6her mit aktivierten experimentellen Funktionen."
             }
         }
     }

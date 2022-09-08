@@ -466,21 +466,38 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_by_dhcp_updates_ip(hass):
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+        ),
+        (
+            config_entries.SOURCE_HOMEKIT,
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                addresses=[IP_ADDRESS],
+                hostname=LABEL,
+                name=LABEL,
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                type="mock_type",
+            ),
+        ),
+    ],
+)
+async def test_discovered_by_dhcp_or_homekit_updates_ip(hass, source, data):
     """Update host from dhcp."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id=SERIAL
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
-    ):
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
-            ),
+            context={"source": source},
+            data=data,
         )
         await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT

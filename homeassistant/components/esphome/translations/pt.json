@@ -22,6 +22,9 @@
                 "description": "Deseja adicionar um n\u00f3 ESPHome `{name}` ao Home Assistant?",
                 "title": "N\u00f3 ESPHome descoberto"
             },
+            "encryption_key": {
+                "description": "Insira a chave de criptografia que voc\u00ea definiu em sua configura\u00e7\u00e3o para {name}."
+            },
             "user": {
                 "data": {
                     "host": "Servidor",
