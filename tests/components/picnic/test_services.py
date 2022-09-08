@@ -151,6 +151,30 @@ async def test_add_product_using_name_no_results(
         )
 
 
+async def test_add_product_using_name_no_named_results(
+    hass: HomeAssistant,
+    picnic_api_client: MagicMock,
+    picnic_config_entry: MockConfigEntry,
+):
+    """Test adding a product by name for which no named results are returned."""
+
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    picnic_service = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+
+    # Set the search return value and check that the right exception is raised during the service call
+    picnic_api_client.search.return_value = [{"items": [{"attr": "test"}]}]
+    with pytest.raises(PicnicServiceException):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_PRODUCT_TO_CART,
+            {
+                "device_id": picnic_service.id,
+                "product_name": "Random product",
+            },
+            blocking=True,
+        )
+
+
 async def test_add_product_multiple_config_entries(
     hass: HomeAssistant,
     picnic_api_client: MagicMock,
@@ -181,7 +205,7 @@ async def test_add_product_multiple_config_entries(
     picnic_api_client_2.add_product.assert_called_with("5109348572", 1)
 
 
-async def test_add_product_config_entry_doesnt_exist(
+async def test_add_product_device_doesnt_exist(
     hass: HomeAssistant,
     picnic_api_client: MagicMock,
     picnic_config_entry: MockConfigEntry,
