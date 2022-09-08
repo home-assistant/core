@@ -111,6 +111,7 @@ FLOWS = {
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
+        "fast_protobuf",
         "fibaro",
         "filesize",
         "fireservicerota",
