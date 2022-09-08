@@ -123,6 +123,7 @@ def get_device_entities(
             "entity_category": entry.entity_category,
             "supported_features": entry.supported_features,
             "unit_of_measurement": entry.unit_of_measurement,
+            "value_id": value_id,
             "primary_value": primary_value_data,
         }
         entities.append(entity)
