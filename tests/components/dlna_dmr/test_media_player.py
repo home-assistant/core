@@ -31,7 +31,10 @@ from homeassistant.components.dlna_dmr.const import (
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player.const import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerState,
+)
 from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
 from homeassistant.components.media_source.models import PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID
@@ -223,7 +226,7 @@ async def test_setup_entry_no_options(
         ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
     # Quick check of the state to verify the entity has a connected DmrDevice
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
     # Check the name matches that supplied
     assert mock_state.name == MOCK_DEVICE_NAME
 
@@ -292,7 +295,7 @@ async def test_setup_entry_with_options(
         ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
     # Quick check of the state to verify the entity has a connected DmrDevice
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
     # Check the name matches that supplied
     assert mock_state.name == MOCK_DEVICE_NAME
 
@@ -359,7 +362,7 @@ async def test_event_subscribe_rejected(
     assert mock_state is not None
 
     # Device should be connected
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Device should not be unsubscribed
     dmr_device_mock.async_unsubscribe_services.assert_not_awaited()
@@ -385,14 +388,14 @@ async def test_available_device(
 
     # Check entity state gets updated when device changes state
     for (dev_state, ent_state) in [
-        (None, ha_const.STATE_ON),
-        (TransportState.STOPPED, ha_const.STATE_IDLE),
-        (TransportState.PLAYING, ha_const.STATE_PLAYING),
-        (TransportState.TRANSITIONING, ha_const.STATE_PLAYING),
-        (TransportState.PAUSED_PLAYBACK, ha_const.STATE_PAUSED),
-        (TransportState.PAUSED_RECORDING, ha_const.STATE_PAUSED),
-        (TransportState.RECORDING, ha_const.STATE_IDLE),
-        (TransportState.NO_MEDIA_PRESENT, ha_const.STATE_IDLE),
+        (None, MediaPlayerState.ON),
+        (TransportState.STOPPED, MediaPlayerState.IDLE),
+        (TransportState.PLAYING, MediaPlayerState.PLAYING),
+        (TransportState.TRANSITIONING, MediaPlayerState.PLAYING),
+        (TransportState.PAUSED_PLAYBACK, MediaPlayerState.PAUSED),
+        (TransportState.PAUSED_RECORDING, MediaPlayerState.PAUSED),
+        (TransportState.RECORDING, MediaPlayerState.IDLE),
+        (TransportState.NO_MEDIA_PRESENT, MediaPlayerState.IDLE),
         (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
     ]:
         dmr_device_mock.profile_device.available = True
@@ -1318,7 +1321,7 @@ async def test_become_available(
     # Quick check of the state to verify the entity has a connected DmrDevice
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
     dev_reg = async_get_dr(hass)
     device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
@@ -1496,7 +1499,7 @@ async def test_multiple_ssdp_alive(
     # Device should be available
     mock_state = hass.states.get(mock_disconnected_entity_id)
     assert mock_state is not None
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == media_player.MediaPlayerState.IDLE
 
 
 async def test_ssdp_byebye(
@@ -1592,7 +1595,7 @@ async def test_ssdp_update_seen_bootid(
     # Device was not reconnected, even with a new boot ID
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1617,7 +1620,7 @@ async def test_ssdp_update_seen_bootid(
     # Nothing should change
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1642,7 +1645,7 @@ async def test_ssdp_update_seen_bootid(
     # Nothing should change
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1662,7 +1665,7 @@ async def test_ssdp_update_seen_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1719,7 +1722,7 @@ async def test_ssdp_update_missed_bootid(
     # Device should not reconnect yet
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1739,7 +1742,7 @@ async def test_ssdp_update_missed_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 1
     assert dmr_device_mock.async_subscribe_services.await_count == 2
@@ -1778,7 +1781,7 @@ async def test_ssdp_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
@@ -1798,7 +1801,7 @@ async def test_ssdp_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
@@ -1818,7 +1821,7 @@ async def test_ssdp_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_subscribe_services.call_count == 2
     assert dmr_device_mock.async_unsubscribe_services.call_count == 1
@@ -1849,14 +1852,14 @@ async def test_become_unavailable(
 
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # With a working connection, the state should be restored
     await async_update_entity(hass, mock_entity_id)
     dmr_device_mock.async_update.assert_any_call(do_ping=True)
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Break the service again, and the connection too. An update will cause the
     # device to be disconnected
@@ -1918,7 +1921,7 @@ async def test_poll_availability(
 
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
@@ -2023,7 +2026,7 @@ async def test_config_update_listen_port(
     # Check that its still connected
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_config_update_connect_failure(
@@ -2097,7 +2100,7 @@ async def test_config_update_callback_url(
     # Check that its still connected
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_config_update_poll_availability(
@@ -2138,4 +2141,4 @@ async def test_config_update_poll_availability(
     # Check that its still connected
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
