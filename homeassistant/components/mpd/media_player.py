@@ -15,29 +15,15 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    REPEAT_MODE_ALL,
-    REPEAT_MODE_OFF,
-    REPEAT_MODE_ONE,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -96,6 +82,8 @@ async def async_setup_platform(
 
 class MpdDevice(MediaPlayerEntity):
     """Representation of a MPD server."""
+
+    _attr_media_content_type = MediaType.MUSIC
 
     # pylint: disable=no-member
     def __init__(self, server, port, password, name):
@@ -185,18 +173,18 @@ class MpdDevice(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the media state."""
         if self._status is None:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._status["state"] == "play":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._status["state"] == "pause":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if self._status["state"] == "stop":
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
-        return STATE_OFF
+        return MediaPlayerState.OFF
 
     @property
     def is_volume_muted(self):
@@ -207,11 +195,6 @@ class MpdDevice(MediaPlayerEntity):
     def media_content_id(self):
         """Return the content ID of current playing media."""
         return self._currentsong.get("file")
-
-    @property
-    def media_content_type(self):
-        """Return the content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
@@ -384,7 +367,7 @@ class MpdDevice(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Choose a different available playlist and play it."""
-        await self.async_play_media(MEDIA_TYPE_PLAYLIST, source)
+        await self.async_play_media(MediaType.PLAYLIST, source)
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     async def _update_playlists(self, **kwargs: Any) -> None:
@@ -456,13 +439,13 @@ class MpdDevice(MediaPlayerEntity):
     ) -> None:
         """Send the media player the command for playing a playlist."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             _LOGGER.debug("Playing playlist: %s", media_id)
             if media_id in self._playlists:
                 self._currentplaylist = media_id
@@ -479,22 +462,22 @@ class MpdDevice(MediaPlayerEntity):
             await self._client.play()
 
     @property
-    def repeat(self):
+    def repeat(self) -> RepeatMode:
         """Return current repeat mode."""
         if self._status["repeat"] == "1":
             if self._status["single"] == "1":
-                return REPEAT_MODE_ONE
-            return REPEAT_MODE_ALL
-        return REPEAT_MODE_OFF
+                return RepeatMode.ONE
+            return RepeatMode.ALL
+        return RepeatMode.OFF
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        if repeat == REPEAT_MODE_OFF:
+        if repeat == RepeatMode.OFF:
             await self._client.repeat(0)
             await self._client.single(0)
         else:
             await self._client.repeat(1)
-            if repeat == REPEAT_MODE_ONE:
+            if repeat == RepeatMode.ONE:
                 await self._client.single(1)
             else:
                 await self._client.single(0)

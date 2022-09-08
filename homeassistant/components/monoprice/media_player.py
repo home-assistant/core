@@ -7,9 +7,10 @@ from homeassistant import core
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.entity import DeviceInfo
@@ -155,7 +156,7 @@ class MonopriceZone(MediaPlayerEntity):
             self._update_success = False
             return
 
-        self._state = STATE_ON if state.power else STATE_OFF
+        self._state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         self._volume = state.volume
         self._mute = state.mute
         idx = state.source

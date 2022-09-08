@@ -15,15 +15,13 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -126,7 +124,7 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._source_index = {}
         self._source = {}
         self._name = None
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
         self._available = True
 
     @property
@@ -180,16 +178,16 @@ class OpenhomeDevice(MediaPlayerEntity):
                 )
 
             if self._in_standby:
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
             elif self._transport_state == "Paused":
-                self._state = STATE_PAUSED
+                self._state = MediaPlayerState.PAUSED
             elif self._transport_state in ("Playing", "Buffering"):
-                self._state = STATE_PLAYING
+                self._state = MediaPlayerState.PLAYING
             elif self._transport_state == "Stopped":
-                self._state = STATE_IDLE
+                self._state = MediaPlayerState.IDLE
             else:
                 # Device is playing an external source with no transport controls
-                self._state = STATE_PLAYING
+                self._state = MediaPlayerState.PLAYING
 
             self._available = True
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
@@ -211,17 +209,17 @@ class OpenhomeDevice(MediaPlayerEntity):
     ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
-        if media_type != MEDIA_TYPE_MUSIC:
+        if media_type != MediaType.MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
-                MEDIA_TYPE_MUSIC,
+                MediaType.MUSIC,
             )
             return
 
