@@ -29,7 +29,7 @@ from .entity import DIRECTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_MEDIA_TYPES = [MediaType.MOVIE, MediaType.MUSIC, MediaType.TVSHOW]
+KNOWN_MEDIA_TYPES = {MediaType.MOVIE, MediaType.MUSIC, MediaType.TVSHOW}
 
 SUPPORT_DTV = (
     MediaPlayerEntityFeature.PAUSE
