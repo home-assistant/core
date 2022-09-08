@@ -116,9 +116,9 @@ async def async_browse_media(
 
 async def async_play_media(
     hass: HomeAssistant,
-    cast_entity_id: MediaType | str,
+    cast_entity_id: str,
     chromecast: Chromecast,
-    media_type: str,
+    media_type: MediaType | str,
     media_id: str,
 ) -> bool:
     """Play media."""
