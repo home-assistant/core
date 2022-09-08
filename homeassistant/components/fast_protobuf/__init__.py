@@ -34,9 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create an untracked task to build the wheel in the background
     # so we don't block shutdown if its not done by the time we exit
     # since they can just try again next time.
-    asyncio.create_task(
-        hass.loop.run_in_executor(None, build_wheel, "/config", PROTOBUF_VERSION)  # type: ignore[arg-type]
-    )
+    future = hass.loop.run_in_executor(None, build_wheel, "/config", PROTOBUF_VERSION)
+    asyncio.ensure_future(future)
     return True
 
 
