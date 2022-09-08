@@ -1,12 +1,10 @@
 """Constants for ProxmoxVE."""
-from datetime import timedelta
 import logging
 
 from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "proxmoxve"
 INTEGRATION_NAME = "Proxmox VE"
-UPDATE_INTERVAL = timedelta(seconds=60)
 
 LOGGER = logging.getLogger(__package__)
 

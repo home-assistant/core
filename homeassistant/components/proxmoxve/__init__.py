@@ -1,12 +1,14 @@
 """Support for Proxmox VE."""
 from __future__ import annotations
 
+import asyncio
+from datetime import timedelta
+from functools import partial
 from typing import Any
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
-import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
@@ -28,6 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -46,11 +49,17 @@ from .const import (
     INTEGRATION_NAME,
     LOGGER,
     PROXMOX_CLIENT,
-    UPDATE_INTERVAL,
     ProxmoxType,
 )
 
 PLATFORMS = ["binary_sensor"]
+
+COORDINATOR_UPDATE_INTERVAL_MAP = {
+    ProxmoxType.Proxmox: timedelta(minutes=60),
+    ProxmoxType.Node: timedelta(minutes=30),
+    ProxmoxType.QEMU: timedelta(seconds=60),
+    ProxmoxType.LXC: timedelta(seconds=60),
+}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -187,57 +196,82 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady(
             f"Connection to host {host} timed out during setup"
         ) from err
-
-    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    except ResourceException as err:
+        raise ConfigEntryNotReady from err
 
     proxmox = await hass.async_add_executor_job(proxmox_client.get_api_client)
 
-    coordinators_nodes = coordinators[entry_data[CONF_NODE]] = {}
+    async def async_update(
+        api_category: str,
+        node: str | None = None,
+        vm_id: int | None = None,
+    ) -> dict:
+        """Update the API data."""
 
-    # Proxmox instance info
-    coordinator = create_coordinator_proxmox(
-        hass, proxmox, entry_data[CONF_HOST], None, None, ProxmoxType.Proxmox
-    )
-    await coordinator.async_config_entry_first_refresh()
-    coordinators_nodes[ProxmoxType.Proxmox] = coordinator
+        def poll_api():
+            """Call the api."""
+            try:
+                if api_category == ProxmoxType.Proxmox:
+                    api_status = proxmox.version.get()
+                elif api_category is ProxmoxType.Node:
+                    api_status = proxmox.nodes(node).status.get()
+                elif api_category == ProxmoxType.QEMU:
+                    api_status = proxmox.nodes(node).qemu(vm_id).status.current.get()
+                elif api_category == ProxmoxType.LXC:
+                    api_status = proxmox.nodes(node).lxc(vm_id).status.current.get()
+            except AuthenticationError as error:
+                raise ConfigEntryAuthFailed from error
+            except ResourceException as error:
+                raise ConfigEntryNotReady from error
 
-    # Node info
-    coordinator = create_coordinator_proxmox(
-        hass,
-        proxmox,
-        entry_data[CONF_HOST],
-        entry_data[CONF_NODE],
-        None,
-        ProxmoxType.Node,
-    )
-    await coordinator.async_config_entry_first_refresh()
-    coordinators_nodes[ProxmoxType.Node] = coordinator
+            return api_status
 
-    # QEMU info
-    for vm_id in entry_data[CONF_QEMU]:
-        coordinator = create_coordinator_proxmox(
-            hass,
-            proxmox,
-            entry_data[CONF_HOST],
-            entry_data[CONF_NODE],
-            vm_id,
-            ProxmoxType.QEMU,
-        )
+        try:
+            status = await hass.async_add_executor_job(poll_api)
+        except ResourceException as err:
+            raise UpdateFailed(err) from err
+
+        return parse_api_proxmox(status, api_category)
+
+    async def async_init_coordinator(
+        coordinator: DataUpdateCoordinator,
+    ) -> None:
+        """Initialize a RainMachineDataUpdateCoordinator."""
         await coordinator.async_config_entry_first_refresh()
-        coordinators_nodes[vm_id] = coordinator
 
-    # LXC info
-    for container_id in entry_data[CONF_LXC]:
-        coordinator = create_coordinator_proxmox(
-            hass,
-            proxmox,
-            entry_data[CONF_HOST],
-            entry_data[CONF_NODE],
-            container_id,
-            ProxmoxType.LXC,
-        )
-        await coordinator.async_config_entry_first_refresh()
-        coordinators_nodes[container_id] = coordinator
+    controller_init_tasks = []
+    coordinators = {}
+    for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
+        if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
+            for vm_id in config_entry.data[api_category]:
+                coordinator = coordinators[vm_id] = DataUpdateCoordinator(
+                    hass,
+                    logger=LOGGER,
+                    name=f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]} - {config_entry.data[CONF_NODE]} - {vm_id} {api_category}",
+                    update_interval=update_interval,
+                    update_method=partial(
+                        async_update,
+                        api_category,
+                        config_entry.data[CONF_NODE],
+                        vm_id,
+                    ),
+                )
+                controller_init_tasks.append(async_init_coordinator(coordinator))
+        else:
+            coordinator = coordinators[api_category] = DataUpdateCoordinator(
+                hass,
+                logger=LOGGER,
+                name=f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]} - {config_entry.data[CONF_NODE]} - {api_category}",
+                update_interval=update_interval,
+                update_method=partial(
+                    async_update,
+                    api_category,
+                    config_entry.data[CONF_NODE],
+                ),
+            )
+            controller_init_tasks.append(async_init_coordinator(coordinator))
+
+    await asyncio.gather(*controller_init_tasks)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
@@ -263,37 +297,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-def create_coordinator_proxmox(hass, proxmox, host, node, vm_id, info_type):
-    """Create and return a DataUpdateCoordinator for a vm/container."""
-
-    async def async_update_data():
-        """Call the api and handle the response."""
-
-        def poll_api():
-            """Call the api."""
-            try:
-                api_status = call_api_proxmox(proxmox, node, vm_id, info_type)
-            except AuthenticationError as error:
-                raise ConfigEntryAuthFailed from error
-            except Exception as error:
-                raise ConfigEntryNotReady from error
-
-            return api_status
-
-        if (status := await hass.async_add_executor_job(poll_api)) is None:
-            raise ConfigEntryNotReady("Error fetching data from API")
-
-        return parse_api_proxmox(status, info_type)
-
-    return DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"proxmox_coordinator_{host}_{node}_{vm_id}",
-        update_method=async_update_data,
-        update_interval=UPDATE_INTERVAL,
-    )
 
 
 def parse_api_proxmox(status, info_type):
@@ -330,25 +333,6 @@ def parse_api_proxmox(status, info_type):
         }
 
 
-def call_api_proxmox(proxmox, node, vm_id, info_type):
-    """Make proper api calls."""
-    status = None
-
-    try:
-        if info_type == ProxmoxType.Proxmox:
-            status = proxmox.version.get()
-        elif info_type is ProxmoxType.Node:
-            status = proxmox.nodes(node).status.get()
-        elif info_type == ProxmoxType.QEMU:
-            status = proxmox.nodes(node).qemu(vm_id).status.current.get()
-        elif info_type == ProxmoxType.LXC:
-            status = proxmox.nodes(node).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exceptions.ConnectionError):
-        return None
-
-    return status
-
-
 def device_info(
     hass,
     config_entry,
@@ -364,11 +348,11 @@ def device_info(
     node = config_entry.data[CONF_NODE]
 
     proxmox_version = None
-    coordinator = coordinators[node][ProxmoxType.Proxmox]
+    coordinator = coordinators[ProxmoxType.Proxmox]
     if not (coordinator_data := coordinator.data) is None:
         proxmox_version = coordinator_data["version"]
 
-    coordinator = coordinators[node][vm_id]
+    coordinator = coordinators[vm_id]
     if not (coordinator_data := coordinator.data) is None:
         vm_name = coordinator_data["name"]
 

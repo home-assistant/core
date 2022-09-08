@@ -25,7 +25,7 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
 
     for vm_id in config_entry.data[CONF_QEMU]:
-        coordinator = coordinators[config_entry.data[CONF_NODE]][vm_id]
+        coordinator = coordinators[vm_id]
 
         # unfound vm case
         if coordinator.data is None:
@@ -47,7 +47,7 @@ async def async_setup_entry(
         sensors.append(vm_sensor)
 
     for container_id in config_entry.data[CONF_LXC]:
-        coordinator = coordinators[config_entry.data[CONF_NODE]][container_id]
+        coordinator = coordinators[container_id]
 
         # unfound container case
         if coordinator.data is None:
