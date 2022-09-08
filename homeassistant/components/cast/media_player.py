@@ -29,18 +29,16 @@ import yarl
 
 from homeassistant.components import media_source, zeroconf
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_EXTRA,
     BrowseError,
     BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-    async_process_play_media_url,
-)
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_EXTRA,
-    MediaClass,
     MediaPlayerState,
     MediaType,
+    async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.lovelace import cast as lovelace_cast
-from homeassistant.components.media_player.const import MediaClass
+from homeassistant.components.media_player import MediaClass
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component

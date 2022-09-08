@@ -127,6 +127,7 @@ from .const import (  # noqa: F401
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    MediaClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,

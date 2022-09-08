@@ -7,8 +7,7 @@ from typing import Protocol
 from pychromecast import Chromecast
 import voluptuous as vol
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import MediaType
+from homeassistant.components.media_player import BrowseMedia, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

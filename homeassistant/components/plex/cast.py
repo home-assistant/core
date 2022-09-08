@@ -5,8 +5,7 @@ from pychromecast import Chromecast
 from pychromecast.controllers.plex import PlexController
 
 from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import MediaClass, MediaType
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant
 
 from . import async_browse_media as async_browse_plex_media, is_plex_media_id
