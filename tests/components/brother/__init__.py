@@ -4,11 +4,14 @@ from unittest.mock import patch
 
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def init_integration(hass, skip_setup=False) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, skip_setup: bool = False
+) -> MockConfigEntry:
     """Set up the Brother integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,

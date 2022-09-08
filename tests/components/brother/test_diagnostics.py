@@ -1,8 +1,12 @@
 """Test Brother diagnostics."""
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 import json
 from unittest.mock import Mock, patch
 
+from aiohttp import ClientSession
+
+from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
 from tests.common import load_fixture
@@ -10,7 +14,9 @@ from tests.components.brother import init_integration
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: Callable[..., Awaitable[ClientSession]]
+) -> None:
     """Test config entry diagnostics."""
     entry = await init_integration(hass, skip_setup=True)
 

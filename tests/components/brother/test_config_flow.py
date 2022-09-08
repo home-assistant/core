@@ -9,13 +9,14 @@ from homeassistant.components import zeroconf
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"}
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -25,7 +26,7 @@ async def test_show_form(hass):
     assert result["step_id"] == SOURCE_USER
 
 
-async def test_create_entry_with_hostname(hass):
+async def test_create_entry_with_hostname(hass: HomeAssistant) -> None:
     """Test that the user step works with printer hostname."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
@@ -43,7 +44,7 @@ async def test_create_entry_with_hostname(hass):
         assert result["data"][CONF_TYPE] == "laser"
 
 
-async def test_create_entry_with_ipv4_address(hass):
+async def test_create_entry_with_ipv4_address(hass: HomeAssistant) -> None:
     """Test that the user step works with printer IPv4 address."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
@@ -59,7 +60,7 @@ async def test_create_entry_with_ipv4_address(hass):
         assert result["data"][CONF_TYPE] == "laser"
 
 
-async def test_create_entry_with_ipv6_address(hass):
+async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
     """Test that the user step works with printer IPv6 address."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
@@ -77,7 +78,7 @@ async def test_create_entry_with_ipv6_address(hass):
         assert result["data"][CONF_TYPE] == "laser"
 
 
-async def test_invalid_hostname(hass):
+async def test_invalid_hostname(hass: HomeAssistant) -> None:
     """Test invalid hostname in user_input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -88,7 +89,7 @@ async def test_invalid_hostname(hass):
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data", side_effect=ConnectionError()
@@ -100,7 +101,7 @@ async def test_connection_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_snmp_error(hass):
+async def test_snmp_error(hass: HomeAssistant) -> None:
     """Test SNMP error."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data", side_effect=SnmpError("error")
@@ -112,7 +113,7 @@ async def test_snmp_error(hass):
         assert result["errors"] == {"base": "snmp_error"}
 
 
-async def test_unsupported_model_error(hass):
+async def test_unsupported_model_error(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data", side_effect=UnsupportedModel("error")
@@ -126,7 +127,7 @@ async def test_unsupported_model_error(hass):
         assert result["reason"] == "unsupported_model"
 
 
-async def test_device_exists_abort(hass):
+async def test_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort config flow if Brother printer already configured."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
@@ -143,7 +144,7 @@ async def test_device_exists_abort(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_snmp_error(hass):
+async def test_zeroconf_snmp_error(hass: HomeAssistant) -> None:
     """Test we abort zeroconf flow on SNMP error."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data", side_effect=SnmpError("error")
@@ -167,7 +168,7 @@ async def test_zeroconf_snmp_error(hass):
         assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_unsupported_model(hass):
+async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data"
@@ -191,7 +192,7 @@ async def test_zeroconf_unsupported_model(hass):
         assert len(mock_get_data.mock_calls) == 0
 
 
-async def test_zeroconf_device_exists_abort(hass):
+async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
     """Test we abort zeroconf flow if Brother printer already configured."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",
@@ -225,7 +226,7 @@ async def test_zeroconf_device_exists_abort(hass):
     assert entry.data["host"] == "127.0.0.1"
 
 
-async def test_zeroconf_no_probe_existing_device(hass):
+async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
     """Test we do not probe the device is the host is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
     entry.add_to_hass(hass)
@@ -252,7 +253,7 @@ async def test_zeroconf_no_probe_existing_device(hass):
     assert len(mock_get_data.mock_calls) == 0
 
 
-async def test_zeroconf_confirm_create_entry(hass):
+async def test_zeroconf_confirm_create_entry(hass: HomeAssistant) -> None:
     """Test zeroconf confirmation and create config entry."""
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data",

@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
@@ -30,7 +31,7 @@ ATTR_REMAINING_PAGES = "remaining_pages"
 ATTR_COUNTER = "counter"
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test states of the sensors."""
     entry = await init_integration(hass, skip_setup=True)
 
@@ -278,7 +279,7 @@ async def test_disabled_by_default_sensors(hass):
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when device is offline."""
     await init_integration(hass)
 
@@ -312,7 +313,7 @@ async def test_availability(hass):
         assert state.state == "waiting"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
@@ -332,7 +333,7 @@ async def test_manual_update_entity(hass):
         assert len(mock_update.mock_calls) == 1
 
 
-async def test_unique_id_migration(hass):
+async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test states of the unique_id migration."""
     registry = er.async_get(hass)
 
