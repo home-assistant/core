@@ -390,6 +390,7 @@ FLOWS = {
         "thermopro",
         "tibber",
         "tile",
+        "tilt_ble",
         "tolo",
         "tomorrowio",
         "toon",

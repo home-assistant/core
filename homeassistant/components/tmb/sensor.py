@@ -119,7 +119,7 @@ class TMBSensor(SensorEntity):
         }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the next bus information."""
         try:
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)

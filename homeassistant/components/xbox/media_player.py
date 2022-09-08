@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
@@ -154,42 +155,42 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         """If the image url is remotely accessible."""
         return True
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self.client.smartglass.wake_up(self._console.id)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self.client.smartglass.turn_off(self._console.id)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
             await self.client.smartglass.mute(self._console.id)
         else:
             await self.client.smartglass.unmute(self._console.id)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.client.smartglass.play(self._console.id)
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.client.smartglass.pause(self._console.id)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.client.smartglass.previous(self._console.id)
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.client.smartglass.next(self._console.id)
 
@@ -203,7 +204,9 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
             media_content_id,
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Launch an app on the Xbox."""
         if media_id == "Home":
             await self.client.smartglass.go_home(self._console.id)
