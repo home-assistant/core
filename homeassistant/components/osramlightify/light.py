@@ -373,7 +373,7 @@ class Luminary(LightEntity):
             self._max_mireds = color_util.color_temperature_kelvin_to_mired(
                 self._luminary.min_temp() or DEFAULT_KELVIN
             )
-        if len(self._attr_supported_color_modes == 1):
+        if len(self._attr_supported_color_modes) == 1:
             # The light supports only a single color mode
             self._attr_color_mode = list(self._attr_supported_color_modes)[0]
 
