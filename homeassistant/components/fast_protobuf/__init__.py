@@ -15,7 +15,8 @@ import google.protobuf
 from google.protobuf.internal import api_implementation
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import Event, HomeAssistant, callback
 
 PROTOBUF_VERSION = google.protobuf.__version__
 _LOGGER = logging.getLogger(__name__)
@@ -25,19 +26,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fast protobuf from a config entry."""
 
     if api_implementation.Type() == "cpp":
-        _LOGGER.info("Using %s C++ implementation of protobuf", PROTOBUF_VERSION)
+        _LOGGER.info(
+            "Already using %s C++ implementation of protobuf, enjoy :)",
+            PROTOBUF_VERSION,
+        )
         return True
 
     _LOGGER.warning(
         "Building protobuf %s cpp version in the background, this will be cpu intensive",
         PROTOBUF_VERSION,
     )
-    # Create an untracked task to build the wheel in the background
-    # so we don't block shutdown if its not done by the time we exit
-    # since they can just try again next time.
-    config_dir = hass.config.config_dir
-    future = hass.loop.run_in_executor(None, build_wheel, config_dir, PROTOBUF_VERSION)
-    asyncio.ensure_future(future)
+
+    @callback
+    def _async_build_wheel(event: Event) -> None:
+        # Create an untracked task to build the wheel in the background
+        # so we don't block shutdown if its not done by the time we exit
+        # since they can just try again next time.
+        config_dir = hass.config.config_dir
+        future = hass.loop.run_in_executor(
+            None, build_wheel, config_dir, PROTOBUF_VERSION
+        )
+        asyncio.ensure_future(future)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_build_wheel)
+    )
+
     return True
 
 
