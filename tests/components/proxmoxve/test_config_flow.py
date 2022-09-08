@@ -8,7 +8,6 @@ from homeassistant.components.proxmoxve.const import (
     CONF_CONTAINERS,
     CONF_LXC,
     CONF_NODE,
-    CONF_NODES,
     CONF_QEMU,
     CONF_REALM,
     CONF_VMS,
@@ -38,8 +37,8 @@ USER_INPUT_OK = {
     CONF_REALM: "pam",
     CONF_VERIFY_SSL: True,
     CONF_NODE: "pve",
-    CONF_QEMU: [100, 101, 102],
-    CONF_LXC: [201, 202, 203],
+    CONF_QEMU: ["100", "101", "102"],
+    CONF_LXC: ["201", "202", "203"],
 }
 
 USER_INPUT_USER_HOST = {
@@ -55,8 +54,8 @@ USER_INPUT_NODE = {
 }
 USER_INPUT_QEMU_LXC = {
     CONF_NODE: "pve",
-    CONF_QEMU: [100, 101],
-    CONF_LXC: [201, 202],
+    CONF_QEMU: ["100", "101"],
+    CONF_LXC: ["201", "202"],
 }
 USER_INPUT_AUTH = {
     CONF_USERNAME: "root",
@@ -77,13 +76,9 @@ USER_INPUT_NOT_EXIST = {
     CONF_PASSWORD: "secret",
     CONF_REALM: "pam",
     CONF_VERIFY_SSL: True,
-    CONF_NODES: [
-        {
-            CONF_NODE: "not_exist",
-            CONF_VMS: [100, 101],
-            CONF_CONTAINERS: [201, 202],
-        },
-    ],
+    CONF_NODE: "not_exist",
+    CONF_VMS: ["100", "101"],
+    CONF_CONTAINERS: ["201", "202"],
 }
 
 USER_INPUT_PORT_TOO_BIG = {

@@ -166,27 +166,14 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
 
             old_qemu = []
             for qemu in self.config_entry.data[CONF_QEMU]:
-                old_qemu.append(qemu)
+                old_qemu.append(str(qemu))
 
             old_lxc = []
             for lxc in self.config_entry.data[CONF_LXC]:
-                old_lxc.append(lxc)
+                old_lxc.append(str(lxc))
 
             node = self.config_entry.data[CONF_NODE]
             proxmox = self._proxmox_client.get_api_client()
-
-            qemu_list_for_multi_select: list[int] = [
-                int(qemu[ID])
-                for qemu in await self.hass.async_add_executor_job(
-                    proxmox.nodes(node).qemu.get
-                )
-            ]
-            lxc_list_for_multi_select: list[int] = [
-                int(lxc[ID])
-                for lxc in await self.hass.async_add_executor_job(
-                    proxmox.nodes(node).lxc.get
-                )
-            ]
 
             return self.async_show_form(
                 step_id="selection_qemu_lxc",
@@ -194,10 +181,24 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     {
                         vol.Required(CONF_NODE): node,
                         vol.Optional(CONF_QEMU, default=old_qemu): cv.multi_select(
-                            qemu_list_for_multi_select
+                            {
+                                str(
+                                    qemu[ID]
+                                ): f"{qemu[ID]} {qemu['name'] if 'name' in qemu else None}"
+                                for qemu in await self.hass.async_add_executor_job(
+                                    proxmox.nodes(node).qemu.get
+                                )
+                            }
                         ),
                         vol.Optional(CONF_LXC, default=old_lxc): cv.multi_select(
-                            lxc_list_for_multi_select
+                            {
+                                str(
+                                    lxc[ID]
+                                ): f"{lxc[ID]} {lxc['name'] if 'name' in lxc else None}"
+                                for lxc in await self.hass.async_add_executor_job(
+                                    proxmox.nodes(node).lxc.get
+                                )
+                            }
                         ),
                     }
                 ),
@@ -706,29 +707,30 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if (proxmox_cliente := self._proxmox_client) is not None:
                 proxmox = proxmox_cliente.get_api_client()
 
-            qemu_list_for_multi_select: list[int] = [
-                int(qemu[ID])
-                for qemu in await self.hass.async_add_executor_job(
-                    proxmox.nodes(node).qemu.get
-                )
-            ]
-            lxc_list_for_multi_select: list[int] = [
-                int(lxc[ID])
-                for lxc in await self.hass.async_add_executor_job(
-                    proxmox.nodes(node).lxc.get
-                )
-            ]
-
             return self.async_show_form(
                 step_id="selection_qemu_lxc",
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_NODE): node,
                         vol.Optional(CONF_QEMU): cv.multi_select(
-                            qemu_list_for_multi_select
+                            {
+                                str(
+                                    qemu[ID]
+                                ): f"{qemu[ID]} {qemu['name'] if 'name' in qemu else None}"
+                                for qemu in await self.hass.async_add_executor_job(
+                                    proxmox.nodes(node).qemu.get
+                                )
+                            }
                         ),
                         vol.Optional(CONF_LXC): cv.multi_select(
-                            lxc_list_for_multi_select
+                            {
+                                str(
+                                    lxc[ID]
+                                ): f"{lxc[ID]} {lxc['name'] if 'name' in lxc else None}"
+                                for lxc in await self.hass.async_add_executor_job(
+                                    proxmox.nodes(node).lxc.get
+                                )
+                            }
                         ),
                     }
                 ),
