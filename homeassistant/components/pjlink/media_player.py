@@ -9,15 +9,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,7 +83,7 @@ class PjLinkDevice(MediaPlayerEntity):
         self._password = password
         self._encoding = encoding
         self._muted = False
-        self._pwstate = STATE_OFF
+        self._pwstate = MediaPlayerState.OFF
         self._current_source = None
         with self.projector() as projector:
             if not self._name:
@@ -114,23 +108,23 @@ class PjLinkDevice(MediaPlayerEntity):
             try:
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
-                    self._pwstate = STATE_ON
+                    self._pwstate = MediaPlayerState.ON
                     self._muted = projector.get_mute()[1]
                     self._current_source = format_input_source(*projector.get_input())
                 else:
-                    self._pwstate = STATE_OFF
+                    self._pwstate = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
-                    self._pwstate = STATE_OFF
+                    self._pwstate = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
                 else:
                     raise
             except ProjectorError as err:
                 if str(err) == "unavailable time":
-                    self._pwstate = STATE_OFF
+                    self._pwstate = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
                 else:

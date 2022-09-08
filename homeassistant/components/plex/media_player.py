@@ -12,13 +12,13 @@ from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -140,7 +140,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         self._attr_available = False
         self._attr_should_poll = False
-        self._attr_state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
         self._attr_unique_id = (
             f"{self.plex_server.machine_identifier}:{self.machine_identifier}"
         )
@@ -229,7 +229,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     def force_idle(self):
         """Force client to idle."""
-        self._attr_state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
         if self.player_source == "session":
             self.device = None
             self.session_device = None
@@ -247,7 +247,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.session_device = self.session.player
             self.update_state(self.session.state)
         else:
-            self._attr_state = STATE_IDLE
+            self._attr_state = MediaPlayerState.IDLE
 
     @property  # type: ignore[misc]
     @needs_session
@@ -258,24 +258,24 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def update_state(self, state):
         """Set the state of the device, handle session termination."""
         if state == "playing":
-            self._attr_state = STATE_PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         elif state == "paused":
-            self._attr_state = STATE_PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
         elif state == "stopped":
             self.session = None
             self.force_idle()
         else:
-            self._attr_state = STATE_IDLE
+            self._attr_state = MediaPlayerState.IDLE
 
     @property
     def _is_player_active(self):
         """Report if the client is playing media."""
-        return self.state in (STATE_PLAYING, STATE_PAUSED)
+        return self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}
 
     @property
     def _active_media_plexapi_type(self):
         """Get the active media type required by PlexAPI commands."""
-        if self.media_content_type is MEDIA_TYPE_MUSIC:
+        if self.media_content_type == MediaType.MUSIC:
             return "music"
 
         return "video"
