@@ -6,21 +6,21 @@ from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import Literal, cast
+from typing import cast
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder import (
+    get_instance,
+    history,
+    websocket_api as recorder_ws,
+)
 from homeassistant.components.recorder.filters import (
     Filters,
     sqlalchemy_filter_from_include_exclude_conf,
-)
-from homeassistant.components.recorder.statistics import (
-    list_statistic_ids,
-    statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.websocket_api import messages
@@ -68,23 +68,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _ws_get_statistics_during_period(
-    hass: HomeAssistant,
-    msg_id: int,
-    start_time: dt,
-    end_time: dt | None = None,
-    statistic_ids: list[str] | None = None,
-    period: Literal["5minute", "day", "hour", "month"] = "hour",
-) -> str:
-    """Fetch statistics and convert them to json in the executor."""
-    return JSON_DUMP(
-        messages.result_message(
-            msg_id,
-            statistics_during_period(hass, start_time, end_time, statistic_ids, period),
-        )
-    )
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "history/statistics_during_period",
@@ -99,46 +82,11 @@ async def ws_get_statistics_during_period(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Handle statistics websocket command."""
-    start_time_str = msg["start_time"]
-    end_time_str = msg.get("end_time")
-
-    if start_time := dt_util.parse_datetime(start_time_str):
-        start_time = dt_util.as_utc(start_time)
-    else:
-        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
-        return
-
-    if end_time_str:
-        if end_time := dt_util.parse_datetime(end_time_str):
-            end_time = dt_util.as_utc(end_time)
-        else:
-            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
-            return
-    else:
-        end_time = None
-
-    connection.send_message(
-        await get_instance(hass).async_add_executor_job(
-            _ws_get_statistics_during_period,
-            hass,
-            msg["id"],
-            start_time,
-            end_time,
-            msg.get("statistic_ids"),
-            msg.get("period"),
-        )
+    _LOGGER.warning(
+        "WS API 'history/statistics_during_period' is deprecated and will be removed in "
+        "Home Assistant Core 2022.12. Use 'recorder/statistics_during_period' instead"
     )
-
-
-def _ws_get_list_statistic_ids(
-    hass: HomeAssistant,
-    msg_id: int,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
-) -> str:
-    """Fetch a list of available statistic_id and convert them to json in the executor."""
-    return JSON_DUMP(
-        messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
-    )
+    await recorder_ws.ws_handle_get_statistics_during_period(hass, connection, msg)
 
 
 @websocket_api.websocket_command(
@@ -152,14 +100,11 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    connection.send_message(
-        await get_instance(hass).async_add_executor_job(
-            _ws_get_list_statistic_ids,
-            hass,
-            msg["id"],
-            msg.get("statistic_type"),
-        )
+    _LOGGER.warning(
+        "WS API 'history/list_statistic_ids' is deprecated and will be removed in "
+        "Home Assistant Core 2022.12. Use 'recorder/list_statistic_ids' instead"
     )
+    await recorder_ws.ws_handle_list_statistic_ids(hass, connection, msg)
 
 
 def _ws_get_significant_states(
