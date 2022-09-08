@@ -69,8 +69,13 @@ def washer_state(washer: WasherDryer) -> str | None:
     if washer.get_cycle_status_washing():
         machine_cycle = "Cycle Washing"
 
+    if washer.get_attribute("Cavity_OpStatusDoorOpen"):
+        machine_cycle = "Door open"
+        return machine_cycle
+
     if machine_state == MachineState.RunningMainCycle and machine_cycle:
         return machine_cycle
+
     return MACHINE_STATE.get(machine_state)
 
 
