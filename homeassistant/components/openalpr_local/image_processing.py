@@ -141,7 +141,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         """Send event with new plates and store data.
 
         plates are a dict in follow format:
-          { 'plate': confidence }
+          { '<plate>': confidence }
 
         This method must be run in the event loop.
         """
