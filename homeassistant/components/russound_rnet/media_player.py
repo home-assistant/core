@@ -10,8 +10,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -100,9 +101,9 @@ class RussoundRNETDevice(MediaPlayerEntity):
         if ret is not None:
             _LOGGER.debug("Updating status for zone %s", self._zone_id)
             if ret[0] == 0:
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
             else:
-                self._state = STATE_ON
+                self._state = MediaPlayerState.ON
             self._volume = ret[2] * 2 / 100.0
             # Returns 0 based index for source.
             index = ret[1]
