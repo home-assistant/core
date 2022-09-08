@@ -19,9 +19,10 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import (
@@ -296,11 +297,11 @@ class SongpalEntity(MediaPlayerEntity):
         return [src.title for src in self._sources.values()]
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return current state."""
         if self._state:
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def source(self):
