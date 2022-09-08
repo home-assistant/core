@@ -15,7 +15,7 @@
             "unknown": "Unexpected error"
         },
         "create_entry": {
-            "default": "Successfully authenticated"
+            "default": "Successfully authenticated and spreadsheet created at: {url}"
         },
         "step": {
             "auth": {

@@ -3,8 +3,8 @@ append_sheet:
   description: Append data to a worksheet in Google Sheets.
   fields:
     config_entry:
-      name: Config entry
-      description: Config entry to use.
+      name: Sheet
+      description: The sheet to add data to
       required: true
       selector:
         config_entry:
@@ -17,8 +17,8 @@ append_sheet:
         text:
     data:
       name: Data
-      description: Data to be appended to the worksheet. This puts the data on a new row, one value per column.
+      description: Data to be appended to the worksheet. This puts the values on a new row underneath the matching column (key). Any new key is placed on the top of a new column.
       required: true
-      example: '- "foo" or ["foo"]'
+      example: '{"hello": world, "cool": True, "count": 5}'
       selector:
         object:

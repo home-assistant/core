@@ -1,9 +1,12 @@
 """Support for Google Drive."""
 from __future__ import annotations
 
+from datetime import datetime
+import logging
 from typing import cast
 
 import aiohttp
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from gspread import Client
 import voluptuous as vol
@@ -17,6 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DATA_CONFIG_ENTRY, DEFAULT_ACCESS, DOMAIN
 
@@ -27,11 +31,12 @@ SERVICE_APPEND_SHEET = "append_sheet"
 
 APPEND_SHEET_SERVICE_SCHEMA = vol.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): cv.string,
+        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Optional(WORKSHEET): cv.string,
-        vol.Required(DATA): list,
+        vol.Required(DATA): dict,
     },
 )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -72,15 +77,34 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_drive_service(hass: HomeAssistant) -> None:
     """Add the services for Google Sheets."""
 
+    def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
+        """Run append in the executor."""
+        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
+        try:
+            sheet = service.open_by_key(entry.unique_id)
+        except RefreshError as ex:
+            _LOGGER.warning("Token not accepted, please reauthenticate: %s", ex)
+            raise ConfigEntryAuthFailed(
+                "OAuth session is not valid, reauth required"
+            ) from ex
+        worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+        _data = {"created": str(datetime.now())} | call.data[DATA]
+        row = []
+        columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
+        for column in columns:
+            if column in _data:
+                row.append(_data[column])
+            else:
+                row.append("")
+        for key, value in _data.items():
+            if key not in columns:
+                columns.append(key)
+                worksheet.update_cell(1, len(columns), key)
+                row.append(value)
+        worksheet.append_row(row)
+
     async def append_to_sheet(call: ServiceCall) -> None:
         """Edit Google Sheets document."""
-
-        def _append_to_sheet() -> None:
-            """Run append in the executor."""
-            service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
-            sheet = service.open_by_key(entry.unique_id)
-            worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-            worksheet.append_row(call.data[DATA])
 
         entry = cast(
             ConfigEntry,
@@ -88,7 +112,7 @@ async def async_setup_drive_service(hass: HomeAssistant) -> None:
         )
         session: OAuth2Session = hass.data[DOMAIN][entry.entry_id]
         await session.async_ensure_token_valid()
-        await hass.async_add_executor_job(_append_to_sheet)
+        await hass.async_add_executor_job(_append_to_sheet, call, entry)
 
     hass.services.async_register(
         DOMAIN,

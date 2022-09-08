@@ -20,7 +20,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+      "default": "Successfully authenticated and spreadsheet created at: {url}"
     }
   },
   "application_credentials": {

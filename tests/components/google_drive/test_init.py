@@ -200,14 +200,15 @@ async def test_append_sheet(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_drive.Client"):
+    with patch("homeassistant.components.google_drive.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
             {
                 "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
-                "data": ["example"],
+                "data": {"foo": "bar"},
             },
             blocking=True,
         )
+    assert len(mock_client.mock_calls) == 8

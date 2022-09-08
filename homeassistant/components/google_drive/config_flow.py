@@ -7,6 +7,7 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
+from gspread.spreadsheet import Spreadsheet
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -88,13 +89,19 @@ class OAuth2FlowHandler(
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
+        def setup_doc() -> Spreadsheet:
+            """Set up the doc."""
+            spreadsheet = service.create("Home Assistant")
+            spreadsheet.sheet1.append_row(["created"])
+            return spreadsheet
+
         try:
-            doc = await self.hass.async_add_executor_job(
-                service.create, "Home Assistant"
-            )
+            doc = await self.hass.async_add_executor_job(setup_doc)
         except GSpreadException as err:
             _LOGGER.error("Error creating spreadsheet: %s", str(err))
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(doc.id)
-        return self.async_create_entry(title=DEFAULT_NAME, data=data)
+        return self.async_create_entry(
+            title=DEFAULT_NAME, data=data, description_placeholders={"url": doc.url}
+        )
