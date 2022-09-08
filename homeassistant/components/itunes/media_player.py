@@ -10,22 +10,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -195,6 +183,7 @@ def setup_platform(
 class ItunesDevice(MediaPlayerEntity):
     """Representation of an iTunes API instance."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -263,12 +252,12 @@ class ItunesDevice(MediaPlayerEntity):
             return "error"
 
         if self.player_state == "stopped":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         if self.player_state == "paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
-        return STATE_PLAYING
+        return MediaPlayerState.PLAYING
 
     def update(self) -> None:
         """Retrieve latest state."""
@@ -313,15 +302,15 @@ class ItunesDevice(MediaPlayerEntity):
         return self.content_id
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
     def media_image_url(self):
         """Image url of current playing media."""
         if (
-            self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED)
+            self.player_state
+            in {
+                MediaPlayerState.PLAYING,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.PAUSED,
+            }
             and self.current_title is not None
         ):
             return f"{self.client.artwork_url()}?id={self.content_id}"
@@ -393,7 +382,7 @@ class ItunesDevice(MediaPlayerEntity):
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the media player."""
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 
@@ -406,6 +395,7 @@ class ItunesDevice(MediaPlayerEntity):
 class AirPlayDevice(MediaPlayerEntity):
     """Representation an AirPlay device via an iTunes API instance."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.TURN_ON
@@ -466,12 +456,12 @@ class AirPlayDevice(MediaPlayerEntity):
         return "mdi:volume-off"
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.selected is True:
-            return STATE_ON
+            return MediaPlayerState.ON
 
-        return STATE_OFF
+        return MediaPlayerState.OFF
 
     def update(self) -> None:
         """Retrieve latest state."""
@@ -480,11 +470,6 @@ class AirPlayDevice(MediaPlayerEntity):
     def volume_level(self):
         """Return the volume."""
         return float(self.volume) / 100.0
-
-    @property
-    def media_content_type(self):
-        """Flag of media content that is supported."""
-        return MEDIA_TYPE_MUSIC
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
