@@ -7,14 +7,9 @@ from sisyphus_control import Track
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,17 +84,17 @@ class SisyphusPlayer(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the current state of the table; sleeping maps to off."""
         if self._table.state in ["homing", "playing"]:
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._table.state == "paused":
             if self._table.is_sleeping:
-                return STATE_OFF
+                return MediaPlayerState.OFF
 
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if self._table.state == "waiting":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         return None
 
