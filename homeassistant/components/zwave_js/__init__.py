@@ -316,11 +316,13 @@ class ControllerEvents:
         LOGGER.debug("Node added: %s", node.node_id)
 
         # Listen for ready node events, both new and re-interview.
-        node.on(
-            "ready",
-            lambda event: self.hass.async_create_task(
-                self.node_events.async_on_node_ready(event["node"])
-            ),
+        self.config_entry.async_on_unload(
+            node.on(
+                "ready",
+                lambda event: self.hass.async_create_task(
+                    self.node_events.async_on_node_ready(event["node"])
+                ),
+            )
         )
 
         # we only want to run discovery when the node has reached ready state,
