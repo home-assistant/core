@@ -31,7 +31,8 @@ async def async_setup_entry(
 class SkybellLight(SkybellEntity, LightEntity):
     """A light implementation for Skybell devices."""
 
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS, ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -55,3 +56,8 @@ class SkybellLight(SkybellEntity, LightEntity):
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int((self._device.led_intensity * 255) / 100)
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the rgb color value [int, int, int]."""
+        return self._device.led_rgb
