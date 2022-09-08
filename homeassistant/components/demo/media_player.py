@@ -240,7 +240,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        self._attr_media_content_id = media_id
+        self.youtube_id = media_id
         self.schedule_update_ha_state()
 
     def media_pause(self) -> None:
