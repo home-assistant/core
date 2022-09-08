@@ -2419,6 +2419,34 @@ async def test_integration_entities(hass):
     assert info.rate_limit is None
 
 
+async def test_entry_id(hass):
+    """Test entry_id function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_registry = mock_registry(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | entry_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, f"{{{{ entry_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, config_entry.entry_id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ entry_id('Some integration') }}")
+    assert_result_info(info, config_entry.entry_id)
+    assert info.rate_limit is None
+
+
 async def test_device_id(hass):
     """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
