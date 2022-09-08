@@ -22,19 +22,11 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    CONF_HOST,
-    CONF_MODEL,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
@@ -297,11 +289,11 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
-        if self._receiver.state in (STATE_PLAYING, STATE_PAUSED):
-            return MEDIA_TYPE_MUSIC
-        return MEDIA_TYPE_CHANNEL
+        if self._receiver.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
+            return MediaType.MUSIC
+        return MediaType.CHANNEL
 
     @property
     def media_duration(self):

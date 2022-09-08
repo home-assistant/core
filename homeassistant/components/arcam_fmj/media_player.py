@@ -9,17 +9,15 @@ from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
     BrowseMedia,
+    MediaClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -91,11 +89,11 @@ class ArcamFmj(MediaPlayerEntity):
         self._attr_entity_registry_enabled_default = state.zn == 1
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._state.get_power():
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def device_info(self):
@@ -202,7 +200,9 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.set_power(False)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if media_content_id not in (None, "root"):
@@ -215,9 +215,9 @@ class ArcamFmj(MediaPlayerEntity):
         radio = [
             BrowseMedia(
                 title=preset.name,
-                media_class=MEDIA_CLASS_MUSIC,
+                media_class=MediaClass.MUSIC,
                 media_content_id=f"preset:{preset.index}",
-                media_content_type=MEDIA_TYPE_MUSIC,
+                media_content_type=MediaType.MUSIC,
                 can_play=True,
                 can_expand=False,
             )
@@ -226,7 +226,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = BrowseMedia(
             title="Arcam FMJ Receiver",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id="root",
             media_content_type="library",
             can_play=False,
@@ -237,7 +237,7 @@ class ArcamFmj(MediaPlayerEntity):
         return root
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
 
@@ -289,13 +289,13 @@ class ArcamFmj(MediaPlayerEntity):
         return value / 99.0
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         elif source == SourceCodes.FM:
-            value = MEDIA_TYPE_MUSIC
+            value = MediaType.MUSIC
         else:
             value = None
         return value
