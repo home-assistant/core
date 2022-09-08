@@ -15,8 +15,8 @@ import google.protobuf
 from google.protobuf.internal import api_implementation
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.start import async_at_start
 
 PROTOBUF_VERSION = google.protobuf.__version__
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     @callback
-    def _async_build_wheel(event: Event) -> None:
+    def _async_build_wheel(hass: HomeAssistant) -> None:
         # Create an untracked task to build the wheel in the background
         # so we don't block shutdown if its not done by the time we exit
         # since they can just try again next time.
@@ -48,10 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         asyncio.ensure_future(future)
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_build_wheel)
-    )
-
+    entry.async_on_unload(async_at_start(hass, _async_build_wheel))
     return True
 
 
