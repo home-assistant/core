@@ -235,6 +235,14 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             )
         )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_ready_node",
+                self.async_remove,
+            )
+        )
+
         self.async_on_remove(async_at_start(self.hass, self._async_update))
 
     async def async_will_remove_from_hass(self) -> None:
