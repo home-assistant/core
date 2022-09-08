@@ -490,7 +490,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     @soco_error()
     def play_media(  # noqa: C901
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """
         Send the play_media command to the media player.

@@ -200,7 +200,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._attr_state != old_state:
             LOGGER.debug("TV %s state updated to %s", self._host, self._attr_state)
 
-        if self.state != MediaPlayerState.ON:
+        if self._attr_state != MediaPlayerState.ON:
             if self._dmr_device and self._dmr_device.is_subscribed:
                 await self._dmr_device.async_unsubscribe_services()
             return
@@ -357,7 +357,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed:
             return False
         return (
-            self.state == MediaPlayerState.ON
+            self._attr_state == MediaPlayerState.ON
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()
@@ -416,7 +416,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         await self._async_send_keys(["KEY_CHDOWN"])
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
         if media_type == MediaType.APP:

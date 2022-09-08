@@ -298,9 +298,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.seek_track(int(position * 1000))
 
     @spotify_exception_handler
-    def play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
-    ) -> None:
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media."""
         if media_type.startswith(MEDIA_PLAYER_PREFIX):
             media_type = media_type[len(MEDIA_PLAYER_PREFIX) :]
