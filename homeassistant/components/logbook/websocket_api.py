@@ -403,6 +403,7 @@ async def ws_event_stream(
     live_stream.wait_sync_task = asyncio.create_task(
         get_instance(hass).async_block_till_done()
     )
+    await live_stream.wait_sync_task
 
     #
     # Fetch any events from the database that have
