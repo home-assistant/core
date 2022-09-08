@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PROTOBUF_VERSION,
     )
     asyncio.create_task(
-        hass.async_add_executor_job(build_wheel, "/config", PROTOBUF_VERSION)  # type: ignore[arg-type]
+        hass.loop.run_in_executor(None, build_wheel, "/config", PROTOBUF_VERSION)  # type: ignore[arg-type]
     )
     return True
 
