@@ -16,6 +16,15 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
+from .distance import (
+    FOOT_TO_M,
+    IN_TO_M,
+    KM_TO_M,
+    MILE_TO_M,
+    MM_TO_M,
+    NAUTICAL_MILE_TO_M,
+)
+
 VALID_UNITS: tuple[str, ...] = (
     SPEED_FEET_PER_SECOND,
     SPEED_INCHES_PER_DAY,
@@ -27,23 +36,19 @@ VALID_UNITS: tuple[str, ...] = (
     SPEED_MILLIMETERS_PER_DAY,
 )
 
-FOOT_TO_M = 0.3048
 HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
-IN_TO_M = 0.0254
-KM_TO_M = 1000  # 1 km = 1000 m
-MILE_TO_M = 1609.344
-NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+DAYS_TO_SECS = 24 * HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Units in terms of m/s
 UNIT_CONVERSION: dict[str, float] = {
     SPEED_FEET_PER_SECOND: 1 / FOOT_TO_M,
-    SPEED_INCHES_PER_DAY: (24 * HRS_TO_SECS) / IN_TO_M,
+    SPEED_INCHES_PER_DAY: DAYS_TO_SECS / IN_TO_M,
     SPEED_INCHES_PER_HOUR: HRS_TO_SECS / IN_TO_M,
     SPEED_KILOMETERS_PER_HOUR: HRS_TO_SECS / KM_TO_M,
     SPEED_KNOTS: HRS_TO_SECS / NAUTICAL_MILE_TO_M,
     SPEED_METERS_PER_SECOND: 1,
     SPEED_MILES_PER_HOUR: HRS_TO_SECS / MILE_TO_M,
-    SPEED_MILLIMETERS_PER_DAY: (24 * HRS_TO_SECS) * 1000,
+    SPEED_MILLIMETERS_PER_DAY: DAYS_TO_SECS / MM_TO_M,
 }
 
 

@@ -396,12 +396,6 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_DEVICES_LOADED_EVENT = "zha_devices_loaded_event"
 
-EFFECT_BLINK = 0x00
-EFFECT_BREATHE = 0x01
-EFFECT_OKAY = 0x02
-
-EFFECT_DEFAULT_VARIANT = 0x00
-
 
 class Strobe(t.enum8):
     """Strobe enum."""
@@ -412,3 +406,7 @@ class Strobe(t.enum8):
 
 STARTUP_FAILURE_DELAY_S = 3
 STARTUP_RETRIES = 3
+
+EZSP_OVERWRITE_EUI64 = (
+    "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+)

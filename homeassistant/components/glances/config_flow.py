@@ -36,7 +36,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_VERSION, default=DEFAULT_VERSION): int,
+        vol.Required(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SUPPORTED_VERSIONS),
         vol.Optional(CONF_SSL, default=False): bool,
         vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -45,8 +45,6 @@ DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
-    if data[CONF_VERSION] not in SUPPORTED_VERSIONS:
-        raise WrongVersion
     try:
         api = get_api(hass, data)
         await api.get_data("all")
@@ -81,8 +79,6 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except WrongVersion:
-                errors[CONF_VERSION] = "wrong_version"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -117,7 +113,3 @@ class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class WrongVersion(exceptions.HomeAssistantError):
-    """Error to indicate the selected version is wrong."""

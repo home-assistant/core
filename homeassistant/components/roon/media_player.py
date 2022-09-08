@@ -1,5 +1,8 @@
 """MediaPlayer platform for Roon integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from roonapi import split_media_path
 import voluptuous as vol
@@ -8,6 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -119,7 +123,7 @@ class RoonDevice(MediaPlayerEntity):
         self._volume_level = 0
         self.update_data(player_data)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -376,38 +380,38 @@ class RoonDevice(MediaPlayerEntity):
         """Boolean if shuffle is enabled."""
         return self._shuffle
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command to device."""
         self._server.roonapi.playback_control(self.output_id, "play")
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command to device."""
         self._server.roonapi.playback_control(self.output_id, "pause")
 
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Toggle play command to device."""
         self._server.roonapi.playback_control(self.output_id, "playpause")
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command to device."""
         self._server.roonapi.playback_control(self.output_id, "stop")
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command to device."""
         self._server.roonapi.playback_control(self.output_id, "next")
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command to device."""
         self._server.roonapi.playback_control(self.output_id, "previous")
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Send seek command to device."""
         self._server.roonapi.seek(self.output_id, position)
         # Seek doesn't cause an async update - so force one
         self._media_position = position
         self.schedule_update_ha_state()
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
         volume = int(volume * 100)
         self._server.roonapi.change_volume(self.output_id, volume)
@@ -416,15 +420,15 @@ class RoonDevice(MediaPlayerEntity):
         """Send mute/unmute to device."""
         self._server.roonapi.mute(self.output_id, mute)
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Send new volume_level to device."""
         self._server.roonapi.change_volume(self.output_id, 3, "relative")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Send new volume_level to device."""
         self._server.roonapi.change_volume(self.output_id, -3, "relative")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on device (if supported)."""
         if not (self.supports_standby and "source_controls" in self.player_data):
             self.media_play()
@@ -436,7 +440,7 @@ class RoonDevice(MediaPlayerEntity):
                 )
                 return
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off device (if supported)."""
         if not (self.supports_standby and "source_controls" in self.player_data):
             self.media_stop()
@@ -447,11 +451,11 @@ class RoonDevice(MediaPlayerEntity):
                 self._server.roonapi.standby(self.output_id, source["control_key"])
                 return
 
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle state."""
         self._server.roonapi.shuffle(self.output_id, shuffle)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play_media command to the media player."""
 
         _LOGGER.debug("Playback request for %s / %s", media_type, media_id)
@@ -469,7 +473,7 @@ class RoonDevice(MediaPlayerEntity):
                     path_list,
                 )
 
-    def join_players(self, group_members):
+    def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
@@ -509,7 +513,7 @@ class RoonDevice(MediaPlayerEntity):
             [self._output_id] + [sync_available[name] for name in names]
         )
 
-    def unjoin_player(self):
+    def unjoin_player(self) -> None:
         """Remove this player from any group."""
 
         if not self._server.roonapi.is_grouped(self._output_id):
@@ -548,7 +552,9 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.transfer_zone, self._zone_id, transfer_id
         )
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await self.hass.async_add_executor_job(
             browse_media,
