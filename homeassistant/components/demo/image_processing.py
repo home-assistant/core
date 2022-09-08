@@ -3,10 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.camera import Image
 from homeassistant.components.image_processing import (
-    ATTR_AGE,
-    ATTR_CONFIDENCE,
-    ATTR_GENDER,
-    ATTR_NAME,
+    FaceInformation,
     ImageProcessingFaceEntity,
 )
 from homeassistant.components.openalpr_local.image_processing import (
@@ -87,14 +84,14 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
     def process_image(self, image: Image) -> None:
         """Process image."""
         demo_data = [
-            {
-                ATTR_CONFIDENCE: 98.34,
-                ATTR_NAME: "Hans",
-                ATTR_AGE: 16.0,
-                ATTR_GENDER: "male",
-            },
-            {ATTR_NAME: "Helena", ATTR_AGE: 28.0, ATTR_GENDER: "female"},
-            {ATTR_CONFIDENCE: 62.53, ATTR_NAME: "Luna"},
+            FaceInformation(
+                confidence=98.34,
+                name="Hans",
+                age=16.0,
+                gender="male",
+            ),
+            FaceInformation(name="Helena", age=28.0, gender="female"),
+            FaceInformation(confidence=62.53, name="Luna"),
         ]
 
         self.process_faces(demo_data, 4)
