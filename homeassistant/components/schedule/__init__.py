@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
+    CollectionEntity,
     IDManager,
     StorageCollection,
     StorageCollectionWebsocket,
@@ -27,7 +28,6 @@ from homeassistant.helpers.collection import (
     sync_entity_lifecycle,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.integration_platform import (
@@ -163,9 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     id_manager = IDManager()
 
     yaml_collection = YamlCollection(LOGGER, id_manager)
-    sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Schedule.from_yaml
-    )
+    sync_entity_lifecycle(hass, DOMAIN, DOMAIN, component, yaml_collection, Schedule)
 
     storage_collection = ScheduleStorageCollection(
         Store(
@@ -239,7 +237,7 @@ class ScheduleStorageCollection(StorageCollection):
         return data
 
 
-class Schedule(Entity):
+class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _attr_has_entity_name = True
@@ -249,7 +247,7 @@ class Schedule(Entity):
     _next: datetime
     _unsub_update: Callable[[], None] | None = None
 
-    def __init__(self, config: ConfigType, editable: bool = True) -> None:
+    def __init__(self, config: ConfigType, editable: bool) -> None:
         """Initialize a schedule."""
         self._config = ENTITY_SCHEMA(config)
         self._attr_capability_attributes = {ATTR_EDITABLE: editable}
@@ -258,8 +256,14 @@ class Schedule(Entity):
         self._attr_unique_id = self._config[CONF_ID]
 
     @classmethod
+    def from_storage(cls, config: ConfigType) -> Schedule:
+        """Return entity instance initialized from storage."""
+        schedule = cls(config, editable=True)
+        return schedule
+
+    @classmethod
     def from_yaml(cls, config: ConfigType) -> Schedule:
-        """Return entity instance initialized from yaml storage."""
+        """Return entity instance initialized from yaml."""
         schedule = cls(config, editable=False)
         schedule.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         return schedule
@@ -291,14 +295,17 @@ class Schedule(Entity):
         todays_schedule = self._config.get(WEEKDAY_TO_CONF[now.weekday()], [])
 
         # Determine current schedule state
-        self._attr_state = next(
-            (
-                STATE_ON
-                for time_range in todays_schedule
-                if time_range[CONF_FROM] <= now.time() <= time_range[CONF_TO]
-            ),
-            STATE_OFF,
-        )
+        for time_range in todays_schedule:
+            # The current time should be greater or equal to CONF_FROM.
+            if now.time() < time_range[CONF_FROM]:
+                continue
+            # The current time should be smaller (and not equal) to CONF_TO.
+            # Note that any time in the day is treated as smaller than time.max.
+            if now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max:
+                self._attr_state = STATE_ON
+                break
+        else:
+            self._attr_state = STATE_OFF
 
         # Find next event in the schedule, loop over each day (starting with
         # the current day) until the next event has been found.
@@ -319,11 +326,15 @@ class Schedule(Entity):
             if next_event := next(
                 (
                     possible_next_event
-                    for time in times
+                    for timestamp in times
                     if (
                         possible_next_event := (
-                            datetime.combine(now.date(), time, tzinfo=now.tzinfo)
+                            datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
                             + timedelta(days=day)
+                            if not timestamp == time.max
+                            # Special case for midnight of the following day.
+                            else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)
+                            + timedelta(days=day + 1)
                         )
                     )
                     > now

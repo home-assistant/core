@@ -8,7 +8,7 @@ import datetime
 from functools import partial
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 import async_timeout
 import defusedxml.ElementTree as ET
@@ -97,17 +97,17 @@ class SonosSpeaker:
         self.media = SonosMedia(hass, soco)
         self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
-        self.available = True
+        self.available: bool = True
 
         # Device information
-        self.hardware_version = speaker_info["hardware_version"]
-        self.software_version = speaker_info["software_version"]
-        self.mac_address = speaker_info["mac_address"]
-        self.model_name = speaker_info["model_name"]
-        self.model_number = speaker_info["model_number"]
-        self.uid = speaker_info["uid"]
-        self.version = speaker_info["display_version"]
-        self.zone_name = speaker_info["zone_name"]
+        self.hardware_version: str = speaker_info["hardware_version"]
+        self.software_version: str = speaker_info["software_version"]
+        self.mac_address: str = speaker_info["mac_address"]
+        self.model_name: str = speaker_info["model_name"]
+        self.model_number: str = speaker_info["model_number"]
+        self.uid: str = speaker_info["uid"]
+        self.version: str = speaker_info["display_version"]
+        self.zone_name: str = speaker_info["zone_name"]
 
         # Subscriptions and events
         self.subscriptions_failed: bool = False
@@ -160,12 +160,12 @@ class SonosSpeaker:
         self.sonos_group: list[SonosSpeaker] = [self]
         self.sonos_group_entities: list[str] = []
         self.soco_snapshot: Snapshot | None = None
-        self.snapshot_group: list[SonosSpeaker] | None = None
+        self.snapshot_group: list[SonosSpeaker] = []
         self._group_members_missing: set[str] = set()
 
     async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
         """Connect dispatchers in async context during setup."""
-        dispatch_pairs = (
+        dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
@@ -283,18 +283,17 @@ class SonosSpeaker:
         return self._share_link_plugin
 
     @property
-    def subscription_address(self) -> str | None:
-        """Return the current subscription callback address if any."""
-        if self._subscriptions:
-            addr, port = self._subscriptions[0].event_listener.address
-            return ":".join([addr, str(port)])
-        return None
+    def subscription_address(self) -> str:
+        """Return the current subscription callback address."""
+        assert len(self._subscriptions) > 0
+        addr, port = self._subscriptions[0].event_listener.address
+        return ":".join([addr, str(port)])
 
     #
     # Subscription handling and event dispatchers
     #
     def log_subscription_result(
-        self, result: Any, event: str, level: str = logging.DEBUG
+        self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
         """Log a message if a subscription action (create/renew/stop) results in an exception."""
         if not isinstance(result, Exception):
@@ -304,7 +303,7 @@ class SonosSpeaker:
             message = "Request timed out"
             exc_info = None
         else:
-            message = result
+            message = str(result)
             exc_info = result if not str(result) else None
 
         _LOGGER.log(
@@ -554,7 +553,7 @@ class SonosSpeaker:
         )
 
     @callback
-    def speaker_activity(self, source):
+    def speaker_activity(self, source: str) -> None:
         """Track the last activity on this speaker, set availability and resubscribe."""
         if self._resub_cooldown_expires_at:
             if time.monotonic() < self._resub_cooldown_expires_at:
@@ -593,6 +592,7 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        assert self._subscription_lock is not None
         async with self._subscription_lock:
             await self._async_offline()
 
@@ -826,8 +826,8 @@ class SonosSpeaker:
                 if speaker:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = entity_registry.async_get_entity_id(
-                        MP_DOMAIN, DOMAIN, uid
+                    entity_id = cast(
+                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
                     )
                     sonos_group_entities.append(entity_id)
                 else:
@@ -850,7 +850,9 @@ class SonosSpeaker:
             self.async_write_entity_states()
 
             for joined_uid in group[1:]:
-                joined_speaker = self.hass.data[DATA_SONOS].discovered.get(joined_uid)
+                joined_speaker: SonosSpeaker = self.hass.data[
+                    DATA_SONOS
+                ].discovered.get(joined_uid)
                 if joined_speaker:
                     joined_speaker.coordinator = self
                     joined_speaker.sonos_group = sonos_group
@@ -936,7 +938,7 @@ class SonosSpeaker:
         if with_group:
             self.snapshot_group = self.sonos_group.copy()
         else:
-            self.snapshot_group = None
+            self.snapshot_group = []
 
     @staticmethod
     async def snapshot_multi(
@@ -969,7 +971,7 @@ class SonosSpeaker:
             _LOGGER.warning("Error on restore %s: %s", self.zone_name, ex)
 
         self.soco_snapshot = None
-        self.snapshot_group = None
+        self.snapshot_group = []
 
     @staticmethod
     async def restore_multi(
@@ -996,7 +998,7 @@ class SonosSpeaker:
                             exc_info=exc,
                         )
 
-            groups = []
+            groups: list[list[SonosSpeaker]] = []
             if not with_group:
                 return groups
 
@@ -1022,7 +1024,7 @@ class SonosSpeaker:
 
             # Bring back the original group topology
             for speaker in (s for s in speakers if s.snapshot_group):
-                assert speaker.snapshot_group is not None
+                assert len(speaker.snapshot_group)
                 if speaker.snapshot_group[0] == speaker:
                     if speaker.snapshot_group not in (speaker.sonos_group, [speaker]):
                         speaker.join(speaker.snapshot_group)
@@ -1047,7 +1049,7 @@ class SonosSpeaker:
 
         if with_group:
             for speaker in [s for s in speakers_set if s.snapshot_group]:
-                assert speaker.snapshot_group is not None
+                assert len(speaker.snapshot_group)
                 speakers_set.update(speaker.snapshot_group)
 
         async with hass.data[DATA_SONOS].topology_condition:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 import pyiss
@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 @dataclass
@@ -27,31 +27,25 @@ class IssData:
 
     number_of_people_in_space: int
     current_location: dict[str, str]
-    is_above: bool
-    next_rise: datetime
 
 
-def update(iss: pyiss.ISS, latitude: float, longitude: float) -> IssData:
+def update(iss: pyiss.ISS) -> IssData:
     """Retrieve data from the pyiss API."""
     return IssData(
         number_of_people_in_space=iss.number_of_people_in_space(),
         current_location=iss.current_location(),
-        is_above=iss.is_ISS_above(latitude, longitude),
-        next_rise=iss.next_rise(latitude, longitude),
     )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-    latitude = hass.config.latitude
-    longitude = hass.config.longitude
 
     iss = pyiss.ISS()
 
     async def async_update() -> IssData:
         try:
-            return await hass.async_add_executor_job(update, iss, latitude, longitude)
+            return await hass.async_add_executor_job(update, iss)
         except (HTTPError, requests.exceptions.ConnectionError) as ex:
             raise UpdateFailed("Unable to retrieve data") from ex
 

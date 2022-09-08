@@ -143,6 +143,6 @@ class MfiSensor(SensorEntity):
             return "State"
         return tag
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self._port.refresh()

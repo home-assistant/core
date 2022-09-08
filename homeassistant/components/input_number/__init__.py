@@ -130,7 +130,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber
     )
 
     storage_collection = NumberStorageCollection(
@@ -202,20 +202,27 @@ class NumberStorageCollection(collection.StorageCollection):
         return _cv_input_number({**data, **update_data})
 
 
-class InputNumber(RestoreEntity):
+class InputNumber(collection.CollectionEntity, RestoreEntity):
     """Representation of a slider."""
 
     _attr_should_poll = False
+    editable: bool
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize an input number."""
         self._config = config
-        self.editable = True
         self._current_value: float | None = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputNumber:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> InputNumber:
+        """Return entity instance initialized from storage."""
+        input_num = cls(config)
+        input_num.editable = True
+        return input_num
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> InputNumber:
+        """Return entity instance initialized from yaml."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = False
@@ -310,7 +317,7 @@ class InputNumber(RestoreEntity):
         """Decrement value."""
         await self.async_set_value(max(self._current_value - self._step, self._minimum))
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed

@@ -6,8 +6,8 @@
   "quality_scale": "internal",
   "requirements": [
     "bleak==0.16.0",
-    "bluetooth-adapters==0.3.2",
-    "bluetooth-auto-recovery==0.3.0"
+    "bluetooth-adapters==0.3.5",
+    "bluetooth-auto-recovery==0.3.2"
   ],
   "codeowners": ["@bdraco"],
   "config_flow": true,

@@ -7,6 +7,7 @@
 
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
+astroid==2.12.5
 codecov==2.1.12
 coverage==6.4.4
 freezegun==1.2.1

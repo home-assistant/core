@@ -13,7 +13,7 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d(\u30aa\u30d7\u30b7\u30e7\u30f3)"
                 },
-                "description": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30db\u30b9\u30c8: {host}\n\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30dd\u30fc\u30c8: {port}\n\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30e6\u30fc\u30b6\u30fc\u540d: {username}"
+                "description": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30db\u30b9\u30c8: {host}\n\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30e6\u30fc\u30b6\u30fc\u540d: {username}"
             }
         }
     },

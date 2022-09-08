@@ -90,7 +90,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._volume = None
         self._source = None
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         # Updated this function to make a single call to get_zone_info, so that
         # with a single call we can get On/Off, Volume and Source, reducing the
@@ -141,7 +141,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         """
         return self._volume
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level.  Volume has a range (0..1).
 
         Translate this to a range of (0..100) as expected
@@ -149,19 +149,19 @@ class RussoundRNETDevice(MediaPlayerEntity):
         """
         self._russ.set_volume("1", self._zone_id, volume * 100)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._russ.set_power("1", self._zone_id, "1")
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self._russ.set_power("1", self._zone_id, "0")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._russ.toggle_mute("1", self._zone_id)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         if source in self._sources:
             index = self._sources.index(source)
