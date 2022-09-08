@@ -6,8 +6,7 @@ from typing import Any
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
-from homeassistant.components.siren.const import ATTR_TONE
+from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
