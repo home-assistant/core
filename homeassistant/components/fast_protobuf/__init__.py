@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import glob
 import logging
 import os
@@ -34,20 +35,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create an untracked task to build the wheel in the background
     # so we don't block shutdown if its not done by the time we exit
     # since they can just try again next time.
-    future = hass.loop.run_in_executor(None, build_wheel, "/config", PROTOBUF_VERSION)
+    config_dir = hass.config.config_dir
+    future = hass.loop.run_in_executor(None, build_wheel, config_dir, PROTOBUF_VERSION)
     asyncio.ensure_future(future)
     return True
 
 
-def build_wheel(wheel_directory: str, version: str) -> str:
+def build_wheel(target_dir: str, version: str) -> str:
     """Build a wheel for the current platform."""
     python_bin = sys.executable
     cpu_count = os.cpu_count() or 4
     _LOGGER.info("Building protobuf wheel for %s", version)
-    wheel_directory = os.path.abspath(wheel_directory)
+    target_dir = os.path.abspath(target_dir)
     with tempfile.TemporaryDirectory(
         dir=os.path.expanduser("~")  # /tmp may be non-executable
     ) as tmp_dist_dir:
+        with contextlib.suppress(subprocess.CalledProcessError):
+            run_command(
+                "apk add "
+                "autoconf automake libtool m4 gcc musl-dev "
+                "openssl-dev libffi-dev zlib-dev jpeg-dev g++ make"
+            )
         run_command(
             f"git clone --depth 1 --branch v{version}"
             f" https://github.com/protocolbuffers/protobuf {tmp_dist_dir}/protobuf"
@@ -68,14 +76,15 @@ def build_wheel(wheel_directory: str, version: str) -> str:
             f"{python_bin} setup.py bdist_wheel --cpp_implementation --compile_static_extension"
         )
         wheel_file = glob.glob(f"{tmp_dist_dir}/protobuf/python/dist/*.whl")[0]
+        _LOGGER.info("Built wheel %s", wheel_file)
         result_basename = os.path.basename(wheel_file)
-        target_dir = wheel_directory
         result_path = os.path.join(target_dir, result_basename)
         shutil.copy(wheel_file, result_path)
         _LOGGER.info("Moved into file: %s", result_path)
     _LOGGER.info("Finished building wheel: %s", result_path)
     run_command(
-        "{python_bin} -m pip install --upgrade --no-deps --force-reinstall protobuf {result_path}"
+        f"{python_bin} -m pip install --upgrade --no-deps "
+        f"--force-reinstall protobuf {result_path}"
     )
     _LOGGER.warning("Restart Home Assistant to use the new wheel")
     return result_path
