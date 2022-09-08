@@ -7,7 +7,7 @@ from contextlib import suppress
 from datetime import datetime
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -55,7 +55,6 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
-from . import CastProtocol
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
@@ -75,6 +74,9 @@ from .helpers import (
     PlaylistSupported,
     parse_playlist,
 )
+
+if TYPE_CHECKING:
+    from . import CastProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
