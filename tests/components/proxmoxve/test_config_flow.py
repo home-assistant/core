@@ -69,21 +69,6 @@ USER_INPUT_OPTION_AUTH = {
     CONF_REALM: "pam",
     CONF_VERIFY_SSL: True,
 }
-USER_INPUT_IMPORT_OK = {
-    CONF_HOST: "192.168.10.101",
-    CONF_PORT: 8006,
-    CONF_USERNAME: "root",
-    CONF_PASSWORD: "secret",
-    CONF_REALM: "pam",
-    CONF_VERIFY_SSL: True,
-    CONF_NODES: [
-        {
-            CONF_NODE: "pve",
-            CONF_VMS: [100, 101],
-            CONF_CONTAINERS: [201, 202],
-        },
-    ],
-}
 
 USER_INPUT_NOT_EXIST = {
     CONF_HOST: "192.168.10.101",
@@ -322,46 +307,12 @@ async def test_flow_import_ok(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=USER_INPUT_IMPORT_OK,
+            data=USER_INPUT_OK,
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert "data" in result
-        assert result["data"][CONF_HOST] == USER_INPUT_IMPORT_OK[CONF_HOST]
-
-
-async def test_flow_import_error_port_small(hass: HomeAssistant):
-    """Test flow import error port too small."""
-
-    with patch(
-        "homeassistant.components.proxmoxve.ProxmoxClient.build_client",
-        return_value=None,
-    ):
-
-        # imported config is identical to the one generated from config flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_PORT_TOO_SMALL
-        )
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "import_failed"
-
-
-async def test_flow_import_error_port_big(hass: HomeAssistant):
-    """Test flow import error port too big."""
-
-    with patch(
-        "homeassistant.components.proxmoxve.ProxmoxClient.build_client",
-        return_value=None,
-    ):
-
-        # imported config is identical to the one generated from config flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_PORT_TOO_BIG
-        )
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "import_failed"
+        assert result["data"][CONF_HOST] == USER_INPUT_OK[CONF_HOST]
 
 
 async def test_flow_import_error_auth_error(hass: HomeAssistant):
@@ -375,7 +326,7 @@ async def test_flow_import_error_auth_error(hass: HomeAssistant):
 
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_IMPORT_OK
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
         )
 
         assert result["type"] == FlowResultType.ABORT
@@ -411,7 +362,7 @@ async def test_flow_import_error_cant_connect(hass: HomeAssistant):
 
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_IMPORT_OK
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
         )
 
         assert result["type"] == FlowResultType.ABORT
@@ -429,7 +380,7 @@ async def test_flow_import_error_general_error(hass: HomeAssistant):
 
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_IMPORT_OK
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
         )
 
         assert result["type"] == FlowResultType.ABORT
@@ -458,7 +409,7 @@ async def test_flow_import_error_already_configured(hass: HomeAssistant):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=USER_INPUT_IMPORT_OK,
+        data=USER_INPUT_OK,
     )
 
     entry.add_to_hass(hass)
@@ -474,7 +425,7 @@ async def test_flow_import_error_already_configured(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=USER_INPUT_IMPORT_OK,
+            data=USER_INPUT_OK,
         )
 
         assert result["type"] == FlowResultType.ABORT

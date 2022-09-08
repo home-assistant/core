@@ -25,13 +25,10 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from . import ProxmoxClient
 from .const import (
-    CONF_CONTAINERS,
     CONF_LXC,
     CONF_NODE,
-    CONF_NODES,
     CONF_QEMU,
     CONF_REALM,
-    CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
@@ -302,222 +299,169 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        host = import_config.get(CONF_HOST, "")
-        port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        username = import_config.get(CONF_USERNAME, "")
-        password = import_config.get(CONF_PASSWORD, "")
-        realm = import_config.get(CONF_REALM, DEFAULT_REALM)
-        verify_ssl = import_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-
-        self._host = host
-
-        if port > 65535 or port <= 0:
-            errors[CONF_PORT] = "invalid_port"
+        if await self._async_endpoint_exists(
+            f"{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}_{import_config.get(CONF_NODE)}"
+        ):
+            LOGGER.warning(
+                "The node %s of instance %s:%s already configured, you can remove it from configuration.yaml if you still have it",
+                import_config.get(CONF_NODE),
+                import_config.get(CONF_HOST),
+                import_config.get(CONF_PORT),
+            )
             async_create_issue(
                 async_get_hass(),
                 DOMAIN,
-                f"import_invalid_port_{DOMAIN}_{host}_{port}",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="import_invalid_port",
+                f"import_already_configured_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}_{import_config.get(CONF_NODE)}",
                 breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="import_already_configured",
                 translation_placeholders={
                     "integration": INTEGRATION_NAME,
                     "platform": DOMAIN,
-                    "host": host,
-                    "port": port,
+                    "host": str(import_config.get(CONF_HOST)),
+                    "port": str(import_config.get(CONF_PORT)),
+                    "node": str(import_config.get(CONF_NODE)),
+                },
+            )
+            return self.async_abort(reason="import_failed")
+
+        proxmox_client = ProxmoxClient(
+            host=import_config.get(CONF_HOST),
+            port=import_config.get(CONF_PORT),
+            user=import_config.get(CONF_USERNAME),
+            realm=import_config.get(CONF_REALM),
+            password=import_config.get(CONF_PASSWORD),
+            verify_ssl=import_config.get(CONF_VERIFY_SSL),
+        )
+
+        try:
+            await self.hass.async_add_executor_job(proxmox_client.build_client)
+        except proxmoxer.backends.https.AuthenticationError:
+            errors[CONF_USERNAME] = "auth_error"
+            async_create_issue(
+                async_get_hass(),
+                DOMAIN,
+                f"import_auth_error_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}",
+                breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_auth_error",
+                translation_placeholders={
+                    "integration": INTEGRATION_NAME,
+                    "platform": DOMAIN,
+                    "host": str(import_config.get(CONF_HOST)),
+                    "port": str(import_config.get(CONF_PORT)),
+                },
+            )
+        except SSLError:
+            errors[CONF_VERIFY_SSL] = "ssl_rejection"
+            async_create_issue(
+                async_get_hass(),
+                DOMAIN,
+                f"import_ssl_rejection_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}",
+                breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_ssl_rejection",
+                translation_placeholders={
+                    "integration": INTEGRATION_NAME,
+                    "platform": DOMAIN,
+                    "host": str(import_config.get(CONF_HOST)),
+                    "port": str(import_config.get(CONF_PORT)),
+                },
+            )
+        except ConnectTimeout:
+            errors[CONF_HOST] = "cant_connect"
+            async_create_issue(
+                async_get_hass(),
+                DOMAIN,
+                f"import_cant_connect_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}",
+                breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_cant_connect",
+                translation_placeholders={
+                    "integration": INTEGRATION_NAME,
+                    "platform": DOMAIN,
+                    "host": str(import_config.get(CONF_HOST)),
+                    "port": str(import_config.get(CONF_PORT)),
+                },
+            )
+        except Exception:  # pylint: disable=broad-except
+            errors[CONF_BASE] = "general_error"
+            async_create_issue(
+                async_get_hass(),
+                DOMAIN,
+                f"import_general_error_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}",
+                breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_general_error",
+                translation_placeholders={
+                    "integration": INTEGRATION_NAME,
+                    "platform": DOMAIN,
+                    "host": str(import_config.get(CONF_HOST)),
+                    "port": str(import_config.get(CONF_PORT)),
                 },
             )
 
-        if not errors:
-            try:
-                self._proxmox_client = ProxmoxClient(
-                    host,
-                    port=port,
-                    user=username,
-                    realm=realm,
-                    password=password,
-                    verify_ssl=verify_ssl,
-                )
+        if errors:
+            return self.async_abort(reason="import_failed")
 
-                await self.hass.async_add_executor_job(
-                    self._proxmox_client.build_client
-                )
+        proxmox_nodes_host = []
+        if proxmox := (proxmox_client.get_api_client()):
+            proxmox_nodes = await self.hass.async_add_executor_job(proxmox.nodes.get)
 
-            except proxmoxer.backends.https.AuthenticationError:
-                errors[CONF_USERNAME] = "auth_error"
-                async_create_issue(
-                    async_get_hass(),
-                    DOMAIN,
-                    f"import_auth_error_{DOMAIN}_{host}_{port}",
-                    breaks_in_ha_version="2022.12.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="import_auth_error",
-                    translation_placeholders={
-                        "integration": INTEGRATION_NAME,
-                        "platform": DOMAIN,
-                        "host": host,
-                        "port": port,
-                    },
-                )
-            except SSLError:
-                errors[CONF_VERIFY_SSL] = "ssl_rejection"
-                async_create_issue(
-                    async_get_hass(),
-                    DOMAIN,
-                    f"import_ssl_rejection_{DOMAIN}_{host}_{port}",
-                    breaks_in_ha_version="2022.12.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="import_ssl_rejection",
-                    translation_placeholders={
-                        "integration": INTEGRATION_NAME,
-                        "platform": DOMAIN,
-                        "host": host,
-                        "port": port,
-                    },
-                )
-            except ConnectTimeout:
-                errors[CONF_HOST] = "cant_connect"
-                async_create_issue(
-                    async_get_hass(),
-                    DOMAIN,
-                    f"import_cant_connect_{DOMAIN}_{host}_{port}",
-                    breaks_in_ha_version="2022.12.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="import_cant_connect",
-                    translation_placeholders={
-                        "integration": INTEGRATION_NAME,
-                        "platform": DOMAIN,
-                        "host": host,
-                        "port": port,
-                    },
-                )
-            except Exception:  # pylint: disable=broad-except
-                errors[CONF_BASE] = "general_error"
-                async_create_issue(
-                    async_get_hass(),
-                    DOMAIN,
-                    f"import_general_error_{DOMAIN}_{host}_{port}",
-                    breaks_in_ha_version="2022.12.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="import_general_error",
-                    translation_placeholders={
-                        "integration": INTEGRATION_NAME,
-                        "platform": DOMAIN,
-                        "host": host,
-                        "port": port,
-                    },
-                )
+            for node in proxmox_nodes:
+                proxmox_nodes_host.append(node[CONF_NODE])
 
-            else:
-                self._config[CONF_HOST] = host
-                self._config[CONF_PORT] = port
-                self._config[CONF_USERNAME] = username
-                self._config[CONF_PASSWORD] = password
-                self._config[CONF_REALM] = realm
-                self._config[CONF_VERIFY_SSL] = verify_ssl
+        if import_config.get(CONF_NODE) not in proxmox_nodes_host:
+            LOGGER.warning(
+                "The node %s does not exist of instance %s:%s and will be ignored",
+                import_config.get(CONF_NODE),
+                import_config.get(CONF_HOST),
+                import_config.get(CONF_PORT),
+            )
+            async_create_issue(
+                async_get_hass(),
+                DOMAIN,
+                f"import_node_not_exist_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}_{import_config.get(CONF_NODE)}",
+                breaks_in_ha_version="2022.12.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="import_node_not_exist",
+                translation_placeholders={
+                    "integration": INTEGRATION_NAME,
+                    "platform": DOMAIN,
+                    "host": str(import_config.get(CONF_HOST)),
+                    "port": str(import_config.get(CONF_PORT)),
+                    "node": str(import_config.get(CONF_NODE)),
+                },
+            )
+            return self.async_abort(reason="import_failed")
 
-                proxmox_nodes_host = []
-                if (proxmox_cliente := self._proxmox_client) is not None:
-                    if proxmox := (proxmox_cliente.get_api_client()):
-                        proxmox_nodes = await self.hass.async_add_executor_job(
-                            proxmox.nodes.get
-                        )
-                        for node in proxmox_nodes:
-                            proxmox_nodes_host.append(node[CONF_NODE])
-
-                if import_nodes := (import_config.get(CONF_NODES)):
-                    for node in import_nodes:
-                        if node[CONF_NODE] not in proxmox_nodes_host:
-                            LOGGER.warning(
-                                "The node %s does not exist of instance %s:%s and will be ignored",
-                                node[CONF_NODE],
-                                self._config[CONF_HOST],
-                                self._config[CONF_PORT],
-                            )
-                            async_create_issue(
-                                async_get_hass(),
-                                DOMAIN,
-                                f"import_node_not_exist_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
-                                breaks_in_ha_version="2022.12.0",
-                                is_fixable=False,
-                                severity=IssueSeverity.WARNING,
-                                translation_key="import_node_not_exist",
-                                translation_placeholders={
-                                    "integration": INTEGRATION_NAME,
-                                    "platform": DOMAIN,
-                                    "host": host,
-                                    "port": port,
-                                    "node": node[CONF_NODE],
-                                },
-                            )
-                            continue
-
-                        if await self._async_endpoint_exists(
-                            f"{self._config[CONF_HOST]}/{self._config[CONF_PORT]}/{node[CONF_NODE]}"
-                        ):
-                            LOGGER.warning(
-                                "The node %s of instance %s:%s already configured, you can remove it from configuration.yaml if you still have it",
-                                node[CONF_NODE],
-                                self._config[CONF_HOST],
-                                self._config[CONF_PORT],
-                            )
-                            async_create_issue(
-                                async_get_hass(),
-                                DOMAIN,
-                                f"import_already_configured_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
-                                breaks_in_ha_version="2022.12.0",
-                                is_fixable=False,
-                                severity=IssueSeverity.WARNING,
-                                translation_key="import_already_configured",
-                                translation_placeholders={
-                                    "integration": INTEGRATION_NAME,
-                                    "platform": DOMAIN,
-                                    "host": host,
-                                    "port": port,
-                                    "node": node[CONF_NODE],
-                                },
-                            )
-                            continue
-
-                        self._config[CONF_NODE] = node[CONF_NODE]
-                        self._config[CONF_QEMU] = []
-                        self._config[CONF_LXC] = []
-                        for vm_id in node[CONF_VMS]:
-                            self._config[CONF_QEMU].append(vm_id)
-                        for container_id in node[CONF_CONTAINERS]:
-                            self._config[CONF_LXC].append(container_id)
-
-                        async_create_issue(
-                            async_get_hass(),
-                            DOMAIN,
-                            f"import_success_{DOMAIN}_{host}_{port}_{node[CONF_NODE]}",
-                            breaks_in_ha_version="2022.12.0",
-                            is_fixable=False,
-                            severity=IssueSeverity.WARNING,
-                            translation_key="import_success",
-                            translation_placeholders={
-                                "integration": "Proxmox VE",
-                                "platform": DOMAIN,
-                                "node": node[CONF_NODE],
-                                "host": host,
-                                "port": port,
-                            },
-                        )
-
-                        return self.async_create_entry(
-                            title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}",
-                            data=self._config,
-                        )
-
-        LOGGER.error(
-            "Could not import ProxmoxVE configuration, please configure it manually from Integrations"
+        async_create_issue(
+            async_get_hass(),
+            DOMAIN,
+            f"import_success_{DOMAIN}_{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}_{import_config.get(CONF_NODE)}",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="import_success",
+            translation_placeholders={
+                "integration": INTEGRATION_NAME,
+                "platform": DOMAIN,
+                "node": str(import_config.get(CONF_NODE)),
+                "host": str(import_config.get(CONF_HOST)),
+                "port": str(import_config.get(CONF_PORT)),
+            },
         )
-        return self.async_abort(reason="import_failed")
+
+        return self.async_create_entry(
+            title=f"{import_config.get(CONF_NODE)} - {import_config.get(CONF_HOST)}",
+            data=import_config,
+        )
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
@@ -723,7 +667,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             if await self._async_endpoint_exists(
-                f"{self._config[CONF_HOST]}/{self._config[CONF_PORT]}/{user_input.get(CONF_NODE)}"
+                f"{self._config[CONF_HOST]}_{self._config[CONF_PORT]}_{user_input.get(CONF_NODE)}"
             ):
                 return self.async_abort(reason="already_configured")
 
@@ -815,7 +759,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_endpoint_exists(self, host_port_node):
         existing_endpoints = [
-            f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_PORT)}/{entry.data.get(CONF_NODE)}"
+            f"{entry.data.get(CONF_HOST)}_{entry.data.get(CONF_PORT)}_{entry.data.get(CONF_NODE)}"
             for entry in self._async_current_entries()
         ]
 

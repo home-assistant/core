@@ -1,6 +1,8 @@
 """Support for Proxmox VE."""
 from __future__ import annotations
 
+from typing import Any
+
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
@@ -115,11 +117,47 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN in config:
         for conf in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            config_import: dict[str, Any] = {}
+            errors = {}
+            if conf.get(CONF_PORT) > 65535 or conf.get(CONF_PORT) <= 0:
+                errors[CONF_PORT] = "invalid_port"
+                async_create_issue(
+                    async_get_hass(),
+                    DOMAIN,
+                    f"import_invalid_port_{DOMAIN}_{conf.get[CONF_HOST]}_{conf.get[CONF_PORT]}",
+                    is_fixable=False,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="import_invalid_port",
+                    breaks_in_ha_version="2022.12.0",
+                    translation_placeholders={
+                        "integration": INTEGRATION_NAME,
+                        "platform": DOMAIN,
+                        "host": conf.get[CONF_HOST],
+                        "port": conf.get[CONF_PORT],
+                    },
                 )
-            )
+            else:
+
+                if nodes := conf.get(CONF_NODES):
+                    for node in nodes:
+                        config_import = {}
+                        config_import[CONF_HOST] = conf.get(CONF_HOST)
+                        config_import[CONF_PORT] = conf.get(CONF_PORT, DEFAULT_PORT)
+                        config_import[CONF_USERNAME] = conf.get(CONF_USERNAME)
+                        config_import[CONF_PASSWORD] = conf.get(CONF_PASSWORD)
+                        config_import[CONF_REALM] = conf.get(CONF_REALM, DEFAULT_REALM)
+                        config_import[CONF_VERIFY_SSL] = conf.get(CONF_VERIFY_SSL)
+                        config_import[CONF_NODE] = node[CONF_NODE]
+                        config_import[CONF_QEMU] = node[CONF_VMS]
+                        config_import[CONF_LXC] = node[CONF_CONTAINERS]
+
+                        hass.async_create_task(
+                            hass.config_entries.flow.async_init(
+                                DOMAIN,
+                                context={"source": SOURCE_IMPORT},
+                                data=config_import,
+                            )
+                        )
     return True
 
 
@@ -154,14 +192,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     proxmox = await hass.async_add_executor_job(proxmox_client.get_api_client)
 
-    node_coordinators = coordinators[entry_data[CONF_NODE]] = {}
+    coordinators_nodes = coordinators[entry_data[CONF_NODE]] = {}
 
     # Proxmox instance info
     coordinator = create_coordinator_proxmox(
         hass, proxmox, entry_data[CONF_HOST], None, None, ProxmoxType.Proxmox
     )
     await coordinator.async_config_entry_first_refresh()
-    node_coordinators[ProxmoxType.Proxmox] = coordinator
+    coordinators_nodes[ProxmoxType.Proxmox] = coordinator
 
     # Node info
     coordinator = create_coordinator_proxmox(
@@ -173,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ProxmoxType.Node,
     )
     await coordinator.async_config_entry_first_refresh()
-    node_coordinators[ProxmoxType.Node] = coordinator
+    coordinators_nodes[ProxmoxType.Node] = coordinator
 
     # QEMU info
     for vm_id in entry_data[CONF_QEMU]:
@@ -186,7 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ProxmoxType.QEMU,
         )
         await coordinator.async_config_entry_first_refresh()
-        node_coordinators[vm_id] = coordinator
+        coordinators_nodes[vm_id] = coordinator
 
     # LXC info
     for container_id in entry_data[CONF_LXC]:
@@ -199,7 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ProxmoxType.LXC,
         )
         await coordinator.async_config_entry_first_refresh()
-        node_coordinators[container_id] = coordinator
+        coordinators_nodes[container_id] = coordinator
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
@@ -227,7 +265,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_type):
+def create_coordinator_proxmox(hass, proxmox, host, node, vm_id, info_type):
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
     async def async_update_data():
@@ -236,7 +274,7 @@ def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_ty
         def poll_api():
             """Call the api."""
             try:
-                api_status = call_api_proxmox(proxmox, node_name, vm_id, vm_type)
+                api_status = call_api_proxmox(proxmox, node, vm_id, info_type)
             except AuthenticationError as error:
                 raise ConfigEntryAuthFailed from error
             except Exception as error:
@@ -244,15 +282,15 @@ def create_coordinator_proxmox(hass, proxmox, host_name, node_name, vm_id, vm_ty
 
             return api_status
 
-        if (vm_status := await hass.async_add_executor_job(poll_api)) is None:
+        if (status := await hass.async_add_executor_job(poll_api)) is None:
             raise ConfigEntryNotReady("Error fetching data from API")
 
-        return parse_api_proxmox(vm_status, vm_type)
+        return parse_api_proxmox(status, info_type)
 
     return DataUpdateCoordinator(
         hass,
         LOGGER,
-        name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
+        name=f"proxmox_coordinator_{host}_{node}_{vm_id}",
         update_method=async_update_data,
         update_interval=UPDATE_INTERVAL,
     )
@@ -265,7 +303,7 @@ def parse_api_proxmox(status, info_type):
     in the future.
     """
     if info_type == ProxmoxType.Proxmox:
-        if version := status["version"] is None:
+        if (version := status["version"]) is None:
             version = None
 
         return {
@@ -273,7 +311,7 @@ def parse_api_proxmox(status, info_type):
         }
 
     if info_type is ProxmoxType.Node:
-        if uptime := status["uptime"] is None:
+        if (uptime := status["uptime"]) is None:
             uptime = None
 
         return {
@@ -281,9 +319,9 @@ def parse_api_proxmox(status, info_type):
         }
 
     if info_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
-        if status_vm := status["status"] is None:
+        if (status_vm := status["status"]) is None:
             status_vm = None
-        if name_vm := status["name"] is None:
+        if (name_vm := status["name"]) is None:
             name_vm = None
 
         return {
@@ -292,7 +330,7 @@ def parse_api_proxmox(status, info_type):
         }
 
 
-def call_api_proxmox(proxmox, node_name, vm_id, info_type):
+def call_api_proxmox(proxmox, node, vm_id, info_type):
     """Make proper api calls."""
     status = None
 
@@ -300,11 +338,11 @@ def call_api_proxmox(proxmox, node_name, vm_id, info_type):
         if info_type == ProxmoxType.Proxmox:
             status = proxmox.version.get()
         elif info_type is ProxmoxType.Node:
-            status = proxmox.nodes(node_name).status.get()
+            status = proxmox.nodes(node).status.get()
         elif info_type == ProxmoxType.QEMU:
-            status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
+            status = proxmox.nodes(node).qemu(vm_id).status.current.get()
         elif info_type == ProxmoxType.LXC:
-            status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
+            status = proxmox.nodes(node).lxc(vm_id).status.current.get()
     except (ResourceException, requests.exceptions.ConnectionError):
         return None
 
