@@ -1321,6 +1321,66 @@ async def test_register_callback_by_manufacturer_id(
     assert service_info.manufacturer_id == 21
 
 
+async def test_not_filtering_wanted_apple_devices(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test filtering noisy apple devices."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {MANUFACTURER_ID: 76},
+            BluetoothScanningMode.ACTIVE,
+        )
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        ibeacon_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        ibeacon_adv = AdvertisementData(
+            local_name="ibeacon",
+            manufacturer_data={76: b"\x02\x00\x00\x00"},
+        )
+
+        inject_advertisement(hass, ibeacon_device, ibeacon_adv)
+
+        homekit_device = BLEDevice("44:44:33:11:23:46", "rtx")
+        homekit_adv = AdvertisementData(
+            local_name="homekit",
+            manufacturer_data={76: b"\x06\x00\x00\x00"},
+        )
+
+        inject_advertisement(hass, homekit_device, homekit_adv)
+
+        apple_device = BLEDevice("44:44:33:11:23:47", "rtx")
+        apple_adv = AdvertisementData(
+            local_name="apple",
+            manufacturer_data={76: b"\x10\x00\x00\x00"},
+        )
+
+        inject_advertisement(hass, apple_device, apple_adv)
+
+        cancel()
+
+    assert len(callbacks) == 3
+
+
 async def test_filtering_noisy_apple_devices(
     hass, mock_bleak_scanner_start, enable_bluetooth
 ):
