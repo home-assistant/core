@@ -10,8 +10,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MediaPlayerState, MediaType
 from homeassistant.const import ATTR_SECONDS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform

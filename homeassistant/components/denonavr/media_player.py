@@ -22,8 +22,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant

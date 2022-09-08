@@ -21,12 +21,12 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.media_player.browse_media import (
     BrowseMedia,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MediaType
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,

@@ -23,8 +23,8 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,

@@ -12,8 +12,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback

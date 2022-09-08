@@ -8,8 +8,8 @@ from pdunehd import DuneHDPlayer
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo

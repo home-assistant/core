@@ -9,11 +9,9 @@ from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
     BrowseMedia,
+    MediaClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MediaClass,
     MediaPlayerState,
     MediaType,
 )

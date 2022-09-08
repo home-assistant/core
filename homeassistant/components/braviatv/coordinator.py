@@ -16,7 +16,7 @@ from pybravia import (
 )
 from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player.const import MediaType
+from homeassistant.components.media_player import MediaType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
