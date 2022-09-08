@@ -15,15 +15,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -265,7 +259,9 @@ class KefMediaPlayer(MediaPlayerEntity):
                 ) = await self._speaker.get_volume_and_is_muted()
                 state = await self._speaker.get_state()
                 self._source = state.source
-                self._state = STATE_ON if state.is_on else STATE_OFF
+                self._state = (
+                    MediaPlayerState.ON if state.is_on else MediaPlayerState.OFF
+                )
                 if self._dsp is None:
                     # Only do this when necessary because it is a slow operation
                     await self.update_dsp()
@@ -273,7 +269,7 @@ class KefMediaPlayer(MediaPlayerEntity):
                 self._muted = None
                 self._source = None
                 self._volume = None
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
         except (ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
             self._state = None
@@ -367,7 +363,7 @@ class KefMediaPlayer(MediaPlayerEntity):
 
     async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
-        if self._speaker_type == "LS50" and self._state == STATE_OFF:
+        if self._speaker_type == "LS50" and self._state == MediaPlayerState.OFF:
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
