@@ -30,7 +30,7 @@ class DemoMailbox(Mailbox):
 
     def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize Demo mailbox."""
-        super().__init__(hass, name)  # type:ignore[no-untyped-call]
+        super().__init__(hass, name)
         self._messages: dict[str, dict[str, Any]] = {}
         txt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
         for idx in range(0, 10):
@@ -85,5 +85,5 @@ class DemoMailbox(Mailbox):
         if msgid in self._messages:
             _LOGGER.info("Deleting: %s", msgid)
             del self._messages[msgid]
-        self.async_update()  # type:ignore[no-untyped-call]
+        self.async_update()
         return True
