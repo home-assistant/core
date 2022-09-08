@@ -23,7 +23,7 @@ from homeassistant.components import (
     scene,
     script,
 )
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )

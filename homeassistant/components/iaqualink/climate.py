@@ -12,9 +12,9 @@ from iaqualink.const import (
 )
 from iaqualink.device import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
