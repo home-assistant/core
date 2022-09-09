@@ -613,10 +613,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
             content_filter = audio_content_filter
 
-        if media_content_id is None or media_content_type is None:
+        if media_content_id is None:
             return await self._async_root_payload(content_filter)
 
         platform: CastProtocol
+        assert media_content_type is not None
         for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
             browse_media = await platform.async_browse_media(
                 self.hass,
