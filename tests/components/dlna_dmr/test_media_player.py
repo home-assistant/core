@@ -36,6 +36,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     const as mp_const,
 )
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
@@ -527,13 +528,13 @@ async def test_attributes(
 
     # shuffle and repeat is based on device's play mode
     for play_mode, shuffle, repeat in [
-        (PlayMode.NORMAL, False, mp_const.REPEAT_MODE_OFF),
-        (PlayMode.SHUFFLE, True, mp_const.REPEAT_MODE_OFF),
-        (PlayMode.REPEAT_ONE, False, mp_const.REPEAT_MODE_ONE),
-        (PlayMode.REPEAT_ALL, False, mp_const.REPEAT_MODE_ALL),
-        (PlayMode.RANDOM, True, mp_const.REPEAT_MODE_ALL),
-        (PlayMode.DIRECT_1, False, mp_const.REPEAT_MODE_OFF),
-        (PlayMode.INTRO, False, mp_const.REPEAT_MODE_OFF),
+        (PlayMode.NORMAL, False, RepeatMode.OFF),
+        (PlayMode.SHUFFLE, True, RepeatMode.OFF),
+        (PlayMode.REPEAT_ONE, False, RepeatMode.ONE),
+        (PlayMode.REPEAT_ALL, False, RepeatMode.ALL),
+        (PlayMode.RANDOM, True, RepeatMode.ALL),
+        (PlayMode.DIRECT_1, False, RepeatMode.OFF),
+        (PlayMode.INTRO, False, RepeatMode.OFF),
     ]:
         dmr_device_mock.play_mode = play_mode
         attrs = await get_attrs(hass, mock_entity_id)
@@ -886,21 +887,21 @@ async def test_shuffle_repeat_modes(
 
     # Test repeat with all variations of existing play mode
     for init_mode, repeat_set, expect_mode in [
-        (PlayMode.NORMAL, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
-        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_OFF, PlayMode.SHUFFLE),
-        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
-        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
-        (PlayMode.RANDOM, mp_const.REPEAT_MODE_OFF, PlayMode.SHUFFLE),
-        (PlayMode.NORMAL, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.RANDOM, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.NORMAL, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
-        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_ALL, PlayMode.RANDOM),
-        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
-        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
-        (PlayMode.RANDOM, mp_const.REPEAT_MODE_ALL, PlayMode.RANDOM),
+        (PlayMode.NORMAL, RepeatMode.OFF, PlayMode.NORMAL),
+        (PlayMode.SHUFFLE, RepeatMode.OFF, PlayMode.SHUFFLE),
+        (PlayMode.REPEAT_ONE, RepeatMode.OFF, PlayMode.NORMAL),
+        (PlayMode.REPEAT_ALL, RepeatMode.OFF, PlayMode.NORMAL),
+        (PlayMode.RANDOM, RepeatMode.OFF, PlayMode.SHUFFLE),
+        (PlayMode.NORMAL, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.SHUFFLE, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ONE, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ALL, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.RANDOM, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.NORMAL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.SHUFFLE, RepeatMode.ALL, PlayMode.RANDOM),
+        (PlayMode.REPEAT_ONE, RepeatMode.ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.REPEAT_ALL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.RANDOM, RepeatMode.ALL, PlayMode.RANDOM),
     ]:
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
@@ -934,7 +935,7 @@ async def test_shuffle_repeat_modes(
         ha_const.SERVICE_REPEAT_SET,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_REPEAT: mp_const.REPEAT_MODE_OFF,
+            mp_const.ATTR_MEDIA_REPEAT: RepeatMode.OFF,
         },
         blocking=True,
     )
@@ -1970,7 +1971,7 @@ async def test_disappearing_device(
     await entity.async_media_previous_track()
     await entity.async_media_next_track()
     await entity.async_set_shuffle(True)
-    await entity.async_set_repeat(mp_const.REPEAT_MODE_ALL)
+    await entity.async_set_repeat(RepeatMode.ALL)
     await entity.async_select_sound_mode("Default")
 
 
