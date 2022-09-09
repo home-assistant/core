@@ -49,8 +49,8 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
-        command_on="set_timer",
-        command_off="del_timer",
+        command_on="async_turn_on_timer",
+        command_off="async_turn_off_timer",
         data_key="timer_on",
     ),
 )
@@ -62,8 +62,8 @@ PURE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         name="Pure Boost",
         value_fn=lambda data: data.pure_boost_enabled,
         extra_fn=None,
-        command_on="set_pure_boost",
-        command_off="set_pure_boost",
+        command_on="async_turn_on_off_pure_boost",
+        command_off="async_turn_on_off_pure_boost",
         data_key="pure_boost_enabled",
     ),
 )
@@ -113,29 +113,21 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if self.entity_description.key == "timer_on_switch":
-            await self.async_turn_on_timer(
-                key=self.entity_description.data_key,
-                value=True,
-            )
-        if self.entity_description.key == "pure_boost_switch":
-            await self.async_turn_on_off_pure_boost(
-                key=self.entity_description.data_key,
-                value=True,
-            )
+        func = getattr(SensiboDeviceSwitch, self.entity_description.command_on)
+        await func(
+            self,
+            key=self.entity_description.data_key,
+            value=True,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if self.entity_description.key == "timer_on_switch":
-            await self.async_turn_off_timer(
-                key=self.entity_description.data_key,
-                value=False,
-            )
-        if self.entity_description.key == "pure_boost_switch":
-            await self.async_turn_on_off_pure_boost(
-                key=self.entity_description.data_key,
-                value=False,
-            )
+        func = getattr(SensiboDeviceSwitch, self.entity_description.command_off)
+        await func(
+            self,
+            key=self.entity_description.data_key,
+            value=True,
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
