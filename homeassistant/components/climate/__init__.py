@@ -190,8 +190,8 @@ class ClimateEntity(Entity):
     entity_description: ClimateEntityDescription
     _attr_current_humidity: int | None = None
     _attr_current_temperature: float | None = None
-    _attr_fan_mode: str | None
-    _attr_fan_modes: list[str] | None
+    _attr_fan_mode: FanMode | str | None
+    _attr_fan_modes: list[FanMode] | list[str] | None
     _attr_hvac_action: HVACAction | str | None = None
     _attr_hvac_mode: HVACMode | str | None
     _attr_hvac_modes: list[HVACMode] | list[str]
@@ -201,11 +201,11 @@ class ClimateEntity(Entity):
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_min_temp: float
     _attr_precision: float
-    _attr_preset_mode: str | None
-    _attr_preset_modes: list[str] | None
+    _attr_preset_mode: PresetMode | str | None
+    _attr_preset_modes: list[PresetMode] | list[str] | None
     _attr_supported_features: int
-    _attr_swing_mode: str | None
-    _attr_swing_modes: list[str] | None
+    _attr_swing_mode: SwingMode | str | None
+    _attr_swing_modes: list[SwingMode] | list[str] | None
     _attr_target_humidity: int | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
@@ -385,7 +385,7 @@ class ClimateEntity(Entity):
         return self._attr_target_temperature_low
 
     @property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> PresetMode | str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires ClimateEntityFeature.PRESET_MODE.
@@ -393,7 +393,7 @@ class ClimateEntity(Entity):
         return self._attr_preset_mode
 
     @property
-    def preset_modes(self) -> list[str] | None:
+    def preset_modes(self) -> list[PresetMode] | list[str] | None:
         """Return a list of available preset modes.
 
         Requires ClimateEntityFeature.PRESET_MODE.
@@ -409,7 +409,7 @@ class ClimateEntity(Entity):
         return self._attr_is_aux_heat
 
     @property
-    def fan_mode(self) -> str | None:
+    def fan_mode(self) -> FanMode | str | None:
         """Return the fan setting.
 
         Requires ClimateEntityFeature.FAN_MODE.
@@ -417,7 +417,7 @@ class ClimateEntity(Entity):
         return self._attr_fan_mode
 
     @property
-    def fan_modes(self) -> list[str] | None:
+    def fan_modes(self) -> list[FanMode] | list[str] | None:
         """Return the list of available fan modes.
 
         Requires ClimateEntityFeature.FAN_MODE.
@@ -425,7 +425,7 @@ class ClimateEntity(Entity):
         return self._attr_fan_modes
 
     @property
-    def swing_mode(self) -> str | None:
+    def swing_mode(self) -> SwingMode | str | None:
         """Return the swing setting.
 
         Requires ClimateEntityFeature.SWING_MODE.
@@ -433,7 +433,7 @@ class ClimateEntity(Entity):
         return self._attr_swing_mode
 
     @property
-    def swing_modes(self) -> list[str] | None:
+    def swing_modes(self) -> list[SwingMode] | list[str] | None:
         """Return the list of available swing modes.
 
         Requires ClimateEntityFeature.SWING_MODE.
@@ -458,11 +458,11 @@ class ClimateEntity(Entity):
         """Set new target humidity."""
         await self.hass.async_add_executor_job(self.set_humidity, humidity)
 
-    def set_fan_mode(self, fan_mode: str) -> None:
+    def set_fan_mode(self, fan_mode: FanMode | str) -> None:
         """Set new target fan mode."""
         raise NotImplementedError()
 
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
+    async def async_set_fan_mode(self, fan_mode: FanMode | str) -> None:
         """Set new target fan mode."""
         await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
@@ -474,19 +474,19 @@ class ClimateEntity(Entity):
         """Set new target hvac mode."""
         await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 
-    def set_swing_mode(self, swing_mode: str) -> None:
+    def set_swing_mode(self, swing_mode: SwingMode | str) -> None:
         """Set new target swing operation."""
         raise NotImplementedError()
 
-    async def async_set_swing_mode(self, swing_mode: str) -> None:
+    async def async_set_swing_mode(self, swing_mode: SwingMode | str) -> None:
         """Set new target swing operation."""
         await self.hass.async_add_executor_job(self.set_swing_mode, swing_mode)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: PresetMode | str) -> None:
         """Set new preset mode."""
         raise NotImplementedError()
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: PresetMode | str) -> None:
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
