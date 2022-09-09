@@ -71,38 +71,32 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         #
         # Bridge Notifications as seen in ["extra"][BRIDGE_NOTIFICATION_KEY] are as special case as they
         # will report both a disconnect and connect event. The final event in the array is the current
-        # status of the bridge, and as such only that notification will be read.
+        # status of the bridge. Because we are using a Connectivity sensor for the bridge the prescence
+        # of BRIDGE_NOTIFICATION_RULE in the return will tell the sensor its CONNECTED where as the lack
+        # of this value in the return will signal a disconnect to the UI
 
         notifications_by_device: dict[str, set[str]] = {}
-
+        bridge_status_by_device: dict[str, list[str]] = {}
         # Process the notification array
         for item in self.notifications:
 
             device_id = item["device_id"]
             rule = item["extra"]["event_rule_name"]
 
-            if rule == BRIDGE_NOTIFICATION_KEY:
+            if rule == BRIDGE_NOTIFICATION_RULE:
                 # Dont process bridge notifications - they are handled separately
-                continue
+                bridge_status_by_device.setdefault(device_id, [True]).append(
+                    item["extra"][BRIDGE_NOTIFICATION_KEY]
+                )
+            else:
+                notifications_by_device.setdefault(device_id, set()).add(rule)
 
-            notifications_by_device.setdefault(device_id, set()).add(rule)
-
-        # Grab the last ["extra"]["connected"] state of the bridge or True
-        bridge_conencted = (
-            [True]
-            + [
-                x["extra"]["connected"]
-                for x in self.notifications
-                if x["extra"]["event_rule_name"] == BRIDGE_NOTIFICATION_KEY
-            ]
-        )[-1]
-
-        # If the bridge is disconnected then store the rule
-        if not bridge_conencted:
-            notifications_by_device.setdefault(device_id, set()).add(
-                BRIDGE_NOTIFICATION_RULE
-            )
-
+        # For each device look at the last status of the bridge, and if True add BRIDGE_NOTIFICATION_RULE.
+        for device_id in bridge_status_by_device.items():
+            if bridge_status_by_device[device_id][-1]:
+                notifications_by_device.setdefault(device_id, set()).add(
+                    BRIDGE_NOTIFICATION_RULE
+                )
         self.active_notifications_by_device = notifications_by_device
 
     async def _async_update_data(self) -> None:
