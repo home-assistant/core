@@ -1,11 +1,11 @@
 """Test the Z-Wave JS update entities."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
+from zwave_js_server.model.firmware import FirmwareUpdateStatus
 
 from homeassistant.components.update.const import (
     ATTR_AUTO_UPDATE,
@@ -53,7 +53,7 @@ FIRMWARE_UPDATES = {
 }
 
 
-async def test_update_entity_success(
+async def test_update_entity_states(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
@@ -62,7 +62,7 @@ async def test_update_entity_success(
     caplog,
     hass_ws_client,
 ):
-    """Test update entity."""
+    """Test update entity states."""
     ws_client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
@@ -139,36 +139,11 @@ async def test_update_entity_success(
 
     client.async_send_command.reset_mock()
 
-    # Test successful install call without a version
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {
-            ATTR_ENTITY_ID: UPDATE_ENTITY,
-        },
-        blocking=True,
-    )
-
-    args = client.async_send_command.call_args_list[0][0][0]
-    assert args["command"] == "controller.begin_ota_firmware_update"
-    assert (
-        args["nodeId"]
-        == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
-    )
-    assert args["update"] == {
-        "target": 0,
-        "url": "https://example2.com",
-        "integrity": "sha2",
-    }
-
-    client.async_send_command.reset_mock()
-
 
 async def test_update_entity_install_failure(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
-    controller_node,
     integration,
 ):
     """Test update entity failed install."""
@@ -289,11 +264,10 @@ async def test_update_entity_ha_not_running(
     assert args["nodeId"] == zen_31.node_id
 
 
-async def test_update_entity_failure(
+async def test_update_entity_update_failure(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
-    controller_node,
     integration,
 ):
     """Test update entity update failed."""
@@ -335,58 +309,60 @@ async def test_update_entity_progress(
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
-    asyncio_event = asyncio.Event()
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = None
 
-    async def mock_install_func(node, file):
-        """Mock install function."""
-        await asyncio_event.wait()
-
-    with patch(
-        "homeassistant.components.zwave_js.update.Controller.async_begin_ota_firmware_update",
-        side_effect=mock_install_func,
-    ):
-        # Test successful install call without a version
-        hass.async_create_task(
-            hass.services.async_call(
-                UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {
-                    ATTR_ENTITY_ID: UPDATE_ENTITY,
-                },
-                blocking=True,
-            )
-        )
-
-        # Sleep so that task starts
-        await asyncio.sleep(0.1)
-
-        event = Event(
-            type="firmware update progress",
-            data={
-                "source": "node",
-                "event": "firmware update progress",
-                "nodeId": node.node_id,
-                "sentFragments": 1,
-                "totalFragments": 20,
+    # Test successful install call without a version
+    hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: UPDATE_ENTITY,
             },
+            blocking=True,
         )
-        node.receive_event(event)
+    )
 
-        # Validate that the progress is updated
-        state = hass.states.get(UPDATE_ENTITY)
-        assert state
-        attrs = state.attributes
-        assert attrs[ATTR_IN_PROGRESS] == 5
+    # Sleep so that task starts
+    await asyncio.sleep(0.1)
 
-        # Let install function continue
-        asyncio_event.set()
-        await hass.async_block_till_done()
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "node",
+            "event": "firmware update progress",
+            "nodeId": node.node_id,
+            "sentFragments": 1,
+            "totalFragments": 20,
+        },
+    )
+    node.receive_event(event)
 
-        # Validate that progress is reset and entity reflects new version
-        state = hass.states.get(UPDATE_ENTITY)
-        assert state
-        attrs = state.attributes
-        assert attrs[ATTR_IN_PROGRESS] is False
-        assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
-        assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
-        assert state.state == STATE_OFF
+    # Validate that the progress is updated
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] == 5
+
+    event = Event(
+        type="firmware update finished",
+        data={
+            "source": "node",
+            "event": "firmware update finished",
+            "nodeId": node.node_id,
+            "status": FirmwareUpdateStatus.OK_NO_RESTART,
+        },
+    )
+
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Validate that progress is reset and entity reflects new version
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+    assert state.state == STATE_OFF
