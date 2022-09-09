@@ -16,15 +16,10 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_OK,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_PROBLEM,
-)
+from homeassistant.const import STATE_OK, STATE_PROBLEM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,9 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 HK_TO_HA_STATE = {
-    CurrentMediaStateValues.PLAYING: STATE_PLAYING,
-    CurrentMediaStateValues.PAUSED: STATE_PAUSED,
-    CurrentMediaStateValues.STOPPED: STATE_IDLE,
+    CurrentMediaStateValues.PLAYING: MediaPlayerState.PLAYING,
+    CurrentMediaStateValues.PAUSED: MediaPlayerState.PAUSED,
+    CurrentMediaStateValues.STOPPED: MediaPlayerState.IDLE,
 }
 
 
@@ -177,7 +172,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state == STATE_PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             _LOGGER.debug("Cannot play while already playing")
             return
 
@@ -192,7 +187,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state == STATE_PAUSED:
+        if self.state == MediaPlayerState.PAUSED:
             _LOGGER.debug("Cannot pause while already paused")
             return
 
@@ -207,7 +202,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if self.state == STATE_IDLE:
+        if self.state == MediaPlayerState.IDLE:
             _LOGGER.debug("Cannot stop when already idle")
             return
 
