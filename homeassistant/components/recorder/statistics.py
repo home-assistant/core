@@ -420,6 +420,9 @@ def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
 
 def _find_statistics_meta_duplicates(session: Session) -> list[int]:
     """Find duplicated statistics_meta."""
+    # When querying the database, be careful to only explicitly query for columns
+    # which were present in schema version 29. If querying the table, SQLAlchemy
+    # will refer to future columns.
     subquery = (
         session.query(
             StatisticsMeta.statistic_id,
@@ -430,7 +433,7 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
         .subquery()
     )
     query = (
-        session.query(StatisticsMeta)
+        session.query(StatisticsMeta.statistic_id, StatisticsMeta.id)
         .outerjoin(
             subquery,
             (subquery.c.statistic_id == StatisticsMeta.statistic_id),
@@ -473,7 +476,10 @@ def _delete_statistics_meta_duplicates(session: Session) -> int:
 
 
 def delete_statistics_meta_duplicates(session: Session) -> None:
-    """Identify and delete duplicated statistics_meta."""
+    """Identify and delete duplicated statistics_meta.
+
+    This is used when migrating from schema version 28 to schema version 29.
+    """
     deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
     if deleted_statistics_rows:
         _LOGGER.info(
