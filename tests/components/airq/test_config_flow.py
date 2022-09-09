@@ -1,7 +1,7 @@
 """Test the air-Q config flow."""
 from unittest.mock import patch
 
-from aioairq.core import DeviceInfo, InvalidAuth
+from aioairq.core import DeviceInfo, InvalidAuth, InvalidInput
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant import config_entries
@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 TEST_USER_DATA = {
-    CONF_IP_ADDRESS: "client_ip",
+    CONF_IP_ADDRESS: "192.168.0.0",
     CONF_PASSWORD: "password",
 }
 TEST_DEVICE_INFO = DeviceInfo(
@@ -69,8 +69,23 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch("aioairq.AirQ.validate", side_effect=ClientConnectionError):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA | {CONF_IP_ADDRESS: "wrong_ip"}
+            result["flow_id"], TEST_USER_DATA
         )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_invalid_input(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("aioairq.AirQ.validate", side_effect=InvalidInput):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_DATA | {CONF_IP_ADDRESS: "invalid_ip"}
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_input"}

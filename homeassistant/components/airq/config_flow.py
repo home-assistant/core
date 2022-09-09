@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         session = async_get_clientsession(self.hass)
         try:

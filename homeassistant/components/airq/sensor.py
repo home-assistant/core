@@ -338,4 +338,5 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
         # While a sensor is warming up its key isn't present in the returned dict
-        return self.coordinator.data.get(self.entity_description.key) * self._factor
+        value = self.coordinator.data.get(self.entity_description.key)
+        return value * self._factor if value else value
