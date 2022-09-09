@@ -7,7 +7,6 @@ from functools import wraps
 import logging
 import re
 from typing import Any, TypeVar
-import urllib.parse
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
@@ -920,7 +919,7 @@ class KodiEntity(MediaPlayerEntity):
 
             return self.get_browse_image_url(
                 media_content_type,
-                urllib.parse.quote_plus(media_content_id),
+                media_content_id,
                 media_image_id,
             )
 
