@@ -317,9 +317,10 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries_raw": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
+                        "value_template": "value",
                         "unit_of_measurement": "unit",
                         "query": "query",
-                        "value_template": "value",
                         "database": "db2",
                         "field": "field",
                     }
@@ -337,12 +338,13 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "path": "path",
                 "token": "token",
                 "organization": "org",
-                "bucket": "bucket",
+                "bucket": "bucket2",
             },
             {
                 "queries_raw": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "value_template": "value",
                         "query": "query",
@@ -652,14 +654,14 @@ async def test_state_for_no_results(
             BASE_V2_CONFIG,
             BASE_V2_QUERY_RAW,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY_RAW,
             _set_query_mock_v2,
-            ApiException(status=HTTPStatus.BAD_REQUEST),
+            ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
         ),
     ],
     indirect=["mock_client"],
