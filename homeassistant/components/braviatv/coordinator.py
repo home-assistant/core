@@ -282,3 +282,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                         cmd,
                         commands_keys,
                     )
+
+    @catch_braviatv_errors
+    async def async_reboot_device(self) -> None:
+        """Send command to reboot the device."""
+        await self.client.reboot()
+
+    @catch_braviatv_errors
+    async def async_terminate_apps(self) -> None:
+        """Send command to terminate all applications."""
+        await self.client.terminate_apps()

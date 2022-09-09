@@ -14,7 +14,11 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import CONF_IGNORED_SOURCES, DOMAIN
 from .coordinator import BraviaTVCoordinator
 
-PLATFORMS: Final[list[Platform]] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS: Final[list[Platform]] = [
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+    Platform.REMOTE,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
