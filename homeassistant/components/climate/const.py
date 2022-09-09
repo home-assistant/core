@@ -43,8 +43,8 @@ HVAC_MODE_FAN_ONLY = "fan_only"
 HVAC_MODES = [cls.value for cls in HVACMode]
 
 
-class Preset(StrEnum):
-    """Preset for climate devices."""
+class PresetMode(StrEnum):
+    """Preset mode for climate devices."""
 
     # No preset is active
     NONE = "none"
@@ -72,7 +72,7 @@ class Preset(StrEnum):
 
 
 # These PRESET_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the Preset enum instead.
+# Please use the PresetMode enum instead.
 PRESET_NONE = "none"
 PRESET_ECO = "eco"
 PRESET_AWAY = "away"
@@ -83,8 +83,8 @@ PRESET_SLEEP = "sleep"
 PRESET_ACTIVITY = "activity"
 
 
-class FanState(StrEnum):
-    """Fan state for climate devices."""
+class FanMode(StrEnum):
+    """Fan mode for climate devices."""
 
     ON = "on"
     OFF = "off"
@@ -99,7 +99,7 @@ class FanState(StrEnum):
 
 
 # These FAN_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the Preset enum instead.
+# Please use the FanMode enum instead.
 FAN_ON = "on"
 FAN_OFF = "off"
 FAN_AUTO = "auto"
@@ -112,8 +112,8 @@ FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
 
 
-class SwingState(StrEnum):
-    """Swing state for climate devices."""
+class SwingMode(StrEnum):
+    """Swing mode for climate devices."""
 
     ON = "on"
     OFF = "off"
@@ -123,7 +123,7 @@ class SwingState(StrEnum):
 
 
 # These SWING_* constants are deprecated as of Home Assistant 2022.10.
-# Please use the Preset enum instead.
+# Please use the SwingMode enum instead.
 SWING_ON = "on"
 SWING_OFF = "off"
 SWING_BOTH = "both"
