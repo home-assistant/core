@@ -216,12 +216,14 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         firmware = self._latest_version_firmware
         assert firmware
         self._unsub_firmware_events_and_reset_progress(True)
+
         self._progress_unsub = self.node.on(
             "firmware update progress", self._update_progress
         )
         self._finished_unsub = self.node.once(
             "firmware update finished", self._update_finished
         )
+
         for file in firmware.files:
             try:
                 await self.driver.controller.async_begin_ota_firmware_update(
