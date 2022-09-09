@@ -18,13 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_OPENING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -132,7 +126,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                     PlayState.PLAYING: MediaPlayerState.PLAYING,
                     PlayState.PAUSED: MediaPlayerState.PAUSED,
                     PlayState.STOPPED: MediaPlayerState.IDLE,
-                    PlayState.LOADING: STATE_OPENING,
+                    PlayState.LOADING: MediaPlayerState.BUFFERING,
                     None: MediaPlayerState.IDLE,
                 }.get(status)
             else:
