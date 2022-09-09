@@ -147,6 +147,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._finished_unsub = None
 
         self._finished_status = None
+        self._finished_event.clear()
         self._num_files_installed = 0
         self._attr_in_progress = 0
         if write_state:
