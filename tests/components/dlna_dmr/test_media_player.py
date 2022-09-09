@@ -35,6 +35,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     const as mp_const,
 )
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
@@ -504,13 +505,13 @@ async def test_attributes(
     # media_content_type is mapped from UPnP class to MediaPlayer type
     dmr_device_mock.media_class = "object.item.audioItem.musicTrack"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MUSIC
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     dmr_device_mock.media_class = "object.item.videoItem.movie"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MOVIE
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MOVIE
     dmr_device_mock.media_class = "object.item.videoItem.videoBroadcast"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_TVSHOW
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.TVSHOW
 
     # media_season & media_episode have a special case
     dmr_device_mock.media_season_number = "0"
@@ -627,7 +628,7 @@ async def test_play_media_stopped(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
@@ -659,7 +660,7 @@ async def test_play_media_playing(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
@@ -692,7 +693,7 @@ async def test_play_media_no_autoplay(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
@@ -723,7 +724,7 @@ async def test_play_media_metadata(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
@@ -753,7 +754,7 @@ async def test_play_media_metadata(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_TVSHOW,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/123.mkv",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
@@ -1233,7 +1234,7 @@ async def test_unavailable_device(
         (
             mp_const.SERVICE_PLAY_MEDIA,
             {
-                mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+                mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
