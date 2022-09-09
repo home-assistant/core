@@ -1,5 +1,7 @@
 """Test the Z-Wave JS update entities."""
+import asyncio
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -311,3 +313,80 @@ async def test_update_entity_failure(
         args["nodeId"]
         == climate_radio_thermostat_ct100_plus_different_endpoints.node_id
     )
+
+
+async def test_update_entity_progress(
+    hass,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+):
+    """Test update entity progress."""
+    node = climate_radio_thermostat_ct100_plus_different_endpoints
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+
+    asyncio_event = asyncio.Event()
+
+    async def mock_install_func(node, file):
+        """Mock install function."""
+        await asyncio_event.wait()
+
+    with patch(
+        "homeassistant.components.zwave_js.update.Controller.async_begin_ota_firmware_update",
+        side_effect=mock_install_func,
+    ):
+        # Test successful install call without a version
+        hass.async_create_task(
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {
+                    ATTR_ENTITY_ID: UPDATE_ENTITY,
+                },
+                blocking=True,
+            )
+        )
+
+        # Sleep so that task starts
+        await asyncio.sleep(0.1)
+
+        event = Event(
+            type="firmware update progress",
+            data={
+                "source": "node",
+                "event": "firmware update progress",
+                "nodeId": node.node_id,
+                "sentFragments": 1,
+                "totalFragments": 20,
+            },
+        )
+        node.receive_event(event)
+
+        # Validate that the progress is updated
+        state = hass.states.get(UPDATE_ENTITY)
+        assert state
+        attrs = state.attributes
+        assert attrs[ATTR_IN_PROGRESS] == 5
+
+        # Let install function continue
+        asyncio_event.set()
+        await hass.async_block_till_done()
+
+        # Validate that progress is reset and entity reflects new version
+        state = hass.states.get(UPDATE_ENTITY)
+        assert state
+        attrs = state.attributes
+        assert attrs[ATTR_IN_PROGRESS] is False
+        assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
+        assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+        assert state.state == STATE_OFF
