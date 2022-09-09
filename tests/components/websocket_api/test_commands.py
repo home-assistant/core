@@ -1760,6 +1760,12 @@ async def test_validate_config_invalid(websocket_client, key, config, error):
 
 async def test_supported_brands(hass, websocket_client):
     """Test supported brands."""
+    # Custom components without supported brands that override a built-in component with
+    # supported brand will still be listed in HAS_SUPPORTED_BRANDS and should be ignored.
+    mock_integration(
+        hass,
+        MockModule("override_without_brands"),
+    )
     mock_integration(
         hass,
         MockModule("test", partial_manifest={"supported_brands": {"hello": "World"}}),
@@ -1773,7 +1779,7 @@ async def test_supported_brands(hass, websocket_client):
 
     with patch(
         "homeassistant.generated.supported_brands.HAS_SUPPORTED_BRANDS",
-        ("abcd", "test"),
+        ("abcd", "test", "override_without_brands"),
     ):
         await websocket_client.send_json({"id": 7, "type": "supported_brands"})
         msg = await websocket_client.receive_json()
