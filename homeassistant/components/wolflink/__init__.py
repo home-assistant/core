@@ -134,7 +134,7 @@ async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: 
     """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
     try:
         return await fetch_parameters(client, gateway_id, device_id)
-    except (ConnectError, ReadTimeout, ConnectTimeout, FetchFailed) as exception:
+    except (ConnectError, ConnectTimeout, FetchFailed, ReadTimeout) as exception:
         raise ConfigEntryNotReady(
             f"Error communicating with API: {exception}"
         ) from exception
