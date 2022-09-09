@@ -281,6 +281,7 @@ class MqttData:
     config: ConfigType | None = None
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple, CALLBACK_TYPE] = field(default_factory=dict)
+    last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
     reload_needed: bool = False

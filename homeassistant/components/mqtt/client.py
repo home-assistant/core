@@ -17,6 +17,7 @@ import attr
 import certifi
 from paho.mqtt.client import MQTTMessage
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -52,7 +53,6 @@ from .const import (
     MQTT_DISCONNECTED,
     PROTOCOL_31,
 )
-from .discovery import LAST_DISCOVERY
 from .models import (
     AsyncMessageCallbackType,
     MessageCallbackType,
@@ -67,6 +67,9 @@ if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
+
+    from .mixins import MqttData
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -320,14 +323,16 @@ class MQTT:
 
     def __init__(
         self,
-        hass,
-        config_entry,
-        conf,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        conf: ConfigType,
     ) -> None:
         """Initialize Home Assistant MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
+        self._mqtt_data: MqttData = hass.data[DATA_MQTT]
 
         self.hass = hass
         self.config_entry = config_entry
@@ -648,7 +653,7 @@ class MQTT:
                     continue
 
             self.hass.async_run_hass_job(
-                subscription.job,
+                subscription.job,  # type: ignore[arg-type]
                 ReceiveMessage(
                     msg.topic,
                     payload,
@@ -706,10 +711,10 @@ class MQTT:
     async def _discovery_cooldown(self):
         now = time.time()
         # Reset discovery and subscribe cooldowns
-        self.hass.data[LAST_DISCOVERY] = now
+        self._mqtt_data.last_discovery = now
         self._last_subscribe = now
 
-        last_discovery = self.hass.data[LAST_DISCOVERY]
+        last_discovery = self._mqtt_data.last_discovery
         last_subscribe = self._last_subscribe
         wait_until = max(
             last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
@@ -717,7 +722,7 @@ class MQTT:
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
             now = time.time()
-            last_discovery = self.hass.data[LAST_DISCOVERY]
+            last_discovery = self._mqtt_data.last_discovery
             last_subscribe = self._last_subscribe
             wait_until = max(
                 last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
