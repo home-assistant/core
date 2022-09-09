@@ -29,7 +29,6 @@ from .const import (
     ACTIVITY_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
     DOMAIN,
-    SensorDeviceClass as CustomSensorDeviceClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,14 +38,12 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="nh3_MR100",
         name="Ammonia",
-        device_class=CustomSensorDeviceClass.AMMONIA,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="cl2_M20",
         name="Chlorine",
-        device_class=CustomSensorDeviceClass.CHLORINE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -67,7 +64,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="dewpt",
         name="Dew point",
-        device_class=CustomSensorDeviceClass.DEWPOINT,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:water-thermometer",
@@ -75,28 +71,24 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="ethanol",
         name="Ethanol",
-        device_class=CustomSensorDeviceClass.ETHANOL,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ch2o_M10",
         name="Formaldehyde",
-        device_class=CustomSensorDeviceClass.FORMALDEHYDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="h2s",
         name="H2S",
-        device_class=CustomSensorDeviceClass.H2S,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="health",
         name="Health Index",
-        device_class=CustomSensorDeviceClass.INDEX_HEALTH,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:heart-pulse",
@@ -111,7 +103,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="humidity_abs",
         name="Absolute humidity",
-        device_class=CustomSensorDeviceClass.HUMIDITY_ABS,
         native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:water",
@@ -119,14 +110,12 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="h2_M1000",
         name="Hydrogen",
-        device_class=CustomSensorDeviceClass.HYDROGEN,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ch4_MIPEX",
         name="Methane",
-        device_class=CustomSensorDeviceClass.METHANE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -161,7 +150,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="oxygen",
         name="Oxygen",
-        device_class=CustomSensorDeviceClass.OXYGEN,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:leaf",
@@ -169,7 +157,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="performance",
         name="Performance Index",
-        device_class=CustomSensorDeviceClass.INDEX_PERFORMANCE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:head-check",
@@ -208,7 +195,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="pressure_rel",
         name="Relative pressure",
-        device_class=CustomSensorDeviceClass.PRESSURE_REL,
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
@@ -216,7 +202,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="c3h8_MIPEX",
         name="Propane",
-        device_class=CustomSensorDeviceClass.PROPANE,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -230,7 +215,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="sound",
         name="Noise",
-        device_class=CustomSensorDeviceClass.SOUND,
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:ear-hearing",
@@ -238,7 +222,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="sound_max",
         name="Noise (Maximum)",
-        device_class=CustomSensorDeviceClass.SOUND,
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:ear-hearing",
@@ -246,7 +229,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="radon",
         name="Radon",
-        device_class=CustomSensorDeviceClass.RADON,
         native_unit_of_measurement=ACTIVITY_BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
