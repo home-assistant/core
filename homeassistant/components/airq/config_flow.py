@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairq import AirQ, InvalidAuth
+from aioairq import AirQ, InvalidAuth, InvalidInput
 from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
@@ -51,30 +51,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         session = async_get_clientsession(self.hass)
-        airq = AirQ(user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD], session)
-
         try:
-            await airq.validate()
-        except ClientConnectionError:
+            airq = AirQ(user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD], session)
+        except InvalidInput:
             _LOGGER.debug(
-                "Failed to connect to device %s. Check the specified IP address / mDNS, "
-                "as well as whether the device is connected to power and the WiFi",
+                "%s does not appear to be a valid IP address or mDNS name",
                 user_input[CONF_IP_ADDRESS],
             )
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            _LOGGER.debug(
-                "Incorrect password for device %s", user_input[CONF_IP_ADDRESS]
-            )
-            errors["base"] = "invalid_auth"
+            errors["base"] = "invalid_input"
         else:
-            _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
+            try:
+                await airq.validate()
+            except ClientConnectionError:
+                _LOGGER.debug(
+                    "Failed to connect to device %s. Check the IP address / device ID "
+                    "as well as whether the device is connected to power and the WiFi",
+                    user_input[CONF_IP_ADDRESS],
+                )
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                _LOGGER.debug(
+                    "Incorrect password for device %s", user_input[CONF_IP_ADDRESS]
+                )
+                errors["base"] = "invalid_auth"
+            else:
+                _LOGGER.debug(
+                    "Successfully connected to %s", user_input[CONF_IP_ADDRESS]
+                )
 
-            device_info = await airq.fetch_device_info()
-            await self.async_set_unique_id(device_info["id"])
-            self._abort_if_unique_id_configured()
+                device_info = await airq.fetch_device_info()
+                await self.async_set_unique_id(device_info["id"])
+                self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=device_info["name"], data=user_input)
+                return self.async_create_entry(
+                    title=device_info["name"], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
