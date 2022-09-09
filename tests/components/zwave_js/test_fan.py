@@ -1,6 +1,5 @@
 """Test the Z-Wave JS fan platform."""
 import copy
-import math
 
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -259,7 +258,7 @@ async def test_configurable_speeds_fan(hass, client, hs_fc200, integration):
             assert actual_percentage in percentages
 
     state = hass.states.get(entity_id)
-    assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
 
 
@@ -384,7 +383,7 @@ async def test_ge_12730_fan(hass, client, ge_12730, integration):
             assert actual_percentage in percentages
 
     state = hass.states.get(entity_id)
-    assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
 
 
@@ -456,7 +455,7 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
 
     # Check static entity properties
     state = hass.states.get(entity_id)
-    assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == ["breeze"]
 
     # This device has one preset, where a device level of "1" is the
@@ -555,7 +554,7 @@ async def test_leviton_zw4sf_fan(hass, client, leviton_zw4sf, integration):
             assert actual_percentage in percentages
 
     state = hass.states.get(entity_id)
-    assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 25, rel_tol=1e-3)
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(25, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
 
 
