@@ -392,20 +392,17 @@ async def test_update_entity_install_failed(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = None
 
-    async def call_install():
-        """Call install service."""
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {
-                    ATTR_ENTITY_ID: UPDATE_ENTITY,
-                },
-                blocking=True,
-            )
-
-    # Test successful install call without a version
-    hass.async_create_task(call_install())
+    # Test install call - we expect it to raise
+    install_task = hass.async_create_task(
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: UPDATE_ENTITY,
+            },
+            blocking=True,
+        )
+    )
 
     # Sleep so that task starts
     await asyncio.sleep(0.1)
@@ -449,3 +446,7 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_ON
+
+    # validate that the install task failed
+    with pytest.raises(HomeAssistantError):
+        await install_task
