@@ -5,7 +5,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import mysensors
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
@@ -14,6 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import mysensors
 from .const import (
     DOMAIN as MYSENSORS_DOMAIN,
     MYSENSORS_DISCOVERY,

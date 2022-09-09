@@ -38,6 +38,6 @@ class OnlineStatus(BinarySensorEntity):
         self._data = data
         self._attr_name = config[CONF_NAME]
 
-    def update(self):
+    def update(self) -> None:
         """Get the status report from APCUPSd and set this entity's state."""
         self._attr_is_on = int(self._data.status[KEY_STATUS], 16) & VALUE_ONLINE > 0

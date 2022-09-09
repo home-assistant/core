@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host"
+                },
+                "data_description": {
+                    "host": "L'indirizzo IP o il nome host del tuo contatore Pure Energie."
                 }
             },
             "zeroconf_confirm": {

@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         here_travel_time_config,
     )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -187,8 +187,8 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             return HERERoutingData(
                 {
                     ATTR_ATTRIBUTION: attribution,
-                    ATTR_DURATION: summary["baseTime"] / 60,  # type: ignore[misc]
-                    ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
+                    ATTR_DURATION: round(summary["baseTime"] / 60),  # type: ignore[misc]
+                    ATTR_DURATION_IN_TRAFFIC: round(traffic_time / 60),
                     ATTR_DISTANCE: distance,
                     ATTR_ROUTE: response.route_short,
                     ATTR_ORIGIN: ",".join(origin),

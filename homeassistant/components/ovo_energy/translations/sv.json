@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Konto har redan konfigurerats",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "flow_title": "{username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "Autentisering misslyckades f\u00f6r OVO Energy. Ange dina aktuella uppgifter.",
+                "title": "\u00c5terautentisering"
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "St\u00e4ll in en OVO Energy-instans f\u00f6r att komma \u00e5t din energianv\u00e4ndning.",
+                "title": "L\u00e4gg till OVO Energikonto"
+            }
+        }
+    }
+}

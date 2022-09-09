@@ -4,16 +4,18 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
+    ExclusionStrategy,
     InclusionStrategy,
     LogLevel,
     Protocols,
+    ProvisioningEntryStatus,
     QRCodeVersion,
     SecurityClass,
     ZwaveFeature,
@@ -53,7 +55,6 @@ from homeassistant.components.websocket_api.const import (
     ERR_UNKNOWN_ERROR,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
@@ -149,9 +150,11 @@ MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
 ADDITIONAL_PROPERTIES = "additional_properties"
+STATUS = "status"
+REQUESTED_SECURITY_CLASSES = "requested_security_classes"
 
 FEATURE = "feature"
-UNPROVISION = "unprovision"
+STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
@@ -161,19 +164,22 @@ def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
     """Handle provisioning entry dict to ProvisioningEntry."""
     return ProvisioningEntry(
         dsk=info[DSK],
-        security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
+        security_classes=info[SECURITY_CLASSES],
+        status=info[STATUS],
+        requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
         additional_properties={
-            k: v for k, v in info.items() if k not in (DSK, SECURITY_CLASSES)
+            k: v
+            for k, v in info.items()
+            if k not in (DSK, SECURITY_CLASSES, STATUS, REQUESTED_SECURITY_CLASSES)
         },
     )
 
 
 def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
     """Convert QR provisioning information dict to QRProvisioningInformation."""
-    protocols = [Protocols(proto) for proto in info.get(SUPPORTED_PROTOCOLS, [])]
     return QRProvisioningInformation(
-        version=QRCodeVersion(info[VERSION]),
-        security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
+        version=info[VERSION],
+        security_classes=info[SECURITY_CLASSES],
         dsk=info[DSK],
         generic_device_class=info[GENERIC_DEVICE_CLASS],
         specific_device_class=info[SPECIFIC_DEVICE_CLASS],
@@ -184,7 +190,9 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         application_version=info[APPLICATION_VERSION],
         max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
         uuid=info.get(UUID),
-        supported_protocols=protocols if protocols else None,
+        supported_protocols=info.get(SUPPORTED_PROTOCOLS),
+        status=info[STATUS],
+        requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
         additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
     )
 
@@ -197,6 +205,12 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
             vol.Required(SECURITY_CLASSES): vol.All(
                 cv.ensure_list,
                 [vol.Coerce(SecurityClass)],
+            ),
+            vol.Optional(STATUS, default=ProvisioningEntryStatus.ACTIVE): vol.Coerce(
+                ProvisioningEntryStatus
+            ),
+            vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
+                cv.ensure_list, [vol.Coerce(SecurityClass)]
             ),
         },
         # Provisioning entries can have extra keys for SmartStart
@@ -226,6 +240,12 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
                 cv.ensure_list,
                 [vol.Coerce(Protocols)],
+            ),
+            vol.Optional(STATUS, default=ProvisioningEntryStatus.ACTIVE): vol.Coerce(
+                ProvisioningEntryStatus
+            ),
+            vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
+                cv.ensure_list, [vol.Coerce(SecurityClass)]
             ),
             vol.Optional(ADDITIONAL_PROPERTIES): dict,
         }
@@ -359,6 +379,7 @@ def node_status(node: Node) -> dict[str, Any]:
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
+    websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_comments)
@@ -395,7 +416,16 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_data_collection_status)
     websocket_api.async_register_command(hass, websocket_abort_firmware_update)
     websocket_api.async_register_command(
+        hass, websocket_is_node_firmware_update_in_progress
+    )
+    websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
+    )
+    websocket_api.async_register_command(
+        hass, websocket_get_firmware_update_capabilities
+    )
+    websocket_api.async_register_command(
+        hass, websocket_is_any_ota_firmware_update_in_progress
     )
     websocket_api.async_register_command(hass, websocket_check_for_config_updates)
     websocket_api.async_register_command(hass, websocket_install_config_update)
@@ -403,7 +433,6 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
-    websocket_api.async_register_command(hass, websocket_node_ready)
     hass.http.register_view(FirmwareUploadView())
 
 
@@ -452,12 +481,12 @@ async def websocket_network_status(
             "sdk_version": controller.sdk_version,
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
-            "is_secondary": controller.is_secondary,
+            "is_primary": controller.is_primary,
             "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
-            "is_static_update_controller": controller.is_static_update_controller,
-            "is_slave": controller.is_slave,
+            "is_suc": controller.is_suc,
+            "node_type": controller.node_type,
             "firmware_version": controller.firmware_version,
             "manufacturer_id": controller.manufacturer_id,
             "product_id": controller.product_id,
@@ -478,25 +507,28 @@ async def websocket_network_status(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_ready",
+        vol.Required(TYPE): "zwave_js/subscribe_node_status",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_get_node
-async def websocket_node_ready(
+async def websocket_subscribe_node_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
     node: Node,
 ) -> None:
-    """Subscribe to the node ready event of a Z-Wave JS node."""
+    """Subscribe to node status update events of a Z-Wave JS node."""
 
     @callback
     def forward_event(event: dict) -> None:
         """Forward the event."""
         connection.send_message(
-            websocket_api.event_message(msg[ID], {"event": event["event"]})
+            websocket_api.event_message(
+                msg[ID],
+                {"event": event["event"], "status": node.status, "ready": node.ready},
+            )
         )
 
     @callback
@@ -506,7 +538,10 @@ async def websocket_node_ready(
             unsub()
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("ready", forward_event)]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        node.on(evt, forward_event)
+        for evt in ("alive", "dead", "sleep", "wake up", "ready")
+    ]
 
     connection.send_result(msg[ID])
 
@@ -1022,7 +1057,7 @@ async def websocket_stop_exclusion(
     {
         vol.Required(TYPE): "zwave_js/remove_node",
         vol.Required(ENTRY_ID): str,
-        vol.Optional(UNPROVISION): bool,
+        vol.Optional(STRATEGY): vol.Coerce(ExclusionStrategy),
     }
 )
 @websocket_api.async_response
@@ -1072,7 +1107,7 @@ async def websocket_remove_node(
         controller.on("node removed", node_removed),
     ]
 
-    result = await controller.async_begin_exclusion(msg.get(UNPROVISION))
+    result = await controller.async_begin_exclusion(msg.get(STRATEGY))
     connection.send_result(
         msg[ID],
         result,
@@ -1083,8 +1118,7 @@ async def websocket_remove_node(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/replace_failed_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
         vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
             vol.Coerce(int),
             vol.In(
@@ -1107,18 +1141,16 @@ async def websocket_remove_node(
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_entry
+@async_get_node
 async def websocket_replace_failed_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-    driver: Driver,
+    node: Node,
 ) -> None:
     """Replace a failed node with a new node."""
-    controller = driver.controller
-    node_id = msg[NODE_ID]
+    assert node.client.driver
+    controller = node.client.driver.controller
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
     force_security = msg.get(FORCE_SECURITY)
     provisioning = (
@@ -1232,7 +1264,7 @@ async def websocket_replace_failed_node(
 
     try:
         result = await controller.async_replace_failed_node(
-            controller.nodes[node_id],
+            node,
             INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
             force_security=force_security,
             provisioning=provisioning,
@@ -1842,6 +1874,26 @@ async def websocket_abort_firmware_update(
     connection.send_result(msg[ID])
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/is_node_firmware_update_in_progress",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_is_node_firmware_update_in_progress(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Get whether firmware update is in progress for given node."""
+    connection.send_result(msg[ID], await node.async_is_firmware_update_in_progress())
+
+
 def _get_firmware_update_progress_dict(
     progress: FirmwareUpdateProgress,
 ) -> dict[str, int]:
@@ -1922,6 +1974,51 @@ async def websocket_subscribe_firmware_update_status(
         )
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_firmware_update_capabilities",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_get_firmware_update_capabilities(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Abort a firmware update."""
+    capabilities = await node.async_get_firmware_update_capabilities()
+    connection.send_result(msg[ID], capabilities.to_dict())
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/is_any_ota_firmware_update_in_progress",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_is_any_ota_firmware_update_in_progress(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Get whether any firmware updates are in progress."""
+    connection.send_result(
+        msg[ID], await driver.controller.async_is_any_ota_firmware_update_in_progress()
+    )
+
+
 class FirmwareUploadView(HomeAssistantView):
     """View to upload firmware."""
 
@@ -1946,16 +2043,6 @@ class FirmwareUploadView(HomeAssistantView):
                 raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
 
-        if not self._dev_reg:
-            self._dev_reg = dr.async_get(hass)
-        device = self._dev_reg.async_get(device_id)
-        assert device
-        entry = next(
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device.config_entries
-        )
-
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
 
@@ -1964,18 +2051,23 @@ class FirmwareUploadView(HomeAssistantView):
         if "file" not in data or not isinstance(data["file"], web_request.FileField):
             raise web_exceptions.HTTPBadRequest
 
+        target = None
+        if "target" in data:
+            target = int(cast(str, data["target"]))
+
         uploaded_file: web_request.FileField = data["file"]
 
         try:
             await begin_firmware_update(
-                entry.data[CONF_URL],
+                node.client.ws_server_url,
                 node,
                 uploaded_file.filename,
                 await hass.async_add_executor_job(uploaded_file.file.read),
                 async_get_clientsession(hass),
+                target=target,
             )
         except BaseZwaveJSServerError as err:
-            raise web_exceptions.HTTPBadRequest from err
+            raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
 
         return self.json(None)
 

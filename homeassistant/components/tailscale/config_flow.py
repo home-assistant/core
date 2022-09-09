@@ -1,6 +1,7 @@
 """Config flow to configure the Tailscale integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from tailscale import Tailscale, TailscaleAuthenticationError, TailscaleError
@@ -81,7 +82,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Tailscale."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

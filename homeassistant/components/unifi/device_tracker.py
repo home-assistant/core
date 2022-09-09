@@ -19,7 +19,7 @@ from aiounifi.events import (
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,7 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
-from .unifi_client import UniFiClient
+from .controller import UniFiController
+from .unifi_client import UniFiClientBase
 from .unifi_entity_base import UniFiBase
 
 LOGGER = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
     @callback
@@ -144,7 +145,7 @@ def add_device_entities(controller, async_add_entities, devices):
         async_add_entities(trackers)
 
 
-class UniFiClientTracker(UniFiClient, ScannerEntity):
+class UniFiClientTracker(UniFiClientBase, ScannerEntity):
     """Representation of a network client."""
 
     DOMAIN = DOMAIN
@@ -262,11 +263,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self._async_log_debug_data("make_disconnected")
 
     @property
-    def device_info(self) -> None:
-        """Return no device info."""
-        return None
-
-    @property
     def is_connected(self):
         """Return true if the client is connected to the network."""
         if (
@@ -280,9 +276,9 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         return self._is_connected
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type of the client."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def unique_id(self) -> str:
@@ -410,9 +406,9 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         return self._is_connected
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type of the device."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def name(self) -> str:

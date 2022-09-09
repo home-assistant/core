@@ -18,7 +18,7 @@
             "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie",
             "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Przerwij parowanie we wszystkich kontrolerach lub spr\u00f3buj ponownie uruchomi\u0107 urz\u0105dzenie, a nast\u0119pnie wzn\u00f3w parowanie",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Zezwalaj na parowanie z niezabezpieczonymi kodami konfiguracji.",
                     "pairing_code": "Kod parowania"
                 },
-                "description": "Kontroler HomeKit komunikuje si\u0119 z {name} poprzez sie\u0107 lokaln\u0105 za pomoc\u0105 bezpiecznego, szyfrowanego po\u0142\u0105czenia bez oddzielnego kontrolera HomeKit lub iCloud. Wprowad\u017a kod parowania (w formacie XXX-XX-XXX), aby u\u017cy\u0107 tego akcesorium. Ten kod zazwyczaj znajduje si\u0119 na samym urz\u0105dzeniu lub w jego opakowaniu.",
+                "description": "Kontroler HomeKit komunikuje si\u0119 z {name} ({category}) poprzez sie\u0107 lokaln\u0105 za pomoc\u0105 bezpiecznego, szyfrowanego po\u0142\u0105czenia bez oddzielnego kontrolera HomeKit lub iCloud. Wprowad\u017a kod parowania (w formacie XXX-XX-XXX), aby u\u017cy\u0107 tego akcesorium. Ten kod zazwyczaj znajduje si\u0119 na samym urz\u0105dzeniu lub w jego opakowaniu.",
                 "title": "Sparuj z urz\u0105dzeniem poprzez akcesorium HomeKit"
             },
             "protocol_error": {

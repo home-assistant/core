@@ -1194,6 +1194,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capability_attributes={"max": 100},
         device_class="mock-device-class",
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         icon="nice:icon",
         name="best name",
         supported_features=5,
@@ -1213,6 +1214,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capabilities={"max": 100},
         device_class=None,
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         icon=None,
         id=ANY,
         name=None,
@@ -1392,3 +1394,49 @@ class SlowEntity(MockEntity):
         """Make sure control is returned to the event loop on add."""
         await asyncio.sleep(0.1)
         await super().async_added_to_hass()
+
+
+@pytest.mark.parametrize(
+    "has_entity_name, entity_name, expected_entity_id",
+    (
+        (False, "Entity Blu", "test_domain.entity_blu"),
+        (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        (True, "Entity Blu", "test_domain.device_bla_entity_blu"),
+        (True, None, "test_domain.device_bla"),
+    ),
+)
+async def test_entity_name_influences_entity_id(
+    hass, has_entity_name, entity_name, expected_entity_id
+):
+    """Test entity_id is influenced by entity name."""
+    registry = er.async_get(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=has_entity_name,
+                    name=entity_name,
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert registry.async_get(expected_entity_id) is not None

@@ -10,17 +10,14 @@ from pytest import approx
 
 from homeassistant import loader
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import (
-    StatisticsMeta,
-    process_timestamp_to_utc_isoformat,
-)
+from homeassistant.components.recorder.db_schema import StatisticsMeta
+from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -79,24 +76,32 @@ def set_time_zone():
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,mean,min,max",
+    "device_class,state_unit,display_unit,statistics_unit,mean,min,max",
     [
-        (None, "%", "%", 13.050847, -10, 30),
-        ("battery", "%", "%", 13.050847, -10, 30),
-        ("battery", None, None, 13.050847, -10, 30),
-        ("humidity", "%", "%", 13.050847, -10, 30),
-        ("humidity", None, None, 13.050847, -10, 30),
-        ("pressure", "Pa", "Pa", 13.050847, -10, 30),
-        ("pressure", "hPa", "Pa", 1305.0847, -1000, 3000),
-        ("pressure", "mbar", "Pa", 1305.0847, -1000, 3000),
-        ("pressure", "inHg", "Pa", 44195.25, -33863.89, 101591.67),
-        ("pressure", "psi", "Pa", 89982.42, -68947.57, 206842.71),
-        ("temperature", "°C", "°C", 13.050847, -10, 30),
-        ("temperature", "°F", "°C", -10.52731, -23.33333, -1.111111),
+        (None, "%", "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, None, 13.050847, -10, 30),
+        ("humidity", "%", "%", "%", 13.050847, -10, 30),
+        ("humidity", None, None, None, 13.050847, -10, 30),
+        ("pressure", "Pa", "Pa", "Pa", 13.050847, -10, 30),
+        ("pressure", "hPa", "Pa", "Pa", 1305.0847, -1000, 3000),
+        ("pressure", "mbar", "Pa", "Pa", 1305.0847, -1000, 3000),
+        ("pressure", "inHg", "Pa", "Pa", 44195.25, -33863.89, 101591.67),
+        ("pressure", "psi", "Pa", "Pa", 89982.42, -68947.57, 206842.71),
+        ("temperature", "°C", "°C", "°C", 13.050847, -10, 30),
+        ("temperature", "°F", "°C", "°C", -10.52731, -23.33333, -1.111111),
     ],
 )
 def test_compile_hourly_statistics(
-    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    mean,
+    min,
+    max,
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -106,7 +111,7 @@ def test_compile_hourly_statistics(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
@@ -118,11 +123,12 @@ def test_compile_hourly_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -145,13 +151,13 @@ def test_compile_hourly_statistics(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit",
+    "device_class,state_unit,display_unit,statistics_unit",
     [
-        (None, "%", "%"),
+        (None, "%", "%", "%"),
     ],
 )
 def test_compile_hourly_statistics_purged_state_changes(
-    hass_recorder, caplog, device_class, unit, native_unit
+    hass_recorder, caplog, device_class, state_unit, display_unit, statistics_unit
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -161,7 +167,7 @@ def test_compile_hourly_statistics_purged_state_changes(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
@@ -184,12 +190,13 @@ def test_compile_hourly_statistics_purged_state_changes(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": display_unit,
             "statistic_id": "sensor.test1",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -253,27 +260,30 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "°C",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "°C",
+            "statistics_unit_of_measurement": "°C",
         },
         {
             "statistic_id": "sensor.test6",
+            "display_unit_of_measurement": "°C",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "°C",
+            "statistics_unit_of_measurement": "°C",
         },
         {
             "statistic_id": "sensor.test7",
+            "display_unit_of_measurement": "°C",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "°C",
+            "statistics_unit_of_measurement": "°C",
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -323,20 +333,20 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "units,device_class,unit,display_unit,factor",
+    "units,device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", 1),
-        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
-        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", 1),
-        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", 1),
-        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", 35.314666711),
-        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", 1),
-        (METRIC_SYSTEM, "energy", "kWh", "kWh", 1),
-        (METRIC_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
-        (METRIC_SYSTEM, "monetary", "EUR", "EUR", 1),
-        (METRIC_SYSTEM, "monetary", "SEK", "SEK", 1),
-        (METRIC_SYSTEM, "gas", "m³", "m³", 1),
-        (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466),
+        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", "kWh", 1),
+        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", "kWh", 1 / 1000),
+        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", "EUR", 1),
+        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", "SEK", 1),
+        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", "m³", 35.314666711),
+        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", "m³", 1),
+        (METRIC_SYSTEM, "energy", "kWh", "kWh", "kWh", 1),
+        (METRIC_SYSTEM, "energy", "Wh", "kWh", "kWh", 1 / 1000),
+        (METRIC_SYSTEM, "monetary", "EUR", "EUR", "EUR", 1),
+        (METRIC_SYSTEM, "monetary", "SEK", "SEK", "SEK", 1),
+        (METRIC_SYSTEM, "gas", "m³", "m³", "m³", 1),
+        (METRIC_SYSTEM, "gas", "ft³", "m³", "m³", 0.0283168466),
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
@@ -347,8 +357,9 @@ async def test_compile_hourly_sum_statistics_amount(
     units,
     state_class,
     device_class,
-    unit,
+    state_unit,
     display_unit,
+    statistics_unit,
     factor,
 ):
     """Test compiling hourly statistics."""
@@ -364,7 +375,7 @@ async def test_compile_hourly_sum_statistics_amount(
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
         "last_reset": None,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
@@ -388,11 +399,12 @@ async def test_compile_hourly_sum_statistics_amount(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -499,18 +511,25 @@ async def test_compile_hourly_sum_statistics_amount(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
-        ("energy", "Wh", "kWh", 1 / 1000),
-        ("monetary", "EUR", "EUR", 1),
-        ("monetary", "SEK", "SEK", 1),
-        ("gas", "m³", "m³", 1),
-        ("gas", "ft³", "m³", 0.0283168466),
+        ("energy", "kWh", "kWh", "kWh", 1),
+        ("energy", "Wh", "kWh", "kWh", 1 / 1000),
+        ("monetary", "EUR", "EUR", "EUR", 1),
+        ("monetary", "SEK", "SEK", "SEK", 1),
+        ("gas", "m³", "m³", "m³", 1),
+        ("gas", "ft³", "m³", "m³", 0.0283168466),
     ],
 )
 def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    state_class,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    factor,
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -520,7 +539,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
         "last_reset": None,
     }
     seq = [10, 15, 15, 15, 20, 20, 20, 25]
@@ -569,11 +588,12 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -610,13 +630,20 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
+        ("energy", "kWh", "kWh", "kWh", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    state_class,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    factor,
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -626,7 +653,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
         "last_reset": None,
     }
     seq = [10, 15, 15, 15, 20, 20, 20, 25]
@@ -660,11 +687,12 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -689,13 +717,20 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
+        ("energy", "kWh", "kWh", "kWh", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_nan_inf_state(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    state_class,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    factor,
 ):
     """Test compiling hourly statistics with nan and inf states."""
     zero = dt_util.utcnow()
@@ -705,7 +740,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
         "last_reset": None,
     }
     seq = [10, math.nan, 15, 15, 20, math.inf, 20, 10]
@@ -735,11 +770,12 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -770,22 +806,22 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue",
         ),
         (
-            "sensor.today_energy",
+            "sensor.power_consumption",
             "from integration demo ",
             "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+demo%22",
         ),
         (
             "sensor.custom_sensor",
             "from integration test ",
-            "report it to the custom component author",
+            "report it to the custom integration author",
         ),
     ],
 )
 @pytest.mark.parametrize("state_class", ["total_increasing"])
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
+        ("energy", "kWh", "kWh", "kWh", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_negative_state(
@@ -796,8 +832,9 @@ def test_compile_hourly_sum_statistics_negative_state(
     warning_2,
     state_class,
     device_class,
-    unit,
-    native_unit,
+    state_unit,
+    display_unit,
+    statistics_unit,
     factor,
 ):
     """Test compiling hourly statistics with negative states."""
@@ -818,7 +855,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     seq = [15, 16, 15, 16, 20, -20, 20, 10]
 
@@ -846,11 +883,12 @@ def test_compile_hourly_sum_statistics_negative_state(
     statistic_ids = list_statistic_ids(hass)
     assert {
         "name": None,
+        "display_unit_of_measurement": display_unit,
         "has_mean": False,
         "has_sum": True,
         "source": "recorder",
         "statistic_id": entity_id,
-        "unit_of_measurement": native_unit,
+        "statistics_unit_of_measurement": statistics_unit,
     } in statistic_ids
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats[entity_id] == [
@@ -878,18 +916,24 @@ def test_compile_hourly_sum_statistics_negative_state(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
-        ("energy", "Wh", "kWh", 1 / 1000),
-        ("monetary", "EUR", "EUR", 1),
-        ("monetary", "SEK", "SEK", 1),
-        ("gas", "m³", "m³", 1),
-        ("gas", "ft³", "m³", 0.0283168466),
+        ("energy", "kWh", "kWh", "kWh", 1),
+        ("energy", "Wh", "kWh", "kWh", 1 / 1000),
+        ("monetary", "EUR", "EUR", "EUR", 1),
+        ("monetary", "SEK", "SEK", "SEK", 1),
+        ("gas", "m³", "m³", "m³", 1),
+        ("gas", "ft³", "m³", "m³", 0.0283168466),
     ],
 )
 def test_compile_hourly_sum_statistics_total_no_reset(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    factor,
 ):
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
@@ -902,7 +946,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     attributes = {
         "device_class": device_class,
         "state_class": "total",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
 
@@ -925,11 +969,12 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -974,16 +1019,22 @@ def test_compile_hourly_sum_statistics_total_no_reset(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "device_class,state_unit,display_unit,statistics_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
-        ("energy", "Wh", "kWh", 1 / 1000),
-        ("gas", "m³", "m³", 1),
-        ("gas", "ft³", "m³", 0.0283168466),
+        ("energy", "kWh", "kWh", "kWh", 1),
+        ("energy", "Wh", "kWh", "kWh", 1 / 1000),
+        ("gas", "m³", "m³", "m³", 1),
+        ("gas", "ft³", "m³", "m³", 0.0283168466),
     ],
 )
 def test_compile_hourly_sum_statistics_total_increasing(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    factor,
 ):
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
@@ -996,7 +1047,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     attributes = {
         "device_class": device_class,
         "state_class": "total_increasing",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
 
@@ -1019,11 +1070,12 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1071,11 +1123,17 @@ def test_compile_hourly_sum_statistics_total_increasing(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
-    [("energy", "kWh", "kWh", 1)],
+    "device_class,state_unit,display_unit,statistics_unit,factor",
+    [("energy", "kWh", "kWh", "kWh", 1)],
 )
 def test_compile_hourly_sum_statistics_total_increasing_small_dip(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    factor,
 ):
     """Test small dips in sensor readings do not trigger a reset."""
     period0 = dt_util.utcnow()
@@ -1088,7 +1146,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     attributes = {
         "device_class": device_class,
         "state_class": "total_increasing",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
 
@@ -1124,11 +1182,12 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1217,11 +1276,12 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1308,27 +1368,30 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         },
         {
             "statistic_id": "sensor.test2",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         },
         {
             "statistic_id": "sensor.test3",
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         },
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1443,7 +1506,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,value",
+    "device_class,state_unit,value",
     [
         ("battery", "%", 30),
         ("battery", None, 30),
@@ -1459,7 +1522,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     ],
 )
 def test_compile_hourly_statistics_unchanged(
-    hass_recorder, caplog, device_class, unit, value
+    hass_recorder, caplog, device_class, state_unit, value
 ):
     """Test compiling hourly statistics, with no changes during the hour."""
     zero = dt_util.utcnow()
@@ -1469,7 +1532,7 @@ def test_compile_hourly_statistics_unchanged(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
@@ -1530,7 +1593,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,value",
+    "device_class,state_unit,value",
     [
         ("battery", "%", 30),
         ("battery", None, 30),
@@ -1546,7 +1609,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     ],
 )
 def test_compile_hourly_statistics_unavailable(
-    hass_recorder, caplog, device_class, unit, value
+    hass_recorder, caplog, device_class, state_unit, value
 ):
     """Test compiling hourly statistics, with the sensor being unavailable."""
     zero = dt_util.utcnow()
@@ -1556,7 +1619,7 @@ def test_compile_hourly_statistics_unavailable(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states_partially_unavailable(
         hass, zero, "sensor.test1", attributes
@@ -1603,35 +1666,42 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "state_class,device_class,unit,native_unit,statistic_type",
+    "state_class,device_class,state_unit,display_unit,statistics_unit,statistic_type",
     [
-        ("measurement", "battery", "%", "%", "mean"),
-        ("measurement", "battery", None, None, "mean"),
-        ("total", "energy", "Wh", "kWh", "sum"),
-        ("total", "energy", "kWh", "kWh", "sum"),
-        ("measurement", "energy", "Wh", "kWh", "mean"),
-        ("measurement", "energy", "kWh", "kWh", "mean"),
-        ("measurement", "humidity", "%", "%", "mean"),
-        ("measurement", "humidity", None, None, "mean"),
-        ("total", "monetary", "USD", "USD", "sum"),
-        ("total", "monetary", "None", "None", "sum"),
-        ("total", "gas", "m³", "m³", "sum"),
-        ("total", "gas", "ft³", "m³", "sum"),
-        ("measurement", "monetary", "USD", "USD", "mean"),
-        ("measurement", "monetary", "None", "None", "mean"),
-        ("measurement", "gas", "m³", "m³", "mean"),
-        ("measurement", "gas", "ft³", "m³", "mean"),
-        ("measurement", "pressure", "Pa", "Pa", "mean"),
-        ("measurement", "pressure", "hPa", "Pa", "mean"),
-        ("measurement", "pressure", "mbar", "Pa", "mean"),
-        ("measurement", "pressure", "inHg", "Pa", "mean"),
-        ("measurement", "pressure", "psi", "Pa", "mean"),
-        ("measurement", "temperature", "°C", "°C", "mean"),
-        ("measurement", "temperature", "°F", "°C", "mean"),
+        ("measurement", "battery", "%", "%", "%", "mean"),
+        ("measurement", "battery", None, None, None, "mean"),
+        ("total", "energy", "Wh", "kWh", "kWh", "sum"),
+        ("total", "energy", "kWh", "kWh", "kWh", "sum"),
+        ("measurement", "energy", "Wh", "kWh", "kWh", "mean"),
+        ("measurement", "energy", "kWh", "kWh", "kWh", "mean"),
+        ("measurement", "humidity", "%", "%", "%", "mean"),
+        ("measurement", "humidity", None, None, None, "mean"),
+        ("total", "monetary", "USD", "USD", "USD", "sum"),
+        ("total", "monetary", "None", "None", "None", "sum"),
+        ("total", "gas", "m³", "m³", "m³", "sum"),
+        ("total", "gas", "ft³", "m³", "m³", "sum"),
+        ("measurement", "monetary", "USD", "USD", "USD", "mean"),
+        ("measurement", "monetary", "None", "None", "None", "mean"),
+        ("measurement", "gas", "m³", "m³", "m³", "mean"),
+        ("measurement", "gas", "ft³", "m³", "m³", "mean"),
+        ("measurement", "pressure", "Pa", "Pa", "Pa", "mean"),
+        ("measurement", "pressure", "hPa", "Pa", "Pa", "mean"),
+        ("measurement", "pressure", "mbar", "Pa", "Pa", "mean"),
+        ("measurement", "pressure", "inHg", "Pa", "Pa", "mean"),
+        ("measurement", "pressure", "psi", "Pa", "Pa", "mean"),
+        ("measurement", "temperature", "°C", "°C", "°C", "mean"),
+        ("measurement", "temperature", "°F", "°C", "°C", "mean"),
     ],
 )
 def test_list_statistic_ids(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, statistic_type
+    hass_recorder,
+    caplog,
+    state_class,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    statistic_type,
 ):
     """Test listing future statistic ids."""
     hass = hass_recorder()
@@ -1641,18 +1711,19 @@ def test_list_statistic_ids(
         "device_class": device_class,
         "last_reset": 0,
         "state_class": state_class,
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     hass.states.set("sensor.test1", 0, attributes=attributes)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": statistic_type == "mean",
             "has_sum": statistic_type == "sum",
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         },
     ]
     for stat_type in ["mean", "sum", "dogs"]:
@@ -1661,11 +1732,12 @@ def test_list_statistic_ids(
             assert statistic_ids == [
                 {
                     "statistic_id": "sensor.test1",
+                    "display_unit_of_measurement": display_unit,
                     "has_mean": statistic_type == "mean",
                     "has_sum": statistic_type == "sum",
                     "name": None,
                     "source": "recorder",
-                    "unit_of_measurement": native_unit,
+                    "statistics_unit_of_measurement": statistics_unit,
                 },
             ]
         else:
@@ -1700,16 +1772,24 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,mean,min,max",
+    "device_class,state_unit,display_unit,statistics_unit,mean,min,max",
     [
-        (None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", 13.050847, -10, 30),
-        ("battery", "%", "%", 13.050847, -10, 30),
-        ("battery", None, None, 13.050847, -10, 30),
+        (None, None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_1(
-    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    mean,
+    min,
+    max,
 ):
     """Test compiling hourly statistics where units change from one hour to the next."""
     zero = dt_util.utcnow()
@@ -1719,7 +1799,7 @@ def test_compile_hourly_statistics_changing_units_1(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     attributes["unit_of_measurement"] = "cats"
@@ -1741,11 +1821,12 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1769,17 +1850,18 @@ def test_compile_hourly_statistics_changing_units_1(
     wait_recording_done(hass)
     assert (
         "The unit of sensor.test1 (cats) does not match the unit of already compiled "
-        f"statistics ({native_unit})" in caplog.text
+        f"statistics ({display_unit})" in caplog.text
     )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1802,16 +1884,24 @@ def test_compile_hourly_statistics_changing_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,mean,min,max",
+    "device_class,state_unit,display_unit,statistics_unit,mean,min,max",
     [
-        (None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", 13.050847, -10, 30),
-        ("battery", "%", "%", 13.050847, -10, 30),
-        ("battery", None, None, 13.050847, -10, 30),
+        (None, None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_2(
-    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    mean,
+    min,
+    max,
 ):
     """Test compiling hourly statistics where units change during an hour."""
     zero = dt_util.utcnow()
@@ -1821,7 +1911,7 @@ def test_compile_hourly_statistics_changing_units_2(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     attributes["unit_of_measurement"] = "cats"
@@ -1840,11 +1930,12 @@ def test_compile_hourly_statistics_changing_units_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "cats",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "cats",
+            "statistics_unit_of_measurement": "cats",
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1854,16 +1945,24 @@ def test_compile_hourly_statistics_changing_units_2(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,mean,min,max",
+    "device_class,state_unit,display_unit,statistics_unit,mean,min,max",
     [
-        (None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", 13.050847, -10, 30),
-        ("battery", "%", "%", 13.050847, -10, 30),
-        ("battery", None, None, 13.050847, -10, 30),
+        (None, None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_3(
-    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    mean,
+    min,
+    max,
 ):
     """Test compiling hourly statistics where units change from one hour to the next."""
     zero = dt_util.utcnow()
@@ -1873,7 +1972,7 @@ def test_compile_hourly_statistics_changing_units_3(
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     four, _states = record_states(
@@ -1895,11 +1994,12 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1922,16 +2022,19 @@ def test_compile_hourly_statistics_changing_units_3(
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" in caplog.text
-    assert f"matches the unit of already compiled statistics ({unit})" in caplog.text
+    assert (
+        f"matches the unit of already compiled statistics ({state_unit})" in caplog.text
+    )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": native_unit,
+            "statistics_unit_of_measurement": statistics_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1982,11 +2085,12 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": state_unit,
+            "statistics_unit_of_measurement": state_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2030,11 +2134,12 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": state_unit,
+            "statistics_unit_of_measurement": state_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2086,11 +2191,12 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": statistic_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": statistic_unit,
+            "statistics_unit_of_measurement": statistic_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2134,11 +2240,12 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": statistic_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": statistic_unit,
+            "statistics_unit_of_measurement": statistic_unit,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2161,13 +2268,21 @@ def test_compile_hourly_statistics_changing_device_class_2(
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,mean,min,max",
+    "device_class,state_unit,display_unit,statistics_unit,mean,min,max",
     [
-        (None, None, None, 13.050847, -10, 30),
+        (None, None, None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_statistics(
-    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    mean,
+    min,
+    max,
 ):
     """Test compiling hourly statistics where units change during an hour."""
     period0 = dt_util.utcnow()
@@ -2179,12 +2294,12 @@ def test_compile_hourly_statistics_changing_statistics(
     attributes_1 = {
         "device_class": device_class,
         "state_class": "measurement",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     attributes_2 = {
         "device_class": device_class,
         "state_class": "total_increasing",
-        "unit_of_measurement": unit,
+        "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, period0, "sensor.test1", attributes_1)
     do_adhoc_statistics(hass, start=period0)
@@ -2193,11 +2308,12 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": None,
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": None,
+            "statistics_unit_of_measurement": None,
         },
     ]
     metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
@@ -2227,11 +2343,12 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": None,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": None,
+            "statistics_unit_of_measurement": None,
         },
     ]
     metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
@@ -2287,12 +2404,12 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
     )
     with patch(
-        "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
+        "homeassistant.components.recorder.db_schema.dt_util.utcnow", return_value=zero
     ):
         hass = hass_recorder()
         # Remove this after dropping the use of the hass_recorder fixture
         hass.config.set_time_zone("America/Regina")
-    recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -2419,35 +2536,39 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "%",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "%",
+            "statistics_unit_of_measurement": "%",
         },
         {
             "statistic_id": "sensor.test2",
+            "display_unit_of_measurement": "%",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "%",
+            "statistics_unit_of_measurement": "%",
         },
         {
             "statistic_id": "sensor.test3",
+            "display_unit_of_measurement": "%",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "%",
+            "statistics_unit_of_measurement": "%",
         },
         {
             "statistic_id": "sensor.test4",
+            "display_unit_of_measurement": "EUR",
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "EUR",
+            "statistics_unit_of_measurement": "EUR",
         },
     ]
 
@@ -2456,7 +2577,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     sum_adjustement_start = zero + timedelta(minutes=65)
     for i in range(13, 24):
         expected_sums["sensor.test4"][i] += sum_adjustment
-    recorder.async_adjust_statistics(
+    instance.async_adjust_statistics(
         "sensor.test4", sum_adjustement_start, sum_adjustment
     )
     wait_recording_done(hass)

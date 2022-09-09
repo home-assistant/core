@@ -109,11 +109,11 @@ class KebaSensor(SensorEntity):
         self._attributes: dict[str, str] = {}
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the binary sensor."""
         return self._attributes
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get latest cached states from the device."""
         self._attr_native_value = self._keba.get_value(self.entity_description.key)
 
@@ -128,10 +128,10 @@ class KebaSensor(SensorEntity):
         elif self.entity_description.key == "Curr user":
             self._attributes["max_current_hardware"] = self._keba.get_value("Curr HW")
 
-    def update_callback(self):
+    def update_callback(self) -> None:
         """Schedule a state update."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

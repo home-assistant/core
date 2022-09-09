@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -29,8 +28,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 
 NOTIFICATION_SMOKE_ALARM = "1"
@@ -93,7 +90,7 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
         key=NOTIFICATION_CARBON_MONOOXIDE,
         states=("1", "2"),
-        device_class=BinarySensorDeviceClass.GAS,
+        device_class=BinarySensorDeviceClass.CO,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - All other State Id's

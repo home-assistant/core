@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlparse
 
@@ -71,6 +70,36 @@ class AddEntitiesCallback(Protocol):
         """Define add_entities type."""
 
 
+class EntityPlatformModule(Protocol):
+    """Protocol type for entity platform modules."""
+
+    async def async_setup_platform(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up an integration platform async."""
+
+    def setup_platform(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up an integration platform."""
+
+    async def async_setup_entry(
+        self,
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up an integration platform from a config entry."""
+
+
 class EntityPlatform:
     """Manage the entities for a single platform."""
 
@@ -81,7 +110,7 @@ class EntityPlatform:
         logger: Logger,
         domain: str,
         platform_name: str,
-        platform: ModuleType | None,
+        platform: EntityPlatformModule | None,
         scan_interval: timedelta,
         entity_namespace: str | None,
     ) -> None:
@@ -95,7 +124,7 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
-        self._tasks: list[asyncio.Future] = []
+        self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
         # Method to cancel the state change listener
@@ -169,10 +198,12 @@ class EntityPlatform:
             return
 
         @callback
-        def async_create_setup_task() -> Coroutine:
+        def async_create_setup_task() -> Coroutine[
+            Any, Any, None
+        ] | asyncio.Future[None]:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
+                return platform.async_setup_platform(  # type: ignore[union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -181,7 +212,7 @@ class EntityPlatform:
 
             # This should not be replaced with hass.async_add_job because
             # we don't want to track this task in case it blocks startup.
-            return hass.loop.run_in_executor(  # type: ignore[return-value]
+            return hass.loop.run_in_executor(
                 None,
                 platform.setup_platform,  # type: ignore[union-attr]
                 hass,
@@ -211,17 +242,18 @@ class EntityPlatform:
         platform = self.platform
 
         @callback
-        def async_create_setup_task() -> Coroutine:
+        def async_create_setup_task() -> Coroutine[Any, Any, None]:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
-            return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
-                self.hass, config_entry, self._async_schedule_add_entities
+
+            return platform.async_setup_entry(  # type: ignore[union-attr]
+                self.hass, config_entry, self._async_schedule_add_entities_for_entry
             )
 
         return await self._async_setup_platform(async_create_setup_task)
 
     async def _async_setup_platform(
-        self, async_create_setup_task: Callable[[], Coroutine], tries: int = 0
+        self, async_create_setup_task: Callable[[], Awaitable[None]], tries: int = 0
     ) -> bool:
         """Set up a platform via config file or config entry.
 
@@ -334,6 +366,20 @@ class EntityPlatform:
         if not self._setup_complete:
             self._tasks.append(task)
 
+    @callback
+    def _async_schedule_add_entities_for_entry(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Schedule adding entities for a single platform async and track the task."""
+        assert self.config_entry
+        task = self.config_entry.async_create_task(
+            self.hass,
+            self.async_add_entities(new_entities, update_before_add=update_before_add),
+        )
+
+        if not self._setup_complete:
+            self._tasks.append(task)
+
     def add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
@@ -440,15 +486,6 @@ class EntityPlatform:
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
-            if entity.entity_id is not None:
-                requested_entity_id = entity.entity_id
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                suggested_object_id = entity.name  # type: ignore[unreachable]
-
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
-
             if self.config_entry is not None:
                 config_entry_id: str | None = self.config_entry.entry_id
             else:
@@ -503,6 +540,22 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
+            if entity.entity_id is not None:
+                requested_entity_id = entity.entity_id
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+            else:
+                if device and entity.has_entity_name:  # type: ignore[unreachable]
+                    device_name = device.name_by_user or device.name
+                    if not entity.name:
+                        suggested_object_id = device_name
+                    else:
+                        suggested_object_id = f"{device_name} {entity.name}"
+                if not suggested_object_id:
+                    suggested_object_id = entity.name
+
+            if self.entity_namespace is not None:
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
+
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
@@ -522,6 +575,7 @@ class EntityPlatform:
                 entity_category=entity.entity_category,
                 hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
+                has_entity_name=entity.has_entity_name,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity.name,
@@ -678,7 +732,7 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict | vol.Schema,
+        schema: dict[str, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
     ) -> None:
@@ -730,7 +784,7 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            tasks = []
+            tasks: list[Coroutine[Any, Any, None]] = []
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue

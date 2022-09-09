@@ -1,8 +1,6 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
-import logging
-
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -12,11 +10,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id
-
-LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
 EVENT_VALUE_REMOVED = "value removed"

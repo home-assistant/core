@@ -1,0 +1,79 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "duplicate_persistence_file": "Persistensfil anv\u00e4nds redan",
+            "duplicate_topic": "\u00c4mnet anv\u00e4nds redan",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_device": "Ogiltig enhet",
+            "invalid_ip": "Ogiltig IP-adress",
+            "invalid_persistence_file": "Ogiltig persistensfil",
+            "invalid_port": "Ogiltigt portnummer",
+            "invalid_publish_topic": "Ogiltigt \u00e4mne f\u00f6r publicering",
+            "invalid_serial": "Ogiltig serieport",
+            "invalid_subscribe_topic": "Ogiltigt \u00e4mne f\u00f6r prenumeration",
+            "invalid_version": "Ogiltig version av MySensors",
+            "not_a_number": "Ange ett nummer",
+            "port_out_of_range": "Portnummer m\u00e5ste vara minst 1 och h\u00f6gst 65535",
+            "same_topic": "\u00c4mnen f\u00f6r prenumeration och publicering \u00e4r desamma",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "duplicate_persistence_file": "Persistensfil anv\u00e4nds redan",
+            "duplicate_topic": "\u00c4mnet anv\u00e4nds redan",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_device": "Ogiltig enhet",
+            "invalid_ip": "Ogiltig IP-adress",
+            "invalid_persistence_file": "Ogiltig persistensfil",
+            "invalid_port": "Ogiltigt portnummer",
+            "invalid_publish_topic": "Ogiltigt \u00e4mne f\u00f6r publicering",
+            "invalid_serial": "Ogiltig serieport",
+            "invalid_subscribe_topic": "Ogiltigt \u00e4mne f\u00f6r prenumeration",
+            "invalid_version": "Ogiltig version av MySensors",
+            "mqtt_required": "MQTT-integrationen \u00e4r inte konfigurerad",
+            "not_a_number": "Ange ett nummer",
+            "port_out_of_range": "Portnummer m\u00e5ste vara minst 1 och h\u00f6gst 65535",
+            "same_topic": "\u00c4mnen f\u00f6r prenumeration och publicering \u00e4r desamma",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "persistensfil (l\u00e4mna tom f\u00f6r att automatiskt generera)",
+                    "retain": "mqtt beh\u00e5ller",
+                    "topic_in_prefix": "prefix f\u00f6r inmatnings\u00e4mnen (topic_in_prefix)",
+                    "topic_out_prefix": "prefix f\u00f6r utdata\u00e4mnen (topic_out_prefix)",
+                    "version": "MySensors version"
+                },
+                "description": "MQTT-gateway-inst\u00e4llning"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "baudhastighet",
+                    "device": "Serieport",
+                    "persistence_file": "persistensfil (l\u00e4mna tom f\u00f6r att automatiskt generera)",
+                    "version": "MySensors version"
+                },
+                "description": "Seriell gateway-inst\u00e4llning"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "IP-adress f\u00f6r gatewayen",
+                    "persistence_file": "persistensfil (l\u00e4mna tom f\u00f6r att automatiskt generera)",
+                    "tcp_port": "port",
+                    "version": "MySensors version"
+                },
+                "description": "Ethernet-gateway-inst\u00e4llning"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "Gateway typ"
+                },
+                "description": "V\u00e4lj anslutningsmetod till gatewayen"
+            }
+        }
+    }
+}

@@ -287,7 +287,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up an iOS entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
     hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))

@@ -2,15 +2,16 @@
   "system_health": {
     "info": {
       "arch": "CPU Architecture",
+      "config_dir": "Configuration Directory",
       "dev": "Development",
       "docker": "Docker",
-      "user": "User",
       "hassio": "Supervisor",
       "installation_type": "Installation Type",
       "os_name": "Operating System Family",
       "os_version": "Operating System Version",
       "python_version": "Python Version",
       "timezone": "Timezone",
+      "user": "User",
       "version": "Version",
       "virtualenv": "Virtual Environment"
     }

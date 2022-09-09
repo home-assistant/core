@@ -59,8 +59,8 @@ async def test_connectsense_setup(hass):
                     state="379.69299",
                 ),
                 EntityTestInfo(
-                    entity_id="switch.inwall_outlet_0394de",
-                    friendly_name="InWall Outlet-0394DE",
+                    entity_id="switch.inwall_outlet_0394de_outlet_a",
+                    friendly_name="InWall Outlet-0394DE Outlet A",
                     unique_id="homekit-1020301376-13",
                     state="on",
                 ),
@@ -89,8 +89,8 @@ async def test_connectsense_setup(hass):
                     state="175.85001",
                 ),
                 EntityTestInfo(
-                    entity_id="switch.inwall_outlet_0394de_2",
-                    friendly_name="InWall Outlet-0394DE",
+                    entity_id="switch.inwall_outlet_0394de_outlet_b",
+                    friendly_name="InWall Outlet-0394DE Outlet B",
                     unique_id="homekit-1020301376-25",
                     state="on",
                 ),

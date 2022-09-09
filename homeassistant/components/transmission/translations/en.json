@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -9,6 +10,13 @@
             "name_exists": "Name already exists"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password for {username} is invalid.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",

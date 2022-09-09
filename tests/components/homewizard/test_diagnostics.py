@@ -41,6 +41,8 @@ async def test_diagnostics(
                 "active_power_l3_w": 123.456,
                 "total_gas_m3": 1122.333,
                 "gas_timestamp": "2021-03-14T11:22:33",
+                "active_liter_lpm": 12.345,
+                "total_liter_m3": 1234.567,
             },
             "state": {"power_on": True, "switch_lock": False, "brightness": 255},
         },

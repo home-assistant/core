@@ -232,7 +232,9 @@ async def test_sync_in_area(area_on_device, hass, registries):
         "1235",
         suggested_object_id="demo_light",
         device_id=device.id,
-        area_id=area.id if not area_on_device else None,
+    )
+    entity = registries.entity.async_update_entity(
+        entity.entity_id, area_id=area.id if not area_on_device else None
     )
 
     light = DemoLight(
@@ -1026,7 +1028,7 @@ async def test_device_class_switch(hass, device_class, google_type):
         ("garage_door", "action.devices.types.GARAGE"),
         ("lock", "action.devices.types.SENSOR"),
         ("opening", "action.devices.types.SENSOR"),
-        ("window", "action.devices.types.SENSOR"),
+        ("window", "action.devices.types.WINDOW"),
     ],
 )
 async def test_device_class_binary_sensor(hass, device_class, google_type):

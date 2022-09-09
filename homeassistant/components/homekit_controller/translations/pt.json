@@ -48,7 +48,8 @@
             "button6": "Bot\u00e3o 6",
             "button7": "Bot\u00e3o 7",
             "button8": "Bot\u00e3o 8",
-            "button9": "Bot\u00e3o 9"
+            "button9": "Bot\u00e3o 9",
+            "doorbell": "Campainha"
         },
         "trigger_type": {
             "single_press": "\"{subtype}\" pressionado"

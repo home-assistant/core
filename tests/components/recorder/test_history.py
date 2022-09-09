@@ -12,14 +12,13 @@ from sqlalchemy import text
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     Events,
-    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import LazyState, process_timestamp
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -878,3 +877,32 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     assert db_sensor_one_states[0].last_updated is not None
     assert db_sensor_one_states[1].last_updated is not None
     assert db_sensor_one_states[0].last_updated != db_sensor_one_states[1].last_updated
+
+
+def test_state_changes_during_period_multiple_entities_single_test(hass_recorder):
+    """Test state change during period with multiple entities in the same test.
+
+    This test ensures the sqlalchemy query cache does not
+    generate incorrect results.
+    """
+    hass = hass_recorder()
+    start = dt_util.utcnow()
+    test_entites = {f"sensor.{i}": str(i) for i in range(30)}
+    for entity_id, value in test_entites.items():
+        hass.states.set(entity_id, value)
+
+    wait_recording_done(hass)
+    end = dt_util.utcnow()
+
+    hist = history.state_changes_during_period(hass, start, end, None)
+    for entity_id, value in test_entites.items():
+        hist[entity_id][0].state == value
+
+    for entity_id, value in test_entites.items():
+        hist = history.state_changes_during_period(hass, start, end, entity_id)
+        assert len(hist) == 1
+        hist[entity_id][0].state == value
+
+    hist = history.state_changes_during_period(hass, start, end, None)
+    for entity_id, value in test_entites.items():
+        hist[entity_id][0].state == value

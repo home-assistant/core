@@ -1,7 +1,6 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import functools
 import logging
@@ -42,7 +41,7 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -133,7 +132,11 @@ async def async_setup_platform(
     """Set up MQTT sensors configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        sensor.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -144,14 +147,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, sensor.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_yaml_entities(hass, sensor.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -160,8 +156,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config: ConfigType, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up MQTT sensor."""
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
@@ -233,6 +233,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+        self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
@@ -349,11 +350,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def native_value(self):

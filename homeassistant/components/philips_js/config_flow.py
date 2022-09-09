@@ -23,7 +23,7 @@ from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME,
 
 async def _validate_input(
     hass: core.HomeAssistant, host: str, api_version: int
-) -> tuple[dict, PhilipsTV]:
+) -> PhilipsTV:
     """Validate the user input allows us to connect."""
     hub = PhilipsTV(host, api_version)
 
@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         super().__init__()
-        self._current = {}
+        self._current: dict[str, Any] = {}
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
 
@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Attempt to pair with device."""
         assert self._hub
 
-        errors = {}
+        errors: dict[str, str] = {}
         schema = vol.Schema(
             {
                 vol.Required(CONF_PIN): str,

@@ -1,6 +1,6 @@
 """Tests for the Google Assistant traits."""
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -1601,10 +1601,12 @@ async def test_fan_speed(hass):
     assert trt.sync_attributes() == {
         "reversible": False,
         "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
+        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
@@ -1614,6 +1616,143 @@ async def test_fan_speed(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
+
+
+async def test_fan_speed_without_percentage_step(hass):
+    """Test FanSpeed trait speed control percentage step for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "fan.living_room_fan",
+            STATE_ON,
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "reversible": False,
+        "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
+    }
+    # If a fan state has (temporary) no percentage_step attribute return 1 available
+    assert trt.query_attributes() == {
+        "currentFanSpeedPercent": 0,
+        "currentFanSpeedSetting": "1/5",
+    }
+
+
+@pytest.mark.parametrize(
+    "percentage,percentage_step, speed, speeds, percentage_result",
+    [
+        (
+            33,
+            1.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            40,
+            1.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            33,
+            100 / 3,
+            "1/3",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium", "2"],
+                ["High", "Max", "Fast", "3"],
+            ],
+            33,
+        ),
+        (
+            20,
+            100 / 4,
+            "1/4",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium High", "3"],
+                ["High", "Max", "Fast", "4"],
+            ],
+            25,
+        ),
+    ],
+)
+async def test_fan_speed_ordered(
+    hass,
+    percentage: int,
+    percentage_step: float,
+    speed: str,
+    speeds: list[list[str]],
+    percentage_result: int,
+):
+    """Test FanSpeed trait speed control support for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "fan.living_room_fan",
+            STATE_ON,
+            attributes={
+                "percentage": percentage,
+                "percentage_step": percentage_step,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "reversible": False,
+        "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": {
+            "ordered": True,
+            "speeds": [
+                {
+                    "speed_name": f"{idx+1}/{len(speeds)}",
+                    "speed_values": [{"lang": "en", "speed_synonym": x}],
+                }
+                for idx, x in enumerate(speeds)
+            ],
+        },
+    }
+
+    assert trt.query_attributes() == {
+        "currentFanSpeedPercent": percentage,
+        "currentFanSpeedSetting": speed,
+    }
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": speed})
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": speed}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "fan.living_room_fan",
+        "percentage": percentage_result,
+    }
 
 
 @pytest.mark.parametrize(
@@ -1647,10 +1786,12 @@ async def test_fan_reverse(hass, direction_state, direction_call):
     assert trt.sync_attributes() == {
         "reversible": True,
         "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
+        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_REVERSE, params={})

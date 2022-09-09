@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ez a NextDNS profil m\u00e1r be van \u00e1ll\u00edtva."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "profiles": {
+                "data": {
+                    "profile": "Profil"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API kulcs"
+                }
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Szerver el\u00e9r\u00e9se"
+        }
+    }
+}

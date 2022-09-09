@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "ipv6_not_supported": "IPv6 st\u00f6ds inte."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "{name} - {model} ( {ip_address} )",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vill du st\u00e4lla in {name} - {model} ( {ip_address} )?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP-adress"
+                }
+            }
+        }
+    }
+}

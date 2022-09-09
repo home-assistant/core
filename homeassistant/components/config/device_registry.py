@@ -1,12 +1,23 @@
 """HTTP views to interact with the device registry."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.decorators import require_admin
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components.websocket_api.messages import (
+    IDEN_JSON_TEMPLATE,
+    IDEN_TEMPLATE,
+    message_to_json,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceEntryDisabler, async_get
+from homeassistant.helpers.device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    DeviceEntryDisabler,
+    async_get,
+)
 
 WS_TYPE_LIST = "config/device_registry/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -29,6 +40,36 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 async def async_setup(hass):
     """Enable the Device Registry views."""
+
+    cached_list_devices: str | None = None
+
+    @callback
+    def _async_clear_list_device_cache(event: Event) -> None:
+        nonlocal cached_list_devices
+        cached_list_devices = None
+
+    @callback
+    def websocket_list_devices(hass, connection, msg):
+        """Handle list devices command."""
+        nonlocal cached_list_devices
+        if not cached_list_devices:
+            registry = async_get(hass)
+            cached_list_devices = message_to_json(
+                websocket_api.result_message(
+                    IDEN_TEMPLATE,
+                    [_entry_dict(entry) for entry in registry.devices.values()],
+                )
+            )
+        connection.send_message(
+            cached_list_devices.replace(IDEN_JSON_TEMPLATE, str(msg["id"]), 1)
+        )
+
+    hass.bus.async_listen(
+        EVENT_DEVICE_REGISTRY_UPDATED,
+        _async_clear_list_device_cache,
+        run_immediately=True,
+    )
+
     websocket_api.async_register_command(
         hass, WS_TYPE_LIST, websocket_list_devices, SCHEMA_WS_LIST
     )
@@ -39,17 +80,6 @@ async def async_setup(hass):
         hass, websocket_remove_config_entry_from_device
     )
     return True
-
-
-@callback
-def websocket_list_devices(hass, connection, msg):
-    """Handle list devices command."""
-    registry = async_get(hass)
-    connection.send_message(
-        websocket_api.result_message(
-            msg["id"], [_entry_dict(entry) for entry in registry.devices.values()]
-        )
-    )
 
 
 @require_admin
@@ -130,6 +160,7 @@ def _entry_dict(entry):
         "connections": list(entry.connections),
         "disabled_by": entry.disabled_by,
         "entry_type": entry.entry_type,
+        "hw_version": entry.hw_version,
         "id": entry.id,
         "identifiers": list(entry.identifiers),
         "manufacturer": entry.manufacturer,
@@ -137,6 +168,5 @@ def _entry_dict(entry):
         "name_by_user": entry.name_by_user,
         "name": entry.name,
         "sw_version": entry.sw_version,
-        "hw_version": entry.hw_version,
         "via_device_id": entry.via_device_id,
     }
