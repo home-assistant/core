@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from httpx import ConnectError, ReadTimeout, ConnectTimeout
+from httpx import ConnectError, ConnectTimeout, ReadTimeout
 from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
