@@ -285,7 +285,7 @@ async def async_setup_entry(
         description for description in SENSOR_TYPES if description.key in available_keys
     ]
     _LOGGER.debug(
-        "Identified %d  available sensors: %s",
+        "Identified %d available sensors: %s",
         len(available_sensors),
         ", ".join([sensor.key for sensor in available_sensors]),
     )
