@@ -136,8 +136,10 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._finished_event.set()
 
     @callback
-    def _reset_progress(self, write_state: bool = False) -> None:
-        """Reset update install progress."""
+    def _unsub_firmware_events_and_reset_progress(
+        self, write_state: bool = False
+    ) -> None:
+        """Unsubscribe from firmware events and reset update install progress."""
         if self._progress_unsub:
             self._progress_unsub()
             self._progress_unsub = None
@@ -211,7 +213,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         """Install an update."""
         firmware = self._latest_version_firmware
         assert firmware
-        self._reset_progress(True)
+        self._unsub_firmware_events_and_reset_progress(True)
         self._progress_unsub = self.node.on(
             "firmware update progress", self._update_progress
         )
@@ -224,7 +226,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                     self.node, file
                 )
             except BaseZwaveJSServerError as err:
-                self._reset_progress()
+                self._unsub_firmware_events_and_reset_progress()
                 raise HomeAssistantError(err) from err
             await self._finished_event.wait()
             assert self._finished_status is not None
@@ -234,7 +236,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 FirmwareUpdateStatus.OK_WAITING_FOR_ACTIVATION,
             ):
                 status = self._finished_status
-                self._reset_progress()
+                self._unsub_firmware_events_and_reset_progress()
                 raise HomeAssistantError(status.name.replace("_", " ").title())
             self._num_files_installed += 1
             self._attr_in_progress = floor(
@@ -244,7 +246,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         self._attr_installed_version = self._attr_latest_version = firmware.version
         self._latest_version_firmware = None
-        self._reset_progress()
+        self._unsub_firmware_events_and_reset_progress()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
@@ -291,4 +293,4 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._poll_unsub()
             self._poll_unsub = None
 
-        self._reset_progress()
+        self._unsub_firmware_events_and_reset_progress()
