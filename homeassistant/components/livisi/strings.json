@@ -1,11 +1,11 @@
 {
   "config": {
     "step": {
-      "credentials": {
+      "user": {
         "description": "Enter the IP address and the (local) password of the SHC.",
         "data": {
-          "host": "IP Address",
-          "password": "Password"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
