@@ -3,14 +3,11 @@ from __future__ import annotations
 
 from typing import Optional
 
-from bthome_ble import (
-    BTHOME_BINARY_SENSORS,
-    HOME_ASSISTANT_BINARY_SENSOR_DEVICE_CLASSES,
-    SensorUpdate,
-)
+from bthome_ble import BTHOME_BINARY_SENSORS, SensorUpdate
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -30,15 +27,14 @@ BINARY_SENSOR_DESCRIPTIONS = {}
 for key in BTHOME_BINARY_SENSORS:
     # Not all BTHome device classes are available in Home Assistant
     DEV_CLASS = None
-    if key in HOME_ASSISTANT_BINARY_SENSOR_DEVICE_CLASSES:
+    try:
+        BinarySensorDeviceClass(key)
         DEV_CLASS = key
-    BINARY_SENSOR_DESCRIPTIONS.update(
-        {
-            key: BinarySensorEntityDescription(
-                key=key,
-                device_class=DEV_CLASS,
-            )
-        }
+    except ValueError:
+        DEV_CLASS = None
+    BINARY_SENSOR_DESCRIPTIONS[key] = BinarySensorEntityDescription(
+        key=key,
+        device_class=DEV_CLASS,
     )
 
 
