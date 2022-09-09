@@ -71,7 +71,6 @@ from .const import (
     CONF_QOS,
     CONF_TOPIC,
     DATA_MQTT,
-    DATA_MQTT_DISCOVERY_REGISTRY_HOOKS,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -834,9 +833,8 @@ class MqttDiscoveryUpdate(Entity):
         self._removed_from_hass = False
         if discovery_data is None:
             return
-        self._registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
-            DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
-        ]
+        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()

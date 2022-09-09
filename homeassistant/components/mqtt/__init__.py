@@ -20,13 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import (
     config_validation as cv,
@@ -72,7 +66,6 @@ from .const import (  # noqa: F401
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT,
-    DATA_MQTT_DISCOVERY_REGISTRY_HOOKS,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -320,7 +313,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (conf := await async_fetch_config(hass, entry)) is None:
         # Bail out
         return False
-    hass.data[DATA_MQTT_DISCOVERY_REGISTRY_HOOKS] = {}
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:
@@ -646,9 +638,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Reload the legacy yaml platform to make entities unavailable
     await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
     # Cleanup entity registry hooks
-    registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
-        DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
-    ]
+    registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
         registry_hooks.popitem()[1]()
     # Wait for all ACKs and stop the loop
