@@ -165,7 +165,7 @@ class Flexit(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if self.fan_modes and await self._async_write_int16_to_register(
-            17, self.fan_modes.index(fan_mode)
+            17, self.fan_modes.index(fan_mode)  # type: ignore[arg-type]
         ):
             self._attr_fan_mode = fan_mode
         else:
