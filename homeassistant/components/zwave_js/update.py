@@ -200,7 +200,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             return None
         return self._latest_version_firmware.changelog
 
-    async def async_install(self, *_: Any, **__: Any) -> None:
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
         """Install an update."""
         firmware = self._latest_version_firmware
         assert firmware
