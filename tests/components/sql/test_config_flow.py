@@ -6,6 +6,7 @@ from unittest.mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
+from homeassistant.components.recorder import DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -213,7 +214,6 @@ async def test_options_flow(hass: HomeAssistant, recorder_mock) -> None:
         "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
-        "value_template": None,
         "unit_of_measurement": "MiB",
     }
 
@@ -266,7 +266,6 @@ async def test_options_flow_name_previously_removed(
         "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
-        "value_template": None,
         "unit_of_measurement": "MiB",
     }
 
@@ -363,7 +362,6 @@ async def test_options_flow_fails_invalid_query(
     assert result4["type"] == FlowResultType.CREATE_ENTRY
     assert result4["data"] == {
         "name": "Get Value",
-        "value_template": None,
         "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
@@ -415,12 +413,13 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant, recorder_mock) -> 
         )
         await hass.async_block_till_done()
 
+    db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://",
+        "db_url": db_url,
         "query": "SELECT 5 as size",
         "column": "size",
-        "value_template": None,
         "unit_of_measurement": "MiB",
     }
