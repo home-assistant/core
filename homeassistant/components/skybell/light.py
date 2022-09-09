@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -36,12 +35,10 @@ class SkybellLight(SkybellEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
-            await self._device.async_set_setting(ATTR_RGB_COLOR, rgb)
-        if ATTR_BRIGHTNESS in kwargs:
-            level = int((kwargs.get(ATTR_BRIGHTNESS, 0) * 100) / 255)
-            await self._device.async_set_setting(ATTR_BRIGHTNESS, level)
+        for key, value in kwargs.items():
+            if key == ATTR_BRIGHTNESS:
+                value = int((value * 100) / 255)
+            await self._device.async_set_setting(key, value)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
