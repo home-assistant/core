@@ -26,10 +26,9 @@ from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_ha
 BINARY_SENSOR_DESCRIPTIONS = {}
 for key in BTHOME_BINARY_SENSORS:
     # Not all BTHome device classes are available in Home Assistant
-    DEV_CLASS = None
+    DEV_CLASS: str | None = key
     try:
         BinarySensorDeviceClass(key)
-        DEV_CLASS = key
     except ValueError:
         DEV_CLASS = None
     BINARY_SENSOR_DESCRIPTIONS[key] = BinarySensorEntityDescription(
