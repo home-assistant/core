@@ -6,12 +6,63 @@
             "usb_probe_failed": "Det gick inte att unders\u00f6ka usb-enheten"
         },
         "error": {
-            "cannot_connect": "Det gick inte att ansluta till ZHA enhet."
+            "cannot_connect": "Det gick inte att ansluta till ZHA enhet.",
+            "invalid_backup_json": "Ogiltig JSON f\u00f6r s\u00e4kerhetskopiering"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "V\u00e4lj en automatisk s\u00e4kerhetskopiering"
+                },
+                "description": "\u00c5terst\u00e4ll dina n\u00e4tverksinst\u00e4llningar fr\u00e5n en automatisk s\u00e4kerhetskopiering",
+                "title": "\u00c5terst\u00e4ll automatisk s\u00e4kerhetskopiering"
+            },
+            "choose_formation_strategy": {
+                "description": "V\u00e4lj n\u00e4tverksinst\u00e4llningar f\u00f6r din radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "\u00c5terst\u00e4ll en automatisk s\u00e4kerhetskopia",
+                    "form_new_network": "Radera n\u00e4tverksinst\u00e4llningar och skapa ett nytt n\u00e4tverk",
+                    "reuse_settings": "Beh\u00e5ll radion\u00e4tverksinst\u00e4llningar",
+                    "upload_manual_backup": "Ladda upp en manuell s\u00e4kerhetskopia"
+                },
+                "title": "Bildande av n\u00e4tverk"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "description": "V\u00e4lj serieporten f\u00f6r din Zigbee-radio",
+                "title": "V\u00e4lj en seriell port"
+            },
             "confirm": {
                 "description": "Vill du konfigurera {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Vill du konfigurera {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Radiotyp"
+                },
+                "description": "V\u00e4lj din Zigbee-radiotyp",
+                "title": "Radiotyp"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "port hastighet",
+                    "flow_control": "datafl\u00f6deskontroll",
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "description": "Ange inst\u00e4llningarna f\u00f6r serieporten",
+                "title": "Inst\u00e4llningar f\u00f6r seriell port"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Byt ut radions IEEE-adress permanent"
+                },
+                "description": "Din s\u00e4kerhetskopia har en annan IEEE-adress \u00e4n din radio. F\u00f6r att ditt n\u00e4tverk ska fungera korrekt b\u00f6r IEEE-adressen f\u00f6r din radio ocks\u00e5 \u00e4ndras. \n\n Detta \u00e4r en permanent \u00e5tg\u00e4rd.",
+                "title": "Skriv \u00f6ver Radio IEEE-adress"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Ange portspecifika inst\u00e4llningar",
                 "title": "Inst\u00e4llningar"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Ladda upp en fil"
+                },
+                "description": "\u00c5terst\u00e4ll dina n\u00e4tverksinst\u00e4llningar fr\u00e5n en uppladdad backup-JSON-fil. Du kan ladda ner en fr\u00e5n en annan ZHA-installation fr\u00e5n **N\u00e4tverksinst\u00e4llningar**, eller anv\u00e4nda en Zigbee2MQTT `coordinator_backup.json`-fil.",
+                "title": "Ladda upp en manuell s\u00e4kerhetskopia"
             },
             "user": {
                 "data": {
@@ -110,6 +168,78 @@
             "remote_button_short_press": "\"{subtype}\"-knappen trycktes in",
             "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
             "remote_button_triple_press": "\"{subtype}\"-knappen trippelklickades"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Den h\u00e4r enheten \u00e4r inte en zha-enhet",
+            "single_instance_allowed": "Endast en enda konfiguration av ZHA \u00e4r till\u00e5ten.",
+            "usb_probe_failed": "Det gick inte att unders\u00f6ka usb-enheten"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta till ZHA enhet.",
+            "invalid_backup_json": "Ogiltig JSON f\u00f6r s\u00e4kerhetskopiering"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "V\u00e4lj en automatisk s\u00e4kerhetskopiering"
+                },
+                "description": "\u00c5terst\u00e4ll dina n\u00e4tverksinst\u00e4llningar fr\u00e5n en automatisk s\u00e4kerhetskopiering",
+                "title": "\u00c5terst\u00e4ll automatisk s\u00e4kerhetskopiering"
+            },
+            "choose_formation_strategy": {
+                "description": "V\u00e4lj n\u00e4tverksinst\u00e4llningar f\u00f6r din radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "\u00c5terst\u00e4ll en automatisk s\u00e4kerhetskopia",
+                    "form_new_network": "Radera n\u00e4tverksinst\u00e4llningar och skapa ett nytt n\u00e4tverk",
+                    "reuse_settings": "Beh\u00e5ll radion\u00e4tverksinst\u00e4llningar",
+                    "upload_manual_backup": "Ladda upp en manuell s\u00e4kerhetskopia"
+                },
+                "title": "Bildande av n\u00e4tverk"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "description": "V\u00e4lj serieporten f\u00f6r din Zigbee-radio",
+                "title": "V\u00e4lj en seriell port"
+            },
+            "init": {
+                "description": "ZHA kommer att stoppas. Vill du forts\u00e4tta?",
+                "title": "Konfigurera om ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Radiotyp"
+                },
+                "description": "V\u00e4lj din Zigbee-radiotyp",
+                "title": "Radiotyp"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "port hastighet",
+                    "flow_control": "datafl\u00f6deskontroll",
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "description": "Ange inst\u00e4llningarna f\u00f6r serieporten",
+                "title": "Inst\u00e4llningar f\u00f6r seriell port"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Byt ut radions IEEE-adress permanent"
+                },
+                "description": "Din s\u00e4kerhetskopia har en annan IEEE-adress \u00e4n din radio. F\u00f6r att ditt n\u00e4tverk ska fungera korrekt b\u00f6r IEEE-adressen f\u00f6r din radio ocks\u00e5 \u00e4ndras. \n\n Detta \u00e4r en permanent \u00e5tg\u00e4rd.",
+                "title": "Skriv \u00f6ver Radio IEEE-adress"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Ladda upp en fil"
+                },
+                "description": "\u00c5terst\u00e4ll dina n\u00e4tverksinst\u00e4llningar fr\u00e5n en uppladdad backup-JSON-fil. Du kan ladda ner en fr\u00e5n en annan ZHA-installation fr\u00e5n **N\u00e4tverksinst\u00e4llningar**, eller anv\u00e4nda en Zigbee2MQTT `coordinator_backup.json`-fil.",
+                "title": "Ladda upp en manuell s\u00e4kerhetskopia"
+            }
         }
     }
 }

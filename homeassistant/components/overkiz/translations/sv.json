@@ -11,7 +11,8 @@
             "server_in_maintenance": "Servern ligger nere f\u00f6r underh\u00e5ll",
             "too_many_attempts": "F\u00f6r m\u00e5nga f\u00f6rs\u00f6k med en ogiltig token, tillf\u00e4lligt avst\u00e4ngd",
             "too_many_requests": "F\u00f6r m\u00e5nga f\u00f6rfr\u00e5gningar, f\u00f6rs\u00f6k igen senare",
-            "unknown": "Ov\u00e4ntat fel"
+            "unknown": "Ov\u00e4ntat fel",
+            "unknown_user": "Ok\u00e4nd anv\u00e4ndare. Somfy Protect-konton st\u00f6ds inte av denna integration."
         },
         "flow_title": "Gateway: {gateway_id}",
         "step": {
