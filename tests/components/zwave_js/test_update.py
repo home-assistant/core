@@ -140,13 +140,13 @@ async def test_update_entity_states(
     client.async_send_command.reset_mock()
 
 
-async def test_update_entity_install_failure(
+async def test_update_entity_install_raises(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
 ):
-    """Test update entity failed install."""
+    """Test update entity install raises exception."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
@@ -366,3 +366,86 @@ async def test_update_entity_progress(
     assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_OFF
+
+
+async def test_update_entity_install_failed(
+    hass,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+    caplog,
+):
+    """Test update entity install returns error status."""
+    node = climate_radio_thermostat_ct100_plus_different_endpoints
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = None
+
+    async def call_install():
+        """Call install service."""
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {
+                    ATTR_ENTITY_ID: UPDATE_ENTITY,
+                },
+                blocking=True,
+            )
+
+    # Test successful install call without a version
+    hass.async_create_task(call_install())
+
+    # Sleep so that task starts
+    await asyncio.sleep(0.1)
+
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "node",
+            "event": "firmware update progress",
+            "nodeId": node.node_id,
+            "sentFragments": 1,
+            "totalFragments": 20,
+        },
+    )
+    node.receive_event(event)
+
+    # Validate that the progress is updated
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] == 5
+
+    event = Event(
+        type="firmware update finished",
+        data={
+            "source": "node",
+            "event": "firmware update finished",
+            "nodeId": node.node_id,
+            "status": FirmwareUpdateStatus.ERROR_TIMEOUT,
+        },
+    )
+
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Validate that progress is reset and entity reflects old version
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+    assert state.state == STATE_ON
