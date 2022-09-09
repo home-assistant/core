@@ -558,8 +558,18 @@ async def test_api(hass, hass_client_no_auth, mock_panel):
     result = await resp.json()
     assert result == {"message": "ok"}
 
-    # Test the put endpoint for sensor updates
+    # Test the post endpoint for sensor updates
     resp = await client.post(
+        "/api/konnected/device/112233445566",
+        headers={"Authorization": "Bearer abcdefgh"},
+        json={"zone": "1", "state": 1},
+    )
+    assert resp.status == HTTPStatus.OK
+    result = await resp.json()
+    assert result == {"message": "ok"}
+
+    # Test the put endpoint for sensor updates
+    resp = await client.put(
         "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "1", "state": 1},
