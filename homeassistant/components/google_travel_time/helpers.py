@@ -11,7 +11,7 @@ from homeassistant.helpers.location import find_coordinates
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_valid_config_entry(
+def validate_config_entry(
     hass: HomeAssistant, api_key: str, origin: str, destination: str
 ) -> None:
     """Return whether the config entry data is valid."""

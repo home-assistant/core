@@ -35,7 +35,7 @@ from .const import (
     TRAVEL_MODEL,
     UNITS,
 )
-from .helpers import InvalidApiKeyException, UnknownException, is_valid_config_entry
+from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -126,7 +126,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 await self.hass.async_add_executor_job(
-                    is_valid_config_entry,
+                    validate_config_entry,
                     self.hass,
                     user_input[CONF_API_KEY],
                     user_input[CONF_ORIGIN],
