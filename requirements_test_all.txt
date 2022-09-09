@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.22
+PySwitchbot==0.18.27
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -201,7 +201,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.0
+aiopvapi==2.0.1
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
@@ -341,10 +341,10 @@ blinkpy==0.19.0
 bluemaestro-ble==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.3.4
+bluetooth-adapters==0.3.5
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.1
+bluetooth-auto-recovery==0.3.2
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -628,7 +628,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220906.0
+home-assistant-frontend==20220907.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -706,7 +706,7 @@ lacrosse-view==0.0.9
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.7.0
+led-ble==0.7.1
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -980,7 +980,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.24.0
+pyTibber==0.25.2
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1166,7 +1166,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.8.2
+pylitterbot==2022.9.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1454,7 +1454,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.08.0
+regenmaschine==2022.09.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1594,7 +1594,7 @@ subarulink==0.5.0
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.7.2
+surepy==0.8.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.4.4
@@ -1619,6 +1619,9 @@ thermobeacon-ble==0.3.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.3
+
+# homeassistant.components.tilt_ble
+tilt-ble==0.2.3
 
 # homeassistant.components.todoist
 todoist-python==8.0.0
@@ -1680,7 +1683,7 @@ vallox-websocket-api==2.12.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.6.2
+velbus-aio==2022.9.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.18
