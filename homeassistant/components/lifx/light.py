@@ -219,15 +219,10 @@ class LIFXLight(LIFXEntity, LightEntity):
                 elif power_on:
                     await self.set_power(True, duration=fade)
             else:
+                if power_on:
+                    await self.set_power(True)
                 if hsbk:
                     await self.set_color(hsbk, kwargs, duration=fade)
-                    # The response from set_color will tell us if the
-                    # bulb is actually on or not, so we don't need to
-                    # call power_on if its already on
-                    if power_on and self.bulb.power_level == 0:
-                        await self.set_power(True)
-                elif power_on:
-                    await self.set_power(True)
                 if power_off:
                     await self.set_power(False, duration=fade)
 
