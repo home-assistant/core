@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from functools import partial
 import logging
-from typing import Any, Protocol, cast, final
+from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -93,6 +93,9 @@ from .subscription import (
     async_unsubscribe_topics,
 )
 from .util import mqtt_config_entry_enabled, valid_subscribe_topic
+
+if TYPE_CHECKING:
+    from .device_trigger import Trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -276,6 +279,7 @@ class MqttData:
 
     client: MQTT | None = None
     config: ConfigType | None = None
+    device_triggers: dict[str, Trigger] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple, CALLBACK_TYPE] = field(default_factory=dict)
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
