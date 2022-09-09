@@ -961,11 +961,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="preset_mode",
-                    return_type=["str", None],
+                    return_type=["PresetMode", "str", None],
                 ),
                 TypeHintMatch(
                     function_name="preset_modes",
-                    return_type=["list[str]", None],
+                    return_type=["list[PresetMode]", "list[str]", None],
                 ),
                 TypeHintMatch(
                     function_name="is_aux_heat",
@@ -973,19 +973,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="fan_mode",
-                    return_type=["str", None],
+                    return_type=["FanMode", "str", None],
                 ),
                 TypeHintMatch(
                     function_name="fan_modes",
-                    return_type=["list[str]", None],
+                    return_type=["list[FanMode]", "list[str]", None],
                 ),
                 TypeHintMatch(
                     function_name="swing_mode",
-                    return_type=["str", None],
+                    return_type=["SwingMode", "str", None],
                 ),
                 TypeHintMatch(
                     function_name="swing_modes",
-                    return_type=["list[str]", None],
+                    return_type=["list[SwingMode]", "list[str]", None],
                 ),
                 TypeHintMatch(
                     function_name="set_temperature",
@@ -1004,7 +1004,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="set_fan_mode",
                     arg_types={
-                        1: "str",
+                        1: "FanMode | str",
                     },
                     return_type="None",
                     has_async_counterpart=True,
@@ -1020,7 +1020,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="set_swing_mode",
                     arg_types={
-                        1: "str",
+                        1: "SwingMode | str",
                     },
                     return_type="None",
                     has_async_counterpart=True,
@@ -1028,7 +1028,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="set_preset_mode",
                     arg_types={
-                        1: "str",
+                        1: "PresetMode | str",
                     },
                     return_type="None",
                     has_async_counterpart=True,
