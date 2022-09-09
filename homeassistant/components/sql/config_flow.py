@@ -170,7 +170,6 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                     title="",
                     data={
                         CONF_NAME: self.entry.title,
-                        **self.entry.options,
                         **user_input,
                     },
                 )
