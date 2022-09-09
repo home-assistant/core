@@ -30,13 +30,19 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(
             CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS
         ): selector.NumberSelector(
-            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step=1e-3
+            ),
         ),
         vol.Optional(CONF_LOWER): selector.NumberSelector(
-            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step=1e-3
+            ),
         ),
         vol.Optional(CONF_UPPER): selector.NumberSelector(
-            selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step=1e-3
+            ),
         ),
     }
 )
