@@ -121,8 +121,6 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
 # Scheduled to be removed in HA core 2022.12
 DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
 DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN]["platform"] = mqtt.DOMAIN
-DEFAULT_CONFIG_CODE_LEGACY = copy.deepcopy(DEFAULT_CONFIG_CODE[mqtt.DOMAIN])
-DEFAULT_CONFIG_CODE_LEGACY[alarm_control_panel.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -799,7 +797,7 @@ async def test_discovery_update_unchanged_alarm(
     hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test update of discovered alarm_control_panel."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[alarm_control_panel.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][alarm_control_panel.DOMAIN])
     config1["name"] = "Beer"
 
     data1 = json.dumps(config1)

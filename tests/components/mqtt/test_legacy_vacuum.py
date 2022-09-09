@@ -95,8 +95,6 @@ DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
 # Scheduled to be removed in HA core 2022.12
 DEFAULT_CONFIG_LEGACY = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
 DEFAULT_CONFIG_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
-DEFAULT_CONFIG_2_LEGACY = deepcopy(DEFAULT_CONFIG_2[mqtt.DOMAIN])
-DEFAULT_CONFIG_2_LEGACY[vacuum.DOMAIN][CONF_PLATFORM] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -108,7 +106,7 @@ def vacuum_platform_only():
 
 async def test_default_supported_features(hass, mqtt_mock_entry_with_yaml_config):
     """Test that the correct supported features."""
-    assert await async_setup_component(hass, vacuum.DOMAIN, DEFAULT_CONFIG_LEGACY)
+    assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
     entity = hass.states.get("vacuum.mqtttest")
