@@ -289,3 +289,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         if self._progress_unsub:
             self._progress_unsub()
             self._progress_unsub = None
+
+        if self._finished_unsub:
+            self._finished_unsub()
+            self._finished_unsub = None
