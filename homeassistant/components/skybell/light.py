@@ -37,7 +37,7 @@ class SkybellLight(SkybellEntity, LightEntity):
         """Turn on the light."""
         for key, value in kwargs.items():
             if key == ATTR_BRIGHTNESS:
-                value = int((value * 100) / 255)
+                value = int(value * 100 / 255)
             await self._device.async_set_setting(key, value)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
