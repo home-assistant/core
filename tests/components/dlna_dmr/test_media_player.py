@@ -30,13 +30,14 @@ from homeassistant.components.dlna_dmr.const import (
     DOMAIN as DLNA_DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
-from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
+    ATTR_TO_PROPERTY,
     DOMAIN as MP_DOMAIN,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
+    const as mp_const,
 )
-from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
-from homeassistant.components.media_source.models import PlayMedia
+from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
@@ -419,16 +420,19 @@ async def test_feature_flags(
     """Test feature flags of a connected DlnaDmrEntity."""
     # Check supported feature flags, one at a time.
     FEATURE_FLAGS: list[tuple[str, int]] = [
-        ("has_volume_level", mp_const.SUPPORT_VOLUME_SET),
-        ("has_volume_mute", mp_const.SUPPORT_VOLUME_MUTE),
-        ("can_play", mp_const.SUPPORT_PLAY),
-        ("can_pause", mp_const.SUPPORT_PAUSE),
-        ("can_stop", mp_const.SUPPORT_STOP),
-        ("can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
-        ("can_next", mp_const.SUPPORT_NEXT_TRACK),
-        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA | mp_const.SUPPORT_BROWSE_MEDIA),
-        ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
-        ("has_presets", mp_const.SUPPORT_SELECT_SOUND_MODE),
+        ("has_volume_level", MediaPlayerEntityFeature.VOLUME_SET),
+        ("has_volume_mute", MediaPlayerEntityFeature.VOLUME_MUTE),
+        ("can_play", MediaPlayerEntityFeature.PLAY),
+        ("can_pause", MediaPlayerEntityFeature.PAUSE),
+        ("can_stop", MediaPlayerEntityFeature.STOP),
+        ("can_previous", MediaPlayerEntityFeature.PREVIOUS_TRACK),
+        ("can_next", MediaPlayerEntityFeature.NEXT_TRACK),
+        (
+            "has_play_media",
+            MediaPlayerEntityFeature.PLAY_MEDIA | MediaPlayerEntityFeature.BROWSE_MEDIA,
+        ),
+        ("can_seek_rel_time", MediaPlayerEntityFeature.SEEK),
+        ("has_presets", MediaPlayerEntityFeature.SELECT_SOUND_MODE),
     ]
 
     # Clear all feature properties
@@ -449,10 +453,10 @@ async def test_feature_flags(
     # shuffle and repeat features depend on the available play modes
     PLAY_MODE_FEATURE_FLAGS: list[tuple[PlayMode, int]] = [
         (PlayMode.NORMAL, 0),
-        (PlayMode.SHUFFLE, mp_const.SUPPORT_SHUFFLE_SET),
-        (PlayMode.REPEAT_ONE, mp_const.SUPPORT_REPEAT_SET),
-        (PlayMode.REPEAT_ALL, mp_const.SUPPORT_REPEAT_SET),
-        (PlayMode.RANDOM, mp_const.SUPPORT_SHUFFLE_SET),
+        (PlayMode.SHUFFLE, MediaPlayerEntityFeature.SHUFFLE_SET),
+        (PlayMode.REPEAT_ONE, MediaPlayerEntityFeature.REPEAT_SET),
+        (PlayMode.REPEAT_ALL, MediaPlayerEntityFeature.REPEAT_SET),
+        (PlayMode.RANDOM, MediaPlayerEntityFeature.SHUFFLE_SET),
         (PlayMode.DIRECT_1, 0),
         (PlayMode.INTRO, 0),
         (PlayMode.VENDOR_DEFINED, 0),
