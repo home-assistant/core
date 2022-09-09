@@ -83,8 +83,6 @@ TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     extra=vol.REMOVE_EXTRA,
 )
 
-DEVICE_TRIGGERS = "mqtt_device_triggers"
-
 LOG_NAME = "Device trigger"
 
 
