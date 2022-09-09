@@ -2438,6 +2438,8 @@ async def test_subscribe_entities_some_have_uom_multiple(
     ]
     assert msg["event"]["partial"] is True
 
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
     _cycle_entities()
     await hass.async_block_till_done()
 
