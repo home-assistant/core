@@ -328,7 +328,6 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        # device_info["name"] (e.g. ABC) will be prepended to description.name: 'ABC O3'
         self._attr_device_info = coordinator.device_info
         self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
@@ -339,5 +338,4 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
         # While a sensor is warming up its key isn't present in the returned dict
-        # => .get(key) returns None
         return self.coordinator.data.get(self.entity_description.key) * self._factor
