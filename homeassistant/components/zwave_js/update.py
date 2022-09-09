@@ -156,6 +156,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
         """Update the entity."""
         self._poll_unsub = None
+
+        # If device is asleep/dead, wait for it to wake up/become alive before
+        # attempting an update
         for status, event_name in (
             (NodeStatus.ASLEEP, "wake up"),
             (NodeStatus.DEAD, "alive"),
@@ -227,8 +230,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             except BaseZwaveJSServerError as err:
                 self._unsub_firmware_events_and_reset_progress()
                 raise HomeAssistantError(err) from err
+
+            # We need to block until we receive the `firmware update finished` event
             await self._finished_event.wait()
             assert self._finished_status is not None
+
+            # If status is not OK, we should throw an error to let the user know
             if self._finished_status not in (
                 FirmwareUpdateStatus.OK_NO_RESTART,
                 FirmwareUpdateStatus.OK_RESTART_PENDING,
@@ -237,6 +244,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 status = self._finished_status
                 self._unsub_firmware_events_and_reset_progress()
                 raise HomeAssistantError(status.name.replace("_", " ").title())
+
+            # If we get here, the firmware installation was successful and we need to
+            # update progress accordingly
             self._num_files_installed += 1
             self._attr_in_progress = floor(
                 100 * self._num_files_installed / len(firmware.files)
