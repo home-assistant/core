@@ -15,15 +15,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_device,
-    async_get_registry,
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+)
+from homeassistant.helpers.entity import (
+    get_capability,
+    get_device_class,
+    get_unit_of_measurement,
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, SensorDeviceClass
+from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -39,6 +43,7 @@ CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
+CONF_IS_MOISTURE = "is_moisture"
 CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
 CONF_IS_NITROUS_OXIDE = "is_nitrous_oxide"
@@ -68,6 +73,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
+    SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_IS_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_MONOXIDE}],
     SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_IS_NITROUS_OXIDE}],
@@ -106,6 +112,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
                     CONF_IS_OZONE,
+                    CONF_IS_MOISTURE,
                     CONF_IS_NITROGEN_DIOXIDE,
                     CONF_IS_NITROGEN_MONOXIDE,
                     CONF_IS_NITROUS_OXIDE,
@@ -137,18 +144,19 @@ async def async_get_conditions(
 ) -> list[dict[str, str]]:
     """List device conditions."""
     conditions: list[dict[str, str]] = []
-    entity_registry = await async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == DOMAIN
     ]
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not unit_of_measurement:
+        if not unit_of_measurement and not state_class:
             continue
 
         templates = ENTITY_CONDITIONS.get(
@@ -190,7 +198,9 @@ def async_condition_from_config(
     return condition.async_numeric_state_from_config(numeric_state_config)
 
 
-async def async_get_condition_capabilities(hass, config):
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     try:
         unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])

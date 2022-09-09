@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
-            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "already_setup": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
             "external_setup": "Punt succesvol geconfigureerd vanuit een andere stroom.",
-            "no_flows": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "no_flows": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
             "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
         },
         "create_entry": {
-            "default": "Succesvol geauthenticeerd"
+            "default": "Authenticatie geslaagd"
         },
         "error": {
             "follow_link": "Volg de link en verifieer voordat je op Verzenden klikt",
@@ -23,7 +23,7 @@
                 "data": {
                     "flow_impl": "Leverancier"
                 },
-                "description": "Wilt u beginnen met instellen?",
+                "description": "Wil je beginnen met instellen?",
                 "title": "Kies een authenticatie methode"
             }
         }

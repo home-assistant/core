@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya ha sido configurada"
+            "already_configured": "La cuenta ya est\u00e1 configurada"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

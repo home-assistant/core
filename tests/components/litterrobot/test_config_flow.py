@@ -1,10 +1,14 @@
 """Test the Litter-Robot config flow."""
 from unittest.mock import patch
 
+from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant import config_entries
 from homeassistant.components import litterrobot
+from homeassistant.const import CONF_PASSWORD, CONF_SOURCE
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import CONF_USERNAME, CONFIG, DOMAIN
 
@@ -21,7 +25,7 @@ async def test_form(hass, mock_account):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.litterrobot.hub.Account",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         return_value=mock_account,
     ), patch(
         "homeassistant.components.litterrobot.async_setup_entry",
@@ -62,7 +66,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=LitterRobotLoginException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -80,7 +84,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=LitterRobotException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -96,9 +100,8 @@ async def test_form_unknown_error(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with patch(
-        "pylitterbot.Account.connect",
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -107,3 +110,91 @@ async def test_form_unknown_error(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
+    """Test the reauth flow."""
+    entry = MockConfigEntry(
+        domain=litterrobot.DOMAIN,
+        data=CONFIG[litterrobot.DOMAIN],
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            CONF_SOURCE: config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
+        return_value=mock_account,
+    ), patch(
+        "homeassistant.components.litterrobot.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) -> None:
+    """Test the reauth flow fails and recovers."""
+    entry = MockConfigEntry(
+        domain=litterrobot.DOMAIN,
+        data=CONFIG[litterrobot.DOMAIN],
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            CONF_SOURCE: config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
+        side_effect=LitterRobotLoginException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.litterrobot.config_flow.Account.connect",
+        return_value=mock_account,
+    ), patch(
+        "homeassistant.components.litterrobot.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert len(mock_setup_entry.mock_calls) == 1

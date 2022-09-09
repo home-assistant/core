@@ -6,9 +6,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "show_on_map": "Afficher sur la carte\u00a0?"
-                },
                 "description": "Voulez-vous configurer la Station spatiale internationale (ISS)\u00a0?"
             }
         }

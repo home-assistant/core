@@ -2,6 +2,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from aiohttp.client_reqrep import ConnectionKey
 import pytest
 
 
@@ -43,9 +44,16 @@ def mock_intellifire_config_flow() -> Generator[None, MagicMock, None]:
     data_mock.serial = "12345"
 
     with patch(
-        "homeassistant.components.intellifire.config_flow.IntellifireAsync",
+        "homeassistant.components.intellifire.config_flow.IntellifireAPILocal",
         autospec=True,
     ) as intellifire_mock:
         intellifire = intellifire_mock.return_value
         intellifire.data = data_mock
         yield intellifire
+
+
+def mock_api_connection_error() -> ConnectionError:
+    """Return a fake a ConnectionError for iftapi.net."""
+    ret = ConnectionError()
+    ret.args = [ConnectionKey("iftapi.net", 443, False, None, None, None, None)]
+    return ret

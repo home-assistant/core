@@ -14,11 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Nama"
-                },
-                "description": "Siapkan integrasi Vallox Jika Anda memiliki masalah dengan konfigurasi, buka {integration_docs_url}.",
-                "title": "Vallox"
+                    "host": "Host"
+                }
             }
         }
     }

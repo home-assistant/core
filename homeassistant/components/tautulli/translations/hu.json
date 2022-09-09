@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API kulcs"
+                },
+                "description": "Az API-kulcs megkeres\u00e9s\u00e9hez nyissa meg a Tautulli weblapot, \u00e9s keresse meg a Be\u00e1ll\u00edt\u00e1sok, majd a webes fel\u00fcletet. Az API-kulcs az oldal alj\u00e1n lesz.",
+                "title": "Tautulli \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "url": "URL",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                },
+                "description": "Az API-kulcs megtal\u00e1l\u00e1s\u00e1hoz nyissa meg a Tautulli weboldalt, \u00e9s navig\u00e1ljon a Be\u00e1ll\u00edt\u00e1sok, majd a Webes fel\u00fcletre. Az API-kulcs az oldal alj\u00e1n tal\u00e1lhat\u00f3. \n\nP\u00e9lda az URL-re: ```http://192.168.0.10:8181```, ahol a 8181 az alap\u00e9rtelmezett port."
+            }
+        }
+    }
+}

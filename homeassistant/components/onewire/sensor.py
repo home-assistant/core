@@ -1,16 +1,13 @@
 """Support for 1-Wire environment sensors."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
 import os
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
-
-from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,7 +17,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_TYPE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
@@ -29,13 +25,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
-    CONF_TYPE_OWSERVER,
-    CONF_TYPE_SYSBUS,
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
     DOMAIN,
@@ -45,12 +38,7 @@ from .const import (
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
-from .model import OWDirectDeviceDescription, OWServerDeviceDescription
-from .onewire_entities import (
-    OneWireBaseEntity,
-    OneWireEntityDescription,
-    OneWireProxyEntity,
-)
+from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
@@ -263,8 +251,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
 }
 
 # EF sensors are usually hobbyboards specialized sensors.
-# These can only be read by OWFS.  Currently this driver only supports them
-# via owserver (network protocol)
 
 HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "HobbyBoards_EF": (
@@ -381,111 +367,74 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewirehub = hass.data[DOMAIN][config_entry.entry_id]
+    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
     entities = await hass.async_add_executor_job(
-        get_entities, onewirehub, config_entry.data, config_entry.options
+        get_entities, onewire_hub, config_entry.options
     )
     async_add_entities(entities, True)
 
 
 def get_entities(
-    onewirehub: OneWireHub,
-    config: MappingProxyType[str, Any],
-    options: MappingProxyType[str, Any],
-) -> list[SensorEntity]:
+    onewire_hub: OneWireHub, options: MappingProxyType[str, Any]
+) -> list[OneWireSensor]:
     """Get a list of entities."""
-    if not onewirehub.devices:
+    if not onewire_hub.devices:
         return []
 
-    entities: list[SensorEntity] = []
-    conf_type = config[CONF_TYPE]
-    # We have an owserver on a remote(or local) host/port
-    if conf_type == CONF_TYPE_OWSERVER:
-        assert onewirehub.owproxy
-        for device in onewirehub.devices:
-            if TYPE_CHECKING:
-                assert isinstance(device, OWServerDeviceDescription)
-            family = device.family
-            device_type = device.type
-            device_id = device.id
-            device_info = device.device_info
-            device_sub_type = "std"
-            device_path = device.path
-            if "EF" in family:
-                device_sub_type = "HobbyBoard"
-                family = device_type
-            elif "7E" in family:
-                device_sub_type = "EDS"
-                family = device_type
+    entities: list[OneWireSensor] = []
+    assert onewire_hub.owproxy
+    for device in onewire_hub.devices:
+        family = device.family
+        device_type = device.type
+        device_id = device.id
+        device_info = device.device_info
+        device_sub_type = "std"
+        device_path = device.path
+        if "EF" in family:
+            device_sub_type = "HobbyBoard"
+            family = device_type
+        elif "7E" in family:
+            device_sub_type = "EDS"
+            family = device_type
 
-            if family not in get_sensor_types(device_sub_type):
-                continue
-            for description in get_sensor_types(device_sub_type)[family]:
-                if description.key.startswith("moisture/"):
-                    s_id = description.key.split(".")[1]
-                    is_leaf = int(
-                        onewirehub.owproxy.read(
-                            f"{device_path}moisture/is_leaf.{s_id}"
-                        ).decode()
-                    )
-                    if is_leaf:
-                        description = copy.deepcopy(description)
-                        description.device_class = SensorDeviceClass.HUMIDITY
-                        description.native_unit_of_measurement = PERCENTAGE
-                        description.name = f"Wetness {s_id}"
-                override_key = None
-                if description.override_key:
-                    override_key = description.override_key(device_id, options)
-                device_file = os.path.join(
-                    os.path.split(device.path)[0],
-                    override_key or description.key,
+        if family not in get_sensor_types(device_sub_type):
+            continue
+        for description in get_sensor_types(device_sub_type)[family]:
+            if description.key.startswith("moisture/"):
+                s_id = description.key.split(".")[1]
+                is_leaf = int(
+                    onewire_hub.owproxy.read(
+                        f"{device_path}moisture/is_leaf.{s_id}"
+                    ).decode()
                 )
-                name = f"{device_id} {description.name}"
-                entities.append(
-                    OneWireProxySensor(
-                        description=description,
-                        device_id=device_id,
-                        device_file=device_file,
-                        device_info=device_info,
-                        name=name,
-                        owproxy=onewirehub.owproxy,
-                    )
-                )
-
-    # We have a raw GPIO ow sensor on a Pi
-    elif conf_type == CONF_TYPE_SYSBUS:
-        for device in onewirehub.devices:
-            if TYPE_CHECKING:
-                assert isinstance(device, OWDirectDeviceDescription)
-            p1sensor: OneWireInterface = device.interface
-            family = p1sensor.mac_address[:2]
-            device_id = f"{family}-{p1sensor.mac_address[2:]}"
-            device_info = device.device_info
-            description = SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION
-            device_file = f"/sys/bus/w1/devices/{device_id}/w1_slave"
+                if is_leaf:
+                    description = copy.deepcopy(description)
+                    description.device_class = SensorDeviceClass.HUMIDITY
+                    description.native_unit_of_measurement = PERCENTAGE
+                    description.name = f"Wetness {s_id}"
+            override_key = None
+            if description.override_key:
+                override_key = description.override_key(device_id, options)
+            device_file = os.path.join(
+                os.path.split(device.path)[0],
+                override_key or description.key,
+            )
             name = f"{device_id} {description.name}"
             entities.append(
-                OneWireDirectSensor(
+                OneWireSensor(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
                     device_info=device_info,
                     name=name,
-                    owsensor=p1sensor,
+                    owproxy=onewire_hub.owproxy,
                 )
             )
-
     return entities
 
 
-class OneWireSensor(OneWireBaseEntity, SensorEntity):
-    """Mixin for sensor specific attributes."""
-
-    entity_description: OneWireSensorEntityDescription
-
-
-class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
-    """Implementation of a 1-Wire sensor connected through owserver."""
+class OneWireSensor(OneWireEntity, SensorEntity):
+    """Implementation of a 1-Wire sensor."""
 
     entity_description: OneWireSensorEntityDescription
 
@@ -493,69 +442,3 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self._state
-
-
-class OneWireDirectSensor(OneWireSensor):
-    """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
-
-    def __init__(
-        self,
-        description: OneWireSensorEntityDescription,
-        device_id: str,
-        device_info: DeviceInfo,
-        device_file: str,
-        name: str,
-        owsensor: OneWireInterface,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            description=description,
-            device_id=device_id,
-            device_info=device_info,
-            device_file=device_file,
-            name=name,
-        )
-        self._attr_unique_id = device_file
-        self._owsensor = owsensor
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
-        return self._state
-
-    async def get_temperature(self) -> float:
-        """Get the latest data from the device."""
-        attempts = 1
-        while True:
-            try:
-                return await self.hass.async_add_executor_job(
-                    self._owsensor.get_temperature
-                )
-            except UnsupportResponseException as ex:
-                _LOGGER.debug(
-                    "Cannot read from sensor %s (retry attempt %s): %s",
-                    self._device_file,
-                    attempts,
-                    ex,
-                )
-                await asyncio.sleep(0.2)
-                attempts += 1
-                if attempts > 10:
-                    raise
-
-    async def async_update(self) -> None:
-        """Get the latest data from the device."""
-        try:
-            self._value_raw = await self.get_temperature()
-            self._state = round(self._value_raw, 1)
-        except (
-            FileNotFoundError,
-            InvalidCRCException,
-            UnsupportResponseException,
-        ) as ex:
-            _LOGGER.warning(
-                "Cannot read from sensor %s: %s",
-                self._device_file,
-                ex,
-            )
-            self._state = None

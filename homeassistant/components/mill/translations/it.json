@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Seleziona il tipo di connessione",
-                    "password": "Password",
-                    "username": "Nome utente"
+                    "connection_type": "Seleziona il tipo di connessione"
                 },
                 "description": "Seleziona il tipo di connessione. Locale richiede riscaldatori di terza generazione"
             }

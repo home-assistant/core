@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
             "already_configured": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
             "not_compatible": "CPU bilgisi al\u0131nam\u0131yor, bu entegrasyon sisteminizle uyumlu de\u011fil"
         },

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "device_unsupported": "Het apparaat wordt niet ondersteund.",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "reauth_unsuccessful": "Herauthenticatie is mislukt, verwijder de integratie en stel het opnieuw in."
         },
         "error": {

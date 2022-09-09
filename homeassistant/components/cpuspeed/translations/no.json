@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "already_configured": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "not_compatible": "Kan ikke hente CPU-informasjon, denne integrasjonen er ikke kompatibel med systemet ditt"
         },

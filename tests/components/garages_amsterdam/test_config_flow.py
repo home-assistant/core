@@ -8,11 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.garages_amsterdam.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_full_flow(hass: HomeAssistant) -> None:
@@ -21,7 +17,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert "flow_id" in result
 
     with patch(
@@ -34,7 +30,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "IJDok"
     assert "result" in result2
     assert result2["result"].unique_id == "IJDok"
@@ -63,5 +59,5 @@ async def test_error_handling(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == reason

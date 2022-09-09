@@ -6,9 +6,9 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import async_fire_time_changed, mock_registry
 
@@ -28,21 +28,28 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
         "test",
         "light_config_id",
         suggested_object_id="config_light",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     entity_entry2 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_diagnostic_id",
         suggested_object_id="diagnostic_light",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     entity_entry3 = entity_registry.async_get_or_create(
         "light",
         "test",
-        "light_system_id",
-        suggested_object_id="system_light",
-        entity_category="system",
+        "light_hidden_integration_id",
+        suggested_object_id="hidden_integration_light",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    entity_entry4 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_hidden_user_id",
+        suggested_object_id="hidden_user_light",
+        hidden_by=er.RegistryEntryHider.USER,
     )
 
     entity_conf = {"should_expose": False}
@@ -61,20 +68,23 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
+    assert not conf.should_expose(entity_entry4.entity_id)
 
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
-    # config and diagnostic entities should not be exposed
+    # categorized and hidden entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
+    assert not conf.should_expose(entity_entry4.entity_id)
 
     entity_conf["should_expose"] = None
     assert conf.should_expose("light.kitchen")
-    # config and diagnostic entities should not be exposed
+    # categorized and hidden entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
+    assert not conf.should_expose(entity_entry4.entity_id)
 
     assert "alexa" not in hass.config.components
     await cloud_prefs.async_update(
@@ -259,10 +269,7 @@ async def test_alexa_config_fail_refresh_token(
 
 @contextlib.contextmanager
 def patch_sync_helper():
-    """Patch sync helper.
-
-    In Py3.7 this would have been an async context manager.
-    """
+    """Patch sync helper."""
     to_update = []
     to_remove = []
 
@@ -280,21 +287,32 @@ def patch_sync_helper():
 
 async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs, cloud_stub):
     """Test Alexa config responds to updating exposed entities."""
+    hass.states.async_set("binary_sensor.door", "on")
+    hass.states.async_set(
+        "sensor.temp",
+        "23",
+        {"device_class": "temperature", "unit_of_measurement": "°C"},
+    )
+    hass.states.async_set("light.kitchen", "off")
+
     await cloud_prefs.async_update(
+        alexa_enabled=True,
         alexa_report_state=False,
     )
-    await alexa_config.CloudAlexaConfig(
+    conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
-    ).async_initialize()
+    )
+    await conf.async_initialize()
 
     with patch_sync_helper() as (to_update, to_remove):
         await cloud_prefs.async_update_alexa_entity_config(
             entity_id="light.kitchen", should_expose=True
         )
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow())
+        async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done()
 
+    assert conf._alexa_sync_unsub is None
     assert to_update == ["light.kitchen"]
     assert to_remove == []
 
@@ -309,11 +327,22 @@ async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs, cloud_stub):
             entity_id="sensor.temp", should_expose=True
         )
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow())
+        async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done()
 
+    assert conf._alexa_sync_unsub is None
     assert sorted(to_update) == ["binary_sensor.door", "sensor.temp"]
     assert to_remove == ["light.kitchen"]
+
+    with patch_sync_helper() as (to_update, to_remove):
+        await cloud_prefs.async_update(
+            alexa_enabled=False,
+        )
+        await hass.async_block_till_done()
+
+    assert conf._alexa_sync_unsub is None
+    assert to_update == []
+    assert to_remove == ["binary_sensor.door", "sensor.temp", "light.kitchen"]
 
 
 async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
@@ -324,7 +353,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -334,7 +363,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "remove", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
@@ -344,7 +373,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {
                 "action": "update",
                 "entity_id": "light.kitchen",
@@ -359,7 +388,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
-            EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
         )
         await hass.async_block_till_done()

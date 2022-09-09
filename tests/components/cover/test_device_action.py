@@ -16,6 +16,8 @@ from homeassistant.components.cover import (
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -99,8 +101,58 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in expected_action_types
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert_lists_same(actions, expected_actions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected actions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=SUPPORT_CLOSE,
+    )
+    expected_actions = []
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for action in ["close"]
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -129,6 +181,8 @@ async def test_get_action_capabilities(
         ),
     )
     ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -139,9 +193,6 @@ async def test_get_action_capabilities(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -163,6 +214,8 @@ async def test_get_action_capabilities_set_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[1]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -173,9 +226,6 @@ async def test_get_action_capabilities_set_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -212,6 +262,8 @@ async def test_get_action_capabilities_set_tilt_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[3]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -222,9 +274,6 @@ async def test_get_action_capabilities_set_tilt_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [

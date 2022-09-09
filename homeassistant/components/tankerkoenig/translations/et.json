@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus",
+            "no_stations": "Piirkonnas ei leitud \u00fchtegi tanklat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            },
+            "select_station": {
+                "data": {
+                    "stations": "Tanklad"
+                },
+                "description": "piirkonnas on leitud {stations_count} tanklat",
+                "title": "Vali lisatavad tanklad"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "fuel_types": "K\u00fctuse liigid",
+                    "location": "Asukoht",
+                    "name": "Piirkonna nimi",
+                    "radius": "Otsingu raadius",
+                    "stations": "T\u00e4iendavad tanklad"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "V\u00e4rskendamise intervall",
+                    "show_on_map": "N\u00e4ita jaamu kaardil",
+                    "stations": "Tanklad"
+                },
+                "title": "Tankerkoenig valikud"
+            }
+        }
+    }
+}

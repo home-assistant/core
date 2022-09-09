@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "headers": "Hlavi\u010dky"
+                }
+            }
+        }
+    }
+}

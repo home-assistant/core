@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
-            },
             "discovery_confirm": {
                 "description": "Do you want to setup {name} ({host})?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP Address",
-                    "name": "Name"
+                    "host": "IP Address"
                 },
                 "description": "If you leave the IP Address empty, discovery will be used to find devices."
             }

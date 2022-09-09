@@ -100,7 +100,7 @@ class HueBridge:
         if self.api_version == 1:
             if self.api.sensors is not None:
                 self.sensor_manager = SensorManager(self)
-            self.hass.config_entries.async_setup_platforms(
+            await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v1
             )
 
@@ -108,7 +108,7 @@ class HueBridge:
         else:
             await async_setup_devices(self)
             await async_setup_hue_events(self)
-            self.hass.config_entries.async_setup_platforms(
+            await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v2
             )
 
@@ -117,22 +117,19 @@ class HueBridge:
         self.authorized = True
         return True
 
-    async def async_request_call(
-        self, task: Callable, *args, allowed_errors: list[str] | None = None, **kwargs
-    ) -> Any:
-        """Send request to the Hue bridge, optionally omitting error(s)."""
+    async def async_request_call(self, task: Callable, *args, **kwargs) -> Any:
+        """Send request to the Hue bridge."""
         try:
             return await task(*args, **kwargs)
         except AiohueException as err:
-            # The (new) Hue api can be a bit fanatic with throwing errors
-            # some of which we accept in certain conditions
-            # handle that here. Note that these errors are strings and do not have
-            # an identifier or something.
-            if allowed_errors is not None and str(err) in allowed_errors:
+            # The (new) Hue api can be a bit fanatic with throwing errors so
+            # we have some logic to treat some responses as warning only.
+            msg = f"Request failed: {err}"
+            if "may not have effect" in str(err):
                 # log only
-                self.logger.debug("Ignored error/warning from Hue API: %s", str(err))
+                self.logger.debug(msg)
                 return None
-            raise HomeAssistantError(f"Request failed: {err}") from err
+            raise HomeAssistantError(msg) from err
         except aiohttp.ClientError as err:
             raise HomeAssistantError(
                 f"Request failed due connection error: {err}"

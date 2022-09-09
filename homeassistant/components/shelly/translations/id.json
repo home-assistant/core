@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
+            "firmware_not_fully_provisioned": "Perangkat belum sepenuhnya disediakan. Hubungi dukungan Shelly.",
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },

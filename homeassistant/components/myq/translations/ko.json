@@ -9,6 +9,10 @@
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "{username} \uc758 \ube44\ubc00\ubc88\ud638\uac00 \ub354 \uc774\uc0c1 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+                "title": "MyQ \uacc4\uc815 \uc7ac\uc778\uc99d"
+            },
             "user": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",

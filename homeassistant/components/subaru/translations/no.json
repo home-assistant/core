@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "PIN-koden skal best\u00e5 av fire sifre",
+            "bad_validation_code_format": "Valideringskoden skal v\u00e6re p\u00e5 6 sifre",
             "cannot_connect": "Tilkobling mislyktes",
             "incorrect_pin": "Feil PIN",
-            "invalid_auth": "Ugyldig godkjenning"
+            "incorrect_validation_code": "Feil valideringskode",
+            "invalid_auth": "Ugyldig godkjenning",
+            "two_factor_request_failed": "Foresp\u00f8rsel om 2FA-kode mislyktes, pr\u00f8v igjen"
         },
         "step": {
             "pin": {
@@ -16,6 +19,20 @@
                     "pin": "PIN"
                 },
                 "description": "Vennligst skriv inn MySubaru PIN-koden\n MERKNAD: Alle kj\u00f8ret\u00f8yer som er kontoen m\u00e5 ha samme PIN-kode",
+                "title": "Subaru Starlink-konfigurasjon"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Velg en kontaktmetode:"
+                },
+                "description": "Tofaktorautentisering kreves",
+                "title": "Subaru Starlink-konfigurasjon"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Valideringskode"
+                },
+                "description": "Vennligst skriv inn valideringskode mottatt",
                 "title": "Subaru Starlink-konfigurasjon"
             },
             "user": {

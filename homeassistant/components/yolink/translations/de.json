@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "oauth_error": "Ung\u00fcltige Token-Daten empfangen.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "description": "Die yolink-Integration muss dein Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
+            }
+        }
+    }
+}

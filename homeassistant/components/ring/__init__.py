@@ -16,6 +16,7 @@ from ring_doorbell import Auth, Ring
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, __version__
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -36,6 +37,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.CAMERA,
+    Platform.SIREN,
 ]
 
 
@@ -110,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, "update"):
         return True
@@ -142,6 +144,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Last entry unloaded, clean up service
     hass.services.async_remove(DOMAIN, "update")
 
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
     return True
 
 

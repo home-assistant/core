@@ -6,6 +6,7 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "discover_timeout": "Hue k\u00f6pr\u00fcleri bulunam\u0131yor",
+            "invalid_host": "Ge\u00e7ersiz sunucu",
             "no_bridges": "Philips Hue k\u00f6pr\u00fcs\u00fc bulunamad\u0131",
             "not_hue_bridge": "Hue k\u00f6pr\u00fcs\u00fc de\u011fil",
             "unknown": "Beklenmeyen hata"
@@ -43,6 +44,8 @@
             "button_2": "\u0130kinci d\u00fc\u011fme",
             "button_3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme",
             "button_4": "D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fme",
+            "clock_wise": "Saat y\u00f6n\u00fcnde d\u00f6n\u00fc\u015f",
+            "counter_clock_wise": "Saat y\u00f6n\u00fcn\u00fcn tersine d\u00f6n\u00fc\u015f",
             "dim_down": "K\u0131sma",
             "dim_up": "A\u00e7ma",
             "double_buttons_1_3": "Birinci ve \u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fmeler",
@@ -60,7 +63,8 @@
             "remote_double_button_long_press": "Her iki \" {subtype} \" uzun bas\u0131\u015ftan sonra b\u0131rak\u0131ld\u0131",
             "remote_double_button_short_press": "Her iki \"{subtype}\" de b\u0131rak\u0131ld\u0131",
             "repeat": "\" {subtype} \" d\u00fc\u011fmesi bas\u0131l\u0131 tutuldu",
-            "short_release": "K\u0131sa bas\u0131ld\u0131ktan sonra \"{subtype}\" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131"
+            "short_release": "K\u0131sa bas\u0131ld\u0131ktan sonra \"{subtype}\" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131",
+            "start": "\" {subtype} \" ba\u015flang\u0131\u00e7ta bas\u0131ld\u0131"
         }
     },
     "options": {

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "invalid_unique_id": "Impossible to determine a valid unique id for the device",
+            "no_unique_id": "A device without a valid unique id is already configured. Configuration of multiple instance is not possible"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -18,7 +19,7 @@
                     "mode": "Mode",
                     "name": "Name",
                     "password": "Password",
-                    "port": "Port",
+                    "port": "Port (leave empty for protocol default)",
                     "protocol": "Communication protocol to use",
                     "ssh_key": "Path to your SSH key file (instead of password)",
                     "username": "Username"

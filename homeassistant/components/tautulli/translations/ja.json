@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f",
+            "single_instance_allowed": "\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u8a2d\u5b9a\u3067\u304d\u308b\u306e\u306f1\u3064\u3060\u3051\u3067\u3059\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
+                "description": "API\u30ad\u30fc\u3092\u898b\u3064\u3051\u308b\u306b\u306f\u3001Tautulli Web\u30da\u30fc\u30b8\u3092\u958b\u304d\u3001Settings\u306b\u79fb\u52d5\u3057\u3066\u304b\u3089\u3001Web interface\u306b\u79fb\u52d5\u3057\u307e\u3059\u3002API\u30ad\u30fc\u306f\u3001\u305d\u306e\u30da\u30fc\u30b8\u306e\u4e00\u756a\u4e0b\u306b\u3042\u308a\u307e\u3059\u3002",
+                "title": "Tautulli\u3092\u518d\u8a8d\u8a3c\u3057\u307e\u3059"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "url": "URL",
+                    "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
+                },
+                "description": "API\u30ad\u30fc\u3092\u898b\u3064\u3051\u308b\u306b\u306f\u3001Tautulli Web\u30da\u30fc\u30b8\u3092\u958b\u304d\u3001Settings\u306b\u79fb\u52d5\u3057\u3066\u304b\u3089\u3001Web interface\u306b\u79fb\u52d5\u3057\u307e\u3059\u3002API\u30ad\u30fc\u306f\u3001\u305d\u306e\u30da\u30fc\u30b8\u306e\u4e00\u756a\u4e0b\u306b\u3042\u308a\u307e\u3059\u3002\n\nURL\u306e\u4f8b: ```http://192.168.0.10:8181``` \u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30dd\u30fc\u30c8\u306f\u30018181 \u3067\u3059\u3002"
+            }
+        }
+    }
+}

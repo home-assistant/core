@@ -32,7 +32,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         async with async_timeout.timeout(10):
-            data = await hub.get_data()
+            data = await hub.get_all()
             info = await hub.get_info()
     except aiohttp.ClientError as err:
         _LOGGER.debug("Unable to connect: %s", err)

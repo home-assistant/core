@@ -1,15 +1,13 @@
 {
     "config": {
         "error": {
-            "name_exists": "El nombre ya existe",
             "wrong_location": "Ubicaci\u00f3n Suecia solamente"
         },
         "step": {
             "user": {
                 "data": {
                     "latitude": "Latitud",
-                    "longitude": "Longitud",
-                    "name": "Nombre"
+                    "longitude": "Longitud"
                 },
                 "title": "Ubicaci\u00f3n en Suecia"
             }

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "reconfigure_successful": "Herconfiguratie was succesvol"
         },
         "error": {
@@ -10,7 +10,7 @@
             "invalid_auth": "Ongeldige authenticatie",
             "missing_data": "Ontbrekende gegevens: probeer het later opnieuw of een andere configuratie",
             "otp_failed": "Tweestapsverificatie is mislukt, probeer het opnieuw met een nieuwe toegangscode",
-            "unknown": "Onbekende fout: controleer de logs voor meer informatie"
+            "unknown": "Onverwachte fout"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -24,20 +24,11 @@
                 "data": {
                     "password": "Wachtwoord",
                     "port": "Poort",
-                    "ssl": "Gebruik een SSL-certificaat",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Controleer het SSL-certificaat"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
-                "description": "Wil je {name} ({host}) instellen?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
-                },
-                "description": "Reden: {details}",
-                "title": "Synology DSM Verifieer de integratie opnieuw"
+                "description": "Wil je {name} ({host}) instellen?"
             },
             "reauth_confirm": {
                 "data": {
@@ -51,11 +42,10 @@
                     "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort",
-                    "ssl": "Gebruik een SSL-certificaat",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Controleer het SSL-certificaat"
-                },
-                "title": "Synology DSM"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
             }
         }
     },

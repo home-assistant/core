@@ -7,8 +7,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "Konto-ID",
-                    "connection_type": "Verbindungstyp ausw\u00e4hlen",
-                    "host": "Host",
-                    "password": "Passwort"
+                    "connection_type": "Verbindungstyp ausw\u00e4hlen"
                 },
                 "description": "Verbindungstyp ausw\u00e4hlen. Lokal erfordert Heizungen mit Bluetooth"
             }

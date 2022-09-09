@@ -17,10 +17,8 @@
                     "password": "Passord",
                     "region": "Region"
                 },
-                "description": "Vennligst skriv inn e-postadressen og passordet du bruker for \u00e5 logge p\u00e5 MyMazda-mobilappen.",
-                "title": "Mazda Connected Services - Legg til konto"
+                "description": "Vennligst skriv inn e-postadressen og passordet du bruker for \u00e5 logge p\u00e5 MyMazda-mobilappen."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }

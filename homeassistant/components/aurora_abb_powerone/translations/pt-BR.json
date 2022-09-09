@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel conectar, verifique a porta serial, endere\u00e7o, conex\u00e3o el\u00e9trica e se o inversor est\u00e1 ligado (\u00e0 luz do dia)",
             "cannot_open_serial_port": "N\u00e3o \u00e9 poss\u00edvel abrir a porta serial, verifique e tente novamente",
-            "invalid_serial_port": "A porta serial n\u00e3o \u00e9 um dispositivo v\u00e1lido ou n\u00e3o p\u00f4de ser aberta",
-            "unknown": "Erro inesperado"
+            "invalid_serial_port": "A porta serial n\u00e3o \u00e9 um dispositivo v\u00e1lido ou n\u00e3o p\u00f4de ser aberta"
         },
         "step": {
             "user": {

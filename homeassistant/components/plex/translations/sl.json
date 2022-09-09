@@ -33,14 +33,12 @@
                 "title": "Izberite stre\u017enik Plex"
             },
             "user": {
-                "description": "Nadaljujte do [plex.tv] (https://plex.tv), da pove\u017eete stre\u017enik Plex.",
-                "title": "Plex medijski stre\u017enik"
+                "description": "Nadaljujte do [plex.tv] (https://plex.tv), da pove\u017eete stre\u017enik Plex."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Na\u010din nastavitve"
-                },
-                "title": "Plex medijski stre\u017enik"
+                }
             }
         }
     },

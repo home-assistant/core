@@ -13,9 +13,7 @@
                 "data": {
                     "access_token": "Token Akses",
                     "host": "Host"
-                },
-                "description": "Siapkan integrasi Router Vilfo. Anda memerlukan nama host/IP Router Vilfo dan token akses API. Untuk informasi lebih lanjut tentang integrasi ini dan cara mendapatkan data tersebut, kunjungi: https://www.home-assistant.io/integrations/vilfo",
-                "title": "Hubungkan ke Router Vilfo"
+                }
             }
         }
     }

@@ -4,7 +4,6 @@
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "alternative_integration": "Cihaz ba\u015fka bir entegrasyon taraf\u0131ndan daha iyi destekleniyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "could_not_connect": "DLNA cihaz\u0131na ba\u011flan\u0131lamad\u0131",
             "discovery_error": "E\u015fle\u015fen bir DLNA cihaz\u0131 bulunamad\u0131",
             "incomplete_config": "Yap\u0131land\u0131rmada gerekli bir de\u011fi\u015fken eksik",
             "non_unique_id": "Ayn\u0131 benzersiz kimli\u011fe sahip birden fazla cihaz bulundu",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "could_not_connect": "DLNA cihaz\u0131na ba\u011flan\u0131lamad\u0131",
             "not_dmr": "Cihaz, desteklenen bir Dijital Medya Olu\u015fturucu de\u011fil"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Sunucu",
-                    "url": "URL"
+                    "host": "Sunucu"
                 },
                 "description": "Yap\u0131land\u0131rmak i\u00e7in bir cihaz se\u00e7in veya bir URL girmek i\u00e7in bo\u015f b\u0131rak\u0131n",
                 "title": "Ke\u015ffedilen DLNA DMR cihazlar\u0131"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Tarama s\u0131ras\u0131nda uyumsuz medyay\u0131 g\u00f6ster",
                     "callback_url_override": "Olay dinleyici geri \u00e7a\u011f\u0131rma URL'si",
                     "listen_port": "Olay dinleyici ba\u011flant\u0131 noktas\u0131 (ayarlanmam\u0131\u015fsa rastgele)",
                     "poll_availability": "Cihaz kullan\u0131labilirli\u011fi i\u00e7in anket"

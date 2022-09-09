@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_component
+from homeassistant.helpers import entity_component, entity_registry as er
 
 from .common import CONTRACT, setup_platform
 
@@ -49,7 +49,7 @@ def mock_status(request):
 async def test_entity_registry(hass, mock_auth, mock_status):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
     # Prosegur alarm device unique_id is the contract id associated to the alarm account

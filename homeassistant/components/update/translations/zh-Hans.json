@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} \u7684\u66f4\u65b0\u53ef\u7528\u6027\u53d8\u5316",
+            "turned_off": "{entity_name} \u53d8\u4e3a\u6700\u65b0\u72b6\u6001",
+            "turned_on": "{entity_name} \u6536\u5230\u66f4\u65b0"
+        }
+    }
+}

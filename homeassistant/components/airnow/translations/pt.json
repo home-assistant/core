@@ -14,10 +14,8 @@
                     "api_key": "Chave da API",
                     "latitude": "Latitude",
                     "longitude": "Longitude"
-                },
-                "title": ""
+                }
             }
         }
-    },
-    "title": ""
+    }
 }

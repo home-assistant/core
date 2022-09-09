@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Veuillez confirmer l'ajout du r\u00e9cepteur",
-                "title": "R\u00e9cepteurs r\u00e9seaux Denon AVR"
+                "description": "Veuillez confirmer l'ajout du r\u00e9cepteur"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "Adresse IP"
                 },
-                "description": "Connectez-vous \u00e0 votre r\u00e9cepteur, si l'adresse IP n'est pas d\u00e9finie, la d\u00e9tection automatique est utilis\u00e9e",
-                "title": "R\u00e9cepteurs r\u00e9seaux Denon AVR"
+                "data_description": {
+                    "host": "Laissez le champ vide pour utiliser la d\u00e9couverte automatique"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Configurer Zone 2",
                     "zone3": "Configurer Zone 3"
                 },
-                "description": "Sp\u00e9cifiez les param\u00e8tres optionnels",
-                "title": "R\u00e9cepteurs r\u00e9seaux Denon AVR"
+                "description": "Sp\u00e9cifiez les param\u00e8tres optionnels"
             }
         }
     }

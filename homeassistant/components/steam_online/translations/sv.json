@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
+            "reauth_successful": "Omautentiseringen lyckades"
+        },
+        "error": {
+            "cannot_connect": "Misslyckades att ansluta",
+            "invalid_account": "Ogiltigt konto-ID",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Steam-integrationen m\u00e5ste autentiseras p\u00e5 nytt manuellt\n\nDu hittar din nyckel h\u00e4r: {api_key_url}",
+                "title": "Om autentisera integration"
+            },
+            "user": {
+                "data": {
+                    "account": "Steam-konto-ID",
+                    "api_key": "API Nyckel"
+                },
+                "description": "Anv\u00e4nd {account_id_url} f\u00f6r att hitta ditt Steam-konto-ID"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av Steam med YAML har tagits bort. \n\n Din befintliga YAML-konfiguration anv\u00e4nds inte av Home Assistant. \n\n Ta bort YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "Steam YAML-konfigurationen har tagits bort"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "Begr\u00e4nsad v\u00e4nlista: Se dokumentationen om hur du ser alla andra v\u00e4nner"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Namn p\u00e5 konton som ska \u00f6vervakas"
+                }
+            }
+        }
+    }
+}

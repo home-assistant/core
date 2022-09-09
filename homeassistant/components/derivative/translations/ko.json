@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\uc774\ub984",
+                    "round": "\uc18c\uc218\uc810",
+                    "source": "\uc785\ub825 \uc13c\uc11c",
+                    "time_window": "\uc2dc\uac04\ub300",
+                    "unit_prefix": "\ubbf8\ud130\ubc95",
+                    "unit_time": "\uc2dc\uac04 \ub2e8\uc704"
+                },
+                "data_description": {
+                    "round": "\uc18c\uc218\uc810 \uc790\ub9bf\uc218\ub97c \ubcc0\uacbd\ud569\ub2c8\ub2e4.",
+                    "time_window": "\uc124\uc815\ub41c \uacbd\uc6b0 \uc13c\uc11c\uc758 \uac12\uc740 \uc2dc\uac04\ub300 \ub0b4 \ub3c4\ud568\uc218\uc758 \uc2dc\uac04 \uac00\uc911 \uc774\ub3d9 \ud3c9\uade0\uc785\ub2c8\ub2e4.",
+                    "unit_prefix": "\uc120\ud0dd\ud55c \ubbf8\ud130\ubc95 \ubc0f \ub3c4\ud568\uc218\uc758 \ub2e8\uc704\uc2dc\uac04\uc73c\ub85c \ud45c\uc2dc\ub429\ub2c8\ub2e4."
+                },
+                "description": "\ub3c4\ud568\uc218\ub97c \uad6c\ud558\ub294 \uc13c\uc11c\ub97c \uc0dd\uc131\ud569\ub2c8\ub2e4.",
+                "title": "\ub3c4\ud568\uc218 \uc13c\uc11c \ucd94\uac00"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "\uc774\ub984",
+                    "round": "\uc18c\uc218\uc810",
+                    "source": "\uc785\ub825 \uc13c\uc11c",
+                    "time_window": "\uc2dc\uac04\ub300",
+                    "unit_prefix": "\ubbf8\ud130\ubc95",
+                    "unit_time": "\uc2dc\uac04 \ub2e8\uc704"
+                },
+                "data_description": {
+                    "round": "\uc18c\uc218\uc810 \uc790\ub9bf\uc218\ub97c \ubcc0\uacbd\ud569\ub2c8\ub2e4.",
+                    "time_window": "\uc124\uc815\ub41c \uacbd\uc6b0 \uc13c\uc11c\uc758 \uac12\uc740 \uc2dc\uac04\ub300 \ub0b4 \ub3c4\ud568\uc218\uc758 \uc2dc\uac04 \uac00\uc911 \uc774\ub3d9 \ud3c9\uade0\uc785\ub2c8\ub2e4.",
+                    "unit_prefix": "\uc120\ud0dd\ud55c \ubbf8\ud130\ubc95 \ubc0f \ub3c4\ud568\uc218\uc758 \ub2e8\uc704\uc2dc\uac04\uc73c\ub85c \ud45c\uc2dc\ub429\ub2c8\ub2e4.."
+                }
+            }
+        }
+    },
+    "title": "\ub3c4\ud568\uc218 \uc13c\uc11c"
+}

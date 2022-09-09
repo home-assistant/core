@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Vaja on volitusi. Vajuta nuppu Esita ja seej\u00e4rel v\u00e4rskenda PS4 2nd Screen rakenduses seadmeid ning vali j\u00e4tkamiseks seade \u201eHome-Assistant\u201d.",
-                "title": ""
+                "description": "Vaja on volitusi. Vajuta nuppu Esita ja seej\u00e4rel v\u00e4rskenda PS4 2nd Screen rakenduses seadmeid ning vali j\u00e4tkamiseks seade \u201eHome-Assistant\u201d."
             },
             "link": {
                 "data": {
@@ -25,16 +24,18 @@
                     "name": "Nimi",
                     "region": "Piirkond"
                 },
-                "description": "Sisesta oma PlayStation 4 teave. PIN koodi saamiseks mine PlayStation 4 konsooli  \u201eSeaded\u201d. Seej\u00e4rel liigu jaotisse \u201eMobiilirakenduse \u00fchenduse seaded\u201d ja vali \u201eLisa seade\u201d. SisestaPIN kood . Lisateavet leiad [dokumentatsioonist] (https://www.home-assistant.io/components/ps4/).",
-                "title": ""
+                "data_description": {
+                    "code": "Navigeeri oma PlayStation 4 konsoolis jaotisse \u201eSeaded\u201d. Seej\u00e4rel navigeeri jaotisse \"Mobiilirakenduse \u00fchenduse s\u00e4tted\" ja vali PIN-koodi saamiseks \"Lisa seade\"."
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP-aadress (J\u00e4tke t\u00fchjaks, kui kasutate automaatset tuvastamist)",
                     "mode": "Seadistuste re\u017eiim"
                 },
-                "description": "Valikonfigureerimise re\u017eiim. V\u00e4lja IP-aadress saab automaatse tuvastamise valimisel t\u00fchjaks j\u00e4tta, kuna seadmed avastatakse automaatselt.",
-                "title": ""
+                "data_description": {
+                    "ip_address": "Automaatse avastamise valimiseks j\u00e4ta v\u00e4li t\u00fchjaks."
+                }
             }
         }
     }

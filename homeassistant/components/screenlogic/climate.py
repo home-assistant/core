@@ -1,18 +1,15 @@
 """Support for a ScreenLogic heating device."""
 import logging
+from typing import Any
 
 from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, HEAT_MODE
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -26,9 +23,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_FEATURES = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-SUPPORTED_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+SUPPORTED_MODES = [HVACMode.OFF, HVACMode.HEAT]
 
 SUPPORTED_PRESETS = [
     HEAT_MODE.SOLAR,
@@ -54,6 +50,11 @@ async def async_setup_entry(
 
 class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     """Represents a ScreenLogic climate entity."""
+
+    _attr_hvac_modes = SUPPORTED_MODES
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, coordinator, body):
         """Initialize a ScreenLogic climate entity."""
@@ -101,30 +102,25 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current hvac mode."""
         if self.body["heat_mode"]["value"] > 0:
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_OFF
+            return HVACMode.HEAT
+        return HVACMode.OFF
 
     @property
-    def hvac_modes(self):
-        """Return th supported hvac modes."""
-        return SUPPORTED_MODES
-
-    @property
-    def hvac_action(self) -> str:
+    def hvac_action(self) -> HVACAction:
         """Return the current action of the heater."""
         if self.body["heat_status"]["value"] > 0:
-            return CURRENT_HVAC_HEAT
-        if self.hvac_mode == HVAC_MODE_HEAT:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.HEATING
+        if self.hvac_mode == HVACMode.HEAT:
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
     def preset_mode(self) -> str:
         """Return current/last preset mode."""
-        if self.hvac_mode == HVAC_MODE_OFF:
+        if self.hvac_mode == HVACMode.OFF:
             return HEAT_MODE.NAME_FOR_NUM[self._last_preset]
         return HEAT_MODE.NAME_FOR_NUM[self.body["heat_mode"]["value"]]
 
@@ -135,12 +131,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             HEAT_MODE.NAME_FOR_NUM[mode_num] for mode_num in self._configured_heat_modes
         ]
 
-    @property
-    def supported_features(self):
-        """Supported features of the heater."""
-        return SUPPORTED_FEATURES
-
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the heater."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
@@ -154,9 +145,9 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
                 f"Failed to set_temperature {temperature} on body {self.body['body_type']['value']}"
             )
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             mode = HEAT_MODE.OFF
         else:
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
@@ -172,7 +163,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         """Set the preset mode."""
         _LOGGER.debug("Setting last_preset to %s", HEAT_MODE.NUM_FOR_NAME[preset_mode])
         self._last_preset = mode = HEAT_MODE.NUM_FOR_NAME[preset_mode]
-        if self.hvac_mode == HVAC_MODE_OFF:
+        if self.hvac_mode == HVACMode.OFF:
             return
 
         if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
@@ -182,7 +173,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
                 f"Failed to set_preset_mode {mode} on body {self.body['body_type']['value']}"
             )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added."""
         await super().async_added_to_hass()
 

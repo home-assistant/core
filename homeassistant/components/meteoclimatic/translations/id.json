@@ -12,8 +12,9 @@
                 "data": {
                     "code": "Kode stasiun"
                 },
-                "description": "Masukkan kode stasiun Meteoclimatic (misalnya, ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "Sepertinya ESCAT4300000043206B"
+                }
             }
         }
     }

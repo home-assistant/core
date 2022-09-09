@@ -209,7 +209,6 @@ def setup_platform(
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
-        _LOGGER.debug("Status is: %s", status)
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
@@ -281,7 +280,7 @@ class SolarEdgeSensor(SensorEntity):
                 pass
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the sensor and update the state."""
         self._data.update()
         self._attr_native_value = self._data.data[self.entity_description.key]

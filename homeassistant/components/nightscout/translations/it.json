@@ -8,7 +8,6 @@
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {

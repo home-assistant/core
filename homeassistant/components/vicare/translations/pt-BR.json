@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "Chave da API",
                     "heating_type": "Tipo de aquecimento",
-                    "name": "Nome",
                     "password": "Senha",
-                    "scan_interval": "Intervalo de varredura (segundos)",
                     "username": "Email"
                 },
-                "description": "Configure a integra\u00e7\u00e3o do ViCare. Para gerar a chave de API, acesse https://developer.viessmann.com",
-                "title": "{name}"
+                "description": "Configure a integra\u00e7\u00e3o do ViCare. Para gerar a chave de API, acesse https://developer.viessmann.com"
             }
         }
     }

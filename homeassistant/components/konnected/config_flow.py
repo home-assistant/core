@@ -1,9 +1,12 @@
 """Config flow for konnected.io integration."""
+from __future__ import annotations
+
 import asyncio
 import copy
 import logging
 import random
 import string
+from typing import Any
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -20,6 +23,7 @@ from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_REPEAT,
@@ -38,7 +42,6 @@ from .const import (
     CONF_BLINK,
     CONF_DEFAULT_OPTIONS,
     CONF_INVERSE,
-    CONF_MODEL,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
@@ -169,11 +172,11 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # class variable to store/share discovered host information
-    discovered_hosts = {}
+    discovered_hosts: dict[str, dict[str, Any]] = {}
 
     def __init__(self) -> None:
         """Initialize the Konnected flow."""
-        self.data = {}
+        self.data: dict[str, Any] = {}
         self.options = OPTIONS_SCHEMA({CONF_IO: {}})
 
     async def async_gen_config(self, host, port):
@@ -269,6 +272,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Malformed Konnected SSDP info")
         else:
             # extract host/port from ssdp_location
+            assert discovery_info.ssdp_location
             netloc = urlparse(discovery_info.ssdp_location).netloc.split(":")
             self._async_abort_entries_match(
                 {CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
@@ -373,7 +377,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Return the Options Flow."""
         return OptionsFlowHandler(config_entry)
 
@@ -388,10 +394,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.current_opt = self.entry.options or self.entry.data[CONF_DEFAULT_OPTIONS]
 
         # as config proceeds we'll build up new options and then replace what's in the config entry
-        self.new_opt = {CONF_IO: {}}
+        self.new_opt: dict[str, dict[str, Any]] = {CONF_IO: {}}
         self.active_cfg = None
-        self.io_cfg = {}
-        self.current_states = []
+        self.io_cfg: dict[str, Any] = {}
+        self.current_states: list[dict[str, Any]] = []
         self.current_state = 1
 
     @callback

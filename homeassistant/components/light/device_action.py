@@ -24,9 +24,9 @@ from . import (
     ATTR_FLASH,
     DOMAIN,
     FLASH_SHORT,
-    SUPPORT_FLASH,
     VALID_BRIGHTNESS_PCT,
     VALID_FLASH,
+    LightEntityFeature,
     brightness_supported,
     get_supported_color_modes,
 )
@@ -55,7 +55,7 @@ async def async_call_action_from_config(
     hass: HomeAssistant,
     config: ConfigType,
     variables: TemplateVarsType,
-    context: Context,
+    context: Context | None,
 ) -> None:
     """Change state based on configuration."""
     if (
@@ -116,7 +116,7 @@ async def async_get_actions(
                 )
             )
 
-        if supported_features & SUPPORT_FLASH:
+        if supported_features & LightEntityFeature.FLASH:
             actions.append({**base_action, CONF_TYPE: TYPE_FLASH})
 
     return actions
@@ -144,7 +144,7 @@ async def async_get_action_capabilities(
     if brightness_supported(supported_color_modes):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
-    if supported_features & SUPPORT_FLASH:
+    if supported_features & LightEntityFeature.FLASH:
         extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
     return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}

@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Baud H\u0131z\u0131",
                     "device": "Cihaz"
                 },
                 "title": "Modeme ba\u011flan\u0131n"

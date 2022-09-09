@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "default_channel": "Vaikimisi kanal",
+                    "icon": "Ikoon",
+                    "username": "Kasutajanimi"
+                },
+                "data_description": {
+                    "api_key": "Slacki API v\u00f5ti mida kasutatakse Slacki s\u00f5numite saatmiseks.",
+                    "default_channel": "Kanal, kuhu postitada kui s\u00f5numi saatmisel ei ole kanalit m\u00e4\u00e4ratud.",
+                    "icon": "Kasuta \u00fchte Slacki emotikoni esitatud kasutajanime ikoonina.",
+                    "username": "Home Assistant postitab Slacki kasutades m\u00e4\u00e4ratud kasutajanime."
+                },
+                "description": "Vaata oma Slack API v\u00f5tme hankimise dokumentatsiooni."
+            }
+        }
+    }
+}

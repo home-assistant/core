@@ -18,8 +18,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_XY_COLOR,
-    COLOR_MODE_RGBW,
     SCAN_INTERVAL,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -68,7 +69,7 @@ async def test_init(hass, mock_light):
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
     }
 
@@ -102,7 +103,7 @@ async def test_update_exception(hass, mock_light):
     """Test platform setup."""
 
     mock_light.get_color.side_effect = pykulersky.PykulerskyException
-    await hass.helpers.entity_component.async_update_entity("light.bedroom")
+    await async_update_entity(hass, "light.bedroom")
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -186,7 +187,7 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
     }
 
@@ -200,7 +201,7 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_UNAVAILABLE
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
     }
 
@@ -214,9 +215,9 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+        ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (approx(212.571), approx(68.627)),
         ATTR_RGB_COLOR: (80, 160, 255),
@@ -234,9 +235,9 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+        ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (approx(199.701), approx(26.275)),
         ATTR_RGB_COLOR: (188, 233, 255),
@@ -254,9 +255,9 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
-        ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+        ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 240,
         ATTR_HS_COLOR: (approx(200.0), approx(27.059)),
         ATTR_RGB_COLOR: (186, 232, 255),

@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -30,7 +31,6 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callbac
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
-    entity,
     entity_component,
     event,
     service,
@@ -192,7 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone
     )
 
     storage_collection = ZoneStorageCollection(
@@ -283,21 +283,30 @@ async def async_unload_entry(
     return True
 
 
-class Zone(entity.Entity):
+class Zone(collection.CollectionEntity):
     """Representation of a Zone."""
 
-    def __init__(self, config: dict) -> None:
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the zone."""
         self._config = config
         self.editable = True
         self._attrs: dict | None = None
         self._remove_listener: Callable[[], None] | None = None
-        self._generate_attrs()
         self._persons_in_zone: set[str] = set()
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Zone:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Zone:
+        """Return entity instance initialized from storage."""
+        zone = cls(config)
+        zone.editable = True
+        zone._generate_attrs()
+        return zone
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Zone:
+        """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
         zone._generate_attrs()
@@ -328,7 +337,7 @@ class Zone(entity.Entity):
         """Zone does not poll."""
         return False
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         if self._config == config:
             return
@@ -346,6 +355,7 @@ class Zone(entity.Entity):
             self._persons_in_zone.remove(person_entity_id)
 
         if len(self._persons_in_zone) != cur_count:
+            self._generate_attrs()
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -356,6 +366,7 @@ class Zone(entity.Entity):
         for person in persons:
             if self._state_is_in_zone(self.hass.states.get(person)):
                 self._persons_in_zone.add(person)
+        self._generate_attrs()
 
         self.async_on_remove(
             event.async_track_state_change_filtered(
@@ -373,6 +384,7 @@ class Zone(entity.Entity):
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
+            ATTR_PERSONS: sorted(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
 

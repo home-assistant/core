@@ -18,6 +18,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     """Represent a PlugWise Entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
@@ -44,9 +46,9 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             connections=connections,
             manufacturer=data.get("vendor"),
             model=data.get("model"),
-            name=f"Smile {coordinator.data.gateway['smile_name']}",
-            sw_version=data.get("fw"),
-            hw_version=data.get("hw"),
+            name=coordinator.data.gateway["smile_name"],
+            sw_version=data.get("firmware"),
+            hw_version=data.get("hardware"),
         )
 
         if device_id != coordinator.data.gateway["gateway_id"]:

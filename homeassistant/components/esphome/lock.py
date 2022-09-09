@@ -5,7 +5,7 @@ from typing import Any
 
 from aioesphomeapi import LockCommand, LockEntityState, LockInfo, LockState
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
@@ -29,10 +29,6 @@ async def async_setup_entry(
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     """A lock implementation for ESPHome."""
 
@@ -44,7 +40,7 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_OPEN if self._static_info.supports_open else 0
+        return LockEntityFeature.OPEN if self._static_info.supports_open else 0
 
     @property
     def code_format(self) -> str | None:
@@ -53,21 +49,25 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
             return self._static_info.code_format
         return None
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._state.state == LockState.LOCKED
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._state.state == LockState.LOCKING
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._state.state == LockState.UNLOCKING
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""

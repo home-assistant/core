@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "backoff": "Das Ger\u00e4t akzeptiert zur Zeit keine Kopplungsanfragen (Du hast m\u00f6glicherweise zu oft einen ung\u00fcltigen PIN-Code eingegeben), versuche es sp\u00e4ter erneut.",
             "device_did_not_pair": "Es wurde kein Versuch unternommen, den Kopplungsvorgang vom Ger\u00e4t aus abzuschlie\u00dfen.",
             "device_not_found": "Das Ger\u00e4t wurde bei der Erkennung nicht gefunden. Bitte versuche es erneut hinzuzuf\u00fcgen.",
             "inconsistent_device": "Die erwarteten Protokolle wurden bei der Erkennung nicht gefunden. Dies deutet normalerweise auf ein Problem mit Multicast-DNS (Zeroconf) hin. Bitte versuche das Ger\u00e4t erneut hinzuzuf\u00fcgen.",
-            "invalid_config": "Die Konfiguration f\u00fcr dieses Ger\u00e4t ist unvollst\u00e4ndig. Bitte versuche, es erneut hinzuzuf\u00fcgen.",
+            "ipv6_not_supported": "IPv6 wird nicht unterst\u00fctzt.",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "setup_failed": "Fehler beim Einrichten des Ger\u00e4ts.",
@@ -18,7 +17,6 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
-            "no_usable_service": "Es wurde ein Ger\u00e4t gefunden, aber es konnte keine M\u00f6glichkeit gefunden werden, eine Verbindung zu diesem Ger\u00e4t herzustellen. Wenn diese Meldung weiterhin erscheint, versuche, die IP-Adresse anzugeben oder den Apple TV neu zu starten.",
             "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +70,5 @@
                 "description": "Konfiguriere die allgemeinen Ger\u00e4teeinstellungen"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

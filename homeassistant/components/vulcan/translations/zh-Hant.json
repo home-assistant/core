@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "all_student_already_configured": "\u6240\u6709\u5b78\u751f\u90fd\u5df2\u7d93\u65b0\u589e\u3002",
+            "already_configured": "\u8a72\u5b78\u751f\u5df2\u7d93\u65b0\u589e\u3002",
+            "no_matching_entries": "\u627e\u4e0d\u5230\u76f8\u7b26\u7684\u5be6\u9ad4\uff0c\u8acb\u4f7f\u7528\u5176\u4ed6\u5e33\u865f\u6216\u79fb\u9664\u5305\u542b\u904e\u671f\u5b78\u751f\u4e4b\u6574\u5408..",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u932f\u8aa4 - \u8acb\u6aa2\u5bdf\u7db2\u8def\u9023\u7dda",
+            "expired_credentials": "\u6191\u8b49\u904e\u671f - \u8acb\u900f\u904e Vulcan \u884c\u52d5 App \u8a3b\u518a\u9801\u9762\u91cd\u65b0\u65b0\u589e",
+            "expired_token": "\u6b0a\u6756\u5df2\u904e\u671f - \u8acb\u7522\u751f\u65b0\u6b0a\u6756",
+            "invalid_pin": "Pin \u7121\u6548",
+            "invalid_symbol": "\u7b26\u865f\u7121\u6548",
+            "invalid_token": "\u6b0a\u6756\u7121\u6548",
+            "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4"
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "\u4f7f\u7528\u5132\u5b58\u6191\u8b49"
+                },
+                "description": "\u65b0\u589e\u5176\u4ed6\u5b78\u751f\u3002"
+            },
+            "auth": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "\u7b26\u865f",
+                    "token": "\u6b0a\u6756"
+                },
+                "description": "\u4f7f\u7528\u884c\u52d5 App \u8a3b\u518a\u9801\u9762\u767b\u5165 Vulcan \u5e33\u865f\u3002"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "\u7b26\u865f",
+                    "token": "\u6b0a\u6756"
+                },
+                "description": "\u4f7f\u7528\u884c\u52d5 App \u8a3b\u518a\u9801\u9762\u767b\u5165 Vulcan \u5e33\u865f\u3002"
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "\u767b\u5165"
+                },
+                "description": "\u9078\u64c7\u5132\u5b58\u6191\u8b49\u3002"
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "\u9078\u64c7\u5b78\u751f"
+                },
+                "description": "\u9078\u64c7\u5b78\u751f\u3001\u53ef\u4ee5\u518d\u900f\u904e\u65b0\u589e\u6574\u5408\u65b0\u589e\u5176\u4ed6\u5b78\u751f\u3002"
+            }
+        }
+    }
+}

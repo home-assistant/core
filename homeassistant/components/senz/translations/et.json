@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp",
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
+            "no_url_available": "URL pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
+            "oauth_error": "Saadi sobimatud loaandmed."
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "nVent RAYCHEM SENZi konfigureerimine YAMLi abil on eemaldatud.\n\nTeie olemasolevat YAML-konfiguratsiooni ei kasuta Home Assistant.\n\nProbleemi lahendamiseks eemaldage YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "NVent RAYCHEM SENZ YAML konfiguratsioon on eemaldatud"
+        }
+    }
+}

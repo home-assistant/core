@@ -1,2 +1,2 @@
 """Tests for Hass.io component."""
-HASSIO_TOKEN = "123456"
+SUPERVISOR_TOKEN = "123456"

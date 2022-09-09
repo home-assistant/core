@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "not_huawei_lte": "Kein Huawei LTE-Ger\u00e4t"
         },
         "error": {
@@ -34,7 +32,6 @@
                 "data": {
                     "name": "Name des Benachrichtigungsdienstes (\u00c4nderung erfordert Neustart)",
                     "recipient": "SMS-Benachrichtigungsempf\u00e4nger",
-                    "track_new_devices": "Neue Ger\u00e4te verfolgen",
                     "track_wired_clients": "Kabelgebundene Netzwerk-Clients verfolgen",
                     "unauthenticated_mode": "Nicht authentifizierter Modus (\u00c4nderung erfordert erneutes Laden)"
                 }

@@ -6,16 +6,14 @@
                     "site_name": "Nome del sito",
                     "site_nmi": "Sito NMI"
                 },
-                "description": "Seleziona l'NMI del sito che desideri aggiungere",
-                "title": "Amber Electric"
+                "description": "Seleziona l'NMI del sito che desideri aggiungere"
             },
             "user": {
                 "data": {
                     "api_token": "Token API",
                     "site_id": "ID sito"
                 },
-                "description": "Vai su {api_url} per generare una chiave API",
-                "title": "Amber Electric"
+                "description": "Vai su {api_url} per generare una chiave API"
             }
         }
     }

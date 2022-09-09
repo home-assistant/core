@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, callback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -709,8 +710,8 @@ async def test_template_triggers(hass):
     assert hass.states.get("binary_sensor.test_binary").state == STATE_OFF
 
     events = []
-    hass.helpers.event.async_track_state_change_event(
-        "binary_sensor.test_binary", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass, "binary_sensor.test_binary", callback(lambda event: events.append(event))
     )
 
     context = Context()
@@ -748,8 +749,8 @@ async def test_state_triggers(hass):
     assert hass.states.get("binary_sensor.test_binary").state == STATE_OFF
 
     events = []
-    hass.helpers.event.async_track_state_change_event(
-        "binary_sensor.test_binary", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass, "binary_sensor.test_binary", callback(lambda event: events.append(event))
     )
 
     context = Context()

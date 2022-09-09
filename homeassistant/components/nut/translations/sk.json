@@ -8,16 +8,9 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Prostriedky"
-                },
-                "title": "Vyberte prostriedky, ktor\u00e9 chcete monitorova\u0165"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Prostriedky"
+                    "alias": "Alias"
                 },
                 "title": "Vyberte UPS, ktor\u00fa chcete monitorova\u0165"
             },
@@ -32,17 +25,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Prostriedky",
                     "scan_interval": "Skenovac\u00ed interval (v sekund\u00e1ch)"
-                },
-                "description": "Vyberte senzory."
+                }
             }
         }
     }

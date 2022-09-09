@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "round": "Precisione",
+                    "source": "Sensore di ingresso",
+                    "time_window": "Finestra temporale",
+                    "unit_prefix": "Prefisso metrico",
+                    "unit_time": "Unit\u00e0 di tempo"
+                },
+                "data_description": {
+                    "round": "Controlla il numero di cifre decimali nell'uscita.",
+                    "time_window": "Se impostato, il valore del sensore \u00e8 una media mobile delle derivate ponderata nel tempo all'interno di questa finestra.",
+                    "unit_prefix": "L'output sar\u00e0 ridimensionato in base al prefisso metrico selezionato e all'unit\u00e0 di tempo della derivata."
+                },
+                "description": "Crea un sensore che stimi la derivata di un sensore.",
+                "title": "Aggiungi sensore derivata"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nome",
+                    "round": "Precisione",
+                    "source": "Sensore di ingresso",
+                    "time_window": "Finestra temporale",
+                    "unit_prefix": "Prefisso metrico",
+                    "unit_time": "Unit\u00e0 di tempo"
+                },
+                "data_description": {
+                    "round": "Controlla il numero di cifre decimali nell'uscita.",
+                    "time_window": "Se impostato, il valore del sensore \u00e8 una media mobile delle derivate ponderata nel tempo all'interno di questa finestra.",
+                    "unit_prefix": "L'output sar\u00e0 ridimensionato in base al prefisso metrico selezionato e all'unit\u00e0 di tempo della derivata.."
+                }
+            }
+        }
+    },
+    "title": "Sensore derivata"
+}

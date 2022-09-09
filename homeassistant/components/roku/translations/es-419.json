@@ -9,10 +9,6 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
-            "ssdp_confirm": {
-                "description": "\u00bfDesea configurar {name}?",
-                "title": "Roku"
-            },
             "user": {
                 "data": {
                     "host": "Host o direcci\u00f3n IP"

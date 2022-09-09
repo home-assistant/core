@@ -12,9 +12,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Interval pembaruan (dalam detik, minimal 30)",
-                    "unique_id": "Perangkat",
-                    "usn": "Perangkat"
+                    "unique_id": "Perangkat"
                 }
             }
         }

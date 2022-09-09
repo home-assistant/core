@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Palun kinnita vastuv\u00f5tja lisamine",
-                "title": ""
+                "description": "Palun kinnita vastuv\u00f5tja lisamine"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "IP aadress"
                 },
-                "description": "Kui IP-aadressi pole m\u00e4\u00e4ratud, kasutatakse automaatset avastamist",
-                "title": ""
+                "data_description": {
+                    "host": "Automaatse avastamise kasutamiseks j\u00e4ta v\u00e4li t\u00fchjaks."
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Seadista tsoon 2",
                     "zone3": "Seadista tsoon 3"
                 },
-                "description": "Valikuliste s\u00e4tete m\u00e4\u00e4ramine",
-                "title": ""
+                "description": "Valikuliste s\u00e4tete m\u00e4\u00e4ramine"
             }
         }
     }

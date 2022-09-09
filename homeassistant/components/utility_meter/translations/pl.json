@@ -1,0 +1,35 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "cycle": "Cykl resetowania licznika",
+                    "delta_values": "Warto\u015bci delta",
+                    "name": "Nazwa",
+                    "net_consumption": "Zu\u017cycie netto",
+                    "offset": "Przesuni\u0119cie resetowania licznika",
+                    "source": "Sensor wej\u015bciowy",
+                    "tariffs": "Obs\u0142ugiwane taryfy"
+                },
+                "data_description": {
+                    "delta_values": "W\u0142\u0105cz, je\u015bli warto\u015bci \u017ar\u00f3d\u0142owe s\u0105 warto\u015bciami delta od ostatniego odczytu, a nie warto\u015bciami bezwzgl\u0119dnymi.",
+                    "net_consumption": "W\u0142\u0105cz, je\u015bli \u017ar\u00f3d\u0142em jest licznik netto, co oznacza, \u017ce jego warto\u015bci mog\u0105 si\u0119 zar\u00f3wno zwi\u0119ksza\u0107 jak i zmniejsza\u0107.",
+                    "offset": "Przesuni\u0119cie dnia miesi\u0119cznego zerowania licznika.",
+                    "tariffs": "Lista obs\u0142ugiwanych taryf. Pozostaw puste, je\u015bli potrzebna jest tylko jedna taryfa."
+                },
+                "description": "Utw\u00f3rz sensor, kt\u00f3ry \u015bledzi u\u017cycie r\u00f3\u017cnych medi\u00f3w (np. energii, gazu, wody, ogrzewania) przez skonfigurowany okres czasu, zwykle co miesi\u0105c. Sensor licznika medi\u00f3w opcjonalnie obs\u0142uguje podzia\u0142 u\u017cycia wed\u0142ug taryf, w takim przypadku tworzony jest jeden czujnik dla ka\u017cdej taryfy oraz encja do wyboru aktualnej taryfy.",
+                "title": "Dodaj licznik medi\u00f3w"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source": "Sensor wej\u015bciowy"
+                }
+            }
+        }
+    },
+    "title": "Licznik medi\u00f3w"
+}

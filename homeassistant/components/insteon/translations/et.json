@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "\u00dchendamine nurjus",
+            "not_insteon_device": "Avastatud seade ei ole Insteoni seade",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "select_single": "Vali \u00fcks suvand."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Kas seadistada {name} ?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP aagress",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Modemi mudel."
                 },
-                "description": "Vali Insteoni modemi mudel.",
-                "title": ""
+                "description": "Vali Insteoni modemi mudel."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Seadme kategooria (n\u00e4iteks 0x10)",
                     "subcat": "Seadme alamkategooria (n\u00e4iteks 0x0a)"
                 },
-                "description": "Lisa seadme alistamine.",
-                "title": ""
+                "description": "Lisa seadme alistamine."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "H\u00e4mardamise samm (ainult valgustite jaoks, vaikimisi 22)",
                     "unitcode": ""
                 },
-                "description": "Muuda Insteon Hubi parooli.",
-                "title": ""
+                "description": "Muuda Insteon Hubi parooli."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "",
                     "username": "Kasutajanimi"
                 },
-                "description": "Muutda Insteon Hubi \u00fchenduse teavet. P\u00e4rast selle muudatuse tegemist pead Home Assistanti taask\u00e4ivitama. See ei muuda jaoturi enda konfiguratsiooni. Hubis muudatuste tegemiseks kasuta rakendust Hub.",
-                "title": ""
+                "description": "Muutda Insteon Hubi \u00fchenduse teavet. P\u00e4rast selle muudatuse tegemist pead Home Assistanti taask\u00e4ivitama. See ei muuda jaoturi enda konfiguratsiooni. Hubis muudatuste tegemiseks kasuta rakendust Hub."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Muuda jaoturi konfiguratsiooni.",
                     "remove_override": "Seadme alistamise eemaldamine.",
                     "remove_x10": "Eemalda X10 seade."
-                },
-                "description": "Vali seadistussuvand.",
-                "title": ""
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Vali eemaldatava seadme aadress"
                 },
-                "description": "Seadme alistamise eemaldamine",
-                "title": ""
+                "description": "Seadme alistamise eemaldamine"
             },
             "remove_x10": {
                 "data": {
                     "address": "Vali eemaldatava seadme aadress"
                 },
-                "description": "Eemalda X10 seade",
-                "title": ""
+                "description": "Eemalda X10 seade"
             }
         }
     }

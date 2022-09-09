@@ -27,8 +27,6 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    children: list[BrowseMediaSource | BrowseMedia] | None
-
     def __init__(
         self, *, domain: str | None, identifier: str | None, **kwargs: Any
     ) -> None:
@@ -50,6 +48,7 @@ class MediaSourceItem:
     hass: HomeAssistant
     domain: str | None
     identifier: str
+    target_media_player: str | None
 
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
@@ -94,7 +93,9 @@ class MediaSourceItem:
         return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
 
     @classmethod
-    def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
+    def from_uri(
+        cls, hass: HomeAssistant, uri: str, target_media_player: str | None
+    ) -> MediaSourceItem:
         """Create an item from a uri."""
         if not (match := URI_SCHEME_REGEX.match(uri)):
             raise ValueError("Invalid media source URI")
@@ -102,7 +103,7 @@ class MediaSourceItem:
         domain = match.group("domain")
         identifier = match.group("identifier")
 
-        return cls(hass, domain, identifier)
+        return cls(hass, domain, identifier, target_media_player)
 
 
 class MediaSource(ABC):

@@ -3,9 +3,6 @@
         "step": {
             "authorize": {
                 "title": "Godkend Sony Bravia TV"
-            },
-            "user": {
-                "title": "Sony Bravia TV"
             }
         }
     }

@@ -35,14 +35,12 @@
                 "title": "Pilih server Plex"
             },
             "user": {
-                "description": "Lanjutkan [plex.tv](https://plex.tv) untuk menautkan server Plex.",
-                "title": "Server Media Plex"
+                "description": "Lanjutkan [plex.tv](https://plex.tv) untuk menautkan server Plex."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Metode penyiapan"
-                },
-                "title": "Server Media Plex"
+                }
             }
         }
     },

@@ -56,21 +56,7 @@
                 "description": "Wybierz port szeregowy urz\u0105dzenia USB Crownstone. \n\nPoszukaj urz\u0105dzenia z VID 10C4 i PID EA60.",
                 "title": "Konfiguracja urz\u0105dzenia USB Crownstone"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
-                },
-                "description": "Wybierz port szeregowy urz\u0105dzenia USB Crownstone. \n\nPoszukaj urz\u0105dzenia z VID 10C4 i PID EA60.",
-                "title": "Konfiguracja urz\u0105dzenia USB Crownstone"
-            },
             "usb_manual_config": {
-                "data": {
-                    "usb_manual_path": "\u015acie\u017cka urz\u0105dzenia USB"
-                },
-                "description": "Wprowad\u017a r\u0119cznie \u015bcie\u017ck\u0119 urz\u0105dzenia USB Crownstone.",
-                "title": "Wpisz r\u0119cznie \u015bcie\u017ck\u0119 urz\u0105dzenia USB Crownstone"
-            },
-            "usb_manual_config_option": {
                 "data": {
                     "usb_manual_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
@@ -82,13 +68,6 @@
                     "usb_sphere": "Crownstone Sphere"
                 },
                 "description": "Wybierz USB, w kt\u00f3rym znajduje si\u0119 Crownstone Sphere.",
-                "title": "USB Crownstone Sphere"
-            },
-            "usb_sphere_config_option": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "Wybierz USB w kt\u00f3rym znajduje si\u0119 Crownstone Sphere.",
                 "title": "USB Crownstone Sphere"
             }
         }

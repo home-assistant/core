@@ -175,7 +175,7 @@ async def test_options_not_loaded(hass):
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 @pytest.mark.parametrize("reversed", [True, False])
@@ -204,7 +204,7 @@ async def test_options_with_targets(hass, reversed):
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result2 = await hass.config_entries.options.async_configure(
@@ -212,19 +212,19 @@ async def test_options_with_targets(hass, reversed):
             user_input={"target_id": "a"},
         )
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"reverse": reversed},
         )
 
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result3["type"] == data_entry_flow.FlowResultType.FORM
 
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
             user_input={"target_id": None},
         )
-        assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         assert config_entry.options == {
             CONF_REVERSED_TARGET_IDS: {"a": reversed},

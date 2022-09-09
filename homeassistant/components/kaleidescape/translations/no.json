@@ -13,14 +13,12 @@
         "flow_title": "{model} ( {name} )",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du sette opp {model} -spilleren med navnet {name} ?",
-                "title": "Kaleidescape"
+                "description": "Vil du sette opp {model} -spilleren med navnet {name} ?"
             },
             "user": {
                 "data": {
                     "host": "Vert"
-                },
-                "title": "Kaleidescape-oppsett"
+                }
             }
         }
     }

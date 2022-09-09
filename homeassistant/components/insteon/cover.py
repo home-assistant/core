@@ -1,13 +1,12 @@
 """Support for Insteon covers via PowerLinc Modem."""
 import math
+from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -17,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 
 async def async_setup_entry(
@@ -43,8 +40,14 @@ async def async_setup_entry(
 class InsteonCoverEntity(InsteonEntity, CoverEntity):
     """A Class for an Insteon cover entity."""
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current cover position."""
         if self._insteon_device_group.value is not None:
             pos = self._insteon_device_group.value
@@ -53,24 +56,19 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
         return int(math.ceil(pos * 100 / 255))
 
     @property
-    def supported_features(self):
-        """Return the supported features for this entity."""
-        return SUPPORTED_FEATURES
-
-    @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self.current_cover_position)
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self._insteon_device.async_open()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._insteon_device.async_close()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         position = int(kwargs[ATTR_POSITION] * 255 / 100)
         if position == 0:

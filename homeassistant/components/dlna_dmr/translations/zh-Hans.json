@@ -4,7 +4,6 @@
             "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86",
             "alternative_integration": "\u8be5\u8bbe\u5907\u5728\u53e6\u4e00\u96c6\u6210\u80fd\u63d0\u4f9b\u66f4\u597d\u7684\u652f\u6301",
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "could_not_connect": "\u8fde\u63a5 DLNA \u8bbe\u5907\u5931\u8d25",
             "discovery_error": "\u672a\u53d1\u73b0\u53ef\u7528\u7684 DLNA \u8bbe\u5907",
             "incomplete_config": "\u914d\u7f6e\u7f3a\u5c11\u5fc5\u8981\u7684\u53d8\u91cf\u4fe1\u606f",
             "non_unique_id": "\u53d1\u73b0\u591a\u53f0\u8bbe\u5907\u5177\u6709\u76f8\u540c\u7684 unique ID",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "could_not_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 DLNA \u8bbe\u5907",
             "not_dmr": "\u8be5\u8bbe\u5907\u4e0d\u662f\u53d7\u652f\u6301\u7684\u6570\u5b57\u5a92\u4f53\u6e32\u67d3\u5668\uff08DMR\uff09"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "\u4e3b\u673a",
-                    "url": "\u7f51\u5740"
+                    "host": "\u4e3b\u673a"
                 },
                 "title": "\u53d1\u73b0 DLNA DMR \u8bbe\u5907"
             }

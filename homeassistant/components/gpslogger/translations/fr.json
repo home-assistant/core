@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "\u00cates-vous s\u00fbr de vouloir configurer le Webhook GPSLogger ?",
+                "description": "Voulez-vous vraiment configurer le webhook GPSLogger\u00a0?",
                 "title": "Configurer le Webhook GPSLogger"
             }
         }

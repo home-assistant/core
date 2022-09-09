@@ -16,6 +16,7 @@ class Gateway:
 
     def __init__(self, config, hass):
         """Initialize the sms gateway."""
+        _LOGGER.debug("Init with connection mode:%s", config["Connection"])
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
@@ -73,7 +74,6 @@ class Gateway:
 
         self._hass.add_job(self._notify_incoming_sms, data)
 
-    # pylint: disable=no-self-use
     def get_and_delete_all_sms(self, state_machine, force=False):
         """Read and delete all SMS in the modem."""
         # Read SMS memory status ...
@@ -154,6 +154,10 @@ class Gateway:
         """Get the current signal level of the modem."""
         return await self._worker.get_signal_quality_async()
 
+    async def get_network_info_async(self):
+        """Get the current network info of the modem."""
+        return await self._worker.get_network_info_async()
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
@@ -163,8 +167,13 @@ async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
         gateway = Gateway(config, hass)
-        await gateway.init_async()
+        try:
+            await gateway.init_async()
+        except gammu.GSMError as exc:
+            _LOGGER.error("Failed to initialize, error %s", exc)
+            await gateway.terminate_async()
+            return None
         return gateway
     except gammu.GSMError as exc:
-        _LOGGER.error("Failed to initialize, error %s", exc)
+        _LOGGER.error("Failed to create async worker, error %s", exc)
         return None

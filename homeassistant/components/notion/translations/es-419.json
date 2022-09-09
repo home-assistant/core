@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Este nombre de usuario ya est\u00e1 en uso."
         },
-        "error": {
-            "no_devices": "No se han encontrado dispositivos en la cuenta."
-        },
         "step": {
             "user": {
                 "data": {

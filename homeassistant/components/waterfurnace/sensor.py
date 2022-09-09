@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
@@ -95,6 +96,8 @@ def setup_platform(
 class WaterFurnaceSensor(SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, client, config):
         """Initialize the sensor."""
         self.client = client
@@ -130,16 +133,11 @@ class WaterFurnaceSensor(SensorEntity):
         """Return the units of measurement."""
         return self._unit_of_measurement
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                UPDATE_TOPIC, self.async_update_callback
+            async_dispatcher_connect(
+                self.hass, UPDATE_TOPIC, self.async_update_callback
             )
         )
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -94,17 +95,17 @@ class DigitalOceanSwitch(SwitchEntity):
             ATTR_VCPUS: self.data.vcpus,
         }
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the droplet."""
         if self.data.status != "active":
             self.data.power_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Shutdown the droplet."""
         if self.data.status == "active":
             self.data.power_off()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the device and update the data."""
         self._digital_ocean.update()
 

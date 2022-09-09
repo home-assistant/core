@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "not_zha_device": "Dit apparaat is niet een zha-apparaat.",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
             "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
         },
         "error": {

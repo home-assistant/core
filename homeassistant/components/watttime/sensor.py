@@ -35,14 +35,14 @@ SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT = "percent"
 REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
-        name="Marginal Operating Emissions Rate",
+        name="Marginal operating emissions rate",
         icon="mdi:blur",
         native_unit_of_measurement=f"{MASS_POUNDS} CO2/MWh",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
-        name="Relative Marginal Emissions Intensity",
+        name="Relative marginal emissions intensity",
         icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -66,6 +66,8 @@ async def async_setup_entry(
 
 class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     """Define a realtime emissions sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

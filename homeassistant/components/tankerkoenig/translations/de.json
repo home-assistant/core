@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_stations": "Konnte keine Station in Reichweite finden."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                }
+            },
+            "select_station": {
+                "data": {
+                    "stations": "Stationen"
+                },
+                "description": "{stations_count} Stationen im Umkreis gefunden",
+                "title": "W\u00e4hle Stationen zum Hinzuf\u00fcgen aus"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "fuel_types": "Kraftstoffarten",
+                    "location": "Standort",
+                    "name": "Name der Region",
+                    "radius": "Suchradius",
+                    "stations": "Zus\u00e4tzliche Tankstellen"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update-Intervall",
+                    "show_on_map": "Stationen auf der Karte anzeigen",
+                    "stations": "Stationen"
+                },
+                "title": "Tankerkoenig Optionen"
+            }
+        }
+    }
+}

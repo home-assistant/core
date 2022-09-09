@@ -14,11 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Name"
-                },
-                "description": "Set up the Vallox integration. If you have problems with configuration go to {integration_docs_url}.",
-                "title": "Vallox"
+                    "host": "Host"
+                }
             }
         }
     }

@@ -7,7 +7,7 @@
             "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
             "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "cannot_connect": "Kan geen verbinding maken",
             "discovery_requires_supervisor": "Ontdekking vereist de Supervisor.",
             "not_zwave_device": "Het ontdekte apparaat is niet een Z-Wave apparaat."
@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Netwerksleutel",
                     "s0_legacy_key": "S0 Sleutel (Legacy)",
                     "s2_access_control_key": "S2 Toegangscontrolesleutel",
                     "s2_authenticated_key": "S2 geverifieerde sleutel",
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Wilt u {name} instellen met de Z-Wave JS add-on?"
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u de Z-Wave JS Server met home ID {home_id} gevonden op {url} toevoegen aan Home Assistant?",
+                "title": "Ontdekt Z-Wave JS Server"
             }
         }
     },
@@ -74,7 +77,7 @@
         },
         "condition_type": {
             "config_parameter": "Config parameter {subtype} waarde",
-            "node_status": "Knooppuntstatus",
+            "node_status": "Apparaatstatus",
             "value": "Huidige waarde van een Z-Wave-waarde"
         },
         "trigger_type": {
@@ -83,7 +86,7 @@
             "event.value_notification.basic": "Basis CC-evenement op {subtype}",
             "event.value_notification.central_scene": "Centrale Sc\u00e8ne actie op {subtype}",
             "event.value_notification.scene_activation": "Sc\u00e8ne-activering op {subtype}",
-            "state.node_status": "Knooppuntstatus gewijzigd",
+            "state.node_status": "Apparaatstatus gewijzigd",
             "zwave_js.value_updated.config_parameter": "Waardeverandering op configuratieparameter {subtype}",
             "zwave_js.value_updated.value": "Waardeverandering op een Z-Wave JS-waarde"
         }
@@ -113,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Emulate Hardware",
                     "log_level": "Log level",
-                    "network_key": "Netwerksleutel",
                     "s0_legacy_key": "S0 Sleutel (Legacy)",
                     "s2_access_control_key": "S2 Toegangscontrolesleutel",
                     "s2_authenticated_key": "S2 geverifieerde sleutel",
@@ -142,6 +144,5 @@
                 "title": "The Z-Wave JS add-on is aan het starten."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

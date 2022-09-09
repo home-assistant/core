@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Balikkan status buka/tutup",
-                    "name": "Nama (opsional)",
+                    "name": "Nama",
                     "type": "Jenis Sensor Biner"
                 },
                 "description": "Opsi {zone}",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nama (opsional)",
-                    "poll_interval": "Interval Polling (dalam menit) (opsional)",
+                    "name": "Nama",
+                    "poll_interval": "Interval Polling (menit)",
                     "type": "Jenis Sensor"
                 },
                 "description": "Opsi {zone}",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Ganti URL host API (opsional)",
+                    "api_host": "Timpa URL host API",
                     "blink": "Kedipkan panel LED saat mengirim perubahan status",
                     "discovery": "Tanggapi permintaan penemuan di jaringan Anda",
                     "override_api_host": "Timpa URL panel host API Home Assistant bawaan"
@@ -95,11 +95,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Keluaran saat nyala",
-                    "momentary": "Durasi pulsa (milidetik) (opsional)",
+                    "momentary": "Durasi pulsa (milidetik)",
                     "more_states": "Konfigurasikan status tambahan untuk zona ini",
-                    "name": "Nama (opsional)",
-                    "pause": "Jeda di antara pulsa (milidetik) (opsional)",
-                    "repeat": "Waktu pengulangan (-1 = tak terbatas) (opsional)"
+                    "name": "Nama",
+                    "pause": "Jeda di antara pulsa (milidetik)",
+                    "repeat": "Waktu pengulangan (-1 = tak terbatas)"
                 },
                 "description": "Opsi {zone}: status {state}",
                 "title": "Konfigurasikan Output yang Dapat Dialihkan"

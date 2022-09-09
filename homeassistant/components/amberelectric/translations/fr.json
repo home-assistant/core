@@ -6,16 +6,14 @@
                     "site_name": "Nom du site",
                     "site_nmi": "Site NMI"
                 },
-                "description": "S\u00e9lectionnez le NMI du site que vous souhaitez ajouter",
-                "title": "Amber Electrique"
+                "description": "S\u00e9lectionnez le NMI du site que vous souhaitez ajouter"
             },
             "user": {
                 "data": {
                     "api_token": "Jeton d'API",
                     "site_id": "ID du site"
                 },
-                "description": "Acc\u00e9dez \u00e0 {api_url} pour g\u00e9n\u00e9rer une cl\u00e9 API",
-                "title": "Amber Electrique"
+                "description": "Acc\u00e9dez \u00e0 {api_url} pour g\u00e9n\u00e9rer une cl\u00e9 API"
             }
         }
     }

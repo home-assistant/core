@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Address"
+                },
+                "title": "Connect to the device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Name of source #1",
+                    "source_2": "Name of source #2",
+                    "source_3": "Name of source #3",
+                    "source_4": "Name of source #4",
+                    "source_5": "Name of source #5",
+                    "source_6": "Name of source #6"
+                },
+                "title": "Configure sources"
+            }
+        }
+    }
+}

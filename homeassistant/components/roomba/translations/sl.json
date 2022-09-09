@@ -6,11 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Nenehno",
-                    "delay": "Zamik",
-                    "host": "Ime gostitelja ali naslov IP",
-                    "password": "Geslo"
+                    "host": "Ime gostitelja ali naslov IP"
                 },
                 "description": "Trenutno je pridobivanje BLID-a in gesla ro\u010dni postopek. Upo\u0161tevajte korake opisane v dokumentaciji na: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
                 "title": "Pove\u017eite se z napravo"

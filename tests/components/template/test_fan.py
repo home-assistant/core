@@ -383,17 +383,22 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "x" in caplog_setup_text
 
 
-async def test_on_off(hass):
+async def test_on_off(hass, calls):
     """Test turn on and turn off."""
     await _register_components(hass)
+    expected_calls = 0
 
-    for func, state in [
-        (common.async_turn_on, STATE_ON),
-        (common.async_turn_off, STATE_OFF),
+    for func, state, action in [
+        (common.async_turn_on, STATE_ON, "turn_on"),
+        (common.async_turn_off, STATE_OFF, "turn_off"),
     ]:
         await func(hass, _TEST_FAN)
         assert hass.states.get(_STATE_INPUT_BOOLEAN).state == state
         _verify(hass, state, 0, None, None, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == action
+        assert calls[-1].data["caller"] == _TEST_FAN
 
 
 async def test_set_invalid_direction_from_initial_stage(hass, calls):
@@ -407,29 +412,43 @@ async def test_set_invalid_direction_from_initial_stage(hass, calls):
     _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_osc(hass):
+async def test_set_osc(hass, calls):
     """Test set oscillating."""
     await _register_components(hass)
+    expected_calls = 0
 
     await common.async_turn_on(hass, _TEST_FAN)
+    expected_calls += 1
     for state in [True, False]:
         await common.async_oscillate(hass, _TEST_FAN, state)
         assert hass.states.get(_OSC_INPUT).state == str(state)
         _verify(hass, STATE_ON, 0, state, None, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_oscillating"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["option"] == state
 
 
-async def test_set_direction(hass):
+async def test_set_direction(hass, calls):
     """Test set valid direction."""
     await _register_components(hass)
+    expected_calls = 0
 
     await common.async_turn_on(hass, _TEST_FAN)
+    expected_calls += 1
     for cmd in [DIRECTION_FORWARD, DIRECTION_REVERSE]:
         await common.async_set_direction(hass, _TEST_FAN, cmd)
         assert hass.states.get(_DIRECTION_INPUT_SELECT).state == cmd
         _verify(hass, STATE_ON, 0, None, cmd, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_direction"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["option"] == cmd
 
 
-async def test_set_invalid_direction(hass):
+async def test_set_invalid_direction(hass, calls):
     """Test set invalid direction when fan has valid direction."""
     await _register_components(hass)
 
@@ -440,30 +459,36 @@ async def test_set_invalid_direction(hass):
         _verify(hass, STATE_ON, 0, None, DIRECTION_FORWARD, None)
 
 
-async def test_preset_modes(hass):
+async def test_preset_modes(hass, calls):
     """Test preset_modes."""
     await _register_components(
         hass, ["off", "low", "medium", "high", "auto", "smart"], ["auto", "smart"]
     )
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for extra, state in [
-        ("auto", "auto"),
-        ("smart", "smart"),
-        ("invalid", "smart"),
+    for extra, state, expected_calls in [
+        ("auto", "auto", 2),
+        ("smart", "smart", 3),
+        ("invalid", "smart", 3),
     ]:
         await common.async_set_preset_mode(hass, _TEST_FAN, extra)
         assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == state
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_preset_mode"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["option"] == state
 
     await common.async_turn_on(hass, _TEST_FAN, preset_mode="auto")
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
 
 
-async def test_set_percentage(hass):
+async def test_set_percentage(hass, calls):
     """Test set valid speed percentage."""
     await _register_components(hass)
+    expected_calls = 0
 
     await common.async_turn_on(hass, _TEST_FAN)
+    expected_calls += 1
     for state, value in [
         (STATE_ON, 100),
         (STATE_ON, 66),
@@ -472,13 +497,18 @@ async def test_set_percentage(hass):
         await common.async_set_percentage(hass, _TEST_FAN, value)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
         _verify(hass, state, value, None, None, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_value"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["value"] == value
 
     await common.async_turn_on(hass, _TEST_FAN, percentage=50)
     assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 50
     _verify(hass, STATE_ON, 50, None, None, None)
 
 
-async def test_increase_decrease_speed(hass):
+async def test_increase_decrease_speed(hass, calls):
     """Test set valid increase and decrease speed."""
     await _register_components(hass, speed_count=3)
 
@@ -495,7 +525,7 @@ async def test_increase_decrease_speed(hass):
         _verify(hass, state, value, None, None, None)
 
 
-async def test_increase_decrease_speed_default_speed_count(hass):
+async def test_increase_decrease_speed_default_speed_count(hass, calls):
     """Test set valid increase and decrease speed."""
     await _register_components(hass)
 
@@ -512,7 +542,7 @@ async def test_increase_decrease_speed_default_speed_count(hass):
         _verify(hass, state, value, None, None, None)
 
 
-async def test_set_invalid_osc_from_initial_state(hass):
+async def test_set_invalid_osc_from_initial_state(hass, calls):
     """Test set invalid oscillating when fan is in initial state."""
     await _register_components(hass)
 
@@ -523,7 +553,7 @@ async def test_set_invalid_osc_from_initial_state(hass):
     _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_invalid_osc(hass):
+async def test_set_invalid_osc(hass, calls):
     """Test set invalid oscillating when fan has valid osc."""
     await _register_components(hass)
 
@@ -616,10 +646,19 @@ async def _register_components(
             "percentage_template": "{{ states('input_number.percentage') }}",
             "oscillating_template": "{{ states('input_select.osc') }}",
             "direction_template": "{{ states('input_select.direction') }}",
-            "turn_on": {
-                "service": "input_boolean.turn_on",
-                "entity_id": _STATE_INPUT_BOOLEAN,
-            },
+            "turn_on": [
+                {
+                    "service": "input_boolean.turn_on",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_on",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
             "turn_off": [
                 {
                     "service": "input_boolean.turn_off",
@@ -632,35 +671,82 @@ async def _register_components(
                         "value": 0,
                     },
                 },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_off",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
             ],
-            "set_preset_mode": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _PRESET_MODE_INPUT_SELECT,
-                    "option": "{{ preset_mode }}",
+            "set_preset_mode": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _PRESET_MODE_INPUT_SELECT,
+                        "option": "{{ preset_mode }}",
+                    },
                 },
-            },
-            "set_percentage": {
-                "service": "input_number.set_value",
-                "data_template": {
-                    "entity_id": _PERCENTAGE_INPUT_NUMBER,
-                    "value": "{{ percentage }}",
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_preset_mode",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ preset_mode }}",
+                    },
                 },
-            },
-            "set_oscillating": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _OSC_INPUT,
-                    "option": "{{ oscillating }}",
+            ],
+            "set_percentage": [
+                {
+                    "service": "input_number.set_value",
+                    "data_template": {
+                        "entity_id": _PERCENTAGE_INPUT_NUMBER,
+                        "value": "{{ percentage }}",
+                    },
                 },
-            },
-            "set_direction": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _DIRECTION_INPUT_SELECT,
-                    "option": "{{ direction }}",
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_value",
+                        "caller": "{{ this.entity_id }}",
+                        "value": "{{ percentage }}",
+                    },
                 },
-            },
+            ],
+            "set_oscillating": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _OSC_INPUT,
+                        "option": "{{ oscillating }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_oscillating",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ oscillating }}",
+                    },
+                },
+            ],
+            "set_direction": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _DIRECTION_INPUT_SELECT,
+                        "option": "{{ direction }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_direction",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ direction }}",
+                    },
+                },
+            ],
         }
 
         if preset_modes:

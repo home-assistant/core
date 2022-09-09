@@ -39,6 +39,9 @@ def config_entry_fixture(hass, config, controller_mac):
 @pytest.fixture(name="controller")
 def controller_fixture(
     controller_mac,
+    data_api_versions,
+    data_diagnostics_current,
+    data_machine_firmare_update_status,
     data_programs,
     data_provision_settings,
     data_restrictions_current,
@@ -49,10 +52,17 @@ def controller_fixture(
     controller = AsyncMock()
     controller.api_version = "4.5.0"
     controller.hardware_version = 3
-    controller.name = "My RainMachine"
+    # The api returns a controller with all numbers as numeric
+    # instead of a string
+    controller.name = 12345
     controller.mac = controller_mac
     controller.software_version = "4.0.925"
 
+    controller.api.versions.return_value = data_api_versions
+    controller.diagnostics.current.return_value = data_diagnostics_current
+    controller.machine.get_firmware_update_status.return_value = (
+        data_machine_firmare_update_status
+    )
     controller.programs.all.return_value = data_programs
     controller.provisioning.settings.return_value = data_provision_settings
     controller.restrictions.current.return_value = data_restrictions_current
@@ -66,6 +76,26 @@ def controller_fixture(
 def controller_mac_fixture():
     """Define a controller MAC address."""
     return "aa:bb:cc:dd:ee:ff"
+
+
+@pytest.fixture(name="data_api_versions", scope="session")
+def data_api_versions_fixture():
+    """Define API version data."""
+    return json.loads(load_fixture("api_versions_data.json", "rainmachine"))
+
+
+@pytest.fixture(name="data_diagnostics_current", scope="session")
+def data_diagnostics_current_fixture():
+    """Define current diagnostics data."""
+    return json.loads(load_fixture("diagnostics_current_data.json", "rainmachine"))
+
+
+@pytest.fixture(name="data_machine_firmare_update_status", scope="session")
+def data_machine_firmare_update_status_fixture():
+    """Define machine firmware update status data."""
+    return json.loads(
+        load_fixture("machine_firmware_update_status_data.json", "rainmachine")
+    )
 
 
 @pytest.fixture(name="data_programs", scope="session")

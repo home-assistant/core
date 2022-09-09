@@ -11,12 +11,12 @@
             "default": "Sikeres hiteles\u00edt\u00e9s"
         },
         "error": {
-            "follow_link": "K\u00e9rem, k\u00f6vesse a hivatkoz\u00e1st \u00e9s hiteles\u00edtse mag\u00e1t miel\u0151tt megnyomn\u00e1 a K\u00fcld\u00e9s gombot",
+            "follow_link": "K\u00e9rem, k\u00f6vesse a hivatkoz\u00e1st \u00e9s hiteles\u00edtse mag\u00e1t miel\u0151tt folytatn\u00e1",
             "no_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token"
         },
         "step": {
             "auth": {
-                "description": "K\u00e9rem k\u00f6vesse az al\u00e1bbi linket \u00e9s a **Fogadja el** a hozz\u00e1f\u00e9r\u00e9st a Minut fi\u00f3kj\u00e1hoz, majd t\u00e9rjen vissza \u00e9s nyomja meg a **K\u00fcld\u00e9s ** gombot. \n\n [Link]({authorization_url})",
+                "description": "K\u00e9rem k\u00f6vesse az al\u00e1bbi linket \u00e9s a **Fogadja el** a hozz\u00e1f\u00e9r\u00e9st a Minut fi\u00f3kj\u00e1hoz, majd t\u00e9rjen vissza \u00e9s nyomja meg a **Mehet** gombot. \n\n [Link]({authorization_url})",
                 "title": "Point hiteles\u00edt\u00e9se"
             },
             "user": {
@@ -24,7 +24,7 @@
                     "flow_impl": "Szolg\u00e1ltat\u00f3"
                 },
                 "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?",
-                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+                "title": "V\u00e1lasszon egy hiteles\u00edt\u00e9si m\u00f3dszert"
             }
         }
     }

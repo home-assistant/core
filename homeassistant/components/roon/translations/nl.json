@@ -1,22 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al toegevoegd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "invalid_auth": "Ongeldige authencatie",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                },
+                "description": "Kon de Roon server niet vinden, voer uw Hostnaam en Poort in."
+            },
             "link": {
                 "description": "U moet Home Assistant autoriseren in Roon. Nadat je op verzenden hebt geklikt, ga je naar de Roon Core-applicatie, open je Instellingen en schakel je Home Assistant in op het tabblad Extensies.",
                 "title": "Autoriseer Home Assistant in Roon"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Kon de Roon-server niet vinden, voer de hostnaam of het IP-adres in."
             }
         }
     }

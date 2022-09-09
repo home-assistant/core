@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken, controleer de seri\u00eble poort, het adres, de elektrische aansluiting en of de omvormer aan staat (bij daglicht)",
             "cannot_open_serial_port": "Kan seri\u00eble poort niet openen, controleer en probeer het opnieuw",
-            "invalid_serial_port": "Seri\u00eble poort is geen geldig apparaat of kan niet worden geopend",
-            "unknown": "Onverwachte fout"
+            "invalid_serial_port": "Seri\u00eble poort is geen geldig apparaat of kan niet worden geopend"
         },
         "step": {
             "user": {

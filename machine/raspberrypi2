@@ -4,11 +4,7 @@ FROM homeassistant/armv7-homeassistant:$BUILD_VERSION
 RUN apk --no-cache add \
         raspberrypi \
         raspberrypi-libs \
-        usbutils \
-    && sed -i "s|# RPi.GPIO|RPi.GPIO|g" /usr/src/homeassistant/requirements_all.txt \
-    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-        RPi.GPIO -c /usr/src/homeassistant/requirements_all.txt \
-        --use-deprecated=legacy-resolver
+        usbutils
 
 ##
 # Set symlinks for raspberry pi binaries.

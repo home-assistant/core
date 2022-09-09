@@ -10,7 +10,7 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Voulez-vous configurer {name} ( {host} ) ?",
+                "description": "Voulez-vous configurer {name} ({host})\u00a0?",
                 "title": "Configuration de Logitech Harmony Hub"
             },
             "user": {

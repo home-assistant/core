@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername",
+                    "web_port": "Webport (f\u00fcr Besuchsdienste)"
+                },
+                "description": "Um diese Integration nutzen zu k\u00f6nnen, musst du die folgende Option in den Deluge-Einstellungen aktivieren: Daemon \u2192 Fernsteuerungen zulassen"
+            }
+        }
+    }
+}

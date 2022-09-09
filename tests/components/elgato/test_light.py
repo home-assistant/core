@@ -13,9 +13,8 @@ from homeassistant.components.light import (
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,6 +24,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -45,10 +45,10 @@ async def test_light_state_temperature(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 54
     assert state.attributes.get(ATTR_COLOR_TEMP) == 297
     assert state.attributes.get(ATTR_HS_COLOR) == (27.316, 47.743)
-    assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
     assert state.attributes.get(ATTR_MIN_MIREDS) == 143
     assert state.attributes.get(ATTR_MAX_MIREDS) == 344
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [COLOR_MODE_COLOR_TEMP]
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get("light.frenck")
@@ -90,10 +90,10 @@ async def test_light_state_color(
     assert state.attributes.get(ATTR_HS_COLOR) == (358.0, 6.0)
     assert state.attributes.get(ATTR_MIN_MIREDS) == 153
     assert state.attributes.get(ATTR_MAX_MIREDS) == 285
-    assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_HS
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.HS
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
     assert state.state == STATE_ON
 
@@ -184,13 +184,15 @@ async def test_light_unavailable(
     mock_elgato.state.side_effect = ElgatoError
     mock_elgato.light.side_effect = ElgatoError
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "light.frenck"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "light.frenck"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.frenck")
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -219,18 +221,20 @@ async def test_light_identify_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_elgato: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error occurred during identifying an Elgato Light."""
     mock_elgato.identify.side_effect = ElgatoError
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_IDENTIFY,
-        {
-            ATTR_ENTITY_ID: "light.frenck",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while identifying the Elgato Light"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IDENTIFY,
+            {
+                ATTR_ENTITY_ID: "light.frenck",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
     assert len(mock_elgato.identify.mock_calls) == 1
-    assert "An error occurred while identifying the Elgato Light" in caplog.text

@@ -13,8 +13,7 @@
         },
         "step": {
             "creds": {
-                "description": "Der kr\u00e6ves legitimationsoplysninger. Tryk p\u00e5 'Indsend' og derefter i PS4 2. sk\u00e6rm-app, opdater enheder, og v\u00e6lg 'Home Assistant'-enhed for at forts\u00e6tte.",
-                "title": "PlayStation 4"
+                "description": "Der kr\u00e6ves legitimationsoplysninger. Tryk p\u00e5 'Indsend' og derefter i PS4 2. sk\u00e6rm-app, opdater enheder, og v\u00e6lg 'Home Assistant'-enhed for at forts\u00e6tte."
             },
             "link": {
                 "data": {
@@ -22,17 +21,13 @@
                     "ip_address": "IP-adresse",
                     "name": "Navn",
                     "region": "Omr\u00e5de"
-                },
-                "description": "Indtast dine PlayStation 4-oplysninger. For 'PIN' skal du navigere til 'Indstillinger' p\u00e5 din PlayStation 4-konsol. Naviger derefter til 'Mobile App Connection Settings' og v\u00e6lg 'Add Device'. Indtast den pinkode, der vises. Se [dokumentation](https://www.home-assistant.io/components/ps4/) for yderligere oplysninger.",
-                "title": "PlayStation 4"
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP-adresse (lad det v\u00e6re tomt, hvis du bruger automatisk registrering).",
                     "mode": "Konfigurationstilstand"
-                },
-                "description": "V\u00e6lg tilstand for konfiguration. IP-adressefeltet kan v\u00e6re tomt, hvis du v\u00e6lger automatisk registrering, da enheder automatisk bliver fundet.",
-                "title": "PlayStation 4"
+                }
             }
         }
     }

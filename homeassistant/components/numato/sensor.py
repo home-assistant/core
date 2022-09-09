@@ -102,7 +102,7 @@ class NumatoGpioAdc(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         try:
             adc_val = self._api.read_adc_input(self._device_id, self._port)

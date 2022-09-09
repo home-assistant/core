@@ -1,14 +1,8 @@
 """Provides device automations for Cover."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
@@ -32,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.entity import get_supported_features
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -74,9 +69,9 @@ TRIGGER_SCHEMA = vol.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Cover devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     triggers = []
 
     # Get all the integrations entities for this device
@@ -149,8 +144,8 @@ async def async_get_trigger_capabilities(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] in STATE_TRIGGER_TYPES:
@@ -174,7 +169,7 @@ async def async_attach_trigger(
             hass, state_config
         )
         return await state_trigger.async_attach_trigger(
-            hass, state_config, action, automation_info, platform_type="device"
+            hass, state_config, action, trigger_info, platform_type="device"
         )
 
     if config[CONF_TYPE] == "position":
@@ -196,5 +191,5 @@ async def async_attach_trigger(
         hass, numeric_state_config
     )
     return await numeric_state_trigger.async_attach_trigger(
-        hass, numeric_state_config, action, automation_info, platform_type="device"
+        hass, numeric_state_config, action, trigger_info, platform_type="device"
     )

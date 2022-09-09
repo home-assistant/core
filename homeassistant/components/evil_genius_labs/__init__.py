@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import cast
 
+from aiohttp import ContentTypeError
 from async_timeout import timeout
 import pyevilgenius
 
@@ -36,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -53,6 +54,8 @@ class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Update coordinator for Evil Genius data."""
 
     info: dict
+
+    product: dict | None
 
     def __init__(
         self, hass: HomeAssistant, name: str, client: pyevilgenius.EvilGeniusDevice
@@ -71,14 +74,30 @@ class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
         """Return the device name."""
         return cast(str, self.data["name"]["value"])
 
+    @property
+    def product_name(self) -> str | None:
+        """Return the product name."""
+        if self.product is None:
+            return None
+
+        return cast(str, self.product["productName"])
+
     async def _async_update_data(self) -> dict:
         """Update Evil Genius data."""
         if not hasattr(self, "info"):
             async with timeout(5):
                 self.info = await self.client.get_info()
 
+        if not hasattr(self, "product"):
+            async with timeout(5):
+                try:
+                    self.product = await self.client.get_product()
+                except ContentTypeError:
+                    # Older versions of the API don't support this
+                    self.product = None
+
         async with timeout(5):
-            return cast(dict, await self.client.get_data())
+            return cast(dict, await self.client.get_all())
 
 
 class EvilGeniusEntity(CoordinatorEntity[EvilGeniusUpdateCoordinator]):
@@ -92,6 +111,7 @@ class EvilGeniusEntity(CoordinatorEntity[EvilGeniusUpdateCoordinator]):
             identifiers={(DOMAIN, info["wiFiChipId"])},
             connections={(dr.CONNECTION_NETWORK_MAC, info["macAddress"])},
             name=self.coordinator.device_name,
+            model=self.coordinator.product_name,
             manufacturer="Evil Genius Labs",
             sw_version=info["coreVersion"].replace("_", "."),
             configuration_url=self.coordinator.client.url,

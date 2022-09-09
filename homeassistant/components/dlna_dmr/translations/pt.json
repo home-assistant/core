@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+        },
+        "step": {
+            "confirm": {
+                "description": "Autentica\u00e7\u00e3o inv\u00e1lid"
+            },
+            "manual": {
+                "data": {
+                    "url": ""
+                }
+            }
+        }
+    }
+}

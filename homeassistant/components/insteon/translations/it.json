@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Impossibile connettersi",
+            "not_insteon_device": "Dispositivo rilevato non \u00e8 un dispositivo Insteon",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "select_single": "Seleziona un'opzione."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vuoi configurare {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Indirizzo IP",
@@ -38,15 +43,14 @@
                 "data": {
                     "modem_type": "Tipo di modem."
                 },
-                "description": "Seleziona il tipo di modem Insteon.",
-                "title": "Insteon"
+                "description": "Seleziona il tipo di modem Insteon."
             }
         }
     },
     "options": {
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "input_error": "Voci non valide, si prega di controllare i valori.",
+            "input_error": "Voci non valide, controlla i valori.",
             "select_single": "Seleziona un'opzione."
         },
         "step": {
@@ -56,8 +60,7 @@
                     "cat": "Categoria del dispositivo (ad es. 0x10)",
                     "subcat": "Sottocategoria del dispositivo (ad es. 0x0a)"
                 },
-                "description": "Aggiungi una sostituzione del dispositivo.",
-                "title": "Insteon"
+                "description": "Aggiungi una sostituzione del dispositivo."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Livelli del dimmer (solo per dispositivi luminosi, predefiniti 22)",
                     "unitcode": "Codice unit\u00e0 (1 - 16)"
                 },
-                "description": "Cambia la password di Insteon Hub.",
-                "title": "Insteon"
+                "description": "Cambia la password di Insteon Hub."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "description": "Modifica le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizza l'app Hub.",
-                "title": "Insteon"
+                "description": "Modifica le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizza l'app Hub."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Modifica la configurazione dell'hub.",
                     "remove_override": "Rimuovere una sostituzione del dispositivo.",
                     "remove_x10": "Rimuovi un dispositivo X10."
-                },
-                "description": "Seleziona un'opzione da configurare.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Seleziona un indirizzo del dispositivo da rimuovere"
                 },
-                "description": "Rimuovere una sostituzione del dispositivo",
-                "title": "Insteon"
+                "description": "Rimuovere una sostituzione del dispositivo"
             },
             "remove_x10": {
                 "data": {
                     "address": "Seleziona un indirizzo del dispositivo da rimuovere"
                 },
-                "description": "Rimuovi un dispositivo X10",
-                "title": "Insteon"
+                "description": "Rimuovi un dispositivo X10"
             }
         }
     }

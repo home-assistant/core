@@ -38,18 +38,56 @@ def mock_addon_info(addon_info_side_effect):
         yield addon_info
 
 
+@pytest.fixture(name="addon_store_info_side_effect")
+def addon_store_info_side_effect_fixture():
+    """Return the add-on store info side effect."""
+    return None
+
+
+@pytest.fixture(name="addon_store_info")
+def mock_addon_store_info(addon_store_info_side_effect):
+    """Mock Supervisor add-on info."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_get_addon_store_info",
+        side_effect=addon_store_info_side_effect,
+    ) as addon_store_info:
+        addon_store_info.return_value = {
+            "installed": None,
+            "state": None,
+            "version": "1.0.0",
+        }
+        yield addon_store_info
+
+
 @pytest.fixture(name="addon_running")
-def mock_addon_running(addon_info):
+def mock_addon_running(addon_store_info, addon_info):
     """Mock add-on already running."""
+    addon_store_info.return_value = {
+        "installed": "1.0.0",
+        "state": "started",
+        "version": "1.0.0",
+    }
     addon_info.return_value["state"] = "started"
+    addon_info.return_value["version"] = "1.0.0"
     return addon_info
 
 
 @pytest.fixture(name="addon_installed")
-def mock_addon_installed(addon_info):
+def mock_addon_installed(addon_store_info, addon_info):
     """Mock add-on already installed but not running."""
+    addon_store_info.return_value = {
+        "installed": "1.0.0",
+        "state": "stopped",
+        "version": "1.0.0",
+    }
     addon_info.return_value["state"] = "stopped"
-    addon_info.return_value["version"] = "1.0"
+    addon_info.return_value["version"] = "1.0.0"
+    return addon_info
+
+
+@pytest.fixture(name="addon_not_installed")
+def mock_addon_not_installed(addon_store_info, addon_info):
+    """Mock add-on not installed."""
     return addon_info
 
 
@@ -81,13 +119,18 @@ def mock_set_addon_options(set_addon_options_side_effect):
 
 
 @pytest.fixture(name="install_addon_side_effect")
-def install_addon_side_effect_fixture(addon_info):
+def install_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the install add-on side effect."""
 
     async def install_addon(hass, slug):
         """Mock install add-on."""
+        addon_store_info.return_value = {
+            "installed": "1.0.0",
+            "state": "stopped",
+            "version": "1.0.0",
+        }
         addon_info.return_value["state"] = "stopped"
-        addon_info.return_value["version"] = "1.0"
+        addon_info.return_value["version"] = "1.0.0"
 
     return install_addon
 
@@ -112,11 +155,16 @@ def mock_update_addon():
 
 
 @pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture(addon_info):
+def start_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the start add-on options side effect."""
 
     async def start_addon(hass, slug):
         """Mock start add-on."""
+        addon_store_info.return_value = {
+            "installed": "1.0.0",
+            "state": "started",
+            "version": "1.0.0",
+        }
         addon_info.return_value["state"] = "started"
 
     return start_addon
@@ -208,6 +256,12 @@ def log_config_state_fixture():
         "filename": "",
         "forceConsole": False,
     }
+
+
+@pytest.fixture(name="config_entry_diagnostics", scope="session")
+def config_entry_diagnostics_fixture():
+    """Load the config entry diagnostics fixture data."""
+    return json.loads(load_fixture("zwave_js/config_entry_diagnostics.json"))
 
 
 @pytest.fixture(name="multisensor_6_state", scope="session")
@@ -509,6 +563,12 @@ def light_express_controls_ezmultipli_state_fixture():
     return json.loads(load_fixture("zwave_js/express_controls_ezmultipli_state.json"))
 
 
+@pytest.fixture(name="lock_home_connect_620_state", scope="session")
+def lock_home_connect_620_state_fixture():
+    """Load the Home Connect 620 lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
@@ -524,7 +584,8 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
-            await asyncio.sleep(30)
+            listen_block = asyncio.Event()
+            await listen_block.wait()
             assert False, "Listen wasn't canceled!"
 
         async def disconnect():
@@ -784,6 +845,8 @@ async def integration_fixture(hass, client):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    client.async_send_command.reset_mock()
+
     return entry
 
 
@@ -1023,5 +1086,13 @@ def zp3111_fixture(client, zp3111_state):
 def express_controls_ezmultipli_fixture(client, express_controls_ezmultipli_state):
     """Mock a Express Controls EZMultiPli node."""
     node = Node(client, copy.deepcopy(express_controls_ezmultipli_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_home_connect_620")
+def lock_home_connect_620_fixture(client, lock_home_connect_620_state):
+    """Mock a Home Connect 620 lock node."""
+    node = Node(client, copy.deepcopy(lock_home_connect_620_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

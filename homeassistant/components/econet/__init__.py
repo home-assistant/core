@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     api.subscribe()
 
@@ -111,6 +111,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class EcoNetEntity(Entity):
     """Define a base EcoNet entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, econet):
         """Initialize."""
         self._econet = econet
@@ -119,9 +121,7 @@ class EcoNetEntity(Entity):
         """Subscribe to device events."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                PUSH_UPDATE, self.on_update_received
-            )
+            async_dispatcher_connect(self.hass, PUSH_UPDATE, self.on_update_received)
         )
 
     @callback
@@ -157,11 +157,3 @@ class EcoNetEntity(Entity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False

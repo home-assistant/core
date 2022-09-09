@@ -86,7 +86,7 @@ INTEGRATION_LOAD_EXCEPTIONS = (
 )
 
 DEFAULT_CONFIG = f"""
-# Configure a default setup of Home Assistant (frontend, api, etc)
+# Loads default set of integrations. Do not remove.
 default_config:
 
 # Text to speech
@@ -286,6 +286,7 @@ async def async_create_default_config(hass: HomeAssistant) -> bool:
 
     Return if creation was successful.
     """
+    assert hass.config.config_dir
     return await hass.async_add_executor_job(
         _write_default_config, hass.config.config_dir
     )
@@ -951,8 +952,9 @@ def async_notify_setup_error(
     message = "The following integrations and platforms could not be set up:\n\n"
 
     for name, link in errors.items():
+        show_logs = f"[Show logs](/config/logs?filter={name})"
         part = f"[{name}]({link})" if link else name
-        message += f" - {part}\n"
+        message += f" - {part} ({show_logs})\n"
 
     message += "\nPlease check your config and [logs](/config/logs)."
 

@@ -34,7 +34,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
-    entities = []
+    entities: list[XiaomiBinarySensor] = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]
@@ -140,14 +140,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
         self._device_class = device_class
-        self._should_poll = False
         self._density = 0
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return self._should_poll
 
     @property
     def is_on(self):
@@ -159,7 +153,7 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
         """Return the class of binary sensor."""
         return self._device_class
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor state."""
         _LOGGER.debug("Updating xiaomi sensor (%s) by polling", self._sid)
         self._get_from_hub(self._sid)
@@ -340,7 +334,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        self._should_poll = False
+        self._attr_should_poll = False
         if NO_CLOSE in data:  # handle push from the hub
             self._open_since = data[NO_CLOSE]
             return True
@@ -350,7 +344,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
             return False
 
         if value == "open":
-            self._should_poll = True
+            self._attr_should_poll = True
             if self._state:
                 return False
             self._state = True
@@ -388,14 +382,14 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        self._should_poll = False
+        self._attr_should_poll = False
 
         value = data.get(self._data_key)
         if value is None:
             return False
 
         if value == "leak":
-            self._should_poll = True
+            self._attr_should_poll = True
             if self._state:
                 return False
             self._state = True
@@ -464,6 +458,11 @@ class XiaomiVibration(XiaomiBinarySensor):
         attrs.update(super().extra_state_attributes)
         return attrs
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
@@ -498,6 +497,11 @@ class XiaomiButton(XiaomiBinarySensor):
         attrs = {ATTR_LAST_ACTION: self._last_action}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -545,7 +549,6 @@ class XiaomiCube(XiaomiBinarySensor):
         """Initialize the Xiaomi Cube."""
         self._hass = hass
         self._last_action = None
-        self._state = False
         if "proto" not in device or int(device["proto"][0:1]) == 1:
             data_key = "status"
         else:
@@ -558,6 +561,11 @@ class XiaomiCube(XiaomiBinarySensor):
         attrs = {ATTR_LAST_ACTION: self._last_action}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

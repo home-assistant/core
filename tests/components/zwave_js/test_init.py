@@ -3,6 +3,7 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
+from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
@@ -12,6 +13,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -242,6 +244,61 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     )
 
 
+async def test_existing_node_reinterview(
+    hass: HomeAssistant,
+    client: Client,
+    multisensor_6_state: dict,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test we handle a node re-interview firing a node ready event."""
+    dev_reg = dr.async_get(hass)
+    node = multisensor_6
+    assert client.driver is not None
+    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id_ext = (
+        f"{air_temperature_device_id}-{node.manufacturer_id}:"
+        f"{node.product_type}:{node.product_id}"
+    )
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state  # entity and device added
+    assert state.state != STATE_UNAVAILABLE
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
+    assert device.sw_version == "1.12"
+
+    node_state = deepcopy(multisensor_6_state)
+    node_state["firmwareVersion"] = "1.13"
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": node_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
+    assert device.sw_version == "1.13"
+
+
 async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integration):
     """Test we handle a non-ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
@@ -432,10 +489,14 @@ async def test_start_addon(
 
 
 async def test_install_addon(
-    hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
+    hass,
+    addon_not_installed,
+    install_addon,
+    addon_options,
+    set_addon_options,
+    start_addon,
 ):
     """Test install and start the Z-Wave JS add-on during entry setup."""
-    addon_installed.return_value["version"] = None
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -583,10 +644,10 @@ async def test_addon_options_changed(
     "addon_version, update_available, update_calls, backup_calls, "
     "update_addon_side_effect, create_backup_side_effect",
     [
-        ("1.0", True, 1, 1, None, None),
-        ("1.0", False, 0, 0, None, None),
-        ("1.0", True, 1, 1, HassioAPIError("Boom"), None),
-        ("1.0", True, 0, 1, None, HassioAPIError("Boom")),
+        ("1.0.0", True, 1, 1, None, None),
+        ("1.0.0", False, 0, 0, None, None),
+        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -720,7 +781,7 @@ async def test_remove_entry(
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
-        {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 1
@@ -762,7 +823,7 @@ async def test_remove_entry(
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
-        {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 0
@@ -786,7 +847,7 @@ async def test_remove_entry(
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
-        {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 1
@@ -800,8 +861,10 @@ async def test_removed_device(
     hass, client, climate_radio_thermostat_ct100_plus, lock_schlage_be469, integration
 ):
     """Test that the device registry gets updated when a device gets removed."""
+    driver = client.driver
+    assert driver
     # Verify how many nodes are available
-    assert len(client.driver.controller.nodes) == 2
+    assert len(driver.controller.nodes) == 2
 
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
@@ -811,10 +874,10 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 29
+    assert len(entity_entries) == 31
 
     # Remove a node and reload the entry
-    old_node = client.driver.controller.nodes.pop(13)
+    old_node = driver.controller.nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -823,8 +886,8 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 17
-    assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
+    assert len(entity_entries) == 18
+    assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
 
 
 async def test_suggested_area(hass, client, eaton_rf9640_dimmer):

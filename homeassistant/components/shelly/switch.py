@@ -29,12 +29,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return await async_setup_block_entry(hass, config_entry, async_add_entities)
+    return async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
-async def async_setup_block_entry(
+@callback
+def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -59,7 +60,7 @@ async def async_setup_block_entry(
 
         relay_blocks.append(block)
         unique_id = f"{wrapper.mac}-{block.type}_{block.channel}"
-        await async_remove_shelly_entity(hass, "light", unique_id)
+        async_remove_shelly_entity(hass, "light", unique_id)
 
     if not relay_blocks:
         return
@@ -67,7 +68,8 @@ async def async_setup_block_entry(
     async_add_entities(BlockRelaySwitch(wrapper, block) for block in relay_blocks)
 
 
-async def async_setup_rpc_entry(
+@callback
+def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -84,7 +86,7 @@ async def async_setup_rpc_entry(
 
         switch_ids.append(id_)
         unique_id = f"{wrapper.mac}-switch:{id_}"
-        await async_remove_shelly_entity(hass, "light", unique_id)
+        async_remove_shelly_entity(hass, "light", unique_id)
 
     if not switch_ids:
         return

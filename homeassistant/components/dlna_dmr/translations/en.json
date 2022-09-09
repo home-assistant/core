@@ -4,7 +4,6 @@
             "already_configured": "Device is already configured",
             "alternative_integration": "Device is better supported by another integration",
             "cannot_connect": "Failed to connect",
-            "could_not_connect": "Failed to connect to DLNA device",
             "discovery_error": "Failed to discover a matching DLNA device",
             "incomplete_config": "Configuration is missing a required variable",
             "non_unique_id": "Multiple devices found with the same unique ID",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "could_not_connect": "Failed to connect to DLNA device",
             "not_dmr": "Device is not a supported Digital Media Renderer"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "url": "URL"
+                    "host": "Host"
                 },
                 "description": "Choose a device to configure or leave blank to enter a URL",
                 "title": "Discovered DLNA DMR devices"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Show incompatible media when browsing",
                     "callback_url_override": "Event listener callback URL",
                     "listen_port": "Event listener port (random if not set)",
                     "poll_availability": "Poll for device availability"

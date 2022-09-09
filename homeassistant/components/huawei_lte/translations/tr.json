@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "not_huawei_lte": "Huawei LTE cihaz\u0131 de\u011fil"
         },
         "error": {
@@ -34,7 +32,6 @@
                 "data": {
                     "name": "Bildirim hizmeti ad\u0131 (de\u011fi\u015fiklik yeniden ba\u015flatmay\u0131 gerektirir)",
                     "recipient": "SMS bildirimi al\u0131c\u0131lar\u0131",
-                    "track_new_devices": "Yeni cihazlar\u0131 izle",
                     "track_wired_clients": "Kablolu a\u011f istemcilerini izleyin",
                     "unauthenticated_mode": "Kimli\u011fi do\u011frulanmam\u0131\u015f mod (de\u011fi\u015fiklik yeniden y\u00fckleme gerektirir)"
                 }

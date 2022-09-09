@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_account": "Niepoprawny identyfikator konta",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Integracja Steam musi zosta\u0107 ponownie uwierzytelniona r\u0119cznie\n\nSw\u00f3j klucz znajdziesz tutaj: {api_key_url}",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "user": {
+                "data": {
+                    "account": "Identyfikator konta Steam",
+                    "api_key": "Klucz API"
+                },
+                "description": "U\u017cyj {account_id_url}, aby znale\u017a\u0107 sw\u00f3j identyfikator konta Steam"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfiguracja Steam za pomoc\u0105 YAML zosta\u0142a usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML nie jest u\u017cywana przez Home Assistant. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistant, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Steam zosta\u0142a usuni\u0119ta"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "Lista znajomych ograniczona: zapoznaj si\u0119 z dokumentacj\u0105, aby dowiedzie\u0107 si\u0119, jak zobaczy\u0107 wszystkich innych znajomych"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Nazwy kont, kt\u00f3re maj\u0105 by\u0107 monitorowane"
+                }
+            }
+        }
+    }
+}

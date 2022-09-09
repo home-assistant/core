@@ -27,7 +27,7 @@ async def test_waste_pickup_calendar(
     assert entry.unique_id == "12345"
     assert state.attributes[ATTR_ICON] == "mdi:delete-empty"
     assert state.attributes["all_day"] is True
-    assert state.attributes["message"] == "Christmas Tree Pickup"
+    assert state.attributes["message"] == "Christmas tree pickup"
     assert not state.attributes["location"]
     assert not state.attributes["description"]
     assert state.state == STATE_OFF
@@ -76,8 +76,9 @@ async def test_api_events(
     events = await response.json()
     assert len(events) == 1
     assert events[0] == {
-        "all_day": True,
         "start": {"date": "2022-01-06"},
         "end": {"date": "2022-01-06"},
-        "summary": "Christmas Tree Pickup",
+        "summary": "Christmas tree pickup",
+        "description": None,
+        "location": None,
     }

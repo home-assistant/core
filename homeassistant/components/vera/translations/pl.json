@@ -10,8 +10,9 @@
                     "lights": "Identyfikatory prze\u0142\u0105cznik\u00f3w Vera, kt\u00f3re maj\u0105 by\u0107 traktowane jako \u015bwiat\u0142a w Home Assistant.",
                     "vera_controller_url": "Adres URL kontrolera"
                 },
-                "description": "Podaj adres URL kontrolera Vera. Powinien on wygl\u0105da\u0107 tak: http://192.168.1.161:3480.",
-                "title": "Konfiguracja kontrolera Vera"
+                "data_description": {
+                    "vera_controller_url": "Powinno to wygl\u0105da\u0107 tak: http://192.168.1.161:3480"
+                }
             }
         }
     },

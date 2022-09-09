@@ -1,3 +1,29 @@
+set_hev_cycle_state:
+  name: Set HEV cycle state
+  description: Control the HEV LEDs on a LIFX Clean bulb.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power:
+      name: enable
+      description: Start or stop a Clean cycle.
+      required: true
+      example: true
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: How long the HEV LEDs will remain on. Uses the configured default duration if not specified.
+      required: false
+      default: 7200
+      example: 3600
+      selector:
+        number:
+          min: 0
+          max: 86400
+          unit_of_measurement: seconds
 set_state:
   name: Set State
   description: Set a color/brightness and possibly turn the light on/off.
@@ -47,11 +73,11 @@ effect_pulse:
       selector:
         select:
           options:
-            - 'blink'
-            - 'breathe'
-            - 'ping'
-            - 'strobe'
-            - 'solid'
+            - "blink"
+            - "breathe"
+            - "ping"
+            - "strobe"
+            - "solid"
     brightness:
       name: Brightness
       description: Number indicating brightness of the temporary color.
@@ -129,7 +155,7 @@ effect_colorloop:
         number:
           min: 0
           max: 360
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     spread:
       name: Spread
       description: Maximum hue difference between participating lights, in degrees on a color wheel.
@@ -138,7 +164,7 @@ effect_colorloop:
         number:
           min: 0
           max: 360
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     power_on:
       name: Power on
       description: Powered off lights are temporarily turned on during the effect.

@@ -1,6 +1,8 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES
 import voluptuous as vol
 
@@ -51,7 +53,10 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.In(SLEEP_MINUTE_OPTIONS),
+            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
+                vol.Coerce(int),
+                vol.In(SLEEP_MINUTE_OPTIONS),
+            ),
             vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
                 SYSTEM_REVERT_MODES
             ),
@@ -65,7 +70,7 @@ class FloSwitch(FloEntity, SwitchEntity):
 
     def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
-        super().__init__("shutoff_valve", "Shutoff Valve", device)
+        super().__init__("shutoff_valve", "Shutoff valve", device)
         self._state = self._device.last_known_valve_state == "open"
 
     @property
@@ -80,13 +85,13 @@ class FloSwitch(FloEntity, SwitchEntity):
             return "mdi:valve-open"
         return "mdi:valve-closed"
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self._device.api_client.device.close_valve(self._device.id)
         self._state = False
@@ -98,7 +103,7 @@ class FloSwitch(FloEntity, SwitchEntity):
         self._state = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(self._device.async_add_listener(self.async_update_state))
 

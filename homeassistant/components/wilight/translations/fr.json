@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Voulez-vous configurer la WiLight {name}\u00a0?\n\n Elle prend en charge\u00a0: {components}",
-                "title": "WiLight"
+                "description": "Les composants suivants sont pris en charge\u00a0: {components}"
             }
         }
     }

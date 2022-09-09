@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "\u7f51\u5173 IP"
                 },
-                "description": "\u5982\u679c\u8981\u8fde\u63a5\u5176\u4ed6\u7f51\u5173\uff0c\u8bf7\u518d\u6b21\u8fd0\u884c\u914d\u7f6e\u7a0b\u5e8f",
-                "title": "\u9009\u62e9\u8981\u8fde\u63a5\u7684\u5c0f\u7c73 Aqara \u7f51\u5173"
+                "description": "\u5982\u679c\u8981\u8fde\u63a5\u5176\u4ed6\u7f51\u5173\uff0c\u8bf7\u518d\u6b21\u8fd0\u884c\u914d\u7f6e\u7a0b\u5e8f"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "\u8981\u4f7f\u7528\u7684\u7f51\u7edc\u63a5\u53e3",
                     "mac": "MAC \u5730\u5740 (\u53ef\u9009)"
                 },
-                "description": "\u8fde\u63a5\u5230\u60a8\u7684\u5c0f\u7c73 Aqara \u7f51\u5173\uff0c\u5982\u679c IP \u548c MAC \u5730\u5740\u7559\u7a7a\uff0c\u5219\u4f7f\u7528\u81ea\u52a8\u53d1\u73b0",
-                "title": "\u5c0f\u7c73 Aqara \u7f51\u5173"
+                "description": "\u8fde\u63a5\u5230\u60a8\u7684\u5c0f\u7c73 Aqara \u7f51\u5173\uff0c\u5982\u679c IP \u548c MAC \u5730\u5740\u7559\u7a7a\uff0c\u5219\u4f7f\u7528\u81ea\u52a8\u53d1\u73b0"
             }
         }
     }

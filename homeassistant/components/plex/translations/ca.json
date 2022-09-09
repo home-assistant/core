@@ -35,14 +35,12 @@
                 "title": "Selecciona servidor Plex"
             },
             "user": {
-                "description": "V\u00e9s a [plex.tv](https://plex.tv) per enlla\u00e7ar un servidor Plex.",
-                "title": "Servidor Multim\u00e8dia Plex"
+                "description": "V\u00e9s a [plex.tv](https://plex.tv) per enlla\u00e7ar un servidor Plex."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "M\u00e8tode de configuraci\u00f3"
-                },
-                "title": "Servidor Multim\u00e8dia Plex"
+                }
             }
         }
     },

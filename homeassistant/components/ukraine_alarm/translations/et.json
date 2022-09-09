@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "max_regions": "Seadistada saab kuni 5 piirkonda",
+            "rate_limit": "Liiga palju taotlusi",
+            "timeout": "\u00dchenduse ajal\u00f5pp",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Piirkond"
+                },
+                "description": "Kui soovid j\u00e4lgida mitte ainult oblastit ja piirkonda vali konkreetne asukoht"
+            },
+            "district": {
+                "data": {
+                    "region": "Piirkond"
+                },
+                "description": "Kui soovid j\u00e4lgida mitte ainult oblastit vali konkreetne piirkond"
+            },
+            "user": {
+                "data": {
+                    "region": "Piirkond"
+                },
+                "description": "Vali j\u00e4lgitav oblast"
+            }
+        }
+    }
+}

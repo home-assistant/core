@@ -13,10 +13,4 @@ ENTRY_CONFIG: Final[dict[str, str]] = {
     CONF_HEATING_TYPE: "auto",
 }
 
-ENTRY_CONFIG_NO_HEATING_TYPE: Final[dict[str, str]] = {
-    CONF_USERNAME: "foo@bar.com",
-    CONF_PASSWORD: "1234",
-    CONF_CLIENT_ID: "5678",
-}
-
 MOCK_MAC = "B874241B7B9"

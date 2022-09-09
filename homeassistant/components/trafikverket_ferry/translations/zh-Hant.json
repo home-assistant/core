@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "incorrect_api_key": "\u6240\u9078\u64c7\u5e33\u865f\u4e4b API \u91d1\u9470\u7121\u6548",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_route": "\u627e\u4e0d\u5230\u63d0\u4f9b\u8cc7\u8a0a\u4e4b\u8def\u7dda"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u91d1\u9470"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u91d1\u9470",
+                    "from": "\u81ea\u6d77\u6e2f",
+                    "time": "\u6642\u9593",
+                    "to": "\u81f3\u6d77\u6e2f",
+                    "weekday": "\u5e73\u65e5"
+                }
+            }
+        }
+    }
+}

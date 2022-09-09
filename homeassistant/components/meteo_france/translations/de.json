@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Stadt"
                 },
-                "description": "W\u00e4hle deine Stadt aus der Liste",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "W\u00e4hle deine Stadt aus der Liste"
             },
             "user": {
                 "data": {
                     "city": "Stadt"
                 },
-                "description": "Gib die Postleitzahl (nur f\u00fcr Frankreich empfohlen) oder den St\u00e4dtenamen ein",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Gib die Postleitzahl (nur f\u00fcr Frankreich empfohlen) oder den St\u00e4dtenamen ein"
             }
         }
     },

@@ -17,10 +17,9 @@
                     "port": "Puerto",
                     "rtsp_port": "Puerto RTSP",
                     "stream": "Stream",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }
-    },
-    "title": "Foscam"
+    }
 }

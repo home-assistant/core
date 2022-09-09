@@ -1,0 +1,96 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "already_exists": "Kamera dengan setelan URL ini sudah ada.",
+            "invalid_still_image": "URL tidak mengembalikan gambar diam yang valid",
+            "malformed_url": "URL salah format",
+            "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
+            "relative_url": "URL relatif tidak diizinkan",
+            "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
+            "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
+            "stream_io_error": "Kesalahan Input/Output saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
+            "stream_no_route_to_host": "Tidak dapat menemukan host saat mencoba menyambung ke streaming",
+            "stream_no_video": "Streaming tidak memiliki video",
+            "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
+            "stream_unauthorised": "Otorisasi gagal saat mencoba menyambung ke streaming",
+            "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
+            "timeout": "Tenggang waktu habis saat memuat URL",
+            "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            },
+            "content_type": {
+                "data": {
+                    "content_type": "Jenis Konten"
+                },
+                "description": "Tentukan jenis konten untuk streaming."
+            },
+            "user": {
+                "data": {
+                    "authentication": "Autentikasi",
+                    "framerate": "Frame Rate (Hz)",
+                    "limit_refetch_to_url_change": "Batasi pengambilan ulang untuk perubahan URL",
+                    "password": "Kata Sandi",
+                    "rtsp_transport": "Protokol transportasi RTSP",
+                    "still_image_url": "URL Gambar Diam (mis. http://...)",
+                    "stream_source": "URL Sumber Streaming (mis. rtsp://...)",
+                    "username": "Nama Pengguna",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "description": "Masukkan pengaturan untuk terhubung ke kamera."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_exists": "Kamera dengan setelan URL ini sudah ada.",
+            "invalid_still_image": "URL tidak mengembalikan gambar diam yang valid",
+            "malformed_url": "URL salah format",
+            "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
+            "relative_url": "URL relatif tidak diizinkan",
+            "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
+            "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
+            "stream_io_error": "Kesalahan Input/Output saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
+            "stream_no_route_to_host": "Tidak dapat menemukan host saat mencoba menyambung ke streaming",
+            "stream_no_video": "Streaming tidak memiliki video",
+            "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
+            "stream_unauthorised": "Otorisasi gagal saat mencoba menyambung ke streaming",
+            "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
+            "timeout": "Tenggang waktu habis saat memuat URL",
+            "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Jenis Konten"
+                },
+                "description": "Tentukan jenis konten untuk streaming."
+            },
+            "init": {
+                "data": {
+                    "authentication": "Autentikasi",
+                    "framerate": "Frame Rate (Hz)",
+                    "limit_refetch_to_url_change": "Batasi pengambilan ulang untuk perubahan URL",
+                    "password": "Kata Sandi",
+                    "rtsp_transport": "Protokol transportasi RTSP",
+                    "still_image_url": "URL Gambar Diam (mis. http://...)",
+                    "stream_source": "URL Sumber Streaming (mis. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Gunakan jam dinding sebagai stempel waktu",
+                    "username": "Nama Pengguna",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Opsi ini dapat memperbaiki masalah segmentasi atau mogok yang timbul dari implementasi stempel waktu bermasalah pada beberapa kamera"
+                }
+            }
+        }
+    }
+}

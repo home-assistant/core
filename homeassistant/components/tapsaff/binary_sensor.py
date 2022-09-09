@@ -8,15 +8,13 @@ from tapsaff import TapsAff
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_LOCATION, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_LOCATION = "location"
 
 DEFAULT_NAME = "Taps Aff"
 
@@ -63,7 +61,7 @@ class TapsAffSensor(BinarySensorEntity):
         """Return true if taps aff."""
         return self.data.is_taps_aff
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.data.update()
 

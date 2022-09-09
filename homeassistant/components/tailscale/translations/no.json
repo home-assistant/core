@@ -19,7 +19,7 @@
                     "api_key": "API-n\u00f8kkel",
                     "tailnet": "Tailnet"
                 },
-                "description": "For \u00e5 autentisere med Tailscale m\u00e5 du opprette en API-n\u00f8kkel p\u00e5 https://login.tailscale.com/admin/settings/authkeys. \n\n Et Tailnet er navnet p\u00e5 Tailscale-nettverket ditt. Du finner den i \u00f8verste venstre hj\u00f8rne i Tailscale Admin Panel (ved siden av Tailscale-logoen)."
+                "description": "Denne integrasjonen overv\u00e5ker Tailscale-nettverket ditt, det ** GJ\u00d8R IKKE ** gj\u00f8r hjemmeassistenten din tilgjengelig via Tailscale VPN. \n\nHvis du vil godkjenne med Tailscale, m\u00e5 du opprette en API-n\u00f8kkel p\u00e5 {authkeys_url}.\n\nEt Tailnet er navnet p\u00e5 Tailscale-nettverket. Du finner den \u00f8verst til venstre i Tailscale Admin Panel (ved siden av Tailscale-logoen)."
             }
         }
     }

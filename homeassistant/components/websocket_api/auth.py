@@ -56,7 +56,7 @@ class AuthPhase:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
         cancel_ws: CALLBACK_TYPE,
         request: Request,
     ) -> None:

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "Si us plau, actualitza la contrasenya de {username}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
+            "user": {
+                "data": {
+                    "import_plugins": "Vols importar les entitats dels complements Fibaro?",
+                    "password": "Contrasenya",
+                    "url": "URL en el format http://HOST/api/",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    }
+}

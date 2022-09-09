@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "max_regions": "Maks 5 regioner kan konfigureres",
+            "rate_limit": "For mange foresp\u00f8rsler",
+            "timeout": "Tidsavbrudd oppretter forbindelse",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Hvis du ikke bare vil overv\u00e5ke stat og distrikt, velg dets spesifikke fellesskap"
+            },
+            "district": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Hvis du ikke bare vil overv\u00e5ke staten, velg dens spesifikke distrikt"
+            },
+            "user": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Velg tilstand \u00e5 overv\u00e5ke"
+            }
+        }
+    }
+}

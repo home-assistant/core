@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "backoff": "En aquests moments el dispositiu no accepta sol\u00b7licituds de vinculaci\u00f3 (\u00e9s possible que hagis introdu\u00eft un codi PIN inv\u00e0lid massa vegades), torna-ho a provar m\u00e9s tard.",
             "device_did_not_pair": "No s'ha fet cap intent d'acabar el proc\u00e9s de vinculaci\u00f3 des del dispositiu.",
             "device_not_found": "No s'ha trobat el dispositiu durant el descobriment, prova de tornar-lo a afegir.",
             "inconsistent_device": "Els protocols esperats no s'han trobat durant el descobriment. Normalment aix\u00f2 indica un problema amb el DNS multicast (Zeroconf). Prova d'afegir el dispositiu de nou.",
-            "invalid_config": "La configuraci\u00f3 d'aquest dispositiu no est\u00e0 completa. Intenta'l tornar a afegir.",
+            "ipv6_not_supported": "IPv6 no est\u00e0 suportat.",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "setup_failed": "No s'ha pogut configurar el dispositiu.",
@@ -18,7 +17,6 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
-            "no_usable_service": "S'ha trobat un dispositiu per\u00f2 no ha pogut identificar cap manera d'establir-hi una connexi\u00f3. Si continues veient aquest missatge, prova d'especificar-ne l'adre\u00e7a IP o reinicia l'Apple TV.",
             "unknown": "Error inesperat"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +70,5 @@
                 "description": "Configuraci\u00f3 dels par\u00e0metres generals del dispositiu"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

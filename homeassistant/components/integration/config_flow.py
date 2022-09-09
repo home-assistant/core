@@ -9,16 +9,16 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
     TIME_DAYS,
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
 )
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -33,66 +33,72 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    {"value": "none", "label": "none"},
-    {"value": "k", "label": "k (kilo)"},
-    {"value": "M", "label": "M (mega)"},
-    {"value": "G", "label": "T (tera)"},
-    {"value": "T", "label": "P (peta)"},
+    selector.SelectOptionDict(value="none", label="none"),
+    selector.SelectOptionDict(value="k", label="k (kilo)"),
+    selector.SelectOptionDict(value="M", label="M (mega)"),
+    selector.SelectOptionDict(value="G", label="G (giga)"),
+    selector.SelectOptionDict(value="T", label="T (tera)"),
 ]
 TIME_UNITS = [
-    {"value": TIME_SECONDS, "label": "s (seconds)"},
-    {"value": TIME_MINUTES, "label": "min (minutes)"},
-    {"value": TIME_HOURS, "label": "h (hours)"},
-    {"value": TIME_DAYS, "label": "d (days)"},
+    selector.SelectOptionDict(value=TIME_SECONDS, label="s (seconds)"),
+    selector.SelectOptionDict(value=TIME_MINUTES, label="min (minutes)"),
+    selector.SelectOptionDict(value=TIME_HOURS, label="h (hours)"),
+    selector.SelectOptionDict(value=TIME_DAYS, label="d (days)"),
 ]
 INTEGRATION_METHODS = [
-    {"value": METHOD_TRAPEZOIDAL, "label": "Trapezoidal rule"},
-    {"value": METHOD_LEFT, "label": "Left Riemann sum"},
-    {"value": METHOD_RIGHT, "label": "Right Riemann sum"},
+    selector.SelectOptionDict(value=METHOD_TRAPEZOIDAL, label="Trapezoidal rule"),
+    selector.SelectOptionDict(value=METHOD_LEFT, label="Left Riemann sum"),
+    selector.SelectOptionDict(value=METHOD_RIGHT, label="Right Riemann sum"),
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {"number": {"min": 0, "max": 6, "mode": "box"}}
+        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=6, mode=selector.NumberSelectorMode.BOX
+            ),
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
-        vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            {"entity": {"domain": "sensor"}},
+        vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="sensor")
         ),
-        vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.selector(
-            {"select": {"options": INTEGRATION_METHODS}}
+        vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=INTEGRATION_METHODS),
         ),
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            {
-                "number": {
-                    "min": 0,
-                    "max": 6,
-                    "mode": "box",
-                    CONF_UNIT_OF_MEASUREMENT: "decimals",
-                }
-            }
+        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                max=6,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="decimals",
+            ),
         ),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
-            {"select": {"options": UNIT_PREFIXES}}
+        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            {"select": {"options": TIME_UNITS}}
+        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=TIME_UNITS, mode=selector.SelectSelectorMode.DROPDOWN
+            ),
         ),
     }
 )
 
-CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+}
 
-OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+}
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Integration."""
 
     config_flow = CONFIG_FLOW

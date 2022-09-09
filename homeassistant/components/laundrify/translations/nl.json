@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_format": "Ongeldig formaat. Specificeer als xxx-xxx.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Verificatiecode (xxx-xxx)"
+                },
+                "description": "Voer de verificatiecode in die wordt weergegeven in de laundrify-app."
+            },
+            "reauth_confirm": {
+                "description": "De laundrify-integratie moet opnieuw worden geauthenticeerd.",
+                "title": "Integratie herauthenticeren"
+            }
+        }
+    }
+}

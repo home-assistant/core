@@ -8,17 +8,11 @@ from aiolookin import Remote
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_STANDBY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,13 +29,13 @@ _TYPE_TO_DEVICE_CLASS = {
 }
 
 _FUNCTION_NAME_TO_FEATURE = {
-    "power": SUPPORT_TURN_OFF,
-    "poweron": SUPPORT_TURN_ON,
-    "poweroff": SUPPORT_TURN_OFF,
-    "mute": SUPPORT_VOLUME_MUTE,
-    "volup": SUPPORT_VOLUME_STEP,
-    "chup": SUPPORT_NEXT_TRACK,
-    "chdown": SUPPORT_PREVIOUS_TRACK,
+    "power": MediaPlayerEntityFeature.TURN_OFF,
+    "poweron": MediaPlayerEntityFeature.TURN_ON,
+    "poweroff": MediaPlayerEntityFeature.TURN_OFF,
+    "mute": MediaPlayerEntityFeature.VOLUME_MUTE,
+    "volup": MediaPlayerEntityFeature.VOLUME_STEP,
+    "chup": MediaPlayerEntityFeature.NEXT_TRACK,
+    "chdown": MediaPlayerEntityFeature.PREVIOUS_TRACK,
 }
 
 
@@ -119,13 +113,13 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
-        self._attr_state = STATE_STANDBY
+        self._attr_state = MediaPlayerState.STANDBY
         self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_send_command(self._power_on_command)
-        self._attr_state = STATE_ON
+        self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
     def _update_from_status(self, status: str) -> None:
@@ -142,5 +136,7 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._attr_state = STATE_ON if state == "1" else STATE_STANDBY
+        self._attr_state = (
+            MediaPlayerState.ON if state == "1" else MediaPlayerState.STANDBY
+        )
         self._attr_is_volume_muted = mute == "0"

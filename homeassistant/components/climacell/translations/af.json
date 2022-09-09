@@ -2,9 +2,8 @@
     "options": {
         "step": {
             "init": {
-                "title": "Update ClimaCell opties"
+                "title": "Update [%key:component::climacell::title%] opties"
             }
         }
-    },
-    "title": "ClimaCell"
+    }
 }

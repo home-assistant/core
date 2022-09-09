@@ -47,8 +47,7 @@
                     "automatic_add": "Aktiv\u00e9ier automatesch dob\u00e4isetzen",
                     "debug": "Aktiv\u00e9ier Debuggen",
                     "device": "Wiel een Apparat fir ze konfigur\u00e9ieren",
-                    "event_code": "Evenement Code aginn fir dob\u00e4izesetzen",
-                    "remove_device": "Wiel een Apparat fir ze l\u00e4schen"
+                    "event_code": "Evenement Code aginn fir dob\u00e4izesetzen"
                 },
                 "title": "Rfxtrx Optioune"
             },
@@ -57,11 +56,9 @@
                     "command_off": "Data bits W\u00e4ert fir Kommando aus",
                     "command_on": "Data bits W\u00e4ert fir Kommando un",
                     "data_bit": "Unzuel vun Data Bits",
-                    "fire_event": "Aktiv\u00e9ier Apparat Evenement",
                     "off_delay": "Aus Verz\u00f6gerung",
                     "off_delay_enabled": "Aktiv\u00e9iert Aus Verz\u00f6gerung",
-                    "replace_device": "Wiel een Apparat fir ze ersetzen",
-                    "signal_repetitions": "Zuel vu Signalwidderhuelungen"
+                    "replace_device": "Wiel een Apparat fir ze ersetzen"
                 },
                 "title": "Apparat Optioune konfigur\u00e9ieren"
             }

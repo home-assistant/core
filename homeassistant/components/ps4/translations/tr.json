@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Kimlik bilgileri gerekli. \"G\u00f6nder\"e bas\u0131n ve ard\u0131ndan PS4 2. Ekran Uygulamas\u0131nda cihazlar\u0131 yenileyin ve devam etmek i\u00e7in \"Home-Asistan\" cihaz\u0131n\u0131 se\u00e7in.",
-                "title": "PlayStation 4"
+                "description": "Kimlik bilgileri gerekli. \"G\u00f6nder\"e bas\u0131n ve ard\u0131ndan PS4 2. Ekran Uygulamas\u0131nda cihazlar\u0131 yenileyin ve devam etmek i\u00e7in \"Home-Asistan\" cihaz\u0131n\u0131 se\u00e7in."
             },
             "link": {
                 "data": {
@@ -25,16 +24,18 @@
                     "name": "Ad",
                     "region": "B\u00f6lge"
                 },
-                "description": "PlayStation 4 bilgilerinizi girin. PIN Kodu i\u00e7in PlayStation 4 konsolunuzda 'Ayarlar'a gidin. Ard\u0131ndan \"Mobil Uygulama Ba\u011flant\u0131 Ayarlar\u0131\"na gidin ve \"Cihaz Ekle\"yi se\u00e7in. PIN Kodu kodunu girin. Ek bilgi i\u00e7in [belgelere](https://www.home-assistant.io/components/ps4/) bak\u0131n.",
-                "title": "PlayStation 4"
+                "data_description": {
+                    "code": "PlayStation 4 konsolunuzda 'Ayarlar'a gidin. Ard\u0131ndan, \"Mobil Uygulama Ba\u011flant\u0131 Ayarlar\u0131\"na gidin ve PIN'i almak i\u00e7in \"Cihaz Ekle\"yi se\u00e7in."
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP Adresi (Otomatik Ke\u015fif kullan\u0131l\u0131yorsa bo\u015f b\u0131rak\u0131n).",
                     "mode": "Yap\u0131land\u0131rma Modu"
                 },
-                "description": "Yap\u0131land\u0131rma i\u00e7in modu se\u00e7in. IP Adresi alan\u0131, Otomatik Ke\u015fif se\u00e7ildi\u011finde cihazlar otomatik olarak ke\u015ffedilece\u011finden bo\u015f b\u0131rak\u0131labilir.",
-                "title": "PlayStation 4"
+                "data_description": {
+                    "ip_address": "Otomatik bulma se\u00e7iliyorsa bo\u015f b\u0131rak\u0131n."
+                }
             }
         }
     }

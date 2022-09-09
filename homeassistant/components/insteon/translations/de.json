@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "not_insteon_device": "Erkanntes Ger\u00e4t ist kein Insteon-Ger\u00e4t",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "select_single": "W\u00e4hle eine Option aus."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP-Adresse",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Modemtyp."
                 },
-                "description": "W\u00e4hle den Insteon-Modemtyp aus.",
-                "title": "Insteon"
+                "description": "W\u00e4hle den Insteon-Modemtyp aus."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Ger\u00e4tekategorie (z. B. 0x10)",
                     "subcat": "Ger\u00e4teunterkategorie (z. B. 0x0a)"
                 },
-                "description": "F\u00fcge eine Ger\u00e4te\u00fcberschreibung hinzu.",
-                "title": "Insteon"
+                "description": "F\u00fcge eine Ger\u00e4te\u00fcberschreibung hinzu."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Dimmerstufen (nur f\u00fcr Lichtger\u00e4te, Voreinstellung 22)",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "\u00c4ndere das Insteon Hub-Passwort.",
-                "title": "Insteon"
+                "description": "\u00c4ndere das Insteon Hub-Passwort."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "\u00c4ndere die Verbindungsinformationen des Insteon-Hubs. Du musst Home Assistant neu starten, nachdem du diese \u00c4nderung vorgenommen hast. Dies \u00e4ndert nicht die Konfiguration des Hubs selbst. Um die Konfiguration im Hub zu \u00e4ndern, verwende die Hub-App.",
-                "title": "Insteon"
+                "description": "\u00c4ndere die Verbindungsinformationen des Insteon-Hubs. Du musst Home Assistant neu starten, nachdem du diese \u00c4nderung vorgenommen hast. Dies \u00e4ndert nicht die Konfiguration des Hubs selbst. Um die Konfiguration im Hub zu \u00e4ndern, verwende die Hub-App."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "\u00c4ndere die Konfiguration des Hubs.",
                     "remove_override": "Entferne eine Ger\u00e4te\u00fcbersteuerung.",
                     "remove_x10": "Entferne ein X10-Ger\u00e4t."
-                },
-                "description": "W\u00e4hle eine Option zum Konfigurieren aus.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "W\u00e4hle eine Ger\u00e4teadresse zum Entfernen"
                 },
-                "description": "Entfernen einer Ger\u00e4te\u00fcbersteuerung",
-                "title": "Insteon"
+                "description": "Entfernen einer Ger\u00e4te\u00fcbersteuerung"
             },
             "remove_x10": {
                 "data": {
                     "address": "W\u00e4hle eine Ger\u00e4teadresse zum Entfernen"
                 },
-                "description": "Ein X10-Ger\u00e4t entfernen",
-                "title": "Insteon"
+                "description": "Ein X10-Ger\u00e4t entfernen"
             }
         }
     }

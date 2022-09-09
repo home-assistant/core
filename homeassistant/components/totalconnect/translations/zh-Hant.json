@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "\u5ea7\u6a19",
                     "usercode": "\u4f7f\u7528\u8005\u4ee3\u78bc"
                 },
                 "description": "\u8f38\u5165\u4f7f\u7528\u8005\u65bc\u6b64\u5ea7\u6a19 {location_id} \u4e4b\u4f7f\u7528\u8005\u4ee3\u78bc",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "\u81ea\u52d5\u5ffd\u7565\u4f4e\u96fb\u91cf"
                 },
-                "title": "Total Connect"
+                "description": "\u7576\u56de\u5831\u4f4e\u96fb\u91cf\u6642\u81ea\u52d5\u5ffd\u7565\u5340\u57df\u3002",
+                "title": "TotalConnect \u9078\u9805"
             }
         }
     }

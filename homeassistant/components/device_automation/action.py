@@ -25,7 +25,6 @@ class DeviceAutomationActionProtocol(Protocol):
         self, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        raise NotImplementedError
 
     async def async_call_action_from_config(
         self,
@@ -35,7 +34,16 @@ class DeviceAutomationActionProtocol(Protocol):
         context: Context | None,
     ) -> None:
         """Execute a device action."""
-        raise NotImplementedError
+
+    async def async_get_action_capabilities(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> dict[str, vol.Schema]:
+        """List action capabilities."""
+
+    async def async_get_actions(
+        self, hass: HomeAssistant, device_id: str
+    ) -> list[dict[str, Any]]:
+        """List actions."""
 
 
 async def async_validate_action_config(

@@ -20,9 +20,7 @@
                     "device_class": "Der Typ des Ger\u00e4ts",
                     "host": "Host",
                     "port": "Port"
-                },
-                "description": "Stelle die erforderlichen Parameter f\u00fcr die Verbindung mit deinem Android TV-Ger\u00e4t ein",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Regeln zur Statuserkennung konfigurieren",
                     "turn_off_command": "ADB-Shell-Abschaltbefehl (f\u00fcr Standard leer lassen)",
                     "turn_on_command": "ADB-Shell-Einschaltbefehl (f\u00fcr Standard leer lassen)"
-                },
-                "title": "Android TV-Optionen"
+                }
             },
             "rules": {
                 "data": {

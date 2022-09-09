@@ -23,9 +23,11 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
+    async_register_admin_service,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -199,21 +201,20 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                     )
 
         tasks = [
-            hass.helpers.entity_component.async_update_entity(entity)
-            for entity in call.data[ATTR_ENTITY_ID]
+            async_update_entity(hass, entity) for entity in call.data[ATTR_ENTITY_ID]
         ]
 
         if tasks:
             await asyncio.wait(tasks)
 
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
     )
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
     )
     hass.services.async_register(
         ha.DOMAIN,
@@ -233,8 +234,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         # auth only processed during startup
         await conf_util.async_process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
 
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
     )
 
     async def async_set_location(call: ha.ServiceCall) -> None:
@@ -243,7 +244,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
         )
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         ha.DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
@@ -265,7 +267,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
         )
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         ha.DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,

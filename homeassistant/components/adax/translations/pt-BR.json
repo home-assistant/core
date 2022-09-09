@@ -7,8 +7,7 @@
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "error": {
-            "cannot_connect": "Falha ao conectar",
-            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+            "cannot_connect": "Falha ao conectar"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "ID da conta",
-                    "connection_type": "Selecione o tipo de conex\u00e3o",
-                    "host": "Nome do host",
-                    "password": "Senha"
+                    "connection_type": "Selecione o tipo de conex\u00e3o"
                 },
                 "description": "Selecione o tipo de conex\u00e3o. Local requer aquecedores com bluetooth"
             }

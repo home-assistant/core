@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import mimetypes
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from yarl import URL
 
@@ -17,6 +17,7 @@ from homeassistant.components.media_source.models import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN
 
@@ -46,21 +47,26 @@ class TTSMediaSource(MediaSource):
             raise Unresolvable("No message specified.")
 
         options = dict(parsed.query)
-        kwargs = {
+        kwargs: dict[str, Any] = {
             "engine": parsed.name,
             "message": options.pop("message"),
             "language": options.pop("language", None),
             "options": options,
         }
+        if "cache" in options:
+            kwargs["cache"] = options.pop("cache") == "true"
 
         manager: SpeechManager = self.hass.data[DOMAIN]
 
         try:
-            url = await manager.async_get_url_path(**kwargs)  # type: ignore[arg-type]
+            url = await manager.async_get_url_path(**kwargs)
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 
         mime_type = mimetypes.guess_type(url)[0] or "audio/mpeg"
+
+        if manager.base_url and manager.base_url != get_url(self.hass):
+            url = f"{manager.base_url}{url}"
 
         return PlayMedia(url, mime_type)
 

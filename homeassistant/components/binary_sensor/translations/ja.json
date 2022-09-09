@@ -59,8 +59,6 @@
             "connected": "{entity_name} \u63a5\u7d9a\u3055\u308c\u3066\u3044\u307e\u3059",
             "gas": "{entity_name} \u304c\u30ac\u30b9\u306e\u691c\u51fa\u3092\u958b\u59cb\u3057\u307e\u3057\u305f",
             "hot": "{entity_name} \u6e29\u307e\u3063\u3066\u3044\u307e\u3059",
-            "is_not_tampered": "{entity_name} \u304c\u6539\u7ac4(tampering)\u306e\u691c\u51fa\u3092\u505c\u6b62\u3057\u307e\u3057\u305f",
-            "is_tampered": "{entity_name} \u304c\u6539\u7ac4(tampering)\u306e\u691c\u51fa\u3092\u958b\u59cb\u3057\u307e\u3057\u305f",
             "light": "{entity_name} \u306f\u3001\u5149\u306e\u691c\u51fa\u3092\u958b\u59cb\u3057\u307e\u3057\u305f",
             "locked": "{entity_name} \u306f\u30ed\u30c3\u30af\u3055\u308c\u3066\u3044\u307e\u3059",
             "moist": "{entity_name} \u304c\u6e7f\u3063\u305f",
@@ -137,10 +135,6 @@
         "carbon_monoxide": {
             "off": "\u30af\u30ea\u30a2",
             "on": "\u691c\u51fa"
-        },
-        "co": {
-            "off": "\u30af\u30ea\u30a2",
-            "on": "\u691c\u51fa\u3055\u308c\u307e\u3057\u305f"
         },
         "cold": {
             "off": "\u901a\u5e38",

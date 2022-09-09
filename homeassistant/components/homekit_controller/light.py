@@ -10,16 +10,15 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .entity import HomeKitEntity
 
 
 async def async_setup_entry(
@@ -74,28 +73,60 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
+    def min_mireds(self) -> int:
+        """Return minimum supported color temperature."""
+        min_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].minValue
+        return int(min_value) if min_value else super().min_mireds
+
+    @property
+    def max_mireds(self) -> int:
+        """Return the maximum color temperature."""
+        max_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].maxValue
+        return int(max_value) if max_value else super().max_mireds
+
+    @property
     def color_temp(self) -> int:
         """Return the color temperature."""
         return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        features = 0
-
-        if self.service.has(CharacteristicsTypes.BRIGHTNESS):
-            features |= SUPPORT_BRIGHTNESS
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        # aiohomekit does not keep track of the light's color mode, report
+        # hs for light supporting both hs and ct
+        if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
+            CharacteristicsTypes.SATURATION
+        ):
+            return ColorMode.HS
 
         if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
-            features |= SUPPORT_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
 
-        if self.service.has(CharacteristicsTypes.HUE):
-            features |= SUPPORT_COLOR
+        if self.service.has(CharacteristicsTypes.BRIGHTNESS):
+            return ColorMode.BRIGHTNESS
 
-        if self.service.has(CharacteristicsTypes.SATURATION):
-            features |= SUPPORT_COLOR
+        return ColorMode.ONOFF
 
-        return features
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        color_modes: set[ColorMode] = set()
+
+        if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
+            CharacteristicsTypes.SATURATION
+        ):
+            color_modes.add(ColorMode.HS)
+
+        if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+            color_modes.add(ColorMode.COLOR_TEMP)
+
+        if not color_modes and self.service.has(CharacteristicsTypes.BRIGHTNESS):
+            color_modes.add(ColorMode.BRIGHTNESS)
+
+        if not color_modes:
+            color_modes.add(ColorMode.ONOFF)
+
+        return color_modes
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""

@@ -4,15 +4,13 @@
             "already_configured": "Account is al geconfigureerd"
         },
         "error": {
-            "name_exists": "Naam bestaat al",
             "wrong_location": "Locatie alleen Zweden"
         },
         "step": {
             "user": {
                 "data": {
                     "latitude": "Breedtegraad",
-                    "longitude": "Lengtegraad",
-                    "name": "Naam"
+                    "longitude": "Lengtegraad"
                 },
                 "title": "Locatie in Zweden"
             }

@@ -10,14 +10,10 @@
                 },
                 "title": "Manuaalinen Plex-konfigurointi"
             },
-            "user": {
-                "title": "Plex Media Server"
-            },
             "user_advanced": {
                 "data": {
                     "setup_method": "Asennusmenetelm\u00e4"
-                },
-                "title": "Plex-mediapalvelin"
+                }
             }
         }
     },

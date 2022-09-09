@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Veuillez mettre \u00e0 jour votre mot de passe pour {username}",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
+            "user": {
+                "data": {
+                    "import_plugins": "Importer les entit\u00e9s \u00e0 partir des plugins fibaro\u00a0?",
+                    "password": "Mot de passe",
+                    "url": "URL au format http://HOST/api/",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nombre",
+                    "round": "Precisi\u00f3n",
+                    "source": "Sensor de entrada",
+                    "time_window": "Ventana de tiempo",
+                    "unit_prefix": "Prefijo m\u00e9trico",
+                    "unit_time": "Unidad de tiempo"
+                },
+                "data_description": {
+                    "round": "Controla el n\u00famero de d\u00edgitos decimales en la salida.",
+                    "time_window": "Si se establece, el valor del sensor es un promedio m\u00f3vil ponderado en el tiempo de las derivadas dentro de esta ventana.",
+                    "unit_prefix": "La salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico seleccionado y la unidad de tiempo de la derivada."
+                },
+                "description": "Crea un sensor que estima la derivada de un sensor.",
+                "title": "A\u00f1adir sensor de derivaci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nombre",
+                    "round": "Precisi\u00f3n",
+                    "source": "Sensor de entrada",
+                    "time_window": "Ventana de tiempo",
+                    "unit_prefix": "Prefijo m\u00e9trico",
+                    "unit_time": "Unidad de tiempo"
+                },
+                "data_description": {
+                    "round": "Controla el n\u00famero de d\u00edgitos decimales en la salida.",
+                    "time_window": "Si se establece, el valor del sensor es un promedio m\u00f3vil ponderado en el tiempo de las derivadas dentro de esta ventana.",
+                    "unit_prefix": "La salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico seleccionado y la unidad de tiempo de la derivada."
+                }
+            }
+        }
+    },
+    "title": "Sensor de derivaci\u00f3n"
+}

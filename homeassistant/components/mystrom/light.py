@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
@@ -12,11 +13,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -28,8 +27,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "myStrom bulb"
-
-SUPPORT_MYSTROM = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_COLOR
 
 EFFECT_RAINBOW = "rainbow"
 EFFECT_SUNRISE = "sunrise"
@@ -74,6 +71,10 @@ async def async_setup_platform(
 class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
+
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
@@ -94,11 +95,6 @@ class MyStromLight(LightEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._mac
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_MYSTROM
 
     @property
     def brightness(self):
@@ -125,7 +121,7 @@ class MyStromLight(LightEntity):
         """Return true if light is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         effect = kwargs.get(ATTR_EFFECT)
@@ -152,14 +148,14 @@ class MyStromLight(LightEntity):
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the bulb."""
         try:
             await self._bulb.set_off()
         except MyStromConnectionError:
             _LOGGER.warning("The myStrom bulb not online")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
             await self._bulb.get_state()

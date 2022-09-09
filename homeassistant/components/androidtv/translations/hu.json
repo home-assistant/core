@@ -20,9 +20,7 @@
                     "device_class": "Az eszk\u00f6z t\u00edpusa",
                     "host": "C\u00edm",
                     "port": "Port"
-                },
-                "description": "Az Android TV k\u00e9sz\u00fcl\u00e9khez val\u00f3 csatlakoz\u00e1shoz sz\u00fcks\u00e9ges param\u00e9terek be\u00e1ll\u00edt\u00e1sa",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -43,14 +41,13 @@
             "init": {
                 "data": {
                     "apps": "Alkalmaz\u00e1slista konfigur\u00e1l\u00e1sa",
-                    "exclude_unnamed_apps": "Ismeretlen nev\u0171 alkalmaz\u00e1s kiz\u00e1r\u00e1sa",
-                    "get_sources": "A fut\u00f3 alkalmaz\u00e1sok forr\u00e1slist\u00e1jak\u00e9nt val\u00f3 megjelen\u00edt\u00e9se",
-                    "screencap": "A k\u00e9perny\u0151n megjelen\u0151 k\u00e9p legyen-e az albumbor\u00edt\u00f3",
+                    "exclude_unnamed_apps": "Az ismeretlen nev\u0171 alkalmaz\u00e1sok kiz\u00e1r\u00e1sa a forr\u00e1slist\u00e1b\u00f3l",
+                    "get_sources": "A fut\u00f3 alkalmaz\u00e1sok megjelen\u00edt\u00e9se a bemeneti forr\u00e1sok list\u00e1j\u00e1ban",
+                    "screencap": "Haszn\u00e1ljon k\u00e9perny\u0151felv\u00e9telt az albumbor\u00edt\u00f3khoz",
                     "state_detection_rules": "\u00c1llapotfelismer\u00e9si szab\u00e1lyok konfigur\u00e1l\u00e1sa",
-                    "turn_off_command": "ADB shell parancs az alap\u00e9rtelmezett kikapcsol\u00e1si (turn_off) parancs fel\u00fcl\u00edr\u00e1s\u00e1ra",
-                    "turn_on_command": "ADB shell parancs az alap\u00e9rtelmezett bekapcsol\u00e1si (turn_on) parancs fel\u00fcl\u00edr\u00e1s\u00e1ra"
-                },
-                "title": "Android TV be\u00e1ll\u00edt\u00e1sok"
+                    "turn_off_command": "ADB shell kikapcsol\u00e1si parancs (alap\u00e9rtelmez\u00e9s szerint hagyja \u00fcresen)",
+                    "turn_on_command": "ADB shell bekapcsol\u00e1si parancs (alap\u00e9rtelmez\u00e9s szerint hagyja \u00fcresen)"
+                }
             },
             "rules": {
                 "data": {

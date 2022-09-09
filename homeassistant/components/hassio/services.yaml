@@ -82,6 +82,12 @@ backup_full:
       example: "password"
       selector:
         text:
+    compressed:
+      name: Compressed
+      description: Use compressed archives
+      default: true
+      selector:
+        boolean:
 
 backup_partial:
   name: Create a partial backup.
@@ -116,6 +122,12 @@ backup_partial:
       example: "password"
       selector:
         text:
+    compressed:
+      name: Compressed
+      description: Use compressed archives
+      default: true
+      selector:
+        boolean:
 
 restore_full:
   name: Restore from full backup.

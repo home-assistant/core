@@ -9,9 +9,6 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
-            "ssdp_confirm": {
-                "title": "Roku"
-            },
             "user": {
                 "data": {
                     "host": "Servidor"

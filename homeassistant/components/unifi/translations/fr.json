@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Le contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9",
-            "configuration_updated": "Configuration mise \u00e0 jour.",
+            "configuration_updated": "Configuration mise \u00e0 jour",
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "L'int\u00e9gration UniFi n'est pas configur\u00e9e"
+        },
         "step": {
             "client_control": {
                 "data": {

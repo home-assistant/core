@@ -45,11 +45,11 @@ class IntegerTypeData:
 
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
-        return value * self.step / (10**self.scale)
+        return value / (10**self.scale)
 
     def scale_value_back(self, value: float | int) -> int:
         """Return raw value for scaled."""
-        return int((value * (10**self.scale)) / self.step)
+        return int(value * (10**self.scale))
 
     def remap_value_to(
         self,
@@ -131,6 +131,7 @@ class ElectricityTypeData:
 class TuyaEntity(Entity):
     """Tuya base device."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
@@ -138,16 +139,6 @@ class TuyaEntity(Entity):
         self._attr_unique_id = f"tuya.{device.id}"
         self.device = device
         self.device_manager = device_manager
-
-    @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.name is not None
-        ):
-            return f"{self.device.name} {self.entity_description.name}"
-        return self.device.name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -198,7 +189,7 @@ class TuyaEntity(Entity):
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
-        dptype: DPType = None,
+        dptype: DPType | None = None,
     ) -> DPCode | EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:

@@ -17,10 +17,8 @@
                     "password": "Kata Sandi",
                     "region": "Wilayah"
                 },
-                "description": "Masukkan alamat email dan kata sandi yang digunakan untuk masuk ke aplikasi seluler MyMazda.",
-                "title": "Mazda Connected Services - Tambahkan Akun"
+                "description": "Masukkan alamat email dan kata sandi yang digunakan untuk masuk ke aplikasi seluler MyMazda."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }

@@ -1,4 +1,4 @@
-"""Tests for 1-Wire devices connected on OWServer."""
+"""Tests for 1-Wire switches."""
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -35,7 +35,7 @@ def override_platforms():
         yield
 
 
-async def test_owserver_switch(
+async def test_switches(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,

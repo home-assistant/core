@@ -16,15 +16,5 @@
                 "title": "Tesla Wall Connector konfigur\u00e1l\u00e1sa"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g"
-                },
-                "title": "Tesla Wall Connector konfigur\u00e1l\u00e1sa"
-            }
-        }
     }
 }

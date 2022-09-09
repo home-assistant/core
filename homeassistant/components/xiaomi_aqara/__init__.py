@@ -82,7 +82,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)
-        gateway = call.data.get(ATTR_GW_MAC)
+        gateway: XiaomiGateway = call.data[ATTR_GW_MAC]
 
         kwargs = {"mid": ring_id}
 
@@ -93,12 +93,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def stop_ringtone_service(call: ServiceCall) -> None:
         """Service to stop playing ringtone on Gateway."""
-        gateway = call.data.get(ATTR_GW_MAC)
+        gateway: XiaomiGateway = call.data[ATTR_GW_MAC]
         gateway.write_to_hub(gateway.sid, mid=10000)
 
     def add_device_service(call: ServiceCall) -> None:
         """Service to add a new sub-device within the next 30 seconds."""
-        gateway = call.data.get(ATTR_GW_MAC)
+        gateway: XiaomiGateway = call.data[ATTR_GW_MAC]
         gateway.write_to_hub(gateway.sid, join_permission="yes")
         persistent_notification.async_create(
             hass,
@@ -110,7 +110,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def remove_device_service(call: ServiceCall) -> None:
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
-        gateway = call.data.get(ATTR_GW_MAC)
+        gateway: XiaomiGateway = call.data[ATTR_GW_MAC]
         gateway.write_to_hub(gateway.sid, remove_device=device_id)
 
     gateway_only_schema = _add_gateway_to_schema(hass, vol.Schema({}))
@@ -181,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_HOST],
     )
 
+    assert entry.unique_id
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -195,7 +196,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True
 
@@ -223,6 +224,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
+
+    _attr_should_poll = False
 
     def __init__(self, device, device_type, xiaomi_hub, config_entry):
         """Initialize the Xiaomi device."""
@@ -307,11 +310,6 @@ class XiaomiDevice(Entity):
     def available(self):
         """Return True if entity is available."""
         return self._is_available
-
-    @property
-    def should_poll(self):
-        """Return the polling state. No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

@@ -1,0 +1,106 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "not_insteon_device": "Uppt\u00e4ckt enhet \u00e4r inte en Insteon-enhet",
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "select_single": "V\u00e4lj ett alternativ."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_usb": {
+                "description": "Vill du konfigurera {name}?"
+            },
+            "hubv1": {
+                "data": {
+                    "host": "IP-adress",
+                    "port": "Port"
+                },
+                "description": "Konfigurera Insteon Hub version 1 (f\u00f6re 2014).",
+                "title": "Insteon Hub version 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP-adress",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Konfigurera Insteon Hub version 2.",
+                "title": "Insteon Hub version 2"
+            },
+            "plm": {
+                "data": {
+                    "device": "USB-enhetens s\u00f6kv\u00e4g"
+                },
+                "description": "Konfigurera Insteon PowerLink-modemet (PLM).",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modemtyp."
+                },
+                "description": "V\u00e4lj Insteon-modemtyp."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "input_error": "Ogiltiga poster, kontrollera dina v\u00e4rden.",
+            "select_single": "V\u00e4lj ett alternativ."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Enhetsadress (dvs. 1a2b3c)",
+                    "cat": "Enhetskategori (dvs. 0x10)",
+                    "subcat": "Enhetsunderkategori (dvs. 0x0a)"
+                },
+                "description": "L\u00e4gg till en enhets\u00e5sidos\u00e4ttning."
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Huskod (a - p)",
+                    "platform": "Plattform",
+                    "steps": "Dimmersteg (endast f\u00f6r ljusanordningar, standardv\u00e4rde 22)",
+                    "unitcode": "Enhetskod (1 - 16)"
+                },
+                "description": "\u00c4ndra l\u00f6senordet f\u00f6r Insteon Hub."
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP-adress",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "\u00c4ndra Insteon Hub-anslutningsinformationen. Du m\u00e5ste starta om Home Assistant efter att ha gjort denna \u00e4ndring. Detta \u00e4ndrar inte konfigurationen av sj\u00e4lva hubben. Anv\u00e4nd Hub-appen f\u00f6r att \u00e4ndra konfigurationen i Hubben."
+            },
+            "init": {
+                "data": {
+                    "add_override": "L\u00e4gg till en enhets\u00e5sidos\u00e4ttning.",
+                    "add_x10": "L\u00e4gg till en X10-enhet.",
+                    "change_hub_config": "\u00c4ndra Hub-konfigurationen.",
+                    "remove_override": "Ta bort en \u00e5sidos\u00e4ttning av en enhet.",
+                    "remove_x10": "Ta bort en X10-enhet."
+                }
+            },
+            "remove_override": {
+                "data": {
+                    "address": "V\u00e4lj en enhetsadress att ta bort"
+                },
+                "description": "Ta bort en enhets\u00e5sidos\u00e4ttning"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "V\u00e4lj en enhetsadress att ta bort"
+                },
+                "description": "Ta bort en X10-enhet"
+            }
+        }
+    }
+}

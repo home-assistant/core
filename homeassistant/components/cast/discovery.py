@@ -34,7 +34,7 @@ def discover_chromecast(
         _LOGGER.error("Discovered chromecast without uuid %s", info)
         return
 
-    info = info.fill_out_missing_chromecast_info()
+    info = info.fill_out_missing_chromecast_info(hass)
     _LOGGER.debug("Discovered new or updated chromecast %s", info)
 
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)

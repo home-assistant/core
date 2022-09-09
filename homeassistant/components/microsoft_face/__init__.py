@@ -10,6 +10,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components import camera
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_TIMEOUT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -181,7 +182,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         p_id = face.store[g_id].get(service.data[ATTR_PERSON])
 
         camera_entity = service.data[ATTR_CAMERA_ENTITY]
-        camera = hass.components.camera
 
         try:
             image = await camera.async_get_image(hass, camera_entity)
@@ -207,6 +207,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class MicrosoftFaceGroupEntity(Entity):
     """Person-Group state/data Entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, api, g_id, name):
         """Initialize person/group entity."""
         self.hass = hass
@@ -228,11 +230,6 @@ class MicrosoftFaceGroupEntity(Entity):
     def state(self):
         """Return the state of the entity."""
         return len(self._api.store[self._id])
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
     @property
     def extra_state_attributes(self):

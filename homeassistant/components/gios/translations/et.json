@@ -14,7 +14,6 @@
                     "name": "Nimi",
                     "station_id": "M\u00f5\u00f5tejaama ID"
                 },
-                "description": "Loo GIO\u015a (Poola keskkonnakaitse peainspektsioon) \u00f5hukvaliteedi sidumnie. Kui vajad seadistamisel abi, vaats siit: https://www.home-assistant.io/integrations/gios",
                 "title": ""
             }
         }

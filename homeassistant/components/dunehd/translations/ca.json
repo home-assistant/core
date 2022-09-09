@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Configura la integraci\u00f3 Dune HD. Si tens problemes durant la configuraci\u00f3, v\u00e9s a: https://www.home-assistant.io/integrations/dunehd\n\nAssegura't que el reproductor estigui engegat.",
-                "title": "Dune HD"
+                "description": "Assegura't que el reproductor est\u00e0 engegat."
             }
         }
     }

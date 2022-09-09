@@ -8,15 +8,20 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "description": "Impossibile scoprire il server Roon, inserisci il tuo nome host e la porta."
+            },
             "link": {
                 "description": "Devi autorizzare l'Assistente Home in Roon. Dopo aver fatto clic su Invia, passa all'applicazione Roon Core, apri Impostazioni e abilita HomeAssistant nella scheda Estensioni.",
                 "title": "Autorizza HomeAssistant in Roon"
             },
             "user": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Impossibile individuare il server Roon, inserire l'hostname o l'IP."
+                "one": "Vuoto",
+                "other": "Vuoti"
             }
         }
     }

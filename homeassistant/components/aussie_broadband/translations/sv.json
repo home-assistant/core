@@ -11,12 +11,12 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "L\u00f6senord"
                 },
                 "description": "Uppdatera l\u00f6senord f\u00f6r {username}",
-                "title": "\u00c5terautentisera integration"
+                "title": "\u00c5terautenticera integration"
             },
             "service": {
                 "data": {

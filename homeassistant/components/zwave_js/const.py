@@ -21,7 +21,6 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
-DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
@@ -45,6 +44,7 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PROPERTY = "property"
 ATTR_PROPERTY_KEY = "property_key"
 ATTR_PARAMETERS = "parameters"
+ATTR_DIRECTION = "direction"
 ATTR_EVENT = "event"
 ATTR_EVENT_LABEL = "event_label"
 ATTR_EVENT_TYPE = "event_type"
@@ -55,6 +55,8 @@ ATTR_OPTIONS = "options"
 ATTR_TEST_NODE_ID = "test_node_id"
 ATTR_STATUS = "status"
 ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
+ATTR_EVENT_TYPE_LABEL = "event_type_label"
+ATTR_DATA_TYPE_LABEL = "data_type_label"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
@@ -70,15 +72,16 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
 # service constants
-SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
-SERVICE_SET_VALUE = "set_value"
-SERVICE_RESET_METER = "reset_meter"
+SERVICE_INVOKE_CC_API = "invoke_cc_api"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"
 SERVICE_REFRESH_VALUE = "refresh_value"
+SERVICE_RESET_METER = "reset_meter"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
-SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
+SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_SET_VALUE = "set_value"
 
 ATTR_NODES = "nodes"
 # config parameter
@@ -92,6 +95,9 @@ ATTR_BROADCAST = "broadcast"
 # meter reset
 ATTR_METER_TYPE = "meter_type"
 ATTR_METER_TYPE_NAME = "meter_type_name"
+# invoke CC API
+ATTR_METHOD_NAME = "method_name"
+ATTR_PARAMETERS = "parameters"
 
 ADDON_SLUG = "core_zwave_js"
 
@@ -113,3 +119,9 @@ ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
+
+# This API key is only for use with Home Assistant. Reach out to Z-Wave JS to apply for
+# your own (https://github.com/zwave-js/firmware-updates/).
+API_KEY_FIRMWARE_UPDATE_SERVICE = (
+    "2e39d98fc56386389fbb35e5a98fa1b44b9fdd8f971460303587cff408430d4cfcde6134"
+)

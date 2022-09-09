@@ -7,6 +7,10 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "insteon",
+        "vid": "10BF"
+    },
+    {
         "domain": "modem_callerid",
         "vid": "0572",
         "pid": "1340"
@@ -36,6 +40,12 @@ USB = [
         "vid": "10C4",
         "pid": "EA60",
         "description": "*2652*"
+    },
+    {
+        "domain": "zha",
+        "vid": "1A86",
+        "pid": "55D4",
+        "description": "*sonoff*plus*"
     },
     {
         "domain": "zha",
@@ -75,6 +85,18 @@ USB = [
     },
     {
         "domain": "zha",
+        "vid": "0403",
+        "pid": "6015",
+        "description": "*zigate*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*zigate*"
+    },
+    {
+        "domain": "zha",
         "vid": "10C4",
         "pid": "8B34",
         "description": "*bv 2010/10*"
@@ -89,10 +111,5 @@ USB = [
         "vid": "10C4",
         "pid": "8A2A",
         "description": "*z-wave*"
-    },
-    {
-        "domain": "zwave_js",
-        "vid": "10C4",
-        "pid": "EA60"
     }
 ]

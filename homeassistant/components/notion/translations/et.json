@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "no_devices": "Kontolt ei leitud \u00fchtegi seadet",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {

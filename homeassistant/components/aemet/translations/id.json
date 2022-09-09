@@ -14,8 +14,7 @@
                     "longitude": "Bujur",
                     "name": "Nama integrasi"
                 },
-                "description": "Siapkan integrasi AEMET OpenData. Untuk menghasilkan kunci API, buka https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "Untuk membuat kunci API, buka https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

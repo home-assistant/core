@@ -18,6 +18,9 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -71,13 +74,18 @@ class InputButtonStorageCollection(collection.StorageCollection):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input button."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputButton.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputButton
     )
 
     storage_collection = InputButtonStorageCollection(
@@ -123,20 +131,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputButton(ButtonEntity, RestoreEntity):
+class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
 
     _attr_should_poll = False
+    editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a button."""
         self._config = config
-        self.editable = True
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> ButtonEntity:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> InputButton:
+        """Return entity instance initialized from storage."""
+        button = cls(config)
+        button.editable = True
+        return button
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> InputButton:
+        """Return entity instance initialized from yaml."""
         button = cls(config)
         button.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         button.editable = False

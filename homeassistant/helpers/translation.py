@@ -3,19 +3,17 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import (
-    MAX_LOAD_CONCURRENTLY,
     Integration,
     async_get_config_flows,
-    async_get_integration,
+    async_get_integrations,
     bind_hass,
 )
-from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,16 +149,13 @@ async def async_get_component_strings(
 ) -> dict[str, Any]:
     """Load translations."""
     domains = list({loaded.split(".")[-1] for loaded in components})
-    integrations = dict(
-        zip(
-            domains,
-            await gather_with_concurrency(
-                MAX_LOAD_CONCURRENTLY,
-                *(async_get_integration(hass, domain) for domain in domains),
-            ),
-        )
-    )
 
+    integrations: dict[str, Integration] = {}
+    ints_or_excs = await async_get_integrations(hass, domains)
+    for domain, int_or_exc in ints_or_excs.items():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations[domain] = int_or_exc
     translations: dict[str, Any] = {}
 
     # Determine paths of missing components/platforms
@@ -286,7 +281,7 @@ async def async_get_translations(
     hass: HomeAssistant,
     language: str,
     category: str,
-    integration: str | None = None,
+    integrations: Iterable[str] | None = None,
     config_flow: bool | None = None,
 ) -> dict[str, Any]:
     """Return all backend translations.
@@ -297,8 +292,8 @@ async def async_get_translations(
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
-    if integration is not None:
-        components = {integration}
+    if integrations is not None:
+        components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category == "state":
@@ -310,7 +305,10 @@ async def async_get_translations(
         }
 
     async with lock:
-        cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
+        if TRANSLATION_FLATTEN_CACHE in hass.data:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+        else:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
         cached = await cache.async_fetch(language, category, components)
 
     return dict(ChainMap(*cached))

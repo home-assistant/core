@@ -1,24 +1,18 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
-from python_awair.air_data import AirData
-from python_awair.devices import AwairDevice
-import voluptuous as vol
+from typing import cast
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_CONNECTIONS,
-    ATTR_NAME,
-    CONF_ACCESS_TOKEN,
-)
+from python_awair.air_data import AirData
+from python_awair.devices import AwairBaseDevice, AwairLocalDevice
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AwairDataUpdateCoordinator, AwairResult
@@ -31,36 +25,11 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
     DUST_ALIASES,
-    LOGGER,
     SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
     SENSOR_TYPES_DUST,
     AwairSensorEntityDescription,
 )
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Awair configuration from YAML."""
-    LOGGER.warning(
-        "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -106,10 +75,12 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     """Defines an Awair sensor entity."""
 
     entity_description: AwairSensorEntityDescription
+    _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
-        device: AwairDevice,
+        device: AwairBaseDevice,
         coordinator: AwairDataUpdateCoordinator,
         description: AwairSensorEntityDescription,
     ) -> None:
@@ -117,14 +88,6 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._device = device
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        if self._device.name:
-            return f"{self._device.name} {self.entity_description.name}"
-
-        return self.entity_description.name
 
     @property
     def unique_id(self) -> str:
@@ -215,7 +178,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         sensor_type = self.entity_description.key
-        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict = {}
         if not self._air_data:
             return attrs
         if sensor_type in self._air_data.indices:
@@ -232,15 +195,20 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, self._device.uuid)},
             manufacturer="Awair",
             model=self._device.model,
+            name=(
+                self._device.name
+                or cast(ConfigEntry, self.coordinator.config_entry).title
+                or f"{self._device.model} ({self._device.device_id})"
+            ),
         )
-
-        if self._device.name:
-            info[ATTR_NAME] = self._device.name
 
         if self._device.mac_address:
             info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
             }
+
+        if isinstance(self._device, AwairLocalDevice):
+            info[ATTR_SW_VERSION] = self._device.fw_version
 
         return info
 

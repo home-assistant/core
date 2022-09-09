@@ -2,11 +2,7 @@
     "config": {
         "abort": {
             "backoff": "El dispositivo no acepta solicitudes de emparejamiento en este momento (es posible que haya ingresado un c\u00f3digo PIN no v\u00e1lido demasiadas veces), vuelva a intentarlo m\u00e1s tarde.",
-            "device_did_not_pair": "No se intent\u00f3 finalizar el proceso de emparejamiento desde el dispositivo.",
-            "invalid_config": "La configuraci\u00f3n de este dispositivo est\u00e1 incompleta. Intente agregarlo nuevamente."
-        },
-        "error": {
-            "no_usable_service": "Se encontr\u00f3 un dispositivo, pero no se pudo identificar ninguna forma de establecer una conexi\u00f3n con \u00e9l. Si sigue viendo este mensaje, intente especificar su direcci\u00f3n IP o reinicie su Apple TV."
+            "device_did_not_pair": "No se intent\u00f3 finalizar el proceso de emparejamiento desde el dispositivo."
         },
         "step": {
             "confirm": {
@@ -47,6 +43,5 @@
                 "description": "Configurar los ajustes generales del dispositivo"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

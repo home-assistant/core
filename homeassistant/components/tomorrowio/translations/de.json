@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "rate_limited": "Aktuelle Aktualisierungsrate gedrosselt, bitte versuche es sp\u00e4ter erneut.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "location": "Standort",
+                    "name": "Name"
+                },
+                "description": "Um einen API-Schl\u00fcssel zu erhalten, melde dich bei [Tomorrow.io] (https://app.tomorrow.io/signup) an."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Minuten zwischen den NowCast Kurzvorhersagen"
+                },
+                "description": "Wenn du die Vorhersage-Entitit\u00e4t \"Kurzvorhersage\" aktivierst, kannst du die Anzahl der Minuten zwischen den einzelnen Vorhersagen konfigurieren. Die Anzahl der bereitgestellten Vorhersagen h\u00e4ngt von der Anzahl der zwischen den Vorhersagen gew\u00e4hlten Minuten ab.",
+                "title": "Tomorrow.io Optionen aktualisieren"
+            }
+        }
+    }
+}

@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Questa \u00e8 un'integrazione per le chiamate su linea fissa che utilizza un modem vocale CX93001. Questo pu\u00f2 recuperare le informazioni sull'ID del chiamante con un'opzione per rifiutare una chiamata in arrivo.",
-                "title": "Modem del telefono"
+                "description": "Questa \u00e8 un'integrazione per le chiamate su linea fissa che utilizza un modem vocale CX93001. Questo pu\u00f2 recuperare le informazioni sull'ID del chiamante con un'opzione per rifiutare una chiamata in arrivo."
             },
             "user": {
                 "data": {
                     "name": "Nome",
                     "port": "Porta"
                 },
-                "description": "Questa \u00e8 un'integrazione per le chiamate su linea fissa che utilizza un modem vocale CX93001. Questo pu\u00f2 recuperare le informazioni sull'ID del chiamante con un'opzione per rifiutare una chiamata in arrivo.",
-                "title": "Modem del telefono"
+                "description": "Questa \u00e8 un'integrazione per le chiamate su linea fissa che utilizza un modem vocale CX93001. Questo pu\u00f2 recuperare le informazioni sull'ID del chiamante con un'opzione per rifiutare una chiamata in arrivo."
             }
         }
     }

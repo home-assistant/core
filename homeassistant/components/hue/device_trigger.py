@@ -1,7 +1,7 @@
 """Provides device automations for Philips Hue events."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -24,16 +24,15 @@ from .v2.device_trigger import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.components.automation import (
-        AutomationActionType,
-        AutomationTriggerInfo,
-    )
     from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
     from .bridge import HueBridge
 
 
-async def async_validate_trigger_config(hass: "HomeAssistant", config: ConfigType):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     if DOMAIN not in hass.data:
         # happens at startup
@@ -51,13 +50,14 @@ async def async_validate_trigger_config(hass: "HomeAssistant", config: ConfigTyp
         if bridge.api_version == 1:
             return await async_validate_trigger_config_v1(bridge, device_entry, config)
         return await async_validate_trigger_config_v2(bridge, device_entry, config)
+    return config
 
 
 async def async_attach_trigger(
-    hass: "HomeAssistant",
+    hass: HomeAssistant,
     config: ConfigType,
-    action: "AutomationActionType",
-    automation_info: "AutomationTriggerInfo",
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     device_id = config[CONF_DEVICE_ID]
@@ -72,17 +72,19 @@ async def async_attach_trigger(
         bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
         if bridge.api_version == 1:
             return await async_attach_trigger_v1(
-                bridge, device_entry, config, action, automation_info
+                bridge, device_entry, config, action, trigger_info
             )
         return await async_attach_trigger_v2(
-            bridge, device_entry, config, action, automation_info
+            bridge, device_entry, config, action, trigger_info
         )
     raise InvalidDeviceAutomationConfig(
         f"Device ID {device_id} is not found on any Hue bridge"
     )
 
 
-async def async_get_triggers(hass: "HomeAssistant", device_id: str):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """Get device triggers for given (hass) device id."""
     if DOMAIN not in hass.data:
         return []
@@ -99,5 +101,6 @@ async def async_get_triggers(hass: "HomeAssistant", device_id: str):
         bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
 
         if bridge.api_version == 1:
-            return await async_get_triggers_v1(bridge, device_entry)
-        return await async_get_triggers_v2(bridge, device_entry)
+            return async_get_triggers_v1(bridge, device_entry)
+        return async_get_triggers_v2(bridge, device_entry)
+    return []

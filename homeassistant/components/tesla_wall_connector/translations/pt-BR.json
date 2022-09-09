@@ -16,15 +16,5 @@
                 "title": "Configurar o conector de parede Tesla"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Frequ\u00eancia de atualiza\u00e7\u00e3o"
-                },
-                "title": "Configurar op\u00e7\u00f5es para o Tesla Wall Connector"
-            }
-        }
     }
 }

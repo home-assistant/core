@@ -8,7 +8,6 @@
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
             "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
-        "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "invalid_id": "Urz\u0105dzenie zwr\u00f3ci\u0142o nieprawid\u0142owy unikalny identyfikator"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "url": "URL",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    }
+}

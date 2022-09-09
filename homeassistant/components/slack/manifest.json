@@ -1,9 +1,10 @@
 {
   "domain": "slack",
   "name": "Slack",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slack",
   "requirements": ["slackclient==2.5.0"],
-  "codeowners": ["@bachya"],
+  "codeowners": ["@bachya", "@tkdrob"],
   "iot_class": "cloud_push",
   "loggers": ["slack"]
 }

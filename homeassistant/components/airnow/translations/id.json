@@ -17,10 +17,8 @@
                     "longitude": "Bujur",
                     "radius": "Radius Stasiun (mil; opsional)"
                 },
-                "description": "Siapkan integrasi kualitas udara AirNow. Untuk membuat kunci API buka https://docs.airnowapi.org/account/request/",
-                "title": "AirNow"
+                "description": "Untuk membuat kunci API buka https://docs.airnowapi.org/account/request/"
             }
         }
-    },
-    "title": "AirNow"
+    }
 }

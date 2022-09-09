@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "description": "Uw Twinkly LED-string instellen",
-                "title": "Twinkly"
+                }
             }
         }
     }

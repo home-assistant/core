@@ -5,17 +5,11 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "onvif"
 
-DEFAULT_NAME = "ONVIF Camera"
-DEFAULT_PORT = 5000
-DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "888888"
+DEFAULT_PORT = 80
 DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_DEVICE_ID = "deviceid"
-CONF_RTSP_TRANSPORT = "rtsp_transport"
 CONF_SNAPSHOT_AUTH = "snapshot_auth"
-
-RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"

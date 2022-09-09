@@ -3,7 +3,7 @@
   "name": "Honeywell Lyric",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lyric",
-  "dependencies": ["http"],
+  "dependencies": ["application_credentials"],
   "requirements": ["aiolyric==1.0.8"],
   "codeowners": ["@timmo001"],
   "quality_scale": "silver",

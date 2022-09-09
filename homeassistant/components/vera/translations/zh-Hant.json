@@ -10,8 +10,9 @@
                     "lights": "\u65bc Home Assistant \u4e2d\u8996\u70ba\u71c8\u5149\u7684 Vera \u958b\u95dc\u88dd\u7f6e ID\u3002",
                     "vera_controller_url": "\u63a7\u5236\u5668 URL"
                 },
-                "description": "\u65bc\u4e0b\u65b9\u63d0\u4f9b Vera \u63a7\u5236\u5668 URL\u3002\u683c\u5f0f\u61c9\u8a72\u70ba\uff1ahttp://192.168.1.161:3480\u3002",
-                "title": "\u8a2d\u5b9a Vera \u63a7\u5236\u5668"
+                "data_description": {
+                    "vera_controller_url": "\u770b\u8d77\u4f86\u61c9\u8a72\u985e\u4f3c\uff1ahttp://192.168.1.161:3480"
+                }
             }
         }
     },

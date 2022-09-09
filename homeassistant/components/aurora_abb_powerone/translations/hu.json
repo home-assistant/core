@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "A csatlakoz\u00e1s sikertelen. Ellen\u0151rizze a soros portot, a c\u00edmet, az elektromos csatlakoz\u00e1st \u00e9s azt, hogy az inverter be van-e kapcsolva (nappal).",
             "cannot_open_serial_port": "A soros port nem nyithat\u00f3 meg, k\u00e9rem ellen\u0151rizze \u00e9s pr\u00f3b\u00e1lkozzon \u00fajra",
-            "invalid_serial_port": "A soros port nem \u00e9rv\u00e9nyes eszk\u00f6z, vagy nem nyithat\u00f3 meg",
-            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+            "invalid_serial_port": "A soros port nem \u00e9rv\u00e9nyes eszk\u00f6z, vagy nem nyithat\u00f3 meg"
         },
         "step": {
             "user": {

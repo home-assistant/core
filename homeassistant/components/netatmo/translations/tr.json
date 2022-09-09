@@ -60,7 +60,7 @@
             "public_weather_areas": {
                 "data": {
                     "new_area": "Alan ad\u0131",
-                    "weather_areas": "Hava alanlar\u0131"
+                    "weather_areas": "Hava b\u00f6lgeleri"
                 },
                 "description": "Genel hava durumu sens\u00f6rlerini yap\u0131land\u0131r\u0131n.",
                 "title": "Netatmo genel hava durumu sens\u00f6r\u00fc"

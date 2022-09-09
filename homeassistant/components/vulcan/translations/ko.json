@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "description": "\ubaa8\ubc14\uc77c \uc571 \ub4f1\ub85d \ud398\uc774\uc9c0\ub97c \uc0ac\uc6a9\ud558\uc5ec Vulcan \uacc4\uc815\uc5d0 \ub85c\uadf8\uc778\ud569\ub2c8\ub2e4."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "token": "\ud1a0\ud070"
+                },
+                "description": "\ubaa8\ubc14\uc77c \uc571\uc73c\ub85c Vulcan \uacc4\uc815\uc5d0 \ub85c\uadf8\uc778\ud569\ub2c8\ub2e4."
+            }
+        }
+    }
+}

@@ -7,6 +7,7 @@ import aiohue
 from homeassistant.components import hue
 from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
 from homeassistant.components.hue.v1 import light as hue_light
+from homeassistant.components.light import COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
 
@@ -236,6 +237,11 @@ async def test_lights_color_mode(hass, mock_bridge_v1):
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
     assert "color_temp" not in lamp_1.attributes
+    assert lamp_1.attributes["color_mode"] == COLOR_MODE_HS
+    assert lamp_1.attributes["supported_color_modes"] == [
+        COLOR_MODE_COLOR_TEMP,
+        COLOR_MODE_HS,
+    ]
 
     new_light1_on = LIGHT_1_ON.copy()
     new_light1_on["state"] = new_light1_on["state"].copy()
@@ -256,6 +262,11 @@ async def test_lights_color_mode(hass, mock_bridge_v1):
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
     assert "hs_color" in lamp_1.attributes
+    assert lamp_1.attributes["color_mode"] == COLOR_MODE_COLOR_TEMP
+    assert lamp_1.attributes["supported_color_modes"] == [
+        COLOR_MODE_COLOR_TEMP,
+        COLOR_MODE_HS,
+    ]
 
 
 async def test_groups(hass, mock_bridge_v1):
@@ -651,6 +662,7 @@ def test_available():
         bridge=Mock(config_entry=Mock(options={"allow_unreachable": False})),
         coordinator=Mock(last_update_success=True),
         is_group=False,
+        supported_color_modes=hue_light.COLOR_MODES_HUE_EXTENDED,
         supported_features=hue_light.SUPPORT_HUE_EXTENDED,
         rooms={},
     )
@@ -666,6 +678,7 @@ def test_available():
         ),
         coordinator=Mock(last_update_success=True),
         is_group=False,
+        supported_color_modes=hue_light.COLOR_MODES_HUE_EXTENDED,
         supported_features=hue_light.SUPPORT_HUE_EXTENDED,
         rooms={},
         bridge=Mock(config_entry=Mock(options={"allow_unreachable": True})),
@@ -682,6 +695,7 @@ def test_available():
         ),
         coordinator=Mock(last_update_success=True),
         is_group=True,
+        supported_color_modes=hue_light.COLOR_MODES_HUE_EXTENDED,
         supported_features=hue_light.SUPPORT_HUE_EXTENDED,
         rooms={},
         bridge=Mock(config_entry=Mock(options={"allow_unreachable": False})),
@@ -702,6 +716,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_color_modes=hue_light.COLOR_MODES_HUE_EXTENDED,
         supported_features=hue_light.SUPPORT_HUE_EXTENDED,
         rooms={},
     )
@@ -718,6 +733,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_color_modes=hue_light.COLOR_MODES_HUE_EXTENDED,
         supported_features=hue_light.SUPPORT_HUE_EXTENDED,
         rooms={},
     )
@@ -734,6 +750,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_color_modes=hue_light.COLOR_MODES_HUE_EXTENDED,
         supported_features=hue_light.SUPPORT_HUE_EXTENDED,
         rooms={},
     )
@@ -910,15 +927,20 @@ async def test_group_features(hass, mock_bridge_v1):
     assert len(mock_bridge_v1.mock_requests) == 2
 
     color_temp_feature = hue_light.SUPPORT_HUE["Color temperature light"]
+    color_temp_mode = sorted(hue_light.COLOR_MODES_HUE["Color temperature light"])
     extended_color_feature = hue_light.SUPPORT_HUE["Extended color light"]
+    extended_color_mode = sorted(hue_light.COLOR_MODES_HUE["Extended color light"])
 
     group_1 = hass.states.get("light.group_1")
+    assert group_1.attributes["supported_color_modes"] == color_temp_mode
     assert group_1.attributes["supported_features"] == color_temp_feature
 
     group_2 = hass.states.get("light.living_room")
+    assert group_2.attributes["supported_color_modes"] == extended_color_mode
     assert group_2.attributes["supported_features"] == extended_color_feature
 
     group_3 = hass.states.get("light.dining_room")
+    assert group_3.attributes["supported_color_modes"] == extended_color_mode
     assert group_3.attributes["supported_features"] == extended_color_feature
 
     entity_registry = er.async_get(hass)

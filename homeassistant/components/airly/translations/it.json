@@ -15,8 +15,7 @@
                     "longitude": "Logitudine",
                     "name": "Nome"
                 },
-                "description": "Configurazione dell'integrazione della qualit\u00e0 dell'aria Airly. Per generare la chiave API vai su https://developer.airly.eu/register",
-                "title": "Airly"
+                "description": "Per generare la chiave API, vai su https://developer.airly.eu/register"
             }
         }
     },

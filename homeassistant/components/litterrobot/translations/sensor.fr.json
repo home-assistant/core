@@ -1,0 +1,28 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "Capot retir\u00e9",
+            "ccc": "Cycle de nettoyage termin\u00e9",
+            "ccp": "Cycle de nettoyage en cours",
+            "csf": "D\u00e9faut du capteur de chat",
+            "csi": "Interruption du capteur de chat",
+            "cst": "Minutage du capteur de chat",
+            "df1": "Tiroir presque plein \u2013\u00a02\u00a0cycles restants",
+            "df2": "Tiroir presque plein \u2013\u00a01\u00a0cycle restant",
+            "dfs": "Tiroir plein",
+            "dhf": "D\u00e9faut de position de vidage +\u00a0origine",
+            "dpf": "D\u00e9faut de position de vidage",
+            "ec": "Cycle de vidage",
+            "hpf": "D\u00e9faut de position d'origine",
+            "off": "D\u00e9sactiv\u00e9",
+            "offline": "Hors ligne",
+            "otf": "D\u00e9faut de surcouple",
+            "p": "En pause",
+            "pd": "D\u00e9tection de pincement",
+            "rdy": "Pr\u00eat",
+            "scf": "D\u00e9faut du capteur de chat au d\u00e9marrage",
+            "sdf": "Tiroir plein au d\u00e9marrage",
+            "spf": "D\u00e9tection de pincement au d\u00e9marrage"
+        }
+    }
+}

@@ -1,0 +1,55 @@
+{
+    "application_credentials": {
+        "description": "F\u00f8lg [instruksjonene]( {more_info_url} ) for [OAuth-samtykkeskjermen]( {oauth_consent_url} ) for \u00e5 gi Home Assistant tilgang til Google-kalenderen din. Du m\u00e5 ogs\u00e5 opprette applikasjonslegitimasjon knyttet til kalenderen din:\n 1. G\u00e5 til [Credentials]( {oauth_creds_url} ) og klikk p\u00e5 **Create Credentials**.\n 1. Velg **OAuth-klient-ID** fra rullegardinlisten.\n 1. Velg **TV og begrensede inngangsenheter** for applikasjonstype. "
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
+            "code_expired": "Autentiseringskoden er utl\u00f8pt eller p\u00e5loggingsoppsettet er ugyldig. Pr\u00f8v p\u00e5 nytt.",
+            "invalid_access_token": "Ugyldig tilgangstoken",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "oauth_error": "Mottatt ugyldige token data.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "timeout_connect": "Tidsavbrudd oppretter forbindelse"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "progress": {
+            "exchange": "Hvis du vil knytte sammen Google-kontoen din, g\u00e5r du til [{url}]({url}) og skriver inn kode:\n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Koble til Google-kontoen"
+            },
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Google Kalender-integrasjonen m\u00e5 autentisere kontoen din p\u00e5 nytt",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av Google Kalender i configuration.yaml blir fjernet i Home Assistant 2022.9. \n\n Din eksisterende OAuth-applikasjonslegitimasjon og tilgangsinnstillinger er automatisk importert til brukergrensesnittet. Fjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Google Kalender YAML-konfigurasjonen blir fjernet"
+        },
+        "removed_track_new_yaml": {
+            "description": "Du har deaktivert enhetssporing for Google Kalender i configuration.yaml, som ikke lenger st\u00f8ttes. Du m\u00e5 manuelt endre integreringssystemalternativene i brukergrensesnittet for \u00e5 deaktivere nyoppdagede enheter fremover. Fjern track_new-innstillingen fra configuration.yaml og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Google Kalender-enhetssporing er endret"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant tilgang til Google Kalender"
+                }
+            }
+        }
+    }
+}

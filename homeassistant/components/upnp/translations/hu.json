@@ -20,9 +20,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Friss\u00edt\u00e9si intervallum (m\u00e1sodperc, minimum 30)",
-                    "unique_id": "Eszk\u00f6z",
-                    "usn": "Eszk\u00f6z"
+                    "unique_id": "Eszk\u00f6z"
                 }
             }
         }

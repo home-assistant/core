@@ -13,6 +13,7 @@ from homeassistant.components.subaru.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_API
 
@@ -23,7 +24,7 @@ DEVICE_ID = "lock.test_vehicle_2_door_locks"
 
 async def test_device_exists(hass, ev_entry):
     """Test subaru lock entity exists."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry
 

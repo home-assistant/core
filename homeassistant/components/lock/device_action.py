@@ -17,8 +17,9 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, SUPPORT_OPEN
+from . import DOMAIN, LockEntityFeature
 
 ACTION_TYPES = {"lock", "unlock", "open"}
 
@@ -34,7 +35,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Lock devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     actions = []
 
     # Get all the integrations entities for this device
@@ -54,14 +55,17 @@ async def async_get_actions(
         actions.append({**base_action, CONF_TYPE: "lock"})
         actions.append({**base_action, CONF_TYPE: "unlock"})
 
-        if supported_features & (SUPPORT_OPEN):
+        if supported_features & (LockEntityFeature.OPEN):
             actions.append({**base_action, CONF_TYPE: "open"})
 
     return actions
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}

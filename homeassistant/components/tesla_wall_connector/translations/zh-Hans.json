@@ -16,15 +16,5 @@
                 "title": "\u914d\u7f6e Tesla \u58c1\u6302\u5f0f\u5145\u7535\u8fde\u63a5\u5668"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "\u66f4\u65b0\u9891\u7387"
-                },
-                "title": "Tesla \u58c1\u6302\u5f0f\u5145\u7535\u8fde\u63a5\u5668\u914d\u7f6e\u9009\u9879"
-            }
-        }
     }
 }

@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_account": "Ugyldig konto-ID",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Steam-integrasjonen m\u00e5 re-autentiseres manuelt \n\n Du finner n\u00f8kkelen din her: {api_key_url}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "account": "Steam-konto-ID",
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Bruk {account_id_url} for \u00e5 finne Steam-konto-ID-en din"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av Steam med YAML er fjernet. \n\n Din eksisterende YAML-konfigurasjon brukes ikke av Home Assistant. \n\n Fjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Steam YAML-konfigurasjonen er fjernet"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "Begrenset venneliste: Se dokumentasjonen for hvordan du ser alle andre venner"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Navn p\u00e5 kontoer som skal overv\u00e5kes"
+                }
+            }
+        }
+    }
+}

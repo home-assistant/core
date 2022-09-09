@@ -1,14 +1,19 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
+            "not_insteon_device": "Ontdekt apparaat is geen Insteon apparaat",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "select_single": "Selecteer een optie."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Wil je {name} instellen?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP-adres",
@@ -38,14 +43,13 @@
                 "data": {
                     "modem_type": "Modemtype."
                 },
-                "description": "Selecteer het Insteon-modemtype.",
-                "title": "Insteon"
+                "description": "Selecteer het Insteon-modemtype."
             }
         }
     },
     "options": {
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "input_error": "Ongeldige invoer, controleer uw waarden.",
             "select_single": "Selecteer \u00e9\u00e9n optie."
         },
@@ -56,8 +60,7 @@
                     "cat": "Apparaatcategorie (bijv. 0x10)",
                     "subcat": "Apparaatsubcategorie (bijv. 0x0a)"
                 },
-                "description": "Voeg een apparaat overschrijven toe.",
-                "title": "Insteon"
+                "description": "Voeg een apparaat overschrijven toe."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Dimmerstappen (alleen voor verlichtingsapparaten, standaard 22)",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "Wijzig het wachtwoord van de Insteon Hub.",
-                "title": "Insteon"
+                "description": "Wijzig het wachtwoord van de Insteon Hub."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Wijzig de verbindingsgegevens van de Insteon Hub. Je moet Home Assistant opnieuw opstarten nadat je deze wijziging hebt aangebracht. Dit verandert niets aan de configuratie van de Hub zelf. Gebruik de Hub-app om de configuratie in de Hub te wijzigen.",
-                "title": "Insteon"
+                "description": "Wijzig de verbindingsgegevens van de Insteon Hub. Je moet Home Assistant opnieuw opstarten nadat je deze wijziging hebt aangebracht. Dit verandert niets aan de configuratie van de Hub zelf. Gebruik de Hub-app om de configuratie in de Hub te wijzigen."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Wijzig de Hub-configuratie.",
                     "remove_override": "Verwijder een apparaatoverschrijving.",
                     "remove_x10": "Verwijder een X10-apparaat."
-                },
-                "description": "Selecteer een optie om te configureren.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Selecteer een apparaatadres om te verwijderen"
                 },
-                "description": "Verwijder een apparaatoverschrijving",
-                "title": "Insteon"
+                "description": "Verwijder een apparaatoverschrijving"
             },
             "remove_x10": {
                 "data": {
                     "address": "Selecteer een apparaatadres om te verwijderen"
                 },
-                "description": "Verwijder een X10 apparaat",
-                "title": "Insteon"
+                "description": "Verwijder een X10 apparaat"
             }
         }
     }

@@ -15,13 +15,13 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 
 from . import Camera, _async_stream_endpoint_url
-from .const import DOMAIN, STREAM_TYPE_HLS
+from .const import DOMAIN, StreamType
 
 
 async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
@@ -52,7 +52,7 @@ class CameraMediaSource(MediaSource):
                 f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
             )
 
-        if stream_type != STREAM_TYPE_HLS:
+        if stream_type != StreamType.HLS:
             raise Unresolvable("Camera does not support MJPEG or HLS streaming.")
 
         if "stream" not in self.hass.config.components:
@@ -86,7 +86,7 @@ class CameraMediaSource(MediaSource):
             if stream_type is None:
                 content_type = camera.content_type
 
-            elif can_stream_hls and stream_type == STREAM_TYPE_HLS:
+            elif can_stream_hls and stream_type == StreamType.HLS:
                 content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
 
             else:

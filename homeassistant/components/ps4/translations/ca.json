@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Credencials necess\u00e0ries. Prem 'Envia' i, a continuaci\u00f3, a la segona pantalla de l'aplicaci\u00f3 de la PS4, actualitza els dispositius i selecciona 'Home-Assistant' per continuar.",
-                "title": "PlayStation 4"
+                "description": "Credencials necess\u00e0ries. Prem 'Envia' i, a continuaci\u00f3, a la segona pantalla de l'aplicaci\u00f3 de la PS4, actualitza els dispositius i selecciona 'Home-Assistant' per continuar."
             },
             "link": {
                 "data": {
@@ -25,16 +24,18 @@
                     "name": "Nom",
                     "region": "Regi\u00f3"
                 },
-                "description": "Introdueix la informaci\u00f3 de la teva PlayStation 4. Per al Codi PIN, ves a 'Configuraci\u00f3' a la consola de la PlayStation 4. Despr\u00e9s navega fins a 'Configuraci\u00f3 de la connexi\u00f3 de l'aplicaci\u00f3 m\u00f2bil' i selecciona 'Afegir dispositiu'. Introdueix el Codi PIN que es mostra. Consulta la [documentaci\u00f3](https://www.home-assistant.io/components/ps4/) per a m\u00e9s informaci\u00f3.",
-                "title": "PlayStation 4"
+                "data_description": {
+                    "code": "V\u00e9s a 'Configuraci\u00f3' de la teva consola PlayStation 4. A continuaci\u00f3, v\u00e9s a 'Configuraci\u00f3 de connexi\u00f3 de l'aplicaci\u00f3 m\u00f2bil' i selecciona 'Afegeix un dispositiu' per obtenir el PIN."
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "Adre\u00e7a IP (deixa-ho en blanc si fas servir la detecci\u00f3 autom\u00e0tica).",
                     "mode": "Mode de configuraci\u00f3"
                 },
-                "description": "Selecciona el mode de configuraci\u00f3. El camp de l'Adre\u00e7a IP es pot deixar en blanc si selecciones descobriment autom\u00e0tic (els dispositius es descobriran autom\u00e0ticament).",
-                "title": "PlayStation 4"
+                "data_description": {
+                    "ip_address": "Deixa-ho en blanc si selecciones el descobriment autom\u00e0tic."
+                }
             }
         }
     }

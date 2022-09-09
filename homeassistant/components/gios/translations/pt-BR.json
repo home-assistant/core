@@ -14,7 +14,6 @@
                     "name": "Nome",
                     "station_id": "ID da esta\u00e7\u00e3o de medi\u00e7\u00e3o"
                 },
-                "description": "Configurar a integra\u00e7\u00e3o da qualidade do ar GIO\u015a (Polish Chief Inspectorate Of Environmental Protection). Se precisar de ajuda com a configura\u00e7\u00e3o, d\u00ea uma olhada em https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Inspetor-Chefe Polon\u00eas de Prote\u00e7\u00e3o Ambiental)"
             }
         }

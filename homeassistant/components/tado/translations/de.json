@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Aktiviert den Fallback-Modus."
+                    "fallback": "Aktiviere den Fallback-Modus."
                 },
-                "description": "Der Fallback-Modus wechselt beim n\u00e4chsten Zeitplanwechsel nach dem manuellen Anpassen einer Zone zu Smart Schedule.",
+                "description": "Mit dem Fallback-Modus kannst du festlegen, wann von deinem manuellen Zonen-Overlay auf den intelligenten Zeitplan umgeschaltet werden soll. (NEXT_TIME_BLOCK:= Wechsel bei der n\u00e4chsten Smart Schedule-\u00c4nderung; MANUAL:= Kein Wechsel, bis du abbrichst; TADO_DEFAULT:= Wechsel basierend auf deiner Einstellung in der Tado-App).",
                 "title": "Passe die Tado-Optionen an."
             }
         }

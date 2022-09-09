@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Inndataenheter",
+                    "name": "Navn",
+                    "round_digits": "Presisjon",
+                    "type": "Statistisk karakteristikk"
+                },
+                "data_description": {
+                    "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt eller median."
+                },
+                "description": "Lag en sensor som beregner en min, maks, middelverdi eller medianverdi fra en liste over inngangssensorer.",
+                "title": "Legg til min / maks / gjennomsnitt / median sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Inndataenheter",
+                    "round_digits": "Presisjon",
+                    "type": "Statistisk karakteristikk"
+                },
+                "data_description": {
+                    "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt eller median."
+                }
+            }
+        }
+    },
+    "title": "Min / maks / gjennomsnitt / median sensor"
+}

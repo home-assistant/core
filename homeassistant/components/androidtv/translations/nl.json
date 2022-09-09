@@ -20,9 +20,7 @@
                     "device_class": "Het type apparaat",
                     "host": "Host",
                     "port": "Poort"
-                },
-                "description": "Stel de vereiste parameters in om verbinding te maken met uw Android TV-apparaat",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Regels voor statusdetectie van Android TV configureren",
                     "turn_off_command": "ADB shell-uitschakelcommando(laat standaard leeg)",
                     "turn_on_command": "ADB shell-inschakelcommando (laat standaard leeg)"
-                },
-                "title": "Android TV-opties"
+                }
             },
             "rules": {
                 "data": {

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Account is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -14,7 +14,7 @@
         "step": {
             "reauth": {
                 "data": {
-                    "password": "Paswoord",
+                    "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }
             },

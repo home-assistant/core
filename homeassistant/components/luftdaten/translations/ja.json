@@ -10,8 +10,7 @@
                 "data": {
                     "show_on_map": "\u5730\u56f3\u306b\u8868\u793a",
                     "station_id": "Luftdaten\u30bb\u30f3\u30b5\u30fcID"
-                },
-                "title": "Luftdaten\u306e\u5b9a\u7fa9"
+                }
             }
         }
     }

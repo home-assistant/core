@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd.",
+            "already_configured": "Locatie is al geconfigureerd",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Stad"
                 },
-                "description": "Kies uw stad uit de lijst",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Kies uw stad uit de lijst"
             },
             "user": {
                 "data": {
                     "city": "Stad"
                 },
-                "description": "Vul de postcode (alleen voor Frankrijk, aanbevolen) of de plaatsnaam in",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Vul de postcode (alleen voor Frankrijk, aanbevolen) of de plaatsnaam in"
             }
         }
     },

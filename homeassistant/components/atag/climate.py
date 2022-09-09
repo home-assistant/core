@@ -1,16 +1,15 @@
 """Initialization of ATAG One climate platform."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_BOOST,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform
@@ -27,8 +26,7 @@ PRESET_MAP = {
     PRESET_BOOST: "fireplace",
 }
 PRESET_INVERTED = {v: k for k, v in PRESET_MAP.items()}
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+HVAC_MODES = [HVACMode.AUTO, HVACMode.HEAT]
 
 
 async def async_setup_entry(
@@ -44,7 +42,9 @@ class AtagThermostat(AtagEntity, ClimateEntity):
 
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = list(PRESET_MAP.keys())
-    _attr_supported_features = SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, coordinator, atag_id):
         """Initialize an Atag climate device."""
@@ -52,7 +52,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         self._attr_temperature_unit = coordinator.data.climate.temp_unit
 
     @property
-    def hvac_mode(self) -> str | None:  # type: ignore[override]
+    def hvac_mode(self) -> str | None:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.climate.hvac_mode in HVAC_MODES:
             return self.coordinator.data.climate.hvac_mode
@@ -62,7 +62,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.data.climate.status
-        return CURRENT_HVAC_HEAT if is_active else CURRENT_HVAC_IDLE
+        return HVACAction.HEATING if is_active else HVACAction.IDLE
 
     @property
     def current_temperature(self) -> float | None:
@@ -80,12 +80,12 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         preset = self.coordinator.data.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.coordinator.data.climate.set_temp(kwargs.get(ATTR_TEMPERATURE))
         self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.coordinator.data.climate.set_hvac_mode(hvac_mode)
         self.async_write_ha_state()

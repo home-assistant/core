@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "backoff": "Seade ei aktsepteeri praegu sidumisn\u00f5udeid (v\u00f5ib-olla oled liiga palju kordi vale PIN-koodi sisestanud), proovi hiljem uuesti.",
             "device_did_not_pair": "Seade ei \u00fcritatud sidumisprotsessi l\u00f5pule viia.",
             "device_not_found": "Seadet avastamise ajal ei leitud, proovi seda uuesti lisada.",
             "inconsistent_device": "Eeldatavaid protokolle avastamise ajal ei leitud. See n\u00e4itab tavaliselt probleemi multcast DNS-iga (Zeroconf). Proovi seade uuesti lisada.",
-            "invalid_config": "Selle seadme s\u00e4tted on puudulikud. Proovi see uuesti lisada.",
+            "ipv6_not_supported": "IPv6 ei ole toetatud.",
             "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi seadet",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "setup_failed": "Seadme h\u00e4\u00e4lestamine nurjus.",
@@ -18,7 +17,6 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "invalid_auth": "Vigane autentimine",
             "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi seadet",
-            "no_usable_service": "Leiti seade kuid ei suudetud tuvastada moodust \u00fchenduse loomiseks. Kui n\u00e4ed seda teadet pidevalt, proovi m\u00e4\u00e4rata seadme IP-aadress v\u00f5i taask\u00e4ivita Apple TV.",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +70,5 @@
                 "description": "Seadme \u00fclds\u00e4tete seadistamine"
             }
         }
-    },
-    "title": ""
+    }
 }

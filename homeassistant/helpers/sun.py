@@ -1,8 +1,9 @@
 """Helpers for sun events."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, callback
@@ -11,10 +12,13 @@ from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     import astral
+    import astral.location
 
 DATA_LOCATION_CACHE = "astral_location_cache"
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
+
+_AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
 @callback
@@ -73,15 +77,15 @@ def get_location_astral_event_next(
     if utc_point_in_time is None:
         utc_point_in_time = dt_util.utcnow()
 
-    kwargs = {"local": False}
+    kwargs: dict[str, Any] = {"local": False}
     if event not in ELEVATION_AGNOSTIC_EVENTS:
         kwargs["observer_elevation"] = elevation
 
     mod = -1
     while True:
         try:
-            next_dt: datetime.datetime = (
-                getattr(location, event)(
+            next_dt = (
+                cast(_AstralSunEventCallable, getattr(location, event))(
                     dt_util.as_local(utc_point_in_time).date()
                     + datetime.timedelta(days=mod),
                     **kwargs,
@@ -111,12 +115,12 @@ def get_astral_event_date(
     if isinstance(date, datetime.datetime):
         date = dt_util.as_local(date).date()
 
-    kwargs = {"local": False}
+    kwargs: dict[str, Any] = {"local": False}
     if event not in ELEVATION_AGNOSTIC_EVENTS:
         kwargs["observer_elevation"] = elevation
 
     try:
-        return getattr(location, event)(date, **kwargs)  # type: ignore[no-any-return]
+        return cast(_AstralSunEventCallable, getattr(location, event))(date, **kwargs)
     except ValueError:
         # Event never occurs for specified date.
         return None

@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

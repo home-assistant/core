@@ -1,0 +1,35 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "cycle": "Cicle de reinici del comptador",
+                    "delta_values": "Valors delta",
+                    "name": "Nom",
+                    "net_consumption": "Consum net",
+                    "offset": "Despla\u00e7ament del reinici del comptador",
+                    "source": "Sensor d'entrada",
+                    "tariffs": "Tarifes suportades"
+                },
+                "data_description": {
+                    "delta_values": "Activa-ho si els les lectures s\u00f3n valors delta (actual - anterior) en lloc de valors absoluts.",
+                    "net_consumption": "Activa-ho si \u00e9s un comptador net, \u00e9s a dir, pot augmentar i disminuir.",
+                    "offset": "Despla\u00e7a el dia de restabliment mensual del comptador.",
+                    "tariffs": "Llista de tarifes admeses, deixa-la en blanc si utilitzes una \u00fanica tarifa."
+                },
+                "description": "El sensor de comptador permet fer un seguiment dels consums de diversos serveis (per exemple, energia, gas, aigua o calefacci\u00f3) durant un per\u00edode de temps establert, normalment mensual. El sensor comptador tamb\u00e9 permet dividir el consum per tarifes; en aquest cas, es crear\u00e0 un sensor per a cada tarifa i una entitat de selecci\u00f3 que tria la tarifa actual.",
+                "title": "Afegeix comptador"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source": "Sensor d'entrada"
+                }
+            }
+        }
+    },
+    "title": "Comptador"
+}

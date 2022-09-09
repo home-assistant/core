@@ -14,7 +14,11 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    DeviceInfo,
+    EntityCategory,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -326,6 +330,25 @@ async def test_parallel_updates_sync_platform(hass):
     await handle.async_add_entities([entity])
     assert entity.parallel_updates is not None
     assert entity.parallel_updates._value == 1
+
+
+async def test_parallel_updates_no_update_method(hass):
+    """Test platform parallel_updates default set to 0."""
+    platform = MockPlatform()
+
+    mock_entity_platform(hass, "test_domain.platform", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+
+    entity = MockEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is None
 
 
 async def test_parallel_updates_sync_platform_with_constant(hass):
@@ -1144,6 +1167,25 @@ async def test_entity_disabled_by_device(hass: HomeAssistant):
     assert entry_disabled.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
+async def test_entity_hidden_by_integration(hass):
+    """Test entity hidden by integration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+
+    entity_default = MockEntity(unique_id="default")
+    entity_hidden = MockEntity(
+        unique_id="hidden", entity_registry_visible_default=False
+    )
+
+    await component.async_add_entities([entity_default, entity_hidden])
+
+    registry = er.async_get(hass)
+
+    entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
+    assert entry_default.hidden_by is None
+    entry_hidden = registry.async_get_or_create(DOMAIN, DOMAIN, "hidden")
+    assert entry_hidden.hidden_by is er.RegistryEntryHider.INTEGRATION
+
+
 async def test_entity_info_added_to_entity_registry(hass):
     """Test entity info is written to entity registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
@@ -1151,7 +1193,8 @@ async def test_entity_info_added_to_entity_registry(hass):
     entity_default = MockEntity(
         capability_attributes={"max": 100},
         device_class="mock-device-class",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         icon="nice:icon",
         name="best name",
         supported_features=5,
@@ -1170,7 +1213,8 @@ async def test_entity_info_added_to_entity_registry(hass):
         "test_domain",
         capabilities={"max": 100},
         device_class=None,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         icon=None,
         id=ANY,
         name=None,
@@ -1350,3 +1394,49 @@ class SlowEntity(MockEntity):
         """Make sure control is returned to the event loop on add."""
         await asyncio.sleep(0.1)
         await super().async_added_to_hass()
+
+
+@pytest.mark.parametrize(
+    "has_entity_name, entity_name, expected_entity_id",
+    (
+        (False, "Entity Blu", "test_domain.entity_blu"),
+        (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        (True, "Entity Blu", "test_domain.device_bla_entity_blu"),
+        (True, None, "test_domain.device_bla"),
+    ),
+)
+async def test_entity_name_influences_entity_id(
+    hass, has_entity_name, entity_name, expected_entity_id
+):
+    """Test entity_id is influenced by entity name."""
+    registry = er.async_get(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=has_entity_name,
+                    name=entity_name,
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert registry.async_get(expected_entity_id) is not None

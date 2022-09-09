@@ -10,8 +10,7 @@
                 "data": {
                     "show_on_map": "Uka\u017e na map\u011b",
                     "station_id": "ID senzoru Luftdaten"
-                },
-                "title": "Definujte Luftdaten"
+                }
             }
         }
     }

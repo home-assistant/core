@@ -4,7 +4,9 @@
             "address_already_configured": "Bu adrese sahip bir ElkM1 zaten yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r",
             "already_configured": "Bu \u00f6nek ile bir ElkM1 zaten yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r",
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
-            "cannot_connect": "Ba\u011flanma hatas\u0131"
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "Seri yoluyla ba\u011flan\u0131l\u0131yorsa IP adresi veya etki alan\u0131 veya seri ba\u011flant\u0131 noktas\u0131.",
-                    "device": "Cihaz",
-                    "password": "Parola",
-                    "prefix": "Benzersiz bir \u00f6nek (yaln\u0131zca bir ElkM1'iniz varsa bo\u015f b\u0131rak\u0131n).",
-                    "protocol": "Protokol",
-                    "temperature_unit": "ElkM1'in kulland\u0131\u011f\u0131 s\u0131cakl\u0131k birimi.",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                    "device": "Cihaz"
                 },
                 "description": "Ke\u015ffedilen bir sistem veya ke\u015ffedilmemi\u015fse 'Manuel Giri\u015f' se\u00e7in.",
                 "title": "Elk-M1 Kontrol\u00fcne Ba\u011flan\u0131n"

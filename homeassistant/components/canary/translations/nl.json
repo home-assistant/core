@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n enkele configuratie mogelijk.",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{name}",
         "step": {

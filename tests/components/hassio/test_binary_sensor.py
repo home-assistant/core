@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +24,11 @@ def mock_all(aioclient_mock, request):
         "http://127.0.0.1/info",
         json={
             "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
+            "data": {
+                "supervisor": "222",
+                "homeassistant": "0.110.0",
+                "hassos": "1.2.3",
+            },
         },
     )
     aioclient_mock.get(
@@ -69,6 +73,7 @@ def mock_all(aioclient_mock, request):
             "result": "ok",
             "data": {
                 "result": "ok",
+                "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "addons": [
                     {
@@ -113,9 +118,20 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/info",
+        json={"result": "ok", "data": {"auto_update": True}},
+    )
+    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/info",
+        json={"result": "ok", "data": {"auto_update": False}},
+    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
 
 @pytest.mark.parametrize(

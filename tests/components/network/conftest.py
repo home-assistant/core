@@ -6,4 +6,8 @@ import pytest
 @pytest.fixture(autouse=True)
 def mock_get_source_ip():
     """Override mock of network util's async_get_source_ip."""
-    return
+
+
+@pytest.fixture(autouse=True)
+def mock_network():
+    """Override mock of network util's async_get_adapters."""

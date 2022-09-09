@@ -15,10 +15,9 @@
                     "latitude": "Latitudine",
                     "longitude": "Logitudine",
                     "mode": "Modalit\u00e0",
-                    "name": "Nome dell'integrazione"
+                    "name": "Nome"
                 },
-                "description": "Configura l'integrazione di OpenWeatherMap. Per generare la chiave API, vai su https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Per generare la chiave API, vai su https://openweathermap.org/appid"
             }
         }
     },

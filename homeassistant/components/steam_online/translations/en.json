@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_account": "Invalid account ID",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: {api_key_url}",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "account": "Steam account ID",
+                    "api_key": "API Key"
+                },
+                "description": "Use {account_id_url} to find your Steam account ID"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Configuring Steam using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Steam YAML configuration has been removed"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Names of accounts to be monitored"
+                }
+            }
+        }
+    }
+}

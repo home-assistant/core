@@ -19,9 +19,7 @@
                     "device_class": "\u8bbe\u5907\u7c7b\u578b",
                     "host": "\u4e3b\u673a",
                     "port": "\u7aef\u53e3"
-                },
-                "description": "\u8bf7\u586b\u5199\u4ee5\u4e0b\u53c2\u6570\uff0c\u8fde\u63a5\u5230 Android TV \u8bbe\u5907\u3002",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -48,8 +46,7 @@
                     "state_detection_rules": "\u914d\u7f6e\u72b6\u6001\u68c0\u6d4b\u89c4\u5219",
                     "turn_off_command": "ADB shell \u5173\u673a\u547d\u4ee4\uff08\u7559\u7a7a\u4ee5\u4f7f\u7528\u9ed8\u8ba4\u503c\uff09",
                     "turn_on_command": "ADB shell \u5f00\u673a\u547d\u4ee4\uff08\u7559\u7a7a\u4ee5\u4f7f\u7528\u9ed8\u8ba4\u503c\uff09"
-                },
-                "title": "Android TV \u9009\u9879"
+                }
             },
             "rules": {
                 "data": {

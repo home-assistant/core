@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd."
+            "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
-            "already_configured": "Locatie is al geconfigureerd."
+            "already_configured": "Locatie is al geconfigureerd"
         },
         "step": {
             "user": {

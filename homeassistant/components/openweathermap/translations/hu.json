@@ -15,10 +15,9 @@
                     "latitude": "Sz\u00e9less\u00e9g",
                     "longitude": "Hossz\u00fas\u00e1g",
                     "mode": "M\u00f3d",
-                    "name": "Az integr\u00e1ci\u00f3 neve"
+                    "name": "Elnevez\u00e9s"
                 },
-                "description": "Az OpenWeatherMap integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa. Az API kulcs l\u00e9trehoz\u00e1s\u00e1hoz l\u00e1togasson el a https://openweathermap.org/appid oldalra",
-                "title": "OpenWeatherMap"
+                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://openweathermap.org/appid webhelyet"
             }
         }
     },

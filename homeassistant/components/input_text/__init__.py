@@ -19,6 +19,9 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -115,13 +118,18 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input text."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputText.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputText
     )
 
     storage_collection = InputTextStorageCollection(
@@ -187,27 +195,31 @@ class InputTextStorageCollection(collection.StorageCollection):
         return _cv_input_text({**data, **update_data})
 
 
-class InputText(RestoreEntity):
+class InputText(collection.CollectionEntity, RestoreEntity):
     """Represent a text box."""
 
-    def __init__(self, config: dict) -> None:
+    _attr_should_poll = False
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a text input."""
         self._config = config
-        self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputText:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> InputText:
+        """Return entity instance initialized from storage."""
+        input_text = cls(config)
+        input_text.editable = True
+        return input_text
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> InputText:
+        """Return entity instance initialized from yaml."""
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
         return input_text
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self):
@@ -281,7 +293,7 @@ class InputText(RestoreEntity):
         self._current_value = value
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

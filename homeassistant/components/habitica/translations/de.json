@@ -15,6 +15,5 @@
                 "description": "Verbinde dein Habitica-Profil, um die \u00dcberwachung des Profils und der Aufgaben deines Benutzers zu erm\u00f6glichen. Beachte, dass api_id und api_key von https://habitica.com/user/settings/api bezogen werden m\u00fcssen."
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

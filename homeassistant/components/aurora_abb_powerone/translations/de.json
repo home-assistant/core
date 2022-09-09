@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung kann nicht hergestellt werden, bitte \u00fcberpr\u00fcfe den seriellen Anschluss, die Adresse, die elektrische Verbindung und ob der Wechselrichter eingeschaltet ist (bei Tageslicht)",
             "cannot_open_serial_port": "Serielle Schnittstelle kann nicht ge\u00f6ffnet werden, bitte pr\u00fcfen und erneut versuchen",
-            "invalid_serial_port": "Serielle Schnittstelle ist kein g\u00fcltiges Ger\u00e4t oder konnte nicht ge\u00f6ffnet werden",
-            "unknown": "Unerwarteter Fehler"
+            "invalid_serial_port": "Serielle Schnittstelle ist kein g\u00fcltiges Ger\u00e4t oder konnte nicht ge\u00f6ffnet werden"
         },
         "step": {
             "user": {

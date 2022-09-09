@@ -1,6 +1,7 @@
 {
   "domain": "timer",
   "name": "Timer",
+  "integration_type": "helper",
   "documentation": "https://www.home-assistant.io/integrations/timer",
   "codeowners": [],
   "quality_scale": "internal"

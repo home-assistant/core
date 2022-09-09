@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
             "already_configured": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
             "not_compatible": "Nem lehet CPU-inform\u00e1ci\u00f3kat lek\u00e9rni, ez az integr\u00e1ci\u00f3 nem kompatibilis a rendszer\u00e9vel."
         },

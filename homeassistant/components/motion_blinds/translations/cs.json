@@ -19,10 +19,8 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Kl\u00ed\u010d API",
                     "host": "IP adresa"
-                },
-                "title": "Motion Blinds"
+                }
             }
         }
     }

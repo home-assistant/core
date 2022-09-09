@@ -12,7 +12,14 @@
             "user": {
                 "data": {
                     "host": "H\u00f4te"
+                },
+                "data_description": {
+                    "host": "L'adresse IP ou le nom d'h\u00f4te de votre compteur Pure Energie."
                 }
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter Pure Energie Meter (`{model}`) \u00e0 Home Assistant\u00a0?",
+                "title": "D\u00e9couverte de l'appareil Pure Energie Meter"
             }
         }
     }

@@ -90,7 +90,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("HTTPError when connecting to Zabbix API: %s", http_error)
         zapi = None
         _LOGGER.error(RETRY_MESSAGE, http_error)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        event_helper.call_later(
+            hass,
+            RETRY_INTERVAL,
+            lambda _: setup(hass, config),  # type: ignore[arg-type,return-value]
+        )
         return True
 
     hass.data[DOMAIN] = zapi

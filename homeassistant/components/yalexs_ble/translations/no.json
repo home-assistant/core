@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "no_unconfigured_devices": "Fant ingen ukonfigurerte enheter."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_key_format": "Den frakoblede n\u00f8kkelen m\u00e5 v\u00e6re en 32-byte sekskantstreng.",
+            "invalid_key_index": "Frakoblet n\u00f8kkelspor m\u00e5 v\u00e6re et heltall mellom 0 og 255.",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Vil du konfigurere {name} over Bluetooth med adressen {address} ?"
+            },
+            "user": {
+                "data": {
+                    "address": "Bluetooth-adresse",
+                    "key": "Frakoblet n\u00f8kkel (32-byte sekskantstreng)",
+                    "slot": "Frakoblet n\u00f8kkelspor (heltall mellom 0 og 255)"
+                },
+                "description": "Sjekk dokumentasjonen for hvordan du finner frakoblet n\u00f8kkel."
+            }
+        }
+    }
+}

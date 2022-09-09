@@ -10,8 +10,9 @@
                     "lights": "Vera l\u00fclitite ID'd mida neid k\u00e4sitleda Home Assistantis tuledena.",
                     "vera_controller_url": "Kontrolleri URL"
                 },
-                "description": "Esita allpool Vera kontrolleri URL. See peaks v\u00e4lja n\u00e4gema selline: http://192.168.1.161:3480.",
-                "title": "Seadista Vera kontroller"
+                "data_description": {
+                    "vera_controller_url": "See peaks v\u00e4lja n\u00e4gema selline: http://192.168.1.161:3480"
+                }
             }
         }
     },

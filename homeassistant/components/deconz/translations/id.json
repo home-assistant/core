@@ -5,10 +5,10 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "no_bridges": "deCONZ bridge tidak ditemukan",
             "no_hardware_available": "Tidak ada perangkat keras radio yang terhubung ke deCONZ",
-            "not_deconz_bridge": "Bukan bridge deCONZ",
             "updated_instance": "Instans deCONZ yang diperbarui dengan alamat host baru"
         },
         "error": {
+            "linking_not_possible": "Tidak dapat terhubung dengan gateway",
             "no_key": "Tidak bisa mendapatkan kunci API"
         },
         "flow_title": "{host}",

@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import zigpy.endpoint
 import zigpy.exceptions
 import zigpy.group
+from zigpy.types.named import EUI64
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_entries_for_device
@@ -21,10 +21,20 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-GroupMember = collections.namedtuple("GroupMember", "ieee endpoint_id")
-GroupEntityReference = collections.namedtuple(
-    "GroupEntityReference", "name original_name entity_id"
-)
+
+class GroupMember(NamedTuple):
+    """Describes a group member."""
+
+    ieee: EUI64
+    endpoint_id: int
+
+
+class GroupEntityReference(NamedTuple):
+    """Reference to a group entity."""
+
+    name: str
+    original_name: str
+    entity_id: int
 
 
 class ZHAGroupMember(LogMixin):
@@ -68,7 +78,7 @@ class ZHAGroupMember(LogMixin):
         return member_info
 
     @property
-    def associated_entities(self) -> list[GroupEntityReference]:
+    def associated_entities(self) -> list[dict[str, Any]]:
         """Return the list of entities that were derived from this endpoint."""
         ha_entity_registry = self.device.gateway.ha_entity_registry
         zha_device_registry = self.device.gateway.device_registry
@@ -100,11 +110,11 @@ class ZHAGroupMember(LogMixin):
                 str(ex),
             )
 
-    def log(self, level: int, msg: str, *args: Any) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ZHAGroup(LogMixin):
@@ -140,9 +150,7 @@ class ZHAGroup(LogMixin):
     def members(self) -> list[ZHAGroupMember]:
         """Return the ZHA devices that are members of this group."""
         return [
-            ZHAGroupMember(
-                self, self._zha_gateway.devices.get(member_ieee), endpoint_id
-            )
+            ZHAGroupMember(self, self._zha_gateway.devices[member_ieee], endpoint_id)
             for (member_ieee, endpoint_id) in self._zigpy_group.members.keys()
             if member_ieee in self._zha_gateway.devices
         ]
@@ -216,8 +224,8 @@ class ZHAGroup(LogMixin):
         group_info["members"] = [member.member_info for member in self.members]
         return group_info
 
-    def log(self, level: int, msg: str, *args: Any) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.name, self.group_id) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)

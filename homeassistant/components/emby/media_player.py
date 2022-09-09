@@ -6,18 +6,16 @@ import logging
 from pyemby import EmbyServer
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -49,12 +47,12 @@ DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
 
 SUPPORT_EMBY = (
-    SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_STOP
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -143,6 +141,8 @@ async def async_setup_platform(
 class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
+    _attr_should_poll = False
+
     def __init__(self, emby, device_id):
         """Initialize the Emby device."""
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
@@ -150,12 +150,12 @@ class EmbyDevice(MediaPlayerEntity):
         self.device_id = device_id
         self.device = self.emby.devices[self.device_id]
 
-        self._available = True
-
         self.media_status_last_position = None
         self.media_status_received = None
 
-    async def async_added_to_hass(self):
+        self._attr_unique_id = device_id
+
+    async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.emby.add_update_callback(self.async_update_callback, self.device_id)
 
@@ -174,19 +174,9 @@ class EmbyDevice(MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    def set_available(self, value):
+    def set_available(self, value: bool) -> None:
         """Set available property."""
-        self._available = value
-
-    @property
-    def unique_id(self):
-        """Return the id of this emby client."""
-        return self.device_id
+        self._attr_available = value
 
     @property
     def supports_remote_control(self):
@@ -197,11 +187,6 @@ class EmbyDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
     @property
     def state(self):
@@ -313,26 +298,26 @@ class EmbyDevice(MediaPlayerEntity):
             return SUPPORT_EMBY
         return 0
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Play media."""
         await self.device.media_play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Pause the media player."""
         await self.device.media_pause()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Stop the media player."""
         await self.device.media_stop()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.device.media_next()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send next track command."""
         await self.device.media_previous()
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.device.media_seek(position)
