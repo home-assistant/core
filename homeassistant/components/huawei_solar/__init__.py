@@ -141,7 +141,7 @@ def _compute_device_infos(
 
     inverter_device_info = DeviceInfo(
         identifiers={(DOMAIN, bridge.serial_number)},
-        name=bridge.model_name,
+        name="Inverter",
         manufacturer="Huawei",
         model=bridge.model_name,
         via_device=connecting_inverter_device_id,  # type: ignore[typeddict-item]
@@ -155,7 +155,7 @@ def _compute_device_infos(
             identifiers={
                 (DOMAIN, f"{bridge.serial_number}/power_meter"),
             },
-            name="Power Meter",
+            name="Power meter",
             via_device=(DOMAIN, bridge.serial_number),
         )
 
@@ -167,9 +167,9 @@ def _compute_device_infos(
             identifiers={
                 (DOMAIN, f"{bridge.serial_number}/connected_energy_storage"),
             },
-            name=f"{inverter_device_info['name']} Connected Energy Storage",
+            name="Battery",
             manufacturer=inverter_device_info["manufacturer"],
-            model=f"{inverter_device_info['model']} Connected Energy Storage",
+            model=f"{inverter_device_info['model']} Connected energy storage",
             via_device=(DOMAIN, bridge.serial_number),
         )
 
@@ -206,6 +206,15 @@ class HuaweiSolarUpdateCoordinator(DataUpdateCoordinator):
         self.bridge = bridge
         self.device_infos = device_infos
 
+    async def _async_update_data(self):
+        try:
+            async with async_timeout.timeout(20):
+                return await self.bridge.update()
+        except HuaweiSolarException as err:
+            raise UpdateFailed(
+                f"Could not update {self.bridge.serial_number} values: {err}"
+            ) from err
+
 
 async def _create_update_coordinator(
     hass,
@@ -239,6 +248,8 @@ async def _create_update_coordinator(
 
 class HuaweiSolarEntity(Entity):
     """Huawei Solar Entity."""
+
+    _attr_has_entity_name = True
 
     def add_name_suffix(self, suffix) -> None:
         """Add a suffix after the current entity name."""
