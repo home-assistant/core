@@ -179,6 +179,48 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
         await self.coordinator.wled.segment(segment_id=self._segment, palette=option)
 
 
+class WLEDEffectSelect(WLEDEntity, SelectEntity):
+    """Defines a WLED Effect select."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:palette-outline"
+    _attr_name = "Color effect"
+    _segment: int
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
+        """Initialize WLED ."""
+        super().__init__(coordinator=coordinator)
+
+        # Segment 0 uses a simpler name, which is more natural for when using
+        # a single segment / using WLED with one big LED strip.
+        if segment != 0:
+            self._attr_name = f"Segment {segment} color effect"
+
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_effect_{segment}"
+        self._attr_options = [effect.name for effect in self.coordinator.data.effects]
+        self._segment = segment
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        try:
+            self.coordinator.data.state.segments[self._segment]
+        except IndexError:
+            return False
+
+        return super().available
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current selected color effect."""
+        return self.coordinator.data.state.segments[self._segment].effect.name
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED segment to the selected color effect."""
+        await self.coordinator.wled.segment(segment_id=self._segment, effect=option)
+
+
 @callback
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
@@ -188,12 +230,16 @@ def async_update_segments(
     """Update segments."""
     segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
 
-    new_entities: list[WLEDPaletteSelect] = []
+    new_palettes: list[WLEDPaletteSelect] = []
+    new_effects: list[WLEDEffectSelect] = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
         current_ids.add(segment_id)
-        new_entities.append(WLEDPaletteSelect(coordinator, segment_id))
+        new_palettes.append(WLEDPaletteSelect(coordinator, segment_id))
+        new_effects.append(WLEDEffectSelect(coordinator, segment_id))
 
-    if new_entities:
-        async_add_entities(new_entities)
+    if new_palettes:
+        async_add_entities(new_palettes)
+    if new_effects:
+        async_add_entities(new_effects)
