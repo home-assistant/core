@@ -313,7 +313,7 @@ async def test_update_entity_progress(
     client.async_send_command.return_value = None
 
     # Test successful install call without a version
-    hass.async_create_task(
+    install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -367,6 +367,8 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_OFF
 
+    await install_task
+
 
 async def test_update_entity_install_failed(
     hass,
@@ -392,8 +394,7 @@ async def test_update_entity_install_failed(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = None
 
-    # Test install call - we expect it to raise
-    install_task = hass.async_create_task(
+    async def call_install():
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -402,7 +403,9 @@ async def test_update_entity_install_failed(
             },
             blocking=True,
         )
-    )
+
+    # Test install call - we expect it to raise
+    install_task = hass.async_create_task(call_install())
 
     # Sleep so that task starts
     await asyncio.sleep(0.1)
