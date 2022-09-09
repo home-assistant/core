@@ -67,42 +67,41 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.debug("Notifications %s", self.notifications)
 
         # The list of notifications returned by API will be in chronological order and there may be
-        # multiple notifications of the same type (such as High Flow). The only special
-        # case here is bridge notifications: NOTIFICATION_BRIDGE_DISCONNECT, which will be either True
-        # or False as indicated in the ["extra"][BRIDGE_NOTIFICATION_KEY].
-        # full_notification_info = {}
+        # multiple notifications of the same type (such as High Flow).
+        #
+        # Bridge Notifications as seen in ["extra"][BRIDGE_NOTIFICATION_KEY] are as special case as they
+        # will report both a disconnect and connect event. The final event in the array is the current
+        # status of the bridge, and as such only that notification will be read.
 
         notifications_by_device: dict[str, set[str]] = {}
 
+        # Process the notification array
         for item in self.notifications:
 
             device_id = item["device_id"]
             rule = item["extra"]["event_rule_name"]
 
-            # Because bridge is a disconnect notification, True = disconnected - its value needs to be reversed
-            # all other notifications will be not False ... aka True
-            value = not item["extra"].get(BRIDGE_NOTIFICATION_KEY, False)
+            if rule == BRIDGE_NOTIFICATION_KEY:
+                # Dont process bridge notifications - they are handled separately
+                continue
 
-            if value:
-                notifications_by_device.setdefault(
-                    device_id, {BRIDGE_NOTIFICATION_RULE}
-                ).add(rule)
+            notifications_by_device.setdefault(device_id, set()).add(rule)
 
-            if rule == BRIDGE_NOTIFICATION_RULE:
-                # If bridge is connected the rule should be present in the notification list
-                # if disconnected the rule should not be present
-                if value:
-                    notifications_by_device[device_id].discard(rule)
-                    _LOGGER.debug(
-                        "Processed bridge disconnect event - removing %s from notification list",
-                        BRIDGE_NOTIFICATION_RULE,
-                    )
-                else:
-                    notifications_by_device[device_id].add(BRIDGE_NOTIFICATION_RULE)
-                    _LOGGER.debug(
-                        "Processed bridge connect event - adding %s from notification list",
-                        BRIDGE_NOTIFICATION_RULE,
-                    )
+        # Grab the last ["extra"]["connected"] state of the bridge or True
+        bridge_conencted = (
+            [True]
+            + [
+                x["extra"]["connected"]
+                for x in self.notifications
+                if x["extra"]["event_rule_name"] == BRIDGE_NOTIFICATION_KEY
+            ]
+        )[-1]
+
+        # If the bridge is disconnected then store the rule
+        if not bridge_conencted:
+            notifications_by_device.setdefault(device_id, set()).add(
+                BRIDGE_NOTIFICATION_RULE
+            )
 
         self.active_notifications_by_device = notifications_by_device
 
