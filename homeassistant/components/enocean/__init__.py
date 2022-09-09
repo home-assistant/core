@@ -215,19 +215,6 @@ async def async_setup_entry(
                     dev_id_string,
                 )
 
-            # delete the old entities from entity registry
-            for new_unique_id in new_unique_ids[dev_id_string]:
-                old_entity = _get_entity_for_unique_id(
-                    ent_reg, old_unique_ids[dev_id_string][new_unique_id]
-                )
-
-                if old_entity:
-                    old_entities[dev_id_string][new_unique_id] = old_entity
-                    ent_reg.async_remove(old_entity.entity_id)
-                    LOGGER.warning(
-                        "Removed entity '%s' from entity registry", old_entity.entity_id
-                    )
-
             # append device
             enocean_devices_to_add.append(
                 {
@@ -259,36 +246,57 @@ async def async_setup_entry(
             options={CONF_ENOCEAN_DEVICES: configured_enocean_devices},
         )
 
-        async_call_later(hass, 10, _update_new_entities)
+        async_call_later(hass, 5, _remove_new_entities_and_update_old_entities)
 
-    async def _update_new_entities(self):
-        # set values for the new entities:
+    async def _remove_new_entities_and_update_old_entities(self):
+        # set values for the old entities:
         for device in enocean_devices_to_add:
             dev_id_string = device[CONF_ENOCEAN_DEVICE_ID]
-            LOGGER.warning("Now processing new entities for device %s", dev_id_string)
+            LOGGER.warning(
+                "Updating entities for imported EnOcean device %s", dev_id_string
+            )
 
             for new_unique_id in new_unique_ids[dev_id_string]:
+                old_unique_id = old_unique_ids[dev_id_string][new_unique_id]
 
-                LOGGER.warning("Entity: %s", new_unique_id)
-
+                # get both the new and the old entity
                 new_entity = _get_entity_for_unique_id(ent_reg, new_unique_id)
+                old_entity = _get_entity_for_unique_id(ent_reg, old_unique_id)
 
+                # if no new entity was found, nothing can be done (this should never happen)
                 if new_entity is None:
-                    LOGGER.warning("Entity not found")
+                    LOGGER.warning(
+                        "No new entity with unique id '%s' found", new_unique_id
+                    )
                     continue
 
-                old_entity = old_entities[dev_id_string].get(new_unique_id, None)
-
+                # if there was no old entity, there is nothing to be done (this should never happen)
                 if old_entity is None:
+                    LOGGER.warning(
+                        "No old entity with unique id '%s' found", old_unique_id
+                    )
                     continue
+
+                # remove the new entity
+                ent_reg.async_remove(new_entity.entity_id)
+                LOGGER.warning(
+                    "Removed new entity '%s' with unique_id '%s' from entity registry",
+                    new_entity.entity_id,
+                    new_unique_id,
+                )
 
                 ent_reg.async_update_entity(
-                    entity_id=new_entity.entity_id,
-                    new_entity_id=old_entity.entity_id,
-                    area_id=old_entity.area_id,
-                    device_class=old_entity.device_class,
-                    icon=old_entity.icon,
-                    name=old_entity.name,
+                    entity_id=old_entity.entity_id,
+                    new_unique_id=new_unique_id,
+                    device_id=new_entity.device_id,
+                )
+
+                LOGGER.warning(
+                    "Updated old entity '%s' in entity registry: Its new unique_id is '%s' (previously '%s') and its device_id is '%s' (previously NULL). You need to restart Home Assistant for this entity to show up in the UI",
+                    old_entity.entity_id,
+                    new_unique_id,
+                    old_unique_id,
+                    new_entity.device_id,
                 )
 
         LOGGER.warning(
