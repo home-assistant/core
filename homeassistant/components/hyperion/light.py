@@ -41,16 +41,11 @@ from .const import (
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
-    NAME_SUFFIX_HYPERION_LIGHT,
-    NAME_SUFFIX_HYPERION_PRIORITY_LIGHT,
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_LIGHT,
-    TYPE_HYPERION_PRIORITY_LIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-COLOR_BLACK = color_util.COLORS["black"]
 
 CONF_DEFAULT_COLOR = "default_color"
 CONF_HDMI_PRIORITY = "hdmi_priority"
@@ -102,7 +97,6 @@ async def async_setup_entry(
         async_add_entities(
             [
                 HyperionLight(*args),
-                HyperionPriorityLight(*args),
             ]
         )
 
@@ -110,13 +104,12 @@ async def async_setup_entry(
     def instance_remove(instance_num: int) -> None:
         """Remove entities for an old Hyperion instance."""
         assert server_id
-        for light_type in LIGHT_TYPES:
-            async_dispatcher_send(
-                hass,
-                SIGNAL_ENTITY_REMOVE.format(
-                    get_hyperion_unique_id(server_id, instance_num, light_type)
-                ),
-            )
+        async_dispatcher_send(
+            hass,
+            SIGNAL_ENTITY_REMOVE.format(
+                get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
+            ),
+        )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
 
@@ -500,7 +493,7 @@ class HyperionLight(HyperionBaseLight):
 
     def _compute_name(self, instance_name: str) -> str:
         """Compute the name of the light."""
-        return f"{instance_name} {NAME_SUFFIX_HYPERION_LIGHT}".strip()
+        return f"{instance_name}".strip()
 
     @property
     def is_on(self) -> bool:
@@ -546,92 +539,3 @@ class HyperionLight(HyperionBaseLight):
             }
         ):
             return
-
-
-class HyperionPriorityLight(HyperionBaseLight):
-    """A Hyperion light that only acts on a single Hyperion priority."""
-
-    def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
-        """Compute a unique id for this instance."""
-        return get_hyperion_unique_id(
-            server_id, instance_num, TYPE_HYPERION_PRIORITY_LIGHT
-        )
-
-    def _compute_name(self, instance_name: str) -> str:
-        """Compute the name of the light."""
-        return f"{instance_name} {NAME_SUFFIX_HYPERION_PRIORITY_LIGHT}".strip()
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Whether or not the entity is enabled by default."""
-        return False
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        priority = self._get_priority_entry_that_dictates_state()
-        return (
-            priority is not None
-            and not HyperionPriorityLight._is_priority_entry_black(priority)
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
-        if not await self._client.async_send_clear(
-            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
-        ):
-            return
-        await self._client.async_send_set_color(
-            **{
-                const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
-                const.KEY_COLOR: COLOR_BLACK,
-                const.KEY_ORIGIN: DEFAULT_ORIGIN,
-            }
-        )
-
-    @property
-    def _support_external_effects(self) -> bool:
-        """Whether or not to support setting external effects from the light entity."""
-        return False
-
-    def _get_priority_entry_that_dictates_state(self) -> dict[str, Any] | None:
-        """Get the relevant Hyperion priority entry to consider."""
-        # Return the active priority (if any) at the configured HA priority.
-        for candidate in self._client.priorities or []:
-            if const.KEY_PRIORITY not in candidate:
-                continue
-            if candidate[const.KEY_PRIORITY] == self._get_option(
-                CONF_PRIORITY
-            ) and candidate.get(const.KEY_ACTIVE, False):
-                # Explicit type specifier to ensure this works when the underlying
-                # (typed) library is installed along with the tests. Casts would trigger
-                # a redundant-cast warning in this case.
-                output: dict[str, Any] = candidate
-                return output
-        return None
-
-    @classmethod
-    def _is_priority_entry_black(cls, priority: dict[str, Any] | None) -> bool:
-        """Determine if a given priority entry is the color black."""
-        if (
-            priority
-            and priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR
-        ):
-            rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
-            if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
-                return True
-        return False
-
-    def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
-        """Determine whether to allow a Hyperion priority to update entity attributes."""
-        # Black is treated as 'off' (and Home Assistant does not support selecting black
-        # from the color selector). Do not set our internal attributes if the priority is
-        # 'off' (i.e. if black is active). Do this to ensure it seamlessly turns back on
-        # at the correct prior color on the next 'on' call.
-        return not HyperionPriorityLight._is_priority_entry_black(priority)
-
-
-LIGHT_TYPES = {
-    TYPE_HYPERION_LIGHT: HyperionLight,
-    TYPE_HYPERION_PRIORITY_LIGHT: HyperionPriorityLight,
-}

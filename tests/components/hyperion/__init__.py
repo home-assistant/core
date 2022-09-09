@@ -27,7 +27,6 @@ TEST_PRIORITY = 180
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
 TEST_ENTITY_ID_3 = "light.test_instance_3"
-TEST_PRIORITY_LIGHT_ENTITY_ID_1 = "light.test_instance_1_priority"
 TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
