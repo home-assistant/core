@@ -1,6 +1,5 @@
 """The tests for the  MQTT device_tracker platform."""
 
-import copy
 from unittest.mock import patch
 
 import pytest
@@ -26,11 +25,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[device_tracker.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
