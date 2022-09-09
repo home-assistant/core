@@ -209,7 +209,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             "firmware update progress", self._update_progress
         )
         self._finished_unsub = self.node.once(
-            "firmware update finished", self._update_progress
+            "firmware update finished", self._update_finished
         )
         for file in firmware.files:
             try:
