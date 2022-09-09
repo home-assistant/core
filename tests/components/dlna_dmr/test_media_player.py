@@ -21,7 +21,6 @@ import pytest
 
 from homeassistant import const as ha_const
 from homeassistant.components import ssdp
-from homeassistant.components.dlna_dmr import media_player
 from homeassistant.components.dlna_dmr.const import (
     CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
@@ -30,6 +29,7 @@ from homeassistant.components.dlna_dmr.const import (
     DOMAIN as DLNA_DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
+from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
 from homeassistant.components.media_player import (
     ATTR_TO_PROPERTY,
     DOMAIN as MP_DOMAIN,
@@ -1503,7 +1503,7 @@ async def test_multiple_ssdp_alive(
     # Device should be available
     mock_state = hass.states.get(mock_disconnected_entity_id)
     assert mock_state is not None
-    assert mock_state.state == media_player.MediaPlayerState.IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_ssdp_byebye(
@@ -1945,9 +1945,7 @@ async def test_disappearing_device(
     directly to skip the availability check.
     """
     # Retrieve entity directly.
-    entity: media_player.DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(
-        mock_disconnected_entity_id
-    )
+    entity: DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
     for attr in ATTR_TO_PROPERTY:
