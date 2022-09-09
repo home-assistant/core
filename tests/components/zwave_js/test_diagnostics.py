@@ -152,6 +152,7 @@ async def test_device_diagnostics_missing_primary_value(
         x for x in diagnostics_data["entities"] if x["entity_id"] == entity_id
     )
 
+    assert air_entity["value_id"] == value.value_id
     assert air_entity["primary_value"] == {
         "command_class": value.command_class,
         "command_class_name": value.command_class_name,
@@ -189,4 +190,5 @@ async def test_device_diagnostics_missing_primary_value(
         x for x in diagnostics_data["entities"] if x["entity_id"] == entity_id
     )
 
+    assert air_entity["value_id"] == value.value_id
     assert air_entity["primary_value"] is None
