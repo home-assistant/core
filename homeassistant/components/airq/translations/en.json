@@ -12,7 +12,8 @@
     },
     "error": {
       "cannot_connect": "Failed to connect, please check the IP or mDNS",
-      "invalid_auth": "Wrong password"
+      "invalid_auth": "Wrong password",
+      "invalid_input": "Invalid IP address or mDNS "
     },
     "abort": {
       "already_configured": "This device is already configured and available to Home Assistant"
