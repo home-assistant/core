@@ -11,7 +11,6 @@ from awesomeversion import AwesomeVersion
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
-from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import (
     FirmwareUpdateFinished,
@@ -84,7 +83,6 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.driver = driver
         self.node = node
         self.semaphore = semaphore
-        self.controller: Controller = self.driver.controller
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
@@ -171,7 +169,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         try:
             async with self.semaphore:
                 available_firmware_updates = (
-                    await self.controller.async_get_available_firmware_updates(
+                    await self.driver.controller.async_get_available_firmware_updates(
                         self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
                     )
                 )
