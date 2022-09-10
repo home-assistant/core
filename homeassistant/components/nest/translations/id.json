@@ -1,6 +1,6 @@
 {
     "application_credentials": {
-        "description": "Ikuti [petunjuk]({more_info_url}) untuk mengonfigurasi Konsol Cloud:\n\n1. Buka [Layar persetujuan OAuth]({oauth_consent_url}) dan konfigurasikan\n1. Buka [Kredentsial]({oauth_creds_url}) dan klik **Buat Kredensial**.\n1. Dari daftar pilihan, pilih **ID klien OAuth**.\n1. Pilih **Aplikasi Web** untuk Jenis Aplikasi.\n1. Tambahkan '{redirect_url}' di bawah *URI pengarahan ulang yand diotorisasi*."
+        "description": "Ikuti [petunjuk]({more_info_url}) untuk mengonfigurasi Konsol Cloud:\n\n1. Buka [Layar persetujuan OAuth]({oauth_consent_url}) dan konfigurasikan\n1. Buka [Kredentsial]({oauth_creds_url}) dan klik **Buat Kredensial**.\n1. Dari daftar pilihan, pilih **ID klien OAuth**.\n1. Pilih **Aplikasi Web** untuk Jenis Aplikasi.\n1. Tambahkan `{redirect_url}` di bawah *URI pengarahan ulang yand diotorisasi*."
     },
     "config": {
         "abort": {
