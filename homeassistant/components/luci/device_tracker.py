@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -59,7 +59,7 @@ class LuciDeviceScanner(DeviceScanner):
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
             config[CONF_SSL],
-            config[CONF_VERIFY_SSL]
+            config[CONF_VERIFY_SSL],
         )
 
         self.last_results = {}
