@@ -205,48 +205,40 @@ class SynologyDsmMediaView(http.HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the media view."""
         self.hass = hass
-        self.tempfile = tempfile.NamedTemporaryFile()
-        self.tempfile_in_buffer = ""
 
     async def get(
         self, request: web.Request, source_dir_id: str, location: str
     ) -> web.FileResponse:
         """Start a GET request."""
-        # We cache the image, so we don't need to ask for it multiple times
-        full_file_path = f"{source_dir_id}/{location}"
-        if full_file_path == self.tempfile_in_buffer:
-            path = Path(self.tempfile.name)
-            return web.FileResponse(path)
-
-        # Close the tempfile and clear it
-        self.tempfile.close()
-        self.tempfile_in_buffer = ""
-
+        if not self.hass.data.get(DOMAIN):
+            raise web.HTTPNotFound()
         parts = location.split("/")
         cache_key = parts[0]
         image_id = cache_key.split("_")[0]
         mime_type, _ = mimetypes.guess_type(parts[1])
         assert isinstance(mime_type, str)
-        if not self.hass.data.get(DOMAIN):
-            raise web.HTTPNotFound()
-
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
-        try:
-            image = await self.hass.loop.run_in_executor(
-                None, diskstation.api.photos.get_thumbnail, image_id, cache_key, "xl"
-            )
-        except SynologyDSMException:
-            raise web.HTTPNotFound()
         file_parts = parts[1].split(".")
         file_extension = file_parts[len(file_parts) - 1]
-        self.tempfile = tempfile.NamedTemporaryFile(
+
+        with tempfile.NamedTemporaryFile(
             suffix=f".{file_extension}", delete=False
-        )
-        fname = self.tempfile.name
-        self.tempfile.write(image)
-        path = Path(fname)
+        ) as temp:
+            # Close the tempfile and clear it
+            temp.seek(0)
+            temp.truncate()
 
-        # Store the file currently in buffer
-        self.tempfile_in_buffer = full_file_path
-
-        return web.FileResponse(path)
+            try:
+                image = await self.hass.loop.run_in_executor(
+                    None,
+                    diskstation.api.photos.get_thumbnail,
+                    image_id,
+                    cache_key,
+                    "xl",
+                )
+            except SynologyDSMException as exc:
+                raise web.HTTPNotFound() from exc
+            fname = temp.name
+            temp.write(image)
+            path = Path(fname)
+            return web.FileResponse(path)
