@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Final, TypedDict
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
