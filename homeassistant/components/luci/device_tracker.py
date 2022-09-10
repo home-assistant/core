@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL,
+    CONF_VERIFY_SSL
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -24,8 +24,10 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ONLY_REACHABLE = "only_reachable"
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
+DEFAULT_ONLY_REACHABLE = False
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -34,6 +36,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_ONLY_REACHABLE, default=DEFAULT_ONLY_REACHABLE): cv.boolean,
     }
 )
 
@@ -56,11 +59,12 @@ class LuciDeviceScanner(DeviceScanner):
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
             config[CONF_SSL],
-            config[CONF_VERIFY_SSL],
+            config[CONF_VERIFY_SSL]
         )
 
         self.last_results = {}
         self.success_init = self.router.is_logged_in()
+        self.only_reachable = config[CONF_ONLY_REACHABLE]
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -92,7 +96,7 @@ class LuciDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Check the Luci router for devices."""
-        result = self.router.get_all_connected_devices(only_reachable=True)
+        result = self.router.get_all_connected_devices(only_reachable=self.only_reachable)
 
         _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
 
@@ -103,6 +107,7 @@ class LuciDeviceScanner(DeviceScanner):
                 or not self.router.router.owrt_version.release
                 or self.router.router.owrt_version.release[0] < 19
                 or device.reachable
+                or self.only_reachable is False
             ):
                 last_results.append(device)
 
