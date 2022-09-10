@@ -211,11 +211,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         def poll_api():
             """Call the api."""
             api_status = {}
+
             try:
                 if api_category == ProxmoxType.Proxmox:
                     api_status = proxmox.version.get()
                 elif api_category is ProxmoxType.Node:
-                    api_status = proxmox.nodes(node).status.get()
+                    api_status = get_data_node(proxmox, node)
                 elif api_category == ProxmoxType.QEMU:
                     api_status = proxmox.nodes(node).qemu(vm_id).status.current.get()
                 elif api_category == ProxmoxType.LXC:
@@ -318,37 +319,64 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def parse_api_proxmox(status, info_type):
+def get_data_node(proxmox, node):
+    """Get the node data in two API endpoints."""
+    api_status = proxmox.nodes(node).status.get()
+    if nodes_api := proxmox.nodes.get():
+        for node_api in nodes_api:
+            if node_api["node"] == node:
+                api_status["status"] = node_api["status"]
+                api_status["cpu_node"] = node_api["cpu"]
+                break
+    return api_status
+
+
+def parse_api_proxmox(status, api_category):
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
     in the future.
     """
-    if info_type == ProxmoxType.Proxmox:
-        if (version := status["version"]) is None:
-            version = None
 
+    memory_free: float | None = None
+
+    LOGGER.debug("Raw status %s: %s", api_category, status)
+
+    if api_category == ProxmoxType.Proxmox:
         return {
-            "version": version,
+            "version": status["version"],
         }
 
-    if info_type is ProxmoxType.Node:
-        if (uptime := status["uptime"]) is None:
-            uptime = None
-
+    if api_category is ProxmoxType.Node:
         return {
-            "uptime": uptime,
+            "status": status["status"],
+            "uptime": status["uptime"],
+            "model": status["cpuinfo"]["model"],
+            "cpu": status["cpu_node"],
+            "memory_used": status["memory"]["used"],
+            "memory_total": status["memory"]["total"],
+            "memory_free": status["memory"]["free"],
+            "swap_total": status["swap"]["total"],
+            "swap_free": status["swap"]["free"],
         }
 
-    if info_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
-        if (status_vm := status["status"]) is None:
-            status_vm = None
-        if (name_vm := status["name"]) is None:
-            name_vm = None
+    if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
+        if status["status"] == "running":
+            if api_category == ProxmoxType.QEMU:
+                memory_free = status["freemem"]
 
         return {
-            "status": status_vm,
-            "name": name_vm,
+            "status": status["status"],
+            "uptime": status["uptime"],
+            "name": status["name"],
+            "cpu": status["cpu"],
+            "memory_total": status["maxmem"],
+            "memory_used": status["mem"],
+            "memory_free": memory_free,
+            "network_in": status["netin"],
+            "network_out": status["netout"],
+            "disk_total": status["maxdisk"],
+            "disk_used": status["disk"],
         }
 
 
@@ -370,7 +398,7 @@ def device_info(
     proxmox_version = None
     coordinator = coordinators[ProxmoxType.Proxmox]
     if not (coordinator_data := coordinator.data) is None:
-        proxmox_version = coordinator_data["version"]
+        proxmox_version = f"Proxmox {coordinator_data['version']}"
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
         coordinator = coordinators[vm_id]
@@ -381,16 +409,23 @@ def device_info(
         host_port_node_vm = f"{host}_{port}_{node}_{vm_id}"
         url = f"https://{host}:{port}/#v1:0:={api_category}/{vm_id}"
         via_device = f"{host}_{port}_{node}"
+        default_model = api_category.upper()
     elif api_category is ProxmoxType.Node:
-        name = f"{node} - {host}"
+        coordinator = coordinators[ProxmoxType.Node]
+        if not (coordinator_data := coordinator.data) is None:
+            model_processor = coordinator_data["model"]
+
+        name = f"Node {node} - {host}:{port}"
         host_port_node_vm = f"{host}_{port}_{node}"
         url = f"https://{host}:{port}/#v1:0:=node/{node}"
         via_device = f"{host}_{port}"
+        default_model = model_processor
     else:
-        name = f"{host}"
+        name = f"Host {host}:{port}"
         host_port_node_vm = f"{host}_{port}"
         url = f"https://{host}:{port}/#v1:0"
         via_device = "no_device"
+        default_model = "Host Proxmox"
 
     if create:
         device_registry = dr.async_get(hass)
@@ -401,7 +436,7 @@ def device_info(
             identifiers={(DOMAIN, host_port_node_vm)},
             default_manufacturer=INTEGRATION_NAME,
             name=name,
-            default_model=api_category.upper(),
+            default_model=default_model,
             sw_version=proxmox_version,
             hw_version=None,
             via_device=(DOMAIN, via_device),
@@ -412,7 +447,7 @@ def device_info(
         identifiers={(DOMAIN, host_port_node_vm)},
         default_manufacturer=INTEGRATION_NAME,
         name=name,
-        default_model=api_category.upper(),
+        default_model=default_model,
         sw_version=proxmox_version,
         hw_version=None,
         via_device=(DOMAIN, via_device),
