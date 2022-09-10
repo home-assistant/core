@@ -4,9 +4,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_ECO,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
