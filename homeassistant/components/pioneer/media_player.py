@@ -10,15 +10,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TIMEOUT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -174,14 +168,14 @@ class PioneerDevice(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._pwstate == "PWR2":
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._pwstate == "PWR1":
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._pwstate == "PWR0":
-            return STATE_ON
+            return MediaPlayerState.ON
 
         return None
 

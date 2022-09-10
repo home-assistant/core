@@ -31,6 +31,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 PLATFORMS_BY_TYPE = {
     SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.LIGHT_STRIP.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.CEILING_LIGHT.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.CURTAIN.value: [
@@ -43,6 +44,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
+    SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
     SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
     SupportedModels.BOT.value: switchbot.Switchbot,
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
@@ -82,11 +84,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
-    )
+    ) or await switchbot.get_device(address)
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
         )
+
+    await switchbot.close_stale_connections(ble_device)
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
     device = cls(
         device=ble_device,

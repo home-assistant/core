@@ -11,8 +11,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.components.camera import PLATFORM_SCHEMA, STATE_IDLE, Camera
-from homeassistant.components.camera.const import DOMAIN
+from homeassistant.components.camera import DOMAIN, PLATFORM_SCHEMA, STATE_IDLE, Camera
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv

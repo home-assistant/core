@@ -158,6 +158,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^COLOR_MODE_(\w*)$"),
         ),
         ObsoleteImportMatch(
+            reason="replaced by color modes",
+            constant=re.compile("^SUPPORT_(BRIGHTNESS|COLOR_TEMP|COLOR)$"),
+        ),
+        ObsoleteImportMatch(
             reason="replaced by LightEntityFeature enum",
             constant=re.compile("^SUPPORT_(EFFECT|FLASH|TRANSITION)$"),
         ),
@@ -303,9 +307,13 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
 
-    def _visit_importfrom_relative(self, current_package: str, node: nodes.ImportFrom) -> None:
+    def _visit_importfrom_relative(
+        self, current_package: str, node: nodes.ImportFrom
+    ) -> None:
         """Called when a ImportFrom node is visited."""
-        if node.level <= 1 or not current_package.startswith("homeassistant.components"):
+        if node.level <= 1 or not current_package.startswith(
+            "homeassistant.components"
+        ):
             return
         split_package = current_package.split(".")
         if not node.modname and len(split_package) == node.level + 1:
@@ -330,7 +338,10 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         ):
             self.add_message("hass-relative-import", node=node)
             return
-        if self.current_package.startswith("homeassistant.components") and node.modname == "homeassistant.components":
+        if (
+            self.current_package.startswith("homeassistant.components")
+            and node.modname == "homeassistant.components"
+        ):
             for name in node.names:
                 if name[0] == self.current_package.split(".")[2]:
                     self.add_message("hass-relative-import", node=node)
