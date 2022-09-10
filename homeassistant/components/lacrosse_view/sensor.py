@@ -89,6 +89,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         unit_metric=SPEED_KILOMETERS_PER_HOUR,
         unit_imperial=SPEED_MILES_PER_HOUR,
+        icon="mdi:weather-windy",
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
@@ -98,6 +99,7 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=PRECIPITATION_INCHES,
         unit_metric=None,
         unit_imperial=None,
+        icon="mdi:weather-rainy",
     ),
 }
 
