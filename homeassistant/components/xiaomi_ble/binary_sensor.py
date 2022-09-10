@@ -39,6 +39,9 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.SMOKE,
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.MOISTURE,
+    ),
 }
 
 
