@@ -1,5 +1,8 @@
 """Support for Ecowitt Weather Stations."""
+from __future__ import annotations
+
 import dataclasses
+from datetime import datetime
 from typing import Final
 
 from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
@@ -242,6 +245,6 @@ class EcowittSensorEntity(EcowittEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.ecowitt.value
