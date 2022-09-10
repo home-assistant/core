@@ -88,15 +88,10 @@ async def async_setup_drive_service(hass: HomeAssistant) -> None:
                 "OAuth session is not valid, reauth required"
             ) from ex
         worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-        _data = {"created": str(datetime.now())} | call.data[DATA]
-        row = []
+        row_data = {"created": str(datetime.now())} | call.data[DATA]
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-        for column in columns:
-            if column in _data:
-                row.append(_data[column])
-            else:
-                row.append("")
-        for key, value in _data.items():
+        row = [row_data.get(column, "") for column in columns]
+        for key, value in row_data.items():
             if key not in columns:
                 columns.append(key)
                 worksheet.update_cell(1, len(columns), key)
