@@ -10,6 +10,7 @@ from . import (
     TEST_NO_PERMISSION_SENSOR,
     TEST_SENSOR,
     TEST_UNSUPPORTED_SENSOR,
+    TEST_WIND_SENSOR,
 )
 
 from tests.common import MockConfigEntry
@@ -21,7 +22,8 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]
+        "lacrosse_view.LaCrosse.get_sensors",
+        return_value=[TEST_SENSOR, TEST_WIND_SENSOR],
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -32,6 +34,10 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature")
+    assert (
+        hass.states.get("sensor.test_wind_speed").attributes["unit_of_measurement"]
+        == "km/h"
+    )
 
 
 async def test_sensor_permission(hass: HomeAssistant, caplog) -> None:
