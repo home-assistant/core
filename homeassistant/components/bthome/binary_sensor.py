@@ -1,12 +1,9 @@
-"""Support for Xiaomi binary sensors."""
+"""Support for BTHome binary sensors."""
 from __future__ import annotations
 
 from typing import Optional
 
-from xiaomi_ble.parser import (
-    BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
-    SensorUpdate,
-)
+from bthome_ble import BTHOME_BINARY_SENSORS, SensorUpdate
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
@@ -26,29 +23,24 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
 
-BINARY_SENSOR_DESCRIPTIONS = {
-    XiaomiBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.MOTION,
-        device_class=BinarySensorDeviceClass.MOTION,
-    ),
-    XiaomiBinarySensorDeviceClass.LIGHT: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.LIGHT,
-        device_class=BinarySensorDeviceClass.LIGHT,
-    ),
-    XiaomiBinarySensorDeviceClass.SMOKE: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.SMOKE,
-        device_class=BinarySensorDeviceClass.SMOKE,
-    ),
-    XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.MOISTURE,
-    ),
-}
+BINARY_SENSOR_DESCRIPTIONS = {}
+for key in BTHOME_BINARY_SENSORS:
+    # Not all BTHome device classes are available in Home Assistant
+    DEV_CLASS: str | None = key
+    try:
+        BinarySensorDeviceClass(key)
+    except ValueError:
+        DEV_CLASS = None
+    BINARY_SENSOR_DESCRIPTIONS[key] = BinarySensorEntityDescription(
+        key=key,
+        device_class=DEV_CLASS,
+    )
 
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
 ) -> PassiveBluetoothDataUpdate:
-    """Convert a sensor update to a bluetooth data update."""
+    """Convert a binary sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
             device_id: sensor_device_info_to_hass(device_info)
@@ -56,10 +48,9 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             device_key_to_bluetooth_entity_key(device_key): BINARY_SENSOR_DESCRIPTIONS[
-                description.device_class
+                description.device_key.key
             ]
             for device_key, description in sensor_update.binary_entity_descriptions.items()
-            if description.device_class
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
@@ -77,24 +68,24 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Xiaomi BLE sensors."""
+    """Set up the BTHome BLE binary sensors."""
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
-            XiaomiBluetoothSensorEntity, async_add_entities
+            BTHomeBluetoothBinarySensorEntity, async_add_entities
         )
     )
     entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
-class XiaomiBluetoothSensorEntity(
+class BTHomeBluetoothBinarySensorEntity(
     PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[Optional[bool]]],
     BinarySensorEntity,
 ):
-    """Representation of a Xiaomi binary sensor."""
+    """Representation of a BTHome binary sensor."""
 
     @property
     def is_on(self) -> bool | None:

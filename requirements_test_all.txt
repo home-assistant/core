@@ -134,7 +134,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.08.3
+aioecowitt==2022.09.1
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -368,7 +368,7 @@ brunt==1.2.0
 bsblan==0.5.0
 
 # homeassistant.components.bthome
-bthome-ble==1.0.0
+bthome-ble==1.2.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5

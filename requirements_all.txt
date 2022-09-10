@@ -147,7 +147,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.08.3
+aioecowitt==2022.09.1
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -467,7 +467,7 @@ bsblan==0.5.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==1.0.0
+bthome-ble==1.2.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
