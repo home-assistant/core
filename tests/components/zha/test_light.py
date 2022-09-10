@@ -14,6 +14,10 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     ColorMode,
 )
+from homeassistant.components.zha.core.const import (
+    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
+    ZHA_OPTIONS,
+)
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -26,6 +30,7 @@ from .common import (
     async_test_rejoin,
     find_entity_id,
     get_zha_gateway,
+    patch_zha_config,
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -340,7 +345,11 @@ async def test_light(
     if cluster_identify:
         await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_SHORT)
 
-    # test turning the lights on and off from the HA
+    # test long flashing the lights from the HA
+    if cluster_identify:
+        await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_LONG)
+
+    # test dimming the lights on and off from the HA
     if cluster_level:
         await async_test_level_on_off_from_hass(
             hass, cluster_on_off, cluster_level, entity_id
@@ -355,16 +364,82 @@ async def test_light(
 
     # test rejoin
     await async_test_off_from_hass(hass, cluster_on_off, entity_id)
-    clusters = [cluster_on_off]
-    if cluster_level:
-        clusters.append(cluster_level)
-    if cluster_color:
-        clusters.append(cluster_color)
+    clusters = [c for c in (cluster_on_off, cluster_level, cluster_color) if c]
     await async_test_rejoin(hass, zigpy_device, clusters, reporting)
 
-    # test long flashing the lights from the HA
-    if cluster_identify:
-        await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_LONG)
+
+@pytest.mark.parametrize(
+    "plugged_attr_reads, config_override, expected_state",
+    [
+        # HS light without cached hue or saturation
+        (
+            {
+                "color_capabilities": (
+                    lighting.Color.ColorCapabilities.Hue_and_saturation
+                ),
+            },
+            {(ZHA_OPTIONS, CONF_ALWAYS_PREFER_XY_COLOR_MODE): False},
+            {},
+        ),
+        # HS light with cached hue
+        (
+            {
+                "color_capabilities": (
+                    lighting.Color.ColorCapabilities.Hue_and_saturation
+                ),
+                "current_hue": 100,
+            },
+            {(ZHA_OPTIONS, CONF_ALWAYS_PREFER_XY_COLOR_MODE): False},
+            {},
+        ),
+        # HS light with cached saturation
+        (
+            {
+                "color_capabilities": (
+                    lighting.Color.ColorCapabilities.Hue_and_saturation
+                ),
+                "current_saturation": 100,
+            },
+            {(ZHA_OPTIONS, CONF_ALWAYS_PREFER_XY_COLOR_MODE): False},
+            {},
+        ),
+        # HS light with both
+        (
+            {
+                "color_capabilities": (
+                    lighting.Color.ColorCapabilities.Hue_and_saturation
+                ),
+                "current_hue": 100,
+                "current_saturation": 100,
+            },
+            {(ZHA_OPTIONS, CONF_ALWAYS_PREFER_XY_COLOR_MODE): False},
+            {},
+        ),
+    ],
+)
+async def test_light_initialization(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined_restored,
+    plugged_attr_reads,
+    config_override,
+    expected_state,
+):
+    """Test zha light initialization with cached attributes and color modes."""
+
+    # create zigpy devices
+    zigpy_device = zigpy_device_mock(LIGHT_COLOR)
+
+    # mock attribute reads
+    zigpy_device.endpoints[1].light_color.PLUGGED_ATTR_READS = plugged_attr_reads
+
+    with patch_zha_config("light", config_override):
+        zha_device = await zha_device_joined_restored(zigpy_device)
+        entity_id = await find_entity_id(Platform.LIGHT, zha_device, hass)
+
+    assert entity_id is not None
+
+    # TODO ensure hue and saturation are properly set on startup
 
 
 @patch(
