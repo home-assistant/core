@@ -17,24 +17,25 @@ from homeassistant.const import (
     PERCENTAGE,
     PRECIPITATION_INCHES,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
+from .coordinator import LaCrosseUpdateCoordinator
 
 
 @dataclass
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float]
+    value_fn: Callable[[Sensor, str], float | str]
+    unit_metric: str | None
+    unit_imperial: str | None
 
 
 @dataclass
@@ -58,6 +59,8 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=TEMP_CELSIUS,
+        unit_metric=None,  # For temperature devices, the unit is already changed based on user preference
+        unit_imperial=None,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -66,6 +69,8 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PERCENTAGE,
+        unit_metric=None,
+        unit_imperial=None,
     ),
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
@@ -74,13 +79,16 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
+        unit_metric=None,
+        unit_imperial=None,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
         name="Wind Speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
@@ -88,6 +96,8 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        unit_metric=None,
+        unit_imperial=None,
     ),
 }
 
@@ -98,9 +108,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
-    coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinator"]
+    coordinator: LaCrosseUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        "coordinator"
+    ]
     sensors: list[Sensor] = coordinator.data
 
     sensor_list = []
@@ -130,9 +140,7 @@ async def async_setup_entry(
     async_add_entities(sensor_list)
 
 
-class LaCrosseViewSensor(
-    CoordinatorEntity[DataUpdateCoordinator[list[Sensor]]], SensorEntity
-):
+class LaCrosseViewSensor(CoordinatorEntity[LaCrosseUpdateCoordinator], SensorEntity):
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
@@ -140,7 +148,7 @@ class LaCrosseViewSensor(
     def __init__(
         self,
         description: LaCrosseSensorEntityDescription,
-        coordinator: DataUpdateCoordinator[list[Sensor]],
+        coordinator: LaCrosseUpdateCoordinator,
         sensor: Sensor,
     ) -> None:
         """Initialize."""
@@ -157,6 +165,13 @@ class LaCrosseViewSensor(
             "via_device": (DOMAIN, sensor.location.id),
         }
         self._sensor = sensor
+
+        if description.unit_metric is not None:
+            self._attr_native_unit_of_measurement = (
+                SPEED_KILOMETERS_PER_HOUR
+                if coordinator.is_metric
+                else SPEED_MILES_PER_HOUR
+            )
 
     @property
     def native_value(self) -> float | str:

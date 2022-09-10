@@ -21,6 +21,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     name: str
     id: str
     hass: HomeAssistant
+    is_metric: bool
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         self.hass = hass
         self.name = entry.data["name"]
         self.id = entry.data["id"]
+        self.is_metric = hass.config.units.is_metric
         super().__init__(
             hass,
             LOGGER,
