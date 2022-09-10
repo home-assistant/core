@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Airthings device with address {address}"
         )
 
-    async def _update_method():
+    async def _async_update_method():
         """Get data from Airthings BLE."""
         ble_device = bluetooth.async_ble_device_from_address(hass, address)
         airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=DOMAIN,
-        update_method=_update_method,
+        update_method=_async_update_method,
         update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     )
 

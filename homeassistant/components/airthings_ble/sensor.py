@@ -39,12 +39,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="radon_1day_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
         name="Radon 1-day average",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
         name="Radon longterm average",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
     "radon_1day_level": SensorEntityDescription(

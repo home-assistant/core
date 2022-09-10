@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, MFCT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
 
-            if 820 not in discovery_info.manufacturer_data:
+            if MFCT_ID not in discovery_info.manufacturer_data:
                 continue
 
             try:
