@@ -118,7 +118,7 @@ class SuezSensor(SensorEntity):
             self._available = False
             _LOGGER.warning("Unable to fetch data")
 
-    def update(self):
+    def update(self) -> None:
         """Return the latest collected data from Linky."""
         self._fetch_data()
         _LOGGER.debug("Suez data state is: %s", self._state)

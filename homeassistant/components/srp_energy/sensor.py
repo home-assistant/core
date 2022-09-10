@@ -153,7 +153,7 @@ class SrpEntity(SensorEntity):
         """Return the state class."""
         return SensorStateClass.TOTAL_INCREASING
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
@@ -161,7 +161,7 @@ class SrpEntity(SensorEntity):
         if self.coordinator.data:
             self._state = self.coordinator.data
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.

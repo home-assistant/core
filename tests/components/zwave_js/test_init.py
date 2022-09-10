@@ -3,6 +3,7 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
+from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
@@ -12,6 +13,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -240,6 +242,61 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     assert device == dev_reg.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
+
+
+async def test_existing_node_reinterview(
+    hass: HomeAssistant,
+    client: Client,
+    multisensor_6_state: dict,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test we handle a node re-interview firing a node ready event."""
+    dev_reg = dr.async_get(hass)
+    node = multisensor_6
+    assert client.driver is not None
+    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id_ext = (
+        f"{air_temperature_device_id}-{node.manufacturer_id}:"
+        f"{node.product_type}:{node.product_id}"
+    )
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state  # entity and device added
+    assert state.state != STATE_UNAVAILABLE
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
+    assert device.sw_version == "1.12"
+
+    node_state = deepcopy(multisensor_6_state)
+    node_state["firmwareVersion"] = "1.13"
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": node_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
+    assert device.sw_version == "1.13"
 
 
 async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integration):
@@ -817,7 +874,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 29
+    assert len(entity_entries) == 31
 
     # Remove a node and reload the entry
     old_node = driver.controller.nodes.pop(13)
@@ -829,7 +886,7 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 17
+    assert len(entity_entries) == 18
     assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
 
 

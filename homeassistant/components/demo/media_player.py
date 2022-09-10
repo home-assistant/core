@@ -1,6 +1,7 @@
 """Demo implementation of the media player."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -108,11 +109,15 @@ NETFLIX_PLAYER_SUPPORT = (
 class AbstractDemoPlayer(MediaPlayerEntity):
     """A demo media players."""
 
+    _attr_should_poll = False
+
     # We only implement the methods that we support
 
-    def __init__(self, name, device_class=None):
+    def __init__(
+        self, name: str, device_class: MediaPlayerDeviceClass | None = None
+    ) -> None:
         """Initialize the demo device."""
-        self._name = name
+        self._attr_name = name
         self._player_state = STATE_PLAYING
         self._volume_level = 1.0
         self._volume_muted = False
@@ -122,47 +127,37 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._device_class = device_class
 
     @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the media player."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the player."""
         return self._player_state
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Return the volume level of the media player (0..1)."""
         return self._volume_level
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Return boolean if volume is currently muted."""
         return self._volume_muted
 
     @property
-    def shuffle(self):
+    def shuffle(self) -> bool:
         """Boolean if shuffling is enabled."""
         return self._shuffle
 
     @property
-    def sound_mode(self):
+    def sound_mode(self) -> str:
         """Return the current sound mode."""
         return self._sound_mode
 
     @property
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str]:
         """Return a list of available sound modes."""
         return self._sound_mode_list
 
     @property
-    def device_class(self):
+    def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the device class of the media player."""
         return self._device_class
 
@@ -227,52 +222,54 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
     # We only implement the methods that we support
 
-    def __init__(self, name, youtube_id=None, media_title=None, duration=360):
+    def __init__(
+        self, name: str, youtube_id: str, media_title: str, duration: int
+    ) -> None:
         """Initialize the demo device."""
         super().__init__(name)
         self.youtube_id = youtube_id
         self._media_title = media_title
         self._duration = duration
-        self._progress = int(duration * 0.15)
+        self._progress: int | None = int(duration * 0.15)
         self._progress_updated_at = dt_util.utcnow()
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str:
         """Return the content ID of current playing media."""
         return self.youtube_id
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str:
         """Return the content type of current playing media."""
         return MEDIA_TYPE_MOVIE
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int:
         """Return the duration of current playing media in seconds."""
         return self._duration
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str:
         """Return the image url of current playing media."""
         return f"https://img.youtube.com/vi/{self.youtube_id}/hqdefault.jpg"
 
     @property
-    def media_title(self):
+    def media_title(self) -> str:
         """Return the title of current playing media."""
         return self._media_title
 
     @property
-    def app_name(self):
+    def app_name(self) -> str:
         """Return the current running application."""
         return "YouTube"
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._progress is None:
             return None
@@ -280,18 +277,21 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         position = self._progress
 
         if self._player_state == STATE_PLAYING:
-            position += (dt_util.utcnow() - self._progress_updated_at).total_seconds()
+            position += int(
+                (dt_util.utcnow() - self._progress_updated_at).total_seconds()
+            )
 
         return position
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid.
 
         Returns value from homeassistant.util.dt.utcnow().
         """
         if self._player_state == STATE_PLAYING:
             return self._progress_updated_at
+        return None
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play a piece of media."""
@@ -333,65 +333,65 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         ),
     ]
 
-    def __init__(self, name="Walkman"):
+    def __init__(self, name: str = "Walkman") -> None:
         """Initialize the demo device."""
         super().__init__(name)
         self._cur_track = 0
-        self._group_members = []
+        self._group_members: list[str] = []
         self._repeat = REPEAT_MODE_OFF
 
     @property
-    def group_members(self):
+    def group_members(self) -> list[str]:
         """List of players which are currently grouped together."""
         return self._group_members
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str:
         """Return the content ID of current playing media."""
         return "bounzz-1"
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str:
         """Return the content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int:
         """Return the duration of current playing media in seconds."""
         return 213
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str:
         """Return the image url of current playing media."""
         return "https://graph.facebook.com/v2.5/107771475912710/picture?type=large"
 
     @property
-    def media_title(self):
+    def media_title(self) -> str:
         """Return the title of current playing media."""
         return self.tracks[self._cur_track][1] if self.tracks else ""
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str:
         """Return the artist of current playing media (Music track only)."""
         return self.tracks[self._cur_track][0] if self.tracks else ""
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str:
         """Return the album of current playing media (Music track only)."""
         return "Bounzz"
 
     @property
-    def media_track(self):
+    def media_track(self) -> int:
         """Return the track number of current media (Music track only)."""
         return self._cur_track + 1
 
     @property
-    def repeat(self):
+    def repeat(self) -> str:
         """Return current repeat mode."""
         return self._repeat
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
         return MUSIC_PLAYER_SUPPORT
 
@@ -439,7 +439,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the demo device."""
         super().__init__("Lounge room")
         self._cur_episode = 1
@@ -448,62 +448,62 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         self._source_list = ["dvd", "youtube"]
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str:
         """Return the content ID of current playing media."""
         return "house-of-cards-1"
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str:
         """Return the content type of current playing media."""
         return MEDIA_TYPE_TVSHOW
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int:
         """Return the duration of current playing media in seconds."""
         return 3600
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str:
         """Return the image url of current playing media."""
         return "https://graph.facebook.com/v2.5/HouseofCards/picture?width=400"
 
     @property
-    def media_title(self):
+    def media_title(self) -> str:
         """Return the title of current playing media."""
         return f"Chapter {self._cur_episode}"
 
     @property
-    def media_series_title(self):
+    def media_series_title(self) -> str:
         """Return the series title of current playing media (TV Show only)."""
         return "House of Cards"
 
     @property
-    def media_season(self):
+    def media_season(self) -> str:
         """Return the season of current playing media (TV Show only)."""
-        return 1
+        return "1"
 
     @property
-    def media_episode(self):
+    def media_episode(self) -> str:
         """Return the episode of current playing media (TV Show only)."""
-        return self._cur_episode
+        return str(self._cur_episode)
 
     @property
-    def app_name(self):
+    def app_name(self) -> str:
         """Return the current running application."""
         return "Netflix"
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Return the current input source."""
         return self._source
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available sources."""
         return self._source_list
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
         return NETFLIX_PLAYER_SUPPORT
 

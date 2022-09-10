@@ -29,7 +29,7 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 class EcobeeSensorEntityDescriptionMixin:
     """Represent the required ecobee entity description attributes."""
 
-    runtime_key: str
+    runtime_key: str | None
 
 
 @dataclass
@@ -46,7 +46,7 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        runtime_key="actualTemperature",
+        runtime_key=None,
     ),
     EcobeeSensorEntityDescription(
         key="humidity",
@@ -54,7 +54,7 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        runtime_key="actualHumidity",
+        runtime_key=None,
     ),
     EcobeeSensorEntityDescription(
         key="co2PPM",
@@ -194,6 +194,11 @@ class EcobeeSensor(SensorEntity):
             for item in sensor["capability"]:
                 if item["type"] != self.entity_description.key:
                     continue
-                thermostat = self.data.ecobee.get_thermostat(self.index)
-                self._state = thermostat["runtime"][self.entity_description.runtime_key]
+                if self.entity_description.runtime_key is None:
+                    self._state = item["value"]
+                else:
+                    thermostat = self.data.ecobee.get_thermostat(self.index)
+                    self._state = thermostat["runtime"][
+                        self.entity_description.runtime_key
+                    ]
                 break

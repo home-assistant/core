@@ -18,6 +18,12 @@
                 "description": "Votre mot de passe pr\u00e9c\u00e9demment saisi pour {username} ne fonctionne plus. Mettez \u00e0 jour votre mot de passe pour continuer \u00e0 utiliser cette int\u00e9gration.",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Appareil de confiance"

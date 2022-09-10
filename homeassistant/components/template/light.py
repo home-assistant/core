@@ -13,11 +13,10 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -182,9 +181,21 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._color = None
         self._effect = None
         self._effect_list = None
+        self._fixed_color_mode = None
         self._max_mireds = None
         self._min_mireds = None
         self._supports_transition = False
+
+        color_modes = {ColorMode.ONOFF}
+        if self._level_script is not None:
+            color_modes.add(ColorMode.BRIGHTNESS)
+        if self._temperature_script is not None:
+            color_modes.add(ColorMode.COLOR_TEMP)
+        if self._color_script is not None:
+            color_modes.add(ColorMode.HS)
+        self._supported_color_modes = filter_supported_color_modes(color_modes)
+        if len(self._supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self._supported_color_modes))
 
     @property
     def brightness(self) -> int | None:
@@ -228,15 +239,24 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._effect_list
 
     @property
+    def color_mode(self):
+        """Return current color mode."""
+        if self._fixed_color_mode:
+            return self._fixed_color_mode
+        # Support for ct + hs, prioritize hs
+        if self._color is not None:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
+
+    @property
+    def supported_color_modes(self):
+        """Flag supported color modes."""
+        return self._supported_color_modes
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
-        if self._level_script is not None:
-            supported_features |= SUPPORT_BRIGHTNESS
-        if self._temperature_script is not None:
-            supported_features |= SUPPORT_COLOR_TEMP
-        if self._color_script is not None:
-            supported_features |= SUPPORT_COLOR
         if self._effect_script is not None:
             supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:

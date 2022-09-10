@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyotgw import vars as gw_vars
 
@@ -66,6 +67,7 @@ class OpenThermClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, gw_dev, options):
         """Initialize the device."""
@@ -100,7 +102,7 @@ class OpenThermClimate(ClimateEntity):
         self.temporary_ovrd_mode = entry.options[CONF_TEMPORARY_OVRD_MODE]
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to the OpenTherm Gateway device."""
         _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
         self._unsub_updates = async_dispatcher_connect(
@@ -110,7 +112,7 @@ class OpenThermClimate(ClimateEntity):
             self.hass, self._gateway.options_update_signal, self.update_options
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates from the component."""
         _LOGGER.debug("Removing OpenTherm Gateway climate %s", self.friendly_name)
         self._unsub_options()
@@ -203,11 +205,6 @@ class OpenThermClimate(ClimateEntity):
         return PRECISION_WHOLE
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC operation."""
         return self._current_operation
@@ -265,11 +262,11 @@ class OpenThermClimate(ClimateEntity):
         """Available preset modes to set."""
         return []
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         _LOGGER.warning("Changing preset mode is not supported")
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             temp = float(kwargs[ATTR_TEMPERATURE])

@@ -2,6 +2,7 @@
 from datetime import datetime
 import logging
 import time
+from typing import Any
 
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
 from nuheat.util import (
@@ -11,9 +12,9 @@ from nuheat.util import (
     nuheat_to_fahrenheit,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -100,7 +101,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         return self._thermostat.room
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._temperature_unit == "C":
             return TEMP_CELSIUS
@@ -121,7 +122,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         return self._thermostat.serial_number
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return the unique id."""
         return self.coordinator.last_update_success and self._thermostat.online
 
@@ -178,7 +179,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         """Return available preset modes."""
         return PRESET_MODES
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Update the hold mode of the thermostat."""
         self._set_schedule_mode(
             PRESET_MODE_TO_SCHEDULE_MODE_MAP.get(preset_mode, SCHEDULE_RUN)
@@ -191,7 +192,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         self._thermostat.schedule_mode = schedule_mode
         self._schedule_update()
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         self._set_temperature_and_mode(
             kwargs.get(ATTR_TEMPERATURE), hvac_mode=kwargs.get(ATTR_HVAC_MODE)

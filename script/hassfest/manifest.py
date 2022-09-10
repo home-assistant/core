@@ -138,7 +138,7 @@ def verify_version(value: str):
     try:
         AwesomeVersion(
             value,
-            [
+            ensure_strategy=[
                 AwesomeVersionStrategy.CALVER,
                 AwesomeVersionStrategy.SEMVER,
                 AwesomeVersionStrategy.SIMPLEVER,

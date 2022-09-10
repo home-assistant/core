@@ -13,7 +13,7 @@ from http import HTTPStatus
 import logging
 import secrets
 from typing import Any, cast, final
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
@@ -30,7 +30,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_UNKNOWN_ERROR,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -127,7 +127,11 @@ from .const import (  # noqa: F401
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    MediaClass,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from .errors import BrowseError
 
@@ -225,7 +229,8 @@ def is_on(hass, entity_id=None):
     """
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
     return any(
-        not hass.states.is_state(entity_id, STATE_OFF) for entity_id in entity_ids
+        not hass.states.is_state(entity_id, MediaPlayerState.OFF)
+        for entity_id in entity_ids
     )
 
 
@@ -410,7 +415,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_REPEAT_SET,
-        {vol.Required(ATTR_MEDIA_REPEAT): vol.In(REPEAT_MODES)},
+        {vol.Required(ATTR_MEDIA_REPEAT): vol.Coerce(RepeatMode)},
         "async_set_repeat",
         [MediaPlayerEntityFeature.REPEAT_SET],
     )
@@ -453,7 +458,7 @@ class MediaPlayerEntity(Entity):
     _attr_media_artist: str | None = None
     _attr_media_channel: str | None = None
     _attr_media_content_id: str | None = None
-    _attr_media_content_type: str | None = None
+    _attr_media_content_type: MediaType | str | None = None
     _attr_media_duration: int | None = None
     _attr_media_episode: str | None = None
     _attr_media_image_hash: str | None
@@ -466,13 +471,13 @@ class MediaPlayerEntity(Entity):
     _attr_media_series_title: str | None = None
     _attr_media_title: str | None = None
     _attr_media_track: int | None = None
-    _attr_repeat: str | None = None
+    _attr_repeat: RepeatMode | str | None = None
     _attr_shuffle: bool | None = None
     _attr_sound_mode_list: list[str] | None = None
     _attr_sound_mode: str | None = None
     _attr_source_list: list[str] | None = None
     _attr_source: str | None = None
-    _attr_state: str | None = None
+    _attr_state: MediaPlayerState | str | None = None
     _attr_supported_features: int = 0
     _attr_volume_level: float | None = None
 
@@ -487,7 +492,7 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | str | None:
         """State of the player."""
         return self._attr_state
 
@@ -514,7 +519,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_media_content_id
 
     @property
-    def media_content_type(self) -> str | None:
+    def media_content_type(self) -> MediaType | str | None:
         """Content type of current playing media."""
         return self._attr_media_content_type
 
@@ -663,7 +668,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_shuffle
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | str | None:
         """Return current repeat mode."""
         return self._attr_repeat
 
@@ -757,12 +762,14 @@ class MediaPlayerEntity(Entity):
         """Send seek command."""
         await self.hass.async_add_executor_job(self.media_seek, position)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         raise NotImplementedError()
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         await self.hass.async_add_executor_job(
@@ -801,11 +808,11 @@ class MediaPlayerEntity(Entity):
         """Enable/disable shuffle mode."""
         await self.hass.async_add_executor_job(self.set_shuffle, shuffle)
 
-    def set_repeat(self, repeat: str) -> None:
+    def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         raise NotImplementedError()
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self.hass.async_add_executor_job(self.set_repeat, repeat)
 
@@ -904,7 +911,11 @@ class MediaPlayerEntity(Entity):
             )
             return
 
-        if self.state in (STATE_OFF, STATE_IDLE, STATE_STANDBY):
+        if self.state in {
+            MediaPlayerState.OFF,
+            MediaPlayerState.IDLE,
+            MediaPlayerState.STANDBY,
+        }:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -953,7 +964,7 @@ class MediaPlayerEntity(Entity):
             )
             return
 
-        if self.state == STATE_PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             await self.async_media_pause()
         else:
             await self.async_media_play()
@@ -961,7 +972,7 @@ class MediaPlayerEntity(Entity):
     @property
     def entity_picture(self) -> str | None:
         """Return image of the media playing."""
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             return None
 
         if self.media_image_remotely_accessible:
@@ -1007,7 +1018,7 @@ class MediaPlayerEntity(Entity):
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             return state_attr
 
         for attr in ATTR_TO_PROPERTY:
@@ -1089,7 +1100,9 @@ class MediaPlayerEntity(Entity):
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
-            f"/{media_content_type}/{media_content_id}"
+            # quote the media_content_id as it may contain url unsafe characters
+            # aiohttp will unquote the path automatically
+            f"/{media_content_type}/{quote(media_content_id)}"
         )
 
         url_query = {"token": self.access_token}
@@ -1106,7 +1119,10 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
-        url + "/browse_media/{media_content_type}/{media_content_id}",
+        # Need to modify the default regex for media_content_id as it may
+        # include arbitrary characters including '/','{', or '}'
+        url
+        + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent) -> None:

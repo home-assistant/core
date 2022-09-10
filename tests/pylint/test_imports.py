@@ -84,6 +84,12 @@ def test_good_import(
             "CONSTANT",
             "hass-absolute-import",
         ),
+        (
+            "homeassistant.components.pylint_test.api.hub",
+            "homeassistant.components",
+            "pylint_test",
+            "hass-relative-import",
+        ),
     ],
 )
 def test_bad_import(
@@ -111,7 +117,7 @@ def test_bad_import(
             line=1,
             col_offset=0,
             end_line=1,
-            end_col_offset=len(import_from) + 21,
+            end_col_offset=len(import_from) + len(import_what) + 13,
         ),
     ):
         imports_checker.visit_importfrom(import_node)

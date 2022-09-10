@@ -74,6 +74,7 @@ async def async_setup_entry(
 class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.AUX_HEAT
@@ -137,11 +138,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return SUPPORT_HVAC
-
-    @property
-    def precision(self) -> int:
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
 
     @property
     def is_aux_heat(self) -> bool:

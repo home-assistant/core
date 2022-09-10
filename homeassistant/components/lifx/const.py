@@ -29,6 +29,15 @@ IDENTIFY_WAVEFORM = {
 IDENTIFY = "identify"
 RESTART = "restart"
 
+ATTR_DURATION = "duration"
+ATTR_INDICATION = "indication"
+ATTR_INFRARED = "infrared"
+ATTR_POWER = "power"
+ATTR_REMAINING = "remaining"
+ATTR_ZONES = "zones"
+
+HEV_CYCLE_STATE = "hev_cycle_state"
+
 DATA_LIFX_MANAGER = "lifx_manager"
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__package__)

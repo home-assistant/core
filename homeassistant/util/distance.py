@@ -1,7 +1,6 @@
 """Distance util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from numbers import Number
 
 from homeassistant.const import (
@@ -28,26 +27,26 @@ VALID_UNITS: tuple[str, ...] = (
     LENGTH_YARD,
 )
 
-TO_METERS: dict[str, Callable[[float], float]] = {
-    LENGTH_METERS: lambda meters: meters,
-    LENGTH_MILES: lambda miles: miles * 1609.344,
-    LENGTH_YARD: lambda yards: yards * 0.9144,
-    LENGTH_FEET: lambda feet: feet * 0.3048,
-    LENGTH_INCHES: lambda inches: inches * 0.0254,
-    LENGTH_KILOMETERS: lambda kilometers: kilometers * 1000,
-    LENGTH_CENTIMETERS: lambda centimeters: centimeters * 0.01,
-    LENGTH_MILLIMETERS: lambda millimeters: millimeters * 0.001,
-}
+MM_TO_M = 0.001  # 1 mm = 0.001 m
+CM_TO_M = 0.01  # 1 cm = 0.01 m
+KM_TO_M = 1000  # 1 km = 1000 m
 
-METERS_TO: dict[str, Callable[[float], float]] = {
-    LENGTH_METERS: lambda meters: meters,
-    LENGTH_MILES: lambda meters: meters * 0.000621371,
-    LENGTH_YARD: lambda meters: meters * 1.09361,
-    LENGTH_FEET: lambda meters: meters * 3.28084,
-    LENGTH_INCHES: lambda meters: meters * 39.3701,
-    LENGTH_KILOMETERS: lambda meters: meters * 0.001,
-    LENGTH_CENTIMETERS: lambda meters: meters * 100,
-    LENGTH_MILLIMETERS: lambda meters: meters * 1000,
+IN_TO_M = 0.0254  # 1 inch = 0.0254 m
+FOOT_TO_M = IN_TO_M * 12  # 12 inches = 1 foot (0.3048 m)
+YARD_TO_M = FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
+MILE_TO_M = YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
+
+NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+UNIT_CONVERSION: dict[str, float] = {
+    LENGTH_METERS: 1,
+    LENGTH_MILLIMETERS: 1 / MM_TO_M,
+    LENGTH_CENTIMETERS: 1 / CM_TO_M,
+    LENGTH_KILOMETERS: 1 / KM_TO_M,
+    LENGTH_INCHES: 1 / IN_TO_M,
+    LENGTH_FEET: 1 / FOOT_TO_M,
+    LENGTH_YARD: 1 / YARD_TO_M,
+    LENGTH_MILES: 1 / MILE_TO_M,
 }
 
 
@@ -64,6 +63,6 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
         return value
 
-    meters: float = TO_METERS[unit_1](value)
+    meters: float = value / UNIT_CONVERSION[unit_1]
 
-    return METERS_TO[unit_2](meters)
+    return meters * UNIT_CONVERSION[unit_2]

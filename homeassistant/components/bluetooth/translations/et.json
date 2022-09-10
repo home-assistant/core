@@ -34,7 +34,7 @@
             "init": {
                 "data": {
                     "adapter": "Sk\u00e4nnimiseks kasutatav Bluetoothi adapter",
-                    "passive": "Passiivne kuulamine"
+                    "passive": "Passiivne sk\u00e4nnimine"
                 },
                 "description": "Passiivseks kuulamiseks on vaja BlueZ 5.63 v\u00f5i uuemat versiooni koos lubatud eksperimentaalsete funktsioonidega."
             }

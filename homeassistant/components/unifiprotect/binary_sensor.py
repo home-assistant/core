@@ -114,8 +114,9 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         name="System Sounds",
         icon="mdi:speaker",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_speaker",
+        ufp_required_field="has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
+        ufp_enabled="feature_flags.has_speaker",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(

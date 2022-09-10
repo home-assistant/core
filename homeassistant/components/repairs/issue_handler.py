@@ -13,8 +13,7 @@ from homeassistant.helpers.integration_platform import (
 )
 
 # pylint: disable-next=unused-import
-from homeassistant.helpers.issue_registry import (  # noqa: F401; Remove when integrations have been updated
-    async_create_issue,
+from homeassistant.helpers.issue_registry import (
     async_delete_issue,
     async_get as async_get_issue_registry,
 )

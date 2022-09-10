@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -103,6 +103,8 @@ async def async_setup_entry(
 class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         unique_id: str,
@@ -125,7 +127,7 @@ class DemoClimate(ClimateEntity):
     ) -> None:
         """Initialize the climate device."""
         self._unique_id = unique_id
-        self._name = name
+        self._attr_name = name
         self._support_flags = SUPPORT_FLAGS
         if target_temperature is not None:
             self._support_flags = (
@@ -185,16 +187,6 @@ class DemoClimate(ClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return self._support_flags
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling state."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self._name
 
     @property
     def temperature_unit(self) -> str:

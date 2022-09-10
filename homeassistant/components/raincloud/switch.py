@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -68,7 +69,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._sensor_type == "manual_watering":
             self.data.watering_time = self._default_watering_timer
@@ -76,7 +77,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
             self.data.auto_watering = True
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._sensor_type == "manual_watering":
             self.data.watering_time = "off"
@@ -84,7 +85,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
             self.data.auto_watering = False
         self._state = False
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         _LOGGER.debug("Updating RainCloud switch: %s", self._name)
         if self._sensor_type == "manual_watering":

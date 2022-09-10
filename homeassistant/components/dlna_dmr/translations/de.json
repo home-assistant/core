@@ -19,7 +19,7 @@
                 "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
             },
             "import_turn_on": {
-                "description": "Bitte schalte das Ger\u00e4t ein und klicke auf Senden, um die Migration fortzusetzen"
+                "description": "Bitte schalte das Ger\u00e4t ein und dr\u00fccke auf Senden, um die Migration fortzusetzen"
             },
             "manual": {
                 "data": {

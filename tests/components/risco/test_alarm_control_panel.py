@@ -36,8 +36,8 @@ from .util import TEST_SITE_UUID
 FIRST_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
 SECOND_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
-FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.risco_test_site_uuid_partition_0"
-SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.risco_test_site_uuid_partition_1"
+FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.name_0"
+SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.name_1"
 
 CODES_REQUIRED_OPTIONS = {"code_arm_required": True, "code_disarm_required": True}
 TEST_RISCO_TO_HA = {
@@ -113,7 +113,11 @@ def two_part_local_alarm():
     with patch.object(
         partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
     ), patch.object(
+        partition_mocks[0], "name", new_callable=PropertyMock(return_value="Name 0")
+    ), patch.object(
         partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+    ), patch.object(
+        partition_mocks[1], "name", new_callable=PropertyMock(return_value="Name 1")
     ), patch(
         "homeassistant.components.risco.RiscoLocal.zones",
         new_callable=PropertyMock(return_value={}),
@@ -475,6 +479,9 @@ async def test_local_setup(hass, two_part_local_alarm, setup_risco_local):
     device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1_local")})
     assert device is not None
     assert device.manufacturer == "Risco"
+    with patch("homeassistant.components.risco.RiscoLocal.disconnect") as mock_close:
+        await hass.config_entries.async_unload(setup_risco_local.entry_id)
+        mock_close.assert_awaited_once()
 
 
 async def _check_local_state(
