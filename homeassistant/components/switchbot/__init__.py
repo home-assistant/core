@@ -89,6 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
         )
+
+    await switchbot.close_stale_connections(ble_device)
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
     device = cls(
         device=ble_device,
