@@ -9,7 +9,6 @@ from huawei_solar import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.huawei_solar.config_flow import SlaveException
 from homeassistant.components.huawei_solar.const import CONF_SLAVE_IDS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -168,7 +167,7 @@ async def test_form_invalid_extra_slave(hass: HomeAssistant) -> None:
         return_value=mock_bridge,
     ), patch(
         "huawei_solar.HuaweiSolarBridge.create_extra_slave",
-        side_effect=SlaveException,
+        side_effect=HuaweiSolarException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
