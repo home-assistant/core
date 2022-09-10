@@ -152,7 +152,7 @@ async def test_action(hass):
     hass.states.async_set(
         "humidifier.entity",
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {const.ATTR_AVAILABLE_MODES: ["home", const.MODE_AWAY]},
     )
 
     assert await async_setup_component(
@@ -308,7 +308,7 @@ async def test_action(hass):
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {const.ATTR_AVAILABLE_MODES: ["home", const.MODE_AWAY]},
             {},
             "set_mode",
             [
@@ -350,7 +350,7 @@ async def test_action(hass):
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {const.ATTR_AVAILABLE_MODES: ["home", const.MODE_AWAY]},
             "set_mode",
             [
                 {

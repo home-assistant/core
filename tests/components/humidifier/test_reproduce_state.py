@@ -6,7 +6,6 @@ from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     DOMAIN,
     MODE_AWAY,
-    MODE_ECO,
     MODE_NORMAL,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
@@ -144,7 +143,7 @@ async def test_multiple_modes(hass):
     await async_reproduce_states(
         hass,
         [
-            State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_ECO, ATTR_HUMIDITY: 40}),
+            State(ENTITY_1, STATE_ON, {ATTR_MODE: "eco", ATTR_HUMIDITY: 40}),
             State(ENTITY_2, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 50}),
         ],
     )
@@ -156,7 +155,7 @@ async def test_multiple_modes(hass):
     assert len(mode_calls) == 2
     # order is not guaranteed
     assert any(
-        call.data == {"entity_id": ENTITY_1, "mode": MODE_ECO} for call in mode_calls
+        call.data == {"entity_id": ENTITY_1, "mode": "eco"} for call in mode_calls
     )
     assert any(
         call.data == {"entity_id": ENTITY_2, "mode": MODE_NORMAL} for call in mode_calls

@@ -248,7 +248,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_mode - event - test_event3"
 
-    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_HOME})
+    hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: "home"})
 
     # Should not fire
     hass.bus.async_fire("test_event3")
@@ -275,7 +275,7 @@ async def test_if_state(hass, calls):
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {const.ATTR_AVAILABLE_MODES: ["home", const.MODE_AWAY]},
             {},
             "is_mode",
             [
@@ -330,7 +330,7 @@ async def test_if_state(hass, calls):
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {const.ATTR_AVAILABLE_MODES: ["home", const.MODE_AWAY]},
             "is_mode",
             [
                 {
