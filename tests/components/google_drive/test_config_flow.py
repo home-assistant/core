@@ -161,7 +161,7 @@ async def test_create_sheet_error(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") == "abort"
-    assert result.get("reason") == "unknown"
+    assert result.get("reason") == "create_spreadsheet_failure"
 
 
 async def test_reauth(
@@ -311,4 +311,4 @@ async def test_reauth_abort(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") == "abort"
-    assert result.get("reason") == "unknown"
+    assert result.get("reason") == "open_spreadsheet_failure"

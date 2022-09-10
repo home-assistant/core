@@ -7,9 +7,11 @@
             "already_configured": "Account is already configured",
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect",
+            "create_spreadsheet_failure": "Error while creating spreadsheet, see error log for details",
             "invalid_access_token": "Invalid access token",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "oauth_error": "Received invalid token data.",
+            "open_spreadsheet_failure": "Error while opening spreadsheet, see error log for details",
             "reauth_successful": "Re-authentication was successful",
             "timeout_connect": "Timeout establishing connection",
             "unknown": "Unexpected error"

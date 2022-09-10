@@ -83,7 +83,7 @@ class OAuth2FlowHandler(
                 _LOGGER.error(
                     "Could not find spreadsheet '%s': %s", entry.unique_id, str(err)
                 )
-                return self.async_abort(reason="unknown")
+                return self.async_abort(reason="open_spreadsheet_failure")
 
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -99,7 +99,7 @@ class OAuth2FlowHandler(
             doc = await self.hass.async_add_executor_job(setup_doc)
         except GSpreadException as err:
             _LOGGER.error("Error creating spreadsheet: %s", str(err))
-            return self.async_abort(reason="unknown")
+            return self.async_abort(reason="create_spreadsheet_failure")
 
         await self.async_set_unique_id(doc.id)
         return self.async_create_entry(
