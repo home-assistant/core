@@ -103,28 +103,28 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
-    # import to config flow
-    LOGGER.warning(
-        # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
-        "Configuration of the Proxmox in YAML is deprecated and should "
-        "be removed in 2022.12. Resolve the import issues and remove the "
-        "YAML configuration from your configuration.yaml file",
-    )
-    async_create_issue(
-        async_get_hass(),
-        DOMAIN,
-        "yaml_deprecated",
-        breaks_in_ha_version="2022.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="yaml_deprecated",
-        translation_placeholders={
-            "integration": "Proxmox VE",
-            "platform": DOMAIN,
-        },
-    )
 
+    # import to config flow
     if DOMAIN in config:
+        LOGGER.warning(
+            # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
+            "Configuration of the Proxmox in YAML is deprecated and should "
+            "be removed in 2022.12. Resolve the import issues and remove the "
+            "YAML configuration from your configuration.yaml file",
+        )
+        async_create_issue(
+            async_get_hass(),
+            DOMAIN,
+            "yaml_deprecated",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="yaml_deprecated",
+            translation_placeholders={
+                "integration": "Proxmox VE",
+                "platform": DOMAIN,
+            },
+        )
         for conf in config[DOMAIN]:
             config_import: dict[str, Any] = {}
             errors = {}
