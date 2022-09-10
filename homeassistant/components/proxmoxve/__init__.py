@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -52,7 +53,9 @@ from .const import (
     ProxmoxType,
 )
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+]
 
 COORDINATOR_UPDATE_INTERVAL_MAP = {
     ProxmoxType.Proxmox: timedelta(minutes=60),
@@ -361,9 +364,8 @@ def parse_api_proxmox(status, api_category):
         }
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
-        if status["status"] == "running":
-            if api_category == ProxmoxType.QEMU:
-                memory_free = status["freemem"]
+        if api_category == ProxmoxType.QEMU and status["status"] == "running":
+            memory_free = status["freemem"]
 
         return {
             "status": status["status"],
