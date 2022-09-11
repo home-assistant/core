@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import Dict, Tuple
 
 from solax import RealTimeAPI
 from solax.discovery import InverterError
@@ -16,20 +15,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    ELECTRIC_CURRENT_AMPERE,
-    POWER_WATT,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
-)
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -37,7 +36,7 @@ DEFAULT_PORT = 80
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-SENSOR_DESCRIPTIONS: Dict[Tuple[Units, bool], SensorEntityDescription] = {
+SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     (Units.C, False): SensorEntityDescription(
         key=SensorDeviceClass.TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -51,7 +50,7 @@ SENSOR_DESCRIPTIONS: Dict[Tuple[Units, bool], SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.KWH, True): SensorEntityDescription(
-        key=f'{SensorDeviceClass.ENERGY}-{SensorStateClass.TOTAL_INCREASING}',
+        key=f"{SensorDeviceClass.ENERGY}-{SensorStateClass.TOTAL_INCREASING}",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -87,7 +86,7 @@ SENSOR_DESCRIPTIONS: Dict[Tuple[Units, bool], SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.NONE, False): SensorEntityDescription(
-        key='none',
+        key="none",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
