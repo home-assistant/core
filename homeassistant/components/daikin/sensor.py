@@ -27,15 +27,16 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
+    ATTR_ALL_ENERGY_TODAY,
+    ATTR_ALL_POWER,
     ATTR_COMPRESSOR_FREQUENCY,
     ATTR_COOL_ENERGY,
+    ATTR_ENERGY_TODAY,
     ATTR_HEAT_ENERGY,
     ATTR_HUMIDITY,
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
-    ATTR_TOTAL_ENERGY_TODAY,
-    ATTR_TOTAL_POWER,
 )
 
 
@@ -44,6 +45,8 @@ class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[Appliance], float | None]
+    enabled_default: bool
+    cross_device: bool  # Cross-device sensors should be created only once
 
 
 @dataclass
@@ -59,6 +62,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.inside_temperature,
+        enabled_default=True,
+        cross_device=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
@@ -67,6 +72,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.outside_temperature,
+        enabled_default=True,
+        cross_device=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
@@ -75,6 +82,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
+        enabled_default=True,
+        cross_device=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
@@ -83,14 +92,18 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
+        enabled_default=True,
+        cross_device=False,
     ),
     DaikinSensorEntityDescription(
-        key=ATTR_TOTAL_POWER,
-        name="Estimated Power Consumption",
+        key=ATTR_ALL_POWER,
+        name="All Devices' Estimated Power Consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
+        enabled_default=True,
+        cross_device=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
@@ -99,6 +112,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
+        enabled_default=False,
+        cross_device=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
@@ -107,6 +122,21 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
+        enabled_default=False,
+        cross_device=False,
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_ENERGY_TODAY,
+        name="Today's Energy Consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(
+            device.today_cool_energy_consumption + device.today_heat_energy_consumption,
+            2,
+        ),
+        enabled_default=True,
+        cross_device=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
@@ -116,14 +146,18 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_HERTZ,
         value_func=lambda device: device.compressor_frequency,
+        enabled_default=False,
+        cross_device=False,
     ),
     DaikinSensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_TODAY,
-        name="Today's Total Energy Consumption",
+        key=ATTR_ALL_ENERGY_TODAY,
+        name="All Devices' Today's Energy Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
+        enabled_default=False,
+        cross_device=True,
     ),
 )
 
@@ -150,10 +184,11 @@ async def async_setup_entry(
     if daikin_api.device.support_outside_temperature:
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)
     if daikin_api.device.support_energy_consumption:
-        sensors.append(ATTR_TOTAL_POWER)
+        sensors.append(ATTR_ENERGY_TODAY)
         sensors.append(ATTR_COOL_ENERGY)
         sensors.append(ATTR_HEAT_ENERGY)
-        sensors.append(ATTR_TOTAL_ENERGY_TODAY)
+        sensors.append(ATTR_ALL_POWER)
+        sensors.append(ATTR_ALL_ENERGY_TODAY)
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
         sensors.append(ATTR_TARGET_HUMIDITY)
@@ -179,11 +214,18 @@ class DaikinSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._api = api
-        self._attr_name = f"{api.name} {description.name}"
+        self._attr_entity_registry_enabled_default = description.enabled_default
+        if description.cross_device:
+            self._attr_name = f"Daikin {description.name}"
+        else:
+            self._attr_name = f"{api.name} {description.name}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
+        if self.entity_description.cross_device:
+            # Cross-device sensors should be generated once for all devices
+            return f"daikin-{self.entity_description.key}"
         return f"{self._api.device.mac}-{self.entity_description.key}"
 
     @property
