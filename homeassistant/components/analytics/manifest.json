@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/analytics",
   "codeowners": ["@home-assistant/core", "@ludeeus"],
   "dependencies": ["api", "websocket_api"],
+  "requirements": ["sqlalchemy==1.4.41"],
   "after_dependencies": ["energy"],
   "quality_scale": "internal",
   "iot_class": "cloud_push"
