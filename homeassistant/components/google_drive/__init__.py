@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import cast
 
 import aiohttp
@@ -36,7 +35,6 @@ APPEND_SHEET_SERVICE_SCHEMA = vol.All(
         vol.Required(DATA): dict,
     },
 )
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
