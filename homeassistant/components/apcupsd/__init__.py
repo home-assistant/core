@@ -105,7 +105,7 @@ class APCUPSdData:
     updates from the server.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, host: str, port: int) -> None:
         """Initialize the data object."""
         self._host = host
         self._port = port

@@ -1,7 +1,6 @@
 """Support for APCUPSd sensors."""
 from __future__ import annotations
 
-import copy
 import logging
 
 from apcaccess.status import ALL_UNITS
@@ -461,11 +460,12 @@ async def async_setup_platform(
     # Remove the artificial entry since it's no longer needed.
     hass.data[DOMAIN].pop(SOURCE_IMPORT)
 
-    # Our config flow allows an extra field CONF_RESOURCES and will import properly as
-    # options (although not shown in UI during config setup).
+    # Our config flow supports CONF_RESOURCES and will properly import it to disable
+    # entities not listed in CONF_RESOURCES by default. Note that this designed to
+    # support YAML config import only (i.e., not shown in UI during setup).
     conf[CONF_RESOURCES] = config[CONF_RESOURCES]
 
-    _LOGGER.warning(
+    _LOGGER.debug(
         "YAML configurations loaded with host %s, port %s and resources %s ",
         conf[CONF_HOST],
         conf[CONF_PORT],
@@ -494,7 +494,8 @@ async def async_setup_entry(
     available_resources: set[str] = {k.lower() for k, _ in data_service.status.items()}
 
     # We use user-specified resources from imported YAML config (if available) to
-    # determine whether to enable the entity by default.
+    # determine whether to enable the entity by default. Here, we first collect the
+    # specified resources
     specified_resources = None
     if (resources := config_entry.data.get(CONF_RESOURCES)) is not None:
         assert isinstance(resources, list)
@@ -506,13 +507,13 @@ async def async_setup_entry(
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
 
-        description = copy.copy(SENSORS[resource])
         # To avoid breaking changes, we disable sensors not specified in resources.
+        enabled_by_default = True
         if specified_resources is not None:
-            description.entity_registry_enabled_default = (
-                resource in specified_resources
-            )
-        entities.append(APCUPSdSensor(data_service, description))
+            enabled_by_default = resource in specified_resources
+
+        entity = APCUPSdSensor(data_service, SENSORS[resource], enabled_by_default)
+        entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
 
@@ -537,11 +538,13 @@ class APCUPSdSensor(SensorEntity):
         self,
         data_service: APCUPSdData,
         description: SensorEntityDescription,
+        enabled_by_default: bool,
     ) -> None:
         """Initialize the sensor."""
         if (serial_no := data_service.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
         self.entity_description = description
+        self._attr_entity_registry_enabled_default = enabled_by_default
         self._data_service = data_service
 
     @property

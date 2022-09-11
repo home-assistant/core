@@ -13,7 +13,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "description": "Enter the [%key:common::config_flow::data::host%] and [%key:common::config_flow::data::port%] on which the apcupsd NIS is being served."
+        "description": "Enter the host and port on which the apcupsd NIS is being served."
       }
     }
   }

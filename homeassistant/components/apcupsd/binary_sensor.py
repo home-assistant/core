@@ -15,6 +15,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DOMAIN, VALUE_ONLINE, APCUPSdData
 
 _LOGGER = logging.getLogger(__name__)
+_DESCRIPTION = BinarySensorEntityDescription(
+    key="statflag",
+    name="UPS Online Status",
+    icon="mdi:heart",
+)
 
 
 async def async_setup_entry(
@@ -25,19 +30,13 @@ async def async_setup_entry(
     """Set up an APCUPSd Online Status binary sensor."""
     data_service: APCUPSdData = hass.data[DOMAIN][config_entry.entry_id]
 
-    description = BinarySensorEntityDescription(
-        key="statflag",
-        name="UPS Online Status",
-        icon="mdi:heart",
-    )
-
     # Do not create the binary sensor if APCUPSd does not provide STATFLAG field for us
     # to determine the online status.
     if data_service.statflag is None:
         return
 
     async_add_entities(
-        [OnlineStatus(data_service, description)],
+        [OnlineStatus(data_service, _DESCRIPTION)],
         update_before_add=True,
     )
 

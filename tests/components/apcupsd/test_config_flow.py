@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture() -> MockConfigEntry:
     """Create hass config_entry fixture."""
 
     return MockConfigEntry(
@@ -29,7 +29,7 @@ def config_entry_fixture():
     )
 
 
-async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test successful creation of config entries via user configuration."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get"
@@ -53,7 +53,7 @@ async def test_flow_works(hass: HomeAssistant, config_entry: MockConfigEntry):
             assert result["description"] == "APCUPSd"
 
 
-async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test successful creation of config entries via YAML import."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get",
@@ -101,7 +101,7 @@ async def test_flow_import(hass: HomeAssistant, config_entry: MockConfigEntry):
         assert result["data"][CONF_RESOURCES] == resources
 
 
-async def test_config_flow_cannot_connect(hass: HomeAssistant):
+async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test config flow setup with connection error."""
     with patch("apcaccess.status.get") as mock_get:
         mock_get.side_effect = OSError()
@@ -114,7 +114,7 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant):
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_config_flow_no_status(hass: HomeAssistant):
+async def test_config_flow_no_status(hass: HomeAssistant) -> None:
     """Test config flow setup with successful connection but no status is reported."""
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get"
@@ -132,7 +132,7 @@ async def test_config_flow_no_status(hass: HomeAssistant):
 
 async def test_config_flow_duplicate(
     hass: HomeAssistant, config_entry: MockConfigEntry
-):
+) -> None:
     """Test config flow setup with duplicate integration."""
     # Add a duplicate integration.
     with patch("apcaccess.status.parse") as mock_parse, patch(
