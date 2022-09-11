@@ -4,11 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     HVAC_MODES,
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
