@@ -203,8 +203,8 @@ build.json @home-assistant/supervisor
 /tests/components/control4/ @lawtancool
 /homeassistant/components/conversation/ @home-assistant/core
 /tests/components/conversation/ @home-assistant/core
-/homeassistant/components/coolmaster/ @OnFreund
-/tests/components/coolmaster/ @OnFreund
+/homeassistant/components/coolmaster/ @OnFreund @Rjevski
+/tests/components/coolmaster/ @OnFreund @Rjevski
 /homeassistant/components/coronavirus/ @home-assistant/core
 /tests/components/coronavirus/ @home-assistant/core
 /homeassistant/components/counter/ @fabaff

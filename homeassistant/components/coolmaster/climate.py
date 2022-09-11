@@ -2,6 +2,8 @@
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -11,10 +13,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import (
+    CONF_SUPPORTED_MODES,
+    DATA_COORDINATOR,
+    DATA_INFO,
+    DOMAIN,
+    SERVICE_FEED,
+)
 
 CM_TO_HA_STATE = {
     "heat": HVACMode.HEAT,
@@ -53,6 +64,16 @@ async def async_setup_entry(
     ]
 
     async_add_devices(all_devices)
+
+    platform = async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_FEED,
+        {
+            vol.Required("temperature"): vol.Coerce(float),
+        },
+        "feed",
+    )
 
 
 class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
@@ -172,3 +193,14 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
         _LOGGER.debug("Turning %s off", self.unique_id)
         self._unit = await self._unit.turn_off()
         self.async_write_ha_state()
+
+    async def feed(self, temperature: float):
+        """
+        Provide ambient temperature suggestion to the unit.
+
+        Warning: this is not supported by all units and even if supported will depend
+        on the unit's configuration. It is not guaranteed that this will have any effect.
+        """
+        _LOGGER.debug("Sending %d as ambient temperature", temperature)
+
+        await self._unit.feed(temperature)
