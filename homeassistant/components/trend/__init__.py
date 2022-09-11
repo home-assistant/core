@@ -2,5 +2,4 @@
 
 from homeassistant.const import Platform
 
-DOMAIN = "trend"
 PLATFORMS = [Platform.BINARY_SENSOR]

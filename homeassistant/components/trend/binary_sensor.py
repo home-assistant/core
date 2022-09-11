@@ -34,21 +34,21 @@ from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-from . import DOMAIN, PLATFORMS
+from . import PLATFORMS
+from .const import (
+    ATTR_GRADIENT,
+    ATTR_INVERT,
+    ATTR_MIN_GRADIENT,
+    ATTR_SAMPLE_COUNT,
+    ATTR_SAMPLE_DURATION,
+    CONF_INVERT,
+    CONF_MAX_SAMPLES,
+    CONF_MIN_GRADIENT,
+    CONF_SAMPLE_DURATION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ATTRIBUTE = "attribute"
-ATTR_GRADIENT = "gradient"
-ATTR_MIN_GRADIENT = "min_gradient"
-ATTR_INVERT = "invert"
-ATTR_SAMPLE_DURATION = "sample_duration"
-ATTR_SAMPLE_COUNT = "sample_count"
-
-CONF_INVERT = "invert"
-CONF_MAX_SAMPLES = "max_samples"
-CONF_MIN_GRADIENT = "min_gradient"
-CONF_SAMPLE_DURATION = "sample_duration"
 
 SENSOR_SCHEMA = vol.Schema(
     {
