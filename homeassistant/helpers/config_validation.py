@@ -595,10 +595,12 @@ def template(value: Any | None) -> template_helper.Template:
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid("template value is None")
-    if isinstance(value, (list, dict, template_helper.Template)):
+    if isinstance(value, (list, dict)):
         raise vol.Invalid("template value should be a string")
-
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    if isinstance(value, (template_helper.Template)):
+        template_value = value
+    else:
+        template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
 
     try:
         template_value.ensure_valid()
