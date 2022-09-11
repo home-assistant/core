@@ -1,6 +1,5 @@
 """The tests for the  MQTT device_tracker platform."""
 
-import copy
 from unittest.mock import patch
 
 import pytest
@@ -26,11 +25,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[device_tracker.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -440,7 +434,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
         device_tracker.DOMAIN,
-        DEFAULT_CONFIG_LEGACY,
+        DEFAULT_CONFIG,
         None,
     )
 
@@ -451,8 +445,10 @@ async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
     entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
     topic = "/location/jan"
 
-    config = {"name": dev_id, "state_topic": topic}
+    config = {
+        mqtt.DOMAIN: {device_tracker.DOMAIN: {"name": dev_id, "state_topic": topic}}
+    }
 
-    await help_test_setup_manual_entity_from_yaml(hass, device_tracker.DOMAIN, config)
+    await help_test_setup_manual_entity_from_yaml(hass, config)
 
     assert hass.states.get(entity_id) is not None
