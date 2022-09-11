@@ -335,7 +335,6 @@ build.json @home-assistant/supervisor
 /tests/components/faa_delays/ @ntilley905
 /homeassistant/components/fan/ @home-assistant/core
 /tests/components/fan/ @home-assistant/core
-/homeassistant/components/fast_protobuf/ @bdraco
 /homeassistant/components/fastdotcom/ @rohankapoorcom
 /homeassistant/components/fibaro/ @rappenze
 /tests/components/fibaro/ @rappenze
