@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Entry setup."""
-    api = hass.data[DOMAIN][entry.entry_id]  # type: RealTimeAPI
+    api: RealTimeAPI = hass.data[DOMAIN][entry.entry_id]
     resp = await api.get_data()
     serial = resp.serial_number
     version = resp.version
@@ -54,14 +54,24 @@ async def async_setup_entry(
         state_class = None
         device_class = DEVICE_CLASS_MAPPING.get(measurement.unit, None)
         if device_class:
-            state_class = SensorStateClass.MEASUREMENT
-            if isinstance(sensor, Total):
+            if measurement.is_monotonic:
                 state_class = SensorStateClass.TOTAL_INCREASING
-            unit = measurement.unit.value
+            else:
+                state_class = SensorStateClass.MEASUREMENT
+        unit = measurement.unit.value
 
         uid = f"{serial}-{idx}"
         devices.append(
-            Inverter(uid, serial, version, sensor, unit, state_class, device_class)
+            Inverter(
+                api.inverter.manufacturer,
+                uid,
+                serial,
+                version,
+                sensor,
+                unit,
+                state_class,
+                device_class,
+            )
         )
     endpoint.sensors = devices
     async_add_entities(devices)
@@ -70,12 +80,12 @@ async def async_setup_entry(
 class RealTimeDataEndpoint:
     """Representation of a Sensor."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass: HomeAssistant, api: RealTimeAPI) -> None:
         """Initialize the sensor."""
-        self.hass = hass
+        self.hass: HomeAssistant = hass
         self.api = api
         self.ready = asyncio.Event()
-        self.sensors = []
+        self.sensors: list[Inverter] = []
 
     async def async_refresh(self, now=None):
         """Fetch new state data for the sensor.
@@ -104,6 +114,7 @@ class Inverter(SensorEntity):
 
     def __init__(
         self,
+        manufacturer,
         uid,
         serial,
         version,
@@ -114,14 +125,14 @@ class Inverter(SensorEntity):
     ):
         """Initialize an inverter sensor."""
         self._attr_unique_id = uid
-        self._attr_name = f"Solax {serial} {key}"
+        self._attr_name = f"{manufacturer} {serial} {key}"
         self._attr_native_unit_of_measurement = unit
         self._attr_state_class = state_class
         self._attr_device_class = device_class
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=MANUFACTURER,
-            name=f"Solax {serial}",
+            name=f"{manufacturer} {serial}",
             sw_version=version,
         )
         self.key = key
