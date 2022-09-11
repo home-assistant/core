@@ -147,7 +147,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=FREQUENCY_HERTZ,
         value_func=lambda device: device.compressor_frequency,
         enabled_default=False,
-        cross_device=False,
+        cross_device=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_ENERGY_TODAY,
