@@ -146,3 +146,56 @@ full_state:
           options:
             - "on"
             - "off"
+enable_climate_react:
+  name: Enable Climate React
+  description: Enable and configure Climate React.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    high_temperature_threshold:
+      name: Threshold high
+      description: When temp/humidity goes above.
+      required: true
+      example: 24
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 0.1
+          mode: box
+    high_temperature_state:
+      name: State high threshold
+      description: What should happen at high threshold. Requires full state.
+      required: true
+      selector:
+        object:
+    low_temperature_threshold:
+      name: Threshold low
+      description: When temp/humidity goes below.
+      required: true
+      example: 19
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 0.1
+          mode: box
+    low_temperature_state:
+      name: State low threshold
+      description: What should happen at low threshold. Requires full state.
+      required: true
+      selector:
+        object:
+    smart_type:
+      name: Trigger type
+      description: Choose between temperature/feels like/humidity.
+      required: true
+      example: "temperature"
+      selector:
+        select:
+          options:
+            - "temperature"
+            - "feelsLike"
+            - "humidity"

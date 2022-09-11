@@ -155,6 +155,24 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         extra_fn=None,
         entity_registry_enabled_default=False,
     ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_low",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Climate React low temperature threshold",
+        value_fn=lambda data: data.smart_low_temp_threshold,
+        extra_fn=lambda data: data.smart_low_state,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_high",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Climate React high temperature threshold",
+        value_fn=lambda data: data.smart_high_temp_threshold,
+        extra_fn=lambda data: data.smart_high_state,
+        entity_registry_enabled_default=False,
+    ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
 
