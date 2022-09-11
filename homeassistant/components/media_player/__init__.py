@@ -25,10 +25,7 @@ from yarl import URL
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.components.websocket_api.const import (
-    ERR_NOT_SUPPORTED,
-    ERR_UNKNOWN_ERROR,
-)
+from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     SERVICE_MEDIA_NEXT_TRACK,
