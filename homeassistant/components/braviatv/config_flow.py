@@ -91,11 +91,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             if is_host_valid(host):
-                session = async_create_clientsession(
-                    self.hass,
-                    cookie_jar=CookieJar(unsafe=True, quote_cookie=False),
-                )
-                self.client = BraviaTV(host=host, session=session)
                 self.device_config[CONF_HOST] = host
                 self.create_client()
                 return await self.async_step_authorize()
