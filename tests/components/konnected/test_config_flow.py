@@ -31,7 +31,7 @@ async def test_flow_works(hass, mock_panel):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_panel.get_status.return_value = {
@@ -41,7 +41,7 @@ async def test_flow_works(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel",
@@ -53,7 +53,7 @@ async def test_flow_works(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["host"] == "1.2.3.4"
     assert result["data"]["port"] == 1234
     assert result["data"]["model"] == "Konnected"
@@ -68,7 +68,7 @@ async def test_pro_flow_works(hass, mock_panel):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # pro uses chipId instead of MAC as unique id
@@ -80,7 +80,7 @@ async def test_pro_flow_works(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel Pro",
@@ -92,7 +92,7 @@ async def test_pro_flow_works(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["host"] == "1.2.3.4"
     assert result["data"]["port"] == 1234
     assert result["data"]["model"] == "Konnected Pro"
@@ -124,7 +124,7 @@ async def test_ssdp(hass, mock_panel):
         ),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel",
@@ -265,21 +265,21 @@ async def test_import_no_host_user_finish(hass, mock_panel):
             "id": "aabbccddeeff",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "import_confirm"
     assert result["description_placeholders"]["id"] == "aabbccddeeff"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # confirm user is prompted to enter host
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"host": "1.1.1.1", "port": 1234}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel Pro",
@@ -292,7 +292,7 @@ async def test_import_no_host_user_finish(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_import_ssdp_host_user_finish(hass, mock_panel):
@@ -332,7 +332,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
             "id": "somechipid",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "import_confirm"
     assert result["description_placeholders"]["id"] == "somechipid"
 
@@ -356,7 +356,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "model": "Konnected Alarm Panel Pro",
@@ -369,7 +369,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_already_configured(hass, mock_panel):
@@ -535,13 +535,13 @@ async def test_import_existing_config(hass, mock_panel):
             }
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "host": "1.2.3.4",
         "port": 1234,
@@ -715,13 +715,13 @@ async def test_import_pin_config(hass, mock_panel):
             }
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "host": "1.2.3.4",
         "port": 1234,
@@ -800,7 +800,7 @@ async def test_option_flow(hass, mock_panel):
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_io"
 
     result = await hass.config_entries.options.async_configure(
@@ -815,7 +815,7 @@ async def test_option_flow(hass, mock_panel):
             "out": "Switchable Output",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
     assert result["description_placeholders"] == {
         "zone": "Zone 2",
@@ -825,7 +825,7 @@ async def test_option_flow(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "door"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
     assert result["description_placeholders"] == {
         "zone": "Zone 6",
@@ -836,7 +836,7 @@ async def test_option_flow(hass, mock_panel):
         result["flow_id"],
         user_input={"type": "window", "name": "winder", "inverse": True},
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_digital"
     assert result["description_placeholders"] == {
         "zone": "Zone 3",
@@ -846,7 +846,7 @@ async def test_option_flow(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "dht"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
     assert result["description_placeholders"] == {
         "zone": "Zone 4",
@@ -857,7 +857,7 @@ async def test_option_flow(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
     assert result["description_placeholders"] == {
         "zone": "OUT",
@@ -877,7 +877,7 @@ async def test_option_flow(hass, mock_panel):
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
     assert result["description_placeholders"] == {
         "zone": "OUT",
@@ -897,7 +897,7 @@ async def test_option_flow(hass, mock_panel):
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_misc"
     # make sure we enforce url format
     result = await hass.config_entries.options.async_configure(
@@ -910,7 +910,7 @@ async def test_option_flow(hass, mock_panel):
         },
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_misc"
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -921,7 +921,7 @@ async def test_option_flow(hass, mock_panel):
             "api_host": "http://overridehost:1111",
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "io": {
             "2": "Binary Sensor",
@@ -986,7 +986,7 @@ async def test_option_flow_pro(hass, mock_panel):
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_io"
 
     result = await hass.config_entries.options.async_configure(
@@ -1001,7 +1001,7 @@ async def test_option_flow_pro(hass, mock_panel):
             "7": "Digital Sensor",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_io_ext"
 
     result = await hass.config_entries.options.async_configure(
@@ -1017,14 +1017,14 @@ async def test_option_flow_pro(hass, mock_panel):
             "alarm2_out2": "Disabled",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
 
     # zone 2
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "door"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
 
     # zone 6
@@ -1032,42 +1032,42 @@ async def test_option_flow_pro(hass, mock_panel):
         result["flow_id"],
         user_input={"type": "window", "name": "winder", "inverse": True},
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
 
     # zone 10
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "door"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
 
     # zone 11
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "window"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_digital"
 
     # zone 3
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "dht"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_digital"
 
     # zone 7
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "ds18b20", "name": "temper"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
 
     # zone 4
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
 
     # zone 8
@@ -1081,21 +1081,21 @@ async def test_option_flow_pro(hass, mock_panel):
             "repeat": 4,
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
 
     # zone out1
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
 
     # zone alarm1
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_misc"
 
     result = await hass.config_entries.options.async_configure(
@@ -1103,7 +1103,7 @@ async def test_option_flow_pro(hass, mock_panel):
         user_input={"discovery": False, "blink": True, "override_api_host": False},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "io": {
             "10": "Binary Sensor",
@@ -1199,7 +1199,7 @@ async def test_option_flow_import(hass, mock_panel):
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_io"
 
     # confirm the defaults are set based on current config - we"ll spot check this throughout
@@ -1216,7 +1216,7 @@ async def test_option_flow_import(hass, mock_panel):
             "3": "Switchable Output",
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_io_ext"
     schema = result["data_schema"]({})
     assert schema["8"] == "Disabled"
@@ -1225,7 +1225,7 @@ async def test_option_flow_import(hass, mock_panel):
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_binary"
 
     # zone 1
@@ -1236,7 +1236,7 @@ async def test_option_flow_import(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "door"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_digital"
 
     # zone 2
@@ -1247,7 +1247,7 @@ async def test_option_flow_import(hass, mock_panel):
         result["flow_id"],
         user_input={"type": "dht"},
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_switch"
 
     # zone 3
@@ -1261,7 +1261,7 @@ async def test_option_flow_import(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"activation": "high", "more_states": "No"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_misc"
 
     schema = result["data_schema"]({})
@@ -1273,7 +1273,7 @@ async def test_option_flow_import(hass, mock_panel):
     )
 
     # verify the updated fields
-    assert result["type"] == "create_entry"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "io": {"1": "Binary Sensor", "2": "Digital Sensor", "3": "Switchable Output"},
         "discovery": True,
@@ -1346,7 +1346,7 @@ async def test_option_flow_existing(hass, mock_panel):
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "options_io"
 
     # confirm the defaults are pulled in from the existing options
