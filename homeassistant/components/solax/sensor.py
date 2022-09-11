@@ -38,55 +38,55 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     (Units.C, False): SensorEntityDescription(
-        key=SensorDeviceClass.TEMPERATURE,
+        key=f"{Units.C}_{False}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.KWH, False): SensorEntityDescription(
-        key=SensorDeviceClass.ENERGY,
+        key=f"{Units.KWH}_{False}",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.KWH, True): SensorEntityDescription(
-        key=f"{SensorDeviceClass.ENERGY}-{SensorStateClass.TOTAL_INCREASING}",
+        key=f"{Units.KWH}_{True}",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (Units.V, False): SensorEntityDescription(
-        key=SensorDeviceClass.VOLTAGE,
+        key=f"{Units.V}_{False}",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.A, False): SensorEntityDescription(
-        key=SensorDeviceClass.CURRENT,
+        key=f"{Units.A}_{False}",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.W, False): SensorEntityDescription(
-        key=SensorDeviceClass.POWER,
+        key=f"{Units.W}_{False}",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.PERCENT, False): SensorEntityDescription(
-        key=SensorDeviceClass.BATTERY,
+        key=f"{Units.PERCENT}_{False}",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.HZ, False): SensorEntityDescription(
-        key=SensorDeviceClass.FREQUENCY,
+        key=f"{Units.HZ}_{False}",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=FREQUENCY_HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (Units.NONE, False): SensorEntityDescription(
-        key="none",
+        key=f"{Units.NONE}_{False}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -131,7 +131,7 @@ class RealTimeDataEndpoint:
 
     def __init__(self, hass: HomeAssistant, api: RealTimeAPI) -> None:
         """Initialize the sensor."""
-        self.hass: HomeAssistant = hass
+        self.hass = hass
         self.api = api
         self.ready = asyncio.Event()
         self.sensors: list[Inverter] = []
