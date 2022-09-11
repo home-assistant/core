@@ -30,7 +30,7 @@ MAX_CONCURRENCY = 3
 WEMO_MODEL_DISPATCH = {
     "Bridge": [Platform.LIGHT],
     "CoffeeMaker": [Platform.SWITCH],
-    "Dimmer": [Platform.LIGHT],
+    "Dimmer": [Platform.LIGHT, Platform.NUMBER],
     "Humidifier": [Platform.FAN],
     "Insight": [Platform.BINARY_SENSOR, Platform.SWITCH],
     "LightSwitch": [Platform.SWITCH],
