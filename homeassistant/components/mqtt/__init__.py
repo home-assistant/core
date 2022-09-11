@@ -249,8 +249,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     Causes for this is config entry options changing.
     """
     mqtt_data: MqttData = hass.data[DATA_MQTT]
-    if not (client := mqtt_data.client):
-        return
+    assert (client := mqtt_data.client) is not None
 
     if (conf := mqtt_data.config) is None:
         conf = CONFIG_SCHEMA_BASE(dict(entry.data))
@@ -369,9 +368,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 return
 
-        await mqtt_data.client.async_publish(  # type: ignore [union-attr]
-            msg_topic, payload, qos, retain  # type: ignore [arg-type]
-        )
+        assert mqtt_data.client is not None and msg_topic is not None
+        await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
@@ -583,7 +581,8 @@ def async_subscribe_connection_status(
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     mqtt_data: MqttData = hass.data[DATA_MQTT]
-    return mqtt_data.client.connected if mqtt_data.client else False
+    assert mqtt_data.client is not None
+    return mqtt_data.client.connected
 
 
 async def async_remove_config_entry_device(
@@ -600,7 +599,9 @@ async def async_remove_config_entry_device(
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
     mqtt_data: MqttData = hass.data[DATA_MQTT]
-    mqtt_client = cast(MQTT, mqtt_data.client)
+    assert mqtt_data.client is not None
+    mqtt_client = mqtt_data.client
+
     # Unload publish and dump services.
     hass.services.async_remove(
         DOMAIN,

@@ -280,7 +280,9 @@ class MqttData:
     client: MQTT | None = None
     config: ConfigType | None = None
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
-    discovery_registry_hooks: dict[tuple, CALLBACK_TYPE] = field(default_factory=dict)
+    discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
+        default_factory=dict
+    )
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
@@ -617,7 +619,8 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         mqtt_data: MqttData = self.hass.data[DATA_MQTT]
-        client = cast(MQTT, mqtt_data.client)
+        assert mqtt_data.client is not None
+        client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
             return False
         if not self._avail_topics:
@@ -653,7 +656,7 @@ async def cleanup_device_registry(
         )
 
 
-def get_discovery_hash(discovery_data: dict) -> tuple:
+def get_discovery_hash(discovery_data: dict) -> tuple[str, str]:
     """Get the discovery hash from the discovery data."""
     return discovery_data[ATTR_DISCOVERY_HASH]
 
@@ -917,7 +920,7 @@ class MqttDiscoveryUpdate(Entity):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         if self._discovery_data is not None:
-            discovery_hash: tuple = self._discovery_data[ATTR_DISCOVERY_HASH]
+            discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
             if self.registry_entry is not None:
                 self._registry_hooks[
                     discovery_hash

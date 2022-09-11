@@ -340,7 +340,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 def try_connection(
     hass: HomeAssistant,
     broker: str,
-    port,
+    port: int,
     username: str | None,
     password: str | None,
     protocol="3.1",
@@ -362,7 +362,7 @@ def try_connection(
     }
     client = MqttClientSetup({**yaml_config, **entry_config}).client
 
-    result = queue.Queue(maxsize=1)  # type: ignore [var-annotated]
+    result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(client_, userdata, flags, result_code):
         """Handle connection result."""

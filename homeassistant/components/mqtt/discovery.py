@@ -84,12 +84,12 @@ class MQTTConfig(dict):
     discovery_data: dict
 
 
-def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
+def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
-def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple):
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]):
     """Clear entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
 
