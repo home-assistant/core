@@ -121,7 +121,7 @@ aiobafi6==0.7.2
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.11
+aiodiscover==1.4.13
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
