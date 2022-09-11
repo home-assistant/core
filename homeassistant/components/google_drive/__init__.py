@@ -83,10 +83,8 @@ async def async_setup_drive_service(hass: HomeAssistant) -> None:
         try:
             sheet = service.open_by_key(entry.unique_id)
         except RefreshError as ex:
-            _LOGGER.warning("Token not accepted, please reauthenticate: %s", ex)
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from ex
+            entry.async_start_reauth(hass)
+            raise ex
         worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
         row_data = {"created": str(datetime.now())} | call.data[DATA]
         columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
