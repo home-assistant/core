@@ -1,9 +1,6 @@
 """Config flow to configure the Bravia TV integration."""
 from __future__ import annotations
 
-from contextlib import suppress
-import ipaddress
-import re
 from typing import Any
 
 from aiohttp import CookieJar
@@ -17,6 +14,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.network import is_host_valid
 
 from . import BraviaTVCoordinator
 from .const import (
@@ -28,15 +26,6 @@ from .const import (
     DOMAIN,
     NICKNAME,
 )
-
-
-def host_valid(host: str) -> bool:
-    """Return True if hostname or IP address is valid."""
-    with suppress(ValueError):
-        if ipaddress.ip_address(host).version in [4, 6]:
-            return True
-    disallowed = re.compile(r"[^a-zA-Z\d\-]")
-    return all(x and not disallowed.search(x) for x in host.split("."))
 
 
 class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -82,7 +71,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            if host_valid(host):
+            if is_host_valid(host):
                 session = async_create_clientsession(
                     self.hass,
                     cookie_jar=CookieJar(unsafe=True, quote_cookie=False),
