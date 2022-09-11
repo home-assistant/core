@@ -1542,7 +1542,7 @@ soco==0.28.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.9
+solax==0.3.0
 
 # homeassistant.components.honeywell
 somecomfort==0.8.0
