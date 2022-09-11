@@ -70,10 +70,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def ensure_pin(value):
     """Check if valid pin and coerce to string."""
-    if value is None:
+    if value is None:  # pragma: no cover
         raise vol.Invalid("pin value is None")
 
-    if PIN_TO_ZONE.get(str(value)) is None:
+    if PIN_TO_ZONE.get(str(value)) is None:  # pragma: no cover
         raise vol.Invalid("pin not valid")
 
     return str(value)
@@ -81,10 +81,10 @@ def ensure_pin(value):
 
 def ensure_zone(value):
     """Check if valid zone and coerce to string."""
-    if value is None:
+    if value is None:  # pragma: no cover
         raise vol.Invalid("zone value is None")
 
-    if str(value) not in ZONES is None:
+    if str(value) not in ZONES is None:  # pragma: no cover
         raise vol.Invalid("zone not valid")
 
     return str(value)
@@ -329,7 +329,7 @@ class KonnectedView(HomeAssistantView):
 
         try:  # Konnected 2.2.0 and above supports JSON payloads
             payload = await request.json()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError:  # pragma: no cover
             _LOGGER.error(
                 "Your Konnected device software may be out of "
                 "date. Visit https://help.konnected.io for "
