@@ -31,7 +31,6 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRAILER = "trailer"
-MEDIA_TYPE_GENERIC_VIDEO = "video"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8096
@@ -218,7 +217,7 @@ class EmbyDevice(MediaPlayerEntity):
         if media_type == "Music":
             return MediaType.MUSIC
         if media_type == "Video":
-            return MEDIA_TYPE_GENERIC_VIDEO
+            return MediaType.VIDEO
         if media_type == "Audio":
             return MediaType.MUSIC
         if media_type == "TvChannel":
