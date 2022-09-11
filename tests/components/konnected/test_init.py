@@ -489,6 +489,11 @@ async def test_api(hass, hass_client_no_auth, mock_panel):
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin unknown not configured"}
 
+    resp = await client.get("/api/konnected/device/112233445566?zone=6")
+    assert resp.status == HTTPStatus.OK  # get binary value
+    result = await resp.json()
+    assert result == {"state": 0, "zone": "6"}
+
     resp = await client.get("/api/konnected/device/112233445566?zone=8")
     assert resp.status == HTTPStatus.NOT_FOUND  # invalid zone
     result = await resp.json()
