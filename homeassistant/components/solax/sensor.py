@@ -4,7 +4,9 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from solax.inverter import InverterError
+from solax import RealTimeAPI
+from solax.discovery import InverterError
+from solax.units import Total, Units
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
@@ -25,13 +26,23 @@ DEFAULT_PORT = 80
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
+DEVICE_CLASS_MAPPING = {
+    Units.C: SensorDeviceClass.TEMPERATURE,
+    Units.KWH: SensorDeviceClass.ENERGY,
+    Units.V: SensorDeviceClass.VOLTAGE,
+    Units.A: SensorDeviceClass.CURRENT,
+    Units.W: SensorDeviceClass.POWER,
+    Units.PERCENT: SensorDeviceClass.BATTERY,
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Entry setup."""
-    api = hass.data[DOMAIN][entry.entry_id]
+    api = hass.data[DOMAIN][entry.entry_id]  # type: RealTimeAPI
     resp = await api.get_data()
     serial = resp.serial_number
     version = resp.version
@@ -39,27 +50,15 @@ async def async_setup_entry(
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
-    for sensor, (idx, unit) in api.inverter.sensor_map().items():
-        device_class = state_class = None
-        if unit == "C":
-            device_class = SensorDeviceClass.TEMPERATURE
+    for sensor, (idx, measurement) in api.inverter.sensor_map().items():
+        state_class = None
+        device_class = DEVICE_CLASS_MAPPING.get(measurement.unit, None)
+        if device_class:
             state_class = SensorStateClass.MEASUREMENT
-            unit = TEMP_CELSIUS
-        elif unit == "kWh":
-            device_class = SensorDeviceClass.ENERGY
-            state_class = SensorStateClass.TOTAL_INCREASING
-        elif unit == "V":
-            device_class = SensorDeviceClass.VOLTAGE
-            state_class = SensorStateClass.MEASUREMENT
-        elif unit == "A":
-            device_class = SensorDeviceClass.CURRENT
-            state_class = SensorStateClass.MEASUREMENT
-        elif unit == "W":
-            device_class = SensorDeviceClass.POWER
-            state_class = SensorStateClass.MEASUREMENT
-        elif unit == "%":
-            device_class = SensorDeviceClass.BATTERY
-            state_class = SensorStateClass.MEASUREMENT
+            if isinstance(sensor, Total):
+                state_class = SensorStateClass.TOTAL_INCREASING
+            unit = measurement.unit.value
+
         uid = f"{serial}-{idx}"
         devices.append(
             Inverter(uid, serial, version, sensor, unit, state_class, device_class)
