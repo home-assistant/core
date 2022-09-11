@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from typing import Dict, Tuple
 
 from solax import RealTimeAPI
 from solax.discovery import InverterError
@@ -11,6 +12,7 @@ from solax.units import Units
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -19,6 +21,15 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
+    ELECTRIC_CURRENT_AMPERE,
+    POWER_WATT,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
+)
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -26,13 +37,59 @@ DEFAULT_PORT = 80
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-DEVICE_CLASS_MAPPING = {
-    Units.C: SensorDeviceClass.TEMPERATURE,
-    Units.KWH: SensorDeviceClass.ENERGY,
-    Units.V: SensorDeviceClass.VOLTAGE,
-    Units.A: SensorDeviceClass.CURRENT,
-    Units.W: SensorDeviceClass.POWER,
-    Units.PERCENT: SensorDeviceClass.BATTERY,
+SENSOR_DESCRIPTIONS: Dict[Tuple[Units, bool], SensorEntityDescription] = {
+    (Units.C, False): SensorEntityDescription(
+        key=SensorDeviceClass.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.KWH, False): SensorEntityDescription(
+        key=SensorDeviceClass.ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.KWH, True): SensorEntityDescription(
+        key=f'{SensorDeviceClass.ENERGY}-{SensorStateClass.TOTAL_INCREASING}',
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    (Units.V, False): SensorEntityDescription(
+        key=SensorDeviceClass.VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.A, False): SensorEntityDescription(
+        key=SensorDeviceClass.CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.W, False): SensorEntityDescription(
+        key=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.PERCENT, False): SensorEntityDescription(
+        key=SensorDeviceClass.BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.HZ, False): SensorEntityDescription(
+        key=SensorDeviceClass.FREQUENCY,
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (Units.NONE, False): SensorEntityDescription(
+        key='none',
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
@@ -51,14 +108,7 @@ async def async_setup_entry(
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
-        state_class = None
-        device_class = DEVICE_CLASS_MAPPING.get(measurement.unit, None)
-        if device_class:
-            if measurement.is_monotonic:
-                state_class = SensorStateClass.TOTAL_INCREASING
-            else:
-                state_class = SensorStateClass.MEASUREMENT
-        unit = measurement.unit.value
+        description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]
 
         uid = f"{serial}-{idx}"
         devices.append(
@@ -68,9 +118,9 @@ async def async_setup_entry(
                 serial,
                 version,
                 sensor,
-                unit,
-                state_class,
-                device_class,
+                description.native_unit_of_measurement,
+                description.state_class,
+                description.device_class,
             )
         )
     endpoint.sensors = devices
