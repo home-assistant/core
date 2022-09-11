@@ -6,12 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .config_entry import (  # noqa: F401
-    ScannerEntity,
-    TrackerEntity,
-    async_setup_entry,
-    async_unload_entry,
-)
+from .config_entry import async_setup_entry, async_unload_entry  # noqa: F401
 from .const import (  # noqa: F401
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
