@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import konnected, ssdp
 from homeassistant.components.konnected import config_flow
 
@@ -149,7 +149,7 @@ async def test_ssdp(hass, mock_panel):
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
     # Test abort if invalid data
@@ -165,7 +165,7 @@ async def test_ssdp(hass, mock_panel):
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
     # Test abort if invalid manufacturer
@@ -183,7 +183,7 @@ async def test_ssdp(hass, mock_panel):
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_konn_panel"
 
     # Test abort if invalid model
@@ -201,7 +201,7 @@ async def test_ssdp(hass, mock_panel):
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_konn_panel"
 
     # Test abort if already configured
@@ -225,7 +225,7 @@ async def test_ssdp(hass, mock_panel):
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -350,7 +350,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
             },
         ),
     )
-    assert ssdp_result["type"] == "abort"
+    assert ssdp_result["type"] == data_entry_flow.FlowResultType.ABORT
     assert ssdp_result["reason"] == "already_in_progress"
 
     result = await hass.config_entries.flow.async_configure(
@@ -397,7 +397,7 @@ async def test_ssdp_already_configured(hass, mock_panel):
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -477,7 +477,7 @@ async def test_ssdp_host_update(hass, mock_panel):
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
     # confirm the host value was updated, access_token was not
     entry = hass.config_entries.async_entries(config_flow.DOMAIN)[0]
@@ -663,7 +663,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
         },
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
     # We should have updated the host info but not the access token
     assert len(hass.config_entries.async_entries("konnected")) == 1
