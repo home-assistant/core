@@ -477,7 +477,12 @@ async def test_api(hass, hass_client_no_auth, mock_panel):
     assert resp.status == HTTPStatus.NOT_FOUND  # no device provided
 
     resp = await client.get("/api/konnected/223344556677")
+    assert resp.status == HTTPStatus.NOT_FOUND  # no device part provided
+
+    resp = await client.get("/api/konnected/device/223344556677")
     assert resp.status == HTTPStatus.NOT_FOUND  # unknown device provided
+    result = await resp.json()
+    assert result == {"message": "Device 223344556677 not configured"}
 
     resp = await client.get("/api/konnected/device/112233445566")
     assert resp.status == HTTPStatus.NOT_FOUND  # no zone provided
