@@ -9,12 +9,7 @@ from switchbee.device import DeviceType
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -22,13 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_DEFUALT_ALLOWED,
-    CONF_DEVICES,
-    CONF_SWITCHES_AS_LIGHTS,
-    DOMAIN,
-    SCAN_INTERVAL_SEC,
-)
+from .const import CONF_DEFUALT_ALLOWED, CONF_DEVICES, CONF_SWITCHES_AS_LIGHTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,12 +113,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ]
 
         data_schema = {
-            vol.Required(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, SCAN_INTERVAL_SEC
-                ),
-            ): cv.positive_int,
             vol.Required(
                 CONF_DEVICES,
                 default=self.config_entry.options.get(

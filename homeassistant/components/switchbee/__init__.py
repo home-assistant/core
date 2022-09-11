@@ -9,13 +9,7 @@ from switchbee.api import CentralUnitAPI, SwitchBeeError
 from switchbee.device import DeviceType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -46,8 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         devices_map[device]
         for device in entry.options.get(CONF_DEVICES, CONF_DEFUALT_ALLOWED)
     ]
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SEC)
-
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = CentralUnitAPI(central_unit, user, password, websession)
     try:
@@ -56,7 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     coordinator = SwitchBeeCoordinator(
-        hass, api, scan_interval, allowed_devices, entry.data[CONF_SWITCHES_AS_LIGHTS]
+        hass,
+        api,
+        SCAN_INTERVAL_SEC,
+        allowed_devices,
+        entry.data[CONF_SWITCHES_AS_LIGHTS],
     )
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(update_listener))

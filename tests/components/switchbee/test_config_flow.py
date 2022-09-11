@@ -4,23 +4,16 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.switchbee.config_flow import DeviceType, SwitchBeeError
 from homeassistant.components.switchbee.const import CONF_SWITCHES_AS_LIGHTS, DOMAIN
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_FORM, FlowResultType
 
-from .test_data import (
+from tests.common import MockConfigEntry
+from tests.components.switchbee import (
     MOCK_FAILED_TO_LOGIN_MSG,
     MOCK_GET_CONFIGURATION,
     MOCK_INVALID_TOKEN_MGS,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -200,12 +193,10 @@ async def test_option_flow(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 10,
             CONF_DEVICES: [DeviceType.Switch.display, DeviceType.GroupSwitch.display],
         },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
-        CONF_SCAN_INTERVAL: 10,
         CONF_DEVICES: [DeviceType.Switch.display, DeviceType.GroupSwitch.display],
     }

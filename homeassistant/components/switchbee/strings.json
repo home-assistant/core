@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "SwitchBee",
     "step": {
       "user": {
         "description": "Setup SwitchBee integration with Home Assistant.",
@@ -24,7 +23,6 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Polling interval in seconds",
           "devices": "Devices to include"
         }
       }

@@ -8,7 +8,6 @@
           "invalid_auth": "Failed to Authenticate with the Central Unit",
           "unknown": "Unexpected error"
       },
-      "flow_title": "{name}",
       "step": {
           "user": {
               "data": {
@@ -25,7 +24,6 @@
       "step": {
         "init": {
           "data": {
-            "scan_interval": "Polling interval in seconds",
             "devices": "Devices to include"
           }
         }
