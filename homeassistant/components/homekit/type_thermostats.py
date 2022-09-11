@@ -3,8 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_THERMOSTAT
 
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -41,6 +40,7 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
