@@ -436,7 +436,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.2
+bluetooth-auto-recovery==0.3.3
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -1844,7 +1844,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.19
+pysensibo==1.0.20
 
 # homeassistant.components.serial
 # homeassistant.components.zha
