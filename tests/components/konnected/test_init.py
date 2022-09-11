@@ -588,6 +588,16 @@ async def test_api(hass, hass_client_no_auth, mock_panel):
     result = await resp.json()
     assert result == {"message": "ok"}
 
+    # Test the wrong key in json payload
+    resp = await client.put(
+        "/api/konnected/device/112233445566",
+        headers={"Authorization": "Bearer abcdefgh"},
+        json={"zoneWRONGKEY": "14", "state": 1},
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result == {"message": "unregistered sensor/actuator"}
+
 
 async def test_state_updates_zone(hass, hass_client_no_auth, mock_panel):
     """Test callback view."""
