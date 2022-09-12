@@ -757,10 +757,10 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.mill
-mill-local==0.1.1
+mill-local==0.2.0
 
 # homeassistant.components.mill
-millheater==0.10.0
+millheater==0.9.0
 
 # homeassistant.components.minio
 minio==5.0.10
