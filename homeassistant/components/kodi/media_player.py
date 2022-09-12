@@ -7,7 +7,6 @@ from functools import wraps
 import logging
 import re
 from typing import Any, TypeVar
-import urllib.parse
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
@@ -17,28 +16,14 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseError,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_SEASON,
-    MEDIA_TYPE_TRACK,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_URL,
-    MEDIA_TYPE_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -51,10 +36,6 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -113,28 +94,28 @@ WEBSOCKET_WATCHDOG_INTERVAL = timedelta(seconds=10)
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
-    "music": MEDIA_TYPE_MUSIC,
-    "artist": MEDIA_TYPE_MUSIC,
-    "album": MEDIA_TYPE_MUSIC,
-    "song": MEDIA_TYPE_MUSIC,
-    "video": MEDIA_TYPE_VIDEO,
-    "set": MEDIA_TYPE_PLAYLIST,
-    "musicvideo": MEDIA_TYPE_VIDEO,
-    "movie": MEDIA_TYPE_MOVIE,
-    "tvshow": MEDIA_TYPE_TVSHOW,
-    "season": MEDIA_TYPE_TVSHOW,
-    "episode": MEDIA_TYPE_TVSHOW,
+    "music": MediaType.MUSIC,
+    "artist": MediaType.MUSIC,
+    "album": MediaType.MUSIC,
+    "song": MediaType.MUSIC,
+    "video": MediaType.VIDEO,
+    "set": MediaType.PLAYLIST,
+    "musicvideo": MediaType.VIDEO,
+    "movie": MediaType.MOVIE,
+    "tvshow": MediaType.TVSHOW,
+    "season": MediaType.TVSHOW,
+    "episode": MediaType.TVSHOW,
     # Type 'channel' is used for radio or tv streams from pvr
-    "channel": MEDIA_TYPE_CHANNEL,
+    "channel": MediaType.CHANNEL,
     # Type 'audio' is used for audio media, that Kodi couldn't scroblle
-    "audio": MEDIA_TYPE_MUSIC,
+    "audio": MediaType.MUSIC,
 }
 
-MAP_KODI_MEDIA_TYPES = {
-    MEDIA_TYPE_MOVIE: "movieid",
-    MEDIA_TYPE_EPISODE: "episodeid",
-    MEDIA_TYPE_SEASON: "seasonid",
-    MEDIA_TYPE_TVSHOW: "tvshowid",
+MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
+    MediaType.MOVIE: "movieid",
+    MediaType.EPISODE: "episodeid",
+    MediaType.SEASON: "seasonid",
+    MediaType.TVSHOW: "tvshowid",
 }
 
 
@@ -260,7 +241,7 @@ def cmd(
             await func(obj, *args, **kwargs)
         except (TransportError, ProtocolError) as exc:
             # If Kodi is off, we expect calls to fail.
-            if obj.state == STATE_OFF:
+            if obj.state == MediaPlayerState.OFF:
                 log_function = _LOGGER.debug
             else:
                 log_function = _LOGGER.error
@@ -381,18 +362,18 @@ class KodiEntity(MediaPlayerEntity):
         )
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._kodi_is_off:
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         if self._no_active_players:
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         if self._properties["speed"] == 0:
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
-        return STATE_PLAYING
+        return MediaPlayerState.PLAYING
 
     async def async_added_to_hass(self) -> None:
         """Connect the websocket if needed."""
@@ -704,11 +685,11 @@ class KodiEntity(MediaPlayerEntity):
 
     @cmd
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_URL
+            media_type = MediaType.URL
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
@@ -716,27 +697,27 @@ class KodiEntity(MediaPlayerEntity):
 
         media_type_lower = media_type.lower()
 
-        if media_type_lower == MEDIA_TYPE_CHANNEL:
+        if media_type_lower == MediaType.CHANNEL:
             await self._kodi.play_channel(int(media_id))
-        elif media_type_lower == MEDIA_TYPE_PLAYLIST:
+        elif media_type_lower == MediaType.PLAYLIST:
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "file":
             await self._kodi.play_file(media_id)
         elif media_type_lower == "directory":
             await self._kodi.play_directory(media_id)
         elif media_type_lower in [
-            MEDIA_TYPE_ARTIST,
-            MEDIA_TYPE_ALBUM,
-            MEDIA_TYPE_TRACK,
+            MediaType.ARTIST,
+            MediaType.ALBUM,
+            MediaType.TRACK,
         ]:
             await self.async_clear_playlist()
             await self.async_add_to_playlist(media_type_lower, media_id)
             await self._kodi.play_playlist(0)
         elif media_type_lower in [
-            MEDIA_TYPE_MOVIE,
-            MEDIA_TYPE_EPISODE,
-            MEDIA_TYPE_SEASON,
-            MEDIA_TYPE_TVSHOW,
+            MediaType.MOVIE,
+            MediaType.EPISODE,
+            MediaType.SEASON,
+            MediaType.TVSHOW,
         ]:
             await self._kodi.play_item(
                 {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
@@ -797,11 +778,11 @@ class KodiEntity(MediaPlayerEntity):
 
     async def async_add_to_playlist(self, media_type, media_id):
         """Add media item to default playlist (i.e. playlistid=0)."""
-        if media_type == MEDIA_TYPE_ARTIST:
+        if media_type == MediaType.ARTIST:
             await self._kodi.add_artist_to_playlist(int(media_id))
-        elif media_type == MEDIA_TYPE_ALBUM:
+        elif media_type == MediaType.ALBUM:
             await self._kodi.add_album_to_playlist(int(media_id))
-        elif media_type == MEDIA_TYPE_TRACK:
+        elif media_type == MediaType.TRACK:
             await self._kodi.add_song_to_playlist(int(media_id))
 
     async def async_add_media_to_playlist(
@@ -920,7 +901,7 @@ class KodiEntity(MediaPlayerEntity):
 
             return self.get_browse_image_url(
                 media_content_type,
-                urllib.parse.quote_plus(media_content_id),
+                media_content_id,
                 media_image_id,
             )
 

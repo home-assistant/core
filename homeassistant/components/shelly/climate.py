@@ -8,9 +8,10 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 import async_timeout
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

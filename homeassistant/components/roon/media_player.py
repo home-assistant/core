@@ -8,18 +8,13 @@ from roonapi import split_media_path
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_DEFAULT_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import (
@@ -106,7 +101,7 @@ class RoonDevice(MediaPlayerEntity):
         self._available = True
         self._last_position_update = None
         self._supports_standby = False
-        self._state = STATE_IDLE
+        self._state = MediaPlayerState.IDLE
         self._unique_id = None
         self._zone_id = None
         self._output_id = None
@@ -172,12 +167,12 @@ class RoonDevice(MediaPlayerEntity):
         if not self.player_data["is_available"]:
             # this player was removed
             self._available = False
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
         else:
             self._available = True
             # determine player state
             self.update_state()
-            if self.state == STATE_PLAYING:
+            if self.state == MediaPlayerState.PLAYING:
                 self._last_position_update = utcnow()
 
     @classmethod
@@ -254,20 +249,20 @@ class RoonDevice(MediaPlayerEntity):
                 if source["supports_standby"] and source["status"] != "indeterminate":
                     self._supports_standby = True
                     if source["status"] in ["standby", "deselected"]:
-                        new_state = STATE_OFF
+                        new_state = MediaPlayerState.OFF
                     break
         # determine player state
         if not new_state:
             if self.player_data["state"] == "playing":
-                new_state = STATE_PLAYING
+                new_state = MediaPlayerState.PLAYING
             elif self.player_data["state"] == "loading":
-                new_state = STATE_PLAYING
+                new_state = MediaPlayerState.PLAYING
             elif self.player_data["state"] == "stopped":
-                new_state = STATE_IDLE
+                new_state = MediaPlayerState.IDLE
             elif self.player_data["state"] == "paused":
-                new_state = STATE_PAUSED
+                new_state = MediaPlayerState.PAUSED
             else:
-                new_state = STATE_IDLE
+                new_state = MediaPlayerState.IDLE
         self._state = new_state
         self._unique_id = self.player_data["dev_id"]
         self._zone_id = self.player_data["zone_id"]
