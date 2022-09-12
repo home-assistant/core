@@ -12,12 +12,7 @@ from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
 from homeassistant.components import media_source, plex, spotify
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_ALBUM,
-)
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
@@ -159,7 +154,7 @@ def build_item_response(
     media_library: MusicLibrary, payload: dict[str, str], get_thumbnail_url=None
 ) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
-    if payload["search_type"] == MEDIA_TYPE_ALBUM and payload["idstring"].startswith(
+    if payload["search_type"] == MediaType.ALBUM and payload["idstring"].startswith(
         ("A:GENRE", "A:COMPOSER")
     ):
         payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
@@ -191,7 +186,7 @@ def build_item_response(
     # Fetch album info for titles and thumbnails
     # Can't be extracted from track info
     if (
-        payload["search_type"] == MEDIA_TYPE_ALBUM
+        payload["search_type"] == MediaType.ALBUM
         and media[0].item_class == "object.item.audioItem.musicTrack"
     ):
         item = get_media(media_library, payload["idstring"], SONOS_ALBUM_ARTIST)
@@ -271,7 +266,7 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Favorites",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
                 thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
@@ -286,7 +281,7 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Music Library",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="library",
                 thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
@@ -299,7 +294,7 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Plex",
-                media_class=MEDIA_CLASS_APP,
+                media_class=MediaClass.APP,
                 media_content_id="",
                 media_content_type="plex",
                 thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
@@ -337,7 +332,7 @@ async def root_payload(
 
     return BrowseMedia(
         title="Sonos",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="root",
         can_play=False,
@@ -359,7 +354,7 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
 
     return BrowseMedia(
         title="Music Library",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         can_play=False,
@@ -397,7 +392,7 @@ def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
 
     return BrowseMedia(
         title="Favorites",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="favorites",
         can_play=False,
@@ -433,7 +428,7 @@ def favorites_folder_payload(
 
     return BrowseMedia(
         title=content_type.title(),
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="favorites",
         can_play=False,

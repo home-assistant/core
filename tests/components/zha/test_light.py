@@ -176,7 +176,7 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE2,
-        manufacturer="Sengled",
+        manufacturer="sengled",
         nwk=0xC79E,
     )
     color_cluster = zigpy_device.endpoints[1].light_color

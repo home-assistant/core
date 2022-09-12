@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.5
+PySwitchbot==0.19.6
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -329,7 +329,10 @@ bellows==0.33.1
 bimmer_connected==0.10.2
 
 # homeassistant.components.bluetooth
-bleak==0.16.0
+bleak-retry-connector==1.15.0
+
+# homeassistant.components.bluetooth
+bleak==0.17.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -1738,7 +1741,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.0
+xiaomi-ble==0.9.3
 
 # homeassistant.components.knx
 xknx==1.0.2
