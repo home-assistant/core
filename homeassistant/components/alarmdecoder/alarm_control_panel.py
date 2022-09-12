@@ -125,6 +125,10 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
             "programming_mode": message.programming_mode,
             "ready": message.ready,
             "zone_bypassed": message.zone_bypassed,
+            "mask": message.mask,
+            "alarm_sounding": message.alarm_sounding,
+            "fire_alarm": message.fire_alarm,
+            "panel_type": message.panel_type
         }
         self.schedule_update_ha_state()
 
