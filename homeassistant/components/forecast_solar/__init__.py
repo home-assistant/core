@@ -16,6 +16,7 @@ from .const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_HORIZON,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
@@ -45,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         azimuth=(entry.options[CONF_AZIMUTH] - 180),
         kwp=(entry.options[CONF_MODULES_POWER] / 1000),
         damping=entry.options.get(CONF_DAMPING, 0),
+        horizon=entry.options.get(CONF_HORIZON),
         inverter=inverter_size,
     )
 

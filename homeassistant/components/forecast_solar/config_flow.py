@@ -15,6 +15,7 @@ from .const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_HORIZON,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
@@ -127,6 +128,14 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                             )
                         },
                     ): vol.Coerce(int),
+                    vol.Optional(
+                        CONF_HORIZON,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_HORIZON
+                            )
+                        },
+                    ): str,
                 }
             ),
         )
