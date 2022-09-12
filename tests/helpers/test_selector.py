@@ -254,7 +254,12 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
-        {"mode": "slider", "step": "any"},  # Can't combine slider with step any
+        {
+            "mode": "slider",
+            "min": 0,
+            "max": 1,
+            "step": "any",  # Can't combine slider with step any
+        },
     ),
 )
 def test_number_selector_schema_error(schema):
