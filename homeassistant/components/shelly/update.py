@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_SLEEP_PERIOD
+from .const import BLOCK, CONF_SLEEP_PERIOD, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
@@ -34,8 +34,8 @@ LOGGER = logging.getLogger(__name__)
 class RpcUpdateRequiredKeysMixin:
     """Class for RPC update required keys."""
 
-    installed_version: Callable[[dict, dict], str]
-    latest_version: Callable[[dict, dict], str]
+    installed_version: Callable[[dict, dict | None], Any]
+    latest_version: Callable[[dict, dict | None], Any]
     install: Callable
 
 
@@ -43,8 +43,8 @@ class RpcUpdateRequiredKeysMixin:
 class RestUpdateRequiredKeysMixin:
     """Class for REST update required keys."""
 
-    installed_version: Callable[[dict, dict], str]
-    latest_version: Callable[[dict, dict], str]
+    installed_version: Callable[[dict, dict | None], Any]
+    latest_version: Callable[[dict, dict | None], Any]
     install: Callable
 
 
@@ -90,7 +90,9 @@ RPC_UPDATES: Final = {
         name="Firmware Update",
         key="sys",
         sub_key="available_updates",
-        installed_version=lambda status, shelly: shelly["ver"],
+        installed_version=lambda status, shelly: shelly["ver"]
+        if shelly is not None
+        else None,
         latest_version=lambda status, shelly: status.get("stable", {"version": None})[
             "version"
         ],
@@ -103,7 +105,9 @@ RPC_UPDATES: Final = {
         name="Beta Firmware Update",
         key="sys",
         sub_key="available_updates",
-        installed_version=lambda status, shelly: shelly["ver"],
+        installed_version=lambda status, shelly: shelly["ver"]
+        if shelly is not None
+        else None,
         latest_version=lambda status, shelly: status.get("beta", {"version": None})[
             "version"
         ],
@@ -145,9 +149,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return self.entity_description.installed_version(
-            self.wrapper.device.status,
-            self.wrapper.device.shelly,
+        return str(
+            self.entity_description.installed_version(
+                self.wrapper.device.status,
+                self.wrapper.device.shelly,
+            )
         )
 
     @property
@@ -158,7 +164,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             self.wrapper.device.shelly,
         )
         if new_version is not None:
-            return new_version
+            return str(new_version)
 
         return self.installed_version
 
@@ -166,7 +172,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
-        await self.entity_description.install(self.wrapper)
+        config_entry = self.wrapper.entry
+        block_wrapper = self.hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+            config_entry.entry_id
+        ].get(BLOCK)
+        await self.entity_description.install(block_wrapper)
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
@@ -178,9 +188,11 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return self.entity_description.installed_version(
-            self.wrapper.device.status[self.key][self.entity_description.sub_key],
-            self.wrapper.device.shelly,
+        return str(
+            self.entity_description.installed_version(
+                self.wrapper.device.status[self.key][self.entity_description.sub_key],
+                self.wrapper.device.shelly,
+            )
         )
 
     @property
@@ -191,7 +203,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self.wrapper.device.shelly,
         )
         if new_version is not None:
-            return new_version
+            return str(new_version)
 
         return self.installed_version
 
