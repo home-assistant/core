@@ -487,15 +487,6 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
-        # Update properties before we generate the entity_id
-        if update_before_add:
-            try:
-                await entity.async_device_update(warning=False)
-            except Exception:  # pylint: disable=broad-except
-                self.logger.exception("%s: Error on device update!", self.platform_name)
-                entity.add_to_platform_abort()
-                return
-
         suggested_object_id: str | None = None
         generate_new_entity_id = False
 
@@ -634,6 +625,17 @@ class EntityPlatform:
             # If entity already registered, convert entity id to suggestion
             suggested_object_id = split_entity_id(entity.entity_id)[1]
             generate_new_entity_id = True
+
+        # Update properties before we generate the entity_id
+        if update_before_add and (
+            not entity.registry_entry or not entity.registry_entry.disabled
+        ):
+            try:
+                await entity.async_device_update(warning=False)
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("%s: Error on device update!", self.platform_name)
+                entity.add_to_platform_abort()
+                return
 
         # Generate entity ID
         if entity.entity_id is None or generate_new_entity_id:

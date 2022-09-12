@@ -154,6 +154,26 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
     assert not ent.update.called
 
 
+async def test_update_state_adds_entities_with_update_before_add_disabled(hass):
+    """Test if not call update for disabled entities."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    entity_disabled = MockEntity(
+        unique_id="disabled", entity_registry_enabled_default=False
+    )
+    entity_disabled.update = Mock(spec_set=True)
+
+    await component.async_add_entities([entity_disabled], True)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 0
+    assert not entity_disabled.update.called
+
+    registry = er.async_get(hass)
+    entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
+    assert entry_disabled.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_platform(mock_track, hass):
     """Test the setting of the scan interval via platform."""
