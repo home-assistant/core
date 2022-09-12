@@ -293,7 +293,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 )
 
             if self.entity_id is not None:
-                self._hass.bus.fire(
+                self._hass.bus.async_fire(
                     "xiaomi_aqara.motion", {"entity_id": self.entity_id}
                 )
 
@@ -479,7 +479,7 @@ class XiaomiVibration(XiaomiBinarySensor):
             _LOGGER.warning("Unsupported movement_type detected: %s", value)
             return False
 
-        self.hass.bus.fire(
+        self.hass.bus.async_fire(
             "xiaomi_aqara.movement",
             {"entity_id": self.entity_id, "movement_type": value},
         )
@@ -539,7 +539,7 @@ class XiaomiButton(XiaomiBinarySensor):
             _LOGGER.warning("Unsupported click_type detected: %s", value)
             return False
 
-        self._hass.bus.fire(
+        self._hass.bus.async_fire(
             "xiaomi_aqara.click",
             {"entity_id": self.entity_id, "click_type": click_type},
         )
@@ -576,7 +576,7 @@ class XiaomiCube(XiaomiBinarySensor):
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if self._data_key in data:
-            self._hass.bus.fire(
+            self._hass.bus.async_fire(
                 "xiaomi_aqara.cube_action",
                 {"entity_id": self.entity_id, "action_type": data[self._data_key]},
             )
@@ -588,7 +588,7 @@ class XiaomiCube(XiaomiBinarySensor):
                 if isinstance(data["rotate"], int)
                 else data["rotate"].replace(",", ".")
             )
-            self._hass.bus.fire(
+            self._hass.bus.async_fire(
                 "xiaomi_aqara.cube_action",
                 {
                     "entity_id": self.entity_id,
@@ -604,7 +604,7 @@ class XiaomiCube(XiaomiBinarySensor):
                 if isinstance(data["rotate_degree"], int)
                 else data["rotate_degree"].replace(",", ".")
             )
-            self._hass.bus.fire(
+            self._hass.bus.async_fire(
                 "xiaomi_aqara.cube_action",
                 {
                     "entity_id": self.entity_id,

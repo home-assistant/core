@@ -276,12 +276,9 @@ class XiaomiDevice(Entity):
             self._is_gateway = False
             self._device_id = self._sid
 
-    def _add_push_data_job(self, *args):
-        self.hass.add_job(self.push_data, *args)
-
     async def async_added_to_hass(self):
         """Start unavailability tracking."""
-        self._xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self._xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self._async_track_unavailable()
 
     @property
