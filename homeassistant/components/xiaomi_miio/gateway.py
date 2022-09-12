@@ -182,7 +182,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
     @callback
     def push_callback(self, action, params):
         """Push from subdevice."""
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to push server callbacks and install the callbacks on the gateway."""
