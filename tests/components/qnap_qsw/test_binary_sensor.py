@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from homeassistant.components.qnap_qsw.const import ATTR_MESSAGE
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 
 from .util import async_init_integration
 
@@ -15,6 +16,7 @@ async def test_qnap_qsw_create_binary_sensors(
     """Test creation of binary sensors."""
 
     await async_init_integration(hass)
+    er = entity_registry.async_get(hass)
 
     state = hass.states.get("binary_sensor.qsw_m408_4c_anomaly")
     assert state.state == STATE_OFF
@@ -22,6 +24,8 @@ async def test_qnap_qsw_create_binary_sensors(
 
     state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_1_link")
     assert state.state == STATE_OFF
+    entry = er.async_get(state.entity_id)
+    assert entry.unique_id == "qsw_unique_id_ports-status_lacp_port_1_link"
 
     state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_2_link")
     assert state.state == STATE_OFF
@@ -40,6 +44,8 @@ async def test_qnap_qsw_create_binary_sensors(
 
     state = hass.states.get("binary_sensor.qsw_m408_4c_port_1_link")
     assert state.state == STATE_ON
+    entry = er.async_get(state.entity_id)
+    assert entry.unique_id == "qsw_unique_id_ports-status_port_1_link"
 
     state = hass.states.get("binary_sensor.qsw_m408_4c_port_2_link")
     assert state.state == STATE_ON
