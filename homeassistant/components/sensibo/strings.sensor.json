@@ -6,7 +6,7 @@
     },
     "sensibo__smart_type": {
       "temperature": "Temperature",
-      "feelsLike": "Feels Like",
+      "feelslike": "Feels like",
       "humidity": "Humidity"
     }
   }
