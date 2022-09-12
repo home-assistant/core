@@ -173,6 +173,14 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         extra_fn=lambda data: data.smart_high_state,
         entity_registry_enabled_default=False,
     ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_type",
+        device_class="sensibo__smart_type",
+        name="Climate React type",
+        value_fn=lambda data: data.smart_type,
+        extra_fn=None,
+        entity_registry_enabled_default=False,
+    ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
 
