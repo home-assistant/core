@@ -112,7 +112,6 @@ async def async_attach_trigger(
             and not to_match
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
-            assert to_s is not None
             hass.async_run_hass_job(
                 job,
                 {
@@ -127,7 +126,7 @@ async def async_attach_trigger(
                         "description": description,
                     }
                 },
-                to_s.context,
+                to_s.context if to_s else None,
             )
 
     return async_track_state_change_event(hass, entity_id, zone_automation_listener)
