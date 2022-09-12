@@ -432,7 +432,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         def event_callback(action, params):
             """Event from subdevice."""
             _LOGGER.debug("Got new event_callback: %s, %s", action, params)
-            hass.bus.fire(
+            hass.bus.async_fire(
                 f"{DOMAIN}_event",
                 {"device_id": device_id, "type": action, "params": params},
             )
