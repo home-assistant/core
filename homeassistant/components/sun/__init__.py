@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from astral.location import Location
+from astral.location import Elevation, Location
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -121,23 +121,21 @@ class Sun(Entity):
     entity_id = ENTITY_ID
 
     location: Location
+    elevation: Elevation
+    next_rising: datetime
+    next_setting: datetime
     next_dawn: datetime
     next_dusk: datetime
     next_midnight: datetime
     next_noon: datetime
-    next_rising: datetime
-    next_setting: datetime
     solar_elevation: float
+    solar_azimuth: float
     rising: bool
     _next_change: datetime
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the sun."""
         self.hass = hass
-        self.location = None
-        self.elevation = 0.0
-        self._state = None
-        self.solar_azimuth = None
         self.phase: str | None = None
 
         self._config_listener: CALLBACK_TYPE | None = None
