@@ -31,7 +31,7 @@ from ..helpers import (
     get_device_id,
     get_home_and_node_id_from_device_entry,
 )
-from .helpers import async_bypass_dynamic_config_validation
+from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
