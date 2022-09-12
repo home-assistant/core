@@ -386,13 +386,8 @@ class ZWaveListSensor(ZwaveSensorBase):
             config_entry, driver, info, entity_description, unit_of_measurement
         )
 
-        property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True,
-            alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[property_key_name] if property_key_name else None,
-        )
+        self._attr_name = self.generate_name(include_value_name=True)
 
     @property
     def native_value(self) -> str | None:

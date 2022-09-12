@@ -133,22 +133,27 @@ class ZWaveBaseEntity(Entity):
         if additional_info is None:
             additional_info = []
         name = ""
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description
+            and self.entity_description.name
+        ):
+            name = self.entity_description.name
+
         if name_prefix:
-            name = name_prefix
+            name = f"{name_prefix} {name}".strip()
+
+        value_name = ""
         if include_value_name:
             value_name = (
                 alternate_value_name
                 or self.info.primary_value.metadata.label
                 or self.info.primary_value.property_key_name
                 or self.info.primary_value.property_name
+                or ""
             )
-            if name:
-                name = f"{name}: {value_name}"
-            else:
-                name = value_name or ""
-        for item in additional_info:
-            if item:
-                name += f" - {item}"
+        name = f"{name} {value_name}".strip()
+        name = f"{name} {' '.join(additional_info)}".strip()
         # append endpoint if > 1
         if (
             self.info.primary_value.endpoint is not None
