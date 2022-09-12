@@ -1187,7 +1187,7 @@ class MediaPlayerImageView(HomeAssistantView):
 async def websocket_browse_media(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """
     Browse media available to the media_player entity.
