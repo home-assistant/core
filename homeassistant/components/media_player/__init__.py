@@ -135,8 +135,6 @@ from .const import (  # noqa: F401
 )
 from .errors import BrowseError
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -221,7 +219,7 @@ ATTR_TO_PROPERTY = [
 
 
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """
     Return true if specified media player entity_id is on.
 
@@ -372,7 +370,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Remove in Home Assistant 2022.9
-    def _rewrite_enqueue(value):
+    def _rewrite_enqueue(value: dict[str, Any]) -> dict[str, Any]:
         """Rewrite the enqueue value."""
         if ATTR_MEDIA_ENQUEUE not in value:
             pass
@@ -1186,7 +1184,11 @@ class MediaPlayerImageView(HomeAssistantView):
     }
 )
 @websocket_api.async_response
-async def websocket_browse_media(hass, connection, msg):
+async def websocket_browse_media(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """
     Browse media available to the media_player entity.
 
@@ -1213,6 +1215,7 @@ async def websocket_browse_media(hass, connection, msg):
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
     except NotImplementedError:
+        assert player.platform
         _LOGGER.error(
             "%s allows media browsing but its integration (%s) does not",
             player.entity_id,
@@ -1234,11 +1237,12 @@ async def websocket_browse_media(hass, connection, msg):
 
     # For backwards compat
     if isinstance(payload, BrowseMedia):
-        payload = payload.as_dict()
+        result = payload.as_dict()
     else:
+        result = payload  # type: ignore[unreachable]
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
-    connection.send_result(msg["id"], payload)
+    connection.send_result(msg["id"], result)
 
 
 async def async_fetch_image(
