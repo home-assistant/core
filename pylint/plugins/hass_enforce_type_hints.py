@@ -2072,6 +2072,42 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "stt": [
+        ClassTypeHintMatch(
+            base_class="Provider",
+            matches=[
+                TypeHintMatch(
+                    function_name="supported_languages",
+                    return_type="list[str]",
+                ),
+                TypeHintMatch(
+                    function_name="supported_formats",
+                    return_type="list[AudioFormats]",
+                ),
+                TypeHintMatch(
+                    function_name="supported_codecs",
+                    return_type="list[AudioCodecs]",
+                ),
+                TypeHintMatch(
+                    function_name="supported_bit_rates",
+                    return_type="list[AudioBitRates]",
+                ),
+                TypeHintMatch(
+                    function_name="supported_sample_rates",
+                    return_type="list[AudioSampleRates]",
+                ),
+                TypeHintMatch(
+                    function_name="supported_channels",
+                    return_type="list[AudioChannels]",
+                ),
+                TypeHintMatch(
+                    function_name="async_process_audio_stream",
+                    arg_types={1: "SpeechMetadata", 2: "StreamReader"},
+                    return_type="SpeechResult",
+                ),
+            ],
+        ),
+    ],
     "switch": [
         ClassTypeHintMatch(
             base_class="Entity",
