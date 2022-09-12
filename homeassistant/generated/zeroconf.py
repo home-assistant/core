@@ -411,6 +411,12 @@ ZEROCONF = {
             "name": "*zigate*"
         }
     ],
+    "_zigstar_gw._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigstar*"
+        }
+    ],
     "_zwave-js-server._tcp.local.": [
         {
             "domain": "zwave_js"

@@ -91,6 +91,10 @@
     {
       "type": "_zigate-zigbee-gateway._tcp.local.",
       "name": "*zigate*"
+    },
+    {
+      "type": "_zigstar_gw._tcp.local.",
+      "name": "*zigstar*"
     }
   ],
   "dependencies": ["file_upload"],
