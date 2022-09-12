@@ -2,13 +2,15 @@
 import logging
 from typing import Any
 
+from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import ApiStateCommand, DeviceType
+from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -45,16 +47,37 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, SwitchEntity):
     """Representation of an Switchbee switch."""
 
-    def __init__(self, hass, device, coordinator):
+    def __init__(self, hass, device: SwitchBeeBaseDevice, coordinator):
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
-        self._attr_name = f"{device.zone} {device.name}"
+        self._attr_name = f"{device.name}"
         self._device_id = device.id
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
         self._attr_is_on = False
         self._attr_available = True
         self._attr_has_entity_name = True
+        self._device = device
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            name=f"SwitchBee_{str(self._device.unit_id)}",
+            identifiers={
+                (
+                    DOMAIN,
+                    f"SwitchBee_{str(self._device.unit_id)}_{self.coordinator.mac_formated}",
+                )
+            },
+            manufacturer=SWITCHBEE_BRAND,
+            model=self.coordinator.api.module_display(self._device.unit_id),
+            suggested_area=self._device.zone,
+            via_device=(
+                DOMAIN,
+                f"{self.coordinator.api.name} ({self.coordinator.api.mac})",
+            ),
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
