@@ -58,24 +58,20 @@ class Device(CoordinatorEntity, SwitchEntity):
         self._attr_available = True
         self._attr_has_entity_name = True
         self._device = device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            name=f"SwitchBee_{str(self._device.unit_id)}",
+        self._attr_device_info = DeviceInfo(
+            name=f"SwitchBee_{str(device.unit_id)}",
             identifiers={
                 (
                     DOMAIN,
-                    f"SwitchBee_{str(self._device.unit_id)}_{self.coordinator.mac_formated}",
+                    f"{str(device.unit_id)}-{coordinator.mac_formated}",
                 )
             },
             manufacturer=SWITCHBEE_BRAND,
-            model=self.coordinator.api.module_display(self._device.unit_id),
-            suggested_area=self._device.zone,
+            model=coordinator.api.module_display(device.unit_id),
+            suggested_area=device.zone,
             via_device=(
                 DOMAIN,
-                f"{self.coordinator.api.name} ({self.coordinator.api.mac})",
+                f"{coordinator.api.name} ({coordinator.api.mac})",
             ),
         )
 

@@ -11,12 +11,12 @@
       "step": {
           "user": {
             "description": "Setup SwitchBee integration with Home Assistant.",
-              "data": {
-                  "host": "Central Unit IP address",
-                  "username": "User (e-mail)",
-                  "password": "Password",
-                  "switch_as_light": "Initialize switches as light entities"
-              }
+            "data": {
+                "host": "Central Unit IP address",
+                "username": "User (e-mail)",
+                "password": "Password",
+                "switch_as_light": "Initialize switches as light entities"
+            }
           }
       }
   },
