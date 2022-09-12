@@ -173,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await multicast.start_listen()
 
             # register stop callback to shutdown listining for local pushes
-            def stop_xiaomi(event):
+            async def stop_xiaomi(event):
                 """Stop Xiaomi Socket."""
                 _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
                 multicast.stop_listen()
