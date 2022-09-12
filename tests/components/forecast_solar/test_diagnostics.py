@@ -30,6 +30,7 @@ async def test_diagnostics(
                 "modules power": 5100,
                 "damping": 0.5,
                 "inverter_size": 2000,
+                "horizon": "0,0,0,0,0,0,10,20,20,20,20,20",
             },
         },
         "data": {
