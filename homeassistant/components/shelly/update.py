@@ -1,22 +1,31 @@
 """Update entities for Netgear devices."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
-from typing import Final, cast, Any, Callable
+from typing import Any, Callable, Final
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
-    UpdateEntityFeature,
     UpdateEntityDescription,
+    UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR_FIRMWARE, KEY_ROUTER
-from .router import NetgearRouter, NetgearRouterEntity
+from .const import CONF_SLEEP_PERIOD
+from .entity import (
+    RestEntityDescription,
+    RpcEntityDescription,
+    ShellyRestAttributeEntity,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_rest,
+    async_setup_entry_rpc,
+)
+from .utils import get_device_entry_gen
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +38,7 @@ class RpcUpdateRequiredKeysMixin:
     latest_version: Callable[[dict, dict], str]
     install: Callable
 
+
 @dataclass
 class RestUpdateRequiredKeysMixin:
     """Class for REST update required keys."""
@@ -37,12 +47,18 @@ class RestUpdateRequiredKeysMixin:
     latest_version: Callable[[dict, dict], str]
     install: Callable
 
-@dataclass
-class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription, RpcUpdateRequiredKeysMixin):
-    """Class to describe a RPC update."""
 
 @dataclass
-class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin):
+class RpcUpdateDescription(
+    RpcEntityDescription, UpdateEntityDescription, RpcUpdateRequiredKeysMixin
+):
+    """Class to describe a RPC update."""
+
+
+@dataclass
+class RestUpdateDescription(
+    RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin
+):
     """Class to describe a REST update."""
 
 
@@ -75,7 +91,9 @@ RPC_UPDATES: Final = {
         key="sys",
         sub_key="available_updates",
         installed_version=lambda status, shelly: shelly["ver"],
-        latest_version=lambda status, shelly: status.get("stable", {"version": ""})["version"],
+        latest_version=lambda status, shelly: status.get("stable", {"version": ""})[
+            "version"
+        ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -86,13 +104,16 @@ RPC_UPDATES: Final = {
         key="sys",
         sub_key="available_updates",
         installed_version=lambda status, shelly: shelly["ver"],
-        latest_version=lambda status, shelly: status.get("beta", {"version": ""})["version"],
+        latest_version=lambda status, shelly: status.get("beta", {"version": ""})[
+            "version"
+        ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
 }
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -115,7 +136,6 @@ async def async_setup_entry(
         )
 
 
-
 class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     """Represent a REST update entity."""
 
@@ -126,7 +146,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return self.entity_description.installed_version(
-            self.wrapper.device.status[self.key][self.entity_description.sub_key],
+            self.wrapper.device.status,
             self.wrapper.device.shelly,
         )
 
@@ -134,7 +154,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.entity_description.latest_version(
-            self.wrapper.device.status[self.key][self.entity_description.sub_key],
+            self.wrapper.device.status,
             self.wrapper.device.shelly,
         )
 
