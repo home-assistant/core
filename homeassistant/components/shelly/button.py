@@ -38,21 +38,6 @@ class ShellyButtonDescription(ButtonEntityDescription, ShellyButtonDescriptionMi
 
 BUTTONS: Final = [
     ShellyButtonDescription(
-        key="ota_update",
-        name="OTA Update",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.async_trigger_ota_update(),
-    ),
-    ShellyButtonDescription(
-        key="ota_update_beta",
-        name="OTA Update Beta",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
-    ),
-    ShellyButtonDescription(
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
