@@ -56,11 +56,6 @@ class Device(CoordinatorEntity, SwitchEntity):
         self._attr_available = True
         self._attr_has_entity_name = True
 
-    @property
-    def available(self) -> bool:
-        """Available."""
-        return self._attr_available
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

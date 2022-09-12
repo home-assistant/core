@@ -8,12 +8,9 @@ from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_FORM, FlowResultType
 
+from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_GET_CONFIGURATION, MOCK_INVALID_TOKEN_MGS
+
 from tests.common import MockConfigEntry
-from tests.components.switchbee import (
-    MOCK_FAILED_TO_LOGIN_MSG,
-    MOCK_GET_CONFIGURATION,
-    MOCK_INVALID_TOKEN_MGS,
-)
 
 
 async def test_form(hass):
@@ -48,7 +45,6 @@ async def test_form(hass):
         )
         await hass.async_block_till_done()
 
-    print(result2)
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
