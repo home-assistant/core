@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
 
     # Create push server
-    if KEY_PUSH_SERVER not in hass.data[DOMAIN]:
+    if KEY_PUSH_SERVER not in hass.data[DOMAIN] and entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         push_server = PushServer(host)
         hass.data[DOMAIN][KEY_PUSH_SERVER] = push_server
         # start the async push server (only once)
@@ -534,10 +534,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, platforms
     )
 
-    _LOGGER.debug("Removing subscribtions from miio device memory")
-    push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
-    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    await push_server.unregister_miio_device(device)
+    if KEY_PUSH_SERVER in hass.data[DOMAIN]:
+        _LOGGER.debug("Removing subscribtions from miio device memory")
+        push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
+        device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+        await push_server.unregister_miio_device(device)
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -547,7 +548,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.state == ConfigEntryState.LOADED
     ]
-    if len(loaded_entries) == 1:
+    if len(loaded_entries) == 1 and KEY_PUSH_SERVER in hass.data[DOMAIN]:
         # No miio devices left, stop push server
         unsub_stop = hass.data[DOMAIN].pop(KEY_PUSH_SERVER_STOP)
         unsub_stop()
