@@ -144,13 +144,13 @@ class Sun(Entity):
         self._config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
-        self.update_location()
+        self.update_location(initial=True)
 
     @callback
-    def update_location(self, _: Event | None = None) -> None:
+    def update_location(self, _: Event | None = None, initial: bool = False) -> None:
         """Update location."""
         location, elevation = get_astral_location(self.hass)
-        if location == self.location:
+        if not initial and location == self.location:
             return
         self.location = location
         self.elevation = elevation
