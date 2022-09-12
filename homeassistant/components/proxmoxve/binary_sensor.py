@@ -5,13 +5,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, ProxmoxEntity, device_info
-from .const import CONF_LXC, CONF_NODE, CONF_QEMU, ProxmoxKeyAPIParse, ProxmoxType
+from .const import CONF_LXC, CONF_QEMU, ProxmoxKeyAPIParse, ProxmoxType
 
 
 async def async_setup_entry(
@@ -82,7 +81,7 @@ def create_binary_sensor(
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
-        unique_id=f"{config_entry.data[CONF_HOST]}_{config_entry.data[CONF_PORT]}_{config_entry.data[CONF_NODE]}_{vm_id}_{key}",
+        unique_id=f"{config_entry.entry_id}_{vm_id}_{key}",
         name=name,
         icon="",
         device_class=BinarySensorDeviceClass.RUNNING,
