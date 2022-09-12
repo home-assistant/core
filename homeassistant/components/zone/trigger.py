@@ -64,8 +64,8 @@ async def async_attach_trigger(
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     entity_id: list[str] = config[CONF_ENTITY_ID]
-    zone_entity_id = config[CONF_ZONE]
-    event = config[CONF_EVENT]
+    zone_entity_id: str = config[CONF_ZONE]
+    event: str = config[CONF_EVENT]
     job = HassJob(action)
 
     @callback
