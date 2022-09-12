@@ -50,6 +50,7 @@ from .const import (
     INTEGRATION_NAME,
     LOGGER,
     PROXMOX_CLIENT,
+    ProxmoxKeyAPIParse,
     ProxmoxType,
 )
 
@@ -59,7 +60,7 @@ PLATFORMS = [
 
 COORDINATOR_UPDATE_INTERVAL_MAP = {
     ProxmoxType.Proxmox: timedelta(minutes=60),
-    ProxmoxType.Node: timedelta(minutes=30),
+    ProxmoxType.Node: timedelta(seconds=60),
     ProxmoxType.QEMU: timedelta(seconds=60),
     ProxmoxType.LXC: timedelta(seconds=60),
 }
@@ -330,6 +331,8 @@ def get_data_node(proxmox, node):
             if node_api["node"] == node:
                 api_status["status"] = node_api["status"]
                 api_status["cpu_node"] = node_api["cpu"]
+                api_status["maxdisk"] = node_api["maxdisk"]
+                api_status["disk"] = node_api["disk"]
                 break
     return api_status
 
@@ -347,38 +350,47 @@ def parse_api_proxmox(status, api_category):
 
     if api_category == ProxmoxType.Proxmox:
         return {
-            "version": status["version"],
+            ProxmoxKeyAPIParse.VERSION: status["version"],
         }
 
     if api_category is ProxmoxType.Node:
         return {
-            "status": status["status"],
-            "uptime": status["uptime"],
-            "model": status["cpuinfo"]["model"],
-            "cpu": status["cpu_node"],
-            "memory_used": status["memory"]["used"],
-            "memory_total": status["memory"]["total"],
-            "memory_free": status["memory"]["free"],
-            "swap_total": status["swap"]["total"],
-            "swap_free": status["swap"]["free"],
+            ProxmoxKeyAPIParse.STATUS: status["status"],
+            ProxmoxKeyAPIParse.UPTIME: status["uptime"],
+            ProxmoxKeyAPIParse.MODEL: status["cpuinfo"]["model"],
+            ProxmoxKeyAPIParse.CPU: status["cpu_node"],
+            ProxmoxKeyAPIParse.MEMORY_USED: status["memory"]["used"],
+            ProxmoxKeyAPIParse.MEMORY_TOTAL: status["memory"]["total"],
+            ProxmoxKeyAPIParse.MEMORY_FREE: status["memory"]["free"],
+            ProxmoxKeyAPIParse.SWAP_TOTAL: status["swap"]["total"],
+            ProxmoxKeyAPIParse.SWAP_FREE: status["swap"]["free"],
+            ProxmoxKeyAPIParse.DISK_USED: status["disk"],
+            ProxmoxKeyAPIParse.DISK_TOTAL: status["maxdisk"],
         }
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
-        if api_category == ProxmoxType.QEMU and status["status"] == "running":
+        if "freemem" in status:
             memory_free = status["freemem"]
+        else:
+            memory_free = status["maxmem"] - status["mem"]
+
+        health = None
+        if "qmpstatus" in status:
+            health = status["qmpstatus"]
 
         return {
-            "status": status["status"],
-            "uptime": status["uptime"],
-            "name": status["name"],
-            "cpu": status["cpu"],
-            "memory_total": status["maxmem"],
-            "memory_used": status["mem"],
-            "memory_free": memory_free,
-            "network_in": status["netin"],
-            "network_out": status["netout"],
-            "disk_total": status["maxdisk"],
-            "disk_used": status["disk"],
+            ProxmoxKeyAPIParse.STATUS: status["status"],
+            ProxmoxKeyAPIParse.HEALTH: health,
+            ProxmoxKeyAPIParse.UPTIME: status["uptime"],
+            ProxmoxKeyAPIParse.NAME: status["name"],
+            ProxmoxKeyAPIParse.CPU: status["cpu"],
+            ProxmoxKeyAPIParse.MEMORY_TOTAL: status["maxmem"],
+            ProxmoxKeyAPIParse.MEMORY_USED: status["mem"],
+            ProxmoxKeyAPIParse.MEMORY_FREE: memory_free,
+            ProxmoxKeyAPIParse.NETWORK_IN: status["netin"],
+            ProxmoxKeyAPIParse.NETWORK_OUT: status["netout"],
+            ProxmoxKeyAPIParse.DISK_TOTAL: status["maxdisk"],
+            ProxmoxKeyAPIParse.DISK_USED: status["disk"],
         }
 
 
@@ -400,12 +412,12 @@ def device_info(
     proxmox_version = None
     coordinator = coordinators[ProxmoxType.Proxmox]
     if not (coordinator_data := coordinator.data) is None:
-        proxmox_version = f"Proxmox {coordinator_data['version']}"
+        proxmox_version = f"Proxmox {coordinator_data[ProxmoxKeyAPIParse.VERSION]}"
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
         coordinator = coordinators[vm_id]
         if not (coordinator_data := coordinator.data) is None:
-            vm_name = coordinator_data["name"]
+            vm_name = coordinator_data[ProxmoxKeyAPIParse.NAME]
 
         name = f"{node} {vm_name} ({vm_id})"
         host_port_node_vm = f"{host}_{port}_{node}_{vm_id}"
@@ -415,7 +427,7 @@ def device_info(
     elif api_category is ProxmoxType.Node:
         coordinator = coordinators[ProxmoxType.Node]
         if not (coordinator_data := coordinator.data) is None:
-            model_processor = coordinator_data["model"]
+            model_processor = coordinator_data[ProxmoxKeyAPIParse.MODEL]
 
         name = f"Node {node} - {host}:{port}"
         host_port_node_vm = f"{host}_{port}_{node}"
@@ -459,14 +471,14 @@ def device_info(
 class ProxmoxEntity(CoordinatorEntity):
     """Represents any entity created for the Proxmox VE platform."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         unique_id,
         name,
         icon,
-        node_name,
-        vm_id=None,
     ):
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
@@ -476,8 +488,6 @@ class ProxmoxEntity(CoordinatorEntity):
         self._name = name
         self._icon = icon
         self._available = True
-        self._node_name = node_name
-        self._vm_id = vm_id
 
         self._state = None
 

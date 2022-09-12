@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, ProxmoxEntity, device_info
-from .const import CONF_LXC, CONF_NODE, CONF_QEMU, ProxmoxType
+from .const import CONF_LXC, CONF_NODE, CONF_QEMU, ProxmoxKeyAPIParse, ProxmoxType
 
 
 async def async_setup_entry(
@@ -107,7 +107,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         info_device,
     ):
         """Create the binary sensor for vms or containers."""
-        super().__init__(coordinator, unique_id, name, icon, vm_id)
+        super().__init__(coordinator, unique_id, name, icon)
 
         self._attr_device_class = device_class
         self._attr_device_info = info_device
@@ -118,7 +118,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         if (data := self.coordinator.data) is None:
             return None
 
-        return data["status"] == "running"
+        return data[ProxmoxKeyAPIParse.STATUS] == "running"
 
     @property
     def available(self):

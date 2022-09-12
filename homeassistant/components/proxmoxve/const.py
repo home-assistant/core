@@ -32,3 +32,24 @@ class ProxmoxType(StrEnum):
     Node = "node"
     QEMU = "qemu"
     LXC = "lxc"
+
+
+class ProxmoxKeyAPIParse(StrEnum):
+    """Proxmox key of data API parse."""
+
+    VERSION = "version"
+    STATUS = "status"
+    UPTIME = "uptime"
+    MODEL = "model"
+    CPU = "cpu"
+    MEMORY_USED = "memory_used"
+    MEMORY_TOTAL = "memory_total"
+    MEMORY_FREE = "memory_free"
+    SWAP_TOTAL = "swap_total"
+    SWAP_FREE = "swap_free"
+    DISK_USED = "disk_used"
+    DISK_TOTAL = "disk_total"
+    HEALTH = "health"
+    NAME = "name"
+    NETWORK_IN = "network_in"
+    NETWORK_OUT = "network_out"
