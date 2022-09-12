@@ -21,7 +21,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
@@ -74,8 +74,6 @@ from .const import (  # noqa: F401
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
-
-# mypy: allow-untyped-calls
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -16,8 +16,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 DEVICE_CLASS_NONE = "none"
 
 CONF_BAT_LOW = "bat_low"
