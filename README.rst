@@ -1,4 +1,4 @@
-Home Assistant |Chat Status|
+Home Assistant |Chat Status| |OpenSSF Scorecard|
 =================================================================================
 
 Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
@@ -22,6 +22,8 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
    :target: https://discord.gg/c5DvZ4e
+.. |OpenSSF Scorecard| image:: https://api.securityscorecards.dev/projects/github.com/home-assistant/core/badge
+   :target: https://api.securityscorecards.dev/projects/github.com/home-assistant/core
 .. |screenshot-states| image:: https://raw.githubusercontent.com/home-assistant/core/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/
 .. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/docs/screenshot-integrations.png
