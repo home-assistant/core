@@ -77,7 +77,7 @@ REST_UPDATES: Final = {
         name="Beta Firmware Update",
         key="fwupdate",
         installed_version=lambda status, shelly: status["update"]["old_version"],
-        latest_version=lambda status, shelly: status["update"].get("beta_version", ""),
+        latest_version=lambda status, shelly: status["update"].get("beta_version"),
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -91,7 +91,7 @@ RPC_UPDATES: Final = {
         key="sys",
         sub_key="available_updates",
         installed_version=lambda status, shelly: shelly["ver"],
-        latest_version=lambda status, shelly: status.get("stable", {"version": ""})[
+        latest_version=lambda status, shelly: status.get("stable", {"version": None})[
             "version"
         ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
@@ -104,7 +104,7 @@ RPC_UPDATES: Final = {
         key="sys",
         sub_key="available_updates",
         installed_version=lambda status, shelly: shelly["ver"],
-        latest_version=lambda status, shelly: status.get("beta", {"version": ""})[
+        latest_version=lambda status, shelly: status.get("beta", {"version": None})[
             "version"
         ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
@@ -153,10 +153,14 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.entity_description.latest_version(
+        new_version = self.entity_description.latest_version(
             self.wrapper.device.status,
             self.wrapper.device.shelly,
         )
+        if new_version is not None:
+            return new_version
+
+        return self.installed_version
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -182,10 +186,14 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.entity_description.latest_version(
+        new_version = self.entity_description.latest_version(
             self.wrapper.device.status[self.key][self.entity_description.sub_key],
             self.wrapper.device.shelly,
         )
+        if new_version is not None:
+            return new_version
+
+        return self.installed_version
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
