@@ -132,7 +132,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
 
     # Create push server
-    if KEY_PUSH_SERVER not in hass.data[DOMAIN] and entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+    if (
+        KEY_PUSH_SERVER not in hass.data[DOMAIN]
+        and entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
+    ):
         push_server = PushServer(host)
         hass.data[DOMAIN][KEY_PUSH_SERVER] = push_server
         # start the async push server (only once)
