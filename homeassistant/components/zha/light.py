@@ -412,6 +412,8 @@ class BaseLight(LogMixin, light.LightEntity):
                 level=0,
                 transition_time=(transition * 10 or self._DEFAULT_MIN_TRANSITION_TIME),
             )
+            if not isinstance(result, Exception) and result[1] is Status.INVALID_VALUE:
+                result = await self._on_off_channel.off()
         else:
             result = await self._on_off_channel.off()
 
