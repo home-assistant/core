@@ -20,8 +20,11 @@ from zwave_js_server.model.firmware import (
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 
-from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
-from homeassistant.components.update.const import UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
