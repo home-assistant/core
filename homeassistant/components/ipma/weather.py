@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
+from pyipma import IPMAException
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast
 from pyipma.location import Location
@@ -47,6 +48,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -100,7 +102,12 @@ async def async_setup_entry(
     mode = config_entry.data[CONF_MODE]
 
     api = await async_get_api(hass)
-    location = await async_get_location(hass, api, latitude, longitude)
+    try:
+        location = await async_get_location(hass, api, latitude, longitude)
+    except IPMAException as err:
+        raise ConfigEntryNotReady(
+            f"Could not get location for ({latitude},{longitude})"
+        ) from err
 
     # Migrate old unique_id
     @callback
