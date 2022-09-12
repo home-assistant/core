@@ -12,12 +12,12 @@ from typing import Any
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
     history,
     is_entity_recorded,
     statistics,
     util as recorder_util,
 )
-from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
