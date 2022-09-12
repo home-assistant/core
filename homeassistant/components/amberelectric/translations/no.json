@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Ugyldig API-n\u00f8kkel",
+            "unknown_error": "Uventet feil"
+        },
         "step": {
             "site": {
                 "data": {

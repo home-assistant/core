@@ -11,7 +11,7 @@ from homeassistant.components.lovelace.const import EVENT_LOVELACE_UPDATED
 from homeassistant.components.persistent_notification import (
     EVENT_PERSISTENT_NOTIFICATIONS_UPDATED,
 )
-from homeassistant.components.shopping_list import EVENT as EVENT_SHOPPING_LIST_UPDATED
+from homeassistant.components.shopping_list import EVENT_SHOPPING_LIST_UPDATED
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
