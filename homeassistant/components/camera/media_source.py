@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, cast
 
-from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
