@@ -87,8 +87,8 @@ async def async_attach_trigger(
         if (
             from_s
             and not location.has_location(from_s)
-            or not to_s
-            or not location.has_location(to_s)
+            or to_s
+            and not location.has_location(to_s)
         ):
             return
 
@@ -112,6 +112,7 @@ async def async_attach_trigger(
             and not to_match
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
+            assert to_s is not None
             hass.async_run_hass_job(
                 job,
                 {
