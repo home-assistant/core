@@ -1,0 +1,9 @@
+{
+  "domain": "hafas",
+  "name": "HaFAS",
+  "documentation": "https://www.home-assistant.io/integrations/hafas",
+  "dependencies": [],
+  "codeowners": ["@kilimnik"],
+  "requirements": ["pyhafas==0.3.0"],
+  "iot_class": "cloud_polling"
+}
