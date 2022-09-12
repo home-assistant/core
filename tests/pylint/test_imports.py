@@ -90,6 +90,12 @@ def test_good_import(
             "pylint_test",
             "hass-relative-import",
         ),
+        (
+            "homeassistant.components.pylint_test.api.hub",
+            "homeassistant.components.pylint_test.const",
+            "CONSTANT",
+            "hass-relative-import",
+        ),
     ],
 )
 def test_bad_import(
