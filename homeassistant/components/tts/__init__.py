@@ -49,8 +49,6 @@ from homeassistant.util.yaml import load_yaml
 
 from .const import DOMAIN
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 TtsAudioType = tuple[Optional[str], Optional[bytes]]
@@ -86,7 +84,7 @@ _RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 
-def _deprecated_platform(value):
+def _deprecated_platform(value: str) -> str:
     """Validate if platform is deprecated."""
     if value == "google":
         raise vol.Invalid(
@@ -253,7 +251,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if setup_tasks:
         await asyncio.wait(setup_tasks)
 
-    async def async_platform_discovered(platform, info):
+    async def async_platform_discovered(
+        platform: str, info: dict[str, Any] | None
+    ) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
@@ -327,7 +327,7 @@ class SpeechManager:
         """Read file cache and delete files."""
         self.mem_cache = {}
 
-        def remove_files():
+        def remove_files() -> None:
             """Remove files from filesystem."""
             for filename in self.file_cache.values():
                 try:
