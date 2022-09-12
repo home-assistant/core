@@ -26,7 +26,13 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
 
 from . import local_source
-from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
+from .const import (
+    DOMAIN,
+    MEDIA_CLASS_MAP,
+    MEDIA_MIME_TYPES,
+    URI_SCHEME,
+    URI_SCHEME_REGEX,
+)
 from .error import MediaSourceError, Unresolvable
 from .models import BrowseMediaSource, MediaSourceItem, PlayMedia
 
@@ -41,6 +47,8 @@ __all__ = [
     "MediaSourceItem",
     "Unresolvable",
     "MediaSourceError",
+    "MEDIA_CLASS_MAP",
+    "MEDIA_MIME_TYPES",
 ]
 
 
