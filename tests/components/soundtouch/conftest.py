@@ -4,9 +4,9 @@ from requests_mock import Mocker
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.soundtouch.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_NAME
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_1_ID = "020000000001"
 DEVICE_2_ID = "020000000002"
@@ -14,8 +14,8 @@ DEVICE_1_IP = "192.168.42.1"
 DEVICE_2_IP = "192.168.42.2"
 DEVICE_1_URL = f"http://{DEVICE_1_IP}:8090"
 DEVICE_2_URL = f"http://{DEVICE_2_IP}:8090"
-DEVICE_1_NAME = "My Soundtouch 1"
-DEVICE_2_NAME = "My Soundtouch 2"
+DEVICE_1_NAME = "My SoundTouch 1"
+DEVICE_2_NAME = "My SoundTouch 2"
 DEVICE_1_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_1"
 DEVICE_2_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_2"
 
@@ -24,15 +24,29 @@ DEVICE_2_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_2"
 
 
 @pytest.fixture
-def device1_config() -> dict[str, str]:
-    """Mock SoundTouch device 1 config."""
-    yield {CONF_PLATFORM: DOMAIN, CONF_HOST: DEVICE_1_IP, CONF_NAME: DEVICE_1_NAME}
+def device1_config() -> MockConfigEntry:
+    """Mock SoundTouch device 1 config entry."""
+    yield MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DEVICE_1_ID,
+        data={
+            CONF_HOST: DEVICE_1_IP,
+            CONF_NAME: "",
+        },
+    )
 
 
 @pytest.fixture
-def device2_config() -> dict[str, str]:
-    """Mock SoundTouch device 2 config."""
-    yield {CONF_PLATFORM: DOMAIN, CONF_HOST: DEVICE_2_IP, CONF_NAME: DEVICE_2_NAME}
+def device2_config() -> MockConfigEntry:
+    """Mock SoundTouch device 2 config entry."""
+    yield MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DEVICE_2_ID,
+        data={
+            CONF_HOST: DEVICE_2_IP,
+            CONF_NAME: "",
+        },
+    )
 
 
 @pytest.fixture(scope="session")

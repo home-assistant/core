@@ -4,8 +4,11 @@ from typing import Any
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.enums.command import OverkizCommand, OverkizCommandParam
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
-from homeassistant.components.siren.const import ATTR_DURATION
+from homeassistant.components.siren import (
+    ATTR_DURATION,
+    SirenEntity,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

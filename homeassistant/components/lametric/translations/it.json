@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "invalid_discovery_info": "Informazioni di rilevamento non valide ricevute",
+            "link_local_address": "Gli indirizzi locali di collegamento non sono supportati",
+            "missing_configuration": "L'integrazione LaMetric non \u00e8 configurata. Segui la documentazione.",
+            "no_devices": "L'utente autorizzato non dispone di dispositivi LaMetric",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "choice_enter_manual_or_fetch_cloud": {
+                "description": "Un dispositivo LaMetric pu\u00f2 essere configurato in Home Assistant in due modi diversi. \n\nPuoi inserire tu stesso tutte le informazioni sul dispositivo e i token API oppure Home Assistant pu\u00f2 importarli dal tuo account LaMetric.com.",
+                "menu_options": {
+                    "manual_entry": "Inserisci manualmente",
+                    "pick_implementation": "Importa da LaMetric.com (consigliato)"
+                }
+            },
+            "manual_entry": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "host": "Host"
+                },
+                "data_description": {
+                    "api_key": "Puoi trovare questa chiave API nella [pagina dei dispositivi nel tuo account sviluppatore LaMetric](https://developer.lametric.com/user/devices).",
+                    "host": "L'indirizzo IP o il nome host di LaMetric TIME sulla rete."
+                }
+            },
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            },
+            "user_cloud_select_device": {
+                "data": {
+                    "device": "Seleziona il dispositivo LaMetric da aggiungere."
+                }
+            }
+        }
+    },
+    "issues": {
+        "manual_migration": {
+            "description": "L'integrazione LaMetric \u00e8 stata modernizzata: viene ora configurata e inizializzata tramite l'interfaccia utente e le comunicazioni sono ora locali. \n\nSfortunatamente, la migrazione automatica non \u00e8 disponibile, quindi \u00e8 necessario configurare nuovamente LaMetric con Home Assistant. Consulta la documentazione di Home Assistant sull'integrazione LaMetric per sapere come configurarlo. \n\nRimuovere la vecchia configurazione YAML di LaMetric dal file configuration.yaml e riavviare Home Assistant per risolvere questo problema.",
+            "title": "Migrazione manuale richiesta per LaMetric"
+        }
+    }
+}

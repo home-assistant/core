@@ -1,6 +1,5 @@
 """Test the base functions of the media player."""
 import asyncio
-import base64
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -12,39 +11,6 @@ from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.setup import async_setup_component
-
-
-async def test_get_image(hass, hass_ws_client, caplog):
-    """Test get image via WS command."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity."
-        "async_get_media_image",
-        return_value=(b"image", "image/jpeg"),
-    ):
-        await client.send_json(
-            {
-                "id": 5,
-                "type": "media_player_thumbnail",
-                "entity_id": "media_player.bedroom",
-            }
-        )
-
-        msg = await client.receive_json()
-
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["content_type"] == "image/jpeg"
-    assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")
-
-    assert "media_player_thumbnail is deprecated" in caplog.text
 
 
 async def test_get_image_http(hass, hass_client_no_auth):
@@ -314,3 +280,34 @@ async def test_enqueue_alert_exclusive(hass):
             },
             blocking=True,
         )
+
+
+async def test_get_async_get_browse_image_quoting(
+    hass, hass_client_no_auth, hass_ws_client
+):
+    """Test get browse image using media_content_id with special characters.
+
+    async_get_browse_image() should get called with the same string that is
+    passed into get_browse_image_url().
+    """
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_comp = hass.data.get("entity_components", {}).get("media_player")
+    assert entity_comp
+
+    player = entity_comp.get_entity("media_player.bedroom")
+    assert player
+
+    client = await hass_client_no_auth()
+
+    with patch(
+        "homeassistant.components.media_player.MediaPlayerEntity."
+        "async_get_browse_image",
+    ) as mock_browse_image:
+        media_content_id = "a/b c/d+e%2Fg{}"
+        url = player.get_browse_image_url("album", media_content_id)
+        await client.get(url)
+        mock_browse_image.assert_called_with("album", media_content_id, None)

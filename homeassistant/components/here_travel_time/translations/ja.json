@@ -10,7 +10,7 @@
         "step": {
             "destination_coordinates": {
                 "data": {
-                    "destination": "GPS\u5ea7\u6a19\u3068\u3057\u3066\u306e\u76ee\u7684\u5730"
+                    "destination": "GPS \u5ea7\u6a19\u3068\u3057\u3066\u306e\u76ee\u7684\u5730"
                 },
                 "title": "\u76ee\u7684\u5730\u3092\u9078\u629e"
             },
@@ -36,6 +36,13 @@
             "origin_entity_id": {
                 "data": {
                     "origin_entity_id": "\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3\u3092\u4f7f\u7528\u3057\u305f\u539f\u70b9(Origin)"
+                },
+                "title": "\u539f\u70b9(Origin)\u3092\u9078\u629e"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "\u5730\u56f3\u4e0a\u306e\u5834\u6240\u3092\u4f7f\u7528\u3059\u308b",
+                    "origin_entity": "\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3\u3092\u4f7f\u7528\u3059\u308b"
                 },
                 "title": "\u539f\u70b9(Origin)\u3092\u9078\u629e"
             },

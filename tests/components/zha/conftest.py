@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import pytest
 import zigpy
 from zigpy.application import ControllerApplication
+import zigpy.backups
 import zigpy.config
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.device
@@ -15,7 +16,6 @@ from zigpy.state import State
 import zigpy.types
 import zigpy.zdo.types as zdo_t
 
-from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
@@ -55,7 +55,16 @@ def zigpy_app_controller():
     app.ieee.return_value = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
-    type(app).state = PropertyMock(return_value=State())
+    type(app).backups = zigpy.backups.BackupManager(app)
+
+    state = State()
+    state.node_info.ieee = app.ieee.return_value
+    state.network_info.extended_pan_id = app.ieee.return_value
+    state.network_info.pan_id = 0x1234
+    state.network_info.channel = 15
+    state.network_info.network_key.key = zigpy.types.KeyData(range(16))
+    type(app).state = PropertyMock(return_value=state)
+
     return app
 
 
@@ -71,11 +80,14 @@ async def config_entry_fixture(hass):
         },
         options={
             zha_const.CUSTOM_CONFIGURATION: {
+                zha_const.ZHA_OPTIONS: {
+                    zha_const.CONF_ENABLE_ENHANCED_LIGHT_TRANSITION: True,
+                },
                 zha_const.ZHA_ALARM_OPTIONS: {
                     zha_const.CONF_ALARM_ARM_REQUIRES_CODE: False,
                     zha_const.CONF_ALARM_MASTER_CODE: "4321",
                     zha_const.CONF_ALARM_FAILED_TRIES: 2,
-                }
+                },
             }
         },
     )
@@ -188,26 +200,14 @@ def zha_device_joined(hass, setup_zha):
 
 
 @pytest.fixture
-def zha_device_restored(hass, zigpy_app_controller, setup_zha, hass_storage):
+def zha_device_restored(hass, zigpy_app_controller, setup_zha):
     """Return a restored ZHA device."""
 
     async def _zha_device(zigpy_dev, last_seen=None):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
 
         if last_seen is not None:
-            hass_storage[f"{DOMAIN}.storage"] = {
-                "key": f"{DOMAIN}.storage",
-                "version": 1,
-                "data": {
-                    "devices": [
-                        {
-                            "ieee": str(zigpy_dev.ieee),
-                            "last_seen": last_seen,
-                            "name": f"{zigpy_dev.manufacturer} {zigpy_dev.model}",
-                        }
-                    ],
-                },
-            }
+            zigpy_dev.last_seen = last_seen
 
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]

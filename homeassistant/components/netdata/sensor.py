@@ -140,11 +140,11 @@ class NetdataSensor(SensorEntity):
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
@@ -186,11 +186,11 @@ class NetdataAlarms(SensorEntity):
         return "mdi:crosshairs-question"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest alarms from Netdata REST API."""
         await self.netdata.async_update()
         alarms = self.netdata.api.alarms["alarms"]

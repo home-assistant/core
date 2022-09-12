@@ -22,31 +22,31 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
     "sd": (
         ButtonEntityDescription(
             key=DPCode.RESET_DUSTER_CLOTH,
-            name="Reset Duster Cloth",
+            name="Reset duster cloth",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_EDGE_BRUSH,
-            name="Reset Edge Brush",
+            name="Reset edge brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_FILTER,
-            name="Reset Filter",
+            name="Reset filter",
             icon="mdi:air-filter",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_MAP,
-            name="Reset Map",
+            name="Reset map",
             icon="mdi:map-marker-remove",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_ROLL_BRUSH,
-            name="Reset Roll Brush",
+            name="Reset roll brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),

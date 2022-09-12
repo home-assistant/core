@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 
 
@@ -79,9 +80,13 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
         """Turn off state."""
         self._state = STATE_OFF
 
+    def standby(self):
+        """Put device in standby."""
+        self._state = STATE_STANDBY
+
     def toggle(self):
         """Toggle the power on the media player."""
-        if self._state in [STATE_OFF, STATE_IDLE]:
+        if self._state in [STATE_OFF, STATE_IDLE, STATE_STANDBY]:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
@@ -138,6 +143,10 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
         """Turn off state."""
         self._state = STATE_OFF
 
+    def standby(self):
+        """Put device in standby."""
+        self._state = STATE_STANDBY
+
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
 def player(hass, request):
@@ -188,3 +197,7 @@ async def test_toggle(player):
     assert player.state == STATE_ON
     await player.async_toggle()
     assert player.state == STATE_OFF
+    player.standby()
+    assert player.state == STATE_STANDBY
+    await player.async_toggle()
+    assert player.state == STATE_ON

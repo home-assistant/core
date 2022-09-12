@@ -11,60 +11,22 @@ from pytautulli import (
     PyTautulliApiSession,
     PyTautulliApiUser,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    DATA_KILOBITS,
-    PERCENTAGE,
-)
+from homeassistant.const import DATA_KILOBITS, PERCENTAGE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import TautulliEntity
-from .const import (
-    ATTR_TOP_USER,
-    CONF_MONITORED_USERS,
-    DEFAULT_NAME,
-    DEFAULT_PATH,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-)
+from .const import ATTR_TOP_USER, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
-
-# Deprecated in Home Assistant 2022.4
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
 
 
 def get_top_stats(
@@ -98,14 +60,14 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="watching_count",
-        name="Tautulli",
+        name="Watching",
         native_unit_of_measurement="Watching",
         value_fn=lambda home_stats, activity, _: cast(int, activity.stream_count),
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="stream_count_direct_play",
-        name="Direct Plays",
+        name="Direct plays",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
@@ -116,7 +78,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="stream_count_direct_stream",
-        name="Direct Streams",
+        name="Direct streams",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
@@ -137,7 +99,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     ),
     TautulliSensorEntityDescription(
         key="total_bandwidth",
-        name="Total Bandwidth",
+        name="Total bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_KILOBITS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -145,7 +107,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     ),
     TautulliSensorEntityDescription(
         key="lan_bandwidth",
-        name="LAN Bandwidth",
+        name="LAN bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_KILOBITS,
         entity_registry_enabled_default=False,
@@ -154,7 +116,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     ),
     TautulliSensorEntityDescription(
         key="wan_bandwidth",
-        name="WAN Bandwidth",
+        name="WAN bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_KILOBITS,
         entity_registry_enabled_default=False,
@@ -164,21 +126,21 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:movie-open",
         key="top_movies",
-        name="Top Movie",
+        name="Top movie",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:television",
         key="top_tv",
-        name="Top TV Show",
+        name="Top TV show",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:walk",
         key=ATTR_TOP_USER,
-        name="Top User",
+        name="Top user",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
@@ -208,7 +170,7 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
     ),
     TautulliSessionSensorEntityDescription(
         key="full_title",
-        name="Full Title",
+        name="Full title",
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.full_title),
     ),
@@ -222,7 +184,7 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
     ),
     TautulliSessionSensorEntityDescription(
         key="stream_resolution",
-        name="Stream Resolution",
+        name="Stream resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.stream_video_resolution),
@@ -230,21 +192,21 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
     TautulliSessionSensorEntityDescription(
         icon="mdi:plex",
         key="transcode_decision",
-        name="Transcode Decision",
+        name="Transcode decision",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.transcode_decision),
     ),
     TautulliSessionSensorEntityDescription(
         key="session_thumb",
-        name="session Thumbnail",
+        name="session thumbnail",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.user_thumb),
     ),
     TautulliSessionSensorEntityDescription(
         key="video_resolution",
-        name="Video Resolution",
+        name="Video resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.video_resolution),
@@ -322,7 +284,6 @@ class TautulliSessionSensor(TautulliEntity, SensorEntity):
         super().__init__(coordinator, description, user)
         entry_id = coordinator.config_entry.entry_id
         self._attr_unique_id = f"{entry_id}_{user.user_id}_{description.key}"
-        self._attr_name = f"{user.username} {description.name}"
 
     @property
     def native_value(self) -> StateType:

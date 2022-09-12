@@ -1,6 +1,9 @@
 """BleBox climate entity."""
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from datetime import timedelta
+from typing import Any
+
+from homeassistant.components.climate import (
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -11,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(
@@ -69,7 +74,7 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
         """Return the desired thermostat temperature."""
         return self._feature.desired
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate entity mode."""
         if hvac_mode == HVACMode.HEAT:
             await self._feature.async_on()
@@ -77,7 +82,7 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
 
         await self._feature.async_off()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the thermostat temperature."""
         value = kwargs[ATTR_TEMPERATURE]
         await self._feature.async_set_temperature(value)

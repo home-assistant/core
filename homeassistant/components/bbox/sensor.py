@@ -136,7 +136,7 @@ class BboxUptimeSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self.bbox_data = bbox_data
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
         self._attr_native_value = utcnow() - timedelta(
@@ -155,7 +155,7 @@ class BboxSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self.bbox_data = bbox_data
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
         sensor_type = self.entity_description.key

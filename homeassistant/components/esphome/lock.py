@@ -29,10 +29,6 @@ async def async_setup_entry(
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     """A lock implementation for ESPHome."""
 
@@ -53,21 +49,25 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
             return self._static_info.code_format
         return None
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._state.state == LockState.LOCKED
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._state.state == LockState.LOCKING
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._state.state == LockState.UNLOCKING
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""

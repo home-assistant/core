@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "database_engine": "Motor de Base de Dados",
+            "database_version": "Vers\u00e3o de Base de Dados"
+        }
+    }
+}

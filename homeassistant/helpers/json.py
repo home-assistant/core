@@ -33,7 +33,7 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
-    if isinstance(obj, set):
+    if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
         return float(obj)

@@ -39,14 +39,20 @@
             "turn_on": "Einschalten"
         },
         "trigger_type": {
-            "button_double_press": "\"{subtype}\" doppelt angeklickt",
+            "button_double_press": "\"{subtype}\" doppelt angedr\u00fcckt",
             "button_long_press": "\"{subtype}\" kontinuierlich gedr\u00fcckt",
             "button_long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen",
-            "button_quadruple_press": "\"{subtype}\" Vierfach geklickt",
-            "button_quintuple_press": "\"{subtype}\" f\u00fcnffach geklickt",
+            "button_quadruple_press": "\"{subtype}\" Vierfach gedr\u00fcckt",
+            "button_quintuple_press": "\"{subtype}\" f\u00fcnffach gedr\u00fcckt",
             "button_short_press": "\"{subtype}\" gedr\u00fcckt",
             "button_short_release": "\"{subtype}\" losgelassen",
-            "button_triple_press": "\"{subtype}\" dreifach geklickt"
+            "button_triple_press": "\"{subtype}\" dreifach gedr\u00fcckt"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Manuell konfigurierte MQTT-{platform}(en) gefunden unter Plattformschl\u00fcssel `{platform}`. \n\nBitte verschiebe die Konfiguration auf den \u201emqtt\u201c-Integrationsschl\u00fcssel und starte Home Assistant neu, um dieses Problem zu beheben. Weitere Informationen findest du in der [Dokumentation]({more_info_url}).",
+            "title": "Deine manuell konfigurierte(n) MQTT-{platform}(en) erfordert Aufmerksamkeit"
         }
     },
     "options": {

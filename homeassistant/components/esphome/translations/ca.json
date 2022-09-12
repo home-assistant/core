@@ -9,7 +9,7 @@
             "connection_error": "No s'ha pogut connectar amb ESP. Verifica que l'arxiu YAML cont\u00e9 la l\u00ednia 'api:'.",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_psk": "La clau de xifratge de transport \u00e9s inv\u00e0lida. Assegura't que coincideix amb la de la configuraci\u00f3",
-            "resolve_error": "No s'ha pogut trobar l'adre\u00e7a de l'ESP. Si l'error persisteix, configura una adre\u00e7a IP est\u00e0tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "No s'ha pogut trobar l'adre\u00e7a de l'ESP. Si l'error persisteix, configura una adre\u00e7a IP est\u00e0tica."
         },
         "flow_title": "{name}",
         "step": {
@@ -40,7 +40,7 @@
                     "host": "Amfitri\u00f3",
                     "port": "Port"
                 },
-                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu node [ESPHome](https://esphomelib.com/)."
+                "description": "Introdueix la configuraci\u00f3 de connexi\u00f3 del node [ESPHome]({esphome_url})."
             }
         }
     }

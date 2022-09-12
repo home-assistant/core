@@ -1,6 +1,8 @@
 """Support for IHC switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.switch import SwitchEntity
@@ -64,14 +66,14 @@ class IHCSwitch(IHCDevice, SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._ihc_on_id:
             await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._ihc_off_id:
             await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)

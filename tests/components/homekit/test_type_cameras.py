@@ -501,7 +501,6 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
     ):
         await _async_start_streaming(hass, acc)
         await _async_reconfigure_stream(hass, acc, session_info, {})
-        await _async_stop_stream(hass, acc, session_info)
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (

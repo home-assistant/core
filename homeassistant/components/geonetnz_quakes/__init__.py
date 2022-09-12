@@ -144,7 +144,9 @@ class GeonetnzQuakesFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        self._hass.config_entries.async_setup_platforms(self._config_entry, PLATFORMS)
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         async def update(event_time):
             """Update."""

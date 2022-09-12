@@ -1,4 +1,6 @@
 """Provide info to system health."""
+from __future__ import annotations
+
 import os
 
 from homeassistant.components import system_health
@@ -24,6 +26,7 @@ async def system_health_info(hass: HomeAssistant):
     host_info = get_host_info(hass)
     supervisor_info = get_supervisor_info(hass)
 
+    healthy: bool | dict[str, str]
     if supervisor_info.get("healthy"):
         healthy = True
     else:
@@ -32,6 +35,7 @@ async def system_health_info(hass: HomeAssistant):
             "error": "Unhealthy",
         }
 
+    supported: bool | dict[str, str]
     if supervisor_info.get("supported"):
         supported = True
     else:

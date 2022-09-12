@@ -3,10 +3,13 @@
         "abort": {
             "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet.",
             "email_2fa_timed_out": "Zeit\u00fcberschreitung beim Warten auf E-Mail-basierte Zwei-Faktor-Authentifizierung.",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "wrong_account": "Die angegebenen Benutzeranmeldeinformationen stimmen nicht mit diesem SimpliSafe-Konto \u00fcberein."
         },
         "error": {
+            "identifier_exists": "Konto bereits registriert",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_auth_code_length": "SimpliSafe Autorisierungscodes sind 45 Zeichen lang",
             "unknown": "Unerwarteter Fehler"
         },
         "progress": {
@@ -28,10 +31,11 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Autorisierungscode",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Gib deinen Benutzernamen und Passwort ein."
+                "description": "SimpliSafe authentifiziert die Benutzer \u00fcber seine Web-App. Aufgrund technischer Beschr\u00e4nkungen gibt es am Ende dieses Prozesses einen manuellen Schritt; bitte stelle sicher, dass du die [Dokumentation] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) liest, bevor du beginnst.\n\nWenn du bereit bist, dr\u00fccke [hier]({url}), um die SimpliSafe-Webanwendung zu \u00f6ffnen und deine Anmeldedaten einzugeben. Wenn du dich bereits bei SimpliSafe in deinem Browser angemeldet hast, kannst du eine neue Registerkarte \u00f6ffnen und dann die oben genannte URL in diese Registerkarte kopieren/einf\u00fcgen.\n\nWenn der Vorgang abgeschlossen ist, kehre hierher zur\u00fcck und gib den Autorisierungscode von der URL \"com.simplisafe.mobile\" ein."
             }
         }
     },

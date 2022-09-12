@@ -8,10 +8,6 @@ from typing import cast
 import attr
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,6 +22,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import debug_info, trigger as mqtt_trigger
@@ -93,8 +90,8 @@ LOG_NAME = "Device trigger"
 class TriggerInstance:
     """Attached trigger settings."""
 
-    action: AutomationActionType = attr.ib()
-    automation_info: AutomationTriggerInfo = attr.ib()
+    action: TriggerActionType = attr.ib()
+    trigger_info: TriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -118,7 +115,7 @@ class TriggerInstance:
             self.trigger.hass,
             mqtt_config,
             self.action,
-            self.automation_info,
+            self.trigger_info,
         )
 
 
@@ -138,10 +135,10 @@ class Trigger:
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(
-        self, action: AutomationActionType, automation_info: AutomationTriggerInfo
+        self, action: TriggerActionType, trigger_info: TriggerInfo
     ) -> Callable:
         """Add MQTT trigger."""
-        instance = TriggerInstance(action, automation_info, self)
+        instance = TriggerInstance(action, trigger_info, self)
         self.trigger_instances.append(instance)
 
         if self.topic is not None:
@@ -323,8 +320,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     hass.data.setdefault(DEVICE_TRIGGERS, {})
@@ -344,5 +341,5 @@ async def async_attach_trigger(
             value_template=None,
         )
     return await hass.data[DEVICE_TRIGGERS][discovery_id].add_trigger(
-        action, automation_info
+        action, trigger_info
     )

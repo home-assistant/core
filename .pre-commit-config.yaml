@@ -1,17 +1,17 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.34.0
+    rev: v2.37.3
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
         args:
           - --safe
           - --quiet
-        files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.1.0
     hooks:
@@ -21,7 +21,7 @@ repos:
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
-        exclude: ^tests/fixtures/
+        exclude: ^tests/fixtures/|homeassistant/generated/
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:
@@ -31,8 +31,8 @@ repos:
           - pyflakes==2.4.0
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
-          - flake8-comprehensions==3.8.0
-          - flake8-noqa==1.2.1
+          - flake8-comprehensions==3.10.0
+          - flake8-noqa==1.2.8
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
@@ -61,7 +61,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -96,7 +96,7 @@ repos:
         files: ^(homeassistant|pylint)/.+\.py$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint -j 0
+        entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
         language: script
         types: [python]
         files: ^homeassistant/.+\.py$

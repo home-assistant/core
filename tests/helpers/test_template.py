@@ -2768,13 +2768,13 @@ async def test_area_entities(hass):
     assert info.rate_limit is None
 
     area_entry = area_registry.async_get_or_create("sensor.fake")
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
         config_entry=config_entry,
-        area_id=area_entry.id,
     )
+    entity_registry.async_update_entity(entity_entry.entity_id, area_id=area_entry.id)
 
     info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
     assert_result_info(info, ["light.hue_5678"])

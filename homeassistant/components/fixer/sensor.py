@@ -9,7 +9,7 @@ from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, CONF_TARGET
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_TARGET
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,6 +61,8 @@ def setup_platform(
 class ExchangeRateSensor(SensorEntity):
     """Representation of a Exchange sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, data, name, target):
         """Initialize the sensor."""
         self.data = data
@@ -88,7 +90,6 @@ class ExchangeRateSensor(SensorEntity):
         """Return the state attributes."""
         if self.data.rate is not None:
             return {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_EXCHANGE_RATE: self.data.rate["rates"][self._target],
                 ATTR_TARGET: self._target,
             }
@@ -98,7 +99,7 @@ class ExchangeRateSensor(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
         self._state = round(self.data.rate["rates"][self._target], 3)

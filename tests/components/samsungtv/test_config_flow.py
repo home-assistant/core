@@ -57,11 +57,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
@@ -363,7 +359,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "pairing"
         assert result["errors"] == {"base": "auth_missing"}
 
@@ -375,7 +371,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 
@@ -447,7 +443,7 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
     assert result["errors"] == {"base": "auth_missing"}
     with patch(
@@ -459,7 +455,7 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
@@ -536,7 +532,7 @@ async def test_ssdp_legacy_not_remote_control_receiver_udn(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=data
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
@@ -582,7 +578,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "pairing"
         assert result["errors"] == {"base": "auth_missing"}
 
@@ -591,7 +587,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "fake_model"
@@ -611,7 +607,7 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
@@ -743,7 +739,7 @@ async def test_ssdp_encrypted_websocket_not_supported(
             context={"source": config_entries.SOURCE_SSDP},
             data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
@@ -1261,7 +1257,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "pairing"
         assert result["errors"] == {"base": "auth_missing"}
 
@@ -1276,7 +1272,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
             {},
         )
         await hass.async_block_till_done()
-        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == RESULT_CANNOT_CONNECT
 
 

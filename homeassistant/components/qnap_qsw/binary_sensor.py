@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_MESSAGE, DOMAIN
-from .coordinator import QswUpdateCoordinator
+from .const import ATTR_MESSAGE, DOMAIN, QSW_COORD_DATA
+from .coordinator import QswDataCoordinator
 from .entity import QswEntityDescription, QswSensorEntity
 
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add QNAP QSW binary sensors from a config_entry."""
-    coordinator: QswUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
     async_add_entities(
         QswBinarySensor(coordinator, description, entry)
         for description in BINARY_SENSOR_TYPES
@@ -66,7 +66,7 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: QswUpdateCoordinator,
+        coordinator: QswDataCoordinator,
         description: QswBinarySensorEntityDescription,
         entry: ConfigEntry,
     ) -> None:

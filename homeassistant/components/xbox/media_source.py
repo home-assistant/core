@@ -55,7 +55,7 @@ def async_parse_identifier(
     identifier = item.identifier or ""
     start = ["", "", ""]
     items = identifier.lstrip("/").split("~~", 2)
-    return tuple(items + start[len(items) :])
+    return tuple(items + start[len(items) :])  # type: ignore[return-value]
 
 
 @dataclass
@@ -201,7 +201,7 @@ class XboxSource(MediaSource):
         )
 
 
-def _build_game_item(item: InstalledPackage, images: list[Image]):
+def _build_game_item(item: InstalledPackage, images: dict[str, list[Image]]):
     """Build individual game."""
     thumbnail = ""
     image = _find_media_image(images.get(item.one_store_product_id, []))

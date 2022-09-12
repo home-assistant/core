@@ -3,7 +3,7 @@ from collections.abc import Callable, Iterable
 import contextlib
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -39,6 +39,8 @@ from .statistics import (
     get_start_time,
 )
 from .util import session_scope
+
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +80,13 @@ def schema_is_current(current_version: int) -> bool:
     return current_version == SCHEMA_VERSION
 
 
+def live_migration(current_version: int) -> bool:
+    """Check if live migration is possible."""
+    return current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+
+
 def migrate_schema(
+    instance: Any,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
@@ -86,7 +94,12 @@ def migrate_schema(
 ) -> None:
     """Check if the schema needs to be upgraded."""
     _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
+    db_ready = False
     for version in range(current_version, SCHEMA_VERSION):
+        if live_migration(version) and not db_ready:
+            db_ready = True
+            instance.migration_is_live = True
+            hass.add_job(instance.async_set_db_ready)
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
         _apply_update(hass, engine, session_maker, new_version, current_version)
@@ -623,7 +636,7 @@ def _apply_update(  # noqa: C901
                         fake_start_time += timedelta(minutes=5)
 
         # When querying the database, be careful to only explicitly query for columns
-        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # which were present in schema version 22. If querying the table, SQLAlchemy
         # will refer to future columns.
         with session_scope(session=session_maker()) as session:
             for sum_statistic in session.query(StatisticsMeta.id).filter_by(

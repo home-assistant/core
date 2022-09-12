@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,6 +45,7 @@ class SleepIQSensorEntity(SleepIQSleeperEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.sensor_type = sensor_type
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         super().__init__(coordinator, bed, sleeper, sensor_type)
 
     @callback

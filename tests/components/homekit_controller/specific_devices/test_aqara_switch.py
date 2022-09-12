@@ -7,6 +7,7 @@ service-label-index despite not being linked to a service-label.
 https://github.com/home-assistant/core/pull/39090
 """
 
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
 
 from tests.components.homekit_controller.common import (
@@ -38,9 +39,10 @@ async def test_aqara_switch_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="sensor.programmable_switch_battery",
-                    friendly_name="Programmable Switch Battery",
+                    entity_id="sensor.programmable_switch_battery_sensor",
+                    friendly_name="Programmable Switch Battery Sensor",
                     unique_id="homekit-111a1111a1a111-5",
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
                     state="100",
                 ),

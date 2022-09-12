@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.data[DOMAIN]["unsub"] = async_dispatcher_connect(
         hass, DOMAIN, async_handle_message

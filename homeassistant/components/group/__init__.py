@@ -231,7 +231,9 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    hass.config_entries.async_setup_platforms(entry, (entry.options["group_type"],))
+    await hass.config_entries.async_forward_entry_setups(
+        entry, (entry.options["group_type"],)
+    )
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
@@ -572,7 +574,6 @@ class Group(Entity):
         return group
 
     @staticmethod
-    @callback
     async def async_create_group(
         hass: HomeAssistant,
         name: str,

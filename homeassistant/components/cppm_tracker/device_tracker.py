@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> CPPMDeviceScanner | None:
     """Initialize Scanner."""
 
     data = {
