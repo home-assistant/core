@@ -1,8 +1,4 @@
-"""The air-Q integration.
-
-This file defines the initialisation of the integration, invoked from ConfigFlow.
-Integration setup defined here calls out to the platform setup (see sensors.py).
-"""
+"""The air-Q integration."""
 from __future__ import annotations
 
 from datetime import timedelta
