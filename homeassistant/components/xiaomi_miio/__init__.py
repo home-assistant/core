@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def stop_push_server(event):
             """Stop push server."""
             _LOGGER.debug("Shutting down Xiaomi Miio push server")
-            hass.loop.create_task(push_server.stop())
+            await push_server.stop()
 
         unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_push_server)
         hass.data[DOMAIN][KEY_PUSH_SERVER_STOP] = unsub
