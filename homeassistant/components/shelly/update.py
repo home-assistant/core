@@ -70,7 +70,7 @@ REST_UPDATES: Final = {
         latest_version=lambda status, shelly: status["update"]["new_version"],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=True,
     ),
     "fwupdate_beta": RestUpdateDescription(
@@ -80,7 +80,7 @@ REST_UPDATES: Final = {
         latest_version=lambda status, shelly: status["update"].get("beta_version", ""),
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
 }
@@ -96,7 +96,7 @@ RPC_UPDATES: Final = {
         ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=True,
     ),
     "fwupdate_beta": RpcUpdateDescription(
@@ -109,7 +109,7 @@ RPC_UPDATES: Final = {
         ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
 }
