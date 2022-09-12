@@ -6,11 +6,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.select import SelectEntity
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant

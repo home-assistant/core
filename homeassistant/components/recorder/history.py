@@ -36,8 +36,6 @@ from .models import (
 )
 from .util import execute_stmt_lambda_element, session_scope
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 STATE_KEY = "state"
