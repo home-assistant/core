@@ -68,7 +68,8 @@ class CameraPreferences:
     ) -> dict[str, bool | int]:
         """Update camera preferences.
 
-        Returns a dict with the preferences on success or a string on error.
+        Returns a dict with the preferences on success.
+        Raises HomeAssistantError on failure.
         """
         if preload_stream is not UNDEFINED:
             # Prefs already initialized.

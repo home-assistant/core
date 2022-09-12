@@ -18,10 +18,10 @@
     "endpoints": [
       {
         "nodeId": 67,
-        "index": 0
+        "index": 0,
+        "commandClasses": []
       }
     ],
-    "commandClasses": [],
     "values": [
       {
         "commandClassName": "Basic",

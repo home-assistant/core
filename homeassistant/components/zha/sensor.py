@@ -5,7 +5,7 @@ import functools
 import numbers
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from homeassistant.components.climate.const import HVACAction
+from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

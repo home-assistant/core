@@ -5,11 +5,11 @@ from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

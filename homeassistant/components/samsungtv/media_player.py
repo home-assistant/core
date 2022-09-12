@@ -26,20 +26,11 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODEL,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -199,15 +190,17 @@ class SamsungTVDevice(MediaPlayerEntity):
             return
         old_state = self._attr_state
         if self._power_off_in_progress():
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
             self._attr_state = (
-                STATE_ON if await self._bridge.async_is_on() else STATE_OFF
+                MediaPlayerState.ON
+                if await self._bridge.async_is_on()
+                else MediaPlayerState.OFF
             )
         if self._attr_state != old_state:
             LOGGER.debug("TV %s state updated to %s", self._host, self._attr_state)
 
-        if self._attr_state != STATE_ON:
+        if self._attr_state != MediaPlayerState.ON:
             if self._dmr_device and self._dmr_device.is_subscribed:
                 await self._dmr_device.async_unsubscribe_services()
             return
@@ -364,7 +357,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed:
             return False
         return (
-            self._attr_state == STATE_ON
+            self._attr_state == MediaPlayerState.ON
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()
@@ -426,11 +419,11 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
-        if media_type == MEDIA_TYPE_APP:
+        if media_type == MediaType.APP:
             await self._async_launch_app(media_id)
             return
 
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type != MediaType.CHANNEL:
             LOGGER.error("Unsupported media type")
             return
 

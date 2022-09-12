@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import select
+from homeassistant.components import mqtt, select
 from homeassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -49,20 +49,26 @@ from .test_common import (
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
-    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
 
 from tests.common import async_fire_mqtt_message, mock_restore_cache
 
 DEFAULT_CONFIG = {
-    select.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "command_topic": "test-topic",
-        "options": ["milk", "beer"],
+    mqtt.DOMAIN: {
+        select.DOMAIN: {
+            "name": "test",
+            "command_topic": "test-topic",
+            "options": ["milk", "beer"],
+        }
     }
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[select.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -77,14 +83,15 @@ async def test_run_select_setup(hass, mqtt_mock_entry_with_yaml_config):
     topic = "test/select"
     await async_setup_component(
         hass,
-        "select",
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                }
             }
         },
     )
@@ -111,15 +118,16 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     topic = "test/select"
     await async_setup_component(
         hass,
-        "select",
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
-                "value_template": "{{ value_json.val }}",
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                    "value_template": "{{ value_json.val }}",
+                }
             }
         },
     )
@@ -157,13 +165,14 @@ async def test_run_select_service_optimistic(hass, mqtt_mock_entry_with_yaml_con
 
     assert await async_setup_component(
         hass,
-        select.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "command_topic": topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                }
             }
         },
     )
@@ -198,14 +207,15 @@ async def test_run_select_service_optimistic_with_command_template(
 
     assert await async_setup_component(
         hass,
-        select.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "command_topic": topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
-                "command_template": '{"option": "{{ value }}"}',
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                    "command_template": '{"option": "{{ value }}"}',
+                }
             }
         },
     )
@@ -238,14 +248,15 @@ async def test_run_select_service(hass, mqtt_mock_entry_with_yaml_config):
 
     assert await async_setup_component(
         hass,
-        select.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "command_topic": cmd_topic,
-                "state_topic": state_topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "command_topic": cmd_topic,
+                    "state_topic": state_topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                }
             }
         },
     )
@@ -276,15 +287,16 @@ async def test_run_select_service_with_command_template(
 
     assert await async_setup_component(
         hass,
-        select.DOMAIN,
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "command_topic": cmd_topic,
-                "state_topic": state_topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
-                "command_template": '{"option": "{{ value }}"}',
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "command_topic": cmd_topic,
+                    "state_topic": state_topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                    "command_template": '{"option": "{{ value }}"}',
+                }
             }
         },
     )
@@ -370,47 +382,59 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, select.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        select.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
-async def test_update_with_json_attrs_bad_JSON(
+async def test_update_with_json_attrs_bad_json(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test attributes get extracted from a JSON result."""
-    await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, select.DOMAIN, DEFAULT_CONFIG
+    await help_test_update_with_json_attrs_bad_json(
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        select.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        select.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
 async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one select per unique_id."""
     config = {
-        select.DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "Test 1",
-                "state_topic": "test-topic",
-                "command_topic": "test-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-                "options": ["milk", "beer"],
-            },
-            {
-                "platform": "mqtt",
-                "name": "Test 2",
-                "state_topic": "test-topic",
-                "command_topic": "test-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-                "options": ["milk", "beer"],
-            },
-        ]
+        mqtt.DOMAIN: {
+            select.DOMAIN: [
+                {
+                    "name": "Test 1",
+                    "state_topic": "test-topic",
+                    "command_topic": "test-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                    "options": ["milk", "beer"],
+                },
+                {
+                    "name": "Test 2",
+                    "state_topic": "test-topic",
+                    "command_topic": "test-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                    "options": ["milk", "beer"],
+                },
+            ]
+        }
     }
     await help_test_unique_id(
         hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, config
@@ -419,7 +443,7 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
 
 async def test_discovery_removal_select(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered select."""
-    data = json.dumps(DEFAULT_CONFIG[select.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, data
     )
@@ -536,14 +560,15 @@ async def test_options_attributes(hass, mqtt_mock_entry_with_yaml_config, option
     topic = "test/select"
     await async_setup_component(
         hass,
-        "select",
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test select",
-                "options": options,
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test select",
+                    "options": options,
+                }
             }
         },
     )
@@ -561,14 +586,15 @@ async def test_mqtt_payload_not_an_option_warning(
     topic = "test/select"
     await async_setup_component(
         hass,
-        "select",
+        mqtt.DOMAIN,
         {
-            "select": {
-                "platform": "mqtt",
-                "state_topic": topic,
-                "command_topic": topic,
-                "name": "Test Select",
-                "options": ["milk", "beer"],
+            mqtt.DOMAIN: {
+                select.DOMAIN: {
+                    "state_topic": topic,
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                }
             }
         },
     )
@@ -609,8 +635,8 @@ async def test_publishing_with_custom_encoding(
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG[domain]
-    config["options"] = ["milk", "beer"]
+    config = DEFAULT_CONFIG
+    config[mqtt.DOMAIN][domain]["options"] = ["milk", "beer"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -629,16 +655,18 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
 
 
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
@@ -659,13 +687,13 @@ async def test_encoding_subscribable_topics(
     attribute_value,
 ):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG["select"])
+    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
     config["options"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry_with_yaml_config,
         caplog,
-        "select",
+        select.DOMAIN,
         config,
         topic,
         value,
@@ -677,17 +705,27 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = select.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
-    config["name"] = "test"
-    del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
-    assert hass.states.get(f"{platform}.test") is not None
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = select.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None

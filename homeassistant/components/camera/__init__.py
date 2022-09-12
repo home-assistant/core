@@ -75,8 +75,6 @@ from .const import (  # noqa: F401
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
 
-# mypy: allow-untyped-calls
-
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ENABLE_MOTION: Final = "enable_motion_detection"
@@ -893,10 +891,11 @@ async def websocket_update_prefs(
     entity_id = changes.pop("entity_id")
     try:
         entity_prefs = await prefs.async_update(entity_id, **changes)
-        connection.send_result(msg["id"], entity_prefs)
     except HomeAssistantError as ex:
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
+    else:
+        connection.send_result(msg["id"], entity_prefs)
 
 
 async def async_handle_snapshot_service(

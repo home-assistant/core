@@ -8,7 +8,7 @@ from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
-from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
+from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

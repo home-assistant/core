@@ -81,7 +81,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
             return event.value
         return self._attr_native_value
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
             self.device.events.async_add_listener(self.async_write_ha_state)
