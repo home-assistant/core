@@ -540,6 +540,9 @@ datadog==0.15.0
 # homeassistant.components.metoffice
 datapoint==0.9.8
 
+# homeassistant.components.bluetooth
+dbus_fast==1.4.0
+
 # homeassistant.components.debugpy
 debugpy==1.6.3
 
