@@ -130,8 +130,6 @@ class ZWaveBaseEntity(Entity):
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
-        if additional_info is None:
-            additional_info = []
         name = ""
         if (
             hasattr(self, "entity_description")
@@ -144,16 +142,17 @@ class ZWaveBaseEntity(Entity):
             name = f"{name_prefix} {name}".strip()
 
         value_name = ""
-        if include_value_name:
+        if alternate_value_name:
+            value_name = alternate_value_name
+        elif include_value_name:
             value_name = (
-                alternate_value_name
-                or self.info.primary_value.metadata.label
+                self.info.primary_value.metadata.label
                 or self.info.primary_value.property_key_name
                 or self.info.primary_value.property_name
                 or ""
             )
         name = f"{name} {value_name}".strip()
-        name = f"{name} {' '.join(additional_info)}".strip()
+        name = f"{name} {' '.join(additional_info or [])}".strip()
         # append endpoint if > 1
         if (
             self.info.primary_value.endpoint is not None

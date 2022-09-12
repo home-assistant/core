@@ -376,10 +376,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Entity class attributes
         self._attr_name = self.generate_name(
-            include_value_name=True,
-            alternate_value_name=self.info.primary_value.metadata.states[
-                self.state_key
-            ],
+            alternate_value_name=self.info.primary_value.metadata.states[self.state_key]
         )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
