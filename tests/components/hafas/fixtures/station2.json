@@ -1,0 +1,1096 @@
+{
+  "ver": "1.16",
+  "ext": "DB.R19.04.a",
+  "lang": "deu",
+  "id": "s7gacieikkq5ym8g",
+  "cInfo": { "code": "OK" },
+  "svcResL": [
+    {
+      "meth": "LocMatch",
+      "err": "OK",
+      "res": {
+        "common": {
+          "locL": [],
+          "prodL": [
+            { "name": "ICE", "icoX": 0, "cls": 1 },
+            { "name": "IC", "icoX": 1, "cls": 2 },
+            { "name": "Bus", "icoX": 2, "cls": 4 },
+            { "name": "FLX", "icoX": 3, "cls": 4 },
+            {
+              "name": "Bus S1",
+              "nameS": "S1",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S1!!1377466!!5711695" }
+            },
+            {
+              "name": "Bus S2",
+              "nameS": "S2",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S2!!1377466!!5711695" }
+            },
+            {
+              "name": "Bus S3",
+              "nameS": "S3",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S3!!1377466!!5711695" }
+            },
+            {
+              "name": "Bus S4",
+              "nameS": "S4",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S4" }
+            },
+            {
+              "name": "Bus S5",
+              "nameS": "S5",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S5" }
+            },
+            {
+              "name": "Bus S6",
+              "nameS": "S6",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S6" }
+            },
+            {
+              "name": "Bus 110",
+              "nameS": "110",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_CX_____110" }
+            },
+            {
+              "name": "Bus RE6",
+              "nameS": "RE6",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_CX_____RE6" }
+            },
+            {
+              "name": "Bus S5X",
+              "nameS": "S5X",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____S5X" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_B7_____SEV!!1377436!!5711898" }
+            },
+            {
+              "name": "Bus RB20",
+              "nameS": "RB20",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_AM_____RB20" }
+            },
+            {
+              "name": "Bus RE10",
+              "nameS": "RE10",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_BB_____RE10!!1377466!!5711695" }
+            },
+            {
+              "name": "Bus RE13",
+              "nameS": "RE13",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____RE13!!1377466!!5711695" }
+            },
+            {
+              "name": "Bus RE50",
+              "nameS": "RE50",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____RE50!!1377466!!5711695" }
+            },
+            {
+              "name": "BusRB110",
+              "nameS": "RB110",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_CX_____RB110" }
+            },
+            { "name": "RB", "icoX": 4, "cls": 8 },
+            { "name": "RB", "icoX": 5, "cls": 8 },
+            { "name": "RE", "icoX": 4, "cls": 8 },
+            { "name": "RE", "icoX": 6, "cls": 8 },
+            {
+              "name": "S 1",
+              "nameS": "1",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_800486_1" }
+            },
+            {
+              "name": "S 2",
+              "nameS": "2",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_8004A9_2" }
+            },
+            {
+              "name": "S 3",
+              "nameS": "3",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_800486_3" }
+            },
+            {
+              "name": "S 4",
+              "nameS": "4",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_800486_4" }
+            },
+            {
+              "name": "S 5",
+              "nameS": "5",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_800486_5" }
+            },
+            {
+              "name": "S 6",
+              "nameS": "6",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_800486_6" }
+            },
+            {
+              "name": "S 5X",
+              "nameS": "5X",
+              "icoX": 7,
+              "cls": 16,
+              "prodCtx": { "lineId": "4_800486_5X" }
+            },
+            {
+              "name": "Bus 72",
+              "nameS": "72",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_72" }
+            },
+            {
+              "name": "Bus 73",
+              "nameS": "73",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_73" }
+            },
+            {
+              "name": "Bus 86",
+              "nameS": "86",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_86" }
+            },
+            {
+              "name": "Bus 89",
+              "nameS": "89",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_89" }
+            },
+            {
+              "name": "Bus N1",
+              "nameS": "N1",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N1" }
+            },
+            {
+              "name": "Bus N2",
+              "nameS": "N2",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N2" }
+            },
+            {
+              "name": "Bus N3",
+              "nameS": "N3",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N3" }
+            },
+            {
+              "name": "Bus N4",
+              "nameS": "N4",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N4" }
+            },
+            {
+              "name": "Bus N5",
+              "nameS": "N5",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N5" }
+            },
+            {
+              "name": "Bus N6",
+              "nameS": "N6",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N6" }
+            },
+            {
+              "name": "Bus N7",
+              "nameS": "N7",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N7" }
+            },
+            {
+              "name": "Bus N8",
+              "nameS": "N8",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N8" }
+            },
+            {
+              "name": "Bus N9",
+              "nameS": "N9",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N9" }
+            },
+            {
+              "name": "Bus 131",
+              "nameS": "131",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_131" }
+            },
+            {
+              "name": "Bus 196",
+              "nameS": "196",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasOVH_196" }
+            },
+            {
+              "name": "Bus 197",
+              "nameS": "197",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasOVH_197" }
+            },
+            {
+              "name": "Bus 412",
+              "nameS": "412",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasTHU_412" }
+            },
+            {
+              "name": "Bus 690",
+              "nameS": "690",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasRL__690" }
+            },
+            {
+              "name": "Bus N17",
+              "nameS": "N17",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N17" }
+            },
+            {
+              "name": "STR 1",
+              "nameS": "1",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_1" }
+            },
+            {
+              "name": "STR 2",
+              "nameS": "2",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_2" }
+            },
+            {
+              "name": "STR 3",
+              "nameS": "3",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_3" }
+            },
+            {
+              "name": "STR 4",
+              "nameS": "4",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_4" }
+            },
+            {
+              "name": "STR 7",
+              "nameS": "7",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_7" }
+            },
+            {
+              "name": "STR 8",
+              "nameS": "8",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_8" }
+            },
+            {
+              "name": "STR 9",
+              "nameS": "9",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_9" }
+            },
+            {
+              "name": "STR 10",
+              "nameS": "10",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_10" }
+            },
+            {
+              "name": "STR 11",
+              "nameS": "11",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_11" }
+            },
+            {
+              "name": "STR 12",
+              "nameS": "12",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_12" }
+            },
+            {
+              "name": "STR 14",
+              "nameS": "14",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_14" }
+            },
+            {
+              "name": "STR 15",
+              "nameS": "15",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_15" }
+            },
+            {
+              "name": "STR 16",
+              "nameS": "16",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_16" }
+            },
+            {
+              "name": "STR 56",
+              "nameS": "56",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_56" }
+            },
+            {
+              "name": "STR N10",
+              "nameS": "N10",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_N10" }
+            },
+            {
+              "name": "STR N17",
+              "nameS": "N17",
+              "icoX": 8,
+              "cls": 256,
+              "prodCtx": { "lineId": "8_nasLVT_N17" }
+            },
+            {
+              "name": "Bus 217",
+              "nameS": "217",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasOVH_217" }
+            },
+            {
+              "name": "RUF 217",
+              "nameS": "217",
+              "icoX": 9,
+              "cls": 512,
+              "prodCtx": { "lineId": "9_nasOVH_217" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_EB_____SEV!!1377436!!5711898" }
+            },
+            {
+              "name": "Bus 90",
+              "nameS": "90",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_90" }
+            },
+            {
+              "name": "Bus 80",
+              "nameS": "80",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_80" }
+            },
+            {
+              "name": "Bus 60",
+              "nameS": "60",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_60" }
+            },
+            {
+              "name": "Bus 64",
+              "nameS": "64",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_64" }
+            },
+            {
+              "name": "Bus N60",
+              "nameS": "N60",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_N60" }
+            },
+            {
+              "name": "ALT 86",
+              "nameS": "86",
+              "icoX": 10,
+              "cls": 512,
+              "prodCtx": { "lineId": "9_nasLVB_86" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_CX_____SEV!!1377436!!5711898" }
+            },
+            {
+              "name": "Bus SEV",
+              "nameS": "SEV",
+              "icoX": 2,
+              "cls": 8,
+              "prodCtx": { "lineId": "3_SD_____SEV" }
+            },
+            {
+              "name": "Bus 79",
+              "nameS": "79",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_79" }
+            },
+            {
+              "name": "Bus 74",
+              "nameS": "74",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_74" }
+            },
+            {
+              "name": "Bus 85",
+              "nameS": "85",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_85" }
+            },
+            {
+              "name": "Bus 61",
+              "nameS": "61",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_61" }
+            },
+            {
+              "name": "Bus 65",
+              "nameS": "65",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_65" }
+            },
+            {
+              "name": "Bus 66",
+              "nameS": "66",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_66" }
+            },
+            {
+              "name": "Bus 161",
+              "nameS": "161",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_161" }
+            },
+            {
+              "name": "Bus SEV2",
+              "nameS": "SEV2",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_SEV2" }
+            },
+            {
+              "name": "Bus 62",
+              "nameS": "62",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_62" }
+            },
+            {
+              "name": "Bus SEV1",
+              "nameS": "SEV1",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasLVB_SEV1" }
+            },
+            {
+              "name": "Bus 190",
+              "nameS": "190",
+              "icoX": 2,
+              "cls": 32,
+              "prodCtx": { "lineId": "5_nasOVH_190" }
+            }
+          ],
+          "polyL": [],
+          "layerL": [
+            { "id": "standard", "name": "standard", "index": 0, "annoCnt": 0 }
+          ],
+          "crdSysL": [
+            { "id": "standard", "index": 0, "type": "WGS84", "dim": 3 }
+          ],
+          "opL": [],
+          "remL": [],
+          "icoL": [
+            { "res": "ICE" },
+            { "res": "IC" },
+            { "res": "Bus" },
+            { "res": "DPF" },
+            { "res": "DPN" },
+            { "res": "RB" },
+            { "res": "RE" },
+            { "res": "S" },
+            { "res": "STR" },
+            { "res": "RUF" },
+            { "res": "ALT" }
+          ]
+        },
+        "match": {
+          "field": "S",
+          "state": "L",
+          "locL": [
+            {
+              "lid": "A=1@O=Leipzig Hbf@X=12382066@Y=51345467@U=80@L=8010205@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Hbf",
+              "icoX": 0,
+              "extId": "8010205",
+              "state": "F",
+              "crd": {
+                "x": 12381167,
+                "y": 51345081,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 319,
+              "pRefL": [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+                34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+                50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64
+              ],
+              "wt": 30285
+            },
+            {
+              "lid": "A=1@O=Leipzig/Halle Flughafen@X=12223424@Y=51423341@U=80@L=8012183@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig/Halle Flughafen",
+              "icoX": 0,
+              "extId": "8012183",
+              "state": "F",
+              "crd": {
+                "x": 12223451,
+                "y": 51423341,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 571,
+              "pRefL": [0, 1, 6, 8, 12, 25, 27, 29, 65, 66],
+              "wt": 6848
+            },
+            {
+              "lid": "A=1@O=Leipzig-Möckern@X=12352275@Y=51364435@U=80@L=8012193@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Möckern",
+              "icoX": 2,
+              "extId": "8012193",
+              "state": "F",
+              "crd": {
+                "x": 12351691,
+                "y": 51364156,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [4, 6, 67, 14, 19, 21, 23, 68, 37, 56, 57],
+              "wt": 6186
+            },
+            {
+              "lid": "A=1@O=Leipzig-Leutzsch@X=12303734@Y=51353998@U=80@L=8010207@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Leutzsch",
+              "icoX": 2,
+              "extId": "8010207",
+              "state": "F",
+              "crd": {
+                "x": 12304570,
+                "y": 51353818,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [4, 14, 19, 23, 69, 36, 53],
+              "wt": 6058
+            },
+            {
+              "lid": "A=1@O=Leipzig-Plagwitz@X=12322081@Y=51328037@U=80@L=8010209@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Plagwitz",
+              "icoX": 2,
+              "extId": "8010209",
+              "state": "F",
+              "crd": {
+                "x": 12321928,
+                "y": 51327858,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [4, 67, 19, 21, 23, 70, 71, 72, 59],
+              "wt": 6058
+            },
+            {
+              "lid": "A=1@O=Leipzig Messe@X=12389275@Y=51396149@U=80@L=8012478@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Messe",
+              "icoX": 2,
+              "extId": "8012478",
+              "state": "F",
+              "crd": {
+                "x": 12389383,
+                "y": 51396167,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 824,
+              "pRefL": [5, 8, 9, 12, 16, 22, 24, 27, 28, 29, 32, 61, 62, 73],
+              "wt": 4956
+            },
+            {
+              "lid": "A=1@O=Leipzig-Engelsdorf@X=12477630@Y=51343948@U=80@L=8011491@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Engelsdorf",
+              "icoX": 2,
+              "extId": "8011491",
+              "state": "F",
+              "crd": {
+                "x": 12469549,
+                "y": 51343876,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 824,
+              "pRefL": [10, 74, 18, 19, 22, 25],
+              "wt": 5201
+            },
+            {
+              "lid": "A=1@O=Leipzig-Stötteritz@X=12411424@Y=51324514@U=80@L=8012194@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Stötteritz",
+              "icoX": 2,
+              "extId": "8012194",
+              "state": "F",
+              "crd": {
+                "x": 12411604,
+                "y": 51324639,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [4, 5, 6, 23, 24, 25, 41, 52],
+              "wt": 4820
+            },
+            {
+              "lid": "A=1@O=Leipzig-Paunsdorf@X=12444334@Y=51344299@U=80@L=8010208@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Paunsdorf",
+              "icoX": 2,
+              "extId": "8010208",
+              "state": "F",
+              "crd": {
+                "x": 12444612,
+                "y": 51344110,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [6, 10, 75, 18, 19, 20, 25, 76],
+              "wt": 4602
+            },
+            {
+              "lid": "A=1@O=Leipzig Bayerischer Bahnhof@X=12381661@Y=51329269@U=80@L=8012184@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Bayerischer Bahnhof",
+              "icoX": 2,
+              "extId": "8012184",
+              "state": "F",
+              "crd": {
+                "x": 12381104,
+                "y": 51330087,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [
+                4, 5, 6, 7, 8, 9, 12, 23, 24, 25, 26, 27, 28, 29, 70, 41, 46,
+                72, 50, 55, 61
+              ],
+              "wt": 4385
+            },
+            {
+              "lid": "A=1@O=Leipzig-Sellerhausen@X=12424665@Y=51345180@U=80@L=8080930@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Sellerhausen",
+              "icoX": 2,
+              "extId": "8080930",
+              "state": "F",
+              "crd": {
+                "x": 12424099,
+                "y": 51345324,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [10, 74, 18, 19, 25],
+              "wt": 4447
+            },
+            {
+              "lid": "A=1@O=Leipzig MDR@X=12386317@Y=51320064@U=80@L=8012187@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig MDR",
+              "icoX": 2,
+              "extId": "8012187",
+              "state": "F",
+              "crd": {
+                "x": 12388169,
+                "y": 51316414,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [4, 5, 6, 7, 8, 9, 12, 23, 24, 25, 26, 27, 28, 29, 77],
+              "wt": 4143
+            },
+            {
+              "lid": "A=1@O=Leipzig Nord@X=12401060@Y=51364165@U=80@L=8012196@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Nord",
+              "icoX": 2,
+              "extId": "8012196",
+              "state": "F",
+              "crd": {
+                "x": 12401410,
+                "y": 51365612,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [5, 7, 9, 24, 26, 28, 68],
+              "wt": 4143
+            },
+            {
+              "lid": "A=1@O=Leipzig Markt@X=12374613@Y=51340640@U=80@L=8012186@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Markt",
+              "icoX": 7,
+              "extId": "8012186",
+              "state": "F",
+              "crd": {
+                "x": 12374604,
+                "y": 51340514,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 304,
+              "pRefL": [23, 24, 25, 26, 27, 28, 29, 33],
+              "wt": 3938
+            },
+            {
+              "lid": "A=1@O=Leipzig Wilhelm-Leuschner-Platz@X=12375396@Y=51335400@U=80@L=8012202@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Wilhelm-Leuschner-Platz",
+              "icoX": 7,
+              "extId": "8012202",
+              "state": "F",
+              "crd": {
+                "x": 12375360,
+                "y": 51335507,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [
+                23, 24, 25, 26, 27, 28, 29, 33, 42, 50, 54, 55, 56, 57, 59, 60,
+                61, 62, 63
+              ],
+              "wt": 3794
+            },
+            {
+              "lid": "A=1@O=Leipzig-Knauthain@X=12309091@Y=51278183@U=80@L=8012192@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Knauthain",
+              "icoX": 2,
+              "extId": "8012192",
+              "state": "F",
+              "crd": {
+                "x": 12309073,
+                "y": 51278147,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 808,
+              "pRefL": [67, 19, 21],
+              "wt": 3924
+            },
+            {
+              "lid": "A=1@O=Leipzig-Miltitz@X=12255030@Y=51325314@U=80@L=8012355@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Miltitz",
+              "icoX": 2,
+              "extId": "8012355",
+              "state": "F",
+              "crd": {
+                "x": 12254931,
+                "y": 51325224,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 296,
+              "pRefL": [14, 19],
+              "wt": 3924
+            },
+            {
+              "lid": "A=1@O=Leipzig-Rückmarsdorf@X=12282672@Y=51341872@U=80@L=8012817@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Rückmarsdorf",
+              "icoX": 2,
+              "extId": "8012817",
+              "state": "F",
+              "crd": {
+                "x": 12282537,
+                "y": 51341800,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 552,
+              "pRefL": [14, 19],
+              "wt": 3924
+            },
+            {
+              "lid": "A=1@O=Leipzig-Connewitz@X=12386308@Y=51300719@U=80@L=8010206@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Connewitz",
+              "icoX": 2,
+              "extId": "8010206",
+              "state": "F",
+              "crd": {
+                "x": 12385625,
+                "y": 51300027,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [
+                6, 7, 8, 9, 12, 25, 26, 27, 28, 29, 76, 42, 55, 56, 57, 61, 62
+              ],
+              "wt": 3798
+            },
+            {
+              "lid": "A=1@O=Leipzig-Gohlis@X=12374533@Y=51362862@U=80@L=8012188@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig-Gohlis",
+              "icoX": 7,
+              "extId": "8012188",
+              "state": "F",
+              "crd": {
+                "x": 12374533,
+                "y": 51362808,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [23, 25, 78, 58],
+              "wt": 3338
+            },
+            {
+              "lid": "A=1@O=Leipzig Völkerschlachtdenkmal@X=12406282@Y=51318743@U=80@L=8012343@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Völkerschlachtdenkmal",
+              "icoX": 7,
+              "extId": "8012343",
+              "state": "F",
+              "crd": {
+                "x": 12404817,
+                "y": 51317547,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [23, 24, 25],
+              "wt": 3195
+            },
+            {
+              "lid": "A=1@O=Leipzig Allee-Center@X=12291751@Y=51319156@U=80@L=8013070@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Allee-Center",
+              "icoX": 2,
+              "extId": "8013070",
+              "state": "F",
+              "crd": {
+                "x": 12291787,
+                "y": 51319147,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [4, 23, 79, 80, 81, 82, 48, 83],
+              "wt": 2225
+            },
+            {
+              "lid": "A=1@O=Leipzig Essener Straße@X=12396988@Y=51376354@U=80@L=8012200@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Essener Straße",
+              "icoX": 2,
+              "extId": "8012200",
+              "state": "F",
+              "crd": {
+                "x": 12396988,
+                "y": 51376354,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 56,
+              "pRefL": [5, 9, 24, 28, 69, 78],
+              "wt": 2225
+            },
+            {
+              "lid": "A=1@O=Leipzig Karlsruher Str@X=12279274@Y=51317232@U=80@L=8010186@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Karlsruher Str",
+              "icoX": 2,
+              "extId": "8010186",
+              "state": "F",
+              "crd": {
+                "x": 12278941,
+                "y": 51317196,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [4, 23, 79, 84, 81, 82, 85, 83],
+              "wt": 2225
+            },
+            {
+              "lid": "A=1@O=Leipzig Slevogtstraße@X=12344419@Y=51372947@U=80@L=8012204@B=1@p=1663183251@",
+              "type": "S",
+              "name": "Leipzig Slevogtstraße",
+              "icoX": 2,
+              "extId": "8012204",
+              "state": "F",
+              "crd": {
+                "x": 12344868,
+                "y": 51372777,
+                "z": 0,
+                "type": "WGS84",
+                "layerX": 0,
+                "crdSysX": 0
+              },
+              "pCls": 312,
+              "pRefL": [6, 25, 69, 68, 38, 86],
+              "wt": 2225
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "domain": "vsn",
+  "name": "Verkehrsverbund Süd-Niedersachsen",
+  "integration_type": "virtual",
+  "supported_by": "hafas"
+}

@@ -933,6 +933,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "db": {
+      "name": "Deutsche Bahn",
+      "integration_type": "virtual",
+      "supported_by": "hafas"
+    },
     "ddwrt": {
       "name": "DD-WRT",
       "integration_type": "hub",
@@ -2107,6 +2112,12 @@
     },
     "habitica": {
       "name": "Habitica",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hafas": {
+      "name": "HaFAS",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5940,6 +5951,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "vsn": {
+      "name": "Verkehrsverbund S\u00fcd-Niedersachsen",
+      "integration_type": "virtual",
+      "supported_by": "hafas"
     },
     "vulcan": {
       "name": "Uonet+ Vulcan",
