@@ -11,8 +11,8 @@ from pydeconz.models.sensor.thermostat import (
     ThermostatPreset,
 )
 
-from homeassistant.components.climate import DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -22,6 +22,7 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

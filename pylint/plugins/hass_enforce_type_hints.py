@@ -1816,6 +1816,20 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "notify": [
+        ClassTypeHintMatch(
+            base_class="BaseNotificationService",
+            matches=[
+                TypeHintMatch(
+                    function_name="send_message",
+                    arg_types={1: "str"},
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "number": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1878,20 +1892,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_get_last_number_data",
                     return_type=["NumberExtraStoredData", None],
-                ),
-            ],
-        ),
-    ],
-    "notify": [
-        ClassTypeHintMatch(
-            base_class="BaseNotificationService",
-            matches=[
-                TypeHintMatch(
-                    function_name="send_message",
-                    arg_types={1: "str"},
-                    kwargs_type="Any",
-                    return_type=None,
-                    has_async_counterpart=True,
                 ),
             ],
         ),
