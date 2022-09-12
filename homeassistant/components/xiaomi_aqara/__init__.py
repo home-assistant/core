@@ -233,7 +233,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass.data[DOMAIN].pop(GATEWAYS_KEY)
         _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
         multicast = hass.data[DOMAIN].pop(LISTENER_KEY)
-        await hass.async_add_executor_job(multicast.stop_listen)
+        multicast.stop_listen()
 
     return unload_ok
 
