@@ -74,6 +74,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         attributes={
             ATTR_MAX: [QSD_SYSTEM_BOARD, QSD_PORT_NUM],
         },
+        entity_registry_enabled_default=False,
         icon="mdi:ethernet",
         key=QSD_PORTS_STATUS,
         name="Ports",
@@ -81,6 +82,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_LINK,
     ),
     QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
         icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
         name="RX",
@@ -89,6 +91,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_RX_OCTETS,
     ),
     QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
         icon="mdi:close-network",
         key=QSD_PORTS_STATISTICS,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -97,6 +100,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_RX_ERRORS,
     ),
     QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
         icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
         name="RX Speed",
@@ -116,6 +120,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_TEMP,
     ),
     QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
         icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
         name="TX",
@@ -124,6 +129,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_TX_OCTETS,
     ),
     QswSensorEntityDescription(
+        entity_registry_enabled_default=False,
         icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
         name="TX Speed",
