@@ -31,8 +31,6 @@ from .const import (
     SpeechResultState,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 

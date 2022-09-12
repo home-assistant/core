@@ -75,8 +75,6 @@ from .const import (  # noqa: F401
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
 
-# mypy: allow-untyped-calls
-
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ENABLE_MOTION: Final = "enable_motion_detection"
