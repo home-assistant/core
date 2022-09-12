@@ -1,4 +1,6 @@
 """Offer zone automation rules."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -10,7 +12,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -72,12 +81,13 @@ async def async_attach_trigger(
     def zone_automation_listener(zone_event: Event) -> None:
         """Listen for state changes and calls action."""
         entity = zone_event.data.get("entity_id")
-        from_s = zone_event.data.get("old_state")
-        to_s = zone_event.data["new_state"]
+        from_s: State | None = zone_event.data.get("old_state")
+        to_s: State | None = zone_event.data.get("new_state")
 
         if (
             from_s
             and not location.has_location(from_s)
+            or not to_s
             or not location.has_location(to_s)
         ):
             return
