@@ -103,7 +103,7 @@ async def async_attach_trigger(
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
             hass.async_run_hass_job(
-                job,  # type: ignore[arg-type]
+                job,
                 {
                     "trigger": {
                         **trigger_data,
