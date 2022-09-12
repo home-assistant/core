@@ -1,6 +1,7 @@
 """Config flow for RFXCOM RFXtrx integration."""
 from __future__ import annotations
 
+import asyncio
 import copy
 import itertools
 import os
@@ -29,6 +30,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.event import async_track_state_change
 
 from . import (
     DOMAIN,
@@ -343,8 +345,32 @@ class OptionsFlow(config_entries.OptionsFlow):
             if new_entity_id is not None:
                 entity_migration_map[new_entity_id] = entry
 
+        @callback
+        def _handle_state_change(entity_id: str, old_state, new_state):
+            # Wait for entities to finish cleanup
+            if new_state is None and entity_id in pending_entities:
+                pending_entities.remove(entity_id)
+            if not pending_entities:
+                wait_for_entities.set()
+
+        # Create a set with entities to be removed which are currently in the state
+        # machine
+        pending_entities = {
+            entry.entity_id
+            for entry in entity_migration_map.values()
+            if not self.hass.states.async_available(entry.entity_id)
+        }
+        track_state_changes = async_track_state_change(
+            self.hass, pending_entities, _handle_state_change
+        )
+        wait_for_entities = asyncio.Event()
+
         for entry in entity_migration_map.values():
             entity_registry.async_remove(entry.entity_id)
+
+        # Wait for entities to finish cleanup
+        await wait_for_entities.wait()
+        track_state_changes()
 
         for entity_id, entry in entity_migration_map.items():
             entity_registry.async_update_entity(
