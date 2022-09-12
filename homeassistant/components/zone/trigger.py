@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -20,9 +20,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-
-# mypy: allow-incomplete-defs, allow-untyped-defs
-# mypy: no-check-untyped-defs
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -67,16 +64,16 @@ async def async_attach_trigger(
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     entity_id: list[str] = config[CONF_ENTITY_ID]
-    zone_entity_id = config.get(CONF_ZONE)
-    event = config.get(CONF_EVENT)
+    zone_entity_id = config[CONF_ZONE]
+    event = config[CONF_EVENT]
     job = HassJob(action)
 
     @callback
-    def zone_automation_listener(zone_event):
+    def zone_automation_listener(zone_event: Event) -> None:
         """Listen for state changes and calls action."""
         entity = zone_event.data.get("entity_id")
         from_s = zone_event.data.get("old_state")
-        to_s = zone_event.data.get("new_state")
+        to_s = zone_event.data["new_state"]
 
         if (
             from_s
@@ -106,7 +103,7 @@ async def async_attach_trigger(
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
             hass.async_run_hass_job(
-                job,
+                job,  # type: ignore[arg-type]
                 {
                     "trigger": {
                         **trigger_data,
