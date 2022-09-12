@@ -80,7 +80,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=device_info["name"], data=user_input
+                    title=device_info["name"],
+                    data=user_input | {"device_info": device_info},
                 )
 
         return self.async_show_form(
