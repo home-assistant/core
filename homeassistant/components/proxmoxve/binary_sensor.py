@@ -82,7 +82,7 @@ def create_binary_sensor(
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
-        unique_id=f"proxmox_{config_entry.data[CONF_HOST]}_{config_entry.data[CONF_PORT]}_{config_entry.data[CONF_NODE]}_{vm_id}_{key}",
+        unique_id=f"{config_entry.data[CONF_HOST]}_{config_entry.data[CONF_PORT]}_{config_entry.data[CONF_NODE]}_{vm_id}_{key}",
         name=name,
         icon="",
         device_class=BinarySensorDeviceClass.RUNNING,
