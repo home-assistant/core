@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await push_server.start()
 
         # register stop callback to shutdown the push server
-        def stop_push_server(event):
+        async def stop_push_server(event):
             """Stop push server."""
             _LOGGER.debug("Shutting down Xiaomi Miio push server")
             await push_server.stop()
