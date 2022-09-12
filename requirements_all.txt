@@ -2423,7 +2423,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.4.1
+ultraheat-api==0.4.3
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.6
