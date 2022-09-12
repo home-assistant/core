@@ -60,8 +60,8 @@ REST_UPDATES: Final = {
     "fwupdate_beta": RestUpdateDescription(
         name="Beta Firmware Update",
         key="fwupdate",
-        installed_version=lambda status, shelly: status["update"]["old_version"]
-        latest_version=lambda status, shelly: status["update"].get("beta_version", "")
+        installed_version=lambda status, shelly: status["update"]["old_version"],
+        latest_version=lambda status, shelly: status["update"].get("beta_version", ""),
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -74,8 +74,8 @@ RPC_UPDATES: Final = {
         name="Firmware Update",
         key="sys",
         sub_key="available_updates",
-        installed_version=lambda status, shelly: shelly["ver"]
-        latest_version=lambda status, shelly: status.get("stable", {"version": ""})["version"]
+        installed_version=lambda status, shelly: shelly["ver"],
+        latest_version=lambda status, shelly: status.get("stable", {"version": ""})["version"],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -85,8 +85,8 @@ RPC_UPDATES: Final = {
         name="Beta Firmware Update",
         key="sys",
         sub_key="available_updates",
-        installed_version=lambda status, shelly: shelly["ver"]
-        latest_version=lambda status, shelly: status.get("beta", {"version": ""})["version"]
+        installed_version=lambda status, shelly: shelly["ver"],
+        latest_version=lambda status, shelly: status.get("beta", {"version": ""})["version"],
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
