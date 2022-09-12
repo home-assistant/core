@@ -172,11 +172,6 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         self._attr_is_on = None
         self.async_update_device()
 
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._router.async_allow_block_device(self._mac, ALLOW)
