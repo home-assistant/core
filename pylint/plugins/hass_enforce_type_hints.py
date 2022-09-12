@@ -2091,6 +2091,35 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "tts": [
+        ClassTypeHintMatch(
+            base_class="Provider",
+            matches=[
+                TypeHintMatch(
+                    function_name="default_language",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_languages",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_options",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="default_options",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
+                    function_name="get_tts_audio",
+                    arg_types={1: "str", 2: "str", 3: "dict[str, Any] | None"},
+                    return_type="TtsAudioType",
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "update": [
         ClassTypeHintMatch(
             base_class="Entity",

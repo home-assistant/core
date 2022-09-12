@@ -11,7 +11,7 @@ import mimetypes
 import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 from aiohttp import web
 import mutagen
@@ -365,7 +365,11 @@ class SpeechManager:
 
         # Languages
         language = language or provider.default_language
-        if language is None or language not in provider.supported_languages:
+        if (
+            language is None
+            or provider.supported_languages is None
+            or language not in provider.supported_languages
+        ):
             raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
@@ -583,33 +587,33 @@ class Provider:
     name: str | None = None
 
     @property
-    def default_language(self):
+    def default_language(self) -> str | None:
         """Return the default language."""
         return None
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str] | None:
         """Return a list of supported languages."""
         return None
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotionen."""
         return None
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any] | None:
         """Return a dict include default options."""
         return None
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict | None = None
+        self, message: str, language: str, options: dict[str, Any] | None = None
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict | None = None
+        self, message: str, language: str, options: dict[str, Any] | None = None
     ) -> TtsAudioType:
         """Load tts audio file from provider.
 
