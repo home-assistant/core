@@ -143,8 +143,6 @@ ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT = "main_brush_left"
 ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT = "side_brush_left"
 ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "filter_left"
 ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
-ATTR_LAST_EVENT = "last_event"
-ATTR_LAST_PRESS = "last_press"
 
 
 @dataclass
@@ -363,16 +361,6 @@ SENSOR_TYPES = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATTR_LAST_EVENT: XiaomiMiioSensorDescription(
-        key=ATTR_LAST_EVENT,
-        name="Last Event",
-        entity_registry_enabled_default=False,
-    ),
-    ATTR_LAST_PRESS: XiaomiMiioSensorDescription(
-        key=ATTR_LAST_PRESS,
-        name="Last Press",
-        entity_registry_enabled_default=False,
     ),
 }
 
