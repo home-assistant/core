@@ -43,7 +43,7 @@ async def async_attach_trigger(
     def call_action() -> None:
         """Call action with right context."""
         hass.async_run_hass_job(
-            job,  # type: ignore[arg-type]
+            job,
             {
                 "trigger": {
                     **trigger_data,
