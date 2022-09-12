@@ -7,8 +7,7 @@ from typing import Any
 from pizone import Controller, Zone
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -16,6 +15,7 @@ from homeassistant.components.climate.const import (
     FAN_TOP,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

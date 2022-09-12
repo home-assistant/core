@@ -7,11 +7,11 @@ from typing import Any
 import pyatmo
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
