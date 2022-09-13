@@ -169,7 +169,6 @@ jobs:
         uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: "pip"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.8
