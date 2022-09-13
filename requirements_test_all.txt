@@ -329,7 +329,7 @@ bellows==0.33.1
 bimmer_connected==0.10.2
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.15.0
+bleak-retry-connector==1.15.1
 
 # homeassistant.components.bluetooth
 bleak==0.17.0
@@ -347,7 +347,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.2
+bluetooth-auto-recovery==0.3.3
 
 # homeassistant.components.bond
 bond-async==0.1.22
