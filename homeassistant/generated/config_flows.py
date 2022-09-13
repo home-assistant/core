@@ -372,6 +372,7 @@ FLOWS = {
         "subaru",
         "sun",
         "surepetcare",
+        "switchbee",
         "switchbot",
         "switcher_kis",
         "syncthing",
