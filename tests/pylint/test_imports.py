@@ -19,6 +19,11 @@ from . import assert_adds_messages, assert_no_messages
             "homeassistant.const",
             "CONSTANT",
         ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "homeassistant.components.pylint_testing",
+            "CONSTANT",
+        ),
         ("homeassistant.components.pylint_test.sensor", ".const", "CONSTANT"),
         ("homeassistant.components.pylint_test.sensor", ".", "CONSTANT"),
         ("homeassistant.components.pylint_test.sensor", "..", "pylint_test"),
