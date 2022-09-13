@@ -268,5 +268,15 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         manufacturer="Permundo",
         model="PSC234 (switch and power monitor)",
     ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0F",
+        manufacturer="NodOn",
+        model="SIN-2-1-01",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-12",
+        manufacturer="NodOn",
+        model="SIN-2-2-01",
+    ),
     ENOCEAN_TEST_BINARY_SENSOR,
 ]
