@@ -186,7 +186,8 @@ class NumberStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        return self.CREATE_UPDATE_SCHEMA(update_data)
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return _cv_input_number({CONF_ID: data[CONF_ID], **update_data})
 
 
 class InputNumber(collection.CollectionEntity, RestoreEntity):

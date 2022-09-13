@@ -544,6 +544,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage", **updated_settings}
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 9
@@ -559,6 +560,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage", **updated_settings}
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 5
