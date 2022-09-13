@@ -140,6 +140,7 @@ async def test_get_triggers(hass, device_reg):
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_id
     )
+
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -156,6 +157,22 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg):
         await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, invalid_device.id
         )
+
+
+async def test_get_triggers_for_non_button_device(hass, device_reg):
+    """Test error raised for invalid lutron device_id."""
+    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+
+    invalid_device = device_reg.async_get_or_create(
+        config_entry_id=config_entry_id,
+        identifiers={(DOMAIN, "invdevserial")},
+    )
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_device.id
+    )
+
+    assert triggers == []
 
 
 async def test_if_fires_on_button_event(hass, calls, device_reg):
