@@ -29,10 +29,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # support for text-based configuration (legacy)
     if DOMAIN not in config:
-        # no config entry for our domain available, e.g. in
-        # "configuration.yaml":
-        #   enocean:
-        # so initialization was successful
         return True
 
     # there is an entry available for our domain
