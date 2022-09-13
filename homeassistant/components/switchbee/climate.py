@@ -32,6 +32,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SwitchBeeCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +91,12 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, ClimateEntity):
     """Representation of an Switchbee button."""
 
-    def __init__(self, hass, device: SwitchBeeThermostat, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SwitchBeeThermostat,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
