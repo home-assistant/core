@@ -107,6 +107,14 @@ async def async_setup_entry(
     async_cleanup_device_registry(hass=hass, entry=config_entry)
     forward_entry_setup_to_platforms(hass=hass, entry=config_entry)
 
+    return _setup_yaml_import(hass, _enocean_platform_configs)
+
+
+# upcoming code is part of platform import to be deleted in a future version
+def _setup_yaml_import(
+    hass: HomeAssistant,
+    enocean_platform_configs: list[EnOceanPlatformConfig],
+) -> bool:
     enocean_devices_to_add = []
 
     # get the entity registry
@@ -121,7 +129,6 @@ async def async_setup_entry(
     # map from dev_id_string to map from (new) unique_id to old entity
     old_entities: dict[str, dict[str, entity_registry.RegistryEntry]] = {}
 
-    # upcoming code is part of platform import to be deleted in a future version
     @callback
     def _schedule_yaml_import(_):
         """Schedule platform configuration import after HA is fully started."""
@@ -129,7 +136,6 @@ async def async_setup_entry(
             return
         async_call_later(hass, 2, _import_yaml)
 
-    # upcoming code is part of platform import to be deleted in a future version
     @callback
     def _import_yaml(_):
         """Import platform configuration to config entry."""
@@ -148,7 +154,7 @@ async def async_setup_entry(
         configured_enocean_devices = config_entry.options.get("devices", [])
 
         # process the platform configs
-        for platform_config in _enocean_platform_configs:
+        for platform_config in enocean_platform_configs:
             dev_id = platform_config.config.get("id", None)
 
             if not dev_id:
