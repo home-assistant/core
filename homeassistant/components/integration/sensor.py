@@ -134,6 +134,9 @@ async def async_setup_platform(
 class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_should_poll = False
+
     def __init__(
         self,
         *,
@@ -158,9 +161,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._unit_time_str = unit_time
-        self._attr_state_class = SensorStateClass.TOTAL
         self._attr_icon = "mdi:chart-histogram"
-        self._attr_should_poll = False
         self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
 
     def _unit(self, source_unit: str) -> str:
