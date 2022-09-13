@@ -1,5 +1,6 @@
 """Support for Asterisk Voicemail interface."""
 import logging
+from typing import Any
 
 from asterisk_mbox import Client as asteriskClient
 from asterisk_mbox.commands import (
@@ -80,7 +81,7 @@ class AsteriskData:
         )
 
     @callback
-    def handle_data(self, command, msg):
+    def handle_data(self, command, msg: dict[str, Any]) -> None:
         """Handle changes to the mailbox."""
 
         if command == CMD_MESSAGE_LIST:
