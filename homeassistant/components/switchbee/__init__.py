@@ -15,6 +15,7 @@ from .coordinator import SwitchBeeCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
