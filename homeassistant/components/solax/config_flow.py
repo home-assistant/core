@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from solax import real_time_api
-from solax.inverter import DiscoveryError
+from solax.discovery import DiscoveryError
 import voluptuous as vol
 
 from homeassistant import config_entries

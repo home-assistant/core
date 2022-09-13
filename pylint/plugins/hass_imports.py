@@ -175,11 +175,35 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by MediaPlayerEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by MediaClass enum",
+            constant=re.compile(r"^MEDIA_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by MediaType enum",
+            constant=re.compile(r"^MEDIA_TYPE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by RepeatMode enum",
+            constant=re.compile(r"^REPEAT_MODE(\w*)$"),
+        ),
     ],
     "homeassistant.components.media_player.const": [
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by MediaClass enum",
+            constant=re.compile(r"^MEDIA_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by MediaType enum",
+            constant=re.compile(r"^MEDIA_TYPE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by RepeatMode enum",
+            constant=re.compile(r"^REPEAT_MODE(\w*)$"),
         ),
     ],
     "homeassistant.components.remote": [
