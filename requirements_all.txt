@@ -147,7 +147,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.09.1
+aioecowitt==2022.09.2
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
