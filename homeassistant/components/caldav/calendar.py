@@ -19,6 +19,7 @@ from homeassistant.components.calendar import (
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_SSL_CLIENT_CERT,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -59,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 )
             ],
         ),
+        vol.Optional(CONF_SSL_CLIENT_CERT, default=None): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_DAYS, default=1): cv.positive_int,
     }
@@ -80,7 +82,8 @@ def setup_platform(
     days = config[CONF_DAYS]
 
     client = caldav.DAVClient(
-        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
+        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL],
+        ssl_cert=config[CONF_SSL_CLIENT_CERT]
     )
 
     calendars = client.principal().calendars()
