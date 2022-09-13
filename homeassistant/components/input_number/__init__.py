@@ -196,6 +196,22 @@ class NumberStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    async def _async_load_data(self) -> dict | None:
+        """Load the data.
+
+        A past bug caused frontend to add initial value to all input numbers.
+        This drops that.
+        """
+        data = await super()._async_load_data()
+
+        if data is None:
+            return data
+
+        for number in data["items"]:
+            number.pop(CONF_INITIAL, None)
+
+        return data
+
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
