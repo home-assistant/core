@@ -7,7 +7,7 @@
   "requirements": [
     "bleak==0.16.0",
     "bluetooth-adapters==0.4.1",
-    "bluetooth-auto-recovery==0.3.2",
+    "bluetooth-auto-recovery==0.3.3",
     "dbus_next==0.2.3"
   ],
   "codeowners": ["@bdraco"],
