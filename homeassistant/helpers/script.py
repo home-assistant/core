@@ -49,6 +49,7 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -1296,7 +1297,7 @@ class Script:
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
@@ -1336,7 +1337,7 @@ class Script:
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
                 for data in (
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
@@ -1387,7 +1388,7 @@ class Script:
                 for data in (
                     step,
                     step.get(CONF_TARGET),
-                    step.get(service.CONF_SERVICE_DATA),
+                    step.get(CONF_SERVICE_DATA),
                     step.get(service.CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
