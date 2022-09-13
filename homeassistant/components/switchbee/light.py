@@ -10,7 +10,7 @@ from switchbee.api import (
     SwitchBeeDeviceOfflineError,
     SwitchBeeError,
 )
-from switchbee.device import ApiStateCommand, DeviceType
+from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +20,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SwitchBeeCoordinator
 from .const import CONF_SWITCHES_AS_LIGHTS, DOMAIN
 
 MAX_BRIGHTNESS = 255
@@ -65,18 +66,24 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, LightEntity):
     """Representation of an SwitchBee light."""
 
-    def __init__(self, hass, device, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SwitchBeeBaseDevice,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
         """Initialize the SwitchBee light."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._attr_name = f"{device.name}"
         self._device_id = device.id
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
-        self._is_dimmer = device.type == DeviceType.Dimmer
+        self._is_dimmer = bool(device.type == DeviceType.Dimmer)
         self._attr_is_on = False
-        self._attr_brightness = 0
-        self._attr_supported_features = ColorMode.BRIGHTNESS if self._is_dimmer else 0
-        self._last_brightness = None
+        self._attr_brightness: int = 0
+        if self._is_dimmer:
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._last_brightness: int = 0
         self._attr_available = True
         self._attr_has_entity_name = True
         self._device = device
