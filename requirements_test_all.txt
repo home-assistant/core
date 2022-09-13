@@ -338,7 +338,7 @@ bleak==0.17.0
 blebox_uniapi==2.0.2
 
 # homeassistant.components.blink
-blinkpy==0.19.0
+blinkpy==0.19.2
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.0
@@ -1175,7 +1175,7 @@ pylitejet==0.3.0
 pylitterbot==2022.9.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.13.1
+pylutron-caseta==0.15.1
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
