@@ -50,10 +50,7 @@ class AirQCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
-        try:
-            data = await self.airq.get(TARGET_ROUTE)
-        except ClientError as err:
-            raise UpdateFailed(f"Error while retrieving data: {err}") from err
+        data = await self.airq.get(TARGET_ROUTE)
         return self.airq.drop_uncertainties_from_data(data)
 
 
