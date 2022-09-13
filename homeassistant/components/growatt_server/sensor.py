@@ -171,7 +171,7 @@ class GrowattInverter(SensorEntity):
             return self.probe.get_data("currency")
         return super().native_unit_of_measurement
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the Growat API and updates the state."""
         self.probe.update()
 

@@ -10,6 +10,13 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Aggiorna la tua password per {email}",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "email": "Email",

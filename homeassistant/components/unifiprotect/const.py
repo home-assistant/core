@@ -63,5 +63,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"

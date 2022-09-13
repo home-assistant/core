@@ -94,16 +94,9 @@ class DeconzNumber(DeconzDevice[Presence], NumberEntity):
     ) -> None:
         """Initialize deCONZ number entity."""
         self.entity_description: DeconzNumberDescription = description
+        self._update_key = self.entity_description.update_key
+        self._name_suffix = description.suffix
         super().__init__(device, gateway)
-
-        self._attr_name = f"{device.name} {description.suffix}"
-        self._update_keys = {self.entity_description.update_key, "reachable"}
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the number value."""
-        if self._device.changed_keys.intersection(self._update_keys):
-            super().async_update_callback()
 
     @property
     def native_value(self) -> float | None:

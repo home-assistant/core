@@ -69,6 +69,28 @@ WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoHand"),
+    time=0,
+    connectable=True,
+)
+
+
+WOHAND_SERVICE_INFO_NOT_CONNECTABLE = BluetoothServiceInfoBleak(
+    name="WoHand",
+    manufacturer_data={89: b"\xfd`0U\x92W"},
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    source="local",
+    advertisement=AdvertisementData(
+        local_name="WoHand",
+        manufacturer_data={89: b"\xfd`0U\x92W"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoHand"),
+    time=0,
+    connectable=False,
 )
 
 
@@ -87,6 +109,8 @@ WOHAND_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=BLEDevice("798A8547-2A3D-C609-55FF-73FA824B923B", "WoHand"),
+    time=0,
+    connectable=True,
 )
 
 
@@ -105,6 +129,8 @@ WOHAND_SERVICE_ALT_ADDRESS_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoHand"),
+    time=0,
+    connectable=True,
 )
 WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoCurtain",
@@ -121,6 +147,8 @@ WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoCurtain"),
+    time=0,
+    connectable=True,
 )
 
 WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -136,6 +164,8 @@ WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"T\x00d\x00\x96\xac"},
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoSensorTH"),
+    time=0,
+    connectable=False,
 )
 
 NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
@@ -151,4 +181,6 @@ NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
         service_data={},
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "unknown"),
+    time=0,
+    connectable=True,
 )

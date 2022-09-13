@@ -8,6 +8,7 @@
         "error": {
             "unknown": "Erro inesperado"
         },
+        "flow_title": "{host}",
         "step": {
             "reauth_confirm": {
                 "data": {

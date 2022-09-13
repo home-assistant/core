@@ -51,7 +51,7 @@ async def test_binary_sensor_camera_remove(
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
-    await remove_entities(hass, [doorbell, unadopted_camera])
+    await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
@@ -65,7 +65,7 @@ async def test_binary_sensor_light_remove(
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
-    await remove_entities(hass, [light])
+    await remove_entities(hass, ufp, [light])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [light])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
@@ -79,7 +79,7 @@ async def test_binary_sensor_sensor_remove(
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
-    await remove_entities(hass, [sensor_all])
+    await remove_entities(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)

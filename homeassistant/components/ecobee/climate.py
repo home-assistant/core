@@ -6,14 +6,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -303,6 +303,9 @@ async def async_setup_entry(
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
+    _attr_precision = PRECISION_TENTHS
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+
     def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
         self.data = data
@@ -380,16 +383,6 @@ class Thermostat(ClimateEntity):
             model=model,
             name=self.name,
         )
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def current_temperature(self) -> float:

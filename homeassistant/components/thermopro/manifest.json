@@ -1,0 +1,14 @@
+{
+  "domain": "thermopro",
+  "name": "ThermoPro",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/thermopro",
+  "bluetooth": [
+    { "local_name": "TP35*", "connectable": false },
+    { "local_name": "TP39*", "connectable": false }
+  ],
+  "dependencies": ["bluetooth"],
+  "requirements": ["thermopro-ble==0.4.3"],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_push"
+}

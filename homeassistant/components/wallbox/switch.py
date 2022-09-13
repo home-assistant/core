@@ -56,6 +56,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         """Return the availability of the switch."""
         return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] in {
             ChargerStatus.CHARGING,
+            ChargerStatus.DISCHARGING,
             ChargerStatus.PAUSED,
             ChargerStatus.SCHEDULED,
         }
@@ -65,6 +66,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         """Return the status of pause/resume."""
         return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] in {
             ChargerStatus.CHARGING,
+            ChargerStatus.DISCHARGING,
             ChargerStatus.WAITING_FOR_CAR,
             ChargerStatus.WAITING,
         }

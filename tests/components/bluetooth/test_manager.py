@@ -24,7 +24,7 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         local_name="wohand_signal_100", service_uuids=[]
     )
     inject_advertisement_with_source(
-        switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"
+        hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"
     )
 
     assert (
@@ -37,7 +37,7 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         local_name="wohand_signal_99", service_uuids=[]
     )
     inject_advertisement_with_source(
-        switchbot_device_signal_99, switchbot_adv_signal_99, "hci0"
+        hass, switchbot_device_signal_99, switchbot_adv_signal_99, "hci0"
     )
 
     assert (
@@ -50,7 +50,7 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         local_name="wohand_good_signal", service_uuids=[]
     )
     inject_advertisement_with_source(
-        switchbot_device_signal_98, switchbot_adv_signal_98, "hci1"
+        hass, switchbot_device_signal_98, switchbot_adv_signal_98, "hci1"
     )
 
     # should not switch to hci1
@@ -70,7 +70,7 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
         local_name="wohand_poor_signal", service_uuids=[]
     )
     inject_advertisement_with_source(
-        switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
     )
 
     assert (
@@ -83,7 +83,7 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
         local_name="wohand_good_signal", service_uuids=[]
     )
     inject_advertisement_with_source(
-        switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
+        hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
     )
 
     assert (
@@ -92,7 +92,7 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
     inject_advertisement_with_source(
-        switchbot_device_good_signal, switchbot_adv_poor_signal, "hci0"
+        hass, switchbot_device_good_signal, switchbot_adv_poor_signal, "hci0"
     )
     assert (
         bluetooth.async_ble_device_from_address(hass, address)
@@ -108,7 +108,7 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
     inject_advertisement_with_source(
-        switchbot_device_similar_signal, switchbot_adv_similar_signal, "hci0"
+        hass, switchbot_device_similar_signal, switchbot_adv_similar_signal, "hci0"
     )
     assert (
         bluetooth.async_ble_device_from_address(hass, address)
@@ -129,6 +129,7 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
         local_name="wohand_poor_signal_hci0", service_uuids=[]
     )
     inject_advertisement_with_time_and_source(
+        hass,
         switchbot_device_poor_signal_hci0,
         switchbot_adv_poor_signal_hci0,
         start_time_monotonic,
@@ -147,6 +148,7 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
         local_name="wohand_poor_signal_hci1", service_uuids=[]
     )
     inject_advertisement_with_time_and_source(
+        hass,
         switchbot_device_poor_signal_hci1,
         switchbot_adv_poor_signal_hci1,
         start_time_monotonic,
@@ -163,6 +165,7 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
     # even though the signal is poor because the device is now
     # likely unreachable via hci0
     inject_advertisement_with_time_and_source(
+        hass,
         switchbot_device_poor_signal_hci1,
         switchbot_adv_poor_signal_hci1,
         start_time_monotonic + STALE_ADVERTISEMENT_SECONDS + 1,

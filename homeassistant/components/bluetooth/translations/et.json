@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
-            "no_adapters": "Bluetoothi adaptereid ei leitud"
+            "no_adapters": "Seadistamata Bluetoothi adaptereid ei leitud"
         },
         "flow_title": "{name}",
         "step": {
@@ -11,6 +11,15 @@
             },
             "enable_bluetooth": {
                 "description": "Kas soovid Bluetoothi seadistada?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapter"
+                },
+                "description": "Vali seadistamiseks Bluetooth-adapter"
+            },
+            "single_adapter": {
+                "description": "Kas seadistada Bluetooth-adapterit {nimi}?"
             },
             "user": {
                 "data": {
@@ -24,8 +33,10 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Sk\u00e4nnimiseks kasutatav Bluetoothi adapter"
-                }
+                    "adapter": "Sk\u00e4nnimiseks kasutatav Bluetoothi adapter",
+                    "passive": "Passiivne sk\u00e4nnimine"
+                },
+                "description": "Passiivseks kuulamiseks on vaja BlueZ 5.63 v\u00f5i uuemat versiooni koos lubatud eksperimentaalsete funktsioonidega."
             }
         }
     }

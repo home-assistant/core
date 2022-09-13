@@ -2,7 +2,7 @@
   "domain": "hunterdouglas_powerview",
   "name": "Hunter Douglas PowerView",
   "documentation": "https://www.home-assistant.io/integrations/hunterdouglas_powerview",
-  "requirements": ["aiopvapi==1.6.19"],
+  "requirements": ["aiopvapi==2.0.1"],
   "codeowners": ["@bdraco", "@kingy444", "@trullock"],
   "config_flow": true,
   "homekit": {

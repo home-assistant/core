@@ -175,7 +175,9 @@ class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FLOW_SENSOR:
-            self._attr_is_on = self.coordinator.data["system"].get("useFlowSensor")
+            self._attr_is_on = self.coordinator.data.get("system", {}).get(
+                "useFlowSensor"
+            )
 
 
 class UniversalRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):

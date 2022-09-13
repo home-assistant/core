@@ -130,6 +130,8 @@ class Plant(Entity):
     configurable min and max values.
     """
 
+    _attr_should_poll = False
+
     READINGS = {
         READING_BATTERY: {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
@@ -322,11 +324,6 @@ class Plant(Entity):
                 )
 
         _LOGGER.debug("Initializing from database completed")
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

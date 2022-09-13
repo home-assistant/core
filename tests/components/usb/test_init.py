@@ -1,7 +1,7 @@
 """Tests for the USB Discovery integration."""
 import os
 import sys
-from unittest.mock import MagicMock, call, patch, sentinel
+from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
 
@@ -875,3 +875,35 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
         assert response["success"]
         await hass.async_block_till_done()
         assert usb.async_is_plugged_in(hass, matcher)
+
+
+async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_client):
+    """Test the websocket call triggers a discovery request callback."""
+    mock_callback = Mock()
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=[]
+    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = usb.async_register_scan_request_callback(hass, mock_callback)
+
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+        assert len(mock_callback.mock_calls) == 1
+        cancel()
+
+        await ws_client.send_json({"id": 2, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+        assert len(mock_callback.mock_calls) == 1

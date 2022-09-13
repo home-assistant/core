@@ -25,6 +25,10 @@
                 "data": {
                     "api_key": "Chiave API",
                     "host": "Host"
+                },
+                "data_description": {
+                    "api_key": "Puoi trovare questa chiave API nella [pagina dei dispositivi nel tuo account sviluppatore LaMetric](https://developer.lametric.com/user/devices).",
+                    "host": "L'indirizzo IP o il nome host di LaMetric TIME sulla rete."
                 }
             },
             "pick_implementation": {

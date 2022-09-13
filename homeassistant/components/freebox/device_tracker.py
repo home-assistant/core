@@ -55,6 +55,8 @@ def add_entities(
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
 
+    _attr_should_poll = False
+
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
@@ -93,7 +95,7 @@ class FreeboxDevice(ScannerEntity):
         return self._name
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._active
 
@@ -112,18 +114,13 @@ class FreeboxDevice(ScannerEntity):
         """Return the attributes."""
         return self._attrs
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
     @callback
     def async_on_demand_update(self):
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
         self.async_on_remove(

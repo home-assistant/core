@@ -48,7 +48,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
                     "model": "yellow",
                     "revision": None,
                 },
-                "dongles": None,
+                "dongle": None,
                 "name": "Home Assistant Yellow",
                 "url": None,
             }

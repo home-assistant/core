@@ -31,6 +31,12 @@
                 },
                 "description": "Lokalny interfejs API Awair musi by\u0107 w\u0142\u0105czony, wykonuj\u0105c nast\u0119puj\u0105ce czynno\u015bci: {url}"
             },
+            "local_pick": {
+                "data": {
+                    "device": "Urz\u0105dzenie",
+                    "host": "Adres IP"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Token dost\u0119pu",
