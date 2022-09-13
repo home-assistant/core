@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "Quer montar uma lareira Escea?"
+            }
+        }
+    }
+}
