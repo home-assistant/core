@@ -1,10 +1,14 @@
 """Config validation helper for the automation integration."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import blueprint
+from homeassistant.components.blueprint.models import BlueprintInputs
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -17,10 +21,12 @@ from homeassistant.const import (
     CONF_ID,
     CONF_VARIABLES,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
 
 from .const import (
@@ -33,9 +39,6 @@ from .const import (
     DOMAIN,
 )
 from .helpers import async_get_blueprints
-
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -63,7 +66,11 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_validate_config_item(hass, config, full_config=None):
+async def async_validate_config_item(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    full_config: dict[str, Any] | None = None,
+) -> BlueprintInputs | dict[str, Any]:
     """Validate config item."""
     if blueprint.is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
@@ -90,17 +97,21 @@ async def async_validate_config_item(hass, config, full_config=None):
 class AutomationConfig(dict):
     """Dummy class to allow adding attributes."""
 
-    raw_config = None
+    raw_config: dict[str, Any] | None = None
 
 
-async def _try_async_validate_config_item(hass, config, full_config=None):
+async def _try_async_validate_config_item(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    full_config: dict[str, Any] | None = None,
+) -> AutomationConfig | blueprint.BlueprintInputs | None:
     """Validate config item."""
     raw_config = None
     with suppress(ValueError):
         raw_config = dict(config)
 
     try:
-        config = await async_validate_config_item(hass, config, full_config)
+        valid_config = await async_validate_config_item(hass, config, full_config)
     except (
         vol.Invalid,
         HomeAssistantError,
@@ -110,15 +121,15 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
-    if isinstance(config, blueprint.BlueprintInputs):
-        return config
+    if isinstance(valid_config, blueprint.BlueprintInputs):
+        return valid_config
 
-    config = AutomationConfig(config)
-    config.raw_config = raw_config
-    return config
+    automation_config = AutomationConfig(config)
+    automation_config.raw_config = raw_config
+    return automation_config
 
 
-async def async_validate_config(hass, config):
+async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
     automations = list(
         filter(
