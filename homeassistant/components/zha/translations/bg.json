@@ -8,6 +8,9 @@
             "cannot_connect": "\u041d\u0435\u0432\u044a\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442 \u0437\u0430 \u0441\u0432\u044a\u0440\u0437\u0432\u0430\u043d\u0435 \u0441 ZHA \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e"
         },
         "step": {
+            "choose_serial_port": {
+                "title": "\u0418\u0437\u0431\u0435\u0440\u0435\u0442\u0435 \u0441\u0435\u0440\u0438\u0435\u043d \u043f\u043e\u0440\u0442"
+            },
             "confirm": {
                 "description": "\u0418\u0441\u043a\u0430\u0442\u0435 \u043b\u0438 \u0434\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u0435 {name}?"
             },
@@ -17,7 +20,8 @@
             "manual_port_config": {
                 "data": {
                     "baudrate": "\u0441\u043a\u043e\u0440\u043e\u0441\u0442 \u043d\u0430 \u043f\u043e\u0440\u0442\u0430"
-                }
+                },
+                "title": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u043d\u0430 \u0441\u0435\u0440\u0438\u0439\u043d\u0438\u044f \u043f\u043e\u0440\u0442"
             },
             "pick_radio": {
                 "data": {
@@ -95,6 +99,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "choose_serial_port": {
+                "title": "\u0418\u0437\u0431\u0435\u0440\u0435\u0442\u0435 \u0441\u0435\u0440\u0438\u0435\u043d \u043f\u043e\u0440\u0442"
+            },
             "manual_port_config": {
                 "data": {
                     "baudrate": "\u0441\u043a\u043e\u0440\u043e\u0441\u0442 \u043d\u0430 \u043f\u043e\u0440\u0442\u0430"

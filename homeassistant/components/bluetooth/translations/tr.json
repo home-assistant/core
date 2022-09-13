@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "no_adapters": "Bluetooth adapt\u00f6r\u00fc bulunamad\u0131"
+            "no_adapters": "Yap\u0131land\u0131r\u0131lmam\u0131\u015f Bluetooth adapt\u00f6r\u00fc bulunamad\u0131"
         },
         "flow_title": "{name}",
         "step": {
@@ -33,8 +33,10 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Tarama i\u00e7in kullan\u0131lacak Bluetooth Adapt\u00f6r\u00fc"
-                }
+                    "adapter": "Tarama i\u00e7in kullan\u0131lacak Bluetooth Adapt\u00f6r\u00fc",
+                    "passive": "Pasif tarama"
+                },
+                "description": "Pasif dinleme, BlueZ 5.63 veya daha yenisini ve deneysel \u00f6zelliklerin etkinle\u015ftirilmesini gerektirir."
             }
         }
     }
