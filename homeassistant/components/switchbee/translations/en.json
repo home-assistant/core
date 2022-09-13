@@ -14,19 +14,9 @@
             "data": {
                 "host": "Central Unit IP address",
                 "username": "User (e-mail)",
-                "password": "Password",
-                "switch_as_light": "Initialize switches as light entities"
+                "password": "Password"
             }
           }
       }
-  },
-  "options": {
-      "step": {
-        "init": {
-          "data": {
-            "devices": "Devices to include"
-          }
-        }
-      }
-    }
+  }
 }

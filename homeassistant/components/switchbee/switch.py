@@ -9,13 +9,14 @@ from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitchBeeCoordinator
 from .const import DOMAIN
+from .coordinator import SwitchBeeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +26,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbee switch."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    device_types = (
-        [DeviceType.TimedPowerSwitch]
-        if coordinator.switch_as_light
-        else [
+
+    async_add_entities(
+        Device(hass, device, coordinator)
+        for device in coordinator.data.values()
+        if device.type
+        in [
             DeviceType.TimedPowerSwitch,
             DeviceType.GroupSwitch,
             DeviceType.Switch,
@@ -37,17 +40,16 @@ async def async_setup_entry(
         ]
     )
 
-    async_add_entities(
-        Device(hass, device, coordinator)
-        for device in coordinator.data.values()
-        if device.type in device_types
-    )
-
 
 class Device(CoordinatorEntity, SwitchEntity):
     """Representation of an Switchbee switch."""
 
-    def __init__(self, hass, device: SwitchBeeBaseDevice, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SwitchBeeBaseDevice,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
@@ -88,6 +90,7 @@ class Device(CoordinatorEntity, SwitchEntity):
             except SwitchBeeError:
                 return
 
+        print(self.coordinator.data)
         if self.coordinator.data[self._device_id].state == -1:
             # This specific call will refresh the state of the device in the CU
             self.hass.async_create_task(async_refresh_state())
@@ -133,9 +136,8 @@ class Device(CoordinatorEntity, SwitchEntity):
         try:
             await self.coordinator.api.set_state(self._device_id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
-            _LOGGER.error(
-                "Failed to set %s state %s, error: %s", self._attr_name, state, exp
-            )
-            self._async_write_ha_state()
+            raise HomeAssistantError(
+                f"Failed to set {self._attr_name} state {state}"
+            ) from exp
         else:
             await self.coordinator.async_refresh()
