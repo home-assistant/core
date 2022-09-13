@@ -1112,7 +1112,9 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[dict[str, Any], MappingProxyType]
 
 
-def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:
+def _referenced_extract_ids(
+    data: dict[str, Any] | None, key: str, found: set[str]
+) -> None:
     """Extract referenced IDs."""
     if not data:
         return
