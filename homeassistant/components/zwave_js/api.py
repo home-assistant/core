@@ -47,12 +47,12 @@ from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
+    ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
