@@ -1348,6 +1348,45 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "image_processing": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ImageProcessingEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="camera_entity",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="confidence",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="process_image",
+                    arg_types={1: "Image"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="ImageProcessingFaceEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="process_faces",
+                    arg_types={
+                        1: "list[FaceInformation]",
+                        2: "int",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "light": [
         ClassTypeHintMatch(
             base_class="Entity",
