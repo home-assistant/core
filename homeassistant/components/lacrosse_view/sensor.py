@@ -148,7 +148,7 @@ class LaCrosseViewSensor(
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.sensor_id}-{description.key}"
-        self._attr_name = f"{sensor.name} {description.name}"
+        self._attr_name = f"{description.name}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
             "name": sensor.name,
