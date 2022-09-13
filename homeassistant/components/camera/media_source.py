@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, cast
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -97,7 +93,7 @@ class CameraMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=camera.entity_id,
-                    media_class=MEDIA_CLASS_VIDEO,
+                    media_class=MediaClass.VIDEO,
                     media_content_type=content_type,
                     title=camera.name,
                     thumbnail=f"/api/camera_proxy/{camera.entity_id}",
@@ -109,12 +105,12 @@ class CameraMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_type="",
             title="Camera",
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
             children=children,
             not_shown=not_shown,
         )

@@ -141,7 +141,7 @@ async def test_notification_off_state(
 
     state = door_states[0]
     assert state
-    assert state.entity_id == "binary_sensor.node_62_access_control_window_door_is_open"
+    assert state.entity_id == "binary_sensor.node_62_window_door_is_open"
 
 
 async def test_property_sensor_door_status(hass, lock_august_pro, integration):

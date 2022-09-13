@@ -61,7 +61,7 @@ class TapsAffSensor(BinarySensorEntity):
         """Return true if taps aff."""
         return self.data.is_taps_aff
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.data.update()
 

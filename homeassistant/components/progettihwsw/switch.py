@@ -1,6 +1,7 @@
 """Control switches."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 from ProgettiHWSW.relay import Relay
 import async_timeout
@@ -65,17 +66,17 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
         self._switch = switch
         self._name = name
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._switch.control(True)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._switch.control(False)
         await self.coordinator.async_request_refresh()
 
-    async def async_toggle(self, **kwargs):
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the state of switch."""
         await self._switch.toggle()
         await self.coordinator.async_request_refresh()

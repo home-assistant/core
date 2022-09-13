@@ -7,8 +7,12 @@ from typing import Any
 from heatmiserV3 import connection, heatmiser
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,

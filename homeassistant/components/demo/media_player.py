@@ -7,16 +7,12 @@ from typing import Any
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-    REPEAT_MODE_OFF,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -118,7 +114,7 @@ class AbstractDemoPlayer(MediaPlayerEntity):
     ) -> None:
         """Initialize the demo device."""
         self._attr_name = name
-        self._player_state = STATE_PLAYING
+        self._player_state = MediaPlayerState.PLAYING
         self._volume_level = 1.0
         self._volume_muted = False
         self._shuffle = False
@@ -163,12 +159,12 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def turn_on(self) -> None:
         """Turn the media player on."""
-        self._player_state = STATE_PLAYING
+        self._player_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
     def turn_off(self) -> None:
         """Turn the media player off."""
-        self._player_state = STATE_OFF
+        self._player_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
     def mute_volume(self, mute: bool) -> None:
@@ -193,17 +189,17 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def media_play(self) -> None:
         """Send play command."""
-        self._player_state = STATE_PLAYING
+        self._player_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
     def media_pause(self) -> None:
         """Send pause command."""
-        self._player_state = STATE_PAUSED
+        self._player_state = MediaPlayerState.PAUSED
         self.schedule_update_ha_state()
 
     def media_stop(self) -> None:
         """Send stop command."""
-        self._player_state = STATE_OFF
+        self._player_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle: bool) -> None:
@@ -222,6 +218,8 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
     # We only implement the methods that we support
 
+    _attr_media_content_type = MediaType.MOVIE
+
     def __init__(
         self, name: str, youtube_id: str, media_title: str, duration: int
     ) -> None:
@@ -237,11 +235,6 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     def media_content_id(self) -> str:
         """Return the content ID of current playing media."""
         return self.youtube_id
-
-    @property
-    def media_content_type(self) -> str:
-        """Return the content type of current playing media."""
-        return MEDIA_TYPE_MOVIE
 
     @property
     def media_duration(self) -> int:
@@ -276,7 +269,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         position = self._progress
 
-        if self._player_state == STATE_PLAYING:
+        if self._player_state == MediaPlayerState.PLAYING:
             position += int(
                 (dt_util.utcnow() - self._progress_updated_at).total_seconds()
             )
@@ -289,7 +282,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        if self._player_state == STATE_PLAYING:
+        if self._player_state == MediaPlayerState.PLAYING:
             return self._progress_updated_at
         return None
 
@@ -309,6 +302,8 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     """A Demo media player."""
 
     # We only implement the methods that we support
+
+    _attr_media_content_type = MediaType.MUSIC
 
     tracks = [
         ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
@@ -338,7 +333,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         super().__init__(name)
         self._cur_track = 0
         self._group_members: list[str] = []
-        self._repeat = REPEAT_MODE_OFF
+        self._repeat = RepeatMode.OFF
 
     @property
     def group_members(self) -> list[str]:
@@ -349,11 +344,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     def media_content_id(self) -> str:
         """Return the content ID of current playing media."""
         return "bounzz-1"
-
-    @property
-    def media_content_type(self) -> str:
-        """Return the content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self) -> int:
@@ -386,7 +376,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self._cur_track + 1
 
     @property
-    def repeat(self) -> str:
+    def repeat(self) -> RepeatMode:
         """Return current repeat mode."""
         return self._repeat
 
@@ -411,10 +401,10 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Clear players playlist."""
         self.tracks = []
         self._cur_track = 0
-        self._player_state = STATE_OFF
+        self._player_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
-    def set_repeat(self, repeat: str) -> None:
+    def set_repeat(self, repeat: RepeatMode) -> None:
         """Enable/disable repeat mode."""
         self._repeat = repeat
         self.schedule_update_ha_state()
@@ -438,6 +428,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     # We only implement the methods that we support
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_media_content_type = MediaType.TVSHOW
 
     def __init__(self) -> None:
         """Initialize the demo device."""
@@ -451,11 +442,6 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     def media_content_id(self) -> str:
         """Return the content ID of current playing media."""
         return "house-of-cards-1"
-
-    @property
-    def media_content_type(self) -> str:
-        """Return the content type of current playing media."""
-        return MEDIA_TYPE_TVSHOW
 
     @property
     def media_duration(self) -> int:
