@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.5
+PySwitchbot==0.19.6
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -433,7 +433,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.2
+bluetooth-auto-recovery==0.3.3
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -533,6 +533,9 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.8
+
+# homeassistant.components.bluetooth
+dbus_next==0.2.3
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1905,6 +1908,9 @@ pystiebeleltron==0.0.1.dev2
 # homeassistant.components.suez_water
 pysuez==0.1.19
 
+# homeassistant.components.switchbee
+pyswitchbee==1.4.7
+
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
 
@@ -2260,7 +2266,7 @@ solaredge-local==0.2.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.9
+solax==0.3.0
 
 # homeassistant.components.honeywell
 somecomfort==0.8.0
@@ -2528,7 +2534,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.0
+xiaomi-ble==0.9.3
 
 # homeassistant.components.knx
 xknx==1.0.2
