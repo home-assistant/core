@@ -52,8 +52,8 @@ from homeassistant.components.websocket_api import (
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
+    ActiveConnection,
 )
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
