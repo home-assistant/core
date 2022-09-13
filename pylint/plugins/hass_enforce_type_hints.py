@@ -1348,6 +1348,45 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "image_processing": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ImageProcessingEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="camera_entity",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="confidence",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="process_image",
+                    arg_types={1: "Image"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="ImageProcessingFaceEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="process_faces",
+                    arg_types={
+                        1: "list[FaceInformation]",
+                        2: "int",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "light": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1496,6 +1535,39 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "mailbox": [
+        ClassTypeHintMatch(
+            base_class="Mailbox",
+            matches=[
+                TypeHintMatch(
+                    function_name="media_type",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="can_delete",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="has_media",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_media",
+                    arg_types={1: "str"},
+                    return_type="bytes",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_messages",
+                    return_type="list[dict[str, Any]]",
+                ),
+                TypeHintMatch(
+                    function_name="async_delete",
+                    arg_types={1: "str"},
+                    return_type="bool",
                 ),
             ],
         ),
