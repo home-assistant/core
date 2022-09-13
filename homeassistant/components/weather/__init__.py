@@ -45,8 +45,6 @@ from homeassistant.util import (
     temperature as temperature_util,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONDITION_CLASS = "condition_class"
@@ -626,9 +624,9 @@ class WeatherEntity(Entity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted from native units to user-configured units."""
-        data = {}
+        data: dict[str, Any] = {}
 
         precision = self.precision
 
@@ -706,8 +704,8 @@ class WeatherEntity(Entity):
 
         if self.forecast is not None:
             forecast = []
-            for forecast_entry in self.forecast:
-                forecast_entry = dict(forecast_entry)
+            for existing_forecast_entry in self.forecast:
+                forecast_entry: dict[str, Any] = dict(existing_forecast_entry)
 
                 temperature = forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)
