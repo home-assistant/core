@@ -1232,6 +1232,7 @@ omit =
     homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/entity.py
+    homeassistant/components/switchbee/light.py
     homeassistant/components/switchbee/switch.py
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/binary_sensor.py
