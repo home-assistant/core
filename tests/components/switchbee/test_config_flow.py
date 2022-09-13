@@ -2,9 +2,9 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.switchbee.config_flow import DeviceType, SwitchBeeError
-from homeassistant.components.switchbee.const import CONF_SWITCHES_AS_LIGHTS, DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.switchbee.config_flow import SwitchBeeError
+from homeassistant.components.switchbee.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_FORM, FlowResultType
 
@@ -40,7 +40,6 @@ async def test_form(hass):
                 CONF_HOST: "1.1.1.1",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
-                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
         await hass.async_block_till_done()
@@ -51,7 +50,6 @@ async def test_form(hass):
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
-        CONF_SWITCHES_AS_LIGHTS: False,
     }
 
 
@@ -71,7 +69,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
                 CONF_HOST: "1.1.1.1",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
-                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
@@ -95,7 +92,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
                 CONF_HOST: "1.1.1.1",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
-                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
@@ -119,7 +115,6 @@ async def test_form_unknown_error(hass):
                 CONF_HOST: "1.1.1.1",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
-                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
@@ -136,7 +131,6 @@ async def test_form_entry_exists(hass):
             CONF_HOST: "1.1.1.1",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_SWITCHES_AS_LIGHTS: False,
         },
         title="1.1.1.1",
     ).add_to_hass(hass)
@@ -160,39 +154,8 @@ async def test_form_entry_exists(hass):
                 CONF_HOST: "1.2.2.2",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
-                CONF_SWITCHES_AS_LIGHTS: False,
             },
         )
 
     assert form_result["type"] == FlowResultType.ABORT
     assert form_result["reason"] == "already_configured"
-
-
-async def test_option_flow(hass):
-    """Test config flow options."""
-    entry = MockConfigEntry(
-        unique_id="a8:21:08:e7:67:b6",
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_SWITCHES_AS_LIGHTS: False,
-        },
-        title="1.1.1.1",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_DEVICES: [DeviceType.Switch.display, DeviceType.GroupSwitch.display],
-        },
-    )
-    assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_DEVICES: [DeviceType.Switch.display, DeviceType.GroupSwitch.display],
-    }

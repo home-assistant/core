@@ -90,7 +90,6 @@ class Device(CoordinatorEntity, SwitchEntity):
             except SwitchBeeError:
                 return
 
-        print(self.coordinator.data)
         if self.coordinator.data[self._device_id].state == -1:
             # This specific call will refresh the state of the device in the CU
             self.hass.async_create_task(async_refresh_state())

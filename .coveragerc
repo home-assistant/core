@@ -1589,7 +1589,9 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/switchbee/__init__.py
     homeassistant/components/switchbee/const.py
+    homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/switch.py
+
 
 [report]
 # Regexes for lines to exclude from consideration
