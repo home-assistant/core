@@ -416,7 +416,7 @@ async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
-    assert float(state.state) == 10
+    assert float(state.state) == 0  # initial is not supported when loading from storage
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
 
@@ -438,7 +438,7 @@ async def test_editable_state_attribute(hass, storage_setup):
     )
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
-    assert float(state.state) == 10
+    assert float(state.state) == 0
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
 
