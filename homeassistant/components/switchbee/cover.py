@@ -13,7 +13,7 @@ from switchbee.api import (
     SwitchBeeTokenError,
 )
 from switchbee.const import SomfyCommand
-from switchbee.device import DeviceType, SwitchBeeShutter
+from switchbee.device import DeviceType, SwitchBeeBaseShutter
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SwitchBeeCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,12 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, CoverEntity):
     """Representation of an SwitchBee cover."""
 
-    def __init__(self, hass, device: SwitchBeeShutter, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SwitchBeeBaseShutter,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
         """Initialize the SwitchBee cover."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
