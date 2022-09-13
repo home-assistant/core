@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, user_input[CONF_DEVICE]
             )
+            _LOGGER.debug("Using this path : %s", dev_path)
 
             try:
                 return await self.validate_and_create_entry(dev_path)
@@ -76,6 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect to the device path and return an entry."""
         model, device_number = await self.validate_ultraheat(dev_path)
 
+        _LOGGER.debug("Got model %s and device_number %s", model, device_number)
         await self.async_set_unique_id(device_number)
         self._abort_if_unique_id_configured()
         data = {
@@ -94,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reader = UltraheatReader(port)
         heat_meter = HeatMeterService(reader)
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
                 _LOGGER.debug("Got data from Ultraheat API: %s", data)

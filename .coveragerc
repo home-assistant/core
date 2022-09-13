@@ -64,6 +64,7 @@ omit =
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apcupsd/*
     homeassistant/components/apple_tv/__init__.py
+    homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
     homeassistant/components/apple_tv/remote.py
     homeassistant/components/aqualogic/*
@@ -1586,6 +1587,9 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/switchbee/__init__.py
+    homeassistant/components/switchbee/const.py
+    homeassistant/components/switchbee/switch.py
 
 [report]
 # Regexes for lines to exclude from consideration

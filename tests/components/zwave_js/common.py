@@ -1,9 +1,7 @@
 """Provide common test tools for Z-Wave JS."""
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 BATTERY_SENSOR = "sensor.multisensor_6_battery_level"
-TAMPER_SENSOR = (
-    "binary_sensor.multisensor_6_home_security_tampering_product_cover_removed"
-)
+TAMPER_SENSOR = "binary_sensor.multisensor_6_tampering_product_cover_removed"
 HUMIDITY_SENSOR = "sensor.multisensor_6_humidity"
 POWER_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
 ENERGY_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2"
@@ -13,10 +11,8 @@ SWITCH_ENTITY = "switch.smart_plug_with_two_usb_ports"
 LOW_BATTERY_BINARY_SENSOR = "binary_sensor.multisensor_6_low_battery_level"
 ENABLED_LEGACY_BINARY_SENSOR = "binary_sensor.z_wave_door_window_sensor_any"
 DISABLED_LEGACY_BINARY_SENSOR = "binary_sensor.multisensor_6_any"
-NOTIFICATION_MOTION_BINARY_SENSOR = (
-    "binary_sensor.multisensor_6_home_security_motion_detection"
-)
-NOTIFICATION_MOTION_SENSOR = "sensor.multisensor_6_home_security_motion_sensor_status"
+NOTIFICATION_MOTION_BINARY_SENSOR = "binary_sensor.multisensor_6_motion_detection"
+NOTIFICATION_MOTION_SENSOR = "sensor.multisensor_6_motion_sensor_status"
 INDICATOR_SENSOR = "sensor.z_wave_thermostat_indicator_value"
 BASIC_NUMBER_ENTITY = "number.livingroomlight_basic"
 PROPERTY_DOOR_STATUS_BINARY_SENSOR = (

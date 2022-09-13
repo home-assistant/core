@@ -11,6 +11,7 @@ from homeassistant.helpers.entity import EntityCategory
 DOMAIN = "landisgyr_heat_meter"
 
 GJ_TO_MWH = 0.277778  # conversion factor
+ULTRAHEAT_TIMEOUT = 30  # reading the IR port can take some time
 
 HEAT_METER_SENSOR_TYPES = (
     SensorEntityDescription(
