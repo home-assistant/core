@@ -49,6 +49,7 @@ MOCK_STATUS = {
     "PostPaused": False,
     "RemainingSizeMB": 512,
     "UpTimeSec": 600,
+    "DownloadLimit": 1000000,
 }
 
 MOCK_HISTORY = [

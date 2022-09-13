@@ -1,6 +1,7 @@
 """The Landis+Gyr Heat Meter integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from ultraheat_api import HeatMeterService, UltraheatReader
@@ -30,15 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info("Polling on %s", entry.data[CONF_DEVICE])
         return await hass.async_add_executor_job(api.read)
 
-    # No automatic polling and no initial refresh of data is being done at this point,
-    # to prevent battery drain. The user will have to do it manually.
-
+    # Polling is only daily to prevent battery drain.
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="ultraheat_gateway",
         update_method=async_update_data,
-        update_interval=None,
+        update_interval=timedelta(days=1),
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

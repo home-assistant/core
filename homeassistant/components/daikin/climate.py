@@ -6,16 +6,17 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -115,6 +116,8 @@ def format_target_temperature(target_temperature):
 class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, api: DaikinApi) -> None:
         """Initialize the climate device."""
 
@@ -179,11 +182,6 @@ class DaikinClimate(ClimateEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._api.device.mac
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

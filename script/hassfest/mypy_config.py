@@ -15,20 +15,7 @@ from .model import Config, Integration
 # If you are an author of component listed here, please fix these errors and
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
-IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.sonos",
-    "homeassistant.components.sonos.alarms",
-    "homeassistant.components.sonos.binary_sensor",
-    "homeassistant.components.sonos.diagnostics",
-    "homeassistant.components.sonos.entity",
-    "homeassistant.components.sonos.favorites",
-    "homeassistant.components.sonos.media_browser",
-    "homeassistant.components.sonos.media_player",
-    "homeassistant.components.sonos.number",
-    "homeassistant.components.sonos.sensor",
-    "homeassistant.components.sonos.speaker",
-    "homeassistant.components.sonos.statistics",
-]
+IGNORED_MODULES: Final[list[str]] = []
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {

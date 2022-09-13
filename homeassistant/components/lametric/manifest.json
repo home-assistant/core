@@ -5,7 +5,7 @@
   "requirements": ["demetriek==0.2.2"],
   "codeowners": ["@robbiet480", "@frenck"],
   "iot_class": "local_polling",
-  "dependencies": ["application_credentials", "repairs"],
+  "dependencies": ["application_credentials"],
   "loggers": ["demetriek"],
   "config_flow": true,
   "ssdp": [

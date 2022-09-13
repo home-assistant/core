@@ -3,8 +3,9 @@
   "name": "Litter-Robot",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/litterrobot",
-  "requirements": ["pylitterbot==2022.7.0"],
-  "codeowners": ["@natekspencer"],
+  "requirements": ["pylitterbot==2022.9.1"],
+  "codeowners": ["@natekspencer", "@tkdrob"],
+  "dhcp": [{ "hostname": "litter-robot4" }],
   "iot_class": "cloud_polling",
   "loggers": ["pylitterbot"]
 }

@@ -57,6 +57,7 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRFRESH_VA4,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_3C,
@@ -516,6 +517,7 @@ FAN_ZA5_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 MODEL_TO_SENSORS_MAP: dict[str, tuple[str, ...]] = {
     MODEL_AIRFRESH_A1: AIRFRESH_SENSORS_A1,
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
+    MODEL_AIRFRESH_VA4: AIRFRESH_SENSORS,
     MODEL_AIRFRESH_T2017: AIRFRESH_SENSORS_T2017,
     MODEL_AIRHUMIDIFIER_CA1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRHUMIDIFIER_CB1: HUMIDIFIER_CA1_CB1_SENSORS,
@@ -890,7 +892,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -956,7 +958,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         """Return the state of the device."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
             self._state = await self.hass.async_add_executor_job(

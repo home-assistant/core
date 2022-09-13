@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -220,13 +221,13 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
             await self.async_turn_on()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on flux."""
         if self.is_on:
             return
@@ -242,7 +243,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off flux."""
         if self.is_on:
             self.unsub_tracker()

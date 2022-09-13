@@ -47,10 +47,10 @@
   "endpoints": [
     {
       "nodeId": 24,
-      "index": 0
+      "index": 0,
+      "commandClasses": []
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "endpoint": 0,

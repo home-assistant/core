@@ -1,6 +1,6 @@
 {
     "application_credentials": {
-        "description": "Folge den [Anweisungen]({more_info_url}), um die Cloud-Konsole zu konfigurieren:\n\n1. Gehe zum [OAuth-Zustimmungsbildschirm]({oauth_consent_url}) und konfiguriere\n1. Gehe zu [Credentials]({oauth_creds_url}) und klicke auf **Create Credentials**.\n1. W\u00e4hle in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **Webanwendung** f\u00fcr den Anwendungstyp.\n1. F\u00fcge `{redirect_url}` unter *Authorized redirect URI* hinzu."
+        "description": "Folge den [Anweisungen]({more_info_url}), um die Cloud-Konsole zu konfigurieren:\n\n1. Gehe zum [OAuth-Zustimmungsbildschirm]({oauth_consent_url}) und konfiguriere\n1. Gehe zu [Credentials]({oauth_creds_url}) und dr\u00fccke auf **Create Credentials**.\n1. W\u00e4hle in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **Webanwendung** f\u00fcr den Anwendungstyp.\n1. F\u00fcge `{redirect_url}` unter *Authorized redirect URI* hinzu."
     },
     "config": {
         "abort": {
@@ -45,18 +45,18 @@
                 "title": "Nest: Cloud-Projekt-ID eingeben"
             },
             "create_cloud_project": {
-                "description": "Die Nest-Integration erm\u00f6glicht es dir, deine Nest-Thermostate, -Kameras und -T\u00fcrklingeln \u00fcber die Smart Device Management API zu integrieren. Die SDM API **erfordert eine einmalige Einrichtungsgeb\u00fchr von US $5**. Siehe Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).\n\n1. Rufe die [Google Cloud Console]({cloud_console_url}) auf.\n1. Wenn dies dein erstes Projekt ist, klicke auf **Projekt erstellen** und dann auf **Neues Projekt**.\n1. Gib deinem Cloud-Projekt einen Namen und klicke dann auf **Erstellen**.\n1. Speichere die Cloud Project ID, z. B. *example-project-12345*, da du diese sp\u00e4ter ben\u00f6tigst.\n1. Gehe zur API-Bibliothek f\u00fcr [Smart Device Management API]({sdm_api_url}) und klicke auf **Aktivieren**.\n1. Wechsele zur API-Bibliothek f\u00fcr [Cloud Pub/Sub API]({pubsub_api_url}) und klicke auf **Aktivieren**.\n\nFahre fort, wenn dein Cloud-Projekt eingerichtet ist.",
+                "description": "Die Nest-Integration erm\u00f6glicht es dir, deine Nest-Thermostate, -Kameras und -T\u00fcrklingeln \u00fcber die Smart Device Management API zu integrieren. Die SDM API **erfordert eine einmalige Einrichtungsgeb\u00fchr von US $5**. Siehe Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).\n\n1. Rufe die [Google Cloud Console]({cloud_console_url}) auf.\n1. Wenn dies dein erstes Projekt ist, dr\u00fccke auf **Projekt erstellen** und dann auf **Neues Projekt**.\n1. Gib deinem Cloud-Projekt einen Namen und dr\u00fccke dann auf **Erstellen**.\n1. Speichere die Cloud Project ID, z. B. *example-project-12345*, da du diese sp\u00e4ter ben\u00f6tigst.\n1. Gehe zur API-Bibliothek f\u00fcr [Smart Device Management API]({sdm_api_url}) und dr\u00fccke auf **Aktivieren**.\n1. Wechsele zur API-Bibliothek f\u00fcr [Cloud Pub/Sub API]({pubsub_api_url}) und dr\u00fccke auf **Aktivieren**.\n\nFahre fort, wenn dein Cloud-Projekt eingerichtet ist.",
                 "title": "Nest: Cloud-Projekt erstellen und konfigurieren"
             },
             "device_project": {
                 "data": {
                     "project_id": "Ger\u00e4tezugriffsprojekt ID"
                 },
-                "description": "Erstelle ein Nest Ger\u00e4tezugriffsprojekt, f\u00fcr dessen Einrichtung **eine Geb\u00fchr von 5 US-Dollar** anf\u00e4llt.\n1. Gehe zur [Device Access Console]({device_access_console_url}) und durchlaufe den Zahlungsablauf.\n1. Klicke auf **Projekt erstellen**.\n1. Gib deinem Device Access-Projekt einen Namen und klicke auf **Weiter**.\n1. Gib deine OAuth-Client-ID ein\n1. Aktiviere Ereignisse, indem du auf **Aktivieren** und **Projekt erstellen** klickst.\n\nGib unten deine Ger\u00e4tezugriffsprojekt ID ein ([more info]({more_info_url})).",
+                "description": "Erstelle ein Nest Ger\u00e4tezugriffsprojekt, f\u00fcr dessen Einrichtung **eine Geb\u00fchr von 5 US-Dollar** anf\u00e4llt.\n1. Gehe zur [Device Access Console]({device_access_console_url}) und durchlaufe den Zahlungsablauf.\n1. Dr\u00fccke auf **Projekt erstellen**.\n1. Gib deinem Device Access-Projekt einen Namen und dr\u00fccke auf **Weiter**.\n1. Gib deine OAuth-Client-ID ein\n1. Aktiviere Ereignisse, indem du auf **Aktivieren** und **Projekt erstellen** dr\u00fcckst.\n\nGib unten deine Ger\u00e4tezugriffsprojekt ID ein ([more info]({more_info_url})).",
                 "title": "Nest: Erstelle ein Ger\u00e4tezugriffsprojekt"
             },
             "device_project_upgrade": {
-                "description": "Aktualisiere das Nest Ger\u00e4tezugriffsprojekt mit deiner neuen OAuth Client ID ([more info]({more_info_url}))\n1. Gehe zur [Ger\u00e4tezugriffskonsole]({device_access_console_url}).\n1. Klicke auf das Papierkorbsymbol neben *OAuth Client ID*.\n1. Klicke auf das \u00dcberlaufmen\u00fc und *Client ID hinzuf\u00fcgen*.\n1. Gib deine neue OAuth-Client-ID ein und klicke auf **Hinzuf\u00fcgen**.\n\nDeine OAuth-Client-ID lautet: `{client_id}`",
+                "description": "Aktualisiere das Nest Ger\u00e4tezugriffsprojekt mit deiner neuen OAuth Client ID ([more info]({more_info_url}))\n1. Gehe zur [Ger\u00e4tezugriffskonsole]({device_access_console_url}).\n1. Dr\u00fccke auf das Papierkorbsymbol neben *OAuth Client ID*.\n1. Dr\u00fccke auf das \u00dcberlaufmen\u00fc und *Client ID hinzuf\u00fcgen*.\n1. Gib deine neue OAuth-Client-ID ein und dr\u00fccke auf **Hinzuf\u00fcgen**.\n\nDeine OAuth-Client-ID lautet: `{client_id}`",
                 "title": "Nest: Aktualisiere das Ger\u00e4tezugriffsprojekt"
             },
             "init": {
@@ -103,7 +103,7 @@
             "title": "Die Nest-YAML-Konfiguration wird entfernt"
         },
         "removed_app_auth": {
-            "description": "Um die Sicherheit zu verbessern und das Phishing-Risiko zu verringern, hat Google die von Home Assistant verwendete Authentifizierungsmethode eingestellt. \n\n **Zur L\u00f6sung sind Ma\u00dfnahmen deinerseits erforderlich** ([more info]( {more_info_url} )) \n\n 1. Besuche die Integrationsseite\n 1. Klicke in der Nest-Integration auf Neu konfigurieren.\n 1. Home Assistant f\u00fchrt dich durch die Schritte zum Upgrade auf die Webauthentifizierung. \n\n Informationen zur Fehlerbehebung findest du in der Nest [Integrationsanleitung]( {documentation_url} ).",
+            "description": "Um die Sicherheit zu verbessern und das Phishing-Risiko zu verringern, hat Google die von Home Assistant verwendete Authentifizierungsmethode eingestellt. \n\n **Zur L\u00f6sung sind Ma\u00dfnahmen deinerseits erforderlich** ([more info]( {more_info_url} )) \n\n 1. Besuche die Integrationsseite\n 1. Dr\u00fccke in der Nest-Integration auf Neu konfigurieren.\n 1. Home Assistant f\u00fchrt dich durch die Schritte zum Upgrade auf die Webauthentifizierung. \n\n Informationen zur Fehlerbehebung findest du in der Nest [Integrationsanleitung]( {documentation_url} ).",
             "title": "Nest-Authentifizierungsdaten m\u00fcssen aktualisiert werden"
         }
     }

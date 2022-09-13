@@ -100,9 +100,11 @@ async def async_setup_entry(
 class BaseDemoFan(FanEntity):
     """A demonstration fan component that uses legacy fan speeds."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         unique_id: str,
         name: str,
         supported_features: int,
@@ -117,7 +119,7 @@ class BaseDemoFan(FanEntity):
         self._preset_mode: str | None = None
         self._oscillating: bool | None = None
         self._direction: str | None = None
-        self._name = name
+        self._attr_name = name
         if supported_features & FanEntityFeature.OSCILLATE:
             self._oscillating = False
         if supported_features & FanEntityFeature.DIRECTION:
@@ -127,16 +129,6 @@ class BaseDemoFan(FanEntity):
     def unique_id(self) -> str:
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Get entity name."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo fan."""
-        return False
 
     @property
     def current_direction(self) -> str | None:

@@ -5,12 +5,7 @@ import datetime as dt
 import logging
 import re
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -102,13 +97,13 @@ class NetatmoSource(MediaSource):
         else:
             path = f"{source}/{camera_id}"
 
-        media_class = MEDIA_CLASS_DIRECTORY if event_id is None else MEDIA_CLASS_VIDEO
+        media_class = MediaClass.DIRECTORY if event_id is None else MediaClass.VIDEO
 
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=path,
             media_class=media_class,
-            media_content_type=MEDIA_TYPE_VIDEO,
+            media_content_type=MediaType.VIDEO,
             title=title,
             can_play=bool(
                 event_id and self.events[camera_id][event_id].get("media_url")

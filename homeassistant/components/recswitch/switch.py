@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyrecswitch import RSNetwork, RSNetworkError
 import voluptuous as vol
@@ -76,11 +77,11 @@ class RecSwitchSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self.gpio_state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.async_set_gpio_status(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.async_set_gpio_status(False)
 
@@ -93,7 +94,7 @@ class RecSwitchSwitch(SwitchEntity):
         except RSNetworkError as error:
             _LOGGER.error("Setting status to %s: %r", self.name, error)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the current switch status."""
 
         try:

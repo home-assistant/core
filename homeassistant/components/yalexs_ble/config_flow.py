@@ -98,7 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         new_data = {CONF_KEY: lock_cfg.key, CONF_SLOT: lock_cfg.slot}
         self._abort_if_unique_id_configured(updates=new_data)
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name:
+            if (
+                local_name_is_unique(lock_cfg.local_name)
+                and entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name
+            ):
                 if hass.config_entries.async_update_entry(
                     entry, data={**entry.data, **new_data}
                 ):

@@ -10,16 +10,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:radio"
 URL = "http://decibel.logitechmusic.com/jsonrpc.js"
 
-PLAYBACK_DICT = {"play": STATE_PLAYING, "pause": STATE_PAUSED, "stop": STATE_IDLE}
+PLAYBACK_DICT = {
+    "play": MediaPlayerState.PLAYING,
+    "pause": MediaPlayerState.PAUSED,
+    "stop": MediaPlayerState.IDLE,
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
@@ -84,6 +82,7 @@ def setup_platform(
 class UERadioDevice(MediaPlayerEntity):
     """Representation of a Logitech UE Smart Radio device."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -115,7 +114,7 @@ class UERadioDevice(MediaPlayerEntity):
             self._session,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         request = send_request(
             {
@@ -133,7 +132,7 @@ class UERadioDevice(MediaPlayerEntity):
             return
 
         if request["result"]["power"] == 0:
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
         else:
             self._state = PLAYBACK_DICT[request["result"]["mode"]]
 
@@ -173,11 +172,6 @@ class UERadioDevice(MediaPlayerEntity):
         return self._volume
 
     @property
-    def media_content_type(self):
-        """Return the media content type."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
     def media_image_url(self):
         """Image URL of current playing media."""
         return self._media_artwork_url
@@ -192,35 +186,35 @@ class UERadioDevice(MediaPlayerEntity):
         """Title of current playing media."""
         return self._media_title
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on specified media player or all."""
         self.send_command(["power", 1])
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off specified media player or all."""
         self.send_command(["power", 0])
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send the media player the command for play/pause."""
         self.send_command(["play"])
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send the media player the command for pause."""
         self.send_command(["pause"])
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send the media player the stop command."""
         self.send_command(["stop"])
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the media player the command for prev track."""
         self.send_command(["button", "rew"])
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send the media player the command for next track."""
         self.send_command(["button", "fwd"])
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         if mute:
             self._last_volume = self._volume
@@ -228,6 +222,6 @@ class UERadioDevice(MediaPlayerEntity):
         else:
             self.send_command(["mixer", "volume", self._last_volume * 100])
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.send_command(["mixer", "volume", volume * 100])

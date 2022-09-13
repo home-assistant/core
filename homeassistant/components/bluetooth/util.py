@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import platform
 
+from bluetooth_auto_recovery import recover_adapter
+
 from homeassistant.core import callback
 
 from .const import (
@@ -22,6 +24,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             WINDOWS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
+                passive_scan=False,
             )
         }
     if platform.system() == "Darwin":
@@ -29,6 +32,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             MACOS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
+                passive_scan=False,
             )
         }
     from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
@@ -43,6 +47,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             address=adapter1["Address"],
             sw_version=adapter1["Name"],  # This is actually the BlueZ version
             hw_version=adapter1["Modalias"],
+            passive_scan="org.bluez.AdvertisementMonitorManager1" in details,
         )
     return adapters
 
@@ -65,3 +70,11 @@ def adapter_human_name(adapter: str, address: str) -> str:
 def adapter_unique_name(adapter: str, address: str) -> str:
     """Return a unique name for the adapter."""
     return adapter if address == DEFAULT_ADDRESS else address
+
+
+async def async_reset_adapter(adapter: str | None) -> bool | None:
+    """Reset the adapter."""
+    if adapter and adapter.startswith("hci"):
+        adapter_id = int(adapter[3:])
+        return await recover_adapter(adapter_id)
+    return False

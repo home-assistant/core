@@ -50,6 +50,7 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
+    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
@@ -1140,7 +1141,7 @@ async def websocket_restore_network_backup(
 
     if msg["ezsp_force_write_eui64"]:
         backup.network_info.stack_specific.setdefault("ezsp", {})[
-            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+            EZSP_OVERWRITE_EUI64
         ] = True
 
     # This can take 30-40s
