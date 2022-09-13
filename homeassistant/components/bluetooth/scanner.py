@@ -17,7 +17,7 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from dbus_next import InvalidMessageError
+from dbus_fast import InvalidMessageError
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
