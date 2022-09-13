@@ -404,7 +404,7 @@ async def async_get_triggers(
     """List device triggers for lutron caseta devices."""
     triggers = []
 
-    if not (verify_device_from_domain(hass, device_id)):
+    if not (is_lutron_caseta_device(hass, device_id)):
         raise InvalidDeviceAutomationConfig(
             f"Device is not a lutron_caseta device: {device_id}"
         )
@@ -492,13 +492,9 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
     return None
 
 
-def verify_device_from_domain(hass: HomeAssistant, device_id: str):
+def is_lutron_caseta_device(hass: HomeAssistant, device_id: str) -> bool:
     """Check if HomeAssistant device is port of this domain."""
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is not None:
-        if device_entry.identifiers is not None:
-            for device_identifiers in device_entry.identifiers:
-                if DOMAIN in device_identifiers:
-                    return True
-
-    return False
+    if not (device_entry := device_registry.async_get(device_id)):
+        return False
+    return any(identifier[0] == DOMAIN for identifier in device_entry.identifiers)
