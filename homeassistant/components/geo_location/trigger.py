@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
 import voluptuous as vol
 
@@ -24,9 +25,9 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_ENTER = "enter"
-EVENT_LEAVE = "leave"
-DEFAULT_EVENT = EVENT_ENTER
+EVENT_ENTER: Final = "enter"
+EVENT_LEAVE: Final = "leave"
+DEFAULT_EVENT: Final = EVENT_ENTER
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
