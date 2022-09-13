@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from copy import copy
@@ -218,7 +218,9 @@ async def trace_action(hass, script_run, stop, variables):
         trace_stack_pop(trace_stack_cv)
 
 
-def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
+def make_script_schema(
+    schema: Mapping[Any, Any], default_script_mode: str, extra: int = vol.PREVENT_EXTRA
+) -> vol.Schema:
     """Make a schema for a component that uses the script helper."""
     return vol.Schema(
         {
@@ -1275,17 +1277,19 @@ class Script:
         return self.script_mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
 
     @property
-    def referenced_areas(self):
+    def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         if self._referenced_areas is not None:
             return self._referenced_areas
 
-        self._referenced_areas: set[str] = set()
+        self._referenced_areas = set()
         Script._find_referenced_areas(self._referenced_areas, self.sequence)
         return self._referenced_areas
 
     @staticmethod
-    def _find_referenced_areas(referenced, sequence):
+    def _find_referenced_areas(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
@@ -1313,17 +1317,19 @@ class Script:
                     Script._find_referenced_areas(referenced, script[CONF_SEQUENCE])
 
     @property
-    def referenced_devices(self):
+    def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
             return self._referenced_devices
 
-        self._referenced_devices: set[str] = set()
+        self._referenced_devices = set()
         Script._find_referenced_devices(self._referenced_devices, self.sequence)
         return self._referenced_devices
 
     @staticmethod
-    def _find_referenced_devices(referenced, sequence):
+    def _find_referenced_devices(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
@@ -1361,17 +1367,19 @@ class Script:
                     Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
 
     @property
-    def referenced_entities(self):
+    def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         if self._referenced_entities is not None:
             return self._referenced_entities
 
-        self._referenced_entities: set[str] = set()
+        self._referenced_entities = set()
         Script._find_referenced_entities(self._referenced_entities, self.sequence)
         return self._referenced_entities
 
     @staticmethod
-    def _find_referenced_entities(referenced, sequence):
+    def _find_referenced_entities(
+        referenced: set[str], sequence: Sequence[dict[str, Any]]
+    ) -> None:
         for step in sequence:
             action = cv.determine_script_action(step)
 
