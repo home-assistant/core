@@ -134,38 +134,67 @@ def test_bad_import(
         imports_checker.visit_importfrom(import_node)
 
 
-def test_bad_root_import(linter: UnittestLinter, imports_checker: BaseChecker) -> None:
+@pytest.mark.parametrize(
+    "import_node",
+    [
+        "from homeassistant.components import climate",
+        "from homeassistant.components.climate import ClimateEntityFeature",
+    ],
+)
+def test_root_import(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    import_node: str,
+) -> None:
     """Ensure bad root imports are rejected."""
 
-    first_node, second_node = astroid.extract_node(
-        """
-    import homeassistant.components.climate.const as climate #@
-    from homeassistant.components.climate.const import ClimateEntityFeature #@
-    """,
+    node = astroid.extract_node(
+        f"{import_node} #@",
         "homeassistant.components.pylint_test.climate",
     )
-    imports_checker.visit_module(first_node.parent)
+    imports_checker.visit_module(node.parent)
+
+    with assert_no_messages(linter):
+        if import_node.startswith("import"):
+            imports_checker.visit_import(node)
+        if import_node.startswith("from"):
+            imports_checker.visit_importfrom(node)
+
+
+@pytest.mark.parametrize(
+    "import_node",
+    [
+        "import homeassistant.components.climate.const as climate",
+        "from homeassistant.components.climate.const import ClimateEntityFeature",
+        "from homeassistant.components.climate import const",
+    ],
+)
+def test_bad_root_import(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    import_node: str,
+) -> None:
+    """Ensure bad root imports are rejected."""
+
+    node = astroid.extract_node(
+        f"{import_node} #@",
+        "homeassistant.components.pylint_test.climate",
+    )
+    imports_checker.visit_module(node.parent)
 
     with assert_adds_messages(
         linter,
         pylint.testutils.MessageTest(
             msg_id="hass-component-root-import",
-            node=first_node,
+            node=node,
             args=None,
-            line=2,
+            line=1,
             col_offset=0,
-            end_line=2,
-            end_col_offset=56,
-        ),
-        pylint.testutils.MessageTest(
-            msg_id="hass-component-root-import",
-            node=second_node,
-            args=None,
-            line=3,
-            col_offset=0,
-            end_line=3,
-            end_col_offset=71,
+            end_line=1,
+            end_col_offset=len(import_node),
         ),
     ):
-        imports_checker.visit_import(first_node)
-        imports_checker.visit_importfrom(second_node)
+        if import_node.startswith("import"):
+            imports_checker.visit_import(node)
+        if import_node.startswith("from"):
+            imports_checker.visit_importfrom(node)
