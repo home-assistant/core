@@ -507,14 +507,17 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 async def test_update_min_max(hass, hass_ws_client, storage_setup):
     """Test updating min/max updates the state."""
 
+    settings = {
+        "name": "from storage",
+        "max": 100,
+        "min": 0,
+        "step": 1,
+        "mode": "slider",
+    }
     items = [
         {
             "id": "from_storage",
-            "name": "from storage",
-            "max": 100,
-            "min": 0,
-            "step": 1,
-            "mode": "slider",
+            **settings,
         }
     ]
     assert await storage_setup(items)
@@ -530,8 +533,14 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = {**settings, "min": 9}
     await client.send_json(
-        {"id": 6, "type": f"{DOMAIN}/update", f"{DOMAIN}_id": f"{input_id}", "min": 9}
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": f"{input_id}",
+            **updated_settings,
+        }
     )
     resp = await client.receive_json()
     assert resp["success"]
@@ -539,13 +548,13 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 9
 
+    updated_settings = {**settings, "max": 5}
     await client.send_json(
         {
             "id": 7,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "max": 5,
-            "min": 0,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
