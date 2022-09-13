@@ -112,15 +112,6 @@ MODELS_FAN_MIOT = [
     MODEL_FAN_ZA5,
 ]
 
-# number of speed levels each fan has
-SPEEDS_FAN_MIOT = {
-    MODEL_FAN_1C: 3,
-    MODEL_FAN_P10: 4,
-    MODEL_FAN_P11: 4,
-    MODEL_FAN_P9: 4,
-    MODEL_FAN_ZA5: 4,
-}
-
 MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3C,
