@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pyipma import IPMAException
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast
 from pyipma.location import Location
@@ -48,12 +47,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
+
+from .const import DATA_API, DATA_LOCATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,17 +96,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
+    api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
+    location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
     mode = config_entry.data[CONF_MODE]
-
-    api = await async_get_api(hass)
-    try:
-        location = await async_get_location(hass, api, latitude, longitude)
-    except IPMAException as err:
-        raise ConfigEntryNotReady(
-            f"Could not get location for ({latitude},{longitude})"
-        ) from err
 
     # Migrate old unique_id
     @callback
@@ -132,29 +123,6 @@ async def async_setup_entry(
     )
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
-
-
-async def async_get_api(hass):
-    """Get the pyipma api object."""
-    websession = async_get_clientsession(hass)
-    return IPMA_API(websession)
-
-
-async def async_get_location(hass, api, latitude, longitude):
-    """Retrieve pyipma location, location name to be used as the entity name."""
-    async with async_timeout.timeout(30):
-        location = await Location.get(api, float(latitude), float(longitude))
-
-    _LOGGER.debug(
-        "Initializing for coordinates %s, %s -> station %s (%d, %d)",
-        latitude,
-        longitude,
-        location.station,
-        location.id_station,
-        location.global_id_local,
-    )
-
-    return location
 
 
 class IPMAWeather(WeatherEntity):
