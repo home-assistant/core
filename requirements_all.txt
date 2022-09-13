@@ -47,7 +47,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.16.2
+PyViCare==2.17.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -408,7 +408,10 @@ bimmer_connected==0.10.2
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.16.0
+bleak-retry-connector==1.15.1
+
+# homeassistant.components.bluetooth
+bleak==0.17.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -535,7 +538,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus_next==0.2.3
+dbus-fast==1.4.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1061,7 +1064,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.mill
-mill-local==0.1.1
+mill-local==0.2.0
 
 # homeassistant.components.mill
 millheater==0.10.0
