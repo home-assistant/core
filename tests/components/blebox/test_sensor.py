@@ -20,7 +20,7 @@ from .conftest import async_setup_entity, mock_feature
 
 @pytest.fixture(name="airsensor")
 def airsensor_fixture():
-    """Return a default air quality fixture."""
+    """Return a default AirQuality sensor mock."""
     feature = mock_feature(
         "sensors",
         blebox_uniapi.sensor.AirQuality,
@@ -38,7 +38,7 @@ def airsensor_fixture():
 
 @pytest.fixture(name="tempsensor")
 def tempsensor_fixture():
-    """Return a default sensor mock."""
+    """Return a default Temperature sensor mock."""
     feature = mock_feature(
         "sensors",
         blebox_uniapi.sensor.Temperature,
