@@ -360,10 +360,10 @@ class OptionsFlow(config_entries.OptionsFlow):
             for entry in entity_migration_map.values()
             if not self.hass.states.async_available(entry.entity_id)
         }
+        wait_for_entities = asyncio.Event()
         track_state_changes = async_track_state_change(
             self.hass, pending_entities, _handle_state_change
         )
-        wait_for_entities = asyncio.Event()
 
         for entry in entity_migration_map.values():
             entity_registry.async_remove(entry.entity_id)
