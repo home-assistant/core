@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, Final
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound
@@ -24,11 +24,11 @@ from homeassistant.setup import async_prepare_setup_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "mailbox"
+DOMAIN: Final = "mailbox"
 
-EVENT = "mailbox_updated"
-CONTENT_TYPE_MPEG = "audio/mpeg"
-CONTENT_TYPE_NONE = "none"
+EVENT: Final = "mailbox_updated"
+CONTENT_TYPE_MPEG: Final = "audio/mpeg"
+CONTENT_TYPE_NONE: Final = "none"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
