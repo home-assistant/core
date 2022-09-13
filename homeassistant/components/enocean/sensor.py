@@ -203,7 +203,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ]
             )
 
-        if eep == "A5-12-01":
+        if (
+            eep == "D2-01-09"
+            and device["manufacturer"] == "Permundo"
+            and device["model"] == "PSC234 (switch and power monitor)"
+        ):
             async_add_entities(
                 [
                     EnOceanPowerSensor(

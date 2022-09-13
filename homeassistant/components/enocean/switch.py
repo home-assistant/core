@@ -90,34 +90,55 @@ async def async_setup_entry(
     devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
-        if device["eep"] == "A5-12-01":
+        if device["eep"][0:5] == "D2-01":
             device_id = from_hex_string(device["id"])
-            async_add_entities(
-                [
+
+            # number of switches depends on EEP's TYPE value:
+            num_switches = 0
+            eep_type = int(device["eep"][6:8], 16)
+
+            if eep_type in range(0x00, 0x10):
+                num_switches = 1
+            elif eep_type in range(0x10, 0x13):
+                num_switches = 2
+            elif eep_type == 0x13:
+                num_switches = 4
+            elif eep_type == 0x14:
+                num_switches = 8
+
+            switches = []
+
+            if num_switches == 1:
+                switches.append(
                     EnOceanSwitch(
-                        device_id,
-                        device["name"],
-                        0,
-                        EnOceanSupportedDeviceType(
+                        dev_id=device_id,
+                        dev_name=device["name"],
+                        channel=0,
+                        dev_type=EnOceanSupportedDeviceType(
                             manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
                             model=device[CONF_ENOCEAN_MODEL],
                             eep=device[CONF_ENOCEAN_EEP],
                         ),
-                        "Switch 1",
+                        name="Switch",
                     ),
-                    EnOceanSwitch(
-                        device_id,
-                        device["name"],
-                        1,
-                        EnOceanSupportedDeviceType(
-                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                            model=device[CONF_ENOCEAN_MODEL],
-                            eep=device[CONF_ENOCEAN_EEP],
+                )
+            else:
+                for channel in range(0, num_switches):
+                    switches.append(
+                        EnOceanSwitch(
+                            dev_id=device_id,
+                            dev_name=device["name"],
+                            channel=channel,
+                            dev_type=EnOceanSupportedDeviceType(
+                                manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+                                model=device[CONF_ENOCEAN_MODEL],
+                                eep=device[CONF_ENOCEAN_EEP],
+                            ),
+                            name="Switch " + str(channel + 1),
                         ),
-                        "Switch 2",
-                    ),
-                ]
-            )
+                    )
+
+            async_add_entities(switches)
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):

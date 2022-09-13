@@ -167,6 +167,86 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         eep="A5-10-14",
         model="EEP A5-10-14 (Room Operating Panel)",
     ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-00",
+        model="EEP D2-01-00 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 00)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-01",
+        model="EEP D2-01-01 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 01)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-03",
+        model="EEP D2-01-03 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 03)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-04",
+        model="EEP D2-01-04 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 04)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-05",
+        model="EEP D2-01-05 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 05)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-06",
+        model="EEP D2-01-06 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 06)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-07",
+        model="EEP D2-01-07 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 07)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-08",
+        model="EEP D2-01-08 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 08)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-09",
+        model="EEP D2-01-09 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 09)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0A",
+        model="EEP D2-01-0A (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 0A)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0B",
+        model="EEP D2-01-0B (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 0B)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0C",
+        model="EEP D2-01-0C (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 0C)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0D",
+        model="EEP D2-01-0D (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 0D)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0E",
+        model="EEP D2-01-0E (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 0E)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-0F",
+        model="EEP D2-01-0F (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 0F)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-10",
+        model="EEP D2-01-10 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 10)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-11",
+        model="EEP D2-01-11 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 11)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-12",
+        model="EEP D2-01-12 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 12)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-13",
+        model="EEP D2-01-13 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 13)",
+    ),
+    EnOceanSupportedDeviceType(
+        eep="D2-01-14",
+        model="EEP D2-01-14 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 14)",
+    ),
     # Part 2/2: specific devices by manufacturer and model (and EEP)
     ENOCEAN_TEST_DIMMER,
     EnOceanSupportedDeviceType(
@@ -184,7 +264,7 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         eep="F6-02-01", manufacturer="TRIO2SYS", model="TRIO2SYS Wall switches "
     ),
     EnOceanSupportedDeviceType(
-        eep="A5-12-01",
+        eep="D2-01-09",
         manufacturer="Permundo",
         model="PSC234 (switch and power monitor)",
     ),
