@@ -40,7 +40,8 @@ class AirQCoordinator(DataUpdateCoordinator):
         self.airq = AirQ(
             entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD], session
         )
-        self.device_id = entry.data["device_info"]["id"]
+        self.device_id = entry.unique_id
+        assert self.device_id is not None
         self.device_info = DeviceInfo(
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, self.device_id)},

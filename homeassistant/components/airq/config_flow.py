@@ -33,12 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial configuration step: authentication.
-
-        This prompts the user to enter the credentials to access the device.
-        It then tries to connect to the device, and to assess the validity
-        of the password.
-        """
+        """Handle the initial (authentication) configuration step."""
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -76,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 device_info = await airq.fetch_device_info()
-                await self.async_set_unique_id(device_info["id"])
+                await self.async_set_unique_id(device_info.pop("id"))
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(

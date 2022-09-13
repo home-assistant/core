@@ -21,7 +21,9 @@ TEST_DEVICE_INFO = DeviceInfo(
     sw_version="sw",
     hw_version="hw",
 )
-TEST_DATA_OUT = TEST_USER_DATA | {"device_info": TEST_DEVICE_INFO}
+TEST_DATA_OUT = TEST_USER_DATA | {
+    "device_info": {k: v for k, v in TEST_DEVICE_INFO.items() if k != "id"}
+}
 
 
 async def test_form(hass: HomeAssistant) -> None:
