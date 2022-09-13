@@ -83,7 +83,7 @@ async def async_setup_entry(
             [AladdinConnectSensor(acc, door, description) for description in SENSORS]
         )
 
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class AladdinConnectSensor(SensorEntity):

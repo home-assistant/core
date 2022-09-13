@@ -333,6 +333,10 @@ async def async_setup_entry(  # noqa: C901
     if entry_data.device_info is not None and entry_data.device_info.name:
         cli.expected_name = entry_data.device_info.name
         reconnect_logic.name = entry_data.device_info.name
+        if entry.unique_id is None:
+            hass.config_entries.async_update_entry(
+                entry, unique_id=entry_data.device_info.name
+            )
 
     await reconnect_logic.start()
     entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)

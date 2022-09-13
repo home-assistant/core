@@ -1,4 +1,6 @@
 """This library brings support for forked_daapd to Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
@@ -8,22 +10,15 @@ from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.browse_media import (
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -35,6 +30,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     CALLBACK_TIMEOUT,
+    CAN_PLAY_TYPE,
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
@@ -168,7 +164,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -192,11 +188,11 @@ class ForkedDaapdZone(MediaPlayerEntity):
         return f"{FD_NAME} output ({self._output['name']})"
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the zone."""
         if self._output["selected"]:
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def volume_level(self):
@@ -449,7 +445,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         Default media player component method counts idle as off.
         We consider idle to be on but just not playing.
         """
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -460,16 +456,17 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return f"{FD_NAME} server"
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         if self._player["state"] == "play":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._player["state"] == "pause":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if not any(output["selected"] for output in self._outputs):
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._player["state"] == "stop":  # this should catch all remaining cases
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
+        return None
 
     @property
     def volume_level(self):
@@ -658,17 +655,17 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._paused_event.clear()
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a URI."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_type == MediaType.MUSIC:
             media_id = async_process_play_media_url(self.hass, media_id)
 
             saved_state = self.state  # save play state
@@ -714,7 +711,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 await self._api.add_to_queue(
                     uris=self._sources_uris[self._source], clear=True
                 )
-                if saved_state == STATE_PLAYING:
+                if saved_state == MediaPlayerState.PLAYING:
                     await self.async_media_play()
             else:  # restore stashed queue
                 if saved_queue:
@@ -728,9 +725,9 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                         clear=True,
                     )
                     await self._api.seek(position_ms=saved_song_position)
-                    if saved_state == STATE_PAUSED:
+                    if saved_state == MediaPlayerState.PAUSED:
                         await self.async_media_pause()
-                    elif saved_state != STATE_PLAYING:
+                    elif saved_state != MediaPlayerState.PLAYING:
                         await self.async_media_stop()
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
@@ -768,6 +765,18 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 PIPE_FUNCTION_MAP[pipe_name][base_function_name],
             )()
         _LOGGER.warning("No pipe control available for %s", pipe_name)
+
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda bm: bm.media_content_type in CAN_PLAY_TYPE,
+        )
 
 
 class ForkedDaapdUpdater:
@@ -885,11 +894,3 @@ class ForkedDaapdUpdater:
                 self._api,
                 outputs_to_add,
             )
-
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
-        """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
-        )

@@ -189,71 +189,6 @@ def is_offset_reached(
     return start + offset_time <= dt.now(start.tzinfo)
 
 
-class CalendarEventDevice(Entity):
-    """Legacy API for calendar event entities."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "CalendarEventDevice is deprecated, modify %s to extend CalendarEntity",
-            cls.__name__,
-        )
-
-    @property
-    def event(self) -> dict[str, Any] | None:
-        """Return the next upcoming event."""
-        raise NotImplementedError()
-
-    @final
-    @property
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return the entity state attributes."""
-
-        if (event := self.event) is None:
-            return None
-
-        event = normalize_event(event)
-        return {
-            "message": event["message"],
-            "all_day": event["all_day"],
-            "start_time": event["start"],
-            "end_time": event["end"],
-            "location": event["location"],
-            "description": event["description"],
-        }
-
-    @final
-    @property
-    def state(self) -> str:
-        """Return the state of the calendar event."""
-        if (event := self.event) is None:
-            return STATE_OFF
-
-        event = normalize_event(event)
-        start = event["dt_start"]
-        end = event["dt_end"]
-
-        if start is None or end is None:
-            return STATE_OFF
-
-        now = dt.now()
-
-        if start <= now < end:
-            return STATE_ON
-
-        return STATE_OFF
-
-    async def async_get_events(
-        self,
-        hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
-    ) -> list[dict[str, Any]]:
-        """Return calendar events within a datetime range."""
-        raise NotImplementedError()
-
-
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
@@ -314,10 +249,14 @@ class CalendarEventView(http.HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Return calendar events."""
-        entity = self.component.get_entity(entity_id)
+        if not (entity := self.component.get_entity(entity_id)) or not isinstance(
+            entity, CalendarEntity
+        ):
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
         start = request.query.get("start")
         end = request.query.get("end")
-        if start is None or end is None or entity is None:
+        if start is None or end is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
             start_date = dt.parse_datetime(start)
@@ -325,16 +264,6 @@ class CalendarEventView(http.HomeAssistantView):
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
-            return web.Response(status=HTTPStatus.BAD_REQUEST)
-
-        # Compatibility shim for old API
-        if isinstance(entity, CalendarEventDevice):
-            event_list = await entity.async_get_events(
-                request.app["hass"], start_date, end_date
-            )
-            return self.json(event_list)
-
-        if not isinstance(entity, CalendarEntity):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         try:

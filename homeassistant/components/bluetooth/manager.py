@@ -54,6 +54,15 @@ if TYPE_CHECKING:
 
 FILTER_UUIDS: Final = "UUIDs"
 
+APPLE_MFR_ID: Final = 76
+APPLE_IBEACON_START_BYTE: Final = 0x02  # iBeacon (tilt_ble)
+APPLE_HOMEKIT_START_BYTE: Final = 0x06  # homekit_controller
+APPLE_DEVICE_ID_START_BYTE: Final = 0x10  # bluetooth_le_tracker
+APPLE_START_BYTES_WANTED: Final = {
+    APPLE_IBEACON_START_BYTE,
+    APPLE_HOMEKIT_START_BYTE,
+    APPLE_DEVICE_ID_START_BYTE,
+}
 
 RSSI_SWITCH_THRESHOLD = 6
 
@@ -144,7 +153,7 @@ class BluetoothManager:
         ] = []
         self._history: dict[str, BluetoothServiceInfoBleak] = {}
         self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
-        self._scanners: list[BaseHaScanner] = []
+        self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
 
@@ -153,13 +162,19 @@ class BluetoothManager:
         """Return if passive scan is supported."""
         return any(adapter[ADAPTER_PASSIVE_SCAN] for adapter in self._adapters.values())
 
+    def async_scanner_count(self, connectable: bool = True) -> int:
+        """Return the number of scanners."""
+        if connectable:
+            return len(self._connectable_scanners)
+        return len(self._connectable_scanners) + len(self._non_connectable_scanners)
+
     async def async_diagnostics(self) -> dict[str, Any]:
         """Diagnostics for the manager."""
         scanner_diagnostics = await asyncio.gather(
             *[
                 scanner.async_diagnostics()
                 for scanner in itertools.chain(
-                    self._scanners, self._connectable_scanners
+                    self._non_connectable_scanners, self._connectable_scanners
                 )
             ]
         )
@@ -215,10 +230,14 @@ class BluetoothManager:
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""
-        return itertools.chain.from_iterable(
-            scanner.discovered_devices
-            for scanner in self._get_scanners_by_type(connectable)
+        yield from itertools.chain.from_iterable(
+            scanner.discovered_devices for scanner in self._get_scanners_by_type(True)
         )
+        if not connectable:
+            yield from itertools.chain.from_iterable(
+                scanner.discovered_devices
+                for scanner in self._get_scanners_by_type(False)
+            )
 
     @hass_callback
     def async_discovered_devices(self, connectable: bool) -> list[BLEDevice]:
@@ -280,6 +299,19 @@ class BluetoothManager:
           than the source from the history or the timestamp
           in the history is older than 180s
         """
+
+        # Pre-filter noisy apple devices as they can account for 20-35% of the
+        # traffic on a typical network.
+        advertisement_data = service_info.advertisement
+        manufacturer_data = advertisement_data.manufacturer_data
+        if (
+            len(manufacturer_data) == 1
+            and (apple_data := manufacturer_data.get(APPLE_MFR_ID))
+            and apple_data[0] not in APPLE_START_BYTES_WANTED
+            and not advertisement_data.service_data
+        ):
+            return
+
         device = service_info.device
         connectable = service_info.connectable
         address = device.address
@@ -289,7 +321,6 @@ class BluetoothManager:
             return
 
         self._history[address] = service_info
-        advertisement_data = service_info.advertisement
         source = service_info.source
 
         if connectable:
@@ -301,12 +332,13 @@ class BluetoothManager:
 
         matched_domains = self._integration_matcher.match_domains(service_info)
         _LOGGER.debug(
-            "%s: %s %s connectable: %s match: %s",
+            "%s: %s %s connectable: %s match: %s rssi: %s",
             source,
             address,
             advertisement_data,
             connectable,
             matched_domains,
+            device.rssi,
         )
 
         for match in self._callback_index.match_callbacks(service_info):
@@ -408,7 +440,11 @@ class BluetoothManager:
 
     def _get_scanners_by_type(self, connectable: bool) -> list[BaseHaScanner]:
         """Return the scanners by type."""
-        return self._connectable_scanners if connectable else self._scanners
+        return (
+            self._connectable_scanners
+            if connectable
+            else self._non_connectable_scanners
+        )
 
     def _get_unavailable_callbacks_by_type(
         self, connectable: bool

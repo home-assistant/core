@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import logging
 from random import randrange
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PLATFORM_SCHEMA,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -18,6 +18,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -204,7 +205,7 @@ class IntesisAC(ClimateEntity):
             self._attr_hvac_modes.extend(mode_list)
         self._attr_hvac_modes.append(HVACMode.OFF)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to event updates."""
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
         await self._controller.add_update_callback(self.async_update_callback)
@@ -256,7 +257,7 @@ class IntesisAC(ClimateEntity):
         """Return the current preset mode."""
         return self._preset
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
@@ -295,7 +296,7 @@ class IntesisAC(ClimateEntity):
         self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode (from quiet, low, medium, high, auto)."""
         await self._controller.set_fan_speed(self._device_id, fan_mode)
 
@@ -303,12 +304,12 @@ class IntesisAC(ClimateEntity):
         self._fan_speed = fan_mode
         self.async_write_ha_state()
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         ih_preset_mode = MAP_PRESET_MODE_TO_IH.get(preset_mode)
         await self._controller.set_preset_mode(self._device_id, ih_preset_mode)
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the vertical vane."""
         if swing_settings := MAP_SWING_TO_IH.get(swing_mode):
             await self._controller.set_vertical_vane(
@@ -318,7 +319,7 @@ class IntesisAC(ClimateEntity):
                 self._device_id, swing_settings.hvane
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Copy values from controller dictionary to climate device."""
         # Update values from controller's device dictionary
         self._connected = self._controller.is_connected
@@ -353,7 +354,7 @@ class IntesisAC(ClimateEntity):
             self._device_id
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Shutdown the controller when the device is being removed."""
         await self._controller.stop()
 
