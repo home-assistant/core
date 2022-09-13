@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,

@@ -1,6 +1,7 @@
 """Viessmann ViCare water_heater device."""
 from contextlib import suppress
 import logging
+from typing import Any
 
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -116,7 +117,7 @@ class ViCareWater(WaterHeaterEntity):
         self._current_mode = None
         self._heating_type = heating_type
 
-    def update(self):
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
@@ -177,7 +178,7 @@ class ViCareWater(WaterHeaterEntity):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)

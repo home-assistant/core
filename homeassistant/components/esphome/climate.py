@@ -13,8 +13,7 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -39,6 +38,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
