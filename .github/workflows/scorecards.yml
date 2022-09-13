@@ -1,5 +1,7 @@
 name: Scorecards supply-chain security
-on: # yamllint disable-line rule:truthy
+
+# yamllint disable-line rule:truthy
+on:
   # Only the default branch is supported.
   branch_protection_rule:
   schedule:
@@ -41,8 +43,8 @@ jobs:
           # repo_token: ${{ secrets.SCORECARD_READ_TOKEN }}
 
           # Publish the results for public repositories to enable scorecard badges. For more details, see
-          # https://github.com/ossf/scorecard-action#publishing-results. 
-          # For private repositories, `publish_results` will automatically be set to `false`, regardless 
+          # https://github.com/ossf/scorecard-action#publishing-results.
+          # For private repositories, `publish_results` will automatically be set to `false`, regardless
           # of the value entered here.
           publish_results: true
 
