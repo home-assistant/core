@@ -133,7 +133,9 @@ async def async_list_traces(hass, wanted_domain, wanted_key):
     return traces
 
 
-def async_store_trace(hass, trace, stored_traces):
+def async_store_trace(
+    hass: HomeAssistant, trace: ActionTrace, stored_traces: int
+) -> None:
     """Store a trace if its key is valid."""
     if key := trace.key:
         traces = hass.data[DATA_TRACE]
@@ -144,7 +146,7 @@ def async_store_trace(hass, trace, stored_traces):
         traces[key][trace.run_id] = trace
 
 
-def _async_store_restored_trace(hass, trace):
+def _async_store_restored_trace(hass: HomeAssistant, trace: RestoredTrace) -> None:
     """Store a restored trace and move it to the end of the LimitedSizeDict."""
     key = trace.key
     traces = hass.data[DATA_TRACE]
@@ -154,7 +156,7 @@ def _async_store_restored_trace(hass, trace):
     traces[key].move_to_end(trace.run_id, last=False)
 
 
-async def async_restore_traces(hass):
+async def async_restore_traces(hass: HomeAssistant) -> None:
     """Restore saved traces."""
     if DATA_TRACES_RESTORED in hass.data:
         return
@@ -216,15 +218,15 @@ class ActionTrace(BaseTrace):
 
     def __init__(
         self,
-        item_id: str,
-        config: dict[str, Any],
-        blueprint_inputs: dict[str, Any],
+        item_id: str | None,
+        config: dict[str, Any] | None,
+        blueprint_inputs: dict[str, Any] | None,
         context: Context,
     ) -> None:
         """Container for script trace."""
         self._trace: dict[str, deque[TraceElement]] | None = None
-        self._config: dict[str, Any] = config
-        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
+        self._config = config
+        self._blueprint_inputs = blueprint_inputs
         self.context: Context = context
         self._error: Exception | None = None
         self._state: str = "running"
@@ -239,7 +241,7 @@ class ActionTrace(BaseTrace):
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((self.key, self.run_id))
 
-    def set_trace(self, trace: dict[str, deque[TraceElement]]) -> None:
+    def set_trace(self, trace: dict[str, deque[TraceElement]] | None) -> None:
         """Set action trace."""
         self._trace = trace
 
