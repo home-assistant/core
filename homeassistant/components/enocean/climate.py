@@ -4,8 +4,6 @@ from __future__ import annotations
 from abc import ABC
 import logging
 
-from homeassistant.components.climate import HVACAction
-from homeassistant.components.enocean.device import EnOceanEntity
 from enocean import utils
 from enocean.protocol.constants import PACKET, RORG
 from enocean.protocol.packet import Packet
@@ -15,8 +13,10 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
+from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -221,6 +221,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         self._current_temp: float = DEFAULT_SET_POINT
         self._off_value = 0
         self._attr_unique_id = f"{combine_hex(dev_id)}"
+        self._attr_should_poll = False
         self.entity_description = ClimateEntityDescription(
             key="thermostat",
             name=dev_name,
@@ -268,6 +269,8 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         command.extend([0x00])  # status
         _LOGGER.debug("Packet sent: %s", str(command))
         self.send_command(command, [], PACKET.RADIO_ERP1)  # no optional values
+
+        self.schedule_update_ha_state()
 
     @property
     def temperature_unit(self):
