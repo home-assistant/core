@@ -1,4 +1,4 @@
-"""Support for Google Drive."""
+"""Support for Google Sheets."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -28,7 +28,7 @@ WORKSHEET = "worksheet"
 
 SERVICE_APPEND_SHEET = "append_sheet"
 
-APPEND_SHEET_SERVICE_SCHEMA = vol.All(
+SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Optional(WORKSHEET): cv.string,
@@ -38,7 +38,7 @@ APPEND_SHEET_SERVICE_SCHEMA = vol.All(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Google Drive from a config entry."""
+    """Set up Google Sheets from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     try:
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
 
-    await async_setup_drive_service(hass)
+    await async_setup_service(hass)
 
     return True
 
@@ -72,7 +72,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup_drive_service(hass: HomeAssistant) -> None:
+async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for Google Sheets."""
 
     def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
@@ -95,7 +95,7 @@ async def async_setup_drive_service(hass: HomeAssistant) -> None:
         worksheet.append_row(row)
 
     async def append_to_sheet(call: ServiceCall) -> None:
-        """Edit Google Sheets document."""
+        """Append new line of data to a Google Sheets document."""
 
         entry = cast(
             ConfigEntry,
@@ -109,5 +109,5 @@ async def async_setup_drive_service(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_APPEND_SHEET,
         append_to_sheet,
-        schema=APPEND_SHEET_SERVICE_SCHEMA,
+        schema=SHEET_SERVICE_SCHEMA,
     )

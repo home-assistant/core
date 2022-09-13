@@ -1,4 +1,4 @@
-"""Config flow for Google integration."""
+"""Config flow for Google Sheets integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,7 +7,6 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
-from gspread.spreadsheet import Spreadsheet
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -22,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Google Drive OAuth2 authentication."""
+    """Config flow to handle Google Sheets OAuth2 authentication."""
 
     DOMAIN = DOMAIN
 
@@ -89,14 +88,10 @@ class OAuth2FlowHandler(
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        def setup_doc() -> Spreadsheet:
-            """Set up the doc."""
-            spreadsheet = service.create("Home Assistant")
-            spreadsheet.sheet1.append_row(["created"])
-            return spreadsheet
-
         try:
-            doc = await self.hass.async_add_executor_job(setup_doc)
+            doc = await self.hass.async_add_executor_job(
+                service.create, "Home Assistant"
+            )
         except GSpreadException as err:
             _LOGGER.error("Error creating spreadsheet: %s", str(err))
             return self.async_abort(reason="create_spreadsheet_failure")

@@ -8,7 +8,7 @@ append_sheet:
       required: true
       selector:
         config_entry:
-          integration: google_drive
+          integration: google_sheets
     worksheet:
       name: Worksheet
       description: Name of the worksheet. Defaults to the first one in the document.

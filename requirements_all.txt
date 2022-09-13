@@ -795,7 +795,7 @@ gridnet==4.0.0
 # homeassistant.components.growatt_server
 growattServer==1.2.2
 
-# homeassistant.components.google_drive
+# homeassistant.components.google_sheets
 gspread==5.5.0
 
 # homeassistant.components.gstreamer

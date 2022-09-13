@@ -1,17 +1,18 @@
-"""Tests for Google Drive."""
+"""Tests for Google Sheets."""
 
 from collections.abc import Awaitable, Callable, Generator
 import http
 import time
 from unittest.mock import patch
 
+from google.auth.exceptions import RefreshError
 import pytest
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_drive import DOMAIN
+from homeassistant.components.google_sheets import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -200,7 +201,7 @@ async def test_append_sheet(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_drive.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -212,3 +213,32 @@ async def test_append_sheet(
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 8
+
+
+async def test_append_sheet_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test error on editing sheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.google_sheets.Client.open_by_key"
+    ) as mock_client, pytest.raises(RefreshError):
+        mock_client.side_effect = RefreshError
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
+                "config_entry": config_entry.entry_id,
+                "worksheet": "Sheet1",
+                "data": {"foo": "bar"},
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 1

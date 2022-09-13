@@ -1,4 +1,4 @@
-"""Test the Google Drive config flow."""
+"""Test the Google Sheets config flow."""
 
 from collections.abc import Generator
 from unittest.mock import Mock, patch
@@ -12,7 +12,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_drive.const import DOMAIN
+from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 SHEET_ID = "google-sheet-id"
-TITLE = "Google Drive"
+TITLE = "Google Sheets"
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 async def mock_client() -> Generator[Mock, None, None]:
     """Fixture to setup a fake spreadsheet client library."""
     with patch(
-        "homeassistant.components.google_drive.config_flow.Client"
+        "homeassistant.components.google_sheets.config_flow.Client"
     ) as mock_client:
         yield mock_client
 
@@ -55,7 +55,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "google_drive", context={"source": config_entries.SOURCE_USER}
+        "google_sheets", context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -93,13 +93,13 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.google_drive.async_setup_entry", return_value=True
+        "homeassistant.components.google_sheets.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-    assert len(mock_client.mock_calls) == 3
+    assert len(mock_client.mock_calls) == 2
 
     assert result.get("type") == "create_entry"
     assert result.get("title") == TITLE
@@ -122,7 +122,7 @@ async def test_create_sheet_error(
 ) -> None:
     """Test case where creating the spreadsheet fails."""
     result = await hass.config_entries.flow.async_init(
-        "google_drive", context={"source": config_entries.SOURCE_USER}
+        "google_sheets", context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -228,7 +228,7 @@ async def test_reauth(
     )
 
     with patch(
-        "homeassistant.components.google_drive.async_setup_entry", return_value=True
+        "homeassistant.components.google_sheets.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
