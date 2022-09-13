@@ -102,8 +102,8 @@ class RainMachineUpdateEntity(RainMachineEntity, UpdateEntity):
 
         # The RainMachine API docs say that multiple "packages" can be updated, but
         # don't give details on what types exist (which makes it impossible to have
-        # update entities per update type; so, we use the first one (with the idea that
-        # after it succeeds, the entity will show the next update:
+        # update entities per update type); so, we use the first one (with the idea that
+        # after it succeeds, the entity will show the next update):
         package_details = data["packageDetails"][0]
         self._attr_latest_version = package_details["newVersion"]
         self._attr_title = package_details["packageName"]
