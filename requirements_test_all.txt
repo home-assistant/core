@@ -155,7 +155,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.6
+aiohomekit==1.5.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1744,7 +1744,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.3
+xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
 xknx==1.0.2
