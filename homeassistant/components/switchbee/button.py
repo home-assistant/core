@@ -2,7 +2,7 @@
 import logging
 
 from switchbee.api import SwitchBeeError
-from switchbee.device import ApiStateCommand, DeviceType
+from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +11,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SwitchBeeCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,12 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, ButtonEntity):
     """Representation of an Switchbee button."""
 
-    def __init__(self, hass, device, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SwitchBeeBaseDevice,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
