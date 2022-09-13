@@ -26,7 +26,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -44,8 +44,6 @@ from .const import (
     METHOD_RIGHT,
     METHOD_TRAPEZOIDAL,
 )
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +153,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
         self._unit_template = f"{'' if unit_prefix is None else unit_prefix}{{}}"
-        self._unit_of_measurement = None
+        self._unit_of_measurement: str | None = None
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._unit_time_str = unit_time
@@ -195,7 +193,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     )
 
         @callback
-        def calc_integration(event):
+        def calc_integration(event: Event) -> None:
             """Handle the sensor state changes."""
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
@@ -237,7 +235,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
             try:
                 # integration as the Riemann integral of previous measures.
-                area = 0
+                area = Decimal(0)
                 elapsed_time = (
                     new_state.last_updated - old_state.last_updated
                 ).total_seconds()
@@ -277,13 +275,13 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal | None:
         """Return the state of the sensor."""
         if isinstance(self._state, Decimal):
             return round(self._state, self._round_digits)
         return self._state
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
