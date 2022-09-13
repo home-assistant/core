@@ -43,7 +43,7 @@ class AirQEntityDescription(SensorEntityDescription):
     By default sensor values are exposed as they are.
     """
 
-    value_fn: Callable = lambda x: x
+    value_transform_fn: Callable = lambda x: x
 
 
 def _index2percent(index_value: float) -> float:
@@ -110,7 +110,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:heart-pulse",
-        value_fn=_index2percent,
+        value_transform_fn=_index2percent,
     ),
     AirQEntityDescription(
         key="humidity",
@@ -179,7 +179,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:head-check",
-        value_fn=_index2percent,
+        value_transform_fn=_index2percent,
     ),
     AirQEntityDescription(
         key="pm1",
@@ -338,8 +338,9 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor.
 
-        Potentially transforming the raw value from the sensor, if value_fn was given.
+        The raw value from the sensor can be additionally transformed
+        if value_transform_fn was given in AirQEntityDescription.
         """
         # While a sensor is warming up its key isn't present in the returned dict
         value_raw = self.coordinator.data.get(self.entity_description.key)
-        return self.entity_description.value_fn(value_raw)
+        return self.entity_description.value_transform_fn(value_raw)
