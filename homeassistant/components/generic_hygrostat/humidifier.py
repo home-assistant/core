@@ -5,15 +5,13 @@ import asyncio
 import logging
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    MODE_AWAY,
+    MODE_NORMAL,
     PLATFORM_SCHEMA,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
-    ATTR_HUMIDITY,
-    MODE_AWAY,
-    MODE_NORMAL,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
