@@ -514,12 +514,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
         "step": 1,
         "mode": "slider",
     }
-    items = [
-        {
-            "id": "from_storage",
-            **settings,
-        }
-    ]
+    items = [{"id": "from_storage"} | settings]
     assert await storage_setup(items)
 
     input_id = "from_storage"
@@ -533,7 +528,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
-    updated_settings = {**settings, "min": 9}
+    updated_settings = settings | {"min": 9}
     await client.send_json(
         {
             "id": 6,
@@ -544,12 +539,12 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     )
     resp = await client.receive_json()
     assert resp["success"]
-    assert resp["result"] == {"id": "from_storage", **updated_settings}
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 9
 
-    updated_settings = {**settings, "max": 5}
+    updated_settings = settings | {"max": 5}
     await client.send_json(
         {
             "id": 7,
@@ -560,7 +555,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     )
     resp = await client.receive_json()
     assert resp["success"]
-    assert resp["result"] == {"id": "from_storage", **updated_settings}
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 5
