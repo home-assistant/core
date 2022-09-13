@@ -1,8 +1,7 @@
 """Support for tracking Bluetooth LE devices."""
 from __future__ import annotations
 
-import logging
-
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,11 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bluetooth import BluetoothServiceInfoBleak
 from .const import ATTR_ADDRESS, ATTR_RSSI, BLE_PREFIX, DOMAIN, SIGNAL_BLE_DEVICE_NEW
 from .data import BLEScanner, signal_battery_update, signal_seen, signal_unavailable
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

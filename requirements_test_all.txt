@@ -1340,6 +1340,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.squeezebox
 pysqueezebox==0.6.0
 
+# homeassistant.components.switchbee
+pyswitchbee==1.4.7
+
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
 
@@ -1551,7 +1554,7 @@ soco==0.28.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.9
+solax==0.3.0
 
 # homeassistant.components.honeywell
 somecomfort==0.8.0
