@@ -297,6 +297,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "yalexs_ble",
-        "manufacturer_id": 465
+        "manufacturer_id": 465,
+        "service_uuid": "0000fe24-0000-1000-8000-00805f9b34fb"
     }
 ]

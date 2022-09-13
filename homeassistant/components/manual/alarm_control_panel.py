@@ -10,9 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    AlarmControlPanelEntityFeature,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     CONF_ARMING_TIME,
     CONF_CODE,

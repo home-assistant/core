@@ -347,10 +347,10 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert not device.area_id
     assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
 
-    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    motion_entity = "binary_sensor.4_in_1_sensor_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+    assert state.name == "4-in-1 Sensor Motion detection"
 
     dev_reg.async_update_device(
         device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
@@ -1179,10 +1179,10 @@ async def test_node_model_change(hass, zp3111, client, integration):
 
     dev_id = device.id
 
-    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    motion_entity = "binary_sensor.4_in_1_sensor_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+    assert state.name == "4-in-1 Sensor Motion detection"
 
     # Customize device and entity names/ids
     dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
@@ -1267,7 +1267,7 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
     er_reg = er.async_get(hass)
 
     # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
+    sensor_cover_entity = "sensor.4_in_1_sensor_cover_status"
     er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
     await hass.async_block_till_done()
 
@@ -1285,9 +1285,7 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
     assert state.state != STATE_UNAVAILABLE
 
     # check for expected entities
-    binary_cover_entity = (
-        "binary_sensor.4_in_1_sensor_home_security_tampering_product_cover_removed"
-    )
+    binary_cover_entity = "binary_sensor.4_in_1_sensor_tampering_product_cover_removed"
     state = hass.states.get(binary_cover_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE
