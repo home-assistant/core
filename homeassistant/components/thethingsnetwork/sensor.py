@@ -109,7 +109,7 @@ class TtnDataSensor(SensorEntity):
                 ATTR_TIME: self._state["time"],
             }
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the current state."""
         await self._ttn_data_storage.async_update()
         self._state = self._ttn_data_storage.data

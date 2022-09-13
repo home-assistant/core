@@ -11,7 +11,7 @@ from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -123,6 +123,7 @@ def get_device_entities(
             "entity_category": entry.entity_category,
             "supported_features": entry.supported_features,
             "unit_of_measurement": entry.unit_of_measurement,
+            "value_id": value_id,
             "primary_value": primary_value_data,
         }
         entities.append(entity)

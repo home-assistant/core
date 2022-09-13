@@ -5,10 +5,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -128,12 +128,12 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             await self.hive.heating.setTargetTemperature(self.device, new_temperature)
 
     @refresh_system
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
             await self.hive.heating.setBoostOff(self.device)
         elif preset_mode == PRESET_BOOST:
-            curtemp = round(self.current_temperature * 2) / 2
+            curtemp = round((self.current_temperature or 0) * 2) / 2
             temperature = curtemp + 0.5
             await self.hive.heating.setBoostOn(self.device, 30, temperature)
 

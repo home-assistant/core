@@ -1291,16 +1291,16 @@ async def test_register_callback_by_manufacturer_id(
         cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
-            {MANUFACTURER_ID: 76},
+            {MANUFACTURER_ID: 21},
             BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "apple")
+        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
         apple_adv = AdvertisementData(
-            local_name="apple",
-            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+            local_name="rtx",
+            manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
         )
 
         inject_advertisement(hass, apple_device, apple_adv)
@@ -1316,9 +1316,119 @@ async def test_register_callback_by_manufacturer_id(
     assert len(callbacks) == 1
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
-    assert service_info.name == "apple"
-    assert service_info.manufacturer == "Apple, Inc."
-    assert service_info.manufacturer_id == 76
+    assert service_info.name == "rtx"
+    assert service_info.manufacturer == "RTX Telecom A/S"
+    assert service_info.manufacturer_id == 21
+
+
+async def test_not_filtering_wanted_apple_devices(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test filtering noisy apple devices."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {MANUFACTURER_ID: 76},
+            BluetoothScanningMode.ACTIVE,
+        )
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        ibeacon_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        ibeacon_adv = AdvertisementData(
+            local_name="ibeacon",
+            manufacturer_data={76: b"\x02\x00\x00\x00"},
+        )
+
+        inject_advertisement(hass, ibeacon_device, ibeacon_adv)
+
+        homekit_device = BLEDevice("44:44:33:11:23:46", "rtx")
+        homekit_adv = AdvertisementData(
+            local_name="homekit",
+            manufacturer_data={76: b"\x06\x00\x00\x00"},
+        )
+
+        inject_advertisement(hass, homekit_device, homekit_adv)
+
+        apple_device = BLEDevice("44:44:33:11:23:47", "rtx")
+        apple_adv = AdvertisementData(
+            local_name="apple",
+            manufacturer_data={76: b"\x10\x00\x00\x00"},
+        )
+
+        inject_advertisement(hass, apple_device, apple_adv)
+
+        cancel()
+
+    assert len(callbacks) == 3
+
+
+async def test_filtering_noisy_apple_devices(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test filtering noisy apple devices."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {MANUFACTURER_ID: 21},
+            BluetoothScanningMode.ACTIVE,
+        )
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        apple_adv = AdvertisementData(
+            local_name="noisy",
+            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+        )
+
+        inject_advertisement(hass, apple_device, apple_adv)
+
+        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_adv = AdvertisementData(local_name="empty")
+
+        inject_advertisement(hass, empty_device, empty_adv)
+        await hass.async_block_till_done()
+
+        cancel()
+
+    assert len(callbacks) == 0
 
 
 async def test_register_callback_by_address_connectable_manufacturer_id(
@@ -1346,21 +1456,21 @@ async def test_register_callback_by_address_connectable_manufacturer_id(
         cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
-            {MANUFACTURER_ID: 76, CONNECTABLE: False, ADDRESS: "44:44:33:11:23:45"},
+            {MANUFACTURER_ID: 21, CONNECTABLE: False, ADDRESS: "44:44:33:11:23:45"},
             BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "apple")
+        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
         apple_adv = AdvertisementData(
-            local_name="apple",
-            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+            local_name="rtx",
+            manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
         )
 
         inject_advertisement(hass, apple_device, apple_adv)
 
-        apple_device_wrong_address = BLEDevice("44:44:33:11:23:46", "apple")
+        apple_device_wrong_address = BLEDevice("44:44:33:11:23:46", "rtx")
 
         inject_advertisement(hass, apple_device_wrong_address, apple_adv)
         await hass.async_block_till_done()
@@ -1370,9 +1480,9 @@ async def test_register_callback_by_address_connectable_manufacturer_id(
     assert len(callbacks) == 1
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
-    assert service_info.name == "apple"
-    assert service_info.manufacturer == "Apple, Inc."
-    assert service_info.manufacturer_id == 76
+    assert service_info.name == "rtx"
+    assert service_info.manufacturer == "RTX Telecom A/S"
+    assert service_info.manufacturer_id == 21
 
 
 async def test_register_callback_by_manufacturer_id_and_address(
@@ -1400,19 +1510,19 @@ async def test_register_callback_by_manufacturer_id_and_address(
         cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
-            {MANUFACTURER_ID: 76, ADDRESS: "44:44:33:11:23:45"},
+            {MANUFACTURER_ID: 21, ADDRESS: "44:44:33:11:23:45"},
             BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "apple")
-        apple_adv = AdvertisementData(
-            local_name="apple",
-            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+        rtx_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        rtx_adv = AdvertisementData(
+            local_name="rtx",
+            manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
         )
 
-        inject_advertisement(hass, apple_device, apple_adv)
+        inject_advertisement(hass, rtx_device, rtx_adv)
 
         yale_device = BLEDevice("44:44:33:11:23:45", "apple")
         yale_adv = AdvertisementData(
@@ -1426,7 +1536,7 @@ async def test_register_callback_by_manufacturer_id_and_address(
         other_apple_device = BLEDevice("44:44:33:11:23:22", "apple")
         other_apple_adv = AdvertisementData(
             local_name="apple",
-            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+            manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
         )
         inject_advertisement(hass, other_apple_device, other_apple_adv)
 
@@ -1435,9 +1545,9 @@ async def test_register_callback_by_manufacturer_id_and_address(
     assert len(callbacks) == 1
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
-    assert service_info.name == "apple"
-    assert service_info.manufacturer == "Apple, Inc."
-    assert service_info.manufacturer_id == 76
+    assert service_info.name == "rtx"
+    assert service_info.manufacturer == "RTX Telecom A/S"
+    assert service_info.manufacturer_id == 21
 
 
 async def test_register_callback_by_service_uuid_and_address(
@@ -1603,31 +1713,31 @@ async def test_register_callback_by_local_name(
         cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
-            {LOCAL_NAME: "apple"},
+            {LOCAL_NAME: "rtx"},
             BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
-        apple_device = BLEDevice("44:44:33:11:23:45", "apple")
-        apple_adv = AdvertisementData(
-            local_name="apple",
-            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+        rtx_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        rtx_adv = AdvertisementData(
+            local_name="rtx",
+            manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
         )
 
-        inject_advertisement(hass, apple_device, apple_adv)
+        inject_advertisement(hass, rtx_device, rtx_adv)
 
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
         inject_advertisement(hass, empty_device, empty_adv)
 
-        apple_device_2 = BLEDevice("44:44:33:11:23:45", "apple")
-        apple_adv_2 = AdvertisementData(
-            local_name="apple2",
-            manufacturer_data={76: b"\xd8.\xad\xcd\r\x85"},
+        rtx_device_2 = BLEDevice("44:44:33:11:23:45", "rtx")
+        rtx_adv_2 = AdvertisementData(
+            local_name="rtx2",
+            manufacturer_data={21: b"\xd8.\xad\xcd\r\x85"},
         )
-        inject_advertisement(hass, apple_device_2, apple_adv_2)
+        inject_advertisement(hass, rtx_device_2, rtx_adv_2)
 
         await hass.async_block_till_done()
 
@@ -1636,9 +1746,9 @@ async def test_register_callback_by_local_name(
     assert len(callbacks) == 1
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
-    assert service_info.name == "apple"
-    assert service_info.manufacturer == "Apple, Inc."
-    assert service_info.manufacturer_id == 76
+    assert service_info.name == "rtx"
+    assert service_info.manufacturer == "RTX Telecom A/S"
+    assert service_info.manufacturer_id == 21
 
 
 async def test_register_callback_by_local_name_overly_broad(

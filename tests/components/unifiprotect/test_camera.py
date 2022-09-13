@@ -492,7 +492,7 @@ async def test_camera_enable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high"
 
-    camera.__fields__["set_motion_detection"] = Mock()
+    camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(
@@ -514,7 +514,7 @@ async def test_camera_disable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high"
 
-    camera.__fields__["set_motion_detection"] = Mock()
+    camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(

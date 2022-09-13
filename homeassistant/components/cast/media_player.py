@@ -7,7 +7,7 @@ from contextlib import suppress
 from datetime import datetime
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -29,29 +29,21 @@ import yarl
 
 from homeassistant.components import media_source, zeroconf
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_EXTRA,
     BrowseError,
     BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
-)
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_EXTRA,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_BUFFERING,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -82,6 +74,9 @@ from .helpers import (
     PlaylistSupported,
     parse_playlist,
 )
+
+if TYPE_CHECKING:
+    from . import CastProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -590,7 +585,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         return BrowseMedia(
             title="Cast",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id="",
             media_content_type="",
             can_play=False,
@@ -599,7 +594,9 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         content_filter = None
@@ -619,6 +616,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if media_content_id is None:
             return await self._async_root_payload(content_filter)
 
+        platform: CastProtocol
+        assert media_content_type is not None
         for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
             browse_media = await platform.async_browse_media(
                 self.hass,
@@ -634,7 +633,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         chromecast = self._get_chromecast()
@@ -774,27 +773,27 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return (media_status, media_status_received)
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         # The lovelace app loops media to prevent timing out, don't show that
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
-                return STATE_PLAYING
+                return MediaPlayerState.PLAYING
             if media_status.player_state == MEDIA_PLAYER_STATE_BUFFERING:
-                return STATE_BUFFERING
+                return MediaPlayerState.BUFFERING
             if media_status.player_is_paused:
-                return STATE_PAUSED
+                return MediaPlayerState.PAUSED
             if media_status.player_is_idle:
-                return STATE_IDLE
+                return MediaPlayerState.IDLE
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
             if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
                 # Some apps don't report media status, show the player as playing
-                return STATE_PLAYING
-            return STATE_IDLE
+                return MediaPlayerState.PLAYING
+            return MediaPlayerState.IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         return None
 
     @property
@@ -807,7 +806,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return media_status.content_id if media_status else None
 
     @property
-    def media_content_type(self) -> str | None:
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # The lovelace app loops media to prevent timing out, don't show that
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
@@ -815,11 +814,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.media_is_tvshow:
-            return MEDIA_TYPE_TVSHOW
+            return MediaType.TVSHOW
         if media_status.media_is_movie:
-            return MEDIA_TYPE_MOVIE
+            return MediaType.MOVIE
         if media_status.media_is_musictrack:
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         return None
 
     @property

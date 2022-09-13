@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import (
     Event,
@@ -41,7 +42,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
-from homeassistant.util.yaml import load_yaml
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -55,14 +55,13 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
-PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -176,7 +175,65 @@ class EntityRegistryStore(storage.Store):
         self, old_major_version: int, old_minor_version: int, old_data: dict
     ) -> dict:
         """Migrate to the new version."""
-        return await _async_migrate(old_major_version, old_minor_version, old_data)
+        data = old_data
+        if old_major_version == 1 and old_minor_version < 2:
+            # From version 1.1
+            for entity in data["entities"]:
+                # Populate all keys
+                entity["area_id"] = entity.get("area_id")
+                entity["capabilities"] = entity.get("capabilities") or {}
+                entity["config_entry_id"] = entity.get("config_entry_id")
+                entity["device_class"] = entity.get("device_class")
+                entity["device_id"] = entity.get("device_id")
+                entity["disabled_by"] = entity.get("disabled_by")
+                entity["entity_category"] = entity.get("entity_category")
+                entity["icon"] = entity.get("icon")
+                entity["name"] = entity.get("name")
+                entity["original_icon"] = entity.get("original_icon")
+                entity["original_name"] = entity.get("original_name")
+                entity["platform"] = entity["platform"]
+                entity["supported_features"] = entity.get("supported_features", 0)
+                entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+
+        if old_major_version == 1 and old_minor_version < 3:
+            # Version 1.3 adds original_device_class
+            for entity in data["entities"]:
+                # Move device_class to original_device_class
+                entity["original_device_class"] = entity["device_class"]
+                entity["device_class"] = None
+
+        if old_major_version == 1 and old_minor_version < 4:
+            # Version 1.4 adds id
+            for entity in data["entities"]:
+                entity["id"] = uuid_util.random_uuid_hex()
+
+        if old_major_version == 1 and old_minor_version < 5:
+            # Version 1.5 adds entity options
+            for entity in data["entities"]:
+                entity["options"] = {}
+
+        if old_major_version == 1 and old_minor_version < 6:
+            # Version 1.6 adds hidden_by
+            for entity in data["entities"]:
+                entity["hidden_by"] = None
+
+        if old_major_version == 1 and old_minor_version < 7:
+            # Version 1.7 adds has_entity_name
+            for entity in data["entities"]:
+                entity["has_entity_name"] = False
+
+        if old_major_version == 1 and old_minor_version < 8:
+            # Cleanup after frontend bug which incorrectly updated device_class
+            # Fixed by frontend PR #13551
+            for entity in data["entities"]:
+                domain = split_entity_id(entity["entity_id"])[0]
+                if domain in [Platform.BINARY_SENSOR, Platform.COVER]:
+                    continue
+                entity["device_class"] = None
+
+        if old_major_version > 1:
+            raise NotImplementedError
+        return data
 
 
 class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
@@ -184,7 +241,7 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
 
     Maintains two additional indexes:
     - id -> entry
-    - (domain, platform, unique_id) -> entry
+    - (domain, platform, unique_id) -> entity_id
     """
 
     def __init__(self) -> None:
@@ -200,14 +257,14 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
             del self._entry_ids[old_entry.id]
             del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
         super().__setitem__(key, entry)
-        self._entry_ids.__setitem__(entry.id, entry)
+        self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         entry = self[key]
-        self._entry_ids.__delitem__(entry.id)
-        self._index.__delitem__((entry.domain, entry.platform, entry.unique_id))
+        del self._entry_ids[entry.id]
+        del self._index[(entry.domain, entry.platform, entry.unique_id)]
         super().__delitem__(key)
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
@@ -326,7 +383,6 @@ class EntityRegistry:
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
         # Data that we want entry to have
-        area_id: str | None | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
@@ -352,7 +408,6 @@ class EntityRegistry:
         if entity_id:
             return self.async_update_entity(
                 entity_id,
-                area_id=area_id,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
                 device_id=device_id,
@@ -363,13 +418,6 @@ class EntityRegistry:
                 original_name=original_name,
                 supported_features=supported_features,
                 unit_of_measurement=unit_of_measurement,
-                # When we changed our slugify algorithm, we invalidated some
-                # stored entity IDs with either a __ or ending in _.
-                # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
-                # removed when we release 1.0 or in 2020.
-                new_entity_id=".".join(
-                    slugify(part) for part in entity_id.split(".", 1)
-                ),
             )
 
         entity_id = self.async_generate_entity_id(
@@ -403,7 +451,6 @@ class EntityRegistry:
             return None if value is UNDEFINED else value
 
         entry = RegistryEntry(
-            area_id=none_if_undefined(area_id),
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
             device_id=none_if_undefined(device_id),
@@ -724,25 +771,13 @@ class EntityRegistry:
         """Load the entity registry."""
         async_setup_entity_restore(self.hass, self)
 
-        data = await storage.async_migrator(
-            self.hass,
-            self.hass.config.path(PATH_REGISTRY),
-            self._store,
-            old_conf_load_func=load_yaml,
-            old_conf_migrate_func=_async_migrate_yaml_to_json,
-        )
+        data = await self._store.async_load()
         entities = EntityRegistryItems()
 
         from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if data is not None:
             for entity in data["entities"]:
-                # Some old installations can have some bad entities.
-                # Filter them out as they cause errors down the line.
-                # Can be removed in Jan 2021
-                if not valid_entity_id(entity["entity_id"]):
-                    continue
-
                 # We removed this in 2022.5. Remove this check in 2023.1.
                 if entity["entity_category"] == "system":
                     entity["entity_category"] = None
@@ -922,73 +957,6 @@ def async_config_entry_disabled_by_changed(
         registry.async_update_entity(
             entity.entity_id, disabled_by=RegistryEntryDisabler.CONFIG_ENTRY
         )
-
-
-async def _async_migrate(
-    old_major_version: int, old_minor_version: int, data: dict
-) -> dict:
-    """Migrate to the new version."""
-    if old_major_version == 1 and old_minor_version < 2:
-        # From version 1.1
-        for entity in data["entities"]:
-            # Populate all keys
-            entity["area_id"] = entity.get("area_id")
-            entity["capabilities"] = entity.get("capabilities") or {}
-            entity["config_entry_id"] = entity.get("config_entry_id")
-            entity["device_class"] = entity.get("device_class")
-            entity["device_id"] = entity.get("device_id")
-            entity["disabled_by"] = entity.get("disabled_by")
-            entity["entity_category"] = entity.get("entity_category")
-            entity["icon"] = entity.get("icon")
-            entity["name"] = entity.get("name")
-            entity["original_icon"] = entity.get("original_icon")
-            entity["original_name"] = entity.get("original_name")
-            entity["platform"] = entity["platform"]
-            entity["supported_features"] = entity.get("supported_features", 0)
-            entity["unit_of_measurement"] = entity.get("unit_of_measurement")
-
-    if old_major_version == 1 and old_minor_version < 3:
-        # Version 1.3 adds original_device_class
-        for entity in data["entities"]:
-            # Move device_class to original_device_class
-            entity["original_device_class"] = entity["device_class"]
-            entity["device_class"] = None
-
-    if old_major_version == 1 and old_minor_version < 4:
-        # Version 1.4 adds id
-        for entity in data["entities"]:
-            entity["id"] = uuid_util.random_uuid_hex()
-
-    if old_major_version == 1 and old_minor_version < 5:
-        # Version 1.5 adds entity options
-        for entity in data["entities"]:
-            entity["options"] = {}
-
-    if old_major_version == 1 and old_minor_version < 6:
-        # Version 1.6 adds hidden_by
-        for entity in data["entities"]:
-            entity["hidden_by"] = None
-
-    if old_major_version == 1 and old_minor_version < 7:
-        # Version 1.6 adds has_entity_name
-        for entity in data["entities"]:
-            entity["has_entity_name"] = False
-
-    if old_major_version > 1:
-        raise NotImplementedError
-    return data
-
-
-async def _async_migrate_yaml_to_json(
-    entities: dict[str, Any]
-) -> dict[str, list[dict[str, Any]]]:
-    """Migrate the YAML config file to storage helper format."""
-    entities_1_1 = {
-        "entities": [
-            {"entity_id": entity_id, **info} for entity_id, info in entities.items()
-        ]
-    }
-    return await _async_migrate(1, 1, entities_1_1)
 
 
 @callback

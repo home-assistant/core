@@ -66,9 +66,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
             self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
+        self._attr_name = self.generate_name(alternate_value_name=info.platform_hint)
 
     @property
     def native_min_value(self) -> float:

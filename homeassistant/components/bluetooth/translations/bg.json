@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "\u0410\u0434\u0430\u043f\u0442\u0435\u0440"
+                },
+                "description": "\u0418\u0437\u0431\u0435\u0440\u0435\u0442\u0435 Bluetooth \u0430\u0434\u0430\u043f\u0442\u0435\u0440 \u0437\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430"
+            },
+            "single_adapter": {
+                "description": "\u0418\u0441\u043a\u0430\u0442\u0435 \u043b\u0438 \u0434\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u0435 Bluetooth \u0430\u0434\u0430\u043f\u0442\u0435\u0440\u0430 {name}?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "passive": "\u041f\u0430\u0441\u0438\u0432\u043d\u043e \u0441\u043a\u0430\u043d\u0438\u0440\u0430\u043d\u0435"
+                }
+            }
+        }
+    }
+}

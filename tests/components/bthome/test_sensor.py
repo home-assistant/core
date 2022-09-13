@@ -1,4 +1,4 @@
-"""Test the BThome sensors."""
+"""Test the BTHome sensors."""
 
 from unittest.mock import patch
 

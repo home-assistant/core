@@ -21,12 +21,12 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.media_player.browse_media import (
     BrowseMedia,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -204,6 +204,8 @@ async def async_setup_platform(
 
 class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
+
+    _attr_media_content_type = MediaType.MUSIC
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -550,11 +552,6 @@ class BluesoundPlayer(MediaPlayerEntity):
                 _create_service_item(resp["services"]["service"])
 
         return self._services_items
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def state(self):
@@ -1022,7 +1019,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         if self.is_grouped and not self.is_master:
@@ -1069,7 +1066,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         return await self.send_bluesound_command("Volume?mute=0")
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
