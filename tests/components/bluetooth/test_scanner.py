@@ -7,7 +7,7 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BLEDevice,
 )
-from dbus_next import InvalidMessageError
+from dbus_fast import InvalidMessageError
 import pytest
 
 from homeassistant.components import bluetooth
