@@ -5,10 +5,7 @@ from systembridgeconnector.models.media_directories import MediaDirectories
 from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
 
 from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source.const import (
-    MEDIA_CLASS_MAP,
-    MEDIA_MIME_TYPES,
-)
+from homeassistant.components.media_source import MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,

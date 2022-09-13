@@ -47,7 +47,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.16.2
+PyViCare==2.17.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -147,7 +147,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.09.1
+aioecowitt==2022.09.2
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.6
+aiohomekit==1.5.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -408,13 +408,16 @@ bimmer_connected==0.10.2
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.16.0
+bleak-retry-connector==1.15.1
+
+# homeassistant.components.bluetooth
+bleak==0.17.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
 
 # homeassistant.components.blink
-blinkpy==0.19.0
+blinkpy==0.19.2
 
 # homeassistant.components.blinksticklight
 blinkstick==1.2.0
@@ -433,7 +436,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.2
+bluetooth-auto-recovery==0.3.3
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -533,6 +536,9 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.8
+
+# homeassistant.components.bluetooth
+dbus-fast==1.4.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1058,7 +1064,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.mill
-mill-local==0.1.1
+mill-local==0.2.0
 
 # homeassistant.components.mill
 millheater==0.10.0
@@ -1671,7 +1677,7 @@ pylitejet==0.3.0
 pylitterbot==2022.9.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.13.1
+pylutron-caseta==0.15.1
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1904,6 +1910,9 @@ pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
 pysuez==0.1.19
+
+# homeassistant.components.switchbee
+pyswitchbee==1.4.7
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -2260,7 +2269,7 @@ solaredge-local==0.2.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.9
+solax==0.3.0
 
 # homeassistant.components.honeywell
 somecomfort==0.8.0
@@ -2528,7 +2537,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.0
+xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
 xknx==1.0.2

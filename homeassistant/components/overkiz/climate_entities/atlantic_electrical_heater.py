@@ -13,8 +13,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.overkiz.entity import OverkizEntity
 from homeassistant.const import TEMP_CELSIUS
+
+from ..entity import OverkizEntity
 
 PRESET_FROST_PROTECTION = "frost_protection"
 

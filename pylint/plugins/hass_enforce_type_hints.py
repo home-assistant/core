@@ -1348,6 +1348,45 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "image_processing": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ImageProcessingEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="camera_entity",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="confidence",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="process_image",
+                    arg_types={1: "Image"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="ImageProcessingFaceEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="process_faces",
+                    arg_types={
+                        1: "list[FaceInformation]",
+                        2: "int",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "light": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -2123,6 +2162,35 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["SwitchDeviceClass", "str", None],
+                ),
+            ],
+        ),
+    ],
+    "tts": [
+        ClassTypeHintMatch(
+            base_class="Provider",
+            matches=[
+                TypeHintMatch(
+                    function_name="default_language",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_languages",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_options",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="default_options",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
+                    function_name="get_tts_audio",
+                    arg_types={1: "str", 2: "str", 3: "dict[str, Any] | None"},
+                    return_type="TtsAudioType",
+                    has_async_counterpart=True,
                 ),
             ],
         ),

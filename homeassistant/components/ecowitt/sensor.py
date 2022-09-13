@@ -196,6 +196,11 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=PRESSURE_INHG,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.PERCENTAGE: SensorEntityDescription(
+        key="PERCENTAGE",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 

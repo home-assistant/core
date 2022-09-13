@@ -11,7 +11,7 @@ import mimetypes
 import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 from aiohttp import web
 import mutagen
@@ -49,8 +49,6 @@ from homeassistant.util.yaml import load_yaml
 
 from .const import DOMAIN
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 TtsAudioType = tuple[Optional[str], Optional[bytes]]
@@ -86,7 +84,7 @@ _RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 
-def _deprecated_platform(value):
+def _deprecated_platform(value: str) -> str:
     """Validate if platform is deprecated."""
     if value == "google":
         raise vol.Invalid(
@@ -253,7 +251,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if setup_tasks:
         await asyncio.wait(setup_tasks)
 
-    async def async_platform_discovered(platform, info):
+    async def async_platform_discovered(
+        platform: str, info: dict[str, Any] | None
+    ) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
@@ -327,7 +327,7 @@ class SpeechManager:
         """Read file cache and delete files."""
         self.mem_cache = {}
 
-        def remove_files():
+        def remove_files() -> None:
             """Remove files from filesystem."""
             for filename in self.file_cache.values():
                 try:
@@ -365,7 +365,11 @@ class SpeechManager:
 
         # Languages
         language = language or provider.default_language
-        if language is None or language not in provider.supported_languages:
+        if (
+            language is None
+            or provider.supported_languages is None
+            or language not in provider.supported_languages
+        ):
             raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
@@ -583,33 +587,33 @@ class Provider:
     name: str | None = None
 
     @property
-    def default_language(self):
+    def default_language(self) -> str | None:
         """Return the default language."""
         return None
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str] | None:
         """Return a list of supported languages."""
         return None
 
     @property
-    def supported_options(self):
-        """Return a list of supported options like voice, emotionen."""
+    def supported_options(self) -> list[str] | None:
+        """Return a list of supported options like voice, emotions."""
         return None
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any] | None:
         """Return a dict include default options."""
         return None
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict | None = None
+        self, message: str, language: str, options: dict[str, Any] | None = None
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict | None = None
+        self, message: str, language: str, options: dict[str, Any] | None = None
     ) -> TtsAudioType:
         """Load tts audio file from provider.
 
