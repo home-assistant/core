@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from decimal import Decimal, DecimalException
 import logging
+from typing import Final
 
 import voluptuous as vol
 
@@ -26,7 +27,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -47,7 +48,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SOURCE_ID = "source"
+ATTR_SOURCE_ID: Final = "source"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
@@ -195,8 +196,8 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         @callback
         def calc_integration(event: Event) -> None:
             """Handle the sensor state changes."""
-            old_state = event.data.get("old_state")
-            new_state = event.data.get("new_state")
+            old_state: State | None = event.data.get("old_state")
+            new_state: State | None = event.data.get("new_state")
 
             if new_state is None or new_state.state in (
                 STATE_UNKNOWN,
