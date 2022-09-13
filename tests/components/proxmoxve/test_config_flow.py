@@ -10,6 +10,10 @@ from homeassistant.components.proxmoxve.const import (
     CONF_NODE,
     CONF_QEMU,
     CONF_REALM,
+    CONF_SCAN_INTERVAL_HOST,
+    CONF_SCAN_INTERVAL_LXC,
+    CONF_SCAN_INTERVAL_NODE,
+    CONF_SCAN_INTERVAL_QEMU,
     CONF_VMS,
     DOMAIN,
 )
@@ -97,6 +101,13 @@ USER_INPUT_PORT_TOO_SMALL = {
     CONF_PASSWORD: "secret",
     CONF_REALM: "pam",
     CONF_VERIFY_SSL: True,
+}
+
+USER_INPUT_INTERVAL_UPDATE_OK = {
+    CONF_SCAN_INTERVAL_HOST: 120,
+    CONF_SCAN_INTERVAL_NODE: 50,
+    CONF_SCAN_INTERVAL_QEMU: 45,
+    CONF_SCAN_INTERVAL_LXC: 35,
 }
 
 MOCK_GET_RESPONSE = [
@@ -644,6 +655,15 @@ async def test_options_flow_v1(hass: HomeAssistant):
             result = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 user_input=USER_INPUT_QEMU_LXC,
+            )
+
+            assert result["step_id"] == "interval_update"
+            assert result["type"] == FlowResultType.FORM
+            assert "flow_id" in result
+
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                user_input=USER_INPUT_INTERVAL_UPDATE_OK,
             )
 
             assert result["type"] == FlowResultType.ABORT

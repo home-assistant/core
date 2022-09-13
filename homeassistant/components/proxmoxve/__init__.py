@@ -41,6 +41,10 @@ from .const import (
     CONF_NODES,
     CONF_QEMU,
     CONF_REALM,
+    CONF_SCAN_INTERVAL_HOST,
+    CONF_SCAN_INTERVAL_LXC,
+    CONF_SCAN_INTERVAL_NODE,
+    CONF_SCAN_INTERVAL_QEMU,
     CONF_VMS,
     COORDINATORS,
     DEFAULT_PORT,
@@ -57,13 +61,6 @@ from .const import (
 PLATFORMS = [
     Platform.BINARY_SENSOR,
 ]
-
-COORDINATOR_UPDATE_INTERVAL_MAP = {
-    ProxmoxType.Proxmox: timedelta(minutes=60),
-    ProxmoxType.Node: timedelta(seconds=60),
-    ProxmoxType.QEMU: timedelta(seconds=60),
-    ProxmoxType.LXC: timedelta(seconds=60),
-}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -249,9 +246,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Initialize a RainMachineDataUpdateCoordinator."""
         await coordinator.async_config_entry_first_refresh()
 
+    coordinator_interval_update_map: dict[ProxmoxType, timedelta] = {
+        ProxmoxType.Proxmox: timedelta(
+            seconds=config_entry.options[CONF_SCAN_INTERVAL_HOST]
+        ),
+        ProxmoxType.Node: timedelta(
+            seconds=config_entry.options[CONF_SCAN_INTERVAL_NODE]
+        ),
+        ProxmoxType.QEMU: timedelta(
+            seconds=config_entry.options[CONF_SCAN_INTERVAL_QEMU]
+        ),
+        ProxmoxType.LXC: timedelta(
+            seconds=config_entry.options[CONF_SCAN_INTERVAL_LXC]
+        ),
+    }
+
     controller_init_tasks = []
     coordinators = {}
-    for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
+    for api_category, update_interval in coordinator_interval_update_map.items():
         if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
             for vm_id in config_entry.data[api_category]:
                 coordinator = coordinators[vm_id] = DataUpdateCoordinator(

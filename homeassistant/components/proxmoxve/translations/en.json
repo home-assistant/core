@@ -113,6 +113,16 @@
                 "description": "Please fill out the form and then press submit when you're ready",
                 "title": "Proxmox VE host information"
             },
+            "interval_update": {
+                "data": {
+                    "interval_update_host": "Host (seconds)",
+                    "interval_update_lxc": "Linux Containers (LXC) (seconds)",
+                    "interval_update_node": "Node (seconds)",
+                    "interval_update_qemu": "Virtual Machines (QEMU) (seconds)"
+                },
+                "description": "Change the time (in seconds) for the information and sensors to update for each Proxmox resource:",
+                "title": "Information update interval setting:"
+            },
             "selection_qemu_lxc": {
                 "data": {
                     "lxc": "Linux Containers (LXC)",

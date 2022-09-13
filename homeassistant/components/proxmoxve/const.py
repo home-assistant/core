@@ -16,6 +16,13 @@ CONF_QEMU = "qemu"
 CONF_REALM = "realm"
 CONF_VMS = "vms"
 
+CONF_SCAN_INTERVAL_HOST = "interval_update_host"
+CONF_SCAN_INTERVAL_NODE = "interval_update_node"
+CONF_SCAN_INTERVAL_QEMU = "interval_update_qemu"
+CONF_SCAN_INTERVAL_LXC = "interval_update_lxc"
+
+UPDATE_INTERVAL_DEFAULT = 60
+
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pve"
 DEFAULT_VERIFY_SSL = False

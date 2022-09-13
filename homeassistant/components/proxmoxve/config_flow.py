@@ -29,6 +29,10 @@ from .const import (
     CONF_NODE,
     CONF_QEMU,
     CONF_REALM,
+    CONF_SCAN_INTERVAL_HOST,
+    CONF_SCAN_INTERVAL_LXC,
+    CONF_SCAN_INTERVAL_NODE,
+    CONF_SCAN_INTERVAL_QEMU,
     DEFAULT_PORT,
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
@@ -36,6 +40,7 @@ from .const import (
     ID,
     INTEGRATION_NAME,
     LOGGER,
+    UPDATE_INTERVAL_DEFAULT,
 )
 
 
@@ -276,8 +281,56 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
             options=self.config_entry.options,
         )
 
-        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-        return self.async_abort(reason="changes_successful")
+        return await self.async_step_interval_update()
+
+    async def async_step_interval_update(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Handle the update interval."""
+
+        if user_input:
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data=self._config,
+                options=user_input,
+            )
+
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return self.async_abort(reason="changes_successful")
+
+        return self.async_show_form(
+            step_id="interval_update",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL_HOST,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL_HOST, UPDATE_INTERVAL_DEFAULT
+                        ),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL_NODE,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL_NODE, UPDATE_INTERVAL_DEFAULT
+                        ),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL_QEMU,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL_QEMU, UPDATE_INTERVAL_DEFAULT
+                        ),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL_LXC,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL_LXC, UPDATE_INTERVAL_DEFAULT
+                        ),
+                    ): cv.positive_int,
+                }
+            ),
+        )
 
 
 class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -459,9 +512,16 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+        import_options: dict[str, int] = {}
+        import_options[CONF_SCAN_INTERVAL_HOST] = UPDATE_INTERVAL_DEFAULT
+        import_options[CONF_SCAN_INTERVAL_NODE] = UPDATE_INTERVAL_DEFAULT
+        import_options[CONF_SCAN_INTERVAL_QEMU] = UPDATE_INTERVAL_DEFAULT
+        import_options[CONF_SCAN_INTERVAL_LXC] = UPDATE_INTERVAL_DEFAULT
+
         return self.async_create_entry(
             title=f"{import_config.get(CONF_NODE)} - {import_config.get(CONF_HOST)}:{import_config.get(CONF_PORT)}",
             data=import_config,
+            options=import_options,
         )
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
@@ -754,9 +814,16 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for lxc_selection in lxc_user:
                 self._config[CONF_LXC].append(lxc_selection)
 
+        conf_options: dict[str, int] = {}
+        conf_options[CONF_SCAN_INTERVAL_HOST] = UPDATE_INTERVAL_DEFAULT
+        conf_options[CONF_SCAN_INTERVAL_NODE] = UPDATE_INTERVAL_DEFAULT
+        conf_options[CONF_SCAN_INTERVAL_QEMU] = UPDATE_INTERVAL_DEFAULT
+        conf_options[CONF_SCAN_INTERVAL_LXC] = UPDATE_INTERVAL_DEFAULT
+
         return self.async_create_entry(
             title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}:{self._config[CONF_PORT]}",
             data=self._config,
+            options=conf_options,
         )
 
     async def _async_endpoint_exists(self, host_port_node):
