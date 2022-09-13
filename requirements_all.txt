@@ -147,7 +147,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.09.1
+aioecowitt==2022.09.2
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.6
+aiohomekit==1.5.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -2537,7 +2537,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.3
+xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
 xknx==1.0.2
