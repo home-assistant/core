@@ -1,0 +1,12 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Bluetooth \u0430\u0434\u0440\u0435\u0441"
+                }
+            }
+        }
+    }
+}

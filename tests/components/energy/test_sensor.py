@@ -20,6 +20,7 @@ from homeassistant.const import (
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNKNOWN,
+    VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
@@ -841,10 +842,13 @@ async def test_cost_sensor_handle_price_units(
     assert state.state == "20.0"
 
 
-async def test_cost_sensor_handle_gas(hass, hass_storage, setup_integration) -> None:
+@pytest.mark.parametrize("unit", (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS))
+async def test_cost_sensor_handle_gas(
+    hass, hass_storage, setup_integration, unit
+) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+        ATTR_UNIT_OF_MEASUREMENT: unit,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()

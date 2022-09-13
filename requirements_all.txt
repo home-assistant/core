@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.5
+PySwitchbot==0.19.6
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -134,7 +134,7 @@ aiobafi6==0.7.2
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.11
+aiodiscover==1.4.13
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -433,7 +433,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.2
+bluetooth-auto-recovery==0.3.3
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -533,6 +533,9 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.8
+
+# homeassistant.components.bluetooth
+dbus_next==0.2.3
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -2528,7 +2531,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.0
+xiaomi-ble==0.9.3
 
 # homeassistant.components.knx
 xknx==1.0.2

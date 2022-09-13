@@ -36,8 +36,6 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import convert as convert_temperature
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
 
