@@ -210,7 +210,7 @@ class MailboxPlatformsView(MailboxView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
-        platforms = []
+        platforms: list[dict[str, Any]] = []
         for mailbox in self.mailboxes:
             platforms.append(
                 {
