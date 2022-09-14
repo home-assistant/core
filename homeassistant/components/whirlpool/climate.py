@@ -104,7 +104,8 @@ class AirConEntity(ClimateEntity):
 
     def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
         """Initialize the entity."""
-        self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
+        self._aircon = Aircon(backend_selector, auth, said)
+        self._aircon.register_callback(self.async_write_ha_state)
 
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._name = name if name is not None else said
