@@ -64,7 +64,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
             self._attr_color_mode = ColorMode.RGB
         else:
             self._attr_color_mode = ColorMode.BRIGHTNESS
-        self._attr_supported_color_modes = {self.color_mode}
+        self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
