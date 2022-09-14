@@ -668,69 +668,68 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if media_type == MediaType.MUSIC:
             media_id = async_process_play_media_url(self.hass, media_id)
 
-            saved_state = self.state  # save play state
-            saved_mute = self.is_volume_muted
-            sleep_future = asyncio.create_task(
-                asyncio.sleep(self._tts_pause_time)
-            )  # start timing now, but not exact because of fd buffer + tts latency
-            await self._pause_and_wait_for_callback()
-            await self._save_and_set_tts_volumes()
-            # save position
-            saved_song_position = self._player["item_progress_ms"]
-            saved_queue = (
-                self._queue if self._queue["count"] > 0 else None
-            )  # stash queue
-            if saved_queue:
-                saved_queue_position = next(
-                    i
-                    for i, item in enumerate(saved_queue["items"])
-                    if item["id"] == self._player["item_id"]
-                )
-            self._tts_requested = True
-            await sleep_future
-            await self._api.add_to_queue(uris=media_id, playback="start", clear=True)
-            try:
-                await asyncio.wait_for(
-                    self._tts_playing_event.wait(), timeout=TTS_TIMEOUT
-                )
-                # we have started TTS, now wait for completion
-                await asyncio.sleep(
-                    self._queue["items"][0]["length_ms"]
-                    / 1000  # player may not have updated yet so grab length from queue
-                    + self._tts_pause_time
-                )
-            except asyncio.TimeoutError:
-                self._tts_requested = False
-                _LOGGER.warning("TTS request timed out")
-            self._tts_playing_event.clear()
-            # TTS done, return to normal
-            await self.async_turn_on()  # restore outputs and volumes
-            if saved_mute:  # mute if we were muted
-                await self.async_mute_volume(True)
-            if self._use_pipe_control():  # resume pipe
-                await self._api.add_to_queue(
-                    uris=self._sources_uris[self._source], clear=True
-                )
-                if saved_state == MediaPlayerState.PLAYING:
-                    await self.async_media_play()
-            else:  # restore stashed queue
-                if saved_queue:
-                    uris = ""
-                    for item in saved_queue["items"]:
-                        uris += item["uri"] + ","
-                    await self._api.add_to_queue(
-                        uris=uris,
-                        playback="start",
-                        playback_from_position=saved_queue_position,
-                        clear=True,
-                    )
-                    await self._api.seek(position_ms=saved_song_position)
-                    if saved_state == MediaPlayerState.PAUSED:
-                        await self.async_media_pause()
-                    elif saved_state != MediaPlayerState.PLAYING:
-                        await self.async_media_stop()
+            await self._async_announce(media_id)
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
+
+    async def _async_announce(self, media_id: str):
+        saved_state = self.state  # save play state
+        saved_mute = self.is_volume_muted
+        sleep_future = asyncio.create_task(
+            asyncio.sleep(self._tts_pause_time)
+        )  # start timing now, but not exact because of fd buffer + tts latency
+        await self._pause_and_wait_for_callback()
+        await self._save_and_set_tts_volumes()
+        # save position
+        saved_song_position = self._player["item_progress_ms"]
+        saved_queue = self._queue if self._queue["count"] > 0 else None  # stash queue
+        if saved_queue:
+            saved_queue_position = next(
+                i
+                for i, item in enumerate(saved_queue["items"])
+                if item["id"] == self._player["item_id"]
+            )
+        self._tts_requested = True
+        await sleep_future
+        await self._api.add_to_queue(uris=media_id, playback="start", clear=True)
+        try:
+            await asyncio.wait_for(self._tts_playing_event.wait(), timeout=TTS_TIMEOUT)
+            # we have started TTS, now wait for completion
+            await asyncio.sleep(
+                self._queue["items"][0]["length_ms"]
+                / 1000  # player may not have updated yet so grab length from queue
+                + self._tts_pause_time
+            )
+        except asyncio.TimeoutError:
+            self._tts_requested = False
+            _LOGGER.warning("TTS request timed out")
+        self._tts_playing_event.clear()
+        # TTS done, return to normal
+        await self.async_turn_on()  # restore outputs and volumes
+        if saved_mute:  # mute if we were muted
+            await self.async_mute_volume(True)
+        if self._use_pipe_control():  # resume pipe
+            await self._api.add_to_queue(
+                uris=self._sources_uris[self._source], clear=True
+            )
+            if saved_state == MediaPlayerState.PLAYING:
+                await self.async_media_play()
+        else:  # restore stashed queue
+            if saved_queue:
+                uris = ""
+                for item in saved_queue["items"]:
+                    uris += item["uri"] + ","
+                await self._api.add_to_queue(
+                    uris=uris,
+                    playback="start",
+                    playback_from_position=saved_queue_position,
+                    clear=True,
+                )
+                await self._api.seek(position_ms=saved_song_position)
+                if saved_state == MediaPlayerState.PAUSED:
+                    await self.async_media_pause()
+                elif saved_state != MediaPlayerState.PLAYING:
+                    await self.async_media_stop()
 
     async def async_select_source(self, source: str) -> None:
         """Change source.
