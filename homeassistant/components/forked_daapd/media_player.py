@@ -720,11 +720,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if not saved_queue:
             return
         # Restore stashed queue
-        uris = ""
-        for item in saved_queue["items"]:
-            uris += item["uri"] + ","
         await self._api.add_to_queue(
-            uris=uris,
+            uris=",".join(item["uri"] for item in saved_queue["items"]),
             playback="start",
             playback_from_position=saved_queue_position,
             clear=True,
