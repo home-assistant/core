@@ -85,7 +85,7 @@ class DemoCover(CoverEntity):
         self._unique_id = unique_id
         self._attr_name = name
         self._position = position
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._supported_features = supported_features
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
@@ -141,11 +141,6 @@ class DemoCover(CoverEntity):
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._is_opening
-
-    @property
-    def device_class(self) -> CoverDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
 
     @property
     def supported_features(self) -> int:
