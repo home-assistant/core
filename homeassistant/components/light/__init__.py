@@ -287,7 +287,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 def preprocess_turn_on_alternatives(
-    hass: HomeAssistant, params: dict[str, Any]
+    hass: HomeAssistant, params: dict[str | vol.Optional, Any]
 ) -> None:
     """Process extra data for turn light on request.
 
@@ -374,9 +374,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
     await profiles.async_initialize()
 
-    def preprocess_data(data: dict[str, Any]) -> dict[str, Any]:
+    def preprocess_data(
+        data: dict[str | vol.Optional, Any]
+    ) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
-        base = {
+        base: dict[str | vol.Optional, Any] = {
             entity_field: data.pop(entity_field)
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
@@ -393,7 +395,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params = dict(call.data["params"])
+        params: dict[str, Any] = dict(call.data["params"])
 
         # Only process params once we processed brightness step
         if params and (
@@ -726,7 +728,7 @@ class Profiles:
 
     @callback
     def apply_default(
-        self, entity_id: str, state_on: bool | None, params: dict
+        self, entity_id: str, state_on: bool | None, params: dict[str, Any]
     ) -> None:
         """Return the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
@@ -738,7 +740,7 @@ class Profiles:
                     params.setdefault(ATTR_TRANSITION, self.data[name].transition)
 
     @callback
-    def apply_profile(self, name: str, params: dict) -> None:
+    def apply_profile(self, name: str, params: dict[str, Any]) -> None:
         """Apply a profile."""
         if (profile := self.data.get(name)) is None:
             return
