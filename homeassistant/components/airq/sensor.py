@@ -51,14 +51,14 @@ class AirQEntityDescription(SensorEntityDescription, AirQEntityDescriptionMixin)
 # Keys must match those in the data dictionary
 SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
-        key="ammonia",
+        key="nh3_MR100",
         name="Ammonia",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("nh3_MR100"),
     ),
     AirQEntityDescription(
-        key="chlorine",
+        key="cl2_M20",
         name="Chlorine",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -81,7 +81,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("co2"),
     ),
     AirQEntityDescription(
-        key="dew_point",
+        key="dewpt",
         name="Dew point",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -96,7 +96,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("ethanol"),
     ),
     AirQEntityDescription(
-        key="formaldehyde",
+        key="ch2o_M10",
         name="Formaldehyde",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -134,14 +134,14 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         icon="mdi:water",
     ),
     AirQEntityDescription(
-        key="hydrogen",
+        key="h2_M1000",
         name="Hydrogen",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("h2_M1000"),
     ),
     AirQEntityDescription(
-        key="methane",
+        key="ch4_MIPEX",
         name="Methane",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -156,7 +156,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("n2o"),
     ),
     AirQEntityDescription(
-        key="no",
+        key="no_M250",
         name="NO",
         device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -239,7 +239,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         icon="mdi:gauge",
     ),
     AirQEntityDescription(
-        key="propane",
+        key="c3h8_MIPEX",
         name="Propane",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -294,7 +294,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("tvoc"),
     ),
     AirQEntityDescription(
-        key="tvoc_industrial",
+        key="tvoc_ionsc",
         name="VOC (Industrial)",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
