@@ -35,8 +35,7 @@ LOGGER = logging.getLogger(__name__)
 class RpcUpdateRequiredKeysMixin:
     """Class for RPC update required keys."""
 
-    installed_version: Callable[[dict, dict | None], Any]
-    latest_version: Callable[[dict, dict | None], Any]
+    latest_version: Callable[[dict], Any]
     install: Callable
 
 
@@ -44,8 +43,7 @@ class RpcUpdateRequiredKeysMixin:
 class RestUpdateRequiredKeysMixin:
     """Class for REST update required keys."""
 
-    installed_version: Callable[[dict, dict | None], Any]
-    latest_version: Callable[[dict, dict | None], Any]
+    latest_version: Callable[[dict], Any]
     install: Callable
 
 
@@ -67,8 +65,7 @@ REST_UPDATES: Final = {
     "fwupdate": RestUpdateDescription(
         name="Firmware Update",
         key="fwupdate",
-        installed_version=lambda status, shelly: status["update"]["old_version"],
-        latest_version=lambda status, shelly: status["update"]["new_version"],
+        latest_version=lambda status: status["update"]["new_version"],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -77,8 +74,7 @@ REST_UPDATES: Final = {
     "fwupdate_beta": RestUpdateDescription(
         name="Beta Firmware Update",
         key="fwupdate",
-        installed_version=lambda status, shelly: status["update"]["old_version"],
-        latest_version=lambda status, shelly: status["update"].get("beta_version"),
+        latest_version=lambda status: status["update"].get("beta_version"),
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -91,10 +87,7 @@ RPC_UPDATES: Final = {
         name="Firmware Update",
         key="sys",
         sub_key="available_updates",
-        installed_version=lambda status, shelly: shelly["ver"]
-        if shelly is not None
-        else None,
-        latest_version=lambda status, shelly: status.get("stable", {"version": None})[
+        latest_version=lambda status: status.get("stable", {"version": None})[
             "version"
         ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
@@ -106,10 +99,7 @@ RPC_UPDATES: Final = {
         name="Beta Firmware Update",
         key="sys",
         sub_key="available_updates",
-        installed_version=lambda status, shelly: shelly["ver"]
-        if shelly is not None
-        else None,
-        latest_version=lambda status, shelly: status.get("beta", {"version": None})[
+        latest_version=lambda status: status.get("beta", {"version": None})[
             "version"
         ],
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
@@ -150,19 +140,13 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return str(
-            self.entity_description.installed_version(
-                self.wrapper.device.status,
-                self.wrapper.device.shelly,
-            )
-        )
+        return self.wrapper.device.status["update"]["old_version"]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
             self.wrapper.device.status,
-            self.wrapper.device.shelly,
         )
         if new_version is not None:
             return str(new_version)
@@ -189,19 +173,16 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return str(
-            self.entity_description.installed_version(
-                self.wrapper.device.status[self.key][self.entity_description.sub_key],
-                self.wrapper.device.shelly,
-            )
-        )
+        if self.wrapper.device.shelly is None:
+            return None
+
+        return self.wrapper.device.shelly["ver"]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
             self.wrapper.device.status[self.key][self.entity_description.sub_key],
-            self.wrapper.device.shelly,
         )
         if new_version is not None:
             return str(new_version)
