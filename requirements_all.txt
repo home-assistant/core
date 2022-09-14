@@ -2005,7 +2005,7 @@ python-ripple-api==0.0.3
 python-smarttub==0.0.33
 
 # homeassistant.components.songpal
-python-songpal==0.15
+python-songpal==0.15.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
