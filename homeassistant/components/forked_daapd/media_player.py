@@ -6,6 +6,7 @@ from collections import defaultdict
 import logging
 from typing import Any
 
+import async_timeout
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
@@ -647,9 +648,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._pause_requested = True
         await self.async_media_pause()
         try:
-            await asyncio.wait_for(
-                self._paused_event.wait(), timeout=CALLBACK_TIMEOUT
-            )  # wait for paused
+            async with async_timeout.timeout(CALLBACK_TIMEOUT):
+                await self._paused_event.wait()  # wait for paused
         except asyncio.TimeoutError:
             self._pause_requested = False
         self._paused_event.clear()
@@ -693,7 +693,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         await sleep_future
         await self._api.add_to_queue(uris=media_id, playback="start", clear=True)
         try:
-            await asyncio.wait_for(self._tts_playing_event.wait(), timeout=TTS_TIMEOUT)
+            async with async_timeout.timeout(TTS_TIMEOUT):
+                await self._tts_playing_event.wait()
             # we have started TTS, now wait for completion
             await asyncio.sleep(
                 self._queue["items"][0]["length_ms"]
