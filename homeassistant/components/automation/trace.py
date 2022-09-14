@@ -53,7 +53,7 @@ def trace_automation(
     config: ConfigType | None,
     blueprint_inputs: ConfigType | None,
     context: Context,
-    trace_config: dict[str, Any],
+    trace_config: ConfigType,
 ) -> Generator[AutomationTrace, None, None]:
     """Trace action execution of automation with automation_id."""
     trace = AutomationTrace(automation_id, config, blueprint_inputs, context)
