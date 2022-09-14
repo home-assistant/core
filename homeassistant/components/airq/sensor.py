@@ -22,7 +22,7 @@ from homeassistant.const import (
     SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -360,13 +360,10 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = coordinator.device_info
         self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        self._attr_native_value = description.value(coordinator.data)
 
-    @property
-    def native_value(self) -> float | int | None:
-        """Return the value reported by the sensor.
-
-        The raw value from the sensor can be additionally transformed
-        if value_transform_fn was given in AirQEntityDescription.
-        """
-        # While a sensor is warming up its key isn't present in the returned dict
-        return self.entity_description.value(self.coordinator.data)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self.entity_description.value(self.coordinator.data)
+        self.async_write_ha_state()
