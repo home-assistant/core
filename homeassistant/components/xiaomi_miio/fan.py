@@ -1089,12 +1089,13 @@ class XiaomiFanMiot(XiaomiGenericFan):
             await self.async_turn_off()
             return
 
-        await self._try_command(
+        result = await self._try_command(
             "Setting fan speed percentage of the miio device failed.",
             self._device.set_speed,
             percentage,
         )
-        self._percentage = percentage
+        if result:
+            self._percentage = percentage
 
         if not self.is_on:
             await self.async_turn_on()
