@@ -269,9 +269,6 @@ airthings_cloud==0.1.0
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
-# homeassistant.components.ambee
-ambee==0.4.0
-
 # homeassistant.components.amberelectric
 amberelectric==1.0.4
 
@@ -368,7 +365,7 @@ brunt==1.2.0
 bsblan==0.5.0
 
 # homeassistant.components.bthome
-bthome-ble==1.2.0
+bthome-ble==1.2.2
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -524,7 +521,7 @@ freebox-api==0.0.10
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.10.1
+fritzconnection==1.10.3
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -634,7 +631,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220907.1
+home-assistant-frontend==20220907.2
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1127,7 +1124,7 @@ pyicloud==1.0.0
 pyinsteon==1.2.0
 
 # homeassistant.components.ipma
-pyipma==3.0.2
+pyipma==3.0.4
 
 # homeassistant.components.ipp
 pyipp==0.11.0

@@ -24,7 +24,6 @@ FLOWS = {
         "aladdin_connect",
         "alarmdecoder",
         "almond",
-        "ambee",
         "amberelectric",
         "ambiclimate",
         "ambient_station",
