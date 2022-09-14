@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from microbot import MicroBotApiClient
 
@@ -14,9 +13,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import MicroBotDataUpdateCoordinator
-
-if TYPE_CHECKING:
-    from bleak.backends.device import BLEDevice
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 PLATFORMS: list[str] = [Platform.SWITCH]
