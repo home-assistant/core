@@ -672,7 +672,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
 
-    async def _async_announce(self, media_id: str):
+    async def _async_announce(self, media_id: str) -> None:
+        """Play a URI."""
         saved_state = self.state  # save play state
         saved_mute = self.is_volume_muted
         sleep_future = asyncio.create_task(
@@ -696,14 +697,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             async with async_timeout.timeout(TTS_TIMEOUT):
                 await self._tts_playing_event.wait()
             # we have started TTS, now wait for completion
-            await asyncio.sleep(
-                self._queue["items"][0]["length_ms"]
-                / 1000  # player may not have updated yet so grab length from queue
-                + self._tts_pause_time
-            )
         except asyncio.TimeoutError:
             self._tts_requested = False
             _LOGGER.warning("TTS request timed out")
+        await asyncio.sleep(
+            self._queue["items"][0]["length_ms"]
+            / 1000  # player may not have updated yet so grab length from queue
+            + self._tts_pause_time
+        )
         self._tts_playing_event.clear()
         # TTS done, return to normal
         await self.async_turn_on()  # restore outputs and volumes
@@ -715,22 +716,22 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             )
             if saved_state == MediaPlayerState.PLAYING:
                 await self.async_media_play()
-        else:  # restore stashed queue
-            if saved_queue:
-                uris = ""
-                for item in saved_queue["items"]:
-                    uris += item["uri"] + ","
-                await self._api.add_to_queue(
-                    uris=uris,
-                    playback="start",
-                    playback_from_position=saved_queue_position,
-                    clear=True,
-                )
-                await self._api.seek(position_ms=saved_song_position)
-                if saved_state == MediaPlayerState.PAUSED:
-                    await self.async_media_pause()
-                elif saved_state != MediaPlayerState.PLAYING:
-                    await self.async_media_stop()
+            return
+        if not saved_queue:
+            return
+        # Restore stashed queue
+        await self._api.add_to_queue(
+            uris=",".join(item["uri"] for item in saved_queue["items"]),
+            playback="start",
+            playback_from_position=saved_queue_position,
+            clear=True,
+        )
+        await self._api.seek(position_ms=saved_song_position)
+        if saved_state == MediaPlayerState.PAUSED:
+            await self.async_media_pause()
+            return
+        if saved_state != MediaPlayerState.PLAYING:
+            await self.async_media_stop()
 
     async def async_select_source(self, source: str) -> None:
         """Change source.
