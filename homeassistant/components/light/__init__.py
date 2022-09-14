@@ -453,14 +453,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
-                rgb_color = color_util.color_rgbww_to_rgb(
-                    rgbww_color[0],
-                    rgbww_color[1],
-                    rgbww_color[2],
-                    rgbww_color[3],
-                    rgbww_color[4],
-                    light.min_mireds,
-                    light.max_mireds,
+                rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+                    *rgbww_color, light.min_mireds, light.max_mireds
                 )
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
         elif ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
@@ -472,12 +466,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_hs_to_RGB(*hs_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    rgb_color[0],
-                    rgb_color[1],
-                    rgb_color[2],
-                    light.min_mireds,
-                    light.max_mireds,
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                    *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
@@ -486,12 +476,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    rgb_color[0],
-                    rgb_color[1],
-                    rgb_color[2],
-                    light.min_mireds,
-                    light.max_mireds,
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                    *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -508,12 +494,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_xy_to_RGB(*xy_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    rgb_color[0],
-                    rgb_color[1],
-                    rgb_color[2],
-                    light.min_mireds,
-                    light.max_mireds,
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                    *rgb_color, light.min_mireds, light.max_mireds
                 )
         elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
             rgbw_color = params.pop(ATTR_RGBW_COLOR)
@@ -521,12 +503,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = rgb_color
             elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    rgb_color[0],
-                    rgb_color[1],
-                    rgb_color[2],
-                    light.min_mireds,
-                    light.max_mireds,
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                    *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -536,14 +514,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
             rgbww_color = params.pop(ATTR_RGBWW_COLOR)
-            rgb_color = color_util.color_rgbww_to_rgb(
-                rgbww_color[0],
-                rgbww_color[1],
-                rgbww_color[2],
-                rgbww_color[3],
-                rgbww_color[4],
-                light.min_mireds,
-                light.max_mireds,
+            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+                *rgbww_color, light.min_mireds, light.max_mireds
             )
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = rgb_color
