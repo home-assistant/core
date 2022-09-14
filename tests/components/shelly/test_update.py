@@ -1,7 +1,7 @@
 """Tests for Shelly update platform."""
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.update.const import SERVICE_INSTALL
-from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
