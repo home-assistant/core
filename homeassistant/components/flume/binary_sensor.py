@@ -38,14 +38,6 @@ class FlumeBinarySensorRequiredKeysMixin:
     event_rule: str
 
 
-# @dataclass
-# class FlumeBinaryConnectionSensorEntityDescription(BinarySensorEntityDescription):
-#     """Describes a connection binary sensor entity."""
-
-#     entity_category = EntityCategory.DIAGNOSTIC
-#     device_class = BinarySensorDeviceClass.CONNECTIVITY
-
-
 @dataclass
 class FlumeBinarySensorEntityDescription(
     BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
@@ -93,7 +85,6 @@ async def async_setup_entry(
     notification_coordinator = FlumeNotificationDataUpdateCoordinator(
         hass=hass, auth=flume_auth
     )
-
     for device in flume_devices.device_list:
         device_id = device[KEY_DEVICE_ID]
 
