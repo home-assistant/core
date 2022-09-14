@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools as ft
 import importlib
 import logging
-from typing import Any, final
+from typing import Any, Final, final
 
 import voluptuous as vol
 
@@ -17,8 +17,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-DOMAIN = "scene"
-STATES = "states"
+DOMAIN: Final = "scene"
+STATES: Final = "states"
 
 
 def _hass_domain_validator(config: dict[str, Any]) -> dict[str, Any]:
