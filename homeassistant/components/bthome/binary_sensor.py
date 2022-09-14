@@ -130,10 +130,6 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=BTHomeBinarySensorDeviceClass.TAMPER,
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
-    BTHomeBinarySensorDeviceClass.UPDATE: BinarySensorEntityDescription(
-        key=BTHomeBinarySensorDeviceClass.UPDATE,
-        device_class=BinarySensorDeviceClass.UPDATE,
-    ),
     BTHomeBinarySensorDeviceClass.VIBRATION: BinarySensorEntityDescription(
         key=BTHomeBinarySensorDeviceClass.VIBRATION,
         device_class=BinarySensorDeviceClass.VIBRATION,
