@@ -1,6 +1,6 @@
 {
   "domain": "keymitt_ble",
-  "name": "MicroBot Push",
+  "name": "Keymitt MicroBot Push",
   "documentation": "https://www.home-assistant.io/integrations/keymitt_ble",
   "config_flow": true,
   "bluetooth": [
