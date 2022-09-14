@@ -165,8 +165,8 @@ def test_good_root_import(
     "import_node",
     [
         "import homeassistant.components.climate.const as climate",
-        "from homeassistant.components.climate.const import ClimateEntityFeature",
         "from homeassistant.components.climate import const",
+        "from homeassistant.components.climate.const import ClimateEntityFeature",
     ],
 )
 def test_bad_root_import(
