@@ -110,7 +110,7 @@ async def _try_async_validate_config_item(
         raw_config = dict(config)
 
     try:
-        valid_config = await async_validate_config_item(hass, config, full_config)
+        validated_config = await async_validate_config_item(hass, config, full_config)
     except (
         vol.Invalid,
         HomeAssistantError,
@@ -120,10 +120,10 @@ async def _try_async_validate_config_item(
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
-    if isinstance(valid_config, blueprint.BlueprintInputs):
-        return valid_config
+    if isinstance(validated_config, blueprint.BlueprintInputs):
+        return validated_config
 
-    automation_config = AutomationConfig(config)
+    automation_config = AutomationConfig(validated_config)
     automation_config.raw_config = raw_config
     return automation_config
 
