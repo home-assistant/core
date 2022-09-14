@@ -717,22 +717,24 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             if saved_state == MediaPlayerState.PLAYING:
                 await self.async_media_play()
             return
-        if saved_queue:  # restore stashed queue
-            uris = ""
-            for item in saved_queue["items"]:
-                uris += item["uri"] + ","
-            await self._api.add_to_queue(
-                uris=uris,
-                playback="start",
-                playback_from_position=saved_queue_position,
-                clear=True,
-            )
-            await self._api.seek(position_ms=saved_song_position)
-            if saved_state == MediaPlayerState.PAUSED:
-                await self.async_media_pause()
-                return
-            if saved_state != MediaPlayerState.PLAYING:
-                await self.async_media_stop()
+        if not saved_queue:
+            return
+        # Restore stashed queue
+        uris = ""
+        for item in saved_queue["items"]:
+            uris += item["uri"] + ","
+        await self._api.add_to_queue(
+            uris=uris,
+            playback="start",
+            playback_from_position=saved_queue_position,
+            clear=True,
+        )
+        await self._api.seek(position_ms=saved_song_position)
+        if saved_state == MediaPlayerState.PAUSED:
+            await self.async_media_pause()
+            return
+        if saved_state != MediaPlayerState.PLAYING:
+            await self.async_media_stop()
 
     async def async_select_source(self, source: str) -> None:
         """Change source.
