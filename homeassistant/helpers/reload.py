@@ -120,7 +120,7 @@ async def _async_setup_platform(
         )
         return
 
-    entity_component: EntityComponent = hass.data[integration_platform]
+    entity_component: EntityComponent = hass.data[integration_platform]  # type: ignore[type-arg]
     tasks = [
         entity_component.async_setup_platform(integration_name, p_config)
         for p_config in platform_configs
