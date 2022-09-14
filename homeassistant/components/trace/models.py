@@ -23,6 +23,7 @@ class BaseTrace(abc.ABC):
 
     context: Context
     key: str
+    run_id: str
 
     def as_dict(self) -> dict[str, Any]:
         """Return an dictionary version of this ActionTrace for saving."""
