@@ -123,7 +123,7 @@ _LOGGER = logging.getLogger(__name__)
 class IfAction(Protocol):
     """Define the format of if_action."""
 
-    config: list[dict[str, Any]]
+    config: list[ConfigType]
 
     def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
         """AND all conditions."""
