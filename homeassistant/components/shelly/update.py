@@ -99,9 +99,7 @@ RPC_UPDATES: Final = {
         name="Beta Firmware Update",
         key="sys",
         sub_key="available_updates",
-        latest_version=lambda status: status.get("beta", {"version": None})[
-            "version"
-        ],
+        latest_version=lambda status: status.get("beta", {"version": None})["version"],
         install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -140,7 +138,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return self.wrapper.device.status["update"]["old_version"]
+        version = self.wrapper.device.status["update"]["old_version"]
+        if version is None:
+            return None
+
+        return str(version)
 
     @property
     def latest_version(self) -> str | None:
@@ -176,7 +178,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         if self.wrapper.device.shelly is None:
             return None
 
-        return self.wrapper.device.shelly["ver"]
+        return str(self.wrapper.device.shelly["ver"])
 
     @property
     def latest_version(self) -> str | None:
