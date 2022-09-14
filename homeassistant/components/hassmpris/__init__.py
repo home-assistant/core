@@ -6,19 +6,13 @@ from typing import cast
 
 import hassmpris_client
 
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .cert_data import CertStore
-from .const import (
-    CONF_HOST,
-    CONF_MPRIS_PORT,
-    DOMAIN,
-    LOGGER as _LOGGER,
-)
+from .const import CONF_HOST, CONF_MPRIS_PORT, DOMAIN, LOGGER as _LOGGER
 from .models import HassmprisData
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)

@@ -1,11 +1,13 @@
 """The hassmpris integration models."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Callable, Coroutine, Any
-from .media_player_entity_manager import EntityManager
+from typing import Any
 
 import hassmpris_client
+
+from .media_player_entity_manager import EntityManager
 
 
 @dataclass

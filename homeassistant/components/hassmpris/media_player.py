@@ -7,10 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    LOGGER as _LOGGER,
-)
+from .const import DOMAIN, LOGGER as _LOGGER
 from .media_player_entity_manager import EntityManager
 from .models import HassmprisData
 
