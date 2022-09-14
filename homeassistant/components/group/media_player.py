@@ -103,6 +103,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
     _attr_available: bool = False
+    _attr_should_poll = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
@@ -215,11 +216,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a media group."""
-        return False
 
     @property
     def extra_state_attributes(self) -> dict:
