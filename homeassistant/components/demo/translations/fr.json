@@ -1,10 +1,20 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "L'alimentation \u00e9lectrique doit \u00eatre remplac\u00e9e"
+                    }
+                }
+            },
+            "title": "L'alimentation \u00e9lectrique n'est pas stable"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Appuyez sur OK une fois le liquide de clignotant rempli",
+                        "description": "Appuyez sur VALIDER une fois le liquide de clignotant rempli",
                         "title": "Le liquide de clignotant doit \u00eatre rempli"
                     }
                 }

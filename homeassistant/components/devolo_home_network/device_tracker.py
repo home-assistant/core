@@ -7,7 +7,7 @@ from devolo_plc_api.device import Device
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -149,9 +149,9 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
         return self._mac
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return tracker source type."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def unique_id(self) -> str:

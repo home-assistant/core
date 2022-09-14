@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Prem ENVIAR per confirmar que s'ha canviat la font d'alimentaci\u00f3",
+                        "title": "La font d'alimentaci\u00f3 s'ha de canviar"
+                    }
+                }
+            },
+            "title": "La font d'alimentaci\u00f3 no \u00e9s estable"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Prem D'acord quan s'hagi omplert el l\u00edquid d'intermitents",
+                        "description": "Prem ENVIA quan s'hagi omplert el l\u00edquid d'intermitents",
                         "title": "Cal omplir el l\u00edquid d'intermitents"
                     }
                 }

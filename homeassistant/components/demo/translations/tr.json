@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "G\u00fc\u00e7 kayna\u011f\u0131n\u0131n de\u011fi\u015ftirildi\u011fini onaylamak i\u00e7in G\u00d6NDER'e bas\u0131n",
+                        "title": "G\u00fc\u00e7 kayna\u011f\u0131n\u0131n de\u011fi\u015ftirilmesi gerekiyor"
+                    }
+                }
+            },
+            "title": "G\u00fc\u00e7 kayna\u011f\u0131 stabil de\u011fil"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Fla\u015f\u00f6r yeniden dolduruldu\u011funda Tamam'a bas\u0131n",
+                        "description": "Fla\u015f\u00f6r s\u0131v\u0131s\u0131 yeniden dolduruldu\u011funda G\u00d6NDER d\u00fc\u011fmesine bas\u0131n",
                         "title": "Fla\u015f\u00f6r\u00fcn yeniden doldurulmas\u0131 gerekiyor"
                     }
                 }

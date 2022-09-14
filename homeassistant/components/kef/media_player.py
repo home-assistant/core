@@ -15,15 +15,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -253,7 +247,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         """Return the state of the device."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update latest state."""
         _LOGGER.debug("Running async_update")
         try:
@@ -265,7 +259,9 @@ class KefMediaPlayer(MediaPlayerEntity):
                 ) = await self._speaker.get_volume_and_is_muted()
                 state = await self._speaker.get_state()
                 self._source = state.source
-                self._state = STATE_ON if state.is_on else STATE_OFF
+                self._state = (
+                    MediaPlayerState.ON if state.is_on else MediaPlayerState.OFF
+                )
                 if self._dsp is None:
                     # Only do this when necessary because it is a slow operation
                     await self.update_dsp()
@@ -273,7 +269,7 @@ class KefMediaPlayer(MediaPlayerEntity):
                 self._muted = None
                 self._source = None
                 self._volume = None
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
         except (ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
             self._state = None
@@ -313,61 +309,61 @@ class KefMediaPlayer(MediaPlayerEntity):
         """Return the device's icon."""
         return "mdi:speaker-wireless"
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._speaker.turn_off()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if not self._supports_on:
             raise NotImplementedError()
         await self._speaker.turn_on()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._speaker.increase_volume()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down the media player."""
         await self._speaker.decrease_volume()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._speaker.set_volume(volume)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute (True) or unmute (False) media player."""
         if mute:
             await self._speaker.mute()
         else:
             await self._speaker.unmute()
 
-    async def async_select_source(self, source: str):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source in self.source_list:
             await self._speaker.set_source(source)
         else:
             raise ValueError(f"Unknown input source: {source}.")
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._speaker.set_play_pause()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._speaker.set_play_pause()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._speaker.prev_track()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._speaker.next_track()
 
     async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
-        if self._speaker_type == "LS50" and self._state == STATE_OFF:
+        if self._speaker_type == "LS50" and self._state == MediaPlayerState.OFF:
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
@@ -382,13 +378,13 @@ class KefMediaPlayer(MediaPlayerEntity):
             **mode._asdict(),
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to DSP updates."""
         self._update_dsp_task_remover = async_track_time_interval(
             self.hass, self.update_dsp, DSP_SCAN_INTERVAL
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to DSP updates."""
         self._update_dsp_task_remover()
         self._update_dsp_task_remover = None

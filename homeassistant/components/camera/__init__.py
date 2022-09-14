@@ -14,14 +14,14 @@ import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import async_timeout
 import attr
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
@@ -39,7 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -65,6 +65,8 @@ from .const import (  # noqa: F401
     DATA_CAMERA_PREFS,
     DATA_RTSP_TO_WEB_RTC,
     DOMAIN,
+    PREF_ORIENTATION,
+    PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
@@ -72,8 +74,6 @@ from .const import (  # noqa: F401
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
-
-# mypy: allow-untyped-calls
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -374,7 +374,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
@@ -715,7 +715,12 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            raise web.HTTPUnauthorized()
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
+                raise web.HTTPUnauthorized()
+            # Invalid sigAuth or camera access token
+            raise web.HTTPForbidden()
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
@@ -869,7 +874,8 @@ async def websocket_get_prefs(
     {
         vol.Required("type"): "camera/update_prefs",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Optional("preload_stream"): bool,
+        vol.Optional(PREF_PRELOAD_STREAM): bool,
+        vol.Optional(PREF_ORIENTATION): vol.All(int, vol.Range(min=1, max=8)),
     }
 )
 @websocket_api.async_response
@@ -883,9 +889,13 @@ async def websocket_update_prefs(
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
-    await prefs.async_update(entity_id, **changes)
-
-    connection.send_result(msg["id"], prefs.get(entity_id).as_dict())
+    try:
+        entity_prefs = await prefs.async_update(entity_id, **changes)
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error setting camera preferences: %s", ex)
+        connection.send_error(msg["id"], "update_failed", str(ex))
+    else:
+        connection.send_result(msg["id"], entity_prefs)
 
 
 async def async_handle_snapshot_service(
@@ -954,6 +964,7 @@ async def _async_stream_endpoint_url(
     # Update keepalive setting which manages idle shutdown
     camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
     stream.keepalive = camera_prefs.preload_stream
+    stream.orientation = camera_prefs.orientation
 
     stream.add_provider(fmt)
     await stream.start()

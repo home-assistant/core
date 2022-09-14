@@ -43,11 +43,10 @@ async def async_setup_entry(
     )
 
 
-class DeconzPowerPlug(DeconzDevice, SwitchEntity):
+class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
     """Representation of a deCONZ power plug."""
 
     TYPE = DOMAIN
-    _device: Light
 
     @property
     def is_on(self) -> bool:

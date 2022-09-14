@@ -137,7 +137,7 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
+        """Update the entity's underlying data."""
         if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_is_on = self.coordinator.data["wet"]
         elif self.entity_description.key == SENSOR_KIND_MOVED:

@@ -14,6 +14,7 @@
             "invalid_serial": "Port serial tidak valid",
             "invalid_subscribe_topic": "Topik langganan tidak valid",
             "invalid_version": "Versi MySensors tidak valid",
+            "mqtt_required": "Integrasi MQTT belum disiapkan",
             "not_a_number": "Masukkan angka",
             "port_out_of_range": "Nilai port minimal 1 dan maksimal 65535",
             "same_topic": "Topik subscribe dan publish sama",
@@ -67,6 +68,14 @@
                     "version": "Versi MySensors"
                 },
                 "description": "Pengaturan gateway Ethernet"
+            },
+            "select_gateway_type": {
+                "description": "Pilih gateway mana yang akan dikonfigurasi.",
+                "menu_options": {
+                    "gw_mqtt": "Konfigurasikan gateway MQTT",
+                    "gw_serial": "Konfigurasikan gateway serial",
+                    "gw_tcp": "Konfigurasikan gateway TCP"
+                }
             },
             "user": {
                 "data": {

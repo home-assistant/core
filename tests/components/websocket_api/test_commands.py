@@ -13,12 +13,13 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
-from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
@@ -1759,6 +1760,12 @@ async def test_validate_config_invalid(websocket_client, key, config, error):
 
 async def test_supported_brands(hass, websocket_client):
     """Test supported brands."""
+    # Custom components without supported brands that override a built-in component with
+    # supported brand will still be listed in HAS_SUPPORTED_BRANDS and should be ignored.
+    mock_integration(
+        hass,
+        MockModule("override_without_brands"),
+    )
     mock_integration(
         hass,
         MockModule("test", partial_manifest={"supported_brands": {"hello": "World"}}),
@@ -1772,7 +1779,7 @@ async def test_supported_brands(hass, websocket_client):
 
     with patch(
         "homeassistant.generated.supported_brands.HAS_SUPPORTED_BRANDS",
-        ("abcd", "test"),
+        ("abcd", "test", "override_without_brands"),
     ):
         await websocket_client.send_json({"id": 7, "type": "supported_brands"})
         msg = await websocket_client.receive_json()
@@ -1788,3 +1795,186 @@ async def test_supported_brands(hass, websocket_client):
             "hello": "World",
         },
     }
+
+
+async def test_message_coalescing(hass, websocket_client, hass_admin_user):
+    """Test enabling message coalescing."""
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "supported_features",
+            "features": {FEATURE_COALESCE_MESSAGES: 1},
+        }
+    )
+    hass.states.async_set("light.permitted", "on", {"color": "red"})
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 1
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    data = await websocket_client.receive_str()
+    msgs = json_loads(data)
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {"a": {"color": "red"}, "c": ANY, "lc": ANY, "s": "on"}
+        }
+    }
+
+    hass.states.async_set("light.permitted", "on", {"color": "yellow"})
+    hass.states.async_set("light.permitted", "on", {"color": "green"})
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+
+    data = await websocket_client.receive_str()
+    msgs = json_loads(data)
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "yellow"}, "c": ANY, "lu": ANY}}}
+    }
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "green"}, "c": ANY, "lu": ANY}}}
+    }
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "blue"}, "c": ANY, "lu": ANY}}}
+    }
+
+    hass.states.async_set("light.permitted", "on", {"color": "yellow"})
+    hass.states.async_set("light.permitted", "on", {"color": "green"})
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_message_coalescing_not_supported_by_websocket_client(
+    hass, websocket_client, hass_admin_user
+):
+    """Test enabling message coalescing not supported by websocket client."""
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    hass.states.async_set("light.permitted", "on", {"color": "red"})
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {"a": {}}
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {"a": {"color": "red"}, "c": ANY, "lc": ANY, "s": "on"}
+        }
+    }
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "blue"}, "c": ANY, "lu": ANY}}}
+    }
+    await websocket_client.close()
+    await hass.async_block_till_done()
+
+
+async def test_client_message_coalescing(hass, websocket_client, hass_admin_user):
+    """Test client message coalescing."""
+    await websocket_client.send_json(
+        [
+            {
+                "id": 1,
+                "type": "supported_features",
+                "features": {FEATURE_COALESCE_MESSAGES: 1},
+            },
+            {"id": 7, "type": "subscribe_entities"},
+        ]
+    )
+    hass.states.async_set("light.permitted", "on", {"color": "red"})
+
+    data = await websocket_client.receive_str()
+    msgs = json_loads(data)
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 1
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.permitted": {"a": {"color": "red"}, "c": ANY, "lc": ANY, "s": "on"}
+        }
+    }
+
+    hass.states.async_set("light.permitted", "on", {"color": "yellow"})
+    hass.states.async_set("light.permitted", "on", {"color": "green"})
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+
+    data = await websocket_client.receive_str()
+    msgs = json_loads(data)
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "yellow"}, "c": ANY, "lu": ANY}}}
+    }
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "green"}, "c": ANY, "lu": ANY}}}
+    }
+
+    msg = msgs.pop(0)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"a": {"color": "blue"}, "c": ANY, "lu": ANY}}}
+    }
+
+    hass.states.async_set("light.permitted", "on", {"color": "yellow"})
+    hass.states.async_set("light.permitted", "on", {"color": "green"})
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+    await websocket_client.close()
+    await hass.async_block_till_done()

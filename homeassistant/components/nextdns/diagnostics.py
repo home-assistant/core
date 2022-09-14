@@ -13,6 +13,7 @@ from .const import (
     ATTR_ENCRYPTION,
     ATTR_IP_VERSIONS,
     ATTR_PROTOCOLS,
+    ATTR_SETTINGS,
     ATTR_STATUS,
     CONF_PROFILE_ID,
     DOMAIN,
@@ -31,6 +32,7 @@ async def async_get_config_entry_diagnostics(
     encryption_coordinator = coordinators[ATTR_ENCRYPTION]
     ip_versions_coordinator = coordinators[ATTR_IP_VERSIONS]
     protocols_coordinator = coordinators[ATTR_PROTOCOLS]
+    settings_coordinator = coordinators[ATTR_SETTINGS]
     status_coordinator = coordinators[ATTR_STATUS]
 
     diagnostics_data = {
@@ -39,6 +41,7 @@ async def async_get_config_entry_diagnostics(
         "encryption_coordinator_data": asdict(encryption_coordinator.data),
         "ip_versions_coordinator_data": asdict(ip_versions_coordinator.data),
         "protocols_coordinator_data": asdict(protocols_coordinator.data),
+        "settings_coordinator_data": asdict(settings_coordinator.data),
         "status_coordinator_data": asdict(status_coordinator.data),
     }
 

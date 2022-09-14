@@ -2,14 +2,30 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
+            "already_configured_account": "Account is al geconfigureerd",
+            "already_configured_device": "Apparaat is al geconfigureerd",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "reauth_successful": "Herauthenticatie geslaagd"
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "unreachable": "Kan geen verbinding maken"
         },
         "error": {
             "invalid_access_token": "Ongeldig toegangstoken",
-            "unknown": "Onverwachte fout"
+            "unknown": "Onverwachte fout",
+            "unreachable": "Kan geen verbinding maken"
         },
+        "flow_title": "{model} ({device_id})",
         "step": {
+            "cloud": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "email": "E-mail"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "IP-adres"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Toegangstoken",

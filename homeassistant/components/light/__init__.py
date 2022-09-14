@@ -8,7 +8,7 @@ from datetime import timedelta
 from enum import IntEnum
 import logging
 import os
-from typing import cast, final
+from typing import Any, cast, final
 
 import voluptuous as vol
 
@@ -20,7 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -33,8 +33,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -59,7 +57,6 @@ SUPPORT_EFFECT = 4
 SUPPORT_FLASH = 8
 SUPPORT_COLOR = 16  # Deprecated, replaced by color modes
 SUPPORT_TRANSITION = 32
-SUPPORT_WHITE_VALUE = 128  # Deprecated, replaced by color modes
 
 # Color mode of the light
 ATTR_COLOR_MODE = "color_mode"
@@ -202,7 +199,6 @@ ATTR_KELVIN = "kelvin"
 ATTR_MIN_MIREDS = "min_mireds"
 ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
-ATTR_WHITE_VALUE = "white_value"
 ATTR_WHITE = "white"
 
 # Brightness of the light, 0..255 or percentage
@@ -274,7 +270,6 @@ LIGHT_TURN_ON_SCHEMA = {
         vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
     ),
     vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
-    ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
@@ -291,7 +286,9 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def preprocess_turn_on_alternatives(hass, params):
+def preprocess_turn_on_alternatives(
+    hass: HomeAssistant, params: dict[str, Any]
+) -> None:
     """Process extra data for turn light on request.
 
     Async friendly.
@@ -319,7 +316,9 @@ def preprocess_turn_on_alternatives(hass, params):
         params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
 
-def filter_turn_off_params(light, params):
+def filter_turn_off_params(
+    light: LightEntity, params: dict[str, Any]
+) -> dict[str, Any]:
     """Filter out params not used in turn off or not supported by the light."""
     supported_features = light.supported_features
 
@@ -331,7 +330,7 @@ def filter_turn_off_params(light, params):
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
 
 
-def filter_turn_on_params(light, params):
+def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[str, Any]:
     """Filter out params not supported by the light."""
     supported_features = light.supported_features
 
@@ -341,8 +340,6 @@ def filter_turn_on_params(light, params):
         params.pop(ATTR_FLASH, None)
     if not supported_features & LightEntityFeature.TRANSITION:
         params.pop(ATTR_TRANSITION, None)
-    if not supported_features & SUPPORT_WHITE_VALUE:
-        params.pop(ATTR_WHITE_VALUE, None)
 
     supported_color_modes = (
         light._light_internal_supported_color_modes  # pylint:disable=protected-access
@@ -377,9 +374,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
     await profiles.async_initialize()
 
-    def preprocess_data(data):
+    def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
-        base = {
+        base: dict[str | vol.Optional, Any] = {
             entity_field: data.pop(entity_field)
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
@@ -389,18 +386,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(light, call):
+    async def async_handle_light_on_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
         """Handle turning a light on.
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params = dict(call.data["params"])
+        params: dict[str, Any] = dict(call.data["params"])
 
         # Only process params once we processed brightness step
         if params and (
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
         ):
-            brightness = light.brightness if light.is_on else 0
+            brightness = light.brightness if light.is_on and light.brightness else 0
 
             if ATTR_BRIGHTNESS_STEP in params:
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
@@ -421,16 +420,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             light._light_internal_supported_color_modes  # pylint: disable=protected-access
         )
         supported_color_modes = light.supported_color_modes
-        # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
-        # for legacy lights
-        if ATTR_RGBW_COLOR in params:
-            if (
-                ColorMode.RGBW in legacy_supported_color_modes
-                and not supported_color_modes
-            ):
-                rgbw_color = params.pop(ATTR_RGBW_COLOR)
-                params[ATTR_RGB_COLOR] = rgbw_color[0:3]
-                params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
         # If a color temperature is specified, emulate it if not supported by the light
         if ATTR_COLOR_TEMP in params:
@@ -462,7 +451,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
-                rgb_color = color_util.color_rgbww_to_rgb(
+                rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
                     *rgbww_color, light.min_mireds, light.max_mireds
                 )
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -475,7 +464,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_hs_to_RGB(*hs_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.XY in supported_color_modes:
@@ -485,7 +474,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.HS in supported_color_modes:
@@ -503,7 +492,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_xy_to_RGB(*xy_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
         elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
@@ -512,7 +501,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = rgb_color
             elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.HS in supported_color_modes:
@@ -523,7 +512,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
             rgbww_color = params.pop(ATTR_RGBWW_COLOR)
-            rgb_color = color_util.color_rgbww_to_rgb(
+            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
                 *rgbww_color, light.min_mireds, light.max_mireds
             )
             if ColorMode.RGB in supported_color_modes:
@@ -544,15 +533,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
         # Remove deprecated white value if the light supports color mode
-        if supported_color_modes:
-            params.pop(ATTR_WHITE_VALUE, None)
-
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             await async_handle_light_off_service(light, call)
         else:
             await light.async_turn_on(**filter_turn_on_params(light, params))
 
-    async def async_handle_light_off_service(light, call):
+    async def async_handle_light_off_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
         """Handle turning off a light."""
         params = dict(call.data["params"])
 
@@ -561,7 +549,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         await light.async_turn_off(**filter_turn_off_params(light, params))
 
-    async def async_handle_toggle_service(light, call):
+    async def async_handle_toggle_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
         """Handle toggling a light."""
         if light.is_on:
             await async_handle_light_off_service(light, call)
@@ -707,7 +697,9 @@ class Profiles:
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id: str, state_on: bool, params: dict) -> None:
+    def apply_default(
+        self, entity_id: str, state_on: bool | None, params: dict[str, Any]
+    ) -> None:
         """Return the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
@@ -718,7 +710,7 @@ class Profiles:
                     params.setdefault(ATTR_TRANSITION, self.data[name].transition)
 
     @callback
-    def apply_profile(self, name: str, params: dict) -> None:
+    def apply_profile(self, name: str, params: dict[str, Any]) -> None:
         """Apply a profile."""
         if (profile := self.data.get(name)) is None:
             return
@@ -786,12 +778,6 @@ class LightEntity(ToggleEntity):
             # Add warning in 2021.6, remove in 2021.10
             supported = self._light_internal_supported_color_modes
 
-            if (
-                ColorMode.RGBW in supported
-                and self.white_value is not None
-                and self.hs_color is not None
-            ):
-                return ColorMode.RGBW
             if ColorMode.HS in supported and self.hs_color is not None:
                 return ColorMode.HS
             if ColorMode.COLOR_TEMP in supported and self.color_temp is not None:
@@ -828,19 +814,6 @@ class LightEntity(ToggleEntity):
     def _light_internal_rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
         rgbw_color = self.rgbw_color
-        if (
-            rgbw_color is None
-            and self.hs_color is not None
-            and self.white_value is not None
-        ):
-            # Backwards compatibility for rgbw_color added in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
-            r, g, b = color_util.color_hs_to_RGB(  # pylint: disable=invalid-name
-                *self.hs_color
-            )
-            w = self.white_value  # pylint: disable=invalid-name
-            rgbw_color = (r, g, b, w)
-
         return rgbw_color
 
     @property
@@ -868,11 +841,6 @@ class LightEntity(ToggleEntity):
         return self._attr_max_mireds
 
     @property
-    def white_value(self) -> int | None:
-        """Return the white value of this light between 0..255."""
-        return None
-
-    @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._attr_effect_list
@@ -883,9 +851,9 @@ class LightEntity(ToggleEntity):
         return self._attr_effect
 
     @property
-    def capability_attributes(self):
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        data = {}
+        data: dict[str, Any] = {}
         supported_features = self.supported_features
         supported_color_modes = self._light_internal_supported_color_modes
 
@@ -944,12 +912,12 @@ class LightEntity(ToggleEntity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if not self.is_on:
             return None
 
-        data = {}
+        data: dict[str, Any] = {}
         supported_features = self.supported_features
         color_mode = self._light_internal_color_mode
 
@@ -982,13 +950,6 @@ class LightEntity(ToggleEntity):
             # Add warning in 2021.6, remove in 2021.10
             data[ATTR_COLOR_TEMP] = self.color_temp
 
-        if supported_features & SUPPORT_WHITE_VALUE and not self.supported_color_modes:
-            # Backwards compatibility
-            # Add warning in 2021.6, remove in 2021.10
-            data[ATTR_WHITE_VALUE] = self.white_value
-            if self.hs_color is not None:
-                data.update(self._light_internal_convert_color(ColorMode.HS))
-
         if supported_features & LightEntityFeature.EFFECT:
             data[ATTR_EFFECT] = self.effect
 
@@ -1009,8 +970,6 @@ class LightEntity(ToggleEntity):
             supported_color_modes.add(ColorMode.COLOR_TEMP)
         if supported_features & SUPPORT_COLOR:
             supported_color_modes.add(ColorMode.HS)
-        if supported_features & SUPPORT_WHITE_VALUE:
-            supported_color_modes.add(ColorMode.RGBW)
         if supported_features & SUPPORT_BRIGHTNESS and not supported_color_modes:
             supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -1028,20 +987,3 @@ class LightEntity(ToggleEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._attr_supported_features
-
-
-def legacy_supported_features(
-    supported_features: int, supported_color_modes: list[str] | None
-) -> int:
-    """Calculate supported features with backwards compatibility."""
-    # Backwards compatibility for supported_color_modes added in 2021.4
-    if supported_color_modes is None:
-        return supported_features
-    if any(mode in supported_color_modes for mode in COLOR_MODES_COLOR):
-        supported_features |= SUPPORT_COLOR
-    if any(mode in supported_color_modes for mode in COLOR_MODES_BRIGHTNESS):
-        supported_features |= SUPPORT_BRIGHTNESS
-    if ColorMode.COLOR_TEMP in supported_color_modes:
-        supported_features |= SUPPORT_COLOR_TEMP
-
-    return supported_features

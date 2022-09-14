@@ -9,9 +9,11 @@ DOMAIN = "here_travel_time"
 DEFAULT_SCAN_INTERVAL = 300
 
 
+CONF_DESTINATION = "destination"
 CONF_DESTINATION_LATITUDE = "destination_latitude"
 CONF_DESTINATION_LONGITUDE = "destination_longitude"
 CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
+CONF_ORIGIN = "origin"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"

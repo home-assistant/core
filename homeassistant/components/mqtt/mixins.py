@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
+    ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
@@ -27,7 +28,13 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,6 +54,8 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -62,7 +71,9 @@ from .const import (
     CONF_TOPIC,
     DATA_MQTT,
     DATA_MQTT_CONFIG,
+    DATA_MQTT_DISCOVERY_REGISTRY_HOOKS,
     DATA_MQTT_RELOAD_DISPATCHERS,
+    DATA_MQTT_RELOAD_ENTRY,
     DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -107,6 +118,7 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
+CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
@@ -199,6 +211,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_MANUFACTURER): cv.string,
             vol.Optional(CONF_MODEL): cv.string,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_HW_VERSION): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
@@ -242,6 +255,20 @@ def warn_for_legacy_schema(domain: str) -> Callable:
             domain,
         )
         warned.add(domain)
+        # Register a repair
+        async_create_issue(
+            async_get_hass(),
+            DOMAIN,
+            f"deprecated_yaml_{domain}",
+            breaks_in_ha_version="2022.12.0",  # Warning first added in 2022.6.0
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "more_info_url": f"https://www.home-assistant.io/integrations/{domain}.mqtt/#new_format",
+                "platform": domain,
+            },
+        )
         return config
 
     return validator
@@ -287,7 +314,7 @@ async def async_discover_yaml_entities(
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant,
     platform_domain: str,
-    config_yaml: ConfigType = None,
+    config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
 
@@ -345,6 +372,12 @@ async def async_setup_platform_helper(
     async_setup_entities: SetupEntity,
 ) -> None:
     """Help to set up the platform for manual configured MQTT entities."""
+    if DATA_MQTT_RELOAD_ENTRY in hass.data:
+        _LOGGER.debug(
+            "MQTT integration is %s, skipping setup of manually configured MQTT items while unloading the config entry",
+            platform_domain,
+        )
+        return
     if not (entry_status := mqtt_config_entry_enabled(hass)):
         _LOGGER.warning(
             "MQTT integration is %s, skipping setup of manually configured MQTT %s",
@@ -629,6 +662,17 @@ async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: di
     await async_publish(hass, discovery_topic, "", retain=True)
 
 
+async def async_clear_discovery_topic_if_entity_removed(
+    hass: HomeAssistant,
+    discovery_data: dict[str, Any],
+    event: Event,
+) -> None:
+    """Clear the discovery topic if the entity is removed."""
+    if event.data["action"] == "remove":
+        # publish empty payload to config topic to avoid re-adding
+        await async_remove_discovery_payload(hass, discovery_data)
+
+
 class MqttDiscoveryDeviceUpdate:
     """Add support for auto discovery for platforms without an entity."""
 
@@ -762,7 +806,8 @@ class MqttDiscoveryUpdate(Entity):
 
     def __init__(
         self,
-        discovery_data: dict,
+        hass: HomeAssistant,
+        discovery_data: dict | None,
         discovery_update: Callable | None = None,
     ) -> None:
         """Initialize the discovery update mixin."""
@@ -770,6 +815,14 @@ class MqttDiscoveryUpdate(Entity):
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
         self._removed_from_hass = False
+        if discovery_data is None:
+            return
+        self._registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
+            DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
+        ]
+        discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+        if discovery_hash in self._registry_hooks:
+            self._registry_hooks.pop(discovery_hash)()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
@@ -832,7 +885,7 @@ class MqttDiscoveryUpdate(Entity):
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
-        if not self._removed_from_hass:
+        if not self._removed_from_hass and self._discovery_data is not None:
             # Stop subscribing to discovery updates to not trigger when we clear the
             # discovery topic
             self._cleanup_discovery_on_remove()
@@ -843,7 +896,20 @@ class MqttDiscoveryUpdate(Entity):
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        if self._discovery_data:
+        if self._discovery_data is not None:
+            discovery_hash: tuple = self._discovery_data[ATTR_DISCOVERY_HASH]
+            if self.registry_entry is not None:
+                self._registry_hooks[
+                    discovery_hash
+                ] = async_track_entity_registry_updated_event(
+                    self.hass,
+                    self.entity_id,
+                    partial(
+                        async_clear_discovery_topic_if_entity_removed,
+                        self.hass,
+                        self._discovery_data,
+                    ),
+                )
             stop_discovery_updates(self.hass, self._discovery_data)
             send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
@@ -879,6 +945,9 @@ def device_info_from_config(config) -> DeviceInfo | None:
 
     if CONF_NAME in config:
         info[ATTR_NAME] = config[CONF_NAME]
+
+    if CONF_HW_VERSION in config:
+        info[ATTR_HW_VERSION] = config[CONF_HW_VERSION]
 
     if CONF_SW_VERSION in config:
         info[ATTR_SW_VERSION] = config[CONF_SW_VERSION]
@@ -929,6 +998,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _attr_should_poll = False
     _entity_id_format: str
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -947,7 +1017,7 @@ class MqttEntity(
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, hass, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
 
     def _init_entity_id(self):
@@ -1054,11 +1124,6 @@ class MqttEntity(
     def name(self):
         """Return the name of the device if any."""
         return self._config.get(CONF_NAME)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):

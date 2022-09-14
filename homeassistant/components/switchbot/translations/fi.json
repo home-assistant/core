@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "password": {
+                "data": {
+                    "password": "Salasana"
+                }
+            }
+        }
+    }
+}

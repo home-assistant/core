@@ -40,7 +40,11 @@ GAS_USAGE_DEVICE_CLASSES = (
     sensor.SensorDeviceClass.GAS,
 )
 GAS_USAGE_UNITS = {
-    sensor.SensorDeviceClass.ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+    sensor.SensorDeviceClass.ENERGY: (
+        ENERGY_WATT_HOUR,
+        ENERGY_KILO_WATT_HOUR,
+        ENERGY_MEGA_WATT_HOUR,
+    ),
     sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
 GAS_PRICE_UNITS = tuple(
