@@ -105,7 +105,7 @@ class StarlingBalanceSensor(SensorEntity):
         """Return the entity icon."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         self._starling_account.update_balance_data()
         if self._balance_data_type == "cleared_balance":

@@ -13,8 +13,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import DEVICE_TRIGGER_BASE_SCHEMA
 from .const import CONF_CHANGED_STATES
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-
 ENTITY_TRIGGERS = [
     {
         # Trigger when entity is turned on or off
