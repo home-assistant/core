@@ -402,7 +402,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
                 try:
                     self._state = MediaPlayerState(states[0])
                 except ValueError:
-                    self._state = None
+                    self._state = (
+                        MediaPlayerState.OFF if states[0] in off_values else None
+                    )
             elif any(state for state in states if state not in off_values):
                 self._state = MediaPlayerState.ON
             else:
