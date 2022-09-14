@@ -115,17 +115,12 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         """Initialize the demo device."""
         self._attr_name = name
         self._attr_state = MediaPlayerState.PLAYING
-        self._volume_level = 1.0
+        self._attr_volume_level = 1.0
         self._volume_muted = False
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
         self._attr_device_class = device_class
-
-    @property
-    def volume_level(self) -> float:
-        """Return the volume level of the media player (0..1)."""
-        return self._volume_level
 
     @property
     def is_volume_muted(self) -> bool:
@@ -164,17 +159,19 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Increase volume."""
-        self._volume_level = min(1.0, self._volume_level + 0.1)
+        assert self.volume_level is not None
+        self._attr_volume_level = min(1.0, self.volume_level + 0.1)
         self.schedule_update_ha_state()
 
     def volume_down(self) -> None:
         """Decrease volume."""
-        self._volume_level = max(0.0, self._volume_level - 0.1)
+        assert self.volume_level is not None
+        self._attr_volume_level = max(0.0, self.volume_level - 0.1)
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume: float) -> None:
         """Set the volume level, range 0..1."""
-        self._volume_level = volume
+        self._attr_volume_level = volume
         self.schedule_update_ha_state()
 
     def media_play(self) -> None:
