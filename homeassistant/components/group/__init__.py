@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from contextvars import ContextVar
 import logging
 from typing import Any, Protocol, Union, cast
@@ -442,7 +442,7 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 
     for object_id, conf in domain_config.items():
         name: str = conf.get(CONF_NAME, object_id)
-        entity_ids: Iterable[str] = conf.get(CONF_ENTITIES) or []
+        entity_ids: Collection[str] = conf.get(CONF_ENTITIES) or []
         icon: str | None = conf.get(CONF_ICON)
         mode = bool(conf.get(CONF_ALL))
         order: int = hass.data[GROUP_ORDER]
@@ -513,7 +513,7 @@ class Group(Entity):
         order: int | None = None,
         icon: str | None = None,
         user_defined: bool = True,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         mode: bool | None = None,
     ) -> None:
         """Initialize a group.
@@ -540,7 +540,7 @@ class Group(Entity):
     def create_group(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         user_defined: bool = True,
         icon: str | None = None,
         object_id: str | None = None,
@@ -560,7 +560,7 @@ class Group(Entity):
     def async_create_group_entity(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         user_defined: bool = True,
         icon: str | None = None,
         object_id: str | None = None,
@@ -596,7 +596,7 @@ class Group(Entity):
     async def async_create_group(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         user_defined: bool = True,
         icon: str | None = None,
         object_id: str | None = None,
@@ -659,14 +659,14 @@ class Group(Entity):
         """Test if any member has an assumed state."""
         return self._assumed_state
 
-    def update_tracked_entity_ids(self, entity_ids: Iterable[str] | None) -> None:
+    def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
         """Update the member entity IDs."""
         asyncio.run_coroutine_threadsafe(
             self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 
     async def async_update_tracked_entity_ids(
-        self, entity_ids: Iterable[str] | None
+        self, entity_ids: Collection[str] | None
     ) -> None:
         """Update the member entity IDs.
 
@@ -677,7 +677,7 @@ class Group(Entity):
         self._reset_tracked_state()
         self._async_start()
 
-    def _set_tracked(self, entity_ids: Iterable[str] | None) -> None:
+    def _set_tracked(self, entity_ids: Collection[str] | None) -> None:
         """Tuple of entities to be tracked."""
         # tracking are the entities we want to track
         # trackable are the entities we actually watch
