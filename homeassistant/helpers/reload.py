@@ -14,6 +14,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from . import config_per_platform
+from .entity import Entity
 from .entity_component import EntityComponent
 from .entity_platform import EntityPlatform, async_get_platforms
 from .service import async_register_admin_service
@@ -120,7 +121,7 @@ async def _async_setup_platform(
         )
         return
 
-    entity_component: EntityComponent = hass.data[integration_platform]
+    entity_component: EntityComponent[Entity] = hass.data[integration_platform]
     tasks = [
         entity_component.async_setup_platform(integration_name, p_config)
         for p_config in platform_configs
