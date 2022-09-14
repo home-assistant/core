@@ -10,6 +10,11 @@ import voluptuous as vol
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -79,7 +84,23 @@ async def async_attach_trigger(
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
     local_only = config.get(CONF_LOCAL_ONLY, None)
+    issue_id: str | None = None
     if local_only is None:
+        issue_id = f"trigger_missing_local_only_{webhook_id}"
+        async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version="2023.1.0",
+            is_fixable=False,
+            learn_more_url="https://github.com/home-assistant/core/pull/66494",
+            severity=IssueSeverity.WARNING,
+            translation_key="trigger_missing_local_only",
+            translation_placeholders={
+                "webhook_id": webhook_id,
+                "automation_name": trigger_info.get("name", "[unknown]"),
+            },
+        )
         _LOGGER.warning(
             "Deprecation warning: "
             "Webhook '%s' does not provide a value for local_only. "
@@ -111,6 +132,8 @@ async def async_attach_trigger(
     @callback
     def unregister():
         """Unregister webhook."""
+        if issue_id:
+            async_delete_issue(hass, DOMAIN, issue_id)
         triggers[webhook_id].remove(trigger_instance)
         if not triggers[webhook_id]:
             async_unregister(hass, webhook_id)
