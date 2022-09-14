@@ -221,7 +221,7 @@ class Proximity(Entity):
                 continue
 
             # Calculate the distance to the proximity zone.
-            distance_to_zone = distance(
+            proximity = distance(
                 proximity_latitude,
                 proximity_longitude,
                 device_state.attributes[ATTR_LATITUDE],
@@ -229,10 +229,10 @@ class Proximity(Entity):
             )
 
             # Add the device and distance to a dictionary.
-            if not distance_to_zone:
+            if not proximity:
                 continue
             distances_to_zone[device] = round(
-                convert(distance_to_zone, LENGTH_METERS, self.unit_of_measurement), 1
+                convert(proximity, LENGTH_METERS, self.unit_of_measurement), 1
             )
 
         # Loop through each of the distances collected and work out the
