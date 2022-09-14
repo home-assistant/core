@@ -141,7 +141,7 @@ def test_bad_import(
         "from homeassistant.components.climate import ClimateEntityFeature",
     ],
 )
-def test_root_import(
+def test_good_root_import(
     linter: UnittestLinter,
     imports_checker: BaseChecker,
     import_node: str,
