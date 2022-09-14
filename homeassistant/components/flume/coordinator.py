@@ -111,31 +111,6 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.active_notifications_by_device = active_notifications_by_device
 
-        # notifications_by_device: dict[str, set[str]] = {}
-
-        # bridge_status_by_device: dict[str, list[str]] = {}
-        # # Process the notification array
-        # for item in self.notifications:
-
-        #     device_id = item["device_id"]
-        #     rule = item["extra"]["event_rule_name"]
-
-        #     if rule == BRIDGE_NOTIFICATION_RULE:
-        #         # Dont process bridge notifications - they are handled separately
-        #         bridge_status_by_device.setdefault(device_id, [True]).append(
-        #             item["extra"][BRIDGE_NOTIFICATION_KEY]
-        #         )
-        #     else:
-        #         notifications_by_device.setdefault(device_id, set()).add(rule)
-
-        # # For each device look at the last status of the bridge, and if True add BRIDGE_NOTIFICATION_RULE.
-        # for device_id in bridge_status_by_device.items():
-        #     if bridge_status_by_device[device_id][-1]:
-        #         notifications_by_device.setdefault(device_id, set()).add(
-        #             BRIDGE_NOTIFICATION_RULE
-        #         )
-        # self.active_notifications_by_device = notifications_by_device
-
     async def _async_update_data(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating Flume Notification")
