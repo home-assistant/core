@@ -13,19 +13,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the Ecobee notification service."""
-    data = hass.data[DOMAIN]
     index = config.get(CONF_INDEX)
-    return EcobeeNotificationService(data, index)
+    return EcobeeNotificationService(hass, index)
 
 
 class EcobeeNotificationService(BaseNotificationService):
     """Implement the notification service for the Ecobee thermostat."""
 
-    def __init__(self, data, thermostat_index):
+    def __init__(self, hass, thermostat_index):
         """Initialize the service."""
-        self.data = data
+        self.hass = hass
         self.thermostat_index = thermostat_index
 
     def send_message(self, message="", **kwargs):
         """Send a message."""
-        self.data.ecobee.send_message(self.thermostat_index, message)
+        data = self.hass.data[DOMAIN]
+        data.ecobee.send_message(self.thermostat_index, message)
