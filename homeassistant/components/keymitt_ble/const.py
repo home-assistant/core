@@ -1,4 +1,4 @@
-"""Constants for Microbot."""
+"""Constants for Keymitt BLE."""
 # Base component constants
 NAME = "MicroBot Push"
 DOMAIN = "keymitt_ble"
