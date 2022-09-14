@@ -88,6 +88,7 @@ async def async_setup_entry(
     for device in flume_devices.device_list:
         device_id = device[KEY_DEVICE_ID]
 
+        # Build connection sensors
         if device[KEY_DEVICE_TYPE] is FLUME_TYPE_BRIDGE:
             new_sensor = FlumeConnectionBinarySensor(
                 coordinator=connection_coordinator,
@@ -113,6 +114,7 @@ async def async_setup_entry(
         if device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR:
             continue
 
+        # Build notification sensors
         flume_entity_list.extend(
             [
                 FlumeNotificationBinarySensor(
