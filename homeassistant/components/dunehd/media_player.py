@@ -8,9 +8,9 @@ from pdunehd import DuneHDPlayer
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,17 +57,17 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self.__update_title()
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState:
         """Return player state."""
-        state = STATE_OFF
+        state = MediaPlayerState.OFF
         if "playback_position" in self._state:
-            state = STATE_PLAYING
+            state = MediaPlayerState.PLAYING
         if self._state.get("player_state") in ("playing", "buffering", "photo_viewer"):
-            state = STATE_PLAYING
+            state = MediaPlayerState.PLAYING
         if int(self._state.get("playback_speed", 1234)) == 0:
-            state = STATE_PAUSED
+            state = MediaPlayerState.PAUSED
         if self._state.get("player_state") == "navigator":
-            state = STATE_ON
+            state = MediaPlayerState.ON
         return state
 
     @property

@@ -11,7 +11,6 @@ from homeassistant.components.awair.const import (
     API_SPL_A,
     API_TEMP,
     API_VOC,
-    DOMAIN,
     SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
     SENSOR_TYPES_DUST,
@@ -30,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
+from . import setup_awair
 from .const import (
     AWAIR_UUID,
     CLOUD_CONFIG,
@@ -38,21 +38,9 @@ from .const import (
     LOCAL_UNIQUE_ID,
 )
 
-from tests.common import MockConfigEntry
-
 SENSOR_TYPES_MAP = {
     desc.key: desc for desc in (SENSOR_TYPE_SCORE, *SENSOR_TYPES, *SENSOR_TYPES_DUST)
 }
-
-
-async def setup_awair(hass: HomeAssistant, fixtures, unique_id, data):
-    """Add Awair devices to hass, using specified fixtures for data."""
-
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=data)
-    with patch("python_awair.AwairClient.query", side_effect=fixtures):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
 
 def assert_expected_properties(
@@ -84,7 +72,7 @@ async def test_awair_gen1_sensors(hass: HomeAssistant, user, cloud_devices, gen1
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_awair_score",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
         {},
@@ -176,7 +164,7 @@ async def test_awair_gen2_sensors(hass: HomeAssistant, user, cloud_devices, gen2
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_awair_score",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "97",
         {},
@@ -209,7 +197,7 @@ async def test_local_awair_sensors(hass: HomeAssistant, local_devices, local_dat
     assert_expected_properties(
         hass,
         registry,
-        "sensor.awair_score",
+        "sensor.mock_title_score",
         f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "94",
         {},
@@ -226,7 +214,7 @@ async def test_awair_mint_sensors(hass: HomeAssistant, user, cloud_devices, mint
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_awair_score",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "98",
         {},
@@ -267,7 +255,7 @@ async def test_awair_glow_sensors(hass: HomeAssistant, user, cloud_devices, glow
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_awair_score",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "93",
         {},
@@ -287,7 +275,7 @@ async def test_awair_omni_sensors(hass: HomeAssistant, user, cloud_devices, omni
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_awair_score",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "99",
         {},
@@ -327,7 +315,7 @@ async def test_awair_offline(hass: HomeAssistant, user, cloud_devices, awair_off
     # device *should* have if it's online. If we don't see it,
     # then we probably didn't set anything up. Which is correct,
     # in this case.
-    assert hass.states.get("sensor.living_room_awair_score") is None
+    assert hass.states.get("sensor.living_room_score") is None
 
 
 async def test_awair_unavailable(
@@ -342,18 +330,18 @@ async def test_awair_unavailable(
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_awair_score",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
         {},
     )
 
     with patch("python_awair.AwairClient.query", side_effect=awair_offline):
-        await async_update_entity(hass, "sensor.living_room_awair_score")
+        await async_update_entity(hass, "sensor.living_room_score")
         assert_expected_properties(
             hass,
             registry,
-            "sensor.living_room_awair_score",
+            "sensor.living_room_score",
             f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
             STATE_UNAVAILABLE,
             {},

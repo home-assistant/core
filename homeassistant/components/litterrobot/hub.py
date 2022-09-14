@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pylitterbot import Account, LitterRobot
+from pylitterbot import Account, FeederRobot, LitterRobot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -61,4 +61,10 @@ class LitterRobotHub:
         """Get Litter-Robots from the account."""
         return (
             robot for robot in self.account.robots if isinstance(robot, LitterRobot)
+        )
+
+    def feeder_robots(self) -> Generator[FeederRobot, Any, Any]:
+        """Get Feeder-Robots from the account."""
+        return (
+            robot for robot in self.account.robots if isinstance(robot, FeederRobot)
         )

@@ -636,7 +636,7 @@ def _apply_update(  # noqa: C901
                         fake_start_time += timedelta(minutes=5)
 
         # When querying the database, be careful to only explicitly query for columns
-        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # which were present in schema version 22. If querying the table, SQLAlchemy
         # will refer to future columns.
         with session_scope(session=session_maker()) as session:
             for sum_statistic in session.query(StatisticsMeta.id).filter_by(

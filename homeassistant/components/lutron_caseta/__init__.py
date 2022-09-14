@@ -343,7 +343,7 @@ class LutronCasetaDevice(Entity):
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,
@@ -358,6 +358,12 @@ class LutronCasetaDevice(Entity):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 
+    def _handle_none_serial(self, serial: str | None) -> str | int:
+        """Handle None serial returned by RA3 and QSX processors."""
+        if serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return serial
+
     @property
     def device_id(self):
         """Return the device ID used for calling pylutron_caseta."""
@@ -369,9 +375,9 @@ class LutronCasetaDevice(Entity):
         return self._device["serial"]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the device (serial)."""
-        return str(self.serial)
+        return str(self._handle_none_serial(self.serial))
 
     @property
     def extra_state_attributes(self):
@@ -386,13 +392,6 @@ class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier if serial number is None."""
-        if self.serial is None:
-            return f"{self._bridge_unique_id}_{self.device_id}"
-        return super().unique_id
 
 
 def _id_to_identifier(lutron_id: str) -> tuple[str, str]:

@@ -70,7 +70,7 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)  # type: ignore[no-untyped-call]
+    preprocess_turn_on_alternatives(hass, kwargs)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]

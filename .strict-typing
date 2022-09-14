@@ -52,7 +52,6 @@ homeassistant.components.airzone.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
-homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
@@ -82,6 +81,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.deconz.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.demo.*
 homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
@@ -201,6 +201,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
+homeassistant.components.prusalink.*
 homeassistant.components.pvoutput.*
 homeassistant.components.pure_energie.*
 homeassistant.components.qnap_qsw.*
@@ -246,6 +247,7 @@ homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
+homeassistant.components.tilt_ble.*
 homeassistant.components.tplink.*
 homeassistant.components.tolo.*
 homeassistant.components.tractive.*

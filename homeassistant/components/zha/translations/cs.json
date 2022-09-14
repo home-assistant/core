@@ -9,11 +9,19 @@
         },
         "flow_title": "ZHA: {name}",
         "step": {
+            "confirm_hardware": {
+                "description": "Chcete nastavit {name}?"
+            },
             "port_config": {
                 "data": {
                     "baudrate": "rychlost portu"
                 },
                 "title": "Nastaven\u00ed"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Nahr\u00e1t soubor"
+                }
             },
             "user": {
                 "description": "Vyberte s\u00e9riov\u00fd port pro r\u00e1dio Zigbee",
@@ -68,6 +76,15 @@
             "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
             "remote_button_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t"
+        }
+    },
+    "options": {
+        "flow_title": "ZHA: {name}",
+        "step": {
+            "init": {
+                "description": "Dopln\u011bk ZHA bude zastaven. P\u0159ejete si pokra\u010dovat?",
+                "title": "P\u0159ekonfigurovat ZHA"
+            }
         }
     }
 }

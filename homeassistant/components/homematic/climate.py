@@ -1,12 +1,14 @@
 """Support for Homematic thermostats."""
 from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from typing import Any
+
+from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -131,7 +133,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         """Return the target temperature."""
         return self._data.get(self._state)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return None

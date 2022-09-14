@@ -404,6 +404,12 @@ def hs_fc200_state_fixture():
     return json.loads(load_fixture("zwave_js/fan_hs_fc200_state.json"))
 
 
+@pytest.fixture(name="leviton_zw4sf_state", scope="session")
+def leviton_zw4sf_state_fixture():
+    """Load the Leviton ZW4SF node state fixture data."""
+    return json.loads(load_fixture("zwave_js/leviton_zw4sf_state.json"))
+
+
 @pytest.fixture(name="gdc_zw062_state", scope="session")
 def motorized_barrier_cover_state_fixture():
     """Load the motorized barrier cover node state fixture data."""
@@ -584,7 +590,8 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
-            await asyncio.sleep(30)
+            listen_block = asyncio.Event()
+            await listen_block.wait()
             assert False, "Listen wasn't canceled!"
 
         async def disconnect():
@@ -844,6 +851,8 @@ async def integration_fixture(hass, client):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    client.async_send_command.reset_mock()
+
     return entry
 
 
@@ -867,6 +876,14 @@ def fan_generic_fixture(client, fan_generic_state):
 def hs_fc200_fixture(client, hs_fc200_state):
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(hs_fc200_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="leviton_zw4sf")
+def leviton_zw4sf_fixture(client, leviton_zw4sf_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(leviton_zw4sf_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

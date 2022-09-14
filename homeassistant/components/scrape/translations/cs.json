@@ -3,7 +3,9 @@
         "step": {
             "user": {
                 "data": {
-                    "headers": "Hlavi\u010dky"
+                    "headers": "Hlavi\u010dky",
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 }
             }
         }

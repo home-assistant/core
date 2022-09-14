@@ -236,13 +236,13 @@ _ControllerClsType = type[zigpy.application.ControllerApplication]
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    znp = (
-        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
-        zigpy_znp.zigbee.application.ControllerApplication,
-    )
     ezsp = (
         "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
         bellows.zigbee.application.ControllerApplication,
+    )
+    znp = (
+        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_znp.zigbee.application.ControllerApplication,
     )
     deconz = (
         "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
@@ -263,11 +263,11 @@ class RadioType(enum.Enum):
         return [e.description for e in RadioType]
 
     @classmethod
-    def get_by_description(cls, description: str) -> str:
+    def get_by_description(cls, description: str) -> RadioType:
         """Get radio by description."""
         for radio in cls:
             if radio.description == description:
-                return radio.name
+                return radio
         raise ValueError
 
     def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:
@@ -396,15 +396,17 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_DEVICES_LOADED_EVENT = "zha_devices_loaded_event"
 
-EFFECT_BLINK = 0x00
-EFFECT_BREATHE = 0x01
-EFFECT_OKAY = 0x02
-
-EFFECT_DEFAULT_VARIANT = 0x00
-
 
 class Strobe(t.enum8):
     """Strobe enum."""
 
     No_Strobe = 0x00
     Strobe = 0x01
+
+
+STARTUP_FAILURE_DELAY_S = 3
+STARTUP_RETRIES = 3
+
+EZSP_OVERWRITE_EUI64 = (
+    "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+)

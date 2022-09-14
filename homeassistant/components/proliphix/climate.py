@@ -1,11 +1,14 @@
 """Support for Proliphix NT10e Thermostats."""
 from __future__ import annotations
 
+from typing import Any
+
 import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -54,6 +57,7 @@ def setup_platform(
 class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_FAHRENHEIT
 
@@ -62,7 +66,7 @@ class ProliphixThermostat(ClimateEntity):
         self._pdp = pdp
         self._name = None
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the thermostat."""
         self._pdp.update()
         self._name = self._pdp.name
@@ -71,15 +75,6 @@ class ProliphixThermostat(ClimateEntity):
     def name(self):
         """Return the name of the thermostat."""
         return self._name
-
-    @property
-    def precision(self):
-        """Return the precision of the system.
-
-        Proliphix temperature values are passed back and forth in the
-        API as tenths of degrees F (i.e. 690 for 69 degrees).
-        """
-        return PRECISION_TENTHS
 
     @property
     def extra_state_attributes(self):
@@ -122,7 +117,7 @@ class ProliphixThermostat(ClimateEntity):
         """Return available HVAC modes."""
         return []
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
