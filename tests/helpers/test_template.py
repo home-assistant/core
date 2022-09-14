@@ -1586,7 +1586,7 @@ def test_version(hass):
         "{{ version('2099.9.9') < '2099.9.10' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result == True
+    assert filter_result == function_result is True
 
     filter_result = template.Template(
         "{{ '2099.9.9' | version == '2099.9.9' }}",
@@ -1596,7 +1596,7 @@ def test_version(hass):
         "{{ version('2099.9.9') == '2099.9.9' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result == True
+    assert filter_result == function_result is True
 
     with pytest.raises(TemplateError):
         template.Template(
