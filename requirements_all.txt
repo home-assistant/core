@@ -1200,7 +1200,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.openevse
-openevsewifi==1.1.0
+openevsewifi==1.1.2
 
 # homeassistant.components.openhome
 openhomedevice==2.0.2
