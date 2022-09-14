@@ -154,12 +154,12 @@ def automations_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
         for automation_entity in component.entities
-        if entity_id in cast(AutomationEntity, automation_entity).referenced_entities
+        if entity_id in automation_entity.referenced_entities
     ]
 
 
@@ -169,12 +169,12 @@ def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
-    return list(cast(AutomationEntity, automation_entity).referenced_entities)
+    return list(automation_entity.referenced_entities)
 
 
 @callback
@@ -183,12 +183,12 @@ def automations_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
         for automation_entity in component.entities
-        if device_id in cast(AutomationEntity, automation_entity).referenced_devices
+        if device_id in automation_entity.referenced_devices
     ]
 
 
@@ -198,12 +198,12 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
-    return list(cast(AutomationEntity, automation_entity).referenced_devices)
+    return list(automation_entity.referenced_devices)
 
 
 @callback
@@ -212,12 +212,12 @@ def automations_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
         for automation_entity in component.entities
-        if area_id in cast(AutomationEntity, automation_entity).referenced_areas
+        if area_id in automation_entity.referenced_areas
     ]
 
 
@@ -227,12 +227,12 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
-    return list(cast(AutomationEntity, automation_entity).referenced_areas)
+    return list(automation_entity.referenced_areas)
 
 
 @callback
@@ -252,7 +252,9 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
-    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent[AutomationEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED

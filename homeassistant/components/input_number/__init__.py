@@ -107,7 +107,7 @@ STORAGE_VERSION = 1
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input slider."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputNumber](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
