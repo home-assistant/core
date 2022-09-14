@@ -326,7 +326,7 @@ The following persons point at invalid users:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
-    entity_component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
