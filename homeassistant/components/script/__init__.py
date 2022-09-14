@@ -167,7 +167,7 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
-    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent[ScriptEntity](LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -189,9 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
         for script_entity in script_entities:
             await script_entity.async_turn_on(
                 variables=variables, context=service.context, wait=False
@@ -200,9 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
 
         if not script_entities:
             return
@@ -216,9 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def toggle_service(service: ServiceCall) -> None:
         """Toggle a script."""
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
         for script_entity in script_entities:
             await script_entity.async_toggle(context=service.context, wait=False)
 
