@@ -21,6 +21,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -216,6 +217,7 @@ class ADBDevice(MediaPlayerEntity):
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
+        self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._entry_id = entry_id
