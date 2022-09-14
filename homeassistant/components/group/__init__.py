@@ -85,6 +85,15 @@ _LOGGER = logging.getLogger(__name__)
 current_domain: ContextVar[str] = ContextVar("current_domain")
 
 
+class GroupProtocol(Protocol):
+    """Define the format of group platforms."""
+
+    def async_describe_on_off_states(
+        self, hass: HomeAssistant, registry: GroupIntegrationRegistry
+    ) -> None:
+        """Describe group on off states."""
+
+
 def _conf_preprocess(value: Any) -> dict[str, Any]:
     """Preprocess alternative configuration formats."""
     if not isinstance(value, dict):
@@ -138,15 +147,6 @@ class GroupIntegrationRegistry:
             self.off_on_mapping[off_state] = list(on_states)[0]
 
         self.on_states_by_domain[current_domain.get()] = set(on_states)
-
-
-class GroupProtocol(Protocol):
-    """Define the format of group platforms."""
-
-    def async_describe_on_off_states(
-        self, hass: HomeAssistant, registry: GroupIntegrationRegistry
-    ) -> None:
-        """Describe group on off states."""
 
 
 @bind_hass
@@ -475,10 +475,7 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling for group."""
-        return False
+    _attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
