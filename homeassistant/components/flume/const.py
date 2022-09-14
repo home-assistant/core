@@ -13,8 +13,9 @@ PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 DEFAULT_NAME = "Flume Sensor"
 
-NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=1)
+NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=5)
 DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+DEVICE_CONNECTION_SCAN_INTERVAL = timedelta(minutes=5)
 
 _LOGGER = logging.getLogger(__package__)
 

@@ -20,6 +20,8 @@ from .const import (
     FLUME_TYPE_BRIDGE,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
+    KEY_DEVICE_LOCATION,
+    KEY_DEVICE_LOCATION_NAME,
     KEY_DEVICE_TYPE,
     NOTIFICATION_HIGH_FLOW,
     NOTIFICATION_LEAK_DETECTED,
@@ -85,8 +87,10 @@ async def async_setup_entry(
     notification_coordinator = FlumeNotificationDataUpdateCoordinator(
         hass=hass, auth=flume_auth
     )
+
     for device in flume_devices.device_list:
         device_id = device[KEY_DEVICE_ID]
+        device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
 
         connection_sensor = FlumeConnectionBinarySensor(
             coordinator=connection_coordinator,
@@ -95,6 +99,7 @@ async def async_setup_entry(
                 key="connected",
             ),
             device_id=device_id,
+            location_name=device_location_name,
             is_bridge=(device[KEY_DEVICE_TYPE] is FLUME_TYPE_BRIDGE),
         )
 
@@ -110,6 +115,7 @@ async def async_setup_entry(
                     coordinator=notification_coordinator,
                     description=description,
                     device_id=device_id,
+                    location_name=device_location_name,
                 )
                 for description in FLUME_BINARY_NOTIFICATION_SENSORS
             ]
@@ -148,4 +154,6 @@ class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return connection status."""
-        return self.coordinator.connected[self.device_id]
+        if connected := self.coordinator.connected:
+            return connected[self.device_id]
+        return False

@@ -21,24 +21,26 @@ class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator]):
         coordinator: DataUpdateCoordinator,
         description: EntityDescription,
         device_id: str,
+        location_name: str,
         is_bridge: bool = False,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator)
         self.entity_description = description
         self.device_id = device_id
-        self._attr_unique_id = f"{description.key}_{device_id}"
 
         if is_bridge:
-            name = "Bridge"
+            name = "Flume Bridge"
         else:
-            name = "Flume"
+            name = "Flume Sensor"
+
+        self._attr_unique_id = f"{description.key}_{device_id}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             manufacturer="Flume, Inc.",
             model="Flume Smart Water Monitor",
-            name=f"{name} {device_id}",
+            name=f"{name} {location_name}",
             configuration_url="https://portal.flumewater.com",
         )
 

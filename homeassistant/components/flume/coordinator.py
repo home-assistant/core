@@ -9,7 +9,13 @@ from pyflume import FlumeDeviceList
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DEVICE_SCAN_INTERVAL, DOMAIN, NOTIFICATION_SCAN_INTERVAL
+from .const import (
+    _LOGGER,
+    DEVICE_CONNECTION_SCAN_INTERVAL,
+    DEVICE_SCAN_INTERVAL,
+    DOMAIN,
+    NOTIFICATION_SCAN_INTERVAL,
+)
 
 
 class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -28,13 +34,12 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Get the latest data from the Flume."""
-        _LOGGER.debug("Updating Flume data")
         try:
             await self.hass.async_add_executor_job(self.flume_device.update_force)
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
-            "Flume update details: values=%s query_payload=%s",
+            "Flume Device Data Update values=%s query_payload=%s",
             self.flume_device.values,
             self.flume_device.query_payload,
         )
@@ -49,7 +54,7 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             name=DOMAIN,
             logger=_LOGGER,
-            update_interval=DEVICE_SCAN_INTERVAL,
+            update_interval=DEVICE_CONNECTION_SCAN_INTERVAL,
         )
 
         self.flume_devices = flume_devices
@@ -58,12 +63,12 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
     def _update_connectivity(self) -> None:
         """Update device connectivity.."""
         # Update devices
-        self.flume_devices.get_devices()
 
         connections = {}
         for item in self.flume_devices.get_devices():
             connections[item["id"]] = item["connected"]
 
+        _LOGGER.debug("Connectivity %s", self.flume_devices.device_list)
         self.connected = connections
 
     async def _async_update_data(self) -> None:

@@ -3,7 +3,7 @@ from numbers import Number
 
 from pyflume import FlumeData
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -18,6 +18,7 @@ from .const import (
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
+    KEY_DEVICE_LOCATION_NAME,
     KEY_DEVICE_LOCATION_TIMEZONE,
     KEY_DEVICE_TYPE,
 )
@@ -47,6 +48,7 @@ async def async_setup_entry(
 
         device_id = device[KEY_DEVICE_ID]
         device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
+        device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
 
         flume_device = FlumeData(
             flume_auth,
@@ -67,6 +69,7 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     description=description,
                     device_id=device_id,
+                    location_name=device_location_name,
                 )
                 for description in FLUME_QUERIES_SENSOR
             ]
@@ -81,14 +84,14 @@ class FlumeSensor(FlumeEntity, SensorEntity):
 
     coordinator: FlumeDeviceDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: FlumeDeviceDataUpdateCoordinator,
-        device_id: str,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Inlitializer function with type hints."""
-        super().__init__(coordinator, description, device_id)
+    # def __init__(
+    #     self,
+    #     coordinator: FlumeDeviceDataUpdateCoordinator,
+    #     device_id: str,
+    #     description: SensorEntityDescription,
+    # ) -> None:
+    #     """Inlitializer function with type hints."""
+    #     super().__init__(coordinator, description, device_id)
 
     @property
     def native_value(self):
