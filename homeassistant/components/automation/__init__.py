@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import Any, Optional, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -119,7 +119,15 @@ SERVICE_TRIGGER = "trigger"
 
 _LOGGER = logging.getLogger(__name__)
 
-IF_ACTION = Callable[[Optional[Mapping[str, Any]]], bool]
+
+class IfAction(Protocol):
+    """Define the format of if_action."""
+
+    config: list[dict[str, Any]]
+
+    def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
+        """AND all conditions."""
+
 
 # AutomationActionType, AutomationTriggerData,
 # and AutomationTriggerInfo are deprecated as of 2022.9.
@@ -296,7 +304,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         automation_id: str | None,
         name: str,
         trigger_config: list[ConfigType],
-        cond_func: IF_ACTION | None,
+        cond_func: IfAction | None,
         action_script: Script,
         initial_state: bool | None,
         variables: ScriptVariables | None,
@@ -748,7 +756,7 @@ async def _async_process_config(
 
 async def _async_process_if(
     hass: HomeAssistant, name: str, config: dict[str, Any], p_config: dict[str, Any]
-) -> IF_ACTION | None:
+) -> IfAction | None:
     """Process if checks."""
     if_configs = p_config[CONF_CONDITION]
 
@@ -785,9 +793,10 @@ async def _async_process_if(
 
         return True
 
-    if_action.config = if_configs
+    result: IfAction = if_action  # type: ignore[assignment]
+    result.config = if_configs
 
-    return if_action
+    return result
 
 
 @callback
