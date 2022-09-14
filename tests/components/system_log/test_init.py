@@ -41,7 +41,7 @@ def find_log(logs, level):
     if not isinstance(level, tuple):
         level = (level,)
     log = next(
-        (log for log in logs if log["level"] in level),
+        (log for log in logs if log["level"] in level and log["name"] != "asyncio"),
         None,
     )
     assert log is not None

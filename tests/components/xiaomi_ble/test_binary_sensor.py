@@ -45,10 +45,10 @@ async def test_smoke_sensor(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    smoke_sensor = hass.states.get("binary_sensor.thermometer_e39cbc_smoke")
+    smoke_sensor = hass.states.get("binary_sensor.thermometer_9cbc_smoke")
     smoke_sensor_attribtes = smoke_sensor.attributes
     assert smoke_sensor.state == "on"
-    assert smoke_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Thermometer E39CBC Smoke"
+    assert smoke_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Thermometer 9CBC Smoke"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -90,10 +90,10 @@ async def test_moisture(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("binary_sensor.smart_flower_pot_6a3e7a_moisture")
+    sensor = hass.states.get("binary_sensor.smart_flower_pot_3e7a_moisture")
     sensor_attr = sensor.attributes
     assert sensor.state == "on"
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 6A3E7A Moisture"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 3E7A Moisture"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

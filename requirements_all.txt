@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.5
+PySwitchbot==0.19.8
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -47,7 +47,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
-PyViCare==2.16.2
+PyViCare==2.17.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -134,7 +134,7 @@ aiobafi6==0.7.2
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.11
+aiodiscover==1.4.13
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.6
+aiohomekit==1.5.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -408,13 +408,16 @@ bimmer_connected==0.10.2
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.16.0
+bleak-retry-connector==1.15.1
+
+# homeassistant.components.bluetooth
+bleak==0.17.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
 
 # homeassistant.components.blink
-blinkpy==0.19.0
+blinkpy==0.19.2
 
 # homeassistant.components.blinksticklight
 blinkstick==1.2.0
@@ -433,7 +436,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.2
+bluetooth-auto-recovery==0.3.3
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -533,6 +536,9 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.8
+
+# homeassistant.components.bluetooth
+dbus-fast==1.4.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -772,7 +778,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.2
+govee-ble==0.17.3
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -851,7 +857,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220907.0
+home-assistant-frontend==20220907.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -968,7 +974,7 @@ lakeside==0.12
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.9.1
+led-ble==0.10.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1608,7 +1614,7 @@ pyinsteon==1.2.0
 pyintesishome==1.8.0
 
 # homeassistant.components.ipma
-pyipma==3.0.2
+pyipma==3.0.4
 
 # homeassistant.components.ipp
 pyipp==0.11.0
@@ -2522,7 +2528,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.9.0
+xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
 xknx==1.0.2
@@ -2542,7 +2548,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.8.1
+yalexs-ble==1.9.0
 
 # homeassistant.components.august
 yalexs==1.2.1
