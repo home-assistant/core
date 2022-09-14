@@ -584,7 +584,7 @@ class DmsDeviceSource:
         media_source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=self._make_identifier(Action.OBJECT, item.id),
-            media_class=MEDIA_CLASS_MAP.get(item.upnp_class, ""),
+            media_class=MEDIA_CLASS_MAP.get(item.upnp_class),
             media_content_type=media_content_type,
             title=title,
             can_play=can_play,
