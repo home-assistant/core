@@ -329,7 +329,7 @@ bellows==0.33.1
 bimmer_connected==0.10.2
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.15.1
+bleak-retry-connector==1.16.0
 
 # homeassistant.components.bluetooth
 bleak==0.17.0
@@ -371,7 +371,7 @@ brunt==1.2.0
 bsblan==0.5.0
 
 # homeassistant.components.bthome
-bthome-ble==1.2.0
+bthome-ble==1.2.2
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1803,4 +1803,4 @@ zigpy==0.50.3
 zwave-js-server-python==0.41.1
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.4
+zwave_me_ws==0.2.6

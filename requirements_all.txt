@@ -408,7 +408,7 @@ bimmer_connected==0.10.2
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.15.1
+bleak-retry-connector==1.16.0
 
 # homeassistant.components.bluetooth
 bleak==0.17.0
@@ -470,7 +470,7 @@ bsblan==0.5.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==1.2.0
+bthome-ble==1.2.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1206,7 +1206,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.openevse
-openevsewifi==1.1.0
+openevsewifi==1.1.2
 
 # homeassistant.components.openhome
 openhomedevice==2.0.2
@@ -2617,4 +2617,4 @@ zm-py==0.5.2
 zwave-js-server-python==0.41.1
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.4
+zwave_me_ws==0.2.6
