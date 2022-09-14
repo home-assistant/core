@@ -63,7 +63,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
 UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
@@ -549,13 +548,13 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._status is None:
             return MediaPlayerState.OFF
 
         if self.is_grouped and not self.is_master:
-            return STATE_GROUPED
+            return MediaPlayerState.IDLE
 
         status = self._status.get("state")
         if status in ("pause", "stop"):
