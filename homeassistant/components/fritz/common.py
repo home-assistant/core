@@ -398,7 +398,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 wan_access=None,
             )
 
-        if self.fritz_status.device_has_mesh_support or (
+        if not self.fritz_status.device_has_mesh_support or (
             self._options
             and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
         ):
