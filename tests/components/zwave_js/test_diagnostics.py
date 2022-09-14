@@ -45,7 +45,7 @@ async def test_config_entry_diagnostics(
                 if (
                     value["commandClass"] == 99
                     and value["property"] == "userCode"
-                    and value["value"]
+                    and value.get("value") in (None, "")
                 ):
                     assert value["value"] == REDACTED
                 else:
