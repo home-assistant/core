@@ -10,7 +10,6 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -51,7 +50,6 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
     ) -> None:
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
-        self._session = aiohttp_client.async_get_clientsession(hass)
         self._attr_name = f"{device.name}"
         self._device_id = device.id
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
@@ -79,6 +77,11 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._update_from_coordinator()
+        super()._handle_coordinator_update()
+
+    def _update_from_coordinator(self) -> None:
+        """Update the entity attributes from the coordinator data."""
 
         async def async_refresh_state():
             """Refresh the device state in the Central Unit.
@@ -111,7 +114,7 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
                 )
             self._attr_available = False
             self.async_write_ha_state()
-            return None
+            return
 
         if not self.available:
             _LOGGER.info(
@@ -125,13 +128,6 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
         self._attr_is_on = (
             self.coordinator.data[self._device_id].state != ApiStateCommand.OFF
         )
-
-        super()._handle_coordinator_update()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to switch."""
