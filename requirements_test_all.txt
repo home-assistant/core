@@ -527,7 +527,7 @@ freebox-api==0.0.10
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.10.1
+fritzconnection==1.10.3
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1130,7 +1130,7 @@ pyicloud==1.0.0
 pyinsteon==1.2.0
 
 # homeassistant.components.ipma
-pyipma==3.0.2
+pyipma==3.0.4
 
 # homeassistant.components.ipp
 pyipp==0.11.0
