@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Coroutine, Mapping
 from copy import deepcopy
 from typing import Any
 
@@ -65,10 +65,10 @@ class GroupNotifyPlatform(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to all entities in the group."""
-        payload = {ATTR_MESSAGE: message}
+        payload: dict[str, Any] = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
-        tasks = []
+        tasks: list[Coroutine[Any, Any, bool | None]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (data := entity.get(ATTR_DATA)) is not None:
