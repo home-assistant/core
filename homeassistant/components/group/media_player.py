@@ -108,7 +108,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
-        self._state: str | None = None
+        self._state: MediaPlayerState | None = None
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -207,7 +207,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the media group."""
         return self._state
 
@@ -399,7 +399,10 @@ class MediaPlayerGroup(MediaPlayerEntity):
         else:
             off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
             if states.count(states[0]) == len(states):
-                self._state = states[0]
+                try:
+                    self._state = MediaPlayerState(states[0])
+                except ValueError:
+                    self._state = None
             elif any(state for state in states if state not in off_values):
                 self._state = MediaPlayerState.ON
             else:
