@@ -14,7 +14,7 @@ class LimitedSizeDict(OrderedDict[_KT, _VT]):
     def __init__(self, *args: Any, **kwds: Any) -> None:
         """Initialize OrderedDict limited in size."""
         self.size_limit = kwds.pop("size_limit", None)
-        super().__init__(self, *args, **kwds)
+        super().__init__(*args, **kwds)
         self._check_size_limit()
 
     def __setitem__(self, key: _KT, value: _VT) -> None:
