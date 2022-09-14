@@ -300,9 +300,6 @@ airtouch4pyapi==1.0.5
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
 
-# homeassistant.components.ambee
-ambee==0.4.0
-
 # homeassistant.components.amberelectric
 amberelectric==1.0.4
 
@@ -863,7 +860,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220907.1
+home-assistant-frontend==20220907.2
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
