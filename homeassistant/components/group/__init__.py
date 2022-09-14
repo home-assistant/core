@@ -503,6 +503,7 @@ class GroupEntity(Entity):
 class Group(Entity):
     """Track a group of entity ids."""
 
+    _attr_should_poll = False
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
 
@@ -614,11 +615,6 @@ class Group(Entity):
         # If called before the platform async_setup is called (test cases)
         await _async_get_component(hass).async_add_entities([group])
         return group
-
-    @property
-    def should_poll(self) -> bool:
-        """No need to poll because groups will update themselves."""
-        return False
 
     @property
     def name(self) -> str:
