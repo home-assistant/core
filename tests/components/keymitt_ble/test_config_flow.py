@@ -34,7 +34,7 @@ async def test_bluetooth_discovery(hass):
             result["flow_id"],
             USER_INPUT,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
 
@@ -78,7 +78,6 @@ async def test_user_setup(hass):
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
@@ -154,7 +153,6 @@ async def test_no_link(hass):
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "link"
