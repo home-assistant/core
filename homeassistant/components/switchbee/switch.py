@@ -54,7 +54,7 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
         self._device_id = device.id
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
         self._attr_is_on = False
-        self._attr_available = True
+        self._is_online = True
         self._attr_has_entity_name = True
         self._device = device
         self._attr_device_info = DeviceInfo(
@@ -73,6 +73,11 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
                 f"{coordinator.api.name} ({coordinator.api.mac})",
             ),
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._is_online
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -107,22 +112,25 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
             # This specific call will refresh the state of the device in the CU
             self.hass.async_create_task(async_refresh_state())
 
-            if self.available:
+            # if the device was online (now offline), log message and mark it as Unavailable
+            if self._is_online:
                 _LOGGER.error(
                     "%s switch is not responding, check the status in the SwitchBee mobile app",
                     self.name,
                 )
-            self._attr_available = False
-            self.async_write_ha_state()
+                self._is_online = False
+
             return
 
-        if not self.available:
+        # check if the device was offline (now online) and bring it back
+        if not self._is_online:
             _LOGGER.info(
                 "%s switch is now responding",
                 self.name,
             )
-        self._attr_available = True
+            self._is_online = True
 
+        self._is_online = True
         # timed power switch state is an integer representing the number of minutes left until it goes off
         # regulare switches state is ON/OFF (1/0 respectively)
         self._attr_is_on = (
@@ -141,8 +149,9 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
         try:
             await self.coordinator.api.set_state(self._device_id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
-            raise HomeAssistantError(
-                f"Failed to set {self._attr_name} state {state}"
-            ) from exp
-        else:
             await self.coordinator.async_refresh()
+            raise HomeAssistantError(
+                f"Failed to set {self._attr_name} state {state}, {str(exp)}"
+            ) from exp
+
+        await self.coordinator.async_refresh()
