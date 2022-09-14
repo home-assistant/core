@@ -162,6 +162,7 @@ class WaterHeaterEntity(Entity):
     _attr_is_away_mode_on: bool | None = None
     _attr_max_temp: float
     _attr_min_temp: float
+    _attr_operation_mode: str | None
     _attr_operation_list: list[str] | None = None
     _attr_precision: float
     _attr_state: None = None
@@ -239,7 +240,7 @@ class WaterHeaterEntity(Entity):
         supported_features = self.supported_features or 0
 
         if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
-            data[ATTR_OPERATION_MODE] = self.current_operation
+            data[ATTR_OPERATION_MODE] = self.operation_mode
 
         if supported_features & WaterHeaterEntityFeature.AWAY_MODE:
             is_away = self.is_away_mode_on
@@ -256,6 +257,15 @@ class WaterHeaterEntity(Entity):
     def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
         return self._attr_current_operation
+
+    @property
+    def operation_mode(self) -> str | None:
+        """Return the operation modes currently configured."""
+        if hasattr(self, "_attr_operation_mode"):
+            return self._attr_operation_mode
+
+        # fall back to legacy mixed up state and setting.
+        return self.current_operation
 
     @property
     def operation_list(self) -> list[str] | None:
