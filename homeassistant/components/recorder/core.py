@@ -536,10 +536,6 @@ class Recorder(threading.Thread):
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
 
-        # Catch up with missed statistics
-        with session_scope(session=self.get_session()) as session:
-            self._schedule_compile_missing_statistics(session)
-
         # Compile short term statistics every 5 minutes
         self._periodic_listener = async_track_utc_time_change(
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
@@ -618,6 +614,10 @@ class Recorder(threading.Thread):
                 return
 
         self.hass.add_job(self.async_set_db_ready)
+
+        # Catch up with missed statistics
+        with session_scope(session=self.get_session()) as session:
+            self._schedule_compile_missing_statistics(session)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
