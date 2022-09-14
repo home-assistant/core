@@ -21,8 +21,7 @@
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_unconfigured_devices": "No unconfigured devices found.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "microbot_unsupported_type": "Unsupported MicroBot Type."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }
