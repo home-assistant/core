@@ -117,15 +117,10 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PLAYING
         self._attr_volume_level = 1.0
         self._attr_is_volume_muted = False
-        self._shuffle = False
+        self._attr_shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
         self._attr_device_class = device_class
-
-    @property
-    def shuffle(self) -> bool:
-        """Boolean if shuffling is enabled."""
-        return self._shuffle
 
     @property
     def sound_mode(self) -> str:
@@ -186,7 +181,7 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        self._shuffle = shuffle
+        self._attr_shuffle = shuffle
         self.schedule_update_ha_state()
 
     def select_sound_mode(self, sound_mode: str) -> None:
