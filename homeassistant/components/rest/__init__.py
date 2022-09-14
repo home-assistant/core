@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, template
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -53,7 +54,7 @@ COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rest platforms."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Entity](_LOGGER, DOMAIN, hass)
     _async_setup_shared_data(hass)
 
     async def reload_service_handler(service: ServiceCall) -> None:
