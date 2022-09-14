@@ -61,10 +61,10 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         """Initialize the device."""
         super().__init__(controller=controller, device=device)
         if device.deviceType in [ZWaveMePlatform.RGB_LIGHT, ZWaveMePlatform.RGBW_LIGHT]:
-            self._color_mode = ColorMode.RGB
+            self._attr_color_mode = ColorMode.RGB
         else:
-            self._color_mode = ColorMode.BRIGHTNESS
-        self._supported_color_modes = {self._color_mode}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {self.color_mode}
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -103,13 +103,3 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         """Return the rgb color value [int, int, int]."""
         rgb = self.device.color
         return rgb["r"], rgb["g"], rgb["b"]
-
-    @property
-    def color_mode(self) -> str | None:
-        """Return the color mode of the light."""
-        return self._color_mode
-
-    @property
-    def supported_color_modes(self) -> set | None:
-        """Flag supported features."""
-        return self._supported_color_modes
