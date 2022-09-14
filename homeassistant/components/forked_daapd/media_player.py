@@ -421,10 +421,12 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             futures = []
             for output in self._last_outputs:
                 futures.append(
-                    self._api.change_output(
-                        output["id"],
-                        selected=output["selected"],
-                        volume=output["volume"],
+                    asyncio.create_task(
+                        self._api.change_output(
+                            output["id"],
+                            selected=output["selected"],
+                            volume=output["volume"],
+                        )
                     )
                 )
             await asyncio.wait(futures)
