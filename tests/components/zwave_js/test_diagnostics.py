@@ -42,7 +42,11 @@ async def test_config_entry_diagnostics(
         for node in nodes:
             assert "location" not in node or node["location"] == REDACTED
             for value in node["values"]:
-                if value["commandClass"] == 99 and value["property"] == "userCode":
+                if (
+                    value["commandClass"] == 99
+                    and value["property"] == "userCode"
+                    and value["value"]
+                ):
                     assert value["value"] == REDACTED
                 else:
                     assert value.get("value") != REDACTED
