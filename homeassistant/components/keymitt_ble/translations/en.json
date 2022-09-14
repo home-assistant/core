@@ -3,7 +3,6 @@
         "abort": {
             "already_configured_device": "Device is already configured",
             "cannot_connect": "Failed to connect",
-            "microbot_unsupported_type": "Unsupported MicroBot Type.",
             "no_unconfigured_devices": "No unconfigured devices found.",
             "unknown": "Unexpected error"
         },
