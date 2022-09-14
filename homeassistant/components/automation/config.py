@@ -8,7 +8,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import blueprint
-from homeassistant.components.blueprint.models import BlueprintInputs
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -68,9 +67,9 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_validate_config_item(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    full_config: dict[str, Any] | None = None,
-) -> BlueprintInputs | dict[str, Any]:
+    config: ConfigType,
+    full_config: ConfigType | None = None,
+) -> blueprint.BlueprintInputs | dict[str, Any]:
     """Validate config item."""
     if blueprint.is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
