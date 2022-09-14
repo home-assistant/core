@@ -536,6 +536,10 @@ class Recorder(threading.Thread):
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
 
+        # Catch up with missed statistics
+        with session_scope(session=self.get_session()) as session:
+            self._schedule_compile_missing_statistics(session)
+
         # Compile short term statistics every 5 minutes
         self._periodic_listener = async_track_utc_time_change(
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
@@ -1118,7 +1122,6 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
-            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
 
