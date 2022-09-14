@@ -4,8 +4,9 @@ from datetime import timedelta
 import logging
 
 from switchbee.api import CentralUnitAPI, SwitchBeeError
-from switchbee.device import DeviceType
+from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -14,19 +15,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchBeeCoordinator(DataUpdateCoordinator):
+class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]):
     """Class to manage fetching Freedompro data API."""
 
     def __init__(
         self,
-        hass,
-        swb_api,
-        scan_interval,
-    ):
+        hass: HomeAssistant,
+        swb_api: CentralUnitAPI,
+        scan_interval: int,
+    ) -> None:
         """Initialize."""
         self._api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
-        self._prev_devices_to_include_to_include: list[DeviceType] = []
         self._mac_addr_fmt: str = format_mac(swb_api.mac)
         super().__init__(
             hass,
@@ -45,7 +45,8 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         """Return formatted MAC address."""
         return self._mac_addr_fmt
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[int, SwitchBeeBaseDevice]:
+        """Update data via library."""
 
         if self._reconnect_counts != self._api.reconnect_count:
             self._reconnect_counts = self._api.reconnect_count

@@ -40,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, SwitchEntity):
+class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
     """Representation of an Switchbee switch."""
 
     def __init__(
@@ -81,7 +81,6 @@ class Device(CoordinatorEntity, SwitchEntity):
         """Handle updated data from the coordinator."""
 
         async def async_refresh_state():
-
             try:
                 await self.coordinator.api.set_state(self._device_id, "dummy")
             except SwitchBeeDeviceOfflineError:
@@ -130,7 +129,7 @@ class Device(CoordinatorEntity, SwitchEntity):
         """Async function to set off to switch."""
         return await self._async_set_state(ApiStateCommand.OFF)
 
-    async def _async_set_state(self, state):
+    async def _async_set_state(self, state: ApiStateCommand) -> None:
         try:
             await self.coordinator.api.set_state(self._device_id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:

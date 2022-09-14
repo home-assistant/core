@@ -1217,6 +1217,11 @@ omit =
     homeassistant/components/switchbee/const.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/switch.py
+<<<<<<< HEAD
+=======
+    homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchbot/binary_sensor.py
+>>>>>>> c32b42c45e (addressed @epenet feedback)
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/binary_sensor.py
     homeassistant/components/switchbot/const.py
