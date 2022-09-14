@@ -287,7 +287,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 def preprocess_turn_on_alternatives(
-    hass: HomeAssistant, params: dict[str | vol.Optional, Any]
+    hass: HomeAssistant, params: dict[str, Any]
 ) -> None:
     """Process extra data for turn light on request.
 
@@ -374,9 +374,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
     await profiles.async_initialize()
 
-    def preprocess_data(
-        data: dict[str | vol.Optional, Any]
-    ) -> dict[str | vol.Optional, Any]:
+    def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
         base: dict[str | vol.Optional, Any] = {
             entity_field: data.pop(entity_field)
