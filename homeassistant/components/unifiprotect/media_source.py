@@ -19,12 +19,7 @@ from pyunifiprotect.utils import from_js_time
 from yarl import URL
 
 from homeassistant.components.camera import CameraImageView
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -422,7 +417,7 @@ class ProtectMediaSource(MediaSource):
             return BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=f"{nvr.id}:eventthumb:{event_id}",
-                media_class=MEDIA_CLASS_IMAGE,
+                media_class=MediaClass.IMAGE,
                 media_content_type="image/jpeg",
                 title=title,
                 can_play=True,
@@ -435,7 +430,7 @@ class ProtectMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{nvr.id}:event:{event_id}",
-            media_class=MEDIA_CLASS_VIDEO,
+            media_class=MediaClass.VIDEO,
             media_content_type="video/mp4",
             title=title,
             can_play=True,
@@ -506,12 +501,12 @@ class ProtectMediaSource(MediaSource):
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{base_id}:recent:{days}",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="video/mp4",
             title=title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
         )
 
         if not build_children:
@@ -560,12 +555,12 @@ class ProtectMediaSource(MediaSource):
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{base_id}:range:{start.year}:{start.month}",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
         )
 
         if not build_children:
@@ -622,12 +617,12 @@ class ProtectMediaSource(MediaSource):
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=identifier,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
         )
 
         if not build_children:
@@ -692,12 +687,12 @@ class ProtectMediaSource(MediaSource):
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=base_id,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
         )
 
         if not build_children or data.api.bootstrap.recording_start is None:
@@ -781,13 +776,13 @@ class ProtectMediaSource(MediaSource):
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{data.api.bootstrap.nvr.id}:browse:{camera_id}",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=name,
             can_play=False,
             can_expand=True,
             thumbnail=thumbnail_url,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
         )
 
         if not build_children:
@@ -837,12 +832,12 @@ class ProtectMediaSource(MediaSource):
         base = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{data.api.bootstrap.nvr.id}:browse",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=data.api.bootstrap.nvr.name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
             children=await self._build_cameras(data),
         )
 
@@ -864,11 +859,11 @@ class ProtectMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=self.name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_VIDEO,
+            children_media_class=MediaClass.VIDEO,
             children=consoles,
         )

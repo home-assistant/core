@@ -61,8 +61,6 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy
 /homeassistant/components/almond/ @gcampax @balloob
 /tests/components/almond/ @gcampax @balloob
-/homeassistant/components/ambee/ @frenck
-/tests/components/ambee/ @frenck
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambiclimate/ @danielhiversen
@@ -1087,6 +1085,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core
 /tests/components/switch_as_x/ @home-assistant/core
+/homeassistant/components/switchbee/ @jafar-atili
+/tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
 /tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
 /homeassistant/components/switcher_kis/ @tomerfi @thecode

@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools as ft
 import importlib
 import logging
-from typing import Any, final
+from typing import Any, Final, final
 
 import voluptuous as vol
 
@@ -17,13 +17,11 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
-DOMAIN = "scene"
-STATES = "states"
+DOMAIN: Final = "scene"
+STATES: Final = "states"
 
 
-def _hass_domain_validator(config):
+def _hass_domain_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
         config = {CONF_PLATFORM: HA_DOMAIN, STATES: config}
@@ -31,7 +29,7 @@ def _hass_domain_validator(config):
     return config
 
 
-def _platform_validator(config):
+def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Validate it is a valid  platform."""
     try:
         platform = importlib.import_module(f".{config[CONF_PLATFORM]}", __name__)
@@ -46,7 +44,7 @@ def _platform_validator(config):
     if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
 
-    return platform.PLATFORM_SCHEMA(config)
+    return platform.PLATFORM_SCHEMA(config)  # type: ignore[no-any-return]
 
 
 PLATFORM_SCHEMA = vol.Schema(

@@ -12,9 +12,10 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
-from homeassistant.components.overkiz.entity import OverkizEntity
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+
+from ..coordinator import OverkizDataUpdateCoordinator
+from ..entity import OverkizEntity
 
 PRESET_DRYING = "drying"
 

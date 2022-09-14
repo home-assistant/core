@@ -2440,8 +2440,6 @@ async def test_subscribe_entities_some_have_uom_multiple(
 
     await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
-    _cycle_entities()
-    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -2450,6 +2448,10 @@ async def test_subscribe_entities_some_have_uom_multiple(
     assert msg["event"]["events"] == []
 
     _cycle_entities()
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
