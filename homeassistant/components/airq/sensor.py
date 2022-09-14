@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import Literal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -312,34 +313,25 @@ async def async_setup_entry(
     """Set up sensor entities based on a config entry."""
 
     coordinator = hass.data[DOMAIN][config.entry_id]
-    available_keys = list(coordinator.data.keys())
 
-    # Add sensors under warmup
-    status = coordinator.data["Status"]
-    if isinstance(status, dict):
-        warming_up_sensors = [
-            k for k, v in status.items() if "sensor still in warm up phase" in v
-        ]
-        available_keys.extend(warming_up_sensors)
-        _LOGGER.debug(
-            "Following %d sensors are warming up: %s",
-            len(warming_up_sensors),
-            ", ".join(warming_up_sensors),
-        )
+    entities: list[AirQSensor] = []
 
-    # Filter out non-sensor keys
-    available_sensors = [
-        description for description in SENSOR_TYPES if description.key in available_keys
-    ]
-    _LOGGER.debug(
-        "Identified %d available sensors: %s",
-        len(available_sensors),
-        ", ".join([sensor.key for sensor in available_sensors]),
-    )
+    device_status: dict[str, str] | Literal["OK"] = coordinator.data["Status"]
 
-    entities = [
-        AirQSensor(coordinator, description) for description in available_sensors
-    ]
+    for description in SENSOR_TYPES:
+        if description.key not in coordinator.data:
+            if isinstance(
+                device_status, dict
+            ) and "sensor still in warm up phase" in device_status.get(
+                description.key, "OK"
+            ):
+                # warming up sensors do not contribute keys to coordinator.data
+                # but still must be added
+                _LOGGER.debug("Following sensor is warming up: %s", description.key)
+            else:
+                continue
+        entities.append(AirQSensor(coordinator, description))
+
     async_add_entities(entities)
 
 
