@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.6
+PySwitchbot==0.19.8
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -714,7 +714,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.10.1
+fritzconnection==1.10.3
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -781,7 +781,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.2
+govee-ble==0.17.3
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -860,7 +860,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220907.0
+home-assistant-frontend==20220907.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -977,7 +977,7 @@ lakeside==0.12
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.9.1
+led-ble==0.10.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1617,7 +1617,7 @@ pyinsteon==1.2.0
 pyintesishome==1.8.0
 
 # homeassistant.components.ipma
-pyipma==3.0.2
+pyipma==3.0.4
 
 # homeassistant.components.ipp
 pyipp==0.11.0
@@ -2560,7 +2560,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.8.1
+yalexs-ble==1.9.0
 
 # homeassistant.components.august
 yalexs==1.2.1
