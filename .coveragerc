@@ -1388,7 +1388,6 @@ omit =
     homeassistant/components/upnp/device.py
     homeassistant/components/upnp/sensor.py
     homeassistant/components/upc_connect/*
-    homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/__init__.py
     homeassistant/components/vallox/fan.py
     homeassistant/components/vallox/sensor.py
