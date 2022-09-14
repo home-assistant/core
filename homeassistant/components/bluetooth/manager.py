@@ -55,9 +55,14 @@ if TYPE_CHECKING:
 FILTER_UUIDS: Final = "UUIDs"
 
 APPLE_MFR_ID: Final = 76
+APPLE_IBEACON_START_BYTE: Final = 0x02  # iBeacon (tilt_ble)
 APPLE_HOMEKIT_START_BYTE: Final = 0x06  # homekit_controller
 APPLE_DEVICE_ID_START_BYTE: Final = 0x10  # bluetooth_le_tracker
-APPLE_START_BYTES_WANTED: Final = {APPLE_DEVICE_ID_START_BYTE, APPLE_HOMEKIT_START_BYTE}
+APPLE_START_BYTES_WANTED: Final = {
+    APPLE_IBEACON_START_BYTE,
+    APPLE_HOMEKIT_START_BYTE,
+    APPLE_DEVICE_ID_START_BYTE,
+}
 
 RSSI_SWITCH_THRESHOLD = 6
 
@@ -327,12 +332,13 @@ class BluetoothManager:
 
         matched_domains = self._integration_matcher.match_domains(service_info)
         _LOGGER.debug(
-            "%s: %s %s connectable: %s match: %s",
+            "%s: %s %s connectable: %s match: %s rssi: %s",
             source,
             address,
             advertisement_data,
             connectable,
             matched_domains,
+            device.rssi,
         )
 
         for match in self._callback_index.match_callbacks(service_info):

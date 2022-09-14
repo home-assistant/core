@@ -64,6 +64,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "govee_ble",
+        "manufacturer_id": 57391,
+        "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "govee_ble",
         "manufacturer_id": 18994,
         "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
         "connectable": False
@@ -270,12 +276,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "thermopro",
+        "local_name": "TP39*",
+        "connectable": False
+    },
+    {
+        "domain": "tilt_ble",
+        "manufacturer_id": 76
+    },
+    {
         "domain": "xiaomi_ble",
         "connectable": False,
         "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
     },
     {
         "domain": "yalexs_ble",
-        "manufacturer_id": 465
+        "manufacturer_id": 465,
+        "service_uuid": "0000fe24-0000-1000-8000-00805f9b34fb"
     }
 ]

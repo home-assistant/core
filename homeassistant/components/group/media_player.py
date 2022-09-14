@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,8 +38,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -408,13 +407,13 @@ class MediaPlayerGroup(MediaPlayerEntity):
             # Set as unknown if all members are unknown or unavailable
             self._state = None
         else:
-            off_values = (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+            off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
             if states.count(states[0]) == len(states):
                 self._state = states[0]
             elif any(state for state in states if state not in off_values):
-                self._state = STATE_ON
+                self._state = MediaPlayerState.ON
             else:
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
 
         supported_features = 0
         if self._features[KEY_CLEAR_PLAYLIST]:
