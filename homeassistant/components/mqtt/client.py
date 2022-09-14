@@ -392,7 +392,8 @@ class MQTT:
                 self._mqttc.publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
-                "Transmitting message on %s: '%s', mid: %s",
+                "Transmitting%s message on %s: '%s', mid: %s",
+                " retained" if retain else "",
                 topic,
                 payload,
                 msg_info.mid,
@@ -610,9 +611,9 @@ class MQTT:
     @callback
     def _mqtt_handle_message(self, msg: MQTTMessage) -> None:
         _LOGGER.debug(
-            "Received message on %s%s: %s",
+            "Received%s message on %s: %s",
+            " retained" if msg.retain else "",
             msg.topic,
-            " (retained)" if msg.retain else "",
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
