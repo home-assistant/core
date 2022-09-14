@@ -79,9 +79,10 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@callback
-def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all scripts that reference the entity."""
+def _scripts_with_x(
+    hass: HomeAssistant, referenced_id: str, property_name: str
+) -> list[str]:
+    """Return all scripts that reference the x."""
     if DOMAIN not in hass.data:
         return []
 
@@ -90,80 +91,57 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     return [
         script_entity.entity_id
         for script_entity in component.entities
-        if entity_id in script_entity.script.referenced_entities
+        if referenced_id in getattr(script_entity.script, property_name)
     ]
+
+
+def _x_in_script(hass: HomeAssistant, entity_id: str, property_name: str) -> list[str]:
+    """Return all x in a script."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    if (script_entity := component.get_entity(entity_id)) is None:
+        return []
+
+    return list(getattr(script_entity.script, property_name))
+
+
+@callback
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all scripts that reference the entity."""
+    return _scripts_with_x(hass, entity_id, "referenced_entities")
 
 
 @callback
 def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_entities)
+    return _x_in_script(hass, entity_id, "referenced_entities")
 
 
 @callback
 def scripts_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all scripts that reference the device."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    return [
-        script_entity.entity_id
-        for script_entity in component.entities
-        if device_id in script_entity.script.referenced_devices
-    ]
+    return _scripts_with_x(hass, device_id, "referenced_devices")
 
 
 @callback
 def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_devices)
+    return _x_in_script(hass, entity_id, "referenced_devices")
 
 
 @callback
 def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
     """Return all scripts that reference the area."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    return [
-        script_entity.entity_id
-        for script_entity in component.entities
-        if area_id in script_entity.script.referenced_areas
-    ]
+    return _scripts_with_x(hass, area_id, "referenced_areas")
 
 
 @callback
 def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all areas in a script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_areas)
+    return _x_in_script(hass, entity_id, "referenced_areas")
 
 
 @callback
