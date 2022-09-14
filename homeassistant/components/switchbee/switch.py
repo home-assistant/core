@@ -81,6 +81,18 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
         """Handle updated data from the coordinator."""
 
         async def async_refresh_state():
+            """Refresh the device state in the Central Unit.
+
+            This function addresses issue of a device that came online back but still report
+            unavialbe state (-1).
+            Such device (offline device) will keep reporting unavailable state (-1)
+            unitl it being controlled by the user (state changed to on/off).
+
+            With this code we keep trying setting dummy state for the device
+            in order for it to start reporting its real state back (assuming it came back online)
+
+            """
+
             try:
                 await self.coordinator.api.set_state(self._device_id, "dummy")
             except SwitchBeeDeviceOfflineError:
@@ -108,8 +120,8 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
             )
         self._attr_available = True
 
-        # timed power switch state will represent a number of minutes until it goes off
-        # regulare switches state is ON/OFF
+        # timed power switch state is an integer representing the number of minutes left until it goes off
+        # regulare switches state is ON/OFF (1/0 respectively)
         self._attr_is_on = (
             self.coordinator.data[self._device_id].state != ApiStateCommand.OFF
         )
