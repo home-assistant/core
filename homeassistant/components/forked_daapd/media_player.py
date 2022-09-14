@@ -418,7 +418,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         # restore state
         await self._api.set_volume(volume=self._last_volume * 100)
         if self._last_outputs:
-            futures = []
+            futures: list[asyncio.Task[int]] = []
             for output in self._last_outputs:
                 futures.append(
                     asyncio.create_task(
