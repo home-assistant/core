@@ -237,7 +237,7 @@ aioslimproto==2.1.1
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.6
+aioswitcher==3.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
