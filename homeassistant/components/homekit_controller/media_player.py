@@ -19,7 +19,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OK, STATE_PROBLEM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -158,17 +157,17 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         return char.value
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the tv."""
         active = self.service.value(CharacteristicsTypes.ACTIVE)
         if not active:
-            return STATE_PROBLEM
+            return MediaPlayerState.OFF
 
         homekit_state = self.service.value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
         if homekit_state is not None:
-            return HK_TO_HA_STATE.get(homekit_state, STATE_OK)
+            return HK_TO_HA_STATE.get(homekit_state, MediaPlayerState.ON)
 
-        return STATE_OK
+        return MediaPlayerState.ON
 
     async def async_media_play(self) -> None:
         """Send play command."""
