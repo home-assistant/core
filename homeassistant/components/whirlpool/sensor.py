@@ -125,18 +125,24 @@ async def async_setup_entry(
 ) -> None:
     """Config flow entry for Whrilpool Laundry."""
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-
-    entities = [
-        WasherDryerClass(
-            appliance["SAID"],
-            appliance["NAME"],
+    for appliance in whirlpool_data.appliances_manager.washer_dryers:
+        _wd = WasherDryer(
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
-            description,
+            appliance["SAID"],
         )
-        for appliance in whirlpool_data.appliances_manager.washer_dryers
-        for description in SENSORS
-    ]
+        await _wd.connect()
+        entities = [
+            WasherDryerClass(
+                appliance["SAID"],
+                appliance["NAME"],
+                whirlpool_data.backend_selector,
+                whirlpool_data.auth,
+                description,
+                _wd,
+            )
+            for description in SENSORS
+        ]
 
     async_add_entities(entities)
 
@@ -153,17 +159,15 @@ class WasherDryerClass(SensorEntity):
         backend: BackendSelector,
         auth: Auth,
         description: WhirlpoolSensorEntityDescription,
+        washdry: WasherDryer,
     ) -> None:
         """Initialize the washer sensor."""
         self._name = name
         self._said = said
 
-        self._wd: WasherDryer = WasherDryer(
-            backend,
-            auth,
-            self._said,
-            self.async_write_ha_state,
-        )
+        self._wd: WasherDryer = washdry
+        self._wd.register_callback(self.async_write_ha_state)
+
         if self._name == "dryer":
             self._attr_icon = ICON_D
         self.entity_description: WhirlpoolSensorEntityDescription = description
@@ -181,7 +185,7 @@ class WasherDryerClass(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect WasherDryer to the cloud."""
-        await self._wd.connect()
+        # await self._wd.connect()
 
     @property
     def available(self) -> bool:
