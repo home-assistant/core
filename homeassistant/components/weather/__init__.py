@@ -703,7 +703,7 @@ class WeatherEntity(Entity):
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
         if self.forecast is not None:
-            forecast = []
+            forecast: list[dict[str, Any]] = []
             for existing_forecast_entry in self.forecast:
                 forecast_entry: dict[str, Any] = dict(existing_forecast_entry)
 
