@@ -1113,7 +1113,7 @@ class XiaomiFanZA5(XiaomiFanMiot):
 
 
 class XiaomiFan1C(XiaomiFanMiot):
-    """Representation of a Xiaomi Fan 1C (Standing Fan 2)."""
+    """Representation of a Xiaomi Fan 1C (Standing Fan 2 Lite)."""
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize MIOT fan with speed count."""
