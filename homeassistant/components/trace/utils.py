@@ -2,8 +2,8 @@
 from collections import OrderedDict
 from typing import Any, TypeVar
 
-_KT = TypeVar("_KT")  # key type
-_VT = TypeVar("_VT")  # value type
+_KT = TypeVar("_KT")
+_VT = TypeVar("_VT")
 
 
 class LimitedSizeDict(OrderedDict[_KT, _VT]):
