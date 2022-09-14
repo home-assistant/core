@@ -304,7 +304,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         raw_config: ConfigType | None,
         blueprint_inputs: ConfigType | None,
         trace_config: ConfigType,
-    ):
+    ) -> None:
         """Initialize an automation entity."""
         self._attr_name = name
         self._trigger_config = trigger_config
@@ -685,9 +685,9 @@ async def _async_process_config(
                 raw_config = cast(AutomationConfig, config_block).raw_config
 
             automation_id: str | None = config_block.get(CONF_ID)
-            name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
+            name: str = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
-            initial_state = config_block.get(CONF_INITIAL_STATE)
+            initial_state: bool | None = config_block.get(CONF_INITIAL_STATE)
 
             action_script = Script(
                 hass,
@@ -762,7 +762,7 @@ async def _async_process_if(
 
     def if_action(variables: Mapping[str, Any] | None = None) -> bool:
         """AND all conditions."""
-        errors = []
+        errors: list[ConditionErrorIndex] = []
         for index, check in enumerate(checks):
             try:
                 with trace_path(["condition", str(index)]):
