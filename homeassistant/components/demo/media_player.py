@@ -116,16 +116,11 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._attr_name = name
         self._attr_state = MediaPlayerState.PLAYING
         self._attr_volume_level = 1.0
-        self._volume_muted = False
+        self._attr_is_volume_muted = False
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
         self._attr_device_class = device_class
-
-    @property
-    def is_volume_muted(self) -> bool:
-        """Return boolean if volume is currently muted."""
-        return self._volume_muted
 
     @property
     def shuffle(self) -> bool:
@@ -154,7 +149,7 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        self._volume_muted = mute
+        self._attr_is_volume_muted = mute
         self.schedule_update_ha_state()
 
     def volume_up(self) -> None:
