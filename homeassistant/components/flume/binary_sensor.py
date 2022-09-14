@@ -17,14 +17,17 @@ from .const import (
     DOMAIN,
     FLUME_AUTH,
     FLUME_DEVICES,
+    FLUME_TYPE_BRIDGE,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_TYPE,
-    NOTIFICATION_BRIDGE_DISCONNECT,
     NOTIFICATION_HIGH_FLOW,
     NOTIFICATION_LEAK_DETECTED,
 )
-from .coordinator import FlumeNotificationDataUpdateCoordinator
+from .coordinator import (
+    FlumeDeviceConnectionUpdateCoordinator,
+    FlumeNotificationDataUpdateCoordinator,
+)
 from .entity import FlumeEntity
 
 
@@ -35,6 +38,14 @@ class FlumeBinarySensorRequiredKeysMixin:
     event_rule: str
 
 
+# @dataclass
+# class FlumeBinaryConnectionSensorEntityDescription(BinarySensorEntityDescription):
+#     """Describes a connection binary sensor entity."""
+
+#     entity_category = EntityCategory.DIAGNOSTIC
+#     device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+
 @dataclass
 class FlumeBinarySensorEntityDescription(
     BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
@@ -42,7 +53,7 @@ class FlumeBinarySensorEntityDescription(
     """Describes a binary sensor entity."""
 
 
-FLUME_BINARY_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
+FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
     FlumeBinarySensorEntityDescription(
         key="leak",
         name="Leak detected",
@@ -56,14 +67,6 @@ FLUME_BINARY_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
         icon="mdi:waves",
-    ),
-    FlumeBinarySensorEntityDescription(
-        key="bridge",
-        name="Bridge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        event_rule=NOTIFICATION_BRIDGE_DISCONNECT,
-        icon="mdi:bridge",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )
 
@@ -80,26 +83,53 @@ async def async_setup_entry(
     flume_auth = flume_domain_data[FLUME_AUTH]
     flume_devices = flume_domain_data[FLUME_DEVICES]
 
-    flume_entity_list = []
+    flume_entity_list: list[
+        FlumeNotificationBinarySensor | FlumeConnectionBinarySensor
+    ] = []
 
+    connection_coordinator = FlumeDeviceConnectionUpdateCoordinator(
+        hass=hass, flume_devices=flume_devices
+    )
     notification_coordinator = FlumeNotificationDataUpdateCoordinator(
         hass=hass, auth=flume_auth
     )
 
     for device in flume_devices.device_list:
+        device_id = device[KEY_DEVICE_ID]
+
+        if device[KEY_DEVICE_TYPE] is FLUME_TYPE_BRIDGE:
+            new_sensor = FlumeConnectionBinarySensor(
+                coordinator=connection_coordinator,
+                description=BinarySensorEntityDescription(
+                    name="Connected",
+                    key="connected",
+                ),
+                device_id=device_id,
+                name="Bridge",
+            )
+        else:
+            new_sensor = FlumeConnectionBinarySensor(
+                coordinator=connection_coordinator,
+                description=BinarySensorEntityDescription(
+                    name="Connected",
+                    key="connected",
+                ),
+                device_id=device_id,
+            )
+
+        flume_entity_list.append(new_sensor)
+
         if device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR:
             continue
 
-        device_id = device[KEY_DEVICE_ID]
-
         flume_entity_list.extend(
             [
-                FlumeBinarySensor(
+                FlumeNotificationBinarySensor(
                     coordinator=notification_coordinator,
                     description=description,
                     device_id=device_id,
                 )
-                for description in FLUME_BINARY_SENSORS
+                for description in FLUME_BINARY_NOTIFICATION_SENSORS
             ]
         )
 
@@ -107,7 +137,7 @@ async def async_setup_entry(
         async_add_entities(flume_entity_list)
 
 
-class FlumeBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
     """Binary sensor class."""
 
     entity_description: FlumeBinarySensorEntityDescription
@@ -123,3 +153,17 @@ class FlumeBinarySensor(FlumeEntity, BinarySensorEntity):
             return self.entity_description.event_rule in notifications
 
         return False
+
+
+class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
+    """Binary Sensor class for WIFI Connection status."""
+
+    entity_description: FlumeBinarySensorEntityDescription
+    coordinator: FlumeDeviceConnectionUpdateCoordinator
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    @property
+    def is_on(self) -> bool:
+        """Return connection status."""
+        return self.coordinator.connected[self.device_id]

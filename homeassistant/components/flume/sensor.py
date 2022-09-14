@@ -42,6 +42,8 @@ async def async_setup_entry(
     for device in flume_devices.device_list:
         if device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR:
             continue
+        if KEY_DEVICE_LOCATION not in device.keys():
+            continue
 
         device_id = device[KEY_DEVICE_ID]
         device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]

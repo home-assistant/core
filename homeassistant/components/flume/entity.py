@@ -21,6 +21,7 @@ class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator]):
         coordinator: DataUpdateCoordinator,
         description: EntityDescription,
         device_id: str,
+        name: str = "Flume",
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator)
@@ -31,7 +32,7 @@ class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator]):
             identifiers={(DOMAIN, device_id)},
             manufacturer="Flume, Inc.",
             model="Flume Smart Water Monitor",
-            name=f"Flume {device_id}",
+            name=f"{name} {device_id}",
             configuration_url="https://portal.flumewater.com",
         )
 

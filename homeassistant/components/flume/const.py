@@ -18,6 +18,7 @@ DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__package__)
 
+FLUME_TYPE_BRIDGE = 1
 FLUME_TYPE_SENSOR = 2
 FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
