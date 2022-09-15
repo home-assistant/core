@@ -108,7 +108,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
-        self._state: MediaPlayerState | None = None
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -205,11 +204,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def state(self) -> MediaPlayerState | None:
-        """Return the state of the media group."""
-        return self._state
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -395,20 +389,20 @@ class MediaPlayerGroup(MediaPlayerEntity):
         )
         if not valid_state:
             # Set as unknown if all members are unknown or unavailable
-            self._state = None
+            self._attr_state = None
         else:
             off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
             if states.count(states[0]) == len(states):
                 try:
-                    self._state = MediaPlayerState(states[0])
+                    self._attr_state = MediaPlayerState(states[0])
                 except ValueError:
-                    self._state = (
+                    self._attr_state = (
                         MediaPlayerState.OFF if states[0] in off_values else None
                     )
             elif any(state for state in states if state not in off_values):
-                self._state = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
             else:
-                self._state = MediaPlayerState.OFF
+                self._attr_state = MediaPlayerState.OFF
 
         supported_features = MediaPlayerEntityFeature(0)
         if self._features[KEY_CLEAR_PLAYLIST]:
