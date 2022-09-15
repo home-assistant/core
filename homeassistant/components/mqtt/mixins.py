@@ -350,7 +350,7 @@ async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
     async_setup: partial[Coroutine[HomeAssistant, str, None]],
-    schema: vol.Schema,
+    discovery_schema: vol.Schema,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
     mqtt_data: MqttData = hass.data[DATA_MQTT]
@@ -367,7 +367,7 @@ async def async_setup_entry_helper(
             return
         discovery_data = discovery_payload.discovery_data
         try:
-            config = schema(discovery_payload)
+            config = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
         except Exception:
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
@@ -381,6 +381,14 @@ async def async_setup_entry_helper(
         async_dispatcher_connect(
             hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
         )
+    )
+
+    # discover manual items
+    await asyncio.gather(
+        *[
+            async_setup(config)
+            for config in await async_get_platform_config_from_yaml(hass, domain)
+        ]
     )
 
 
