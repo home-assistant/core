@@ -787,6 +787,7 @@ omit =
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
     homeassistant/components/nibe_heatpump/switch.py
+    homeassistant/components/nibe_heatpump/water_heater.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
