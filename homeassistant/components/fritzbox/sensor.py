@@ -49,6 +49,52 @@ class FritzSensorEntityDescription(
     """Description for Fritz!Smarthome sensor entities."""
 
 
+def suitable_eco_temperature(device: FritzhomeDevice) -> bool:
+    """Check suitablity for eco temperature sensor."""
+    return device.has_thermostat and device.eco_temperature is not None
+
+
+def suitable_comfort_temperature(device: FritzhomeDevice) -> bool:
+    """Check suitablity for comfort temperature sensor."""
+    return device.has_thermostat and device.comfort_temperature is not None
+
+
+def suitable_nextchange_temperature(device: FritzhomeDevice) -> bool:
+    """Check suitablity for next scheduled temperature sensor."""
+    return device.has_thermostat and device.nextchange_temperature is not None
+
+
+def suitable_nextchange_time(device: FritzhomeDevice) -> bool:
+    """Check suitablity for next scheduled changed time sensor."""
+    return device.has_thermostat and device.nextchange_endperiod is not None
+
+
+def suitable_temperature(device: FritzhomeDevice) -> bool:
+    """Check suitablity for temperature sensor."""
+    return device.has_temperature_sensor and not device.has_thermostat
+
+
+def value_electric_current(device: FritzhomeDevice) -> float:
+    """Return native value for electric current sensor."""
+    if isinstance(device.power, int) and isinstance(device.voltage, int):
+        return round(device.power / device.voltage, 3)
+    return 0.0
+
+
+def value_nextchange_preset(device: FritzhomeDevice) -> str:
+    """Return native value for next scheduled preset sensor."""
+    if device.nextchange_temperature == device.eco_temperature:
+        return PRESET_ECO
+    return PRESET_COMFORT
+
+
+def value_scheduled_preset(device: FritzhomeDevice) -> str:
+    """Return native value for current scheduled preset sensor."""
+    if device.nextchange_temperature == device.eco_temperature:
+        return PRESET_COMFORT
+    return PRESET_ECO
+
+
 SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="temperature",
@@ -57,9 +103,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        suitable=lambda device: (
-            device.has_temperature_sensor and not device.has_thermostat
-        ),
+        suitable=suitable_temperature,
         native_value=lambda device: device.temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
@@ -105,9 +149,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: round(device.power / device.voltage, 3)
-        if device.power and getattr(device, "voltage", None)
-        else 0.0,
+        native_value=value_electric_current,
     ),
     FritzSensorEntityDescription(
         key="total_energy",
@@ -124,8 +166,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         name="Comfort Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        suitable=lambda device: device.has_thermostat
-        and device.comfort_temperature is not None,
+        suitable=suitable_comfort_temperature,
         native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
@@ -133,8 +174,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         name="Eco Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        suitable=lambda device: device.has_thermostat
-        and device.eco_temperature is not None,
+        suitable=suitable_eco_temperature,
         native_value=lambda device: device.eco_temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
@@ -142,35 +182,27 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         name="Next Scheduled Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        suitable=lambda device: device.has_thermostat
-        and device.nextchange_temperature is not None,
+        suitable=suitable_nextchange_temperature,
         native_value=lambda device: device.nextchange_temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
         key="nextchange_time",
         name="Next Scheduled Change Time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        suitable=lambda device: device.has_thermostat
-        and device.nextchange_endperiod is not None,
+        suitable=suitable_nextchange_time,
         native_value=lambda device: utc_from_timestamp(device.nextchange_endperiod),
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",
         name="Next Scheduled Preset",
-        suitable=lambda device: device.has_thermostat
-        and device.nextchange_temperature is not None,
-        native_value=lambda device: PRESET_ECO
-        if device.nextchange_temperature == device.eco_temperature
-        else PRESET_COMFORT,
+        suitable=suitable_nextchange_temperature,
+        native_value=value_nextchange_preset,
     ),
     FritzSensorEntityDescription(
         key="scheduled_preset",
         name="Current Scheduled Preset",
-        suitable=lambda device: device.has_thermostat
-        and device.nextchange_temperature is not None,
-        native_value=lambda device: PRESET_COMFORT
-        if device.nextchange_temperature == device.eco_temperature
-        else PRESET_ECO,
+        suitable=suitable_nextchange_temperature,
+        native_value=value_scheduled_preset,
     ),
 )
 
