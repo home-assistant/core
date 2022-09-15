@@ -206,6 +206,8 @@ def adb_decorator(
 class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
 
+    _attr_device_class = MediaPlayerDeviceClass.TV
+
     def __init__(
         self,
         aftv,
@@ -217,7 +219,6 @@ class ADBDevice(MediaPlayerEntity):
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
-        self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._entry_id = entry_id
