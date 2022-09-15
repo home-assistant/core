@@ -106,7 +106,15 @@ def _prefer_previous_adv(
         return False
     # If the source is the different, the old one is preferred because its
     # not stale and its RSSI_SWITCH_THRESHOLD less than the new one
-    return old.source != new.source
+    if new.source != old.source:
+        return True
+
+    # If the advertisement data is different, the new one is preferred
+    return not (
+        new.manufacturer_data != old.manufacturer_data
+        or new.service_data != old.service_data
+        or new.service_uuids != old.service_uuids
+    )
 
 
 def _dispatch_bleak_callback(
