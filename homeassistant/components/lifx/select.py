@@ -51,7 +51,7 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
         self.entity_description = description
         self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._attr_current_option = coordinator.async_current_infrared_brightness()
+        self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -62,7 +62,7 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Handle coordinator updates."""
-        self._attr_current_option = self.coordinator.async_current_infrared_brightness()
+        self._attr_current_option = self.coordinator.current_infrared_brightness
 
     async def async_select_option(self, option: str) -> None:
         """Update the infrared brightness value."""

@@ -9,13 +9,16 @@ from typing import Any, cast
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     _LOGGER,
     ATTR_REMAINING,
+    DOMAIN,
     IDENTIFY_WAVEFORM,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
@@ -88,6 +91,18 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     def label(self) -> str:
         """Return the label of the bulb."""
         return cast(str, self.device.label)
+
+    @property
+    def current_infrared_brightness(self) -> str | None:
+        """Return the current infrared brightness as a string."""
+        return infrared_brightness_value_to_option(self.device.infrared_brightness)
+
+    def async_get_entity_id(self, platform: Platform, key: str) -> str | None:
+        """Return the entity_id from the platform and key provided."""
+        ent_reg = er.async_get(self.hass)
+        return ent_reg.async_get_entity_id(
+            platform, DOMAIN, f"{self.serial_number}_{key}"
+        )
 
     async def async_identify_bulb(self) -> None:
         """Identify the device by flashing it three times."""
@@ -210,10 +225,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             await async_execute_lifx(
                 partial(self.device.set_hev_cycle, enable=enable, duration=duration)
             )
-
-    def async_current_infrared_brightness(self) -> str | None:
-        """Return the current infrared brightness as a string."""
-        return infrared_brightness_value_to_option(self.device.infrared_brightness)
 
     async def async_set_infrared_brightness(self, option: str) -> None:
         """Set infrared brightness."""
