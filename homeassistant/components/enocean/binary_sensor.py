@@ -102,48 +102,48 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         # Energy Bow
         pushed = None
 
-        match packet.data[0]:
-            case 0xD5:
-                """Enocean Wireless Magnet Contact STM 250"""
-                if packet.data[1] == 0x8:
-                    """contact opened"""
-                    self.which = 0
-                    self.onoff = 1
-                    pushed = 1
-                elif packet.data[1] == 0x9:
-                    """contact closed"""
-                    self.which = 0
-                    self.onoff = 0
-                    pushed = 0
-                self.schedule_update_ha_state()
+        if packet.data[0] == 0xD5:
+            """Enocean Wireless Magnet Contact STM 250"""
+            if packet.data[1] == 0x8:
+                """contact opened"""
+                self.which = 0
+                self.onoff = 1
+                pushed = 1
+            elif packet.data[1] == 0x9:
+                """contact closed"""
+                self.which = 0
+                self.onoff = 0
+                pushed = 0
 
-            case 0xF6:
-                if packet.data[6] == 0x30:
-                    pushed = 1
-                elif packet.data[6] == 0x20:
-                    pushed = 0
+            self.schedule_update_ha_state()
 
-                self.schedule_update_ha_state()
+        elif packet.data[0] == 0xF6:
+            if packet.data[6] == 0x30:
+                pushed = 1
+            elif packet.data[6] == 0x20:
+                pushed = 0
 
-                action = packet.data[1]
-                if action == 0x70:
-                    self.which = 0
-                    self.onoff = 0
-                elif action == 0x50:
-                    self.which = 0
-                    self.onoff = 1
-                elif action == 0x30:
-                    self.which = 1
-                    self.onoff = 0
-                elif action == 0x10:
-                    self.which = 1
-                    self.onoff = 1
-                elif action == 0x37:
-                    self.which = 10
-                    self.onoff = 0
-                elif action == 0x15:
-                    self.which = 10
-                    self.onoff = 1
+            self.schedule_update_ha_state()
+
+            action = packet.data[1]
+            if action == 0x70:
+                self.which = 0
+                self.onoff = 0
+            elif action == 0x50:
+                self.which = 0
+                self.onoff = 1
+            elif action == 0x30:
+                self.which = 1
+                self.onoff = 0
+            elif action == 0x10:
+                self.which = 1
+                self.onoff = 1
+            elif action == 0x37:
+                self.which = 10
+                self.onoff = 0
+            elif action == 0x15:
+                self.which = 10
+                self.onoff = 1
 
         self.hass.bus.fire(
             EVENT_BUTTON_PRESSED,
