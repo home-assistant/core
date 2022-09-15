@@ -23,7 +23,7 @@ from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
-from awesomeversion import AwesomeVersion, AwesomeVersionException
+from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -1530,14 +1530,9 @@ def arc_tangent2(*args, default=_SENTINEL):
         return default
 
 
-def version(value, default=_SENTINEL):
+def version(value):
     """Filter and function to get version object of the value."""
-    try:
-        return AwesomeVersion(value)
-    except AwesomeVersionException:
-        if default is _SENTINEL:
-            raise_no_default("version", value)
-        return default
+    return AwesomeVersion(value)
 
 
 def square_root(value, default=_SENTINEL):
