@@ -145,6 +145,11 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
 
+    @property
+    def state(self) -> MediaPlayerState | None:
+        """Cache state of device."""
+        return self._player_state
+
     def update(self) -> None:
         """Update device status."""
         device = self._device
@@ -160,7 +165,6 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         elif device.status == STATUS_STILL:
             self._player_state = MediaPlayerState.PAUSED
         else:
-            self._player_state = None
             _LOGGER.warning("Unknown state: %s", device.status)
 
     @property
