@@ -1272,6 +1272,7 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
+    await async_wait_recording_done(hass)
     with patch.object(
         get_instance(hass).event_session,
         "close",

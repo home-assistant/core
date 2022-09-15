@@ -85,7 +85,9 @@ class FaceInformation(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent[ImageProcessingEntity](
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
 
     await component.async_setup(config)
 
@@ -123,11 +125,11 @@ class ImageProcessingEntity(Entity):
         """Return minimum confidence for do some things."""
         return None
 
-    def process_image(self, image: Image) -> None:
+    def process_image(self, image: bytes) -> None:
         """Process image."""
         raise NotImplementedError()
 
-    async def async_process_image(self, image: Image) -> None:
+    async def async_process_image(self, image: bytes) -> None:
         """Process image."""
         return await self.hass.async_add_executor_job(self.process_image, image)
 
@@ -137,10 +139,9 @@ class ImageProcessingEntity(Entity):
         This method is a coroutine.
         """
         camera = self.hass.components.camera
-        image = None
 
         try:
-            image = await camera.async_get_image(
+            image: Image = await camera.async_get_image(
                 self.camera_entity, timeout=self.timeout
             )
 
