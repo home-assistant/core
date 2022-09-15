@@ -39,7 +39,6 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    discovery,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -306,30 +305,6 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_discover_yaml_entities(
-    hass: HomeAssistant, platform_domain: str
-) -> None:
-    """Discover entities for a platform."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
-    if mqtt_data.updated_config:
-        # The platform has been reloaded
-        config_yaml = mqtt_data.updated_config
-    else:
-        config_yaml = mqtt_data.config or {}
-    if not config_yaml:
-        return
-    if platform_domain not in config_yaml:
-        return
-    await asyncio.gather(
-        *(
-            discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
-            for config in await async_get_platform_config_from_yaml(
-                hass, platform_domain, config_yaml
-            )
-        )
-    )
-
-
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant,
     platform_domain: str,
@@ -386,11 +361,12 @@ async def async_setup_entry_helper(
 
     async def _async_setup_entities() -> None:
         # setup manual items
-        if DATA_MQTT_UPDATED_CONFIG in hass.data:
+        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        if mqtt_data.updated_config:
             # The platform has been reloaded
-            config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
+            config_yaml = mqtt_data.updated_config
         else:
-            config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
+            config_yaml = mqtt_data.config or {}
         if not config_yaml:
             return
         if domain not in config_yaml:
