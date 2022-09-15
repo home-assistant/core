@@ -379,7 +379,7 @@ class CecEntity(Entity):
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._player_state: MediaPlayerState | None = None
+        self._state: MediaPlayerState | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
@@ -404,22 +404,22 @@ class CecEntity(Entity):
     def _hdmi_cec_unavailable(self, callback_event):
         # Change state to unavailable. Without this, entity would remain in
         # its last state, since the state changes are pushed.
-        self._player_state = None
+        self._state = None
         self.schedule_update_ha_state(False)
 
     def update(self):
         """Update device status."""
         device = self._device
         if device.power_status in [POWER_OFF, 3]:
-            self._player_state = MediaPlayerState.OFF
+            self._state = MediaPlayerState.OFF
         elif device.status == STATUS_PLAY:
-            self._player_state = MediaPlayerState.PLAYING
+            self._state = MediaPlayerState.PLAYING
         elif device.status == STATUS_STOP:
-            self._player_state = MediaPlayerState.IDLE
+            self._state = MediaPlayerState.IDLE
         elif device.status == STATUS_STILL:
-            self._player_state = MediaPlayerState.PAUSED
+            self._state = MediaPlayerState.PAUSED
         elif device.power_status in [POWER_ON, 4]:
-            self._player_state = MediaPlayerState.ON
+            self._state = MediaPlayerState.ON
         else:
             _LOGGER.warning("Unknown state: %d", device.power_status)
 

@@ -44,16 +44,16 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self._device.turn_on()
-        self._player_state = MediaPlayerState.ON
+        self._state = MediaPlayerState.ON
         self.schedule_update_ha_state(force_refresh=False)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._player_state = MediaPlayerState.OFF
+        self._state = MediaPlayerState.OFF
         self.schedule_update_ha_state(force_refresh=False)
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self._player_state == MediaPlayerState.ON
+        return self._state == MediaPlayerState.ON
