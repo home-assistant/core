@@ -226,6 +226,8 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     SensorDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
 }
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""

@@ -107,6 +107,8 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema(
     }
 )
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up water_heater devices."""

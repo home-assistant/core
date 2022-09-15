@@ -150,6 +150,8 @@ DEVICE_CLASS_UPDATE = BinarySensorDeviceClass.UPDATE.value
 DEVICE_CLASS_VIBRATION = BinarySensorDeviceClass.VIBRATION.value
 DEVICE_CLASS_WINDOW = BinarySensorDeviceClass.WINDOW.value
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""

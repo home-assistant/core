@@ -83,6 +83,8 @@ DEVICE_CLASS_SHADE = CoverDeviceClass.SHADE.value
 DEVICE_CLASS_SHUTTER = CoverDeviceClass.SHUTTER.value
 DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 
+# mypy: disallow-any-generics
+
 
 class CoverEntityFeature(IntEnum):
     """Supported features of the cover entity."""

@@ -110,6 +110,8 @@ SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
 SUPPORT_START = 8192
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:

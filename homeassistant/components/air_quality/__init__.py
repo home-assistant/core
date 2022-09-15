@@ -50,6 +50,8 @@ PROP_TO_ATTR: Final[dict[str, str]] = {
     "sulphur_dioxide": ATTR_SO2,
 }
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the air quality component."""

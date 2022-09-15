@@ -141,6 +141,8 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
 
+# mypy: disallow-any-generics
+
 
 def round_temperature(temperature: float | None, precision: float) -> float | None:
     """Convert temperature into preferred precision for display."""

@@ -53,6 +53,9 @@ class SirenTurnOnServiceParameters(TypedDict, total=False):
     volume_level: float
 
 
+# mypy: disallow-any-generics
+
+
 def process_turn_on_params(
     siren: SirenEntity, params: SirenTurnOnServiceParameters
 ) -> SirenTurnOnServiceParameters:

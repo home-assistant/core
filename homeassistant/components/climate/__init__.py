@@ -129,6 +129,8 @@ SET_TEMPERATURE_SCHEMA = vol.All(
     ),
 )
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up climate entities."""

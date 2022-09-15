@@ -78,6 +78,8 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
 }
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
@@ -423,7 +425,9 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
 
-    def _convert_to_state_value(self, value: float, method: Callable) -> float:
+    def _convert_to_state_value(
+        self, value: float, method: Callable[[float, int], float]
+    ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement

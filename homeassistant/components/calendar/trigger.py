@@ -38,6 +38,8 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+# mypy: disallow-any-generics
+
 
 class CalendarEventListener:
     """Helper class to listen to calendar events."""

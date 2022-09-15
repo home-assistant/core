@@ -74,6 +74,8 @@ ATTR_DIRECTION = "direction"
 ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 
+# mypy: disallow-any-generics
+
 
 class NotValidPresetModeError(ValueError):
     """Exception class when the preset_mode in not in the preset_modes list."""

@@ -68,6 +68,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
 # use the HumidifierDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
 def is_on(hass, entity_id):

@@ -12,7 +12,7 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, cast, final
+from typing import Any, Final, TypedDict, cast, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
@@ -136,11 +136,11 @@ _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CACHE_IMAGES = "images"
-CACHE_MAXSIZE = "maxsize"
-CACHE_LOCK = "lock"
-CACHE_URL = "url"
-CACHE_CONTENT = "content"
+CACHE_IMAGES: Final = "images"
+CACHE_MAXSIZE: Final = "maxsize"
+CACHE_LOCK: Final = "lock"
+CACHE_URL: Final = "url"
+CACHE_CONTENT: Final = "content"
 ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16}
 
 SCAN_INTERVAL = dt.timedelta(seconds=10)
@@ -213,6 +213,15 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_REPEAT,
 ]
+
+# mypy: disallow-any-generics
+
+
+class CacheImage(TypedDict, total=False):
+    """Class to hold a cached image."""
+
+    lock: asyncio.Lock
+    content: tuple[bytes | None, str | None]
 
 
 @bind_hass
@@ -1060,7 +1069,10 @@ class MediaPlayerEntity(Entity):
 
         Images are cached in memory (the images are typically 10-100kB in size).
         """
-        cache_images = cast(collections.OrderedDict, ENTITY_IMAGE_CACHE[CACHE_IMAGES])
+        cache_images = cast(
+            collections.OrderedDict[str, CacheImage],
+            ENTITY_IMAGE_CACHE[CACHE_IMAGES],
+        )
         cache_maxsize = cast(int, ENTITY_IMAGE_CACHE[CACHE_MAXSIZE])
 
         if urlparse(url).hostname is None:
@@ -1071,7 +1083,7 @@ class MediaPlayerEntity(Entity):
 
         async with cache_images[url][CACHE_LOCK]:
             if CACHE_CONTENT in cache_images[url]:
-                return cache_images[url][CACHE_CONTENT]  # type:ignore[no-any-return]
+                return cache_images[url][CACHE_CONTENT]
 
         (content, content_type) = await self._async_fetch_image(url)
 

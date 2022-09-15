@@ -167,7 +167,7 @@ def color_temp_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     return ColorMode.COLOR_TEMP in color_modes
 
 
-def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
+def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] | None:
     """Get supported color modes for a light entity.
 
     First try the statemachine, then entity registry.
@@ -278,6 +278,8 @@ LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FL
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# mypy: disallow-any-generics
 
 
 @bind_hass
@@ -868,8 +870,10 @@ class LightEntity(ToggleEntity):
 
         return data
 
-    def _light_internal_convert_color(self, color_mode: ColorMode | str) -> dict:
-        data: dict[str, tuple] = {}
+    def _light_internal_convert_color(
+        self, color_mode: ColorMode | str
+    ) -> dict[str, tuple[float, ...]]:
+        data: dict[str, tuple[float, ...]] = {}
         if color_mode == ColorMode.HS and self.hs_color:
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))

@@ -55,6 +55,8 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
