@@ -7,7 +7,7 @@ from datetime import timedelta
 from enum import IntEnum
 import functools as ft
 import logging
-from typing import Any, cast, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -88,7 +88,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for remotes."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[RemoteEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -145,12 +145,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await cast(EntityComponent, hass.data[DOMAIN]).async_setup_entry(entry)
+    component: EntityComponent[RemoteEntity] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await cast(EntityComponent, hass.data[DOMAIN]).async_unload_entry(entry)
+    component: EntityComponent[RemoteEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 @dataclass
