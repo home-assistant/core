@@ -336,6 +336,8 @@ async def test_schema_migrate(hass, start_version, live):
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         wraps=_instrument_apply_update,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(

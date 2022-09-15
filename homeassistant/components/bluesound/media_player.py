@@ -19,12 +19,11 @@ import xmltodict
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
     async_process_play_media_url,
 )
 from homeassistant.const import (
@@ -35,10 +34,6 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -68,7 +63,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
 UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
@@ -554,20 +548,20 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._status is None:
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         if self.is_grouped and not self.is_master:
-            return STATE_GROUPED
+            return MediaPlayerState.IDLE
 
         status = self._status.get("state")
         if status in ("pause", "stop"):
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if status in ("stream", "play"):
-            return STATE_PLAYING
-        return STATE_IDLE
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.IDLE
 
     @property
     def media_title(self):
@@ -620,14 +614,14 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         mediastate = self.state
-        if self._last_status_update is None or mediastate == STATE_IDLE:
+        if self._last_status_update is None or mediastate == MediaPlayerState.IDLE:
             return None
 
         if (position := self._status.get("secs")) is None:
             return None
 
         position = float(position)
-        if mediastate == STATE_PLAYING:
+        if mediastate == MediaPlayerState.PLAYING:
             position += (dt_util.utcnow() - self._last_status_update).total_seconds()
 
         return position

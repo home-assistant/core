@@ -12,6 +12,7 @@
         "step": {
             "manual": {
                 "data": {
+                    "ip_address": "IP adresa",
                     "serial": "S\u00e9riov\u00e9 \u010d\u00edslo (12 \u010d\u00edslic)"
                 }
             }
