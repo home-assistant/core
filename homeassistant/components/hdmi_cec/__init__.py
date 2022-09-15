@@ -1,6 +1,7 @@
 """Support for HDMI CEC."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from functools import reduce
 import logging
 import multiprocessing
@@ -22,10 +23,7 @@ from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    DOMAIN as MEDIA_PLAYER,
-    MediaPlayerState,
-)
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONF_DEVICES,
@@ -374,7 +372,6 @@ class CecEntity(Entity):
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._state: MediaPlayerState | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
@@ -396,11 +393,9 @@ class CecEntity(Entity):
         else:
             self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
 
+    @abstractmethod
     def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unavailable. Without this, entity would remain in
-        # its last state, since the state changes are pushed.
-        self._state = None
-        self.schedule_update_ha_state(False)
+        pass
 
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
