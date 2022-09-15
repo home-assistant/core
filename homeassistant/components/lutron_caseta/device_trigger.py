@@ -495,6 +495,9 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
 def is_lutron_caseta_device(hass: HomeAssistant, device_id: str) -> bool:
     """Check if HomeAssistant device is port of this domain."""
     device_registry = dr.async_get(hass)
-    if not (device_entry := device_registry.async_get(device_id)):
-        return False
-    return any(identifier[0] == DOMAIN for identifier in device_entry.identifiers)
+    is_lutron_caseta = False
+    if device_entry := device_registry.async_get(device_id):
+        is_lutron_caseta = any(
+            identifier[0] == DOMAIN for identifier in device_entry.identifiers
+        )
+    return is_lutron_caseta
