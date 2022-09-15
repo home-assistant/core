@@ -1,6 +1,7 @@
 """Support for script and automation tracing and debugging."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -80,12 +81,13 @@ async def async_get_trace(
 
 
 async def async_list_contexts(
-    hass: HomeAssistant, key: str
+    hass: HomeAssistant, key: str | None
 ) -> dict[str, dict[str, str]]:
     """List contexts for which we have traces."""
     # Restore saved traces if not done
     await async_restore_traces(hass)
 
+    values: Mapping[str, LimitedSizeDict[str, BaseTrace] | None]
     if key is not None:
         values = {key: _get_data(hass).get(key)}
     else:
