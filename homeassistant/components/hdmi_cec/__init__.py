@@ -27,7 +27,10 @@ from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER,
+    MediaPlayerState,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONF_DEVICES,
@@ -35,12 +38,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
@@ -382,7 +379,7 @@ class CecEntity(Entity):
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._state: str | None = None
+        self._player_state: MediaPlayerState | None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
@@ -407,23 +404,25 @@ class CecEntity(Entity):
     def _hdmi_cec_unavailable(self, callback_event):
         # Change state to unavailable. Without this, entity would remain in
         # its last state, since the state changes are pushed.
-        self._state = STATE_UNAVAILABLE
+        self._attr_available = False
         self.schedule_update_ha_state(False)
 
     def update(self):
         """Update device status."""
         device = self._device
+        self._attr_available = True
         if device.power_status in [POWER_OFF, 3]:
-            self._state = STATE_OFF
+            self._player_state = MediaPlayerState.OFF
         elif device.status == STATUS_PLAY:
-            self._state = STATE_PLAYING
+            self._player_state = MediaPlayerState.PLAYING
         elif device.status == STATUS_STOP:
-            self._state = STATE_IDLE
+            self._player_state = MediaPlayerState.IDLE
         elif device.status == STATUS_STILL:
-            self._state = STATE_PAUSED
+            self._player_state = MediaPlayerState.PAUSED
         elif device.power_status in [POWER_ON, 4]:
-            self._state = STATE_ON
+            self._player_state = MediaPlayerState.ON
         else:
+            self._player_state = None
             _LOGGER.warning("Unknown state: %d", device.power_status)
 
     async def async_added_to_hass(self):

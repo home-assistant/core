@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,16 +44,16 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self._device.turn_on()
-        self._state = STATE_ON
+        self._player_state = MediaPlayerState.ON
         self.schedule_update_ha_state(force_refresh=False)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = STATE_OFF
+        self._player_state = MediaPlayerState.OFF
         self.schedule_update_ha_state(force_refresh=False)
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self._state == STATE_ON
+        return self._player_state == MediaPlayerState.ON
