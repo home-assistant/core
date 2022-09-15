@@ -187,7 +187,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Update state of device."""
         if self._auth_failed or self.hass.is_stopping:
             return
-        old_state = self.state
+        old_state = self._attr_state
         if self._power_off_in_progress():
             self._attr_state = MediaPlayerState.OFF
         else:
@@ -196,10 +196,10 @@ class SamsungTVDevice(MediaPlayerEntity):
                 if await self._bridge.async_is_on()
                 else MediaPlayerState.OFF
             )
-        if self.state != old_state:
+        if self._attr_state != old_state:
             LOGGER.debug("TV %s state updated to %s", self._host, self.state)
 
-        if self.state != MediaPlayerState.ON:
+        if self._attr_state != MediaPlayerState.ON:
             if self._dmr_device and self._dmr_device.is_subscribed:
                 await self._dmr_device.async_unsubscribe_services()
             return
