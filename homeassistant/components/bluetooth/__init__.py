@@ -232,6 +232,8 @@ async def _async_check_haos_version(hass: HomeAssistant) -> None:
         return
 
     system_info = await async_get_system_info(hass)
+    _LOGGER.warning("System info: %s", system_info)
+    system_info["hassos"] = "8.5.000"
     if (
         not (haos_version := system_info.get("hassos"))
         or AwesomeVersion(haos_version) >= RECOMMENDED_HAOS_VERSION
