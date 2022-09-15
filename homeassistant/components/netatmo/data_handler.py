@@ -31,6 +31,7 @@ from .const import (
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_COVER,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
@@ -310,6 +311,7 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
+            NetatmoDeviceCategory.shutter: [NETATMO_CREATE_COVER],
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
                 NETATMO_CREATE_SWITCH,
