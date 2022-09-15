@@ -112,6 +112,8 @@ COLOR_MODES_COLOR = {
     ColorMode.XY,
 }
 
+# mypy: disallow-any-generics
+
 
 def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorMode]:
     """Filter the given color modes."""
@@ -278,8 +280,6 @@ LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FL
 
 
 _LOGGER = logging.getLogger(__name__)
-
-# mypy: disallow-any-generics
 
 
 @bind_hass
