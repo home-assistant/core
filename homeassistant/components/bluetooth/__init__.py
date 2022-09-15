@@ -224,6 +224,7 @@ async def async_get_adapter_from_address(
 
 async def _async_check_haos_version(hass: HomeAssistant) -> None:
     """Check if the version of Home Assistant Operating System is new enough."""
+    # Only warn if a USB adapter is plugged in
     if not any(
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
