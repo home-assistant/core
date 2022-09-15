@@ -145,6 +145,7 @@ FLOWS = {
         "gogogate2",
         "goodwe",
         "google",
+        "google_sheets",
         "google_travel_time",
         "govee_ble",
         "gpslogger",

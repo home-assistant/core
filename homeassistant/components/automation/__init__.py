@@ -148,91 +148,71 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@callback
-def automations_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all automations that reference the entity."""
+def _automations_with_x(
+    hass: HomeAssistant, referenced_id: str, property_name: str
+) -> list[str]:
+    """Return all automations that reference the x."""
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
         for automation_entity in component.entities
-        if entity_id in cast(AutomationEntity, automation_entity).referenced_entities
+        if referenced_id in getattr(automation_entity, property_name)
     ]
 
 
-@callback
-def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all entities in a scene."""
+def _x_in_automation(
+    hass: HomeAssistant, entity_id: str, property_name: str
+) -> list[str]:
+    """Return all x in an automation."""
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
-    return list(cast(AutomationEntity, automation_entity).referenced_entities)
+    return list(getattr(automation_entity, property_name))
+
+
+@callback
+def automations_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all automations that reference the entity."""
+    return _automations_with_x(hass, entity_id, "referenced_entities")
+
+
+@callback
+def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all entities in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_entities")
 
 
 @callback
 def automations_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all automations that reference the device."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    return [
-        automation_entity.entity_id
-        for automation_entity in component.entities
-        if device_id in cast(AutomationEntity, automation_entity).referenced_devices
-    ]
+    return _automations_with_x(hass, device_id, "referenced_devices")
 
 
 @callback
 def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all devices in a scene."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    if (automation_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(cast(AutomationEntity, automation_entity).referenced_devices)
+    """Return all devices in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_devices")
 
 
 @callback
 def automations_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
     """Return all automations that reference the area."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    return [
-        automation_entity.entity_id
-        for automation_entity in component.entities
-        if area_id in cast(AutomationEntity, automation_entity).referenced_areas
-    ]
+    return _automations_with_x(hass, area_id, "referenced_areas")
 
 
 @callback
 def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all areas in an automation."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    if (automation_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(cast(AutomationEntity, automation_entity).referenced_areas)
+    return _x_in_automation(hass, entity_id, "referenced_areas")
 
 
 @callback
@@ -252,7 +232,9 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
-    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent[AutomationEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED

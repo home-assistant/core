@@ -120,7 +120,7 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
-        self._device_class = device_class
+        self._attr_device_class = device_class
 
     @property
     def state(self) -> str:
@@ -151,11 +151,6 @@ class AbstractDemoPlayer(MediaPlayerEntity):
     def sound_mode_list(self) -> list[str]:
         """Return a list of available sound modes."""
         return self._sound_mode_list
-
-    @property
-    def device_class(self) -> MediaPlayerDeviceClass | None:
-        """Return the device class of the media player."""
-        return self._device_class
 
     def turn_on(self) -> None:
         """Turn the media player on."""
@@ -427,12 +422,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
     # We only implement the methods that we support
 
-    _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.TVSHOW
 
     def __init__(self) -> None:
         """Initialize the demo device."""
-        super().__init__("Lounge room")
+        super().__init__("Lounge room", MediaPlayerDeviceClass.TV)
         self._cur_episode = 1
         self._episode_count = 13
         self._source = "dvd"

@@ -49,7 +49,7 @@ PyTurboJPEG==1.6.7
 PyViCare==2.17.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.13.4
+PyXiaomiGateway==0.14.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -171,7 +171,7 @@ aiohue==4.5.0
 aiokafka==0.7.2
 
 # homeassistant.components.lifx
-aiolifx==0.8.2
+aiolifx==0.8.4
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -240,7 +240,7 @@ aioslimproto==2.1.1
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.6
+aioswitcher==3.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -329,7 +329,7 @@ bellows==0.33.1
 bimmer_connected==0.10.2
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.16.0
+bleak-retry-connector==1.17.1
 
 # homeassistant.components.bluetooth
 bleak==0.17.0
@@ -1386,7 +1386,7 @@ python-picnic-api==1.1.0
 python-smarttub==0.0.33
 
 # homeassistant.components.songpal
-python-songpal==0.15
+python-songpal==0.15.1
 
 # homeassistant.components.tado
 python-tado==0.12.0

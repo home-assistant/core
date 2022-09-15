@@ -79,9 +79,10 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@callback
-def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all scripts that reference the entity."""
+def _scripts_with_x(
+    hass: HomeAssistant, referenced_id: str, property_name: str
+) -> list[str]:
+    """Return all scripts that reference the x."""
     if DOMAIN not in hass.data:
         return []
 
@@ -90,80 +91,57 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     return [
         script_entity.entity_id
         for script_entity in component.entities
-        if entity_id in script_entity.script.referenced_entities
+        if referenced_id in getattr(script_entity.script, property_name)
     ]
+
+
+def _x_in_script(hass: HomeAssistant, entity_id: str, property_name: str) -> list[str]:
+    """Return all x in a script."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    if (script_entity := component.get_entity(entity_id)) is None:
+        return []
+
+    return list(getattr(script_entity.script, property_name))
+
+
+@callback
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all scripts that reference the entity."""
+    return _scripts_with_x(hass, entity_id, "referenced_entities")
 
 
 @callback
 def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_entities)
+    return _x_in_script(hass, entity_id, "referenced_entities")
 
 
 @callback
 def scripts_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all scripts that reference the device."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    return [
-        script_entity.entity_id
-        for script_entity in component.entities
-        if device_id in script_entity.script.referenced_devices
-    ]
+    return _scripts_with_x(hass, device_id, "referenced_devices")
 
 
 @callback
 def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_devices)
+    return _x_in_script(hass, entity_id, "referenced_devices")
 
 
 @callback
 def scripts_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
     """Return all scripts that reference the area."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    return [
-        script_entity.entity_id
-        for script_entity in component.entities
-        if area_id in script_entity.script.referenced_areas
-    ]
+    return _scripts_with_x(hass, area_id, "referenced_areas")
 
 
 @callback
 def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all areas in a script."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component = hass.data[DOMAIN]
-
-    if (script_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(script_entity.script.referenced_areas)
+    return _x_in_script(hass, entity_id, "referenced_areas")
 
 
 @callback
@@ -183,7 +161,7 @@ def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
-    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent[ScriptEntity](LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -205,9 +183,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
         for script_entity in script_entities:
             await script_entity.async_turn_on(
                 variables=variables, context=service.context, wait=False
@@ -216,9 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
 
         if not script_entities:
             return
@@ -232,9 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def toggle_service(service: ServiceCall) -> None:
         """Toggle a script."""
-        script_entities: list[ScriptEntity] = cast(
-            list[ScriptEntity], await component.async_extract_from_service(service)
-        )
+        script_entities = await component.async_extract_from_service(service)
         for script_entity in script_entities:
             await script_entity.async_toggle(context=service.context, wait=False)
 
