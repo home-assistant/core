@@ -106,7 +106,7 @@ def _prefer_previous_adv(
         return False
     # If the source is the different, the old one is preferred because its
     # not stale and its RSSI_SWITCH_THRESHOLD less than the new one
-    return new.source != old.source
+    return old.source != new.source
 
 
 def _dispatch_bleak_callback(
