@@ -1,6 +1,7 @@
 """This platform allows several media players to be grouped into one media player."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -65,6 +66,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
+_SEEN_INVALID_STATES = set[str]()
 
 
 async def async_setup_platform(
@@ -392,13 +396,21 @@ class MediaPlayerGroup(MediaPlayerEntity):
             self._attr_state = None
         else:
             off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
-            if states.count(states[0]) == len(states):
+            if states.count(single_state := states[0]) == len(states):
                 try:
-                    self._attr_state = MediaPlayerState(states[0])
+                    self._attr_state = MediaPlayerState(single_state)
                 except ValueError:
-                    self._attr_state = (
-                        MediaPlayerState.OFF if states[0] in off_values else None
-                    )
+                    if single_state in off_values:
+                        self._attr_state = MediaPlayerState.OFF
+                    else:
+                        self._attr_state = None
+                        if single_state not in _SEEN_INVALID_STATES:
+                            _SEEN_INVALID_STATES.add(single_state)
+                            _LOGGER.warning(
+                                "State `%s` is not a valid media player state!",
+                                single_state,
+                            )
+
             elif any(state for state in states if state not in off_values):
                 self._attr_state = MediaPlayerState.ON
             else:
