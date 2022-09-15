@@ -1099,7 +1099,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
 
         if not self.is_on:
             await self.async_turn_on()
-        else:
+        elif result:
             self.async_write_ha_state()
 
 
