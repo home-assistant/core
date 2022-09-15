@@ -4,7 +4,7 @@ from __future__ import annotations
 from pychromecast import Chromecast
 from pychromecast.controllers.plex import PlexController
 
-from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant
 

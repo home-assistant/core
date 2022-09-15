@@ -52,7 +52,6 @@ homeassistant.components.airzone.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
-homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
@@ -82,6 +81,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.deconz.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.demo.*
 homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*

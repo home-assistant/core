@@ -51,7 +51,7 @@ SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
     vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
@@ -60,16 +60,6 @@ CREATE_FIELDS = {
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_PATTERN): cv.string,
     vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In([MODE_TEXT, MODE_PASSWORD]),
-}
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_MIN): vol.Coerce(int),
-    vol.Optional(CONF_MAX): vol.Coerce(int),
-    vol.Optional(CONF_INITIAL): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_PATTERN): cv.string,
-    vol.Optional(CONF_MODE): vol.In([MODE_TEXT, MODE_PASSWORD]),
 }
 
 
@@ -117,7 +107,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input text."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputText](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -147,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -177,12 +167,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InputTextStorageCollection(collection.StorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_text))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -191,8 +180,8 @@ class InputTextStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return _cv_input_text({**data, **update_data})
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: data[CONF_ID]} | update_data
 
 
 class InputText(collection.CollectionEntity, RestoreEntity):

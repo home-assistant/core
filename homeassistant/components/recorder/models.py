@@ -7,7 +7,7 @@ from typing import Any, TypedDict, overload
 
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_LAST_CHANGED,
     COMPRESSED_STATE_LAST_UPDATED,
