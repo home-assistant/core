@@ -8,14 +8,21 @@ import platform
 from typing import TYPE_CHECKING, cast
 
 import async_timeout
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components import usb
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_INTEGRATION_DISCOVERY,
+    ConfigEntry,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
@@ -70,6 +77,8 @@ __all__ = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+RECOMMENDED_HAOS_VERSION = AwesomeVersion("9.0")
 
 
 def _get_manager(hass: HomeAssistant) -> BluetoothManager:
@@ -213,6 +222,32 @@ async def async_get_adapter_from_address(
     return await _get_manager(hass).async_get_adapter_from_address(address)
 
 
+async def _async_check_haos_version(hass: HomeAssistant) -> None:
+    """Check if the version of Home Assistant Operating System is new enough."""
+    if not any(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.source != SOURCE_IGNORE
+    ):
+        return
+
+    system_info = await async_get_system_info(hass)
+    if (
+        not (haos_version := system_info.get("hassos"))
+        or AwesomeVersion(haos_version) >= RECOMMENDED_HAOS_VERSION
+    ):
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "haos_outdated",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="haos_outdated",
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
@@ -250,6 +285,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
     )
+
+    await _async_check_haos_version(hass)
 
     return True
 
