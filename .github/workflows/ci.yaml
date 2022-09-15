@@ -665,6 +665,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
+          mypy --version
           mypy homeassistant pylint
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
@@ -672,6 +673,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
+          mypy --version
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   pip-check:
