@@ -30,6 +30,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import (
     async_integration_yaml_config,
     async_reload_integration_platforms,
@@ -422,6 +423,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
 
             # Reload the modern yaml platforms
+            mqtt_platforms = async_get_platforms(hass, DOMAIN)
+            tasks = [
+                entity.async_remove()
+                for mqtt_platform in mqtt_platforms
+                for entity in mqtt_platform.entities.values()
+                if not entity._discovery_data  # type: ignore[attr-defined] # pylint: disable=protected-access
+                if mqtt_platform.config_entry
+            ]
+            await asyncio.gather(*tasks)
+
             config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
             mqtt_data.updated_config = config_yaml.get(DOMAIN, {})
             await asyncio.gather(
