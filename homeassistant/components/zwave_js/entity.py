@@ -24,6 +24,7 @@ class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -126,29 +127,32 @@ class ZWaveBaseEntity(Entity):
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
         additional_info: list[str] | None = None,
-        name_suffix: str | None = None,
+        name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
-        if additional_info is None:
-            additional_info = []
-        name: str = (
-            self.info.node.name
-            or self.info.node.device_config.description
-            or f"Node {self.info.node.node_id}"
-        )
-        if name_suffix:
-            name = f"{name} {name_suffix}"
-        if include_value_name:
+        name = ""
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description
+            and self.entity_description.name
+        ):
+            name = self.entity_description.name
+
+        if name_prefix:
+            name = f"{name_prefix} {name}".strip()
+
+        value_name = ""
+        if alternate_value_name:
+            value_name = alternate_value_name
+        elif include_value_name:
             value_name = (
-                alternate_value_name
-                or self.info.primary_value.metadata.label
+                self.info.primary_value.metadata.label
                 or self.info.primary_value.property_key_name
                 or self.info.primary_value.property_name
+                or ""
             )
-            name = f"{name}: {value_name}"
-        for item in additional_info:
-            if item:
-                name += f" - {item}"
+        name = f"{name} {value_name}".strip()
+        name = f"{name} {' '.join(additional_info or [])}".strip()
         # append endpoint if > 1
         if (
             self.info.primary_value.endpoint is not None

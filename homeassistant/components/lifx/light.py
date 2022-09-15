@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -29,12 +29,14 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
 from .const import (
+    _LOGGER,
     ATTR_DURATION,
     ATTR_INFRARED,
     ATTR_POWER,
     ATTR_ZONES,
     DATA_LIFX_MANAGER,
     DOMAIN,
+    INFRARED_BRIGHTNESS,
 )
 from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
@@ -212,6 +214,13 @@ class LIFXLight(LIFXEntity, LightEntity):
                 return
 
             if ATTR_INFRARED in kwargs:
+                infrared_entity_id = self.coordinator.async_get_entity_id(
+                    Platform.SELECT, INFRARED_BRIGHTNESS
+                )
+                _LOGGER.warning(
+                    "The 'infrared' attribute of 'lifx.set_state' is deprecated: call 'select.select_option' targeting '%s' instead",
+                    infrared_entity_id,
+                )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
             if ATTR_TRANSITION in kwargs:
@@ -237,15 +246,10 @@ class LIFXLight(LIFXEntity, LightEntity):
                 elif power_on:
                     await self.set_power(True, duration=fade)
             else:
+                if power_on:
+                    await self.set_power(True)
                 if hsbk:
                     await self.set_color(hsbk, kwargs, duration=fade)
-                    # The response from set_color will tell us if the
-                    # bulb is actually on or not, so we don't need to
-                    # call power_on if its already on
-                    if power_on and self.bulb.power_level == 0:
-                        await self.set_power(True)
-                elif power_on:
-                    await self.set_power(True)
                 if power_off:
                     await self.set_power(False, duration=fade)
 

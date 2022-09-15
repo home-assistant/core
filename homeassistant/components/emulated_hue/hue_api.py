@@ -43,7 +43,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     LightEntityFeature,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     MediaPlayerEntityFeature,
 )

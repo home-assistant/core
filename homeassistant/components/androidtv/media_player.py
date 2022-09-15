@@ -21,6 +21,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -204,6 +205,8 @@ def adb_decorator(
 
 class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
+
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,

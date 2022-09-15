@@ -13,7 +13,7 @@ from http import HTTPStatus
 import logging
 import secrets
 from typing import Any, cast, final
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
@@ -25,10 +25,7 @@ from yarl import URL
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.components.websocket_api.const import (
-    ERR_NOT_SUPPORTED,
-    ERR_UNKNOWN_ERROR,
-)
+from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     SERVICE_MEDIA_NEXT_TRACK,
@@ -135,8 +132,6 @@ from .const import (  # noqa: F401
 )
 from .errors import BrowseError
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -221,7 +216,7 @@ ATTR_TO_PROPERTY = [
 
 
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """
     Return true if specified media player entity_id is on.
 
@@ -372,7 +367,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Remove in Home Assistant 2022.9
-    def _rewrite_enqueue(value):
+    def _rewrite_enqueue(value: dict[str, Any]) -> dict[str, Any]:
         """Rewrite the enqueue value."""
         if ATTR_MEDIA_ENQUEUE not in value:
             pass
@@ -1100,7 +1095,9 @@ class MediaPlayerEntity(Entity):
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
-            f"/{media_content_type}/{media_content_id}"
+            # quote the media_content_id as it may contain url unsafe characters
+            # aiohttp will unquote the path automatically
+            f"/{media_content_type}/{quote(media_content_id)}"
         )
 
         url_query = {"token": self.access_token}
@@ -1117,7 +1114,10 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
-        url + "/browse_media/{media_content_type}/{media_content_id}",
+        # Need to modify the default regex for media_content_id as it may
+        # include arbitrary characters including '/','{', or '}'
+        url
+        + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent) -> None:
@@ -1181,7 +1181,11 @@ class MediaPlayerImageView(HomeAssistantView):
     }
 )
 @websocket_api.async_response
-async def websocket_browse_media(hass, connection, msg):
+async def websocket_browse_media(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """
     Browse media available to the media_player entity.
 
@@ -1208,6 +1212,7 @@ async def websocket_browse_media(hass, connection, msg):
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
     except NotImplementedError:
+        assert player.platform
         _LOGGER.error(
             "%s allows media browsing but its integration (%s) does not",
             player.entity_id,
@@ -1229,11 +1234,12 @@ async def websocket_browse_media(hass, connection, msg):
 
     # For backwards compat
     if isinstance(payload, BrowseMedia):
-        payload = payload.as_dict()
+        result = payload.as_dict()
     else:
+        result = payload  # type: ignore[unreachable]
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
-    connection.send_result(msg["id"], payload)
+    connection.send_result(msg["id"], result)
 
 
 async def async_fetch_image(

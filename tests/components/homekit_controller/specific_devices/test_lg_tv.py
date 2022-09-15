@@ -54,7 +54,7 @@ async def test_lg_tv(hass):
                     # The LG TV doesn't (at least at this patch level) report
                     # its media state via CURRENT_MEDIA_STATE. Therefore "ok"
                     # is the best we can say.
-                    state="ok",
+                    state="on",
                 ),
             ],
         ),
