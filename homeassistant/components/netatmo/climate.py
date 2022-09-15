@@ -144,9 +144,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._id = self._room.entity_id
         self._home_id = self._room.home.entity_id
 
-        self._signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{self._room.home.entity_id}"
-        self._climate_state: pyatmo.AsyncClimate = data_handler.data[self._signal_name]
-
+        self._signal_name = f"{HOME}-{self._home_id}"
         self._publishers.extend(
             [
                 {
