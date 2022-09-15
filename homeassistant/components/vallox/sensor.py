@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, time
+import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,6 +32,8 @@ from .const import (
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_STR_REPORTABLE,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ValloxSensorEntity(ValloxEntity, SensorEntity):
@@ -72,10 +75,21 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
 class ValloxProfileSensor(ValloxSensorEntity):
     """Child class for profile reporting."""
 
+    _deprecation_message_count: int = 0
+
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
+
+        if self.entity_description.deprecated and self._deprecation_message_count <= 5:
+            _LOGGER.warning(
+                "%s is deprecated and will be removed in future versions of Vallox integration. Please use corresponding switch entity instead. Disable %s to get rid of current message",
+                self.entity_id,
+                self.entity_id,
+            )
+            self._deprecation_message_count += 1
+
         return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
 
 
@@ -133,6 +147,7 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
     metric_key: str | None = None
     entity_type: type[ValloxSensorEntity] = ValloxSensorEntity
     round_ndigits: int | None = None
+    deprecated: bool = False
 
 
 SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
@@ -142,6 +157,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         icon="mdi:gauge",
         entity_type=ValloxProfileSensor,
         entity_registry_enabled_default=False,
+        deprecated=True,
     ),
     ValloxSensorEntityDescription(
         key="fan_speed",
