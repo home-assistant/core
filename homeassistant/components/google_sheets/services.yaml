@@ -1,0 +1,24 @@
+append_sheet:
+  name: Append to Sheet
+  description: Append data to a worksheet in Google Sheets.
+  fields:
+    config_entry:
+      name: Sheet
+      description: The sheet to add data to
+      required: true
+      selector:
+        config_entry:
+          integration: google_sheets
+    worksheet:
+      name: Worksheet
+      description: Name of the worksheet. Defaults to the first one in the document.
+      example: "Sheet1"
+      selector:
+        text:
+    data:
+      name: Data
+      description: Data to be appended to the worksheet. This puts the values on a new row underneath the matching column (key). Any new key is placed on the top of a new column.
+      required: true
+      example: '{"hello": world, "cool": True, "count": 5}'
+      selector:
+        object:

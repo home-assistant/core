@@ -53,7 +53,7 @@ PyTurboJPEG==1.6.7
 PyViCare==2.17.0
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.13.4
+PyXiaomiGateway==0.14.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -193,7 +193,7 @@ aiokafka==0.7.2
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.8.2
+aiolifx==0.8.4
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -265,7 +265,7 @@ aioslimproto==2.1.1
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.6
+aioswitcher==3.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -299,9 +299,6 @@ airtouch4pyapi==1.0.5
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
-
-# homeassistant.components.ambee
-ambee==0.4.0
 
 # homeassistant.components.amberelectric
 amberelectric==1.0.4
@@ -470,7 +467,7 @@ bsblan==0.5.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==1.2.0
+bthome-ble==1.2.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -804,6 +801,9 @@ gridnet==4.0.0
 # homeassistant.components.growatt_server
 growattServer==1.2.2
 
+# homeassistant.components.google_sheets
+gspread==5.5.0
+
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
 
@@ -860,7 +860,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220907.1
+home-assistant-frontend==20220907.2
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1206,7 +1206,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.openevse
-openevsewifi==1.1.0
+openevsewifi==1.1.2
 
 # homeassistant.components.openhome
 openhomedevice==2.0.2
@@ -2014,7 +2014,7 @@ python-ripple-api==0.0.3
 python-smarttub==0.0.33
 
 # homeassistant.components.songpal
-python-songpal==0.15
+python-songpal==0.15.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
@@ -2454,9 +2454,6 @@ upcloud-api==2.0.0
 # homeassistant.components.zwave_me
 url-normalize==1.4.3
 
-# homeassistant.components.uscis
-uscisstatus==0.1.1
-
 # homeassistant.components.uvc
 uvcclient==0.11.0
 
@@ -2617,4 +2614,4 @@ zm-py==0.5.2
 zwave-js-server-python==0.41.1
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.4
+zwave_me_ws==0.2.6
