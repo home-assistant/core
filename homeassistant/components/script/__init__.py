@@ -86,7 +86,7 @@ def _scripts_with_x(
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
 
     return [
         script_entity.entity_id
@@ -100,7 +100,7 @@ def _x_in_script(hass: HomeAssistant, entity_id: str, property_name: str) -> lis
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
 
     if (script_entity := component.get_entity(entity_id)) is None:
         return []
@@ -150,7 +150,7 @@ def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
 
     return [
         script_entity.entity_id
