@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 import async_timeout
@@ -77,6 +78,9 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 self._ready_event.set()
             _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
             if not self.device.advertisement_changed(adv):
+                self._present = True
+                self.last_seen = time.monotonic()
+                self.name = service_info.name
                 return
             self.data = flatten_sensors_data(adv.data)
             self.device.update_from_advertisement(adv)
