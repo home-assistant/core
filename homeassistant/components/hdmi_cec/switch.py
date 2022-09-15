@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.media_player import MediaPlayerState
+from pycec.const import POWER_OFF, POWER_ON
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,16 +45,21 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self._device.turn_on()
-        self._state = MediaPlayerState.ON
+        self._attr_is_on = True
         self.schedule_update_ha_state(force_refresh=False)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = MediaPlayerState.OFF
+        self._attr_is_on = False
         self.schedule_update_ha_state(force_refresh=False)
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._state == MediaPlayerState.ON
+    def update(self) -> None:
+        """Update device status."""
+        device = self._device
+        if device.power_status in {POWER_OFF, 3}:
+            self._attr_is_on = False
+        elif device.power_status in {POWER_ON, 4}:
+            self._attr_is_on = True
+        else:
+            _LOGGER.warning("Unknown state: %d", device.power_status)
