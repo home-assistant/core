@@ -615,6 +615,10 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_set_db_ready)
 
+        # Catch up with missed statistics
+        with session_scope(session=self.get_session()) as session:
+            self._schedule_compile_missing_statistics(session)
+
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
@@ -1118,7 +1122,6 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
-            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
 
