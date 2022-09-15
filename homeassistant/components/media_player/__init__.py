@@ -1209,8 +1209,8 @@ async def websocket_browse_media(
 
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
-    component = hass.data[DOMAIN]
-    player: MediaPlayerEntity | None = component.get_entity(msg["entity_id"])
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
+    player = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
