@@ -78,12 +78,10 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
 }
 
-# mypy: disallow-any-generics
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
-    component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -117,13 +115,13 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
+    component: EntityComponent = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
+    component: EntityComponent = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -425,9 +423,7 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
 
-    def _convert_to_state_value(
-        self, value: float, method: Callable[[float, int], float]
-    ) -> float:
+    def _convert_to_state_value(self, value: float, method: Callable) -> float:
         """Convert a value in the number's native unit to the configured unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement
