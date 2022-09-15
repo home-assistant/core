@@ -145,12 +145,6 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
 
-    def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unknown. Without this, entity would remain in
-        # its last state, since the state changes are pushed.
-        self._attr_state = None
-        self.schedule_update_ha_state(False)
-
     def update(self) -> None:
         """Update device status."""
         device = self._device

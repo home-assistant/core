@@ -1,7 +1,6 @@
 """Support for HDMI CEC."""
 from __future__ import annotations
 
-from abc import abstractmethod
 from functools import reduce
 import logging
 import multiprocessing
@@ -393,9 +392,9 @@ class CecEntity(Entity):
         else:
             self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
 
-    @abstractmethod
     def _hdmi_cec_unavailable(self, callback_event):
-        pass
+        self._attr_available = False
+        self.schedule_update_ha_state(False)
 
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
@@ -406,6 +405,7 @@ class CecEntity(Entity):
 
     def _update(self, device=None):
         """Device status changed, schedule an update."""
+        self._attr_available = True
         self.schedule_update_ha_state(True)
 
     @property

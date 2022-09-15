@@ -230,9 +230,6 @@ async def test_icon(
     assert state.attributes["icon"] == expected_icon
 
 
-@pytest.mark.xfail(
-    reason="The code only sets the state to unavailable, doesn't set the `_attr_available` to false."
-)
 async def test_unavailable_status(hass, create_hdmi_network, create_cec_entity):
     """Test entity goes into unavailable status when expected."""
     hdmi_network = await create_hdmi_network()
