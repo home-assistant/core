@@ -1,15 +1,9 @@
 """Tests for the HDMI-CEC switch platform."""
+from pycec.const import POWER_OFF, POWER_ON, STATUS_PLAY, STATUS_STILL, STATUS_STOP
+from pycec.network import PhysicalAddress
 import pytest
 
-from homeassistant.components.hdmi_cec import (
-    EVENT_HDMI_CEC_UNAVAILABLE,
-    POWER_OFF,
-    POWER_ON,
-    STATUS_PLAY,
-    STATUS_STILL,
-    STATUS_STOP,
-    PhysicalAddress,
-)
+from homeassistant.components.hdmi_cec import EVENT_HDMI_CEC_UNAVAILABLE
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,7 +14,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from tests.components.hdmi_cec import MockHDMIDevice
+from . import MockHDMIDevice
 
 
 @pytest.mark.parametrize("config", [{}, {"platform": "switch"}])
