@@ -28,6 +28,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+CACHED_KEY: Any = None
+
 
 class MockECDH:
     """Mock ECDH."""
@@ -55,10 +57,13 @@ class MockCakesClient:
 
     async def obtain_certificate(self):
         """Fake certificate."""
+        global CACHED_KEY
         # Any silly certificate will do, so we make one.
         if self.exc_cert:
             raise self.exc_cert()
-        cert = pskca.create_certificate_and_key()[0]
+        if CACHED_KEY is None:
+            CACHED_KEY = pskca.create_certificate_and_key()[0]
+        cert = CACHED_KEY
         return cert, [cert]
 
 
