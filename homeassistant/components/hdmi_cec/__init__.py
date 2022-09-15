@@ -17,11 +17,6 @@ from pycec.const import (
     KEY_MUTE_TOGGLE,
     KEY_VOLUME_DOWN,
     KEY_VOLUME_UP,
-    POWER_OFF,
-    POWER_ON,
-    STATUS_PLAY,
-    STATUS_STILL,
-    STATUS_STOP,
 )
 from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
@@ -406,22 +401,6 @@ class CecEntity(Entity):
         # its last state, since the state changes are pushed.
         self._state = None
         self.schedule_update_ha_state(False)
-
-    def update(self):
-        """Update device status."""
-        device = self._device
-        if device.power_status in [POWER_OFF, 3]:
-            self._state = MediaPlayerState.OFF
-        elif device.status == STATUS_PLAY:
-            self._state = MediaPlayerState.PLAYING
-        elif device.status == STATUS_STOP:
-            self._state = MediaPlayerState.IDLE
-        elif device.status == STATUS_STILL:
-            self._state = MediaPlayerState.PAUSED
-        elif device.power_status in [POWER_ON, 4]:
-            self._state = MediaPlayerState.ON
-        else:
-            _LOGGER.warning("Unknown state: %d", device.power_status)
 
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
