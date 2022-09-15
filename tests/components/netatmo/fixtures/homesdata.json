@@ -5,10 +5,7 @@
         "id": "91763b24c43d3e344f424e8b",
         "name": "MYHOME",
         "altitude": 112,
-        "coordinates": [
-          52.516263,
-          13.377726
-        ],
+        "coordinates": [52.516263, 13.377726],
         "country": "DE",
         "timezone": "Europe/Berlin",
         "rooms": [
@@ -16,9 +13,7 @@
             "id": "2746182631",
             "name": "Livingroom",
             "type": "livingroom",
-            "module_ids": [
-              "12:34:56:00:01:ae"
-            ]
+            "module_ids": ["12:34:56:00:01:ae"]
           },
           {
             "id": "3688132631",
@@ -36,38 +31,26 @@
             "id": "2833524037",
             "name": "Entrada",
             "type": "lobby",
-            "module_ids": [
-              "12:34:56:03:a5:54"
-            ]
+            "module_ids": ["12:34:56:03:a5:54"]
           },
           {
             "id": "2940411577",
             "name": "Cocina",
             "type": "kitchen",
-            "module_ids": [
-              "12:34:56:03:a0:ac"
-            ]
+            "module_ids": ["12:34:56:03:a0:ac"]
           },
           {
             "id": "2940411588",
             "name": "Child",
             "type": "custom",
-            "module_ids": [
-              "12:34:56:26:cc:01"
-            ]
+            "module_ids": ["12:34:56:26:cc:01"]
           },
           {
             "id": "222452125",
             "name": "Bureau",
             "type": "electrical_cabinet",
-            "module_ids": [
-              "12:34:56:20:f5:44",
-              "12:34:56:20:f5:8c"
-            ],
-            "modules": [
-              "12:34:56:20:f5:44",
-              "12:34:56:20:f5:8c"
-            ],
+            "module_ids": ["12:34:56:20:f5:44", "12:34:56:20:f5:8c"],
+            "modules": ["12:34:56:20:f5:44", "12:34:56:20:f5:8c"],
             "therm_relay": "12:34:56:20:f5:44",
             "true_temperature_available": true
           },
@@ -92,9 +75,7 @@
             "id": "1002003001",
             "name": "Corridor",
             "type": "corridor",
-            "module_ids": [
-              "10:20:30:bd:b8:1e"
-            ]
+            "module_ids": ["10:20:30:bd:b8:1e"]
           }
         ],
         "modules": [
@@ -140,10 +121,7 @@
             "setup_date": 1544828430,
             "room_id": "3688132631",
             "reachable": true,
-            "modules_bridged": [
-              "12:34:56:00:86:99",
-              "12:34:56:00:e3:9b"
-            ]
+            "modules_bridged": ["12:34:56:00:86:99", "12:34:56:00:e3:9b"]
           },
           {
             "id": "12:34:56:00:a5:a4",
@@ -159,9 +137,7 @@
             "setup_date": 1607443936,
             "room_id": "222452125",
             "reachable": true,
-            "modules_bridged": [
-              "12:34:56:20:f5:8c"
-            ],
+            "modules_bridged": ["12:34:56:20:f5:8c"],
             "hk_device_id": "12:34:56:20:d0:c5",
             "capabilities": [
               {
@@ -212,9 +188,7 @@
             "name": "module iDiamant",
             "setup_date": 1562262465,
             "room_id": "222452125",
-            "modules_bridged": [
-              "0009999992"
-            ]
+            "modules_bridged": ["0009999992"]
           },
           {
             "id": "0009999992",
@@ -790,10 +764,7 @@
         "id": "111111111111111111111401",
         "name": "Home with no modules",
         "altitude": 9,
-        "coordinates": [
-          1.23456789,
-          50.0987654
-        ],
+        "coordinates": [1.23456789, 50.0987654],
         "country": "BE",
         "timezone": "Europe/Brussels",
         "rooms": [

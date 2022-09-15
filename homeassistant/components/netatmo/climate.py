@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
+    PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
