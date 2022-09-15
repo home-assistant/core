@@ -661,7 +661,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 async def _async_process_config(
     hass: HomeAssistant,
     config: dict[str, Any],
-    component: EntityComponent,
+    component: EntityComponent[AutomationEntity],
 ) -> bool:
     """Process config and add automations.
 
