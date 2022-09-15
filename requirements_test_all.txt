@@ -1097,7 +1097,7 @@ pyforked-daapd==0.1.11
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.5
+pyfritzhome==0.6.7
 
 # homeassistant.components.fronius
 pyfronius==0.7.1
@@ -1249,7 +1249,7 @@ pyotgw==2.0.3
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.6.0
+pyotp==2.7.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.5.0
@@ -1669,7 +1669,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.4.1
+ultraheat-api==0.4.3
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.6

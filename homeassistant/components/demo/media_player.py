@@ -114,18 +114,13 @@ class AbstractDemoPlayer(MediaPlayerEntity):
     ) -> None:
         """Initialize the demo device."""
         self._attr_name = name
-        self._player_state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self._volume_level = 1.0
         self._volume_muted = False
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
         self._attr_device_class = device_class
-
-    @property
-    def state(self) -> str:
-        """Return the state of the player."""
-        return self._player_state
 
     @property
     def volume_level(self) -> float:
@@ -154,12 +149,12 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def turn_on(self) -> None:
         """Turn the media player on."""
-        self._player_state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
     def turn_off(self) -> None:
         """Turn the media player off."""
-        self._player_state = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
     def mute_volume(self, mute: bool) -> None:
@@ -184,17 +179,17 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def media_play(self) -> None:
         """Send play command."""
-        self._player_state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
     def media_pause(self) -> None:
         """Send pause command."""
-        self._player_state = MediaPlayerState.PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
         self.schedule_update_ha_state()
 
     def media_stop(self) -> None:
         """Send stop command."""
-        self._player_state = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle: bool) -> None:
@@ -264,7 +259,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         position = self._progress
 
-        if self._player_state == MediaPlayerState.PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             position += int(
                 (dt_util.utcnow() - self._progress_updated_at).total_seconds()
             )
@@ -277,7 +272,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        if self._player_state == MediaPlayerState.PLAYING:
+        if self.state == MediaPlayerState.PLAYING:
             return self._progress_updated_at
         return None
 
@@ -396,7 +391,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Clear players playlist."""
         self.tracks = []
         self._cur_track = 0
-        self._player_state = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
     def set_repeat(self, repeat: RepeatMode) -> None:
