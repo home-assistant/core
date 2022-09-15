@@ -103,21 +103,21 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         pushed = None
 
         match packet.data[0]:
-            case 0xd5:
-                """ Enocean Wireless Magnet Contact STM 250 """
+            case 0xD5:
+                """Enocean Wireless Magnet Contact STM 250"""
                 if packet.data[1] == 0x8:
-                    """ contact opened"""
+                    """contact opened"""
                     self.which = 0
                     self.onoff = 1
                     pushed = 1
                 elif packet.data[1] == 0x9:
-                    """ contact closed"""
+                    """contact closed"""
                     self.which = 0
                     self.onoff = 0
                     pushed = 0
                 self.schedule_update_ha_state()
 
-            case 0xf6:
+            case 0xF6:
                 if packet.data[6] == 0x30:
                     pushed = 1
                 elif packet.data[6] == 0x20:
