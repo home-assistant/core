@@ -112,8 +112,6 @@ COLOR_MODES_COLOR = {
     ColorMode.XY,
 }
 
-# mypy: disallow-any-generics
-
 
 def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorMode]:
     """Filter the given color modes."""
@@ -169,7 +167,7 @@ def color_temp_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     return ColorMode.COLOR_TEMP in color_modes
 
 
-def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] | None:
+def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
     """Get supported color modes for a light entity.
 
     First try the statemachine, then entity registry.
@@ -368,7 +366,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
-    component = hass.data[DOMAIN] = EntityComponent[LightEntity](
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -585,13 +583,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
+    component = cast(EntityComponent, hass.data[DOMAIN])
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
+    component = cast(EntityComponent, hass.data[DOMAIN])
     return await component.async_unload_entry(entry)
 
 
@@ -870,10 +868,8 @@ class LightEntity(ToggleEntity):
 
         return data
 
-    def _light_internal_convert_color(
-        self, color_mode: ColorMode | str
-    ) -> dict[str, tuple[float, ...]]:
-        data: dict[str, tuple[float, ...]] = {}
+    def _light_internal_convert_color(self, color_mode: ColorMode | str) -> dict:
+        data: dict[str, tuple] = {}
         if color_mode == ColorMode.HS and self.hs_color:
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
