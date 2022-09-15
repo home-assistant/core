@@ -113,7 +113,7 @@ class ZWaveMeEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self.device.deviceIdentifier)},
             name=self._attr_name,
             manufacturer=self.device.manufacturer,
             sw_version=self.device.firmware,
