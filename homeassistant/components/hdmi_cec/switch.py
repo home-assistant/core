@@ -55,7 +55,7 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
         self.schedule_update_ha_state(force_refresh=False)
 
     def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unavailable. Without this, entity would remain in
+        # Change state to unknown. Without this, entity would remain in
         # its last state, since the state changes are pushed.
         self._attr_is_on = None
         self.schedule_update_ha_state(False)

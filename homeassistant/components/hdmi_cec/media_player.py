@@ -146,7 +146,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         self.send_keypress(KEY_VOLUME_DOWN)
 
     def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unavailable. Without this, entity would remain in
+        # Change state to unknown. Without this, entity would remain in
         # its last state, since the state changes are pushed.
         self._attr_state = None
         self.schedule_update_ha_state(False)
