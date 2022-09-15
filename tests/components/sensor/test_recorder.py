@@ -84,12 +84,12 @@ def set_time_zone():
         ("humidity", "%", "%", "%", 13.050847, -10, 30),
         ("humidity", None, None, None, 13.050847, -10, 30),
         ("pressure", "Pa", "Pa", "Pa", 13.050847, -10, 30),
-        ("pressure", "hPa", "Pa", "Pa", 1305.0847, -1000, 3000),
-        ("pressure", "mbar", "Pa", "Pa", 1305.0847, -1000, 3000),
-        ("pressure", "inHg", "Pa", "Pa", 44195.25, -33863.89, 101591.67),
-        ("pressure", "psi", "Pa", "Pa", 89982.42, -68947.57, 206842.71),
+        ("pressure", "hPa", "hPa", "Pa", 13.050847, -10, 30),
+        ("pressure", "mbar", "mbar", "Pa", 13.050847, -10, 30),
+        ("pressure", "inHg", "inHg", "Pa", 13.050847, -10, 30),
+        ("pressure", "psi", "psi", "Pa", 13.050847, -10, 30),
         ("temperature", "°C", "°C", "°C", 13.050847, -10, 30),
-        ("temperature", "°F", "°C", "°C", -10.52731, -23.33333, -1.111111),
+        ("temperature", "°F", "°F", "°C", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics(
@@ -1513,12 +1513,12 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         ("humidity", "%", 30),
         ("humidity", None, 30),
         ("pressure", "Pa", 30),
-        ("pressure", "hPa", 3000),
-        ("pressure", "mbar", 3000),
-        ("pressure", "inHg", 101591.67),
-        ("pressure", "psi", 206842.71),
+        ("pressure", "hPa", 30),
+        ("pressure", "mbar", 30),
+        ("pressure", "inHg", 30),
+        ("pressure", "psi", 30),
         ("temperature", "°C", 30),
-        ("temperature", "°F", -1.111111),
+        ("temperature", "°F", 30),
     ],
 )
 def test_compile_hourly_statistics_unchanged(
@@ -1600,12 +1600,12 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
         ("humidity", "%", 30),
         ("humidity", None, 30),
         ("pressure", "Pa", 30),
-        ("pressure", "hPa", 3000),
-        ("pressure", "mbar", 3000),
-        ("pressure", "inHg", 101591.67),
-        ("pressure", "psi", 206842.71),
+        ("pressure", "hPa", 30),
+        ("pressure", "mbar", 30),
+        ("pressure", "inHg", 30),
+        ("pressure", "psi", 30),
         ("temperature", "°C", 30),
-        ("temperature", "°F", -1.111111),
+        ("temperature", "°F", 30),
     ],
 )
 def test_compile_hourly_statistics_unavailable(
@@ -1685,12 +1685,12 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("measurement", "gas", "m³", "m³", "m³", "mean"),
         ("measurement", "gas", "ft³", "m³", "m³", "mean"),
         ("measurement", "pressure", "Pa", "Pa", "Pa", "mean"),
-        ("measurement", "pressure", "hPa", "Pa", "Pa", "mean"),
-        ("measurement", "pressure", "mbar", "Pa", "Pa", "mean"),
-        ("measurement", "pressure", "inHg", "Pa", "Pa", "mean"),
-        ("measurement", "pressure", "psi", "Pa", "Pa", "mean"),
+        ("measurement", "pressure", "hPa", "hPa", "Pa", "mean"),
+        ("measurement", "pressure", "mbar", "mbar", "Pa", "mean"),
+        ("measurement", "pressure", "inHg", "inHg", "Pa", "mean"),
+        ("measurement", "pressure", "psi", "psi", "Pa", "mean"),
         ("measurement", "temperature", "°C", "°C", "°C", "mean"),
-        ("measurement", "temperature", "°F", "°C", "°C", "mean"),
+        ("measurement", "temperature", "°F", "°F", "°C", "mean"),
     ],
 )
 def test_list_statistic_ids(
@@ -2162,13 +2162,21 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_unit,statistic_unit,mean,min,max",
+    "device_class,state_unit,display_unit,statistic_unit,mean,min,max",
     [
-        ("power", "kW", "W", 13050.847, -10000, 30000),
+        ("power", "kW", "kW", "W", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_device_class_2(
-    hass_recorder, caplog, device_class, state_unit, statistic_unit, mean, min, max
+    hass_recorder,
+    caplog,
+    device_class,
+    state_unit,
+    display_unit,
+    statistic_unit,
+    mean,
+    min,
+    max,
 ):
     """Test compiling hourly statistics where device class changes from one hour to the next."""
     zero = dt_util.utcnow()
@@ -2191,7 +2199,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": statistic_unit,
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2240,7 +2248,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
-            "display_unit_of_measurement": statistic_unit,
+            "display_unit_of_measurement": display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -2325,6 +2333,7 @@ def test_compile_hourly_statistics_changing_statistics(
                 "has_sum": False,
                 "name": None,
                 "source": "recorder",
+                "state_unit_of_measurement": None,
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
             },
@@ -2360,6 +2369,7 @@ def test_compile_hourly_statistics_changing_statistics(
                 "has_sum": True,
                 "name": None,
                 "source": "recorder",
+                "state_unit_of_measurement": None,
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
             },

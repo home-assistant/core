@@ -30,20 +30,25 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
-POWER_SENSOR_ATTRIBUTES = {
+POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
     "state_class": "measurement",
     "unit_of_measurement": "kW",
 }
-PRESSURE_SENSOR_ATTRIBUTES = {
+PRESSURE_SENSOR_HPA_ATTRIBUTES = {
     "device_class": "pressure",
     "state_class": "measurement",
     "unit_of_measurement": "hPa",
 }
-TEMPERATURE_SENSOR_ATTRIBUTES = {
+TEMPERATURE_SENSOR_C_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
     "unit_of_measurement": "°C",
+}
+TEMPERATURE_SENSOR_F_ATTRIBUTES = {
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit_of_measurement": "°F",
 }
 ENERGY_SENSOR_ATTRIBUTES = {
     "device_class": "energy",
@@ -60,12 +65,14 @@ GAS_SENSOR_ATTRIBUTES = {
 @pytest.mark.parametrize(
     "units, attributes, state, value",
     [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
     ],
 )
 async def test_statistics_during_period(
@@ -129,12 +136,12 @@ async def test_statistics_during_period(
 @pytest.mark.parametrize(
     "units, attributes, state, value",
     [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
     ],
 )
 async def test_statistics_during_period_in_the_past(
@@ -302,12 +309,14 @@ async def test_statistics_during_period_bad_end_time(
 @pytest.mark.parametrize(
     "units, attributes, display_unit, statistics_unit",
     [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "W"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "W"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F", "°C"),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C", "°C"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi", "Pa"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa", "Pa"),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa"),
     ],
 )
 async def test_list_statistic_ids(
@@ -429,9 +438,9 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     now = dt_util.utcnow()
 
     units = METRIC_SYSTEM
-    attributes = POWER_SENSOR_ATTRIBUTES
+    attributes = POWER_SENSOR_KW_ATTRIBUTES
     state = 10
-    value = 10000
+    value = 10
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -555,7 +564,7 @@ async def test_update_statistics_metadata(
     now = dt_util.utcnow()
 
     units = METRIC_SYSTEM
-    attributes = POWER_SENSOR_ATTRIBUTES
+    attributes = POWER_SENSOR_KW_ATTRIBUTES
     state = 10
 
     hass.config.units = units
@@ -575,7 +584,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "W",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -602,7 +611,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": new_unit,
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1016,6 +1025,7 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
+                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },

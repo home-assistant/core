@@ -1,4 +1,8 @@
-"""Models for SQLAlchemy."""
+"""Models for SQLAlchemy.
+
+This file contains the model definitions for schema version 28.
+It is used to test the schema migration logic.
+"""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -30,6 +34,12 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
+from homeassistant.components.recorder.const import ALL_DOMAIN_EXCLUDE_ATTRS
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMetaData,
+    process_timestamp,
+)
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -46,14 +56,11 @@ from homeassistant.helpers.json import (
 )
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS
-from .models import StatisticData, StatisticMetaData, process_timestamp
-
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 30
+SCHEMA_VERSION = 29
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
@@ -104,10 +111,10 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
-JSON_VARIANT_CAST = Text().with_variant(
+JSON_VARIENT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"
 )
-JSONB_VARIANT_CAST = Text().with_variant(
+JSONB_VARIENT_CAST = Text().with_variant(
     postgresql.JSONB(none_as_null=True), "postgresql"
 )
 DATETIME_TYPE = (
@@ -494,7 +501,6 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     id = Column(Integer, Identity(), primary_key=True)
     statistic_id = Column(String(255), index=True, unique=True)
     source = Column(String(32))
-    state_unit_of_measurement = Column(String(255))
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
@@ -591,17 +597,17 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
 
 EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSONB_VARIANT_CAST), JSONLiteral(none_as_null=True)
+    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
 )
 OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSONB_VARIANT_CAST), JSONLiteral(none_as_null=True)
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
 )
 
 SHARED_ATTRS_JSON = type_coerce(
-    StateAttributes.shared_attrs.cast(JSON_VARIANT_CAST), JSON(none_as_null=True)
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
 )
 OLD_FORMAT_ATTRS_JSON = type_coerce(
-    States.attributes.cast(JSON_VARIANT_CAST), JSON(none_as_null=True)
+    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
 )
 
 ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
