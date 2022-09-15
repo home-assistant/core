@@ -221,7 +221,7 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
