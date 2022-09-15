@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -261,7 +261,7 @@ class Subscription:
 
     topic: str = attr.ib()
     matcher: Any = attr.ib()
-    job: HassJob = attr.ib()
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str | None = attr.ib(default="utf-8")
 
