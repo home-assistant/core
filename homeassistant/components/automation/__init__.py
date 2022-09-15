@@ -228,6 +228,20 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
     ]
 
 
+@callback
+def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the blueprint the automation is based on or None."""
+    if DOMAIN not in hass.data:
+        return None
+
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
+
+    if (automation_entity := component.get_entity(entity_id)) is None:
+        return None
+
+    return automation_entity.referenced_blueprint
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent[AutomationEntity](
