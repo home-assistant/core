@@ -868,11 +868,6 @@
           "power": 476,
           "reachable": true,
           "bridge": "12:34:56:80:60:40"
-        },
-        {
-          "id": "91827376-7e04-5298-83af-a0cb8372dff3",
-          "last_seen": 1559224132,
-          "out_of_sight": true
         }
       ],
       "rooms": [
