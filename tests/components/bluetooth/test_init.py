@@ -1888,7 +1888,12 @@ async def test_register_callback_survives_reload(
         manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
     )
-
+    switchbot_adv_2 = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["zba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
     inject_advertisement(hass, switchbot_device, switchbot_adv)
     assert len(callbacks) == 1
     service_info: BluetoothServiceInfo = callbacks[0][0]
@@ -1900,7 +1905,7 @@ async def test_register_callback_survives_reload(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    inject_advertisement(hass, switchbot_device, switchbot_adv)
+    inject_advertisement(hass, switchbot_device, switchbot_adv_2)
     assert len(callbacks) == 2
     service_info: BluetoothServiceInfo = callbacks[1][0]
     assert service_info.name == "wohand"
