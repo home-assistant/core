@@ -1203,7 +1203,6 @@ async def test_import_statistics(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
-        "state_unit_of_measurement": "kWh",
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
     }
@@ -1433,7 +1432,6 @@ async def test_adjust_sum_statistics_energy(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
-        "state_unit_of_measurement": "kWh",
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
     }
@@ -1632,7 +1630,6 @@ async def test_adjust_sum_statistics_gas(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
-        "state_unit_of_measurement": "m³",
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
     }
@@ -1797,24 +1794,8 @@ async def test_adjust_sum_statistics_gas(
     "state_unit, statistic_unit, unit_class, factor, valid_units, invalid_units",
     (
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
-        (
-            "MWh",
-            "kWh",
-            "energy",
-            0.001,
-            ("Wh", "kWh", "MWh"),
-            ("ft³", "m³", "cats", None),
-        ),
         ("MWh", "MWh", None, 1, ("MWh",), ("Wh", "kWh", "ft³", "m³", "cats", None)),
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
-        (
-            "ft³",
-            "m³",
-            "volume",
-            35.3147,
-            ("ft³", "m³"),
-            ("Wh", "kWh", "MWh", "cats", None),
-        ),
         ("ft³", "ft³", None, 1, ("ft³",), ("m³", "Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
         (None, None, None, 1, (None,), ("cats",)),
@@ -1862,7 +1843,6 @@ async def test_adjust_sum_statistics_errors(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
-        "state_unit_of_measurement": state_unit,
         "statistic_id": statistic_id,
         "unit_of_measurement": statistic_unit,
     }
