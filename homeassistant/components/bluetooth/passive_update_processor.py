@@ -101,9 +101,11 @@ class PassiveBluetoothProcessorCoordinator(
         return remove_processor
 
     @callback
-    def _async_handle_unavailable(self, address: str) -> None:
+    def _async_handle_unavailable(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
         """Handle the device going unavailable."""
-        super()._async_handle_unavailable(address)
+        super()._async_handle_unavailable(service_info)
         for processor in self._processors:
             processor.async_handle_unavailable()
 
