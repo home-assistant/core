@@ -1335,7 +1335,7 @@ pyspcwebgw==0.4.0
 pysqueezebox==0.6.0
 
 # homeassistant.components.switchbee
-pyswitchbee==1.4.7
+pyswitchbee==1.4.8
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
