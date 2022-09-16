@@ -204,9 +204,10 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             ):
                 self._latest_version_firmware = latest_firmware
                 self._attr_latest_version = latest_firmware.version
-            else:
+                self.async_write_ha_state()
+            elif self._attr_latest_version != self._attr_installed_version:
                 self._attr_latest_version = self._attr_installed_version
-            self.async_write_ha_state()
+                self.async_write_ha_state()
         finally:
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
