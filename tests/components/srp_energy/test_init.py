@@ -1,27 +1,20 @@
 """Tests for Srp Energy component Init."""
-from homeassistant import config_entries
-from homeassistant.components import srp_energy
-
-from . import init_integration
+from homeassistant.components.srp_energy import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 
 
-async def test_setup_entry(hass):
-    """Test setup entry fails if deCONZ is not available."""
-    config_entry = await init_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
-    assert hass.data[srp_energy.SRP_ENERGY_DOMAIN]
+async def test_setup_entry(hass, init_integration):
+    """Test setup entry."""
+    assert init_integration.state == ConfigEntryState.LOADED
+    assert hass.data[DOMAIN][init_integration.entry_id]
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, init_integration):
     """Test being able to unload an entry."""
-    config_entry = await init_integration(hass)
-    assert hass.data[srp_energy.SRP_ENERGY_DOMAIN]
+    assert init_integration.state == ConfigEntryState.LOADED
+    assert hass.data[DOMAIN][init_integration.entry_id]
 
-    assert await srp_energy.async_unload_entry(hass, config_entry)
-    assert not hass.data[srp_energy.SRP_ENERGY_DOMAIN]
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
 
-
-async def test_async_setup_entry_with_exception(hass):
-    """Test exception when SrpClient can't load."""
-    await init_integration(hass, side_effect=Exception())
-    assert srp_energy.SRP_ENERGY_DOMAIN not in hass.data
+    assert init_integration.entry_id not in hass.data[DOMAIN]

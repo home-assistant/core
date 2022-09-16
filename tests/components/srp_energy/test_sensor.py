@@ -1,136 +1,66 @@
 """Tests for the srp_energy sensor platform."""
-from unittest.mock import MagicMock
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.srp_energy.const import (
+from homeassistant.components.srp_energy import (
     ATTRIBUTION,
     DEFAULT_NAME,
+    DOMAIN,
     ICON,
     SENSOR_NAME,
-    SENSOR_TYPE,
-    SRP_ENERGY_DOMAIN,
 )
-from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
-from homeassistant.const import UnitOfEnergy
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+)
+from homeassistant.helpers import entity_registry as ent_reg
+
+from . import ACCNT_ID
 
 
-async def test_async_setup_entry(hass):
-    """Test the sensor."""
-    fake_async_add_entities = MagicMock()
-    fake_srp_energy_client = MagicMock()
-    fake_srp_energy_client.usage.return_value = [{1, 2, 3, 1.999, 4}]
-    fake_config = MagicMock(
-        data={
-            "name": "SRP Energy",
-            "is_tou": False,
-            "id": "0123456789",
-            "username": "testuser@example.com",
-            "password": "mypassword",
-        }
-    )
-    hass.data[SRP_ENERGY_DOMAIN] = fake_srp_energy_client
+async def test_loading_sensors(hass, init_integration) -> None:
+    """Test the srp energy sensors."""
+    # Validate the Config Entry was initialized
+    assert init_integration.state == ConfigEntryState.LOADED
+    assert hass.data[DOMAIN][init_integration.entry_id]
 
-    await async_setup_entry(hass, fake_config, fake_async_add_entities)
+    # Check sensors were loaded
+    assert len(hass.states.async_all()) == 1
 
 
-async def test_async_setup_entry_timeout_error(hass):
-    """Test fetching usage data. Failed the first time because was too get response."""
-    fake_async_add_entities = MagicMock()
-    fake_srp_energy_client = MagicMock()
-    fake_srp_energy_client.usage.return_value = [{1, 2, 3, 1.999, 4}]
-    fake_config = MagicMock(
-        data={
-            "name": "SRP Energy",
-            "is_tou": False,
-            "id": "0123456789",
-            "username": "testuser@example.com",
-            "password": "mypassword",
-        }
-    )
-    hass.data[SRP_ENERGY_DOMAIN] = fake_srp_energy_client
-    fake_srp_energy_client.usage.side_effect = TimeoutError()
-
-    await async_setup_entry(hass, fake_config, fake_async_add_entities)
-    assert not fake_async_add_entities.call_args[0][0][
-        0
-    ].coordinator.last_update_success
-
-
-async def test_async_setup_entry_connect_error(hass):
-    """Test fetching usage data. Failed the first time because was too get response."""
-    fake_async_add_entities = MagicMock()
-    fake_srp_energy_client = MagicMock()
-    fake_srp_energy_client.usage.return_value = [{1, 2, 3, 1.999, 4}]
-    fake_config = MagicMock(
-        data={
-            "name": "SRP Energy",
-            "is_tou": False,
-            "id": "0123456789",
-            "username": "testuser@example.com",
-            "password": "mypassword",
-        }
-    )
-    hass.data[SRP_ENERGY_DOMAIN] = fake_srp_energy_client
-    fake_srp_energy_client.usage.side_effect = ValueError()
-
-    await async_setup_entry(hass, fake_config, fake_async_add_entities)
-    assert not fake_async_add_entities.call_args[0][0][
-        0
-    ].coordinator.last_update_success
-
-
-async def test_srp_entity(hass):
+async def test_srp_entity(hass, init_integration):
     """Test the SrpEntity."""
-    fake_coordinator = MagicMock(data=1.99999999999)
-    srp_entity = SrpEntity(fake_coordinator)
-    srp_entity.hass = hass
+    entity_registry = ent_reg.async_get(hass)
+
+    assert "sensor.srp_energy_usage" in entity_registry.entities
+    srp_entity = entity_registry.entities["sensor.srp_energy_usage"]
 
     assert srp_entity is not None
-    assert srp_entity.name == f"{DEFAULT_NAME} {SENSOR_NAME}"
-    assert srp_entity.unique_id == SENSOR_TYPE
-    assert srp_entity.state is None
-    assert srp_entity.unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
-    assert srp_entity.icon == ICON
-    assert srp_entity.usage == "2.00"
-    assert srp_entity.should_poll is False
-    assert srp_entity.attribution == ATTRIBUTION
-    assert srp_entity.available is not None
-    assert srp_entity.device_class is SensorDeviceClass.ENERGY
-    assert srp_entity.state_class is SensorStateClass.TOTAL_INCREASING
+    assert srp_entity.original_name == f"{DEFAULT_NAME} {SENSOR_NAME}"
+    assert srp_entity.unique_id == f"{ACCNT_ID}_energy_usage".lower()
+    assert srp_entity.unit_of_measurement == ENERGY_KILO_WATT_HOUR
+    assert srp_entity.original_icon == ICON
+    assert srp_entity.original_device_class is SensorDeviceClass.ENERGY
+    assert srp_entity.capabilities["state_class"] is SensorStateClass.TOTAL_INCREASING
 
-    await srp_entity.async_added_to_hass()
-    assert srp_entity.state is not None
-    assert fake_coordinator.async_add_listener.called
-    assert not fake_coordinator.async_add_listener.data.called
+    # assert srp_entity.available is not None
 
+    usage_state = hass.states.get(srp_entity.entity_id)
+    assert usage_state.state == "150.8"
 
-async def test_srp_entity_no_data(hass):
-    """Test the SrpEntity."""
-    fake_coordinator = MagicMock(data=False)
-    srp_entity = SrpEntity(fake_coordinator)
-    srp_entity.hass = hass
-    assert srp_entity.extra_state_attributes is None
+    # Validate attributions
+    assert (
+        usage_state.attributes.get("state_class") is SensorStateClass.TOTAL_INCREASING
+    )
+    assert usage_state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert usage_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
-
-async def test_srp_entity_no_coord_data(hass):
-    """Test the SrpEntity."""
-    fake_coordinator = MagicMock(data=False)
-    srp_entity = SrpEntity(fake_coordinator)
-    srp_entity.hass = hass
-
-    assert srp_entity.usage is None
-
-
-async def test_srp_entity_async_update(hass):
-    """Test the SrpEntity."""
-
-    async def async_magic():
-        pass
-
-    MagicMock.__await__ = lambda x: async_magic().__await__()
-    fake_coordinator = MagicMock(data=False)
-    srp_entity = SrpEntity(fake_coordinator)
-    srp_entity.hass = hass
-
-    await srp_entity.async_update()
-    assert fake_coordinator.async_request_refresh.called
+    assert usage_state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert usage_state.attributes.get(ATTR_ICON) == ICON
+    assert (
+        usage_state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"{DEFAULT_NAME} {SENSOR_NAME}"
+    )
