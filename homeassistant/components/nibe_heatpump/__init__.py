@@ -159,7 +159,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
     ) -> None:
         """Write coil and update state."""
         if not coil:
-            raise Exception("No coil available")
+            raise HomeAssistantError("No coil available")
 
         coil.value = value
         coil = await self.connection.write_coil(coil)
