@@ -1,0 +1,12 @@
+aiofiles==0.8.0
+aiohttp==3.8.1
+async_timeout==4.0.2
+jsonschema==3.2.0
+numpy==1.19.5
+pycryptodome==3.15.0
+pycryptodomex==3.15.0
+requests==2.25.1
+python-slugify
+voluptuous==0.13.1
+websockets==10.3
+klyqa_ctl>=1.0.3

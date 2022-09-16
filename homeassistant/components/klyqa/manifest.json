@@ -1,0 +1,17 @@
+{
+  "domain": "klyqa",
+  "name": "Klyqa",
+  "version": "1.0.0",
+  "documentation": "https://www.home-assistant.io/integrations/klyqa",
+  "config_flow": true,
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "requirements": ["pycryptodomex==3.14.1", "websockets", "aiofiles", "python-slugify","klyqa_ctl>=1.0.3"],
+  "dependencies": ["network"],
+  "after_dependencies": [],
+  "codeowners": [
+    "@fraizy22", "@klyqa"
+  ],
+  "iot_class": "local_push"
+}
