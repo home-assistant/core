@@ -60,10 +60,6 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         PRESET_DEFROSTER_FRONT_AND_REAR,
     ]
 
-    _hvac_mode: HVACMode
-    _target_temperature: float
-    _preset_mode: str
-
     def __init__(
         self,
         client: MazdaAPIClient,
@@ -77,6 +73,21 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         self.region = region
         self._attr_unique_id = self.vin
 
+        if self.data["hvacSetting"]["temperatureUnit"] == "F":
+            self._attr_precision = PRECISION_WHOLE
+            self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_min_temp = 61.0
+            self._attr_max_temp = 83.0
+        else:
+            self._attr_precision = PRECISION_HALVES
+            self._attr_temperature_unit = TEMP_CELSIUS
+            if region == "MJO":
+                self._attr_min_temp = 18.5
+                self._attr_max_temp = 31.5
+            else:
+                self._attr_min_temp = 15.5
+                self._attr_max_temp = 28.5
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         # Whenever a coordinator update happens, update the state of the climate entity.
@@ -88,83 +99,38 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         self._update_hvac_state()
 
     def _update_hvac_state(self):
+        # Update the HVAC mode
         hvac_on = self.client.get_assumed_hvac_mode(self.vehicle_id)
-        self._hvac_mode = HVACMode.HEAT_COOL if hvac_on else HVACMode.OFF
+        self._attr_hvac_mode = HVACMode.HEAT_COOL if hvac_on else HVACMode.OFF
 
+        # Update the target temperature
         hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
-        self._target_temperature = hvac_setting.get("temperature")
+        self._attr_target_temperature = hvac_setting.get("temperature")
 
+        # Update the preset mode based on the state of the front and rear defrosters
         front_defroster = hvac_setting.get("frontDefroster")
         rear_defroster = hvac_setting.get("rearDefroster")
         if front_defroster and rear_defroster:
-            self._preset_mode = PRESET_DEFROSTER_FRONT_AND_REAR
+            self._attr_preset_mode = PRESET_DEFROSTER_FRONT_AND_REAR
         elif front_defroster:
-            self._preset_mode = PRESET_DEFROSTER_FRONT
+            self._attr_preset_mode = PRESET_DEFROSTER_FRONT
         elif rear_defroster:
-            self._preset_mode = PRESET_DEFROSTER_REAR
+            self._attr_preset_mode = PRESET_DEFROSTER_REAR
         else:
-            self._preset_mode = PRESET_DEFROSTER_OFF
+            self._attr_preset_mode = PRESET_DEFROSTER_OFF
 
-        self.async_write_ha_state()
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return the current HVAC setting."""
-        return self._hvac_mode
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the temperature setting."""
-        if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            return PRECISION_WHOLE
-        return PRECISION_HALVES
-
-    @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
+        # Update the current temperature
         current_temperature_celsius = self.data["evStatus"]["hvacInfo"][
             "interiorTemperatureCelsius"
         ]
         if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            return convert_temperature(
+            self._attr_current_temperature = convert_temperature(
                 current_temperature_celsius, TEMP_CELSIUS, TEMP_FAHRENHEIT
             )
-        return current_temperature_celsius
+        else:
+            self._attr_current_temperature = current_temperature_celsius
 
-    @property
-    def target_temperature(self) -> float:
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum target temperature."""
-        if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            return 61.0
-        if self.region == "MJO":
-            return 18.5
-        return 15.5
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum target temperature."""
-        if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            return 83.0
-        if self.region == "MJO":
-            return 31.5
-        return 28.5
-
-    @property
-    def preset_mode(self) -> str:
-        """Return the current preset mode based on the state of the defrosters."""
-        return self._preset_mode
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new HVAC mode."""
@@ -185,12 +151,12 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
                 self.vehicle_id,
                 rounded_temperature,
                 self.data["hvacSetting"]["temperatureUnit"],
-                self._preset_mode
+                self._attr_preset_mode
                 in [
                     PRESET_DEFROSTER_FRONT_AND_REAR,
                     PRESET_DEFROSTER_FRONT,
                 ],
-                self._preset_mode
+                self._attr_preset_mode
                 in [
                     PRESET_DEFROSTER_FRONT_AND_REAR,
                     PRESET_DEFROSTER_REAR,
@@ -212,7 +178,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
 
         await self.client.set_hvac_setting(
             self.vehicle_id,
-            self._target_temperature,
+            self._attr_target_temperature,
             self.data["hvacSetting"]["temperatureUnit"],
             front_defroster,
             rear_defroster,
