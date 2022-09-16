@@ -72,4 +72,4 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
                 f"Error communicating with API: {exp}"
             ) from SwitchBeeError
 
-        return self.api.devices
+        return self.api.devices  # type: ignore[no-any-return]

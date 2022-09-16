@@ -87,7 +87,7 @@ class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntit
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
 
-        async def async_refresh_state():
+        async def async_refresh_state() -> None:
             """Refresh the device state in the Central Unit.
 
             This function addresses issue of a device that came online back but still report
