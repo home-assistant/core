@@ -40,7 +40,7 @@ class BasePassiveBluetoothCoordinator:
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
         self.mode = mode
-        self._last_unavailable = 0.0
+        self._last_unavailable_time = 0.0
         self._last_name = address
 
     @callback
@@ -75,11 +75,15 @@ class BasePassiveBluetoothCoordinator:
     @property
     def last_seen(self) -> float:
         """Return the last time the device was seen."""
+        # If the device is unavailable it will not have a service
+        # info and fall through below.
         if service_info := async_last_service_info(
             self.hass, self.address, self.connectable
         ):
             return service_info.time
-        return self._last_unavailable
+        # This is the time from the last advertisement that
+        # was set when the unavailable callback was called.
+        return self._last_unavailable_time
 
     @property
     def available(self) -> bool:
@@ -116,5 +120,5 @@ class BasePassiveBluetoothCoordinator:
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
         """Handle the device going unavailable."""
-        self._last_unavailable = service_info.time
+        self._last_unavailable_time = service_info.time
         self._last_name = service_info.name
