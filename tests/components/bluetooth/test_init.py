@@ -2546,10 +2546,25 @@ async def test_issue_outdated_haos(
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
-
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
     registry = async_get_issue_registry(hass)
     issue = registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is not None
+
+
+async def test_issue_outdated_haos_no_adapters(
+    hass, mock_bleak_scanner_start, no_adapters, operating_system_85
+):
+    """Test we do not create an issue on outdated haos if there are no adapters."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is None
 
 
 async def test_haos_9_or_later(
@@ -2562,7 +2577,8 @@ async def test_haos_9_or_later(
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
-
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
     registry = async_get_issue_registry(hass)
     issue = registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
