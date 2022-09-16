@@ -1,10 +1,6 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
+from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, DOMAIN, SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import (
-    ATTR_SOURCE_TYPE,
-    DOMAIN,
-    SourceType,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,

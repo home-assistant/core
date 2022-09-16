@@ -722,6 +722,9 @@ async def handle_supported_brands(
     for int_or_exc in ints_or_excs.values():
         if isinstance(int_or_exc, Exception):
             raise int_or_exc
+        # Happens if a custom component without supported brands overrides a built-in one with supported brands
+        if "supported_brands" not in int_or_exc.manifest:
+            continue
         data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
     connection.send_result(msg["id"], data)
 

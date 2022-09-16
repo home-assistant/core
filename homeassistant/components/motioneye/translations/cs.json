@@ -13,6 +13,10 @@
         "step": {
             "user": {
                 "data": {
+                    "admin_password": "Heslo spr\u00e1vce",
+                    "admin_username": "U\u017eivatelsk\u00e9 jm\u00e9no spr\u00e1vce",
+                    "surveillance_password": "Heslo pro dohled",
+                    "surveillance_username": "U\u017eivatelsk\u00e9 jm\u00e9no pro dohled",
                     "url": "URL"
                 }
             }

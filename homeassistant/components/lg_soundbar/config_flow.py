@@ -1,5 +1,5 @@
 """Config flow to configure the LG Soundbar integration."""
-from queue import Queue
+from queue import Full, Queue
 import socket
 
 import temescal
@@ -20,18 +20,29 @@ def test_connect(host, port):
     uuid_q = Queue(maxsize=1)
     name_q = Queue(maxsize=1)
 
+    def queue_add(attr_q, data):
+        try:
+            attr_q.put_nowait(data)
+        except Full:
+            pass
+
     def msg_callback(response):
-        if response["msg"] == "MAC_INFO_DEV" and "s_uuid" in response["data"]:
-            uuid_q.put_nowait(response["data"]["s_uuid"])
+        if (
+            response["msg"] in ["MAC_INFO_DEV", "PRODUCT_INFO"]
+            and "s_uuid" in response["data"]
+        ):
+            queue_add(uuid_q, response["data"]["s_uuid"])
         if (
             response["msg"] == "SPK_LIST_VIEW_INFO"
             and "s_user_name" in response["data"]
         ):
-            name_q.put_nowait(response["data"]["s_user_name"])
+            queue_add(name_q, response["data"]["s_user_name"])
 
     try:
         connection = temescal.temescal(host, port=port, callback=msg_callback)
         connection.get_mac_info()
+        if uuid_q.empty():
+            connection.get_product_info()
         connection.get_info()
         details = {"name": name_q.get(timeout=10), "uuid": uuid_q.get(timeout=10)}
         return details
