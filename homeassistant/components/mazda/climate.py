@@ -13,7 +13,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.temperature import convert as convert_temperature
@@ -90,15 +90,14 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
-        # Whenever a coordinator update happens, update the state of the climate entity.
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._update_hvac_state)
-        )
+        await super().async_added_to_hass()
 
         # Perform an initial update of the state.
-        self._update_hvac_state()
+        self._handle_coordinator_update()
 
-    def _update_hvac_state(self):
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator data updates."""
         # Update the HVAC mode
         hvac_on = self.client.get_assumed_hvac_mode(self.vehicle_id)
         self._attr_hvac_mode = HVACMode.HEAT_COOL if hvac_on else HVACMode.OFF
@@ -106,6 +105,17 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         # Update the target temperature
         hvac_setting = self.client.get_assumed_hvac_setting(self.vehicle_id)
         self._attr_target_temperature = hvac_setting.get("temperature")
+
+        # Update the current temperature
+        current_temperature_celsius = self.data["evStatus"]["hvacInfo"][
+            "interiorTemperatureCelsius"
+        ]
+        if self.data["hvacSetting"]["temperatureUnit"] == "F":
+            self._attr_current_temperature = convert_temperature(
+                current_temperature_celsius, TEMP_CELSIUS, TEMP_FAHRENHEIT
+            )
+        else:
+            self._attr_current_temperature = current_temperature_celsius
 
         # Update the preset mode based on the state of the front and rear defrosters
         front_defroster = hvac_setting.get("frontDefroster")
@@ -119,18 +129,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         else:
             self._attr_preset_mode = PRESET_DEFROSTER_OFF
 
-        # Update the current temperature
-        current_temperature_celsius = self.data["evStatus"]["hvacInfo"][
-            "interiorTemperatureCelsius"
-        ]
-        if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            self._attr_current_temperature = convert_temperature(
-                current_temperature_celsius, TEMP_CELSIUS, TEMP_FAHRENHEIT
-            )
-        else:
-            self._attr_current_temperature = current_temperature_celsius
-
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new HVAC mode."""
@@ -139,7 +138,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             await self.client.turn_off_hvac(self.vehicle_id)
 
-        self._update_hvac_state()
+        self._handle_coordinator_update()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
@@ -163,7 +162,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
                 ],
             )
 
-            self._update_hvac_state()
+            self._handle_coordinator_update()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Turn on/off the front/rear defrosters according to the chosen preset mode."""
@@ -184,4 +183,4 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
             rear_defroster,
         )
 
-        self._update_hvac_state()
+        self._handle_coordinator_update()
