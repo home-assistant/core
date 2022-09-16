@@ -84,52 +84,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-<<<<<<< HEAD
-=======
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for AEMET."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None) -> FlowResult:
-        """Handle options flow."""
-
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        all_devices = [
-            DeviceType.Switch,
-            DeviceType.TimedSwitch,
-            DeviceType.GroupSwitch,
-            DeviceType.TimedPowerSwitch,
-            DeviceType.Shutter,
-            DeviceType.Somfy,
-        ]
-
-        data_schema = {
-            vol.Required(
-                CONF_DEVICES,
-                default=self.config_entry.options.get(
-                    CONF_DEVICES,
-                    CONF_DEFAULT_ALLOWED,
-                ),
-            ): cv.multi_select([device.display for device in all_devices]),
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(data_schema))
-
->>>>>>> fdd68e27bc (Applied code review feedback from other PR)
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
