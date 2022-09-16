@@ -153,9 +153,7 @@ async def get_api(hass, entry):
         raise UnknownError from error
 
 
-def _get_client(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> transmissionrpc.Client | None:
+def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient | None:
     """Return client from integration name or entry_id."""
     if entry_id := data.get(CONF_ENTRY_ID):
         if hass.config_entries.async_get_entry(entry_id):
