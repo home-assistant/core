@@ -76,7 +76,7 @@ class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntit
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._is_online and self.coordinator.last_update_success
+        return self._is_online and super().available
 
     @callback
     def _handle_coordinator_update(self) -> None:
