@@ -1,8 +1,8 @@
 """Update coordinator for the Bluetooth integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import logging
-import time
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
@@ -11,6 +11,8 @@ from . import (
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_address_present,
+    async_last_service_info,
     async_register_callback,
     async_track_unavailable,
 )
@@ -33,14 +35,13 @@ class BasePassiveBluetoothCoordinator:
         """Initialize the coordinator."""
         self.hass = hass
         self.logger = logger
-        self.name: str | None = None
         self.address = address
         self.connectable = connectable
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
-        self._present = False
         self.mode = mode
-        self.last_seen = 0.0
+        self._last_unavailable_time = 0.0
+        self._last_name = address
 
     @callback
     def async_start(self) -> CALLBACK_TYPE:
@@ -53,10 +54,41 @@ class BasePassiveBluetoothCoordinator:
 
         return _async_cancel
 
+    @callback
+    @abstractmethod
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        """Handle a bluetooth event."""
+
+    @property
+    def name(self) -> str:
+        """Return last known name of the device."""
+        if service_info := async_last_service_info(
+            self.hass, self.address, self.connectable
+        ):
+            return service_info.name
+        return self._last_name
+
+    @property
+    def last_seen(self) -> float:
+        """Return the last time the device was seen."""
+        # If the device is unavailable it will not have a service
+        # info and fall through below.
+        if service_info := async_last_service_info(
+            self.hass, self.address, self.connectable
+        ):
+            return service_info.time
+        # This is the time from the last advertisement that
+        # was set when the unavailable callback was called.
+        return self._last_unavailable_time
+
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._present
+        return async_address_present(self.hass, self.address, self.connectable)
 
     @callback
     def _async_start(self) -> None:
@@ -84,17 +116,9 @@ class BasePassiveBluetoothCoordinator:
             self._cancel_track_unavailable = None
 
     @callback
-    def _async_handle_unavailable(self, address: str) -> None:
-        """Handle the device going unavailable."""
-        self._present = False
-
-    @callback
-    def _async_handle_bluetooth_event(
-        self,
-        service_info: BluetoothServiceInfoBleak,
-        change: BluetoothChange,
+    def _async_handle_unavailable(
+        self, service_info: BluetoothServiceInfoBleak
     ) -> None:
-        """Handle a Bluetooth event."""
-        self.last_seen = time.monotonic()
-        self.name = service_info.name
-        self._present = True
+        """Handle the device going unavailable."""
+        self._last_unavailable_time = service_info.time
+        self._last_name = service_info.name
