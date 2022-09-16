@@ -11,13 +11,14 @@ from demetriek import (
 )
 import pytest
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -695,3 +696,50 @@ async def test_cloud_errors(
     assert len(mock_lametric_config_flow.device.mock_calls) == 2
     assert len(mock_lametric_config_flow.notify.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_discovery_updates_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery updates config entries."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="lametric",
+            ip="127.0.0.42",
+            macaddress="aa:bb:cc:dd:ee:ff",
+        ),
+    )
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "mock-from-fixture",
+        CONF_HOST: "127.0.0.42",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+    }
+
+
+async def test_dhcp_unknown_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unknown DHCP discovery aborts flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="lametric",
+            ip="127.0.0.42",
+            macaddress="aa:bb:cc:dd:ee:00",
+        ),
+    )
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "unknown"
