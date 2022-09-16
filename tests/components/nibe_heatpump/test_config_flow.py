@@ -25,7 +25,7 @@ MOCK_FLOW_USERDATA = {
 async def fixture_mock_connection():
     """Make sure we have a dummy connection."""
     with patch(
-        "homeassistant.components.nibe_local.config_flow.NibeGW", spec=Connection
+        "homeassistant.components.nibe_heatpump.config_flow.NibeGW", spec=Connection
     ) as mock_connection:
         yield mock_connection
 
@@ -34,7 +34,7 @@ async def fixture_mock_connection():
 async def fixture_mock_setup():
     """Make sure we never actually run setup."""
     with patch(
-        "homeassistant.components.nibe_local.async_setup_entry", return_value=True
+        "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
