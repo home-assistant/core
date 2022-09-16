@@ -1,0 +1,33 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "step": {
+      "authorize": {
+        "data": {
+          "access_token": "Access Token"
+        },
+        "description": "Enter the access token shown on the LG Netcast.",
+        "title": "Authorize LG Netcast"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "name": "Name"
+        },
+        "description": "Ensure that your TV is turned on before trying to set it up.",
+        "title": "Enter name and host for LG Netcast"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Options for LG Netcast"
+      }
+    }
+  }
+}

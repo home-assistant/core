@@ -204,6 +204,7 @@ FLOWS = {
         "launch_library",
         "laundrify",
         "led_ble",
+        "lg_netcast",
         "lg_soundbar",
         "life360",
         "lifx",

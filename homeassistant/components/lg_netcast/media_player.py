@@ -16,14 +16,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+# from .const import DOMAIN
 
 DEFAULT_NAME = "LG TV Remote"
 
@@ -52,23 +51,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the LG TV platform."""
-
-    host = config.get(CONF_HOST)
-    access_token = config.get(CONF_ACCESS_TOKEN)
-    name = config[CONF_NAME]
-    on_action = config.get(CONF_ON_ACTION)
+    """Set up LG Netcast Media Player from a config entry."""
+    host = config_entry.data[CONF_HOST]
+    access_token = config_entry.data[CONF_ACCESS_TOKEN]
+    name = config_entry.data[CONF_NAME]
 
     client = LgNetCastClient(host, access_token)
-    on_action_script = Script(hass, on_action, name, DOMAIN) if on_action else None
 
-    add_entities([LgTVDevice(client, name, on_action_script)], True)
+    async_add_entities([LgTVDevice(client, name, None)])
 
 
 class LgTVDevice(MediaPlayerEntity):

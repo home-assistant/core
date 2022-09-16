@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/lg_netcast",
   "requirements": ["pylgnetcast==0.3.7"],
   "codeowners": ["@Drafteed"],
+  "config_flow": true,
   "iot_class": "local_polling",
   "loggers": ["pylgnetcast"]
 }
