@@ -12,5 +12,6 @@
     {
       "deviceType": "urn:schemas-upnp-org:device:LaMetric:1"
     }
-  ]
+  ],
+  "dhcp": [{ "registered_devices": true }]
 }

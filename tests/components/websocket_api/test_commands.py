@@ -1603,6 +1603,42 @@ async def test_test_condition(hass, websocket_client):
     assert msg["success"]
     assert msg["result"]["result"] is True
 
+    await websocket_client.send_json(
+        {
+            "id": 6,
+            "type": "test_condition",
+            "condition": {
+                "condition": "template",
+                "value_template": "{{ is_state('hello.world', 'paulus') }}",
+            },
+            "variables": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["result"] is True
+
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "test_condition",
+            "condition": {
+                "condition": "template",
+                "value_template": "{{ is_state('hello.world', 'frenck') }}",
+            },
+            "variables": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["result"] is False
+
 
 async def test_execute_script(hass, websocket_client):
     """Test testing a condition."""
