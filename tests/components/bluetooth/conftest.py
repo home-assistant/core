@@ -5,34 +5,6 @@ from unittest.mock import patch
 import pytest
 
 
-@pytest.fixture(name="operating_system_85")
-def mock_operating_system_85():
-    """Mock running Home Assistant Operating system 8.5."""
-    with patch(
-        "homeassistant.components.bluetooth.async_get_system_info",
-        return_value={
-            "hassos": "8.5",
-            "hassio": True,
-            "docker": True,
-        },
-    ):
-        yield
-
-
-@pytest.fixture(name="operating_system_90")
-def mock_operating_system_90():
-    """Mock running Home Assistant Operating system 9.0."""
-    with patch(
-        "homeassistant.components.bluetooth.async_get_system_info",
-        return_value={
-            "hassos": "9.0",
-            "hassio": True,
-            "docker": True,
-        },
-    ):
-        yield
-
-
 @pytest.fixture(name="macos_adapter")
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
@@ -48,23 +20,6 @@ def windows_adapter():
     with patch(
         "homeassistant.components.bluetooth.util.platform.system",
         return_value="Windows",
-    ):
-        yield
-
-
-@pytest.fixture(name="no_adapters")
-def no_adapter_fixture():
-    """Fixture that mocks no adapters on Linux."""
-    with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
-    ), patch(
-        "homeassistant.components.bluetooth.scanner.platform.system",
-        return_value="Linux",
-    ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
-    ), patch(
-        "bluetooth_adapters.get_bluetooth_adapter_details",
-        return_value={},
     ):
         yield
 
