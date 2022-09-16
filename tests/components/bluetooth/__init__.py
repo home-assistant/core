@@ -80,6 +80,25 @@ def inject_advertisement_with_time_and_source_connectable(
     )
 
 
+def inject_bluetooth_service_info(
+    hass: HomeAssistant, info: models.BluetoothServiceInfo
+) -> None:
+    """Inject a BluetoothServiceInfo into the manager."""
+    advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
+        local_name=None if info.name == "" else info.name,
+        manufacturer_data=info.manufacturer_data,
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+    )
+    device = BLEDevice(  # type: ignore[no-untyped-call]
+        address=info.address,
+        name=info.name,
+        details={},
+        rssi=info.rssi,
+    )
+    inject_advertisement(hass, device, advertisement_data)
+
+
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
     return patch.object(
