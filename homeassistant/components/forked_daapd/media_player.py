@@ -676,11 +676,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             return await self._async_announce(media_id)
 
-        if (
-            enqueue := kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
-        ) is True:
-            enqueue = MediaPlayerEnqueue.ADD
-        if enqueue in {MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
+        # if kwargs[ATTR_MEDIA_ENQUEUE] is None, we assume MediaPlayerEnqueue.REPLACE
+        # if kwargs[ATTR_MEDIA_ENQUEUE] is True, we assume MediaPlayerEnqueue.ADD
+        # kwargs[ATTR_MEDIA_ENQUEUE] is assumed to never be False
+        # See https://github.com/home-assistant/architecture/issues/765
+        enqueue: bool | MediaPlayerEnqueue = kwargs.get(
+            ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
+        )
+        if enqueue in {True, MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
             return await self._api.add_to_queue(
                 uris=media_id,
                 playback="start",
