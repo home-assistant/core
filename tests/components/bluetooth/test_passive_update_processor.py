@@ -1182,7 +1182,7 @@ async def test_exception_from_coordinator_update_method(
     assert processor.available is True
 
     # We should go unavailable once we get an exception
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     assert "Test exception" in caplog.text
     assert processor.available is False
 
