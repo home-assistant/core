@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as WEMO_DOMAIN
+from .const import DOMAIN
 from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
 
@@ -30,13 +30,13 @@ async def async_setup_entry(
         async_add_entities([DimmerBrightness(coordinator)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.number", _discovered_wemo)
+        async_dispatcher_connect(hass, f"{DOMAIN}.number", _discovered_wemo)
     )
 
     await asyncio.gather(
         *(
             _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("number")
+            for coordinator in hass.data[DOMAIN]["pending"].pop("number")
         )
     )
 
