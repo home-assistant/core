@@ -2121,6 +2121,12 @@ async def test_wrapped_instance_with_service_uuids(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2130,9 +2136,10 @@ async def test_wrapped_instance_with_service_uuids(
         )
         scanner.register_detection_callback(_device_detected)
 
-        for _ in range(2):
-            inject_advertisement(hass, switchbot_device, switchbot_adv)
-            await hass.async_block_till_done()
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
 
         assert len(detected) == 2
 
@@ -2213,6 +2220,12 @@ async def test_wrapped_instance_changes_uuids(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2223,9 +2236,9 @@ async def test_wrapped_instance_changes_uuids(
         )
         scanner.register_detection_callback(_device_detected)
 
-        for _ in range(2):
-            inject_advertisement(hass, switchbot_device, switchbot_adv)
-            await hass.async_block_till_done()
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+        await hass.async_block_till_done()
 
         assert len(detected) == 2
 
@@ -2262,6 +2275,12 @@ async def test_wrapped_instance_changes_filters(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:62", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2272,9 +2291,10 @@ async def test_wrapped_instance_changes_filters(
         )
         scanner.register_detection_callback(_device_detected)
 
-        for _ in range(2):
-            inject_advertisement(hass, switchbot_device, switchbot_adv)
-            await hass.async_block_till_done()
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
 
         assert len(detected) == 2
 
