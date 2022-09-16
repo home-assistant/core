@@ -19,6 +19,18 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+__all__ = (
+    "inject_advertisement",
+    "inject_advertisement_with_source",
+    "inject_advertisement_with_time_and_source",
+    "inject_advertisement_with_time_and_source_connectable",
+    "inject_bluetooth_service_info",
+    "patch_all_discovered_devices",
+    "patch_connectable_history",
+    "patch_discovered_devices",
+    "patch_history",
+)
+
 
 def _get_manager() -> BluetoothManager:
     """Return the bluetooth manager."""
