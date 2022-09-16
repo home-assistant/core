@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise
 
     # Trigger a refresh again now that all platforms have registered
-    hass.async_add_job(coordinator.async_refresh)
+    hass.async_create_task(coordinator.async_refresh())
     return True
 
 
