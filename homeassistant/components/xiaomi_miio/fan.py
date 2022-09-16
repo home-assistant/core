@@ -58,7 +58,7 @@ from .const import (
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
     FEATURE_FLAGS_FAN_P9,
-    FEATURE_FLAGS_FAN_P10_P11,
+    FEATURE_FLAGS_FAN_P10_P11_P15_P18,
     FEATURE_FLAGS_FAN_ZA5,
     FEATURE_RESET_FILTER,
     FEATURE_SET_EXTRA_FEATURES,
@@ -843,7 +843,7 @@ class XiaomiGenericFan(XiaomiGenericDevice):
             MODEL_FAN_P15,
             MODEL_FAN_P18,
         ):
-            self._device_features = FEATURE_FLAGS_FAN_P10_P11
+            self._device_features = FEATURE_FLAGS_FAN_P10_P11_P15_P18
         else:
             self._device_features = FEATURE_FLAGS_FAN
         self._attr_supported_features = (
