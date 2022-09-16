@@ -39,7 +39,10 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self._device is not None:
             await self.async_set_unique_id(self._device.mac_address)
-            self._abort_if_unique_id_configured(error="already_configured_device")
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self._device.device_addr},
+                error="already_configured_device",
+            )
             self.context.update(
                 {
                     "host": host,
