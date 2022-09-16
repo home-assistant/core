@@ -327,6 +327,7 @@ class Template:
         "_limited",
         "_strict",
         "_hash_cache",
+        "additional_variables",
     )
 
     def __init__(self, template, hass=None):
@@ -343,6 +344,7 @@ class Template:
         self._limited = None
         self._strict = None
         self._hash_cache: int = hash(self.template)
+        self.additional_variables = {}
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -417,7 +419,9 @@ class Template:
             kwargs.update(variables)
 
         try:
-            render_result = _render_with_context(self.template, compiled, **kwargs)
+            render_result = _render_with_context(
+                self.template, compiled, **{**self.additional_variables, **kwargs}
+            )
         except Exception as err:
             raise TemplateError(err) from err
 
@@ -494,7 +498,9 @@ class Template:
 
         def _render_template() -> None:
             try:
-                _render_with_context(self.template, compiled, **kwargs)
+                _render_with_context(
+                    self.template, compiled, **{**self.additional_variables, **kwargs}
+                )
             except TimeoutError:
                 pass
             except Exception:  # pylint: disable=broad-except
@@ -573,15 +579,15 @@ class Template:
         if self._compiled is None:
             self._ensure_compiled()
 
-        variables = dict(variables or {})
-        variables["value"] = value
+        self.additional_variables = dict(variables or {})
+        self.additional_variables["value"] = value
 
         with suppress(*JSON_DECODE_EXCEPTIONS):
-            variables["value_json"] = json_loads(value)
+            self.additional_variables["value_json"] = json_loads(value)
 
         try:
             return _render_with_context(
-                self.template, self._compiled, **variables
+                self.template, self._compiled, **self.additional_variables
             ).strip()
         except jinja2.TemplateError as ex:
             if error_value is _SENTINEL:

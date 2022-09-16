@@ -178,6 +178,21 @@ class RestSensor(RestEntity, TemplateSensor):
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
 
+        elif self._attribute_templates:
+            self._attributes = {}
+            if value:
+                try:
+                    attrs = {
+                        key: val.async_render_with_possible_json_value(value, None)
+                        for key, val in self._attribute_templates.items()
+                    }
+                    self._attributes = attrs
+                except ValueError:
+                    _LOGGER.warning("REST result could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", value)
+            else:
+                _LOGGER.warning("Empty reply found when expecting JSON data")
+
         if value is not None and self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(
                 value, None

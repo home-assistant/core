@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template_entity import (
+    CONF_ATTRIBUTES,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TEMPLATE_SENSOR_BASE_SCHEMA,
 )
@@ -65,6 +66,7 @@ SENSOR_SCHEMA = {
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_ATTRIBUTES, default={}): vol.Schema({cv.string: cv.template}),
 }
 
 BINARY_SENSOR_SCHEMA = {
