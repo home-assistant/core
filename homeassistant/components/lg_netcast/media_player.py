@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_CAPTURE_SCREEN, DOMAIN
 
 DEFAULT_NAME = "LG TV Remote"
 
@@ -48,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_CAPTURE_SCREEN, default=True): cv.boolean,
     }
 )
 
@@ -64,11 +65,12 @@ def setup_platform(
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config[CONF_NAME]
     on_action = config.get(CONF_ON_ACTION)
+    capture_screen = config.get(CONF_CAPTURE_SCREEN)
 
     client = LgNetCastClient(host, access_token)
     on_action_script = Script(hass, on_action, name, DOMAIN) if on_action else None
 
-    add_entities([LgTVDevice(client, name, on_action_script)], True)
+    add_entities([LgTVDevice(client, name, on_action_script, capture_screen)], True)
 
 
 class LgTVDevice(MediaPlayerEntity):
@@ -77,7 +79,7 @@ class LgTVDevice(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.CHANNEL
 
-    def __init__(self, client, name, on_action_script):
+    def __init__(self, client, name, on_action_script, capture_screen):
         """Initialize the LG TV device."""
         self._client = client
         self._name = name
@@ -92,6 +94,7 @@ class LgTVDevice(MediaPlayerEntity):
         self._state = None
         self._sources = {}
         self._source_names = []
+        self._capture_screen = capture_screen
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
@@ -206,9 +209,9 @@ class LgTVDevice(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """URL for obtaining a screen capture."""
-        return (
-            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
-        )
+        if self._capture_screen:
+            return f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
+        return None
 
     def turn_off(self) -> None:
         """Turn off media player."""
