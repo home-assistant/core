@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp.client_exceptions import ClientConnectorError
 from switchbee.api import CentralUnitAPI, SwitchBeeError
 import voluptuous as vol
 
@@ -39,7 +38,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     )
     try:
         await api.connect()
-    except (SwitchBeeError, ClientConnectorError) as exp:
+    except SwitchBeeError as exp:
         _LOGGER.error(exp)
         if "LOGIN_FAILED" in str(exp):
             raise InvalidAuth from exp

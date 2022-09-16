@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from aiohttp.client_exceptions import ClientConnectorError
 from switchbee.api import CentralUnitAPI, SwitchBeeError
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = CentralUnitAPI(central_unit, user, password, websession)
     try:
         await api.connect()
-    except (SwitchBeeError, ClientConnectorError) as exp:
+    except SwitchBeeError as exp:
         raise ConfigEntryNotReady("Failed to connect to the Central Unit") from exp
 
     coordinator = SwitchBeeCoordinator(
