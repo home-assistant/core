@@ -105,6 +105,7 @@ NETFLIX_PLAYER_SUPPORT = (
 class AbstractDemoPlayer(MediaPlayerEntity):
     """A demo media players."""
 
+    _attr_sound_mode_list = SOUND_MODE_LIST
     _attr_should_poll = False
 
     # We only implement the methods that we support
@@ -118,19 +119,8 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._attr_volume_level = 1.0
         self._attr_is_volume_muted = False
         self._attr_shuffle = False
-        self._sound_mode_list = SOUND_MODE_LIST
-        self._sound_mode = DEFAULT_SOUND_MODE
+        self._attr_sound_mode = DEFAULT_SOUND_MODE
         self._attr_device_class = device_class
-
-    @property
-    def sound_mode(self) -> str:
-        """Return the current sound mode."""
-        return self._sound_mode
-
-    @property
-    def sound_mode_list(self) -> list[str]:
-        """Return a list of available sound modes."""
-        return self._sound_mode_list
 
     def turn_on(self) -> None:
         """Turn the media player on."""
@@ -186,7 +176,7 @@ class AbstractDemoPlayer(MediaPlayerEntity):
 
     def select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        self._sound_mode = sound_mode
+        self._attr_sound_mode = sound_mode
         self.schedule_update_ha_state()
 
 
