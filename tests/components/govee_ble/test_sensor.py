@@ -1,8 +1,6 @@
 """Test the Govee BLE sensors."""
 
-from unittest.mock import patch
 
-from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.govee_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -10,6 +8,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from . import GVH5075_SERVICE_INFO
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_sensors(hass):
@@ -20,22 +19,11 @@ async def test_sensors(hass):
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(GVH5075_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, GVH5075_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 3
 
