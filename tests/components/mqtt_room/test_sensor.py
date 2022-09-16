@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch
 
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
+from homeassistant.components.mqtt_room.sensor import CONF_EXTRA_ROOMS
 import homeassistant.components.sensor as sensor
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_PLATFORM, CONF_TIMEOUT
 from homeassistant.setup import async_setup_component
@@ -15,9 +16,13 @@ DEVICE_ID = "123TESTMAC"
 NAME = "test_device"
 BEDROOM = "bedroom"
 LIVING_ROOM = "living_room"
+KITCHEN = "kitchen"
+OFFICE = "office"
 
 BEDROOM_TOPIC = f"room_presence/{BEDROOM}"
 LIVING_ROOM_TOPIC = f"room_presence/{LIVING_ROOM}"
+KITCHEN_TOPIC = f"room_presence/{KITCHEN}"
+OFFICE_TOPIC = f"room_presence/{OFFICE}"
 
 SENSOR_STATE = f"sensor.{NAME}"
 
@@ -47,6 +52,36 @@ async def assert_distance(hass, distance):
     assert state.attributes.get("distance") == distance
 
 
+async def assert_extra_room(hass, room, distance):
+    """Test the assertion of an extra room distance."""
+    state = hass.states.get(SENSOR_STATE)
+    extra_rooms = state.attributes.get("extra_rooms")
+    assert extra_rooms is not None
+    assert extra_rooms[room] is not None
+    assert extra_rooms[room] == distance
+
+
+async def assert_room_update(hass):
+    """Test assertion that room state correctly updates."""
+    await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
+    await assert_state(hass, BEDROOM)
+    await assert_distance(hass, 10)
+
+    await send_message(hass, LIVING_ROOM_TOPIC, NEAR_MESSAGE)
+    await assert_state(hass, LIVING_ROOM)
+    await assert_distance(hass, 1)
+
+    await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
+    await assert_state(hass, LIVING_ROOM)
+    await assert_distance(hass, 1)
+
+    time = dt.utcnow() + datetime.timedelta(seconds=7)
+    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
+        await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
+        await assert_state(hass, BEDROOM)
+        await assert_distance(hass, 10)
+
+
 async def test_room_update(hass, mqtt_mock_entry_with_yaml_config):
     """Test the updating between rooms."""
     assert await async_setup_component(
@@ -65,20 +100,34 @@ async def test_room_update(hass, mqtt_mock_entry_with_yaml_config):
     )
     await hass.async_block_till_done()
 
-    await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
-    await assert_state(hass, BEDROOM)
-    await assert_distance(hass, 10)
+    await assert_room_update(hass)
 
-    await send_message(hass, LIVING_ROOM_TOPIC, NEAR_MESSAGE)
-    await assert_state(hass, LIVING_ROOM)
-    await assert_distance(hass, 1)
 
-    await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
-    await assert_state(hass, LIVING_ROOM)
-    await assert_distance(hass, 1)
+async def test_room_update_with_extra_rooms(hass, mqtt_mock_entry_with_yaml_config):
+    """Test the updating between rooms with extra rooms activated."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                CONF_PLATFORM: "mqtt_room",
+                CONF_NAME: NAME,
+                CONF_DEVICE_ID: DEVICE_ID,
+                CONF_STATE_TOPIC: "room_presence",
+                CONF_QOS: DEFAULT_QOS,
+                CONF_TIMEOUT: 5,
+                CONF_EXTRA_ROOMS: 2,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-    time = dt.utcnow() + datetime.timedelta(seconds=7)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
-        await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
-        await assert_state(hass, BEDROOM)
-        await assert_distance(hass, 10)
+    await assert_room_update(hass)
+
+    await send_message(hass, KITCHEN_TOPIC, REALLY_FAR_MESSAGE)
+    await assert_extra_room(hass, KITCHEN, 20)
+    await assert_extra_room(hass, BEDROOM, 10)
+
+    await send_message(hass, OFFICE_TOPIC, FAR_MESSAGE)
+    await assert_extra_room(hass, OFFICE, 10)
+    await assert_extra_room(hass, BEDROOM, 10)
