@@ -1,30 +1,32 @@
 """Klyqa datacoordinator."""
-from homeassistant.core import HomeAssistant, callback, Event
-from homeassistant.helpers.entity_component import (
-    EntityComponent,
-    DEFAULT_SCAN_INTERVAL,
-)
-
 import asyncio
+from datetime import timedelta
+import logging
 import socket
+from typing import Any
 
 from klyqa_ctl import klyqa_ctl as api
-from .const import (
-    DOMAIN,
-    LOGGER,
-    CONF_POLLING,
-    CONF_SYNC_ROOMS,
-    EVENT_KLYQA_NEW_LIGHT,
-    EVENT_KLYQA_NEW_LIGHT_GROUP
-)
+
 from homeassistant.const import (
-    CONF_PASSWORD,
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from datetime import timedelta
-import logging
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.entity_component import (
+    DEFAULT_SCAN_INTERVAL,
+    EntityComponent,
+)
+
+from .const import (
+    CONF_POLLING,
+    CONF_SYNC_ROOMS,
+    DOMAIN,
+    EVENT_KLYQA_NEW_LIGHT,
+    EVENT_KLYQA_NEW_LIGHT_GROUP,
+    LOGGER,
+)
 
 
 class HAKlyqaAccount(api.Klyqa_account):
@@ -38,7 +40,18 @@ class HAKlyqaAccount(api.Klyqa_account):
     sync_rooms: bool
     scan_interval_conf: float
 
-    def __init__(self, udp, tcp, username="", password="", host="", hass=None, polling = True, sync_rooms = True, scan_interval = -1.0):
+    def __init__(
+        self,
+        udp,
+        tcp,
+        username="",
+        password="",
+        host="",
+        hass=None,
+        polling=True,
+        sync_rooms=True,
+        scan_interval=-1.0,
+    ):
         super().__init__(username, password, host)
         self.hass = hass
         self.udp = udp
@@ -47,28 +60,35 @@ class HAKlyqaAccount(api.Klyqa_account):
         self.sync_rooms = sync_rooms
         self.scan_interval_conf = scan_interval
 
-
-    async def send_to_bulbs(self, args, args_in, async_answer_callback = None, timeout_ms=5000):
+    async def send_to_bulbs(
+        self, args, args_in, async_answer_callback=None, timeout_ms=5000
+    ):
         """_send_to_bulbs"""
         ret = await super()._send_to_bulbs(
-            args, args_in, self.udp, self.tcp, async_answer_callback = async_answer_callback, timeout_ms=timeout_ms,
+            args,
+            args_in,
+            self.udp,
+            self.tcp,
+            async_answer_callback=async_answer_callback,
+            timeout_ms=timeout_ms,
         )
         return ret
 
-    async def login(self, **kwargs) -> bool:
+    async def login(self, **kwargs: Any) -> bool:
         ret = await super().login(**kwargs)
         if ret:
-            integration_data, cached = await api.async_json_cache({
-                CONF_USERNAME: self.username,
-                CONF_PASSWORD: self.password,
-                CONF_SCAN_INTERVAL: self.scan_interval_conf,
-                CONF_SYNC_ROOMS: self.sync_rooms,
-                CONF_POLLING: self.polling,
-                CONF_HOST: self.host}
-                , "last.klyqa_integration_data.cache.json"
+            integration_data, cached = await api.async_json_cache(
+                {
+                    CONF_USERNAME: self.username,
+                    CONF_PASSWORD: self.password,
+                    CONF_SCAN_INTERVAL: self.scan_interval_conf,
+                    CONF_SYNC_ROOMS: self.sync_rooms,
+                    CONF_POLLING: self.polling,
+                    CONF_HOST: self.host,
+                },
+                "last.klyqa_integration_data.cache.json",
             )
         return ret
-
 
     async def update_account(self):
         """update_account"""
@@ -82,7 +102,9 @@ class HAKlyqaAccount(api.Klyqa_account):
                 u_id = api.format_uid(device["localDeviceId"])
 
                 light = [
-                    entity for entity in ha_entities if hasattr(entity, "u_id") and entity.u_id == u_id
+                    entity
+                    for entity in ha_entities
+                    if hasattr(entity, "u_id") and entity.u_id == u_id
                 ]
 
                 if len(light) == 0:
@@ -94,12 +116,20 @@ class HAKlyqaAccount(api.Klyqa_account):
                 u_id = api.format_uid(group["id"])
 
                 light = [
-                    entity for entity in ha_entities if hasattr(entity, "u_id") and entity.u_id == u_id
+                    entity
+                    for entity in ha_entities
+                    if hasattr(entity, "u_id") and entity.u_id == u_id
                 ]
 
                 if len(light) == 0:
                     """found klyqa device not in the light entities"""
-                    if len(group["devices"]) > 0 and "productId" in group["devices"][0] and group["devices"][0]["productId"].startswith("@klyqa.lighting"):
+                    if (
+                        len(group["devices"]) > 0
+                        and "productId" in group["devices"][0]
+                        and group["devices"][0]["productId"].startswith(
+                            "@klyqa.lighting"
+                        )
+                    ):
                         self.hass.bus.fire(EVENT_KLYQA_NEW_LIGHT_GROUP, group)
         return True
 

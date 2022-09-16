@@ -647,6 +647,10 @@ omit =
     homeassistant/components/keymitt_ble/coordinator.py
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
+    homeassistant/components/klyqa/__init__.py
+    homeassistant/components/klyqa/const.py
+    homeassistant/components/klyqa/datacoordinator.py
+    homeassistant/components/klyqa/light.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py

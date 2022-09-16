@@ -1,12 +1,12 @@
 {
-  "name": "Home Assistant Dev",
+  "name": "PLRQ Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
-  "appPort": ["8123:8123"],
-  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "appPort": ["8123:8123"], // 8123
+  "runArgs": ["--network=host", "-e", "GIT_EDITOR=code --wait"],
   "extensions": [
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",

@@ -1,44 +1,39 @@
 """Config flow for Klyqa."""
 
-from typing import Any, cast
-from numpy import integer
+from typing import cast
 
+from klyqa_ctl import klyqa_ctl as api
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
-
-from klyqa_ctl import klyqa_ctl as api
-
-from homeassistant.core import callback
-from homeassistant.config_entries import ConfigEntry
-
-from .datacoordinator import HAKlyqaAccount, KlyqaDataCoordinator
-
-from .const import CONF_POLLING, DOMAIN, LOGGER, CONF_SYNC_ROOMS
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_PASSWORD,
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
+
+from .const import CONF_POLLING, CONF_SYNC_ROOMS, DOMAIN, LOGGER
+from .datacoordinator import HAKlyqaAccount
 
 user_step_data_schema = {
     vol.Required(CONF_USERNAME, default=""): cv.string,
     vol.Required(CONF_PASSWORD, default=""): cv.string,
     vol.Required(CONF_SCAN_INTERVAL, default=60): int,
-    vol.Required(CONF_SYNC_ROOMS, default=True, msg="sync r", description="sync R"): bool,
+    vol.Required(
+        CONF_SYNC_ROOMS, default=True, msg="sync r", description="sync R"
+    ): bool,
     vol.Required(CONF_POLLING, default=True): bool,
     vol.Required(CONF_HOST, default="https://app-api.prod.qconnex.io"): str,
 }
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a config flow."""
+
     def __init__(self, config_entry):
         """Initialize options flow."""
         self.config_entry = config_entry
@@ -58,12 +53,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self.config_entry.data[CONF_USERNAME]): cv.string,
-                    vol.Required(CONF_PASSWORD, default=self.config_entry.data[CONF_PASSWORD]): cv.string,
-                    vol.Required(CONF_POLLING, default=self.config_entry.data[CONF_POLLING]): bool,
-                    vol.Required(CONF_SCAN_INTERVAL, default=self.config_entry.data[CONF_SCAN_INTERVAL]): int,
-                    vol.Required(CONF_SYNC_ROOMS, default=self.config_entry.data[CONF_SYNC_ROOMS]): bool,
-                    vol.Required(CONF_HOST, default=self.config_entry.data[CONF_HOST]): str,
+                    vol.Required(
+                        CONF_USERNAME, default=self.config_entry.data[CONF_USERNAME]
+                    ): cv.string,
+                    vol.Required(
+                        CONF_PASSWORD, default=self.config_entry.data[CONF_PASSWORD]
+                    ): cv.string,
+                    vol.Required(
+                        CONF_POLLING, default=self.config_entry.data[CONF_POLLING]
+                    ): bool,
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.data[CONF_SCAN_INTERVAL],
+                    ): int,
+                    vol.Required(
+                        CONF_SYNC_ROOMS, default=self.config_entry.data[CONF_SYNC_ROOMS]
+                    ): bool,
+                    vol.Required(
+                        CONF_HOST, default=self.config_entry.data[CONF_HOST]
+                    ): str,
                 }
             ),
         )
@@ -82,7 +90,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass,
                 sync_rooms=self.sync_rooms,
                 polling=self.polling,
-                scan_interval = self.scan_interval
+                scan_interval=self.scan_interval,
             )
             if not await self.hass.async_run_job(
                 klyqa.login,
@@ -114,13 +122,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             CONF_HOST: self.host,
         }
 
-        return self.async_create_entry(
-            title=cast(str, self.username), data=config_data
-        )
+        return self.async_create_entry(title=cast(str, self.username), data=config_data)
 
 
 class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Example config flow."""
+    """Handle a config flow."""
 
     # The schema version of the entries that it creates
     # Home Assistant will call your migrate method if the version changes
@@ -131,17 +137,18 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
 
         self.inited = False
-        self.username: str | None = None
-        self.password: str | None = None
-        self.cache: str | None = None
+        self.username: str = ""
+        self.password: str = ""
+        self.cache: bool = False
         self.scan_interval: int = 30
-        self.host: str | None = None
-        self.sync_rooms: bool | None = None
-        self.polling: bool | None = None
+        self.host: str = "https://app-api.prod.qconnex.io"
+        self.sync_rooms: bool = True
+        self.polling: bool = True
         self.klyqa: HAKlyqaAccount = None
         pass
 
     async def init(self):
+        """Initialize."""
         if self.inited:
             return
         self.inited = True
@@ -158,9 +165,15 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.polling = bool(integration_data[CONF_POLLING])
 
     def get_klyqa(self) -> HAKlyqaAccount:
+        """Get Klyqa account."""
         if self.klyqa:
             return self.klyqa
-        if not self.hass or not DOMAIN in self.hass.data or not self.hass.data[DOMAIN].KlyqaAccounts or not len(self.hass.data[DOMAIN].KlyqaAccounts):
+        if (
+            not self.hass
+            or not DOMAIN in self.hass.data
+            or not self.hass.data[DOMAIN].KlyqaAccounts
+            or not len(self.hass.data[DOMAIN].KlyqaAccounts)
+        ):
             return None
         self.klyqa = self.hass.data[DOMAIN].KlyqaAccounts[0]
         return self.klyqa
@@ -223,7 +236,7 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass,
                 sync_rooms=self.sync_rooms,
                 polling=self.polling,
-                scan_interval = self.scan_interval
+                scan_interval=self.scan_interval,
             )
             if not await self.hass.async_run_job(
                 klyqa.login,
@@ -271,9 +284,7 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="reauth_successful")
 
-        return self.async_create_entry(
-            title=cast(str, self.username), data=config_data
-        )
+        return self.async_create_entry(title=cast(str, self.username), data=config_data)
 
     # @staticmethod
     # @callback

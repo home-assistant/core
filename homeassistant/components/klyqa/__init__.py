@@ -2,27 +2,26 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
-
-from .const import CONF_POLLING, DOMAIN, CONF_SYNC_ROOMS, LOGGER
-from homeassistant.helpers.typing import ConfigType
+import asyncio
+from datetime import timedelta
 
 from klyqa_ctl import klyqa_ctl as api
-from datetime import timedelta
-from .datacoordinator import KlyqaDataCoordinator, HAKlyqaAccount
 
-import asyncio
-
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    CONF_SCAN_INTERVAL,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
+
+from .const import CONF_POLLING, CONF_SYNC_ROOMS, DOMAIN, LOGGER
+from .datacoordinator import HAKlyqaAccount, KlyqaDataCoordinator
 
 # For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -38,7 +37,11 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
         LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(yaml_config)
-    if Platform.LIGHT in yaml_config and DOMAIN in yaml_config[Platform.LIGHT] and "scan_interval" in yaml_config[Platform.LIGHT][DOMAIN]:
+    if (
+        Platform.LIGHT in yaml_config
+        and DOMAIN in yaml_config[Platform.LIGHT]
+        and "scan_interval" in yaml_config[Platform.LIGHT][DOMAIN]
+    ):
         component.scan_interval = yaml_config[Platform.LIGHT][DOMAIN]["scan_interval"]
 
     return True
@@ -72,8 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         klyqa_api.password = password
         klyqa_api.host = host
         klyqa_api.sync_rooms = sync_rooms
-        klyqa_api.polling=polling,
-        klyqa_api.scan_interval=scan_interval
+        klyqa_api.polling = (polling,)
+        klyqa_api.scan_interval = scan_interval
     else:
         klyqa_api: HAKlyqaAccount = HAKlyqaAccount(
             component.udp,
@@ -84,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             sync_rooms=sync_rooms,
             polling=polling,
-            scan_interval=scan_interval
+            scan_interval=scan_interval,
         )
         if not hasattr(component, "entries"):
             component.entries = {}
