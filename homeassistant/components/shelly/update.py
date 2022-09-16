@@ -132,8 +132,18 @@ async def async_setup_entry(
 class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     """Represent a REST update entity."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     entity_description: RestUpdateDescription
+
+    def __init__(
+        self,
+        wrapper: BlockDeviceWrapper,
+        attribute: str,
+        description: RestEntityDescription,
+    ) -> None:
+        """Initialize update entity."""
+        super().__init__(wrapper, attribute, description)
+        self._in_progress_old_version = None
 
     @property
     def installed_version(self) -> str | None:
@@ -155,6 +165,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
 
         return self.installed_version
 
+    @property
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return self._in_progress_old_version == self.installed_version:
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -163,14 +178,26 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         block_wrapper = self.hass.data[DOMAIN][DATA_CONFIG_ENTRY][
             config_entry.entry_id
         ].get(BLOCK)
+        self._in_progress_old_version = self.installed_version
         await self.entity_description.install(block_wrapper)
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     """Represent a RPC update entity."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     entity_description: RpcUpdateDescription
+
+    def __init__(
+        self,
+        wrapper: RpcDeviceWrapper,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize update entity."""
+        super().__init__(wrapper, key, attribute, description)
+        self._in_progress_old_version = None
 
     @property
     def installed_version(self) -> str | None:
@@ -191,8 +218,15 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
 
         return self.installed_version
 
+    @property
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return self._in_progress_old_version == self.installed_version:
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
+        self._in_progress_old_version = self.installed_version
         await self.entity_description.install(self.wrapper)
+        
