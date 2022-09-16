@@ -883,15 +883,10 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
             service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
             manufacturer_data={1: b"\x01"},
         )
-        switchbot_adv_3 = AdvertisementData(
-            local_name="wohand",
-            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-            manufacturer_data={2: b"\x02"},
-        )
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
-        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 1
@@ -899,7 +894,7 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
 
         async_rediscover_address(hass, "44:44:33:11:23:45")
 
-        inject_advertisement(hass, switchbot_device, switchbot_adv_3)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 2
