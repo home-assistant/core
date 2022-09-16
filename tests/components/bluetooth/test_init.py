@@ -37,6 +37,7 @@ from homeassistant.components.bluetooth.match import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -475,7 +476,9 @@ async def test_discovery_match_by_local_name(
         assert len(mock_config_flow.mock_calls) == 0
 
         switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-        switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+        )
 
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
@@ -875,7 +878,11 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
         switchbot_adv = AdvertisementData(
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
-
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={1: b"\x01"},
+        )
         inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
@@ -887,7 +894,7 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
 
         async_rediscover_address(hass, "44:44:33:11:23:45")
 
-        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 2
@@ -1876,7 +1883,12 @@ async def test_register_callback_survives_reload(
         manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
     )
-
+    switchbot_adv_2 = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["zba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
     inject_advertisement(hass, switchbot_device, switchbot_adv)
     assert len(callbacks) == 1
     service_info: BluetoothServiceInfo = callbacks[0][0]
@@ -1888,7 +1900,7 @@ async def test_register_callback_survives_reload(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    inject_advertisement(hass, switchbot_device, switchbot_adv)
+    inject_advertisement(hass, switchbot_device, switchbot_adv_2)
     assert len(callbacks) == 2
     service_info: BluetoothServiceInfo = callbacks[1][0]
     assert service_info.name == "wohand"
@@ -1950,6 +1962,12 @@ async def test_process_advertisements_ignore_bad_advertisement(
         manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
         service_data={"00000d00-0000-1000-8000-00805f9b34fa": b""},
     )
+    adv2 = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fa": b""},
+    )
 
     def _callback(service_info: BluetoothServiceInfo) -> bool:
         done.set()
@@ -1969,6 +1987,7 @@ async def test_process_advertisements_ignore_bad_advertisement(
     # callback that returns False
     while not done.is_set():
         inject_advertisement(hass, device, adv)
+        inject_advertisement(hass, device, adv2)
         await asyncio.sleep(0)
 
     # Set the return value and mutate the advertisement
@@ -1976,6 +1995,7 @@ async def test_process_advertisements_ignore_bad_advertisement(
     return_value.set()
     adv.service_data["00000d00-0000-1000-8000-00805f9b34fa"] = b"H\x10c"
     inject_advertisement(hass, device, adv)
+    inject_advertisement(hass, device, adv2)
     await asyncio.sleep(0)
 
     result = await handle
@@ -2024,6 +2044,12 @@ async def test_wrapped_instance_with_filter(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2033,7 +2059,7 @@ async def test_wrapped_instance_with_filter(
         )
         scanner.register_detection_callback(_device_detected)
 
-        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
 
         discovered = await scanner.discover(timeout=0)
@@ -2090,6 +2116,12 @@ async def test_wrapped_instance_with_service_uuids(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2099,9 +2131,10 @@ async def test_wrapped_instance_with_service_uuids(
         )
         scanner.register_detection_callback(_device_detected)
 
-        for _ in range(2):
-            inject_advertisement(hass, switchbot_device, switchbot_adv)
-            await hass.async_block_till_done()
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
 
         assert len(detected) == 2
 
@@ -2182,6 +2215,12 @@ async def test_wrapped_instance_changes_uuids(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2192,9 +2231,9 @@ async def test_wrapped_instance_changes_uuids(
         )
         scanner.register_detection_callback(_device_detected)
 
-        for _ in range(2):
-            inject_advertisement(hass, switchbot_device, switchbot_adv)
-            await hass.async_block_till_done()
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+        await hass.async_block_till_done()
 
         assert len(detected) == 2
 
@@ -2231,6 +2270,12 @@ async def test_wrapped_instance_changes_filters(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:62", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2241,9 +2286,10 @@ async def test_wrapped_instance_changes_filters(
         )
         scanner.register_detection_callback(_device_detected)
 
-        for _ in range(2):
-            inject_advertisement(hass, switchbot_device, switchbot_adv)
-            await hass.async_block_till_done()
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
 
         assert len(detected) == 2
 
@@ -2533,3 +2579,51 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
             await hass.async_block_till_done()
 
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
+
+
+async def test_issue_outdated_haos(
+    hass, mock_bleak_scanner_start, one_adapter, operating_system_85
+):
+    """Test we create an issue on outdated haos."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is not None
+
+
+async def test_issue_outdated_haos_no_adapters(
+    hass, mock_bleak_scanner_start, no_adapters, operating_system_85
+):
+    """Test we do not create an issue on outdated haos if there are no adapters."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is None
+
+
+async def test_haos_9_or_later(
+    hass, mock_bleak_scanner_start, one_adapter, operating_system_90
+):
+    """Test we do not create issues for haos 9.x or later."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is None
