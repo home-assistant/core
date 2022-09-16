@@ -1,5 +1,5 @@
 """Constants for the Nibe Heat Pump integration."""
-DOMAIN = "nibe_local"
+DOMAIN = "nibe_heatpump"
 
 CONF_LISTENING_PORT = "listening_port"
 CONF_REMOTE_READ_PORT = "remote_read_port"
