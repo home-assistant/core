@@ -20,7 +20,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices, patch_history
+from . import patch_all_discovered_devices
 
 from tests.common import async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -147,9 +147,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert coordinator.available is True
 
-    with patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history({"aa:bb:cc:dd:ee:ff": MagicMock()}):
+    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -159,9 +157,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert coordinator.available is True
 
-    with patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history({"aa:bb:cc:dd:ee:ff": MagicMock()}):
+    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )

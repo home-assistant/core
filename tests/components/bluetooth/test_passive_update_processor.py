@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices, patch_connectable_history, patch_history
+from . import patch_all_discovered_devices
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -228,11 +228,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
-    with patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history({"aa:bb:cc:dd:ee:ff": MagicMock()}), patch_connectable_history(
-        {"aa:bb:cc:dd:ee:ff": MagicMock()},
-    ):
+    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -245,11 +241,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert coordinator.available is True
     assert processor.available is True
 
-    with patch_all_discovered_devices(
-        [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history({"aa:bb:cc:dd:ee:ff": MagicMock()}), patch_connectable_history(
-        {"aa:bb:cc:dd:ee:ff": MagicMock()},
-    ):
+    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
