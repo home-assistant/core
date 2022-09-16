@@ -76,7 +76,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise
 
     try:
-        coil = heatpump.get_coil_by_address(48852)
+        coil = heatpump.get_coil_by_name("modbus40-word-swap-48852")
         coil = await connection.read_coil(coil)
         word_swap = coil.value == "ON"
         coil = await connection.write_coil(coil)
