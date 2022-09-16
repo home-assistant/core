@@ -52,6 +52,23 @@ def windows_adapter():
         yield
 
 
+@pytest.fixture(name="no_adapters")
+def no_adapter_fixture():
+    """Fixture that mocks no adapters on Linux."""
+    with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.platform.system",
+        return_value="Linux",
+    ), patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={},
+    ):
+        yield
+
+
 @pytest.fixture(name="one_adapter")
 def one_adapter_fixture():
     """Fixture that mocks one adapter on Linux."""

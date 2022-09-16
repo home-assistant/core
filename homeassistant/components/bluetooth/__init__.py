@@ -16,8 +16,13 @@ from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     ConfigEntry,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    callback as hass_callback,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
@@ -234,13 +239,13 @@ async def async_get_adapter_from_address(
 
 async def _async_check_haos_version(hass: HomeAssistant) -> None:
     """Check if the version of Home Assistant Operating System is new enough."""
+    # Only warn if a USB adapter is plugged in
     if not any(
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.source != SOURCE_IGNORE
     ):
         return
-
     system_info = await async_get_system_info(hass)
     _LOGGER.warning("System info: %s", system_info)
     system_info["hassos"] = "8.5.000"
@@ -249,7 +254,6 @@ async def _async_check_haos_version(hass: HomeAssistant) -> None:
         or AwesomeVersion(haos_version) >= RECOMMENDED_HAOS_VERSION
     ):
         return
-
     async_create_issue(
         hass,
         DOMAIN,
@@ -298,7 +302,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
     )
 
-    await _async_check_haos_version(hass)
+    # Wait to check until after start to make sure
+    # that the system info is available.
+    async def _async_haos_checks(event: Event) -> None:
+        """Check if the version of Home Assistant Operating System is new enough."""
+        await _async_check_haos_version(hass)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_haos_checks)
 
     return True
 
