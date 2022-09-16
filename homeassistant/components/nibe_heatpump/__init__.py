@@ -101,6 +101,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
     """Update coordinator for nibe heat pumps."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -123,13 +125,11 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
     @property
     def unique_id(self) -> str:
         """Return unique id for this coordinator."""
-        assert self.config_entry
         return self.config_entry.unique_id or self.config_entry.entry_id
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information for the main device."""
-        assert self.config_entry
         return DeviceInfo(identifiers={(DOMAIN, self.unique_id)})
 
     def get_coil_data(self, coil: Coil | None) -> Coil | None:
