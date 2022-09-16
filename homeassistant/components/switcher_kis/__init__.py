@@ -29,7 +29,7 @@ from .const import (
 )
 from .utils import async_start_bridge, async_stop_bridge
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
