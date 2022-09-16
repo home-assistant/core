@@ -1,5 +1,5 @@
 {
-  "name": "PLRQ Home Assistant Dev",
+  "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "script/setup",
