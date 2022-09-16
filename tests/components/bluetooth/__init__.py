@@ -92,6 +92,32 @@ def inject_advertisement_with_time_and_source_connectable(
     )
 
 
+def inject_bluetooth_service_info_bleak(
+    hass: HomeAssistant, info: models.BluetoothServiceInfoBleak
+) -> None:
+    """Inject an advertisement into the manager with connectable status."""
+    advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
+        local_name=None if info.name == "" else info.name,
+        manufacturer_data=info.manufacturer_data,
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+    )
+    device = BLEDevice(  # type: ignore[no-untyped-call]
+        address=info.address,
+        name=info.name,
+        details={},
+        rssi=info.rssi,
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        device,
+        advertisement_data,
+        time.monotonic(),
+        SOURCE_LOCAL,
+        connectable=info.connectable,
+    )
+
+
 def inject_bluetooth_service_info(
     hass: HomeAssistant, info: models.BluetoothServiceInfo
 ) -> None:
