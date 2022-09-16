@@ -742,6 +742,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nfandroidtv/ @tkdrob
 /tests/components/nfandroidtv/ @tkdrob
 /homeassistant/components/nibe_heatpump/ @elupus
+/tests/components/nibe_heatpump/ @elupus
 /homeassistant/components/nightscout/ @marciogranzotto
 /tests/components/nightscout/ @marciogranzotto
 /homeassistant/components/nilu/ @hfurubotten
