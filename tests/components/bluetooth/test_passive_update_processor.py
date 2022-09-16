@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import time
 from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
@@ -16,6 +17,7 @@ from homeassistant.components.bluetooth import (
     DOMAIN,
     BluetoothChange,
     BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -35,7 +37,10 @@ from homeassistant.util import dt as dt_util
 from . import patch_all_discovered_devices
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +56,7 @@ GENERIC_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
 GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     devices={
         None: DeviceInfo(
@@ -224,7 +230,24 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert coordinator.available is False
     assert processor.available is False
 
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    now = time.monotonic()
+    service_info_at_time = BluetoothServiceInfoBleak(
+        name="Generic",
+        address="aa:bb:cc:dd:ee:ff",
+        rssi=-95,
+        manufacturer_data={
+            1: b"\x01\x01\x01\x01\x01\x01\x01\x01",
+        },
+        service_data={},
+        service_uuids=[],
+        source="local",
+        time=now,
+        device=MagicMock(),
+        advertisement=MagicMock(),
+        connectable=True,
+    )
+
+    inject_bluetooth_service_info_bleak(hass, service_info_at_time)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
@@ -235,8 +258,9 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         await hass.async_block_till_done()
     assert coordinator.available is False
     assert processor.available is False
+    assert coordinator.last_seen == service_info_at_time.time
 
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info_bleak(hass, service_info_at_time)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
@@ -248,6 +272,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         await hass.async_block_till_done()
     assert coordinator.available is False
     assert processor.available is False
+    assert coordinator.last_seen == service_info_at_time.time
 
     unregister_processor()
     cancel_coordinator()

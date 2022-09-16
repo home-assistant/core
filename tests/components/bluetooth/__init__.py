@@ -110,7 +110,7 @@ def inject_bluetooth_service_info_bleak(
         hass,
         device,
         advertisement_data,
-        time.monotonic(),
+        info.time,
         SOURCE_LOCAL,
         connectable=info.connectable,
     )
