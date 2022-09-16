@@ -1967,6 +1967,12 @@ async def test_process_advertisements_ignore_bad_advertisement(
         manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
         service_data={"00000d00-0000-1000-8000-00805f9b34fa": b""},
     )
+    adv2 = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fa": b""},
+    )
 
     def _callback(service_info: BluetoothServiceInfo) -> bool:
         done.set()
@@ -1986,6 +1992,7 @@ async def test_process_advertisements_ignore_bad_advertisement(
     # callback that returns False
     while not done.is_set():
         inject_advertisement(hass, device, adv)
+        inject_advertisement(hass, device, adv2)
         await asyncio.sleep(0)
 
     # Set the return value and mutate the advertisement
@@ -1993,6 +2000,7 @@ async def test_process_advertisements_ignore_bad_advertisement(
     return_value.set()
     adv.service_data["00000d00-0000-1000-8000-00805f9b34fa"] = b"H\x10c"
     inject_advertisement(hass, device, adv)
+    inject_advertisement(hass, device, adv2)
     await asyncio.sleep(0)
 
     result = await handle
@@ -2041,6 +2049,12 @@ async def test_wrapped_instance_with_filter(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
+        switchbot_adv_2 = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
@@ -2050,7 +2064,7 @@ async def test_wrapped_instance_with_filter(
         )
         scanner.register_detection_callback(_device_detected)
 
-        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
 
         discovered = await scanner.discover(timeout=0)
