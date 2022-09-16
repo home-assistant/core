@@ -616,8 +616,7 @@ async def handle_test_condition(
     from homeassistant.helpers import condition
 
     # Do static + dynamic validation of the condition
-    config = cv.CONDITION_SCHEMA(msg["condition"])
-    config = await condition.async_validate_condition_config(hass, config)
+    config = await condition.async_validate_condition_config(hass, msg["condition"])
     # Test the condition
     check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
