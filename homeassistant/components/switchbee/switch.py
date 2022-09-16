@@ -27,7 +27,7 @@ async def async_setup_entry(
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        Device(hass, device, coordinator)
+        SwitchBeeSwitchEntity(device, coordinator)
         for device in coordinator.data.values()
         if device.type
         in [
@@ -39,12 +39,11 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
+class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
     """Representation of an Switchbee switch."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: SwitchBeeBaseDevice,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
@@ -77,7 +76,7 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._is_online
+        return self._is_online and self.coordinator.last_update_success
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -92,9 +91,9 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
             """Refresh the device state in the Central Unit.
 
             This function addresses issue of a device that came online back but still report
-            unavialbe state (-1).
+            unavailable state (-1).
             Such device (offline device) will keep reporting unavailable state (-1)
-            unitl it being controlled by the user (state changed to on/off).
+            until it has been actuated by the user (state changed to on/off).
 
             With this code we keep trying setting dummy state for the device
             in order for it to start reporting its real state back (assuming it came back online)
@@ -130,7 +129,6 @@ class Device(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
             )
             self._is_online = True
 
-        self._is_online = True
         # timed power switch state is an integer representing the number of minutes left until it goes off
         # regulare switches state is ON/OFF (1/0 respectively)
         self._attr_is_on = (

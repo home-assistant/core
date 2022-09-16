@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+from aiohttp.client_exceptions import ClientConnectorError
 from switchbee.api import CentralUnitAPI, SwitchBeeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, SCAN_INTERVAL_SEC
+from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
@@ -27,13 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = CentralUnitAPI(central_unit, user, password, websession)
     try:
         await api.connect()
-    except SwitchBeeError as exp:
-        raise PlatformNotReady("Failed to connect to the Central Unit") from exp
+    except (SwitchBeeError, ClientConnectorError) as exp:
+        raise ConfigEntryNotReady("Failed to connect to the Central Unit") from exp
 
     coordinator = SwitchBeeCoordinator(
         hass,
         api,
-        SCAN_INTERVAL_SEC,
     )
 
     await coordinator.async_config_entry_first_refresh()

@@ -2,8 +2,6 @@
 import json
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.switchbee.config_flow import SwitchBeeError
 from homeassistant.components.switchbee.const import DOMAIN
@@ -16,7 +14,6 @@ from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_INVALID_TOKEN_MGS
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(autouse=True)
 async def test_form(hass):
     """Test we get the form."""
 

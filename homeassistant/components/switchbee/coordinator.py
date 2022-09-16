@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,44 +22,33 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
         self,
         hass: HomeAssistant,
         swb_api: CentralUnitAPI,
-        scan_interval: int,
     ) -> None:
         """Initialize."""
-        self._api: CentralUnitAPI = swb_api
+        self.api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
-        self._mac_addr_fmt: str = format_mac(swb_api.mac)
+        self.mac_formated: str = format_mac(swb_api.mac)
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=timedelta(seconds=SCAN_INTERVAL_SEC),
         )
-
-    @property
-    def api(self) -> CentralUnitAPI:
-        """Return SwitchBee API object."""
-        return self._api
-
-    @property
-    def mac_formated(self) -> str:
-        """Return formatted MAC address."""
-        return self._mac_addr_fmt
 
     async def _async_update_data(self) -> dict[int, SwitchBeeBaseDevice]:
         """Update data via library."""
 
-        if self._reconnect_counts != self._api.reconnect_count:
-            self._reconnect_counts = self._api.reconnect_count
+        if self._reconnect_counts != self.api.reconnect_count:
+            self._reconnect_counts = self.api.reconnect_count
             _LOGGER.debug(
                 "Central Unit re-connected again due to invalid token, total %i",
                 self._reconnect_counts,
             )
 
         # The devices are loaded once during the config_entry
-        if not self._api.devices:
+        if not self.api.devices:
             # Try to load the devices from the CU for the first time
             try:
-                await self._api.fetch_configuration(
+                await self.api.fetch_configuration(
                     [
                         DeviceType.Switch,
                         DeviceType.TimedSwitch,
@@ -76,10 +65,10 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
 
         # Get the state of the devices
         try:
-            await self._api.fetch_states()
+            await self.api.fetch_states()
         except SwitchBeeError as exp:
             raise UpdateFailed(
                 f"Error communicating with API: {exp}"
             ) from SwitchBeeError
-        else:
-            return self._api.devices
+
+        return self.api.devices
