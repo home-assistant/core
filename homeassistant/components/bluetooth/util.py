@@ -19,8 +19,8 @@ from .const import (
 from .models import BluetoothServiceInfoBleak
 
 
-async def async_load_history_from_bus() -> dict[str, BluetoothServiceInfoBleak]:
-    """Load the device and advertisement_data history if available on the current platform."""
+async def async_load_history_from_system() -> dict[str, BluetoothServiceInfoBleak]:
+    """Load the device and advertisement_data history if available on the current system."""
     if platform.system() != "Linux":
         return {}
     from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
