@@ -14,6 +14,7 @@ from .hub import LitterRobotHub
 
 PLATFORMS_BY_TYPE = {
     Robot: (
+        Platform.BINARY_SENSOR,
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,

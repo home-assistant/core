@@ -98,24 +98,6 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             device_class="litterrobot__status_code",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        RobotSensorEntityDescription[LitterRobot](
-            key="is_sleeping",
-            name="Is sleeping",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-        ),
-        RobotSensorEntityDescription[LitterRobot](
-            key="sleep_mode_enabled",
-            name="Sleep mode enabled",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-        ),
-        RobotSensorEntityDescription[LitterRobot](
-            key="power_status",
-            name="Power status",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-        ),
     ],
     LitterRobot4: [
         RobotSensorEntityDescription[LitterRobot4](
