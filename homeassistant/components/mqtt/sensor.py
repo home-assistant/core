@@ -1,7 +1,7 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools
 import logging
 
@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -343,12 +343,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self.async_write_ha_state()
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | datetime:
         """Return the state of the entity."""
         return self._state
 
