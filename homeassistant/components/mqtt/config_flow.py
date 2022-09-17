@@ -343,7 +343,7 @@ def try_connection(
     port: int,
     username: str | None,
     password: str | None,
-    protocol="3.1",
+    protocol: str = "3.1",
 ) -> bool:
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
