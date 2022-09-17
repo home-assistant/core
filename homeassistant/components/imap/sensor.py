@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from aioimaplib import IMAP4_SSL, AioImapException
+from aioimaplib import IMAP4, IMAP4_SSL, AioImapException
 import async_timeout
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -40,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SERVER): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=True): cv.boolean,
         vol.Optional(CONF_CHARSET, default="utf-8"): cv.string,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): cv.string,
@@ -60,6 +62,7 @@ async def async_setup_platform(
         config.get(CONF_PASSWORD),
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
+        config.get(CONF_SSL),
         config.get(CONF_CHARSET),
         config.get(CONF_FOLDER),
         config.get(CONF_SEARCH),
@@ -74,13 +77,14 @@ async def async_setup_platform(
 class ImapSensor(SensorEntity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port, charset, folder, search):
+    def __init__(self, name, user, password, server, port, ssl, charset, folder, search):
         """Initialize the sensor."""
         self._name = name or user
         self._user = user
         self._password = password
         self._server = server
         self._port = port
+        self._ssl = ssl
         self._charset = charset
         self._folder = folder
         self._email_count = None
@@ -123,7 +127,10 @@ class ImapSensor(SensorEntity):
         """Return a connection to the server, establishing it if necessary."""
         if self._connection is None:
             try:
-                self._connection = IMAP4_SSL(self._server, self._port)
+                if self._ssl:
+                    self._connection = IMAP4_SSL(self._server, self._port)
+                else:
+                    self._connection = IMAP4(self._server, self._port)
                 await self._connection.wait_hello_from_server()
                 await self._connection.login(self._user, self._password)
                 await self._connection.select(self._folder)
