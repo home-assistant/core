@@ -698,7 +698,7 @@ jsonpath==0.82
 justnimbus==0.6.0
 
 # homeassistant.components.kegtron
-kegtron-ble==0.1.1
+kegtron-ble==0.3.0
 
 # homeassistant.components.konnected
 konnected==1.2.0

@@ -8,7 +8,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     KEGTRON_KT100_SERVICE_INFO,
-    KEGTRON_KT200_SERVICE_INFO,
+    KEGTRON_KT200_PORT_2_SERVICE_INFO,
     NOT_KEGTRON_SERVICE_INFO,
 )
 
@@ -59,7 +59,7 @@ async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.kegtron.config_flow.async_discovered_service_info",
-        return_value=[KEGTRON_KT200_SERVICE_INFO],
+        return_value=[KEGTRON_KT200_PORT_2_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

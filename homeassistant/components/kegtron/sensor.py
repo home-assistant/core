@@ -31,47 +31,41 @@ from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
 
 SENSOR_DESCRIPTIONS = {
-    ("keg_size"): SensorEntityDescription(
+    "port_count": SensorEntityDescription(
+        key="port_count",
+        icon="mdi:water-pump",
+    ),
+    "keg_size": SensorEntityDescription(
         key="keg_size",
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("keg_type"): SensorEntityDescription(
+    "keg_type": SensorEntityDescription(
         key="keg_type",
         icon="mdi:keg",
     ),
-    ("volume_start"): SensorEntityDescription(
+    "volume_start": SensorEntityDescription(
         key="volume_start",
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("port_count"): SensorEntityDescription(
-        key="port_count",
+    "volume_dispensed": SensorEntityDescription(
+        key="volume_dispensed",
         icon="mdi:keg",
+        native_unit_of_measurement=VOLUME_LITERS,
+        state_class=SensorStateClass.TOTAL,
     ),
-    ("port_index"): SensorEntityDescription(
-        key="port_index",
-        icon="mdi:keg",
-    ),
-    ("port_state"): SensorEntityDescription(
+    "port_state": SensorEntityDescription(
         key="port_state",
-        icon="mdi:keg",
+        icon="mdi:water-pump",
     ),
-    ("volume_dispensed_port_1"): SensorEntityDescription(
-        key="volume_dispensed_port_1",
-        icon="mdi:keg",
-        native_unit_of_measurement=VOLUME_LITERS,
-        state_class=SensorStateClass.TOTAL,
+    "port_name": SensorEntityDescription(
+        key="port_name",
+        icon="mdi:water-pump",
     ),
-    ("volume_dispensed_port_2"): SensorEntityDescription(
-        key="volume_dispensed_port_2",
-        icon="mdi:keg",
-        native_unit_of_measurement=VOLUME_LITERS,
-        state_class=SensorStateClass.TOTAL,
-    ),
-    ("signal_strength"): SensorEntityDescription(
+    "signal_strength": SensorEntityDescription(
         key=f"{KegtronSensorDeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -93,7 +87,9 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
-                (description.device_key.key)
+                description.device_key.key.removesuffix("_port_1").removesuffix(
+                    "_port_2"
+                )
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
         },

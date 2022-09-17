@@ -1,6 +1,8 @@
 """Support for Kegtron devices."""
 from __future__ import annotations
 
+import logging
+
 from kegtron_ble import DeviceKey, SensorDeviceInfo
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -8,6 +10,8 @@ from homeassistant.components.bluetooth.passive_update_processor import (
 )
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def device_key_to_bluetooth_entity_key(

@@ -9,7 +9,7 @@
       "manufacturer_id": 65535
     }
   ],
-  "requirements": ["kegtron-ble==0.1.1"],
+  "requirements": ["kegtron-ble==0.3.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@Ernst79"],
   "iot_class": "local_push"
