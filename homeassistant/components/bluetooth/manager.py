@@ -45,7 +45,7 @@ from .models import (
     BluetoothServiceInfoBleak,
 )
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
-from .util import async_get_bluetooth_adapters
+from .util import async_get_bluetooth_adapters, async_load_history_from_system
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -213,10 +213,15 @@ class BluetoothManager:
         self._adapters = await async_get_bluetooth_adapters()
         return self._find_adapter_by_address(address)
 
-    @hass_callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         install_multiple_bleak_catcher()
+        history = await async_load_history_from_system()
+        # Everything is connectable so it fall into both
+        # buckets since the host system can only provide
+        # connectable devices
+        self._history = history.copy()
+        self._connectable_history = history.copy()
         self.async_setup_unavailable_tracking()
 
     @hass_callback
