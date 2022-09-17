@@ -44,7 +44,9 @@ class IBeaconCoordinator:
         self._unique_id_power: dict[str, dict[str, int]] = {}
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
         self._address_to_unique_id: dict[str, set[str]] = {}
-        self._ignore_addresses: set[str] = set(entry.data[CONF_IGNORE_ADDRESSES])
+        self._ignore_addresses: set[str] = set(
+            entry.data.get(CONF_IGNORE_ADDRESSES, [])
+        )
 
     @callback
     def _async_handle_unavailable(
