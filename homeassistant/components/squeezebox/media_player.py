@@ -11,20 +11,14 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
     async_process_play_media_url,
-)
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ENQUEUE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    REPEAT_MODE_ALL,
-    REPEAT_MODE_OFF,
-    REPEAT_MODE_ONE,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import (
@@ -34,10 +28,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -94,9 +84,9 @@ ATTR_TO_PROPERTY = [
 ]
 
 SQUEEZEBOX_MODE = {
-    "pause": STATE_PAUSED,
-    "play": STATE_PLAYING,
-    "stop": STATE_IDLE,
+    "pause": MediaPlayerState.PAUSED,
+    "play": MediaPlayerState.PLAYING,
+    "stop": MediaPlayerState.IDLE,
 }
 
 
@@ -289,10 +279,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             self._remove_dispatcher()
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if not self._player.power:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._player.mode:
             return SQUEEZEBOX_MODE.get(self._player.mode)
         return None
@@ -345,8 +335,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if not self._player.playlist:
             return None
         if len(self._player.playlist) > 1:
-            return MEDIA_TYPE_PLAYLIST
-        return MEDIA_TYPE_MUSIC
+            return MediaType.PLAYLIST
+        return MediaType.MUSIC
 
     @property
     def media_duration(self):
@@ -387,10 +377,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     def repeat(self):
         """Repeat setting."""
         if self._player.repeat == "song":
-            return REPEAT_MODE_ONE
+            return RepeatMode.ONE
         if self._player.repeat == "playlist":
-            return REPEAT_MODE_ALL
-        return REPEAT_MODE_OFF
+            return RepeatMode.ALL
+        return RepeatMode.OFF
 
     @property
     def shuffle(self):
@@ -491,13 +481,13 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             cmd = "play"
 
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
-        if media_type in MEDIA_TYPE_MUSIC:
+        if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
                 # do not process special squeezebox "source" media ids
                 media_id = async_process_play_media_url(self.hass, media_id)
@@ -505,12 +495,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             await self._player.async_load_url(media_id, cmd)
             return
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             try:
                 # a saved playlist by number
                 payload = {
                     "search_id": int(media_id),
-                    "search_type": MEDIA_TYPE_PLAYLIST,
+                    "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(self._player, payload)
             except ValueError:
@@ -531,11 +521,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if index is not None:
             await self._player.async_index(index)
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
-        if repeat == REPEAT_MODE_ALL:
+        if repeat == RepeatMode.ALL:
             repeat_mode = "playlist"
-        elif repeat == REPEAT_MODE_ONE:
+        elif repeat == RepeatMode.ONE:
             repeat_mode = "song"
         else:
             repeat_mode = "none"

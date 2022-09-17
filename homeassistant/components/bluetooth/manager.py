@@ -45,7 +45,7 @@ from .models import (
     BluetoothServiceInfoBleak,
 )
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
-from .util import async_get_bluetooth_adapters
+from .util import async_get_bluetooth_adapters, async_load_history_from_system
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -55,9 +55,14 @@ if TYPE_CHECKING:
 FILTER_UUIDS: Final = "UUIDs"
 
 APPLE_MFR_ID: Final = 76
+APPLE_IBEACON_START_BYTE: Final = 0x02  # iBeacon (tilt_ble)
 APPLE_HOMEKIT_START_BYTE: Final = 0x06  # homekit_controller
 APPLE_DEVICE_ID_START_BYTE: Final = 0x10  # bluetooth_le_tracker
-APPLE_START_BYTES_WANTED: Final = {APPLE_DEVICE_ID_START_BYTE, APPLE_HOMEKIT_START_BYTE}
+APPLE_START_BYTES_WANTED: Final = {
+    APPLE_IBEACON_START_BYTE,
+    APPLE_HOMEKIT_START_BYTE,
+    APPLE_DEVICE_ID_START_BYTE,
+}
 
 RSSI_SWITCH_THRESHOLD = 6
 
@@ -138,9 +143,11 @@ class BluetoothManager:
         self.hass = hass
         self._integration_matcher = integration_matcher
         self._cancel_unavailable_tracking: list[CALLBACK_TYPE] = []
-        self._unavailable_callbacks: dict[str, list[Callable[[str], None]]] = {}
+        self._unavailable_callbacks: dict[
+            str, list[Callable[[BluetoothServiceInfoBleak], None]]
+        ] = {}
         self._connectable_unavailable_callbacks: dict[
-            str, list[Callable[[str], None]]
+            str, list[Callable[[BluetoothServiceInfoBleak], None]]
         ] = {}
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._bleak_callbacks: list[
@@ -206,10 +213,15 @@ class BluetoothManager:
         self._adapters = await async_get_bluetooth_adapters()
         return self._find_adapter_by_address(address)
 
-    @hass_callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         install_multiple_bleak_catcher()
+        history = await async_load_history_from_system()
+        # Everything is connectable so it fall into both
+        # buckets since the host system can only provide
+        # connectable devices
+        self._history = history.copy()
+        self._connectable_history = history.copy()
         self.async_setup_unavailable_tracking()
 
     @hass_callback
@@ -264,12 +276,12 @@ class BluetoothManager:
             }
             disappeared = history_set.difference(active_addresses)
             for address in disappeared:
-                del history[address]
+                service_info = history.pop(address)
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
                 for callback in callbacks:
                     try:
-                        callback(address)
+                        callback(service_info)
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
 
@@ -316,12 +328,23 @@ class BluetoothManager:
             return
 
         self._history[address] = service_info
-        source = service_info.source
 
         if connectable:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
 
+        # If the advertisement data is the same as the last time we saw it, we
+        # don't need to do anything else.
+        if old_service_info and not (
+            service_info.manufacturer_data != old_service_info.manufacturer_data
+            or service_info.service_data != old_service_info.service_data
+            or service_info.service_uuids != old_service_info.service_uuids
+        ):
+            return
+
+        source = service_info.source
+        if connectable:
+            # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
@@ -353,7 +376,10 @@ class BluetoothManager:
 
     @hass_callback
     def async_track_unavailable(
-        self, callback: Callable[[str], None], address: str, connectable: bool
+        self,
+        callback: Callable[[BluetoothServiceInfoBleak], None],
+        address: str,
+        connectable: bool,
     ) -> Callable[[], None]:
         """Register a callback."""
         unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
@@ -425,8 +451,15 @@ class BluetoothManager:
     def async_discovered_service_info(
         self, connectable: bool
     ) -> Iterable[BluetoothServiceInfoBleak]:
-        """Return if the address is present."""
+        """Return all the discovered services info."""
         return self._get_history_by_type(connectable).values()
+
+    @hass_callback
+    def async_last_service_info(
+        self, address: str, connectable: bool
+    ) -> BluetoothServiceInfoBleak | None:
+        """Return the last service info for an address."""
+        return self._get_history_by_type(connectable).get(address)
 
     @hass_callback
     def async_rediscover_address(self, address: str) -> None:
@@ -443,7 +476,7 @@ class BluetoothManager:
 
     def _get_unavailable_callbacks_by_type(
         self, connectable: bool
-    ) -> dict[str, list[Callable[[str], None]]]:
+    ) -> dict[str, list[Callable[[BluetoothServiceInfoBleak], None]]]:
         """Return the unavailable callbacks by type."""
         return (
             self._connectable_unavailable_callbacks

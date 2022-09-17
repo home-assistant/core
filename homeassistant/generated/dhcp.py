@@ -60,6 +60,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'isy994', 'registered_devices': True},
     {'domain': 'isy994', 'hostname': 'isy*', 'macaddress': '0021B9*'},
     {'domain': 'isy994', 'hostname': 'polisy*', 'macaddress': '000DB9*'},
+    {'domain': 'lametric', 'registered_devices': True},
     {'domain': 'lifx', 'macaddress': 'D073D5*'},
     {'domain': 'lifx', 'registered_devices': True},
     {'domain': 'litterrobot', 'hostname': 'litter-robot4'},

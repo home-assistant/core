@@ -12,23 +12,17 @@ from typing_extensions import ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
+    DOMAIN,
+    BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_URL,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -62,9 +56,9 @@ BASE_SUPPORTED_FEATURES = (
 )
 
 PLAY_STATE_TO_STATE = {
-    heos_const.PLAY_STATE_PLAY: STATE_PLAYING,
-    heos_const.PLAY_STATE_STOP: STATE_IDLE,
-    heos_const.PLAY_STATE_PAUSE: STATE_PAUSED,
+    heos_const.PLAY_STATE_PLAY: MediaPlayerState.PLAYING,
+    heos_const.PLAY_STATE_STOP: MediaPlayerState.IDLE,
+    heos_const.PLAY_STATE_PAUSE: MediaPlayerState.PAUSED,
 }
 
 CONTROL_TO_SUPPORT = {
@@ -118,6 +112,7 @@ def log_command_error(
 class HeosMediaPlayer(MediaPlayerEntity):
     """The HEOS player."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
 
     def __init__(self, player):
@@ -205,13 +200,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_URL
+            media_type = MediaType.URL
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
-        if media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_MUSIC):
+        if media_type in {MediaType.URL, MediaType.MUSIC}:
             media_id = async_process_play_media_url(self.hass, media_id)
 
             await self._player.play_url(media_id)
@@ -233,7 +228,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
             await self._player.play_quick_select(index)
             return
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             playlists = await self._player.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
@@ -355,11 +350,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def media_content_id(self) -> str:
         """Content ID of current playing media."""
         return self._player.now_playing_media.media_id
-
-    @property
-    def media_content_type(self) -> str:
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):

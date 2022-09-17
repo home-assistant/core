@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info("Polling on %s", entry.data[CONF_DEVICE])
         return await hass.async_add_executor_job(api.read)
 
-    # No automatic polling and no initial refresh of data is being done at this point,
-    # to prevent battery drain. The user will have to do it manually.
-
+    # Polling is only daily to prevent battery drain.
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,

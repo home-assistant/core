@@ -8,8 +8,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,9 +73,9 @@ class HkAvrDevice(MediaPlayerEntity):
     def update(self) -> None:
         """Update the state of this media_player."""
         if self._avr.is_on():
-            self._state = STATE_ON
+            self._state = MediaPlayerState.ON
         elif self._avr.is_off():
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
         else:
             self._state = None
 

@@ -992,6 +992,8 @@ def mock_bluetooth_adapters():
     with patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ), patch(
+        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
+    ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={
             "hci0": {
