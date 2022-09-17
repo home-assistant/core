@@ -436,7 +436,7 @@ bluemaestro-ble==0.2.0
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.5.0
+bluetooth-adapters==0.5.1
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.3.3
@@ -1680,7 +1680,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.1
+pylitterbot==2022.9.3
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.15.1
@@ -1835,7 +1835,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.4
+pyrisco==0.5.5
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1918,7 +1918,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.switchbee
-pyswitchbee==1.4.7
+pyswitchbee==1.4.8
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
