@@ -95,6 +95,17 @@ class OverkizExecutor:
 
         await self.coordinator.async_refresh()
 
+    async def async_execute_commands(self, commands: list[Command]) -> None:
+        """Execute device commands in async context."""
+
+        await self.coordinator.client.execute_commands(
+            self.device.device_url,
+            commands,
+            "Home Assistant",
+        )
+
+        await self.coordinator.async_refresh()
+
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
     ) -> bool:
