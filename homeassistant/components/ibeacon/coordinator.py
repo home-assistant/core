@@ -7,8 +7,10 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_get
 
 from .const import (
+    DOMAIN,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
@@ -35,6 +37,7 @@ class IBeaconCoordinator:
         self._unique_id_power: dict[str, dict[str, int]] = {}
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
         self._address_to_unique_id: dict[str, set[str]] = {}
+        self._ignore_addresses: set[str] = set()
 
     @callback
     def _async_handle_unavailable(
@@ -54,12 +57,33 @@ class IBeaconCoordinator:
                 async_dispatcher_send(self.hass, signal_unavailable(unique_id))
 
     @callback
+    def _async_remove_address(self, address: str) -> None:
+        """Remove an address that does not follow the spec and any entities created by it."""
+        self._ignore_addresses.add(address)
+        unique_ids = self._address_to_unique_id.pop(address)
+        ent_reg = async_get(self.hass)
+        for unique_id in unique_ids:
+            address_callbacks = self._unique_id_unavailable[unique_id]
+            # Cancel the unavailable tracker
+            address_callbacks.pop(address)()
+            # Remove the power
+            self._unique_id_power[unique_id].pop(address)
+            if not address_callbacks and (
+                entry := ent_reg.async_get_entity_id(
+                    "device_tracker", DOMAIN, unique_id
+                )
+            ):
+                ent_reg.async_remove(entry)
+
+    @callback
     def _async_update_ibeacon(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a bluetooth callback."""
+        if service_info.address in self._ignore_addresses:
+            return
         if not (parsed := parse(service_info)):
             return
         address = service_info.address
@@ -79,6 +103,15 @@ class IBeaconCoordinator:
             unavailable_trackers[address] = bluetooth.async_track_unavailable(
                 self.hass, self._async_handle_unavailable, address
             )
+
+        # Some manufacturers violate the spec and flood us with random
+        # data. Once we see more than 3 unique ids from the same address
+        # we remove all the trackers for that address since we know
+        # its garbage data.
+        if len(self._address_to_unique_id[address]) >= 4:
+            self._async_remove_address(address)
+            return
+
         power_by_address[address] = parsed.power
         rssi_by_address: dict[str, int] = {}
         for address in unavailable_trackers:
