@@ -136,7 +136,9 @@ class IBeaconCoordinator:
 
         power_by_address[address] = parsed.power
         source_by_address[address] = parsed.source
-        distance_by_address[address] = calculate_distance(parsed.power, parsed.rssi)
+        distance_by_address[address] = round(
+            calculate_distance_meters(parsed.power, parsed.rssi), 3
+        )
 
         # Some manufacturers violate the spec and flood us with random
         # data. Once we see more than MAX_UNIQUE_IDS_PER_ADDRESS unique ids
@@ -218,8 +220,8 @@ class IBeaconCoordinator:
                 )
 
 
-def calculate_distance(power: int, rssi: int) -> float:
-    """Calculate the distance between the device and the beacon."""
+def calculate_distance_meters(power: int, rssi: int) -> float:
+    """Calculate the distance in meters between the device and the beacon."""
     if rssi == 0:
         return -1.0
     if (ratio := rssi * 1.0 / power) < 1.0:
