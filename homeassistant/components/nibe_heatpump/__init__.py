@@ -118,9 +118,9 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
         self.heatpump = heatpump
 
     @property
-    def coils(self) -> dict[str, Coil]:
+    def coils(self) -> list[Coil]:
         """Return the full coil database."""
-        return self.heatpump._address_to_coil  # pylint: disable=protected-access
+        return self.heatpump.get_coils()
 
     @property
     def unique_id(self) -> str:

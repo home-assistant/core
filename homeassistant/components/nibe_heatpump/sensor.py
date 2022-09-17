@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             Sensor(coordinator, coil)
-            for coil in coordinator.coils.values()
+            for coil in coordinator.coils
             if not coil.is_writable and not coil.is_boolean
         ]
     )
