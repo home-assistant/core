@@ -41,7 +41,6 @@ switches = [
         device_class=SwitchDeviceClass.SWITCH,
         icon="mdi:sprinkler",
         key="manual",
-        name="Manual",
         on_off_fn=lambda valve, bool: valve.set_is_watering(bool),
         state_fn=lambda valve: valve.is_watering,
     )
