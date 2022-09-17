@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
-    CONF_DEVICE_ID,
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -44,6 +43,8 @@ from .const import (
     LOGGER,
 )
 
+CONF_ENTRY_ID = "entry_id"
+
 DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
 NOTIFICATION_ID = "openuv_notification"
@@ -65,27 +66,27 @@ SERVICES = (
 
 SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_ENTRY_ID): cv.string,
     }
 )
 
 
-@callback
-def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) -> OpenUV:
-    """Get the OpenUV object related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
+# @callback
+# def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) -> OpenUV:
+#     """Get the OpenUV object related to a service call (by device ID)."""
+#     device_id = call.data[CONF_DEVICE_ID]
+#     device_registry = dr.async_get(hass)
 
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid OpenUV service ID: {device_id}")
+#     if (device_entry := device_registry.async_get(device_id)) is None:
+#         raise ValueError(f"Invalid OpenUV service ID: {device_id}")
 
-    for entry_id in device_entry.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            return cast(OpenUV, hass.data[DOMAIN][entry_id])
+#     for entry_id in device_entry.config_entries:
+#         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+#             continue
+#         if entry.domain == DOMAIN:
+#             return cast(OpenUV, hass.data[DOMAIN][entry_id])
 
-    raise ValueError(f"No OpenUV object for service ID: {device_id}")
+#     raise ValueError(f"No OpenUV object for service ID: {device_id}")
 
 
 @callback
@@ -166,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def wrapper(call: ServiceCall) -> None:
             """Wrap the service function."""
-            openuv = async_get_openuv_for_service_call(hass, call)
+            openuv: OpenUV = hass.data[DOMAIN][call.data[CONF_ENTRY_ID]]
 
             try:
                 await func(call, openuv)
