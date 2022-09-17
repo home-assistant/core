@@ -13,6 +13,8 @@ from homeassistant.helpers.entity_registry import async_get
 from .const import (
     APPLE_MFR_ID,
     CONF_IGNORE_ADDRESSES,
+    CONF_MIN_RSSI,
+    DEFAULT_MIN_RSSI,
     DOMAIN,
     IBEACON_FIRST_BYTE,
     IBEACON_SECOND_BYTE,
@@ -40,7 +42,7 @@ class IBeaconCoordinator:
         """Initialize the Coordinator."""
         self.hass = hass
         self._entry = entry
-        self._update_cancel: CALLBACK_TYPE | None = None
+        self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
         self._unique_id_power: dict[str, dict[str, int]] = {}
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
         self._address_to_unique_id: dict[str, set[str]] = {}
@@ -102,6 +104,8 @@ class IBeaconCoordinator:
         """Update from a bluetooth callback."""
         if service_info.address in self._ignore_addresses:
             return
+        if service_info.rssi < self._min_rssi:
+            return
         if not (parsed := parse(service_info)):
             return
         address = service_info.address
@@ -156,29 +160,36 @@ class IBeaconCoordinator:
             )
 
     @callback
-    def async_stop(self) -> None:
+    def _async_stop(self) -> None:
         """Stop the Coordinator."""
-        if self._update_cancel:
-            self._update_cancel()
-            self._update_cancel = None
         for address_cancels in self._unique_id_unavailable.values():
             for cancel in address_cancels.values():
                 cancel()
         self._unique_id_unavailable.clear()
 
+    async def _entry_updated(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Handle options update."""
+        self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
+
     @callback
     def async_start(self) -> None:
         """Start the Coordinator."""
-        self._update_cancel = bluetooth.async_register_callback(
-            self.hass,
-            self._async_update_ibeacon,
-            BluetoothCallbackMatcher(
-                connectable=False,
-                manufacturer_id=APPLE_MFR_ID,
-                manufacturer_data_start=[IBEACON_FIRST_BYTE, IBEACON_SECOND_BYTE],
-            ),  # We will take data from any source
-            bluetooth.BluetoothScanningMode.PASSIVE,
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self._entry_updated)
         )
+        self._entry.async_on_unload(
+            bluetooth.async_register_callback(
+                self.hass,
+                self._async_update_ibeacon,
+                BluetoothCallbackMatcher(
+                    connectable=False,
+                    manufacturer_id=APPLE_MFR_ID,
+                    manufacturer_data_start=[IBEACON_FIRST_BYTE, IBEACON_SECOND_BYTE],
+                ),  # We will take data from any source
+                bluetooth.BluetoothScanningMode.PASSIVE,
+            )
+        )
+        self._entry.async_on_unload(self._async_stop)
         # Replay any that are already there.
         for service_info in bluetooth.async_discovered_service_info(self.hass):
             if (
