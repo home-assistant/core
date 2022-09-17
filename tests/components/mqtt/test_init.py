@@ -1776,14 +1776,14 @@ async def test_delayed_birth_message(
     await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
-        return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
-        wraps=hass.data["mqtt"],
+        return_value=hass.data["mqtt"].client,
+        spec_set=hass.data["mqtt"].client,
+        wraps=hass.data["mqtt"].client,
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
 
-    hass.data["mqtt"] = mqtt_component_mock
-    mqtt_mock = hass.data["mqtt"]
+    hass.data["mqtt"].client = mqtt_component_mock
+    mqtt_mock = hass.data["mqtt"].client
     mqtt_mock.reset_mock()
 
     async def wait_birth(topic, payload, qos):
