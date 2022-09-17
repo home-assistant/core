@@ -422,6 +422,7 @@ build.json @home-assistant/supervisor
 /tests/components/google_assistant/ @home-assistant/cloud
 /homeassistant/components/google_cloud/ @lufton
 /homeassistant/components/google_sheets/ @tkdrob
+/tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/govee_ble/ @bdraco
