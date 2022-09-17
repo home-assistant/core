@@ -66,7 +66,6 @@ async def test_update_entity_states(
 ):
     """Test update entity states."""
     ws_client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
 
     assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
 
@@ -464,8 +463,6 @@ async def test_update_entity_reload(
     integration,
 ):
     """Test update entity maintains state after reload."""
-    await hass.async_block_till_done()
-
     assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
 
     client.async_send_command.return_value = {"updates": []}
