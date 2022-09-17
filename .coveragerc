@@ -652,7 +652,6 @@ omit =
     homeassistant/components/konnected/__init__.py
     homeassistant/components/konnected/handlers.py
     homeassistant/components/konnected/panel.py
-    homeassistant/components/konnected/switch.py
     homeassistant/components/kostal_plenticore/__init__.py
     homeassistant/components/kostal_plenticore/const.py
     homeassistant/components/kostal_plenticore/helper.py

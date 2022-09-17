@@ -30,11 +30,20 @@ async def test_on_off(hass):
             "api_host": "http://192.168.86.32:8123",
             "io": {
                 "1": "Switchable Output",
+                "out": "Switchable Output",
             },
             "switches": [
                 {
                     "zone": "1",
                     "name": "alarm",
+                },
+                {
+                    "zone": "out",
+                    "name": "switcher",
+                    "activation": "low",
+                    "momentary": 50,
+                    "pause": 100,
+                    "repeat": -1,
                 },
             ],
         }
@@ -106,3 +115,34 @@ async def test_on_off(hass):
             entity_state = hass.states.get("switch.alarm")
             assert entity_state
             assert entity_state.state == "on"
+
+            # Turn switch off.
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: "switch.alarm"},
+                blocking=True,
+            )
+
+            # Verify the switch turns on.
+            entity_state = hass.states.get("switch.alarm")
+            assert entity_state
+            assert entity_state.state == "on"
+
+        # test with momentary to cover part of async_turn_on that is momentary only
+        with patch(
+            "homeassistant.components.konnected.panel.AlarmPanel.update_switch",
+            return_value={"state": 1},
+        ):
+            # Turn switch on.
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.switcher"},
+                blocking=True,
+            )
+
+            # Verify the switch turns on.
+            entity_state = hass.states.get("switch.switcher")
+            assert entity_state
+            assert entity_state.state == "off"
