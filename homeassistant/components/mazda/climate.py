@@ -91,16 +91,16 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
                 self._attr_min_temp = 15.5
                 self._attr_max_temp = 28.5
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-
-        # Perform an initial update of the state.
-        self._handle_coordinator_update()
+        self._update_state_attributes()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator data updates."""
+        self._update_state_attributes()
+
+        super()._handle_coordinator_update()
+
+    def _update_state_attributes(self) -> None:
         # Update the HVAC mode
         hvac_on = self.client.get_assumed_hvac_mode(self.vehicle_id)
         self._attr_hvac_mode = HVACMode.HEAT_COOL if hvac_on else HVACMode.OFF
@@ -131,8 +131,6 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
             self._attr_preset_mode = PRESET_DEFROSTER_REAR
         else:
             self._attr_preset_mode = PRESET_DEFROSTER_OFF
-
-        super()._handle_coordinator_update()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new HVAC mode."""
