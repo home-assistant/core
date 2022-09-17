@@ -117,9 +117,9 @@ class IBeaconCoordinator:
             )
 
         # Some manufacturers violate the spec and flood us with random
-        # data. Once we see more than 3 unique ids from the same address
-        # we remove all the trackers for that address since we know
-        # its garbage data.
+        # data. Once we see more than MAX_UNIQUE_IDS_PER_ADDRESS unique ids
+        # from the same address we remove all the trackers for that address
+        # and add the address to the ignore list since we know its garbage data.
         if len(self._address_to_unique_id[address]) >= MAX_UNIQUE_IDS_PER_ADDRESS:
             self._async_remove_address(address)
             return

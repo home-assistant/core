@@ -13,7 +13,7 @@ ATTR_POWER_BY_ADDRESS = "power_by_address"
 ATTR_RSSI_BY_ADDRESS = "rssi_by_address"
 
 # If a device broadcasts this many unique ids from the same address
-# we will add it to the ignore list since its probably garbage data.
+# we will add it to the ignore list since its garbage data.
 MAX_UNIQUE_IDS_PER_ADDRESS = 5
 
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
