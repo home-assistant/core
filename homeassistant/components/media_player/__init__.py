@@ -19,6 +19,7 @@ from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
+from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
@@ -219,7 +220,7 @@ ATTR_TO_PROPERTY = [
 class _CacheImage(TypedDict, total=False):
     """Class to hold a cached image."""
 
-    lock: asyncio.Lock
+    lock: Required[asyncio.Lock]
     content: tuple[bytes | None, str | None]
 
 
