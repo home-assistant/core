@@ -31,6 +31,7 @@ class EntityDomainReplacementStrategy:
     old_domain: str
     old_unique_id: str
     replacement_entity_id: str
+    remove_old_entity: bool = True
 
 
 @callback
@@ -70,8 +71,9 @@ def async_finish_entity_domain_replacements(
             },
         )
 
-        LOGGER.info('Removing old entity: "%s"', removed_entity_id)
-        ent_reg.async_remove(removed_entity_id)
+        if strategy.remove_old_entity:
+            LOGGER.info('Removing old entity: "%s"', removed_entity_id)
+            ent_reg.async_remove(removed_entity_id)
 
 
 class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
