@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Do you want to setup Bluetooth LE Tracker?"
+        "description": "Do you want to setup iBeacon Tracker?"
       }
     },
     "abort": {
