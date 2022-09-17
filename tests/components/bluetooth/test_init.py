@@ -2446,7 +2446,7 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(hass, two_adapters)
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
 
 
-async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
+async def test_auto_detect_bluetooth_adapters_linux_none_found(hass, bluez_dbus_mock):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch(
         "bluetooth_adapters.get_bluetooth_adapter_details", return_value={}
