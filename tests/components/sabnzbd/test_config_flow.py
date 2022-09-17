@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_URL,
 )
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
     CONF_NAME: "Sabnzbd",
@@ -39,7 +39,7 @@ async def test_create_entry(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -55,7 +55,7 @@ async def test_create_entry(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == "edc3eee7330e"
         assert result2["data"] == {
             CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
@@ -93,7 +93,7 @@ async def test_import_flow(hass) -> None:
             data=VALID_CONFIG_OLD,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "edc3eee7330e"
         assert result["data"][CONF_NAME] == "Sabnzbd"
         assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"

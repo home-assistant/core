@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Caminho do Dispositivo USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            }
+        }
+    }
+}

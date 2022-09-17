@@ -1,7 +1,9 @@
 """Config flow for Picnic integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
@@ -11,6 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_COUNTRY_CODE, COUNTRY_CODES, DOMAIN
 
@@ -72,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_reauth(self, _):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform the re-auth step upon an API authentication error."""
         return await self.async_step_user()
 

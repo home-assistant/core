@@ -116,6 +116,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
@@ -124,9 +126,7 @@ class LutronDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_executor_job(
-            self._lutron_device.subscribe, self._update_callback, None
-        )
+        self._lutron_device.subscribe(self._update_callback, None)
 
     def _update_callback(self, _device, _context, _event, _params):
         """Run when invoked by pylutron when the device state changes."""
@@ -136,11 +136,6 @@ class LutronDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return f"{self._area_name} {self._lutron_device.name}"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):

@@ -126,6 +126,8 @@ async def async_setup_entry(
 class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
+    _attr_precision = PRECISION_TENTHS
+
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
@@ -250,11 +252,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         ):
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of 0.1."""
-        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self) -> HVACMode:

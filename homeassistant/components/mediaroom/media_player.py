@@ -117,6 +117,7 @@ async def async_setup_platform(
 class MediaroomDevice(MediaPlayerEntity):
     """Representation of a Mediaroom set-up-box on the network."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.TURN_ON
@@ -162,11 +163,6 @@ class MediaroomDevice(MediaPlayerEntity):
             self._unique_id = device_id
         else:
             self._unique_id = None
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def available(self):

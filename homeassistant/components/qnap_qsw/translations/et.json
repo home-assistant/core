@@ -9,6 +9,12 @@
             "invalid_auth": "Tuvastamine nurjus"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",

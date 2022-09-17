@@ -1,6 +1,7 @@
 """Config flow for Verisure integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from verisure import (
@@ -12,9 +13,10 @@ from verisure import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_GIID,
@@ -33,8 +35,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     email: str
     entry: ConfigEntry
-    installations: dict[str, str]
     password: str
+    verisure: Verisure
 
     @staticmethod
     @callback
@@ -49,25 +51,41 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            verisure = Verisure(
-                username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
+            self.email = user_input[CONF_EMAIL]
+            self.password = user_input[CONF_PASSWORD]
+            self.verisure = Verisure(
+                username=self.email,
+                password=self.password,
+                cookieFileName=self.hass.config.path(
+                    STORAGE_DIR, f"verisure_{user_input[CONF_EMAIL]}"
+                ),
             )
+
             try:
-                await self.hass.async_add_executor_job(verisure.login)
+                await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
-                LOGGER.debug("Could not log in to Verisure, %s", ex)
-                errors["base"] = "invalid_auth"
+                if "Multifactor authentication enabled" in str(ex):
+                    try:
+                        await self.hass.async_add_executor_job(self.verisure.login_mfa)
+                    except (
+                        VerisureLoginError,
+                        VerisureError,
+                        VerisureResponseError,
+                    ) as mfa_ex:
+                        LOGGER.debug(
+                            "Unexpected response from Verisure during MFA set up, %s",
+                            mfa_ex,
+                        )
+                        errors["base"] = "unknown_mfa"
+                    else:
+                        return await self.async_step_mfa()
+                else:
+                    LOGGER.debug("Could not log in to Verisure, %s", ex)
+                    errors["base"] = "invalid_auth"
             except (VerisureError, VerisureResponseError) as ex:
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
             else:
-                self.email = user_input[CONF_EMAIL]
-                self.password = user_input[CONF_PASSWORD]
-                self.installations = {
-                    inst["giid"]: f"{inst['alias']} ({inst['street']})"
-                    for inst in verisure.installations
-                }
-
                 return await self.async_step_installation()
 
         return self.async_show_form(
@@ -81,26 +99,63 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle multifactor authentication step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await self.hass.async_add_executor_job(
+                    self.verisure.mfa_validate, user_input[CONF_CODE], True
+                )
+                await self.hass.async_add_executor_job(self.verisure.login)
+            except VerisureLoginError as ex:
+                LOGGER.debug("Could not log in to Verisure, %s", ex)
+                errors["base"] = "invalid_auth"
+            except (VerisureError, VerisureResponseError) as ex:
+                LOGGER.debug("Unexpected response from Verisure, %s", ex)
+                errors["base"] = "unknown"
+            else:
+                return await self.async_step_installation()
+
+        return self.async_show_form(
+            step_id="mfa",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CODE): vol.All(
+                        vol.Coerce(str), vol.Length(min=6, max=6)
+                    )
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_installation(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select Verisure installation to add."""
-        if len(self.installations) == 1:
-            user_input = {CONF_GIID: list(self.installations)[0]}
+        installations = {
+            inst["giid"]: f"{inst['alias']} ({inst['street']})"
+            for inst in self.verisure.installations or []
+        }
 
         if user_input is None:
-            return self.async_show_form(
-                step_id="installation",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_GIID): vol.In(self.installations)}
-                ),
-            )
+            if len(installations) != 1:
+                return self.async_show_form(
+                    step_id="installation",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_GIID): vol.In(installations)}
+                    ),
+                )
+            user_input = {CONF_GIID: list(installations)[0]}
 
         await self.async_set_unique_id(user_input[CONF_GIID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self.installations[user_input[CONF_GIID]],
+            title=installations[user_input[CONF_GIID]],
             data={
                 CONF_EMAIL: self.email,
                 CONF_PASSWORD: self.password,
@@ -108,7 +163,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Verisure."""
         self.entry = cast(
             ConfigEntry,
@@ -123,14 +178,38 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            verisure = Verisure(
-                username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
+            self.email = user_input[CONF_EMAIL]
+            self.password = user_input[CONF_PASSWORD]
+
+            self.verisure = Verisure(
+                username=self.email,
+                password=self.password,
+                cookieFileName=self.hass.config.path(
+                    STORAGE_DIR, f"verisure-{user_input[CONF_EMAIL]}"
+                ),
             )
+
             try:
-                await self.hass.async_add_executor_job(verisure.login)
+                await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
-                LOGGER.debug("Could not log in to Verisure, %s", ex)
-                errors["base"] = "invalid_auth"
+                if "Multifactor authentication enabled" in str(ex):
+                    try:
+                        await self.hass.async_add_executor_job(self.verisure.login_mfa)
+                    except (
+                        VerisureLoginError,
+                        VerisureError,
+                        VerisureResponseError,
+                    ) as mfa_ex:
+                        LOGGER.debug(
+                            "Unexpected response from Verisure during MFA set up, %s",
+                            mfa_ex,
+                        )
+                        errors["base"] = "unknown_mfa"
+                    else:
+                        return await self.async_step_reauth_mfa()
+                else:
+                    LOGGER.debug("Could not log in to Verisure, %s", ex)
+                    errors["base"] = "invalid_auth"
             except (VerisureError, VerisureResponseError) as ex:
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
@@ -155,6 +234,51 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_EMAIL, default=self.entry.data[CONF_EMAIL]): str,
                     vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle multifactor authentication step during re-authentication."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await self.hass.async_add_executor_job(
+                    self.verisure.mfa_validate, user_input[CONF_CODE], True
+                )
+                await self.hass.async_add_executor_job(self.verisure.login)
+            except VerisureLoginError as ex:
+                LOGGER.debug("Could not log in to Verisure, %s", ex)
+                errors["base"] = "invalid_auth"
+            except (VerisureError, VerisureResponseError) as ex:
+                LOGGER.debug("Unexpected response from Verisure, %s", ex)
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_EMAIL: self.email,
+                        CONF_PASSWORD: self.password,
+                    },
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_mfa",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CODE): vol.All(
+                        vol.Coerce(str),
+                        vol.Length(min=6, max=6),
+                    )
                 }
             ),
             errors=errors,

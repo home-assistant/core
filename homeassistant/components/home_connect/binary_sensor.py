@@ -72,7 +72,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         """Return true if the binary sensor is available."""
         return self._state is not None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the binary sensor's status."""
         state = self.device.appliance.status.get(self._update_key, {})
         if not state:

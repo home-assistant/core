@@ -148,7 +148,6 @@ def air_conditioner_fixture(device_factory):
             Capability.air_conditioner_mode,
             Capability.demand_response_load_control,
             Capability.air_conditioner_fan_mode,
-            Capability.power_consumption_report,
             Capability.switch,
             Capability.temperature_measurement,
             Capability.thermostat_cooling_setpoint,
@@ -177,12 +176,6 @@ def air_conditioner_fixture(device_factory):
                 "high",
                 "turbo",
             ],
-            Attribute.power_consumption: {
-                "start": "2019-02-24T21:03:04Z",
-                "power": 0,
-                "energy": 500,
-                "end": "2019-02-26T02:05:55Z",
-            },
             Attribute.switch: "on",
             Attribute.cooling_setpoint: 23,
         },
@@ -320,10 +313,6 @@ async def test_air_conditioner_entity_state(hass, air_conditioner):
     assert state.attributes["drlc_status_level"] == -1
     assert state.attributes["drlc_status_start"] == "1970-01-01T00:00:00Z"
     assert state.attributes["drlc_status_override"] is False
-    assert state.attributes["power_consumption_start"] == "2019-02-24T21:03:04Z"
-    assert state.attributes["power_consumption_power"] == 0
-    assert state.attributes["power_consumption_energy"] == 500
-    assert state.attributes["power_consumption_end"] == "2019-02-26T02:05:55Z"
 
 
 async def test_set_fan_mode(hass, thermostat, air_conditioner):

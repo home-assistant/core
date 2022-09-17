@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "round": "Precis\u00e3o"
+                },
+                "data_description": {
+                    "time_window": "Se definido, o valor do sensor \u00e9 uma m\u00e9dia m\u00f3vel ponderada no tempo das derivadas dentro desta janela."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data_description": {
+                    "unit_prefix": "."
+                }
+            }
+        }
+    }
+}

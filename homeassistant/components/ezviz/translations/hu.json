@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
-            "ezviz_cloud_account_missing": "Ezviz cloud fi\u00f3k hi\u00e1nyzik. K\u00e9rj\u00fck, konfigur\u00e1lja \u00fajra az Ezviz cloud fi\u00f3kot.",
+            "ezviz_cloud_account_missing": "Ezviz cloud fi\u00f3k hi\u00e1nyzik. K\u00e9rem, konfigur\u00e1lja \u00fajra az Ezviz cloud fi\u00f3kot.",
             "unknown": "V\u00e1ratlan hiba"
         },
         "error": {

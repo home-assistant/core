@@ -1,16 +1,14 @@
 """Configure pytest for Litter-Robot tests."""
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylitterbot import Account, Robot
+from pylitterbot import Account, LitterRobot3, Robot
 from pylitterbot.exceptions import InvalidCommandException
 import pytest
 
 from homeassistant.components import litterrobot
-from homeassistant.components.litterrobot.vacuum import UNAVAILABLE_AFTER
 from homeassistant.core import HomeAssistant
 
 from .common import CONFIG, ROBOT_DATA
@@ -19,13 +17,13 @@ from tests.common import MockConfigEntry
 
 
 def create_mock_robot(
-    robot_data: dict | None = None, side_effect: Any | None = None
+    robot_data: dict | None, account: Account, side_effect: Any | None = None
 ) -> Robot:
     """Create a mock Litter-Robot device."""
     if not robot_data:
         robot_data = {}
 
-    robot = Robot(data={**ROBOT_DATA, **robot_data})
+    robot = LitterRobot3(data={**ROBOT_DATA, **robot_data}, account=account)
     robot.start_cleaning = AsyncMock(side_effect=side_effect)
     robot.set_power_status = AsyncMock(side_effect=side_effect)
     robot.reset_waste_drawer = AsyncMock(side_effect=side_effect)
@@ -33,6 +31,7 @@ def create_mock_robot(
     robot.set_night_light = AsyncMock(side_effect=side_effect)
     robot.set_panel_lockout = AsyncMock(side_effect=side_effect)
     robot.set_wait_time = AsyncMock(side_effect=side_effect)
+    robot.refresh = AsyncMock(side_effect=side_effect)
     return robot
 
 
@@ -45,7 +44,9 @@ def create_mock_account(
     account = MagicMock(spec=Account)
     account.connect = AsyncMock()
     account.refresh_robots = AsyncMock()
-    account.robots = [] if skip_robots else [create_mock_robot(robot_data, side_effect)]
+    account.robots = (
+        [] if skip_robots else [create_mock_robot(robot_data, account, side_effect)]
+    )
     return account
 
 
@@ -71,14 +72,6 @@ def mock_account_with_sleeping_robot() -> MagicMock:
 def mock_account_with_sleep_disabled_robot() -> MagicMock:
     """Mock a Litter-Robot account with a robot that has sleep mode disabled."""
     return create_mock_account({"sleepModeActive": "0"})
-
-
-@pytest.fixture
-def mock_account_with_robot_not_recently_seen() -> MagicMock:
-    """Mock a Litter-Robot account with a sleeping robot."""
-    return create_mock_account(
-        {"lastSeen": (datetime.now() - UNAVAILABLE_AFTER).isoformat()}
-    )
 
 
 @pytest.fixture
@@ -108,8 +101,8 @@ async def setup_integration(
     with patch(
         "homeassistant.components.litterrobot.hub.Account", return_value=mock_account
     ), patch(
-        "homeassistant.components.litterrobot.PLATFORMS",
-        [platform_domain] if platform_domain else [],
+        "homeassistant.components.litterrobot.PLATFORMS_BY_TYPE",
+        {Robot: (platform_domain,)} if platform_domain else {},
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

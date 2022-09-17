@@ -1,4 +1,36 @@
 {
+    "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Nyomja meg a MEHET gombot a t\u00e1pegys\u00e9g cser\u00e9j\u00e9nek meger\u0151s\u00edt\u00e9s\u00e9hez.",
+                        "title": "A t\u00e1pegys\u00e9get ki kell cser\u00e9lni"
+                    }
+                }
+            },
+            "title": "A t\u00e1pegys\u00e9g nem m\u0171k\u00f6dik megb\u00edzhat\u00f3 m\u00f3don"
+        },
+        "out_of_blinker_fluid": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Nyomja meg az OK gombot, ha a villog\u00f3 folyad\u00e9kot felt\u00f6lt\u00f6tt\u00e9k.",
+                        "title": "A villog\u00f3 folyad\u00e9kot fel kell t\u00f6lteni"
+                    }
+                }
+            },
+            "title": "A villog\u00f3 folyad\u00e9k ki\u00fcr\u00fclt, \u00e9s \u00fajra kell t\u00f6lteni"
+        },
+        "transmogrifier_deprecated": {
+            "description": "A transzmogrifier komponens az \u00faj API-ban el\u00e9rhet\u0151 helyi vez\u00e9rl\u00e9s hi\u00e1nya miatt elavult",
+            "title": "A transzmogrifier komponens elavult"
+        },
+        "unfixable_problem": {
+            "description": "Ez az eset soha nem fog le\u00e1llni.",
+            "title": "Ez a hiba nem jav\u00edthat\u00f3"
+        }
+    },
     "options": {
         "step": {
             "init": {

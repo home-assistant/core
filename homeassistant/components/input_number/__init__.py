@@ -1,6 +1,7 @@
 """Support to set a numeric value from a slider or text box."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 
 import voluptuous as vol
@@ -67,7 +68,7 @@ def cv_input_numberd(cfg):
     return cfg
 
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_MIN): vol.Coerce(float),
     vol.Required(CONF_MAX): vol.Coerce(float),
@@ -153,7 +154,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -224,12 +225,28 @@ class NumberStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return self.SCHEMA(data)
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
+
+    async def _async_load_data(self) -> dict | None:
+        """Load the data.
+
+        A past bug caused frontend to add initial value to all input numbers.
+        This drops that.
+        """
+        data = await super()._async_load_data()
+
+        if data is None:
+            return data
+
+        for number in data["items"]:
+            number.pop(CONF_INITIAL, None)
+
+        return data
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
@@ -239,6 +256,8 @@ class NumberStorageCollection(collection.StorageCollection):
 
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
+
+    _attr_should_poll = False
 
     def __init__(self, config: dict) -> None:
         """Initialize an input number."""
@@ -319,8 +338,10 @@ class InputNumber(RestoreEntity):
         if self._current_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        value = state and float(state.state)
+        value: float | None = None
+        if state := await self.async_get_last_state():
+            with suppress(ValueError):
+                value = float(state.state)
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= value <= self._maximum:

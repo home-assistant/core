@@ -183,3 +183,16 @@ async def test_verify_redirect_uri_android_ios(client_id):
         assert not await indieauth.verify_redirect_uri(
             None, "https://incorrect.com", "homeassistant://auth-callback"
         )
+
+        if client_id == "https://home-assistant.io/android":
+            assert await indieauth.verify_redirect_uri(
+                None,
+                client_id,
+                "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+            )
+        else:
+            assert not await indieauth.verify_redirect_uri(
+                None,
+                client_id,
+                "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+            )

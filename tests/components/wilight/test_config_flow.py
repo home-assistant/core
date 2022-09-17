@@ -12,11 +12,7 @@ from homeassistant.components.wilight.config_flow import (
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.components.wilight import (
@@ -61,7 +57,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         CONF_NAME: f"WL{WILIGHT_ID}",
@@ -77,7 +73,7 @@ async def test_ssdp_not_wilight_abort_1(hass: HomeAssistant) -> None:
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_wilight_device"
 
 
@@ -89,7 +85,7 @@ async def test_ssdp_not_wilight_abort_2(hass: HomeAssistant) -> None:
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_wilight_device"
 
 
@@ -103,7 +99,7 @@ async def test_ssdp_not_wilight_abort_3(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_wilight_device"
 
 
@@ -117,7 +113,7 @@ async def test_ssdp_not_supported_abort(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_supported_device"
 
 
@@ -142,7 +138,7 @@ async def test_ssdp_device_exists_abort(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -154,7 +150,7 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistant) -> None:
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         CONF_NAME: f"WL{WILIGHT_ID}",
@@ -165,7 +161,7 @@ async def test_full_ssdp_flow_implementation(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"WL{WILIGHT_ID}"
 
     assert result["data"]

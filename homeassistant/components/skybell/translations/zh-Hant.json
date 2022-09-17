@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u8acb\u66f4\u65b0 {email} \u5bc6\u78bc",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "user": {
+                "data": {
+                    "email": "\u96fb\u5b50\u90f5\u4ef6",
+                    "password": "\u5bc6\u78bc"
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a Skybell \u7684\u529f\u80fd\u5373\u5c07\u79fb\u9664\u3002\n\nHome Assistant \u5c07\u4e0d\u518d\u4f7f\u7528\u73fe\u6709\u7684 YAML \u8a2d\u5b9a\u3002\n\n\u7531 configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 YAML \u8a2d\u5b9a\u4e26\u91cd\u555f Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "Skybell YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        }
+    }
+}

@@ -82,6 +82,7 @@ class TfiacClimate(ClimateEntity):
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_temperature_unit = TEMP_FAHRENHEIT
 
     def __init__(self, hass, client):
         """Init class."""
@@ -120,11 +121,6 @@ class TfiacClimate(ClimateEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._client.status["target_temp"]
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):

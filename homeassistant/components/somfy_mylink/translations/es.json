@@ -8,7 +8,7 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "flow_title": "{mac} ({ip})",
         "step": {
             "user": {
                 "data": {
@@ -16,7 +16,7 @@
                     "port": "Puerto",
                     "system_id": "ID del sistema"
                 },
-                "description": "El ID del sistema se puede obtener en la aplicaci\u00f3n MyLink en Integraci\u00f3n seleccionando cualquier servicio que no sea de la nube."
+                "description": "El ID del sistema se puede obtener en la aplicaci\u00f3n MyLink en Integraci\u00f3n seleccionando cualquier servicio que no sea en la nube."
             }
         }
     },

@@ -1,9 +1,12 @@
 """Test the Z-Wave JS config flow."""
 import asyncio
-from unittest.mock import DEFAULT, call, patch
+from collections.abc import Generator
+from copy import copy
+from unittest.mock import DEFAULT, MagicMock, call, patch
 
 import aiohttp
 import pytest
+from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
@@ -132,6 +135,45 @@ def mock_addon_setup_time():
         "homeassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ) as addon_setup_time:
         yield addon_setup_time
+
+
+@pytest.fixture(name="serial_port")
+def serial_port_fixture() -> ListPortInfo:
+    """Return a mock serial port."""
+    port = ListPortInfo("/test", skip_link_detection=True)
+    port.serial_number = "1234"
+    port.manufacturer = "Virtual serial port"
+    port.device = "/test"
+    port.description = "Some serial port"
+    port.pid = 9876
+    port.vid = 5678
+
+    return port
+
+
+@pytest.fixture(name="mock_list_ports", autouse=True)
+def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
+    """Mock list ports."""
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
+    ) as mock_list_ports:
+        another_port = copy(serial_port)
+        another_port.device = "/new"
+        another_port.description = "New serial port"
+        another_port.serial_number = "5678"
+        another_port.pid = 8765
+        mock_list_ports.return_value = [serial_port, another_port]
+        yield mock_list_ports
+
+
+@pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
+def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
+    """Mock usb serial by id."""
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
+    ) as mock_usb_serial_by_id:
+        mock_usb_serial_by_id.side_effect = lambda x: x
+        yield mock_usb_serial_by_id
 
 
 async def test_manual(hass):
@@ -422,7 +464,7 @@ async def test_abort_discovery_with_existing_entry(
 
 
 async def test_abort_hassio_discovery_with_existing_flow(
-    hass, supervisor, addon_options
+    hass, supervisor, addon_installed, addon_options
 ):
     """Test hassio discovery flow is aborted when another discovery has happened."""
     result = await hass.config_entries.flow.async_init(
@@ -701,15 +743,13 @@ async def test_discovery_addon_not_running(
 async def test_discovery_addon_not_installed(
     hass,
     supervisor,
-    addon_installed,
+    addon_not_installed,
     install_addon,
     addon_options,
     set_addon_options,
     start_addon,
 ):
     """Test discovery with add-on not installed."""
-    addon_installed.return_value["version"] = None
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -1399,7 +1439,7 @@ async def test_addon_installed_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": "/test_new",
+            "usb_path": "/new",
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -1412,7 +1452,7 @@ async def test_addon_installed_already_configured(
         "core_zwave_js",
         {
             "options": {
-                "device": "/test_new",
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -1432,7 +1472,7 @@ async def test_addon_installed_already_configured(
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test_new"
+    assert entry.data["usb_path"] == "/new"
     assert entry.data["s0_legacy_key"] == "new123"
     assert entry.data["s2_access_control_key"] == "new456"
     assert entry.data["s2_authenticated_key"] == "new789"
@@ -1443,7 +1483,7 @@ async def test_addon_installed_already_configured(
 async def test_addon_not_installed(
     hass,
     supervisor,
-    addon_installed,
+    addon_not_installed,
     install_addon,
     addon_options,
     set_addon_options,
@@ -1451,8 +1491,6 @@ async def test_addon_not_installed(
     get_addon_discovery_info,
 ):
     """Test add-on not installed."""
-    addon_installed.return_value["version"] = None
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1533,9 +1571,10 @@ async def test_addon_not_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_install_addon_failure(hass, supervisor, addon_installed, install_addon):
+async def test_install_addon_failure(
+    hass, supervisor, addon_not_installed, install_addon
+):
     """Test add-on install failure."""
-    addon_installed.return_value["version"] = None
     install_addon.side_effect = HassioAPIError()
 
     result = await hass.config_entries.flow.async_init(
@@ -1912,6 +1951,30 @@ async def different_device_server_version(*args):
             0,
             different_device_server_version,
         ),
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            {},
+            {
+                "device": "/test",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "log_level": "info",
+            },
+            {
+                "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "log_level": "info",
+                "emulate_hardware": False,
+            },
+            0,
+            different_device_server_version,
+        ),
     ],
 )
 async def test_options_different_device(
@@ -1979,14 +2042,16 @@ async def test_options_different_device(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
+    # Default emulate_hardware is False.
+    addon_options = {"emulate_hardware": False} | old_addon_options
     # Legacy network key is not reset.
-    old_addon_options.pop("network_key")
+    addon_options.pop("network_key")
 
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
         hass,
         "core_zwave_js",
-        {"options": old_addon_options},
+        {"options": addon_options},
     )
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"
@@ -2292,7 +2357,7 @@ async def test_options_addon_not_installed(
     hass,
     client,
     supervisor,
-    addon_installed,
+    addon_not_installed,
     install_addon,
     integration,
     addon_options,
@@ -2306,7 +2371,6 @@ async def test_options_addon_not_installed(
     disconnect_calls,
 ):
     """Test options flow and add-on not installed on Supervisor."""
-    addon_installed.return_value["version"] = None
     addon_options.update(old_addon_options)
     entry = integration
     entry.unique_id = "1234"
@@ -2384,8 +2448,10 @@ async def test_import_addon_installed(
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
+    serial_port,
 ):
     """Test import step while add-on already installed on Supervisor."""
+    serial_port.device = "/test/imported"
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},

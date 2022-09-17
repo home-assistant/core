@@ -7,6 +7,10 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
+class SonosSubscriptionsFailed(HomeAssistantError):
+    """Subscription creation failed."""
+
+
 class SonosUpdateError(HomeAssistantError):
     """Update failed."""
 

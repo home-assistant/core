@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import cast
 
 import voluptuous as vol
@@ -29,7 +28,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -55,6 +54,7 @@ from .const import (
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
+    LOGGER,
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
@@ -63,11 +63,9 @@ from .discovery_data_template import (
     NumericSensorDataTemplateData,
 )
 from .entity import ZWaveBaseEntity
-from .helpers import get_device_id, get_valueless_base_unique_id
+from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 STATUS_ICON: dict[NodeStatus, str] = {
     NodeStatus.ALIVE: "mdi:heart-pulse",
@@ -495,10 +493,8 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_name = f"{name}: Node Status"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
-        # device is precreated in main handler
-        self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(driver, self.node)},
-        )
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
         self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:

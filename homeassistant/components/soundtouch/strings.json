@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Confirm adding Bose SoundTouch device",
+        "description": "You are about to add the SoundTouch device named `{name}` to Home Assistant."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Bose SoundTouch YAML configuration is being removed",
+      "description": "Configuring Bose SoundTouch using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Bose SoundTouch YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

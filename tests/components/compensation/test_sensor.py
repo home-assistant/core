@@ -163,7 +163,7 @@ async def test_numpy_errors(hass, caplog):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert "invalid value encountered in true_divide" in caplog.text
+    assert "invalid value encountered in divide" in caplog.text
 
 
 async def test_datapoints_greater_than_degree(hass, caplog):

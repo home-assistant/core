@@ -9,6 +9,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Perbarui semua otomasi atau skrip yang menggunakan layanan ini untuk menggunakan layanan `homeassistant.update_entity` dengan target ID entitas Speedtest. Kemudian, klik KIRIM di bawah ini untuk menandai masalah ini sebagai terselesaikan.",
+                        "title": "Layanan speedtest dalam proses penghapusan"
+                    }
+                }
+            },
+            "title": "Layanan speedtest dalam proses penghapusan"
+        }
+    },
     "options": {
         "step": {
             "init": {

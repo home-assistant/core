@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "password": "L\u00f6senord",
+                    "pin": "Pin-kod",
+                    "ssl": "Anv\u00e4nd ett SSL certifikat",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "title": "Anslut till Venstar-termostaten"
+            }
+        }
+    }
+}

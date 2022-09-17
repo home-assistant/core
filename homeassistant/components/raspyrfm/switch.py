@@ -96,6 +96,8 @@ def setup_platform(
 class RaspyRFMSwitch(SwitchEntity):
     """Representation of a RaspyRFM switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, raspyrfm_client, name: str, gateway, controlunit):
         """Initialize the switch."""
         self._raspyrfm_client = raspyrfm_client
@@ -110,11 +112,6 @@ class RaspyRFMSwitch(SwitchEntity):
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return True if polling should be used."""
-        return False
 
     @property
     def assumed_state(self):

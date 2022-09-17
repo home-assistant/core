@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from functools import partial
 from typing import Any, cast
 
@@ -32,7 +33,10 @@ NOTIFY_SERVICES = "notify_services"
 NOTIFY_DISCOVERY_DISPATCHER = "notify_discovery_dispatcher"
 
 
-async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
+@callback
+def async_setup_legacy(
+    hass: HomeAssistant, config: ConfigType
+) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
     hass.data.setdefault(NOTIFY_DISCOVERY_DISPATCHER, None)
@@ -101,15 +105,6 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
             )
             hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(integration_name, p_config))
-        for integration_name, p_config in config_per_platform(config, DOMAIN)
-        if integration_name is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None
     ) -> None:
@@ -119,6 +114,12 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     hass.data[NOTIFY_DISCOVERY_DISPATCHER] = discovery.async_listen_platform(
         hass, DOMAIN, async_platform_discovered
     )
+
+    return [
+        async_setup_platform(integration_name, p_config)
+        for integration_name, p_config in config_per_platform(config, DOMAIN)
+        if integration_name is not None
+    ]
 
 
 @callback

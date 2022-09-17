@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from goodwe import Inverter, Sensor, SensorKind
 
@@ -49,7 +49,7 @@ _MAIN_SENSORS = (
     "e_bat_discharge_total",
 )
 
-_ICONS = {
+_ICONS: dict[SensorKind, str] = {
     SensorKind.PV: "mdi:solar-power",
     SensorKind.AC: "mdi:power-plug-outline",
     SensorKind.UPS: "mdi:power-plug-off-outline",
@@ -62,10 +62,13 @@ _ICONS = {
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[[str, Any, Any], Any] = lambda sensor, prev, val: val
+    value: Callable[[Any, Any], Any] = lambda prev, val: val
+    available: Callable[
+        [CoordinatorEntity], bool
+    ] = lambda entity: entity.coordinator.last_update_success
 
 
-_DESCRIPTIONS = {
+_DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
     "A": GoodweSensorEntityDescription(
         key="A",
         device_class=SensorDeviceClass.CURRENT,
@@ -89,7 +92,8 @@ _DESCRIPTIONS = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value=lambda sensor, prev, val: prev if "total" in sensor and not val else val,
+        value=lambda prev, val: prev if not val else val,
+        available=lambda entity: entity.coordinator.data is not None,
     ),
     "C": GoodweSensorEntityDescription(
         key="C",
@@ -167,10 +171,22 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the value reported by the sensor."""
-        value = self.entity_description.value(
-            self._sensor.id_,
+        value = cast(GoodweSensorEntityDescription, self.entity_description).value(
             self._previous_value,
             self.coordinator.data.get(self._sensor.id_, self._previous_value),
         )
         self._previous_value = value
         return value
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available.
+
+        We delegate the behavior to entity description lambda, since
+        some sensors (like energy produced today) should report themselves
+        as available even when the (non-battery) pv inverter is off-line during night
+        and most of the sensors are actually unavailable.
+        """
+        return cast(GoodweSensorEntityDescription, self.entity_description).available(
+            self
+        )

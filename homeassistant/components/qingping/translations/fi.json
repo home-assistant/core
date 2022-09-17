@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Laitetta ei tueta"
+        }
+    }
+}

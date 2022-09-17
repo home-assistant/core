@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "no_adapters": "No s'ha trobat cap adaptador Bluetooth"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Vols configurar Bluetooth?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adaptador"
+                },
+                "description": "Selecciona un adaptador Bluetooth per configurar-lo"
+            },
+            "single_adapter": {
+                "description": "Vols configurar l'adaptador Bluetooth {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositiu"
+                },
+                "description": "Tria un dispositiu a configurar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "Adaptador Bluetooth a utilitzar per escanejar",
+                    "passive": "Escolta passiva"
+                }
+            }
+        }
+    }
+}

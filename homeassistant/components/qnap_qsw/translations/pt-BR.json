@@ -9,6 +9,12 @@
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Senha",

@@ -60,7 +60,7 @@ def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
 
 
 def _setup_androidtv(
-    hass: HomeAssistant, config: dict[str, Any]
+    hass: HomeAssistant, config: Mapping[str, Any]
 ) -> tuple[str, PythonRSASigner | None, str]:
     """Generate an ADB key (if needed) and load it."""
     adbkey: str = config.get(
@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ANDROID_DEV_OPT: entry.options.copy(),
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

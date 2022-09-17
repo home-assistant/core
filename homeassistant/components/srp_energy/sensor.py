@@ -83,6 +83,8 @@ async def async_setup_entry(
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, coordinator):
         """Initialize the SrpEntity class."""
         self._name = SENSOR_NAME
@@ -124,11 +126,6 @@ class SrpEntity(SensorEntity):
         if self.coordinator.data:
             return f"{self.coordinator.data:.2f}"
         return None
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
 
     @property
     def extra_state_attributes(self):

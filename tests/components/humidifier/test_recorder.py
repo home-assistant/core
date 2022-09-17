@@ -9,7 +9,7 @@ from homeassistant.components.humidifier import (
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
 )
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import State

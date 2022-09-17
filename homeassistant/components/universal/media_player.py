@@ -69,9 +69,13 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -94,7 +98,19 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
+STATES_ORDER = [
+    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
+    STATE_OFF,
+    STATE_IDLE,
+    STATE_STANDBY,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_BUFFERING,
+    STATE_PLAYING,
+]
+STATES_ORDER_LOOKUP = {state: idx for idx, state in enumerate(STATES_ORDER)}
+STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[STATE_IDLE]
 
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
@@ -138,6 +154,8 @@ async def async_setup_platform(
 
 class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -260,11 +278,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self) -> str | None:
@@ -614,9 +627,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self):
         """Update state in HA."""
-        for child_name in self._children:
-            child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
-                self._child_state = child_state
-                return
         self._child_state = None
+        for child_name in self._children:
+            if (child_state := self.hass.states.get(child_name)) and (
+                child_state_order := STATES_ORDER_LOOKUP.get(child_state.state, 0)
+            ) >= STATES_ORDER_IDLE:
+                if self._child_state:
+                    if child_state_order > STATES_ORDER_LOOKUP.get(
+                        self._child_state.state, 0
+                    ):
+                        self._child_state = child_state
+                else:
+                    self._child_state = child_state

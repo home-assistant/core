@@ -31,7 +31,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
         raise ConnectionError from err
 
     devices = device_query["result"]
-    user = user_query["result"].get("username")
+    user: str = user_query["result"].get("username")
     if not devices:
         LOGGER.error("Could not retrieve any devices from Sensibo servers")
         raise NoDevicesError

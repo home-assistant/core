@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "pin": "Pin-kod",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Bortalarmat",
+                    "armed_custom_bypass": "Larmat anpassad f\u00f6rbikoppling",
+                    "armed_home": "Hemmalarmat",
+                    "armed_night": "Nattlarmat"
+                },
+                "description": "V\u00e4lj vilket l\u00e4ge du vill st\u00e4lla in ditt Risco-larm p\u00e5 n\u00e4r Home Assistant-larmet aktiveras",
+                "title": "Mappa Home Assistant tillst\u00e5nd till Risco tillst\u00e5nd"
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "Kr\u00e4v Pin-kod f\u00f6r att aktivera",
+                    "code_disarm_required": "Kr\u00e4v Pin-kod f\u00f6r att avaktivera",
+                    "scan_interval": "Hur ofta ska man fr\u00e5ga Risco (i sekunder)"
+                },
+                "title": "Konfigurera alternativ"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grupp A",
+                    "B": "Grupp B",
+                    "C": "Grupp C",
+                    "D": "Grupp D",
+                    "arm": "Larmat (Borta)",
+                    "partial_arm": "Delvis larmat (hemma)"
+                },
+                "description": "V\u00e4lj vilket tillst\u00e5nd ditt Home Assistant-larm ska rapportera f\u00f6r varje tillst\u00e5nd som rapporteras av Risco",
+                "title": "Mappa Risco-tillst\u00e5nd till Home Assistant-tillst\u00e5nd"
+            }
+        }
+    }
+}

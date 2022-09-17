@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNAVAILABLE
 
 from tests.components.homekit_controller.common import setup_test_component
 
-LIGHT_BULB_NAME = "Light Bulb"
+LIGHT_BULB_NAME = "TestDevice"
 LIGHT_BULB_ENTITY_ID = "light.testdevice"
 
 

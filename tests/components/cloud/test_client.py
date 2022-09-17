@@ -134,7 +134,16 @@ async def test_handler_google_actions(hass):
     assert device["roomHint"] == "living room"
 
 
-async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
+@pytest.mark.parametrize(
+    "intent,response_payload",
+    [
+        ("action.devices.SYNC", {"agentUserId": "myUserName", "devices": []}),
+        ("action.devices.QUERY", {"errorCode": "deviceTurnedOff"}),
+    ],
+)
+async def test_handler_google_actions_disabled(
+    hass, mock_cloud_fixture, intent, response_payload
+):
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
@@ -142,13 +151,17 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
         assert await async_setup_component(hass, "cloud", {})
 
     reqid = "5711642932632160983"
-    data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
+    data = {"requestId": reqid, "inputs": [{"intent": intent}]}
 
     cloud = hass.data["cloud"]
-    resp = await cloud.client.async_google_message(data)
+    with patch(
+        "hass_nabucasa.Cloud._decode_claims",
+        return_value={"cognito:username": "myUserName"},
+    ):
+        resp = await cloud.client.async_google_message(data)
 
     assert resp["requestId"] == reqid
-    assert resp["payload"]["errorCode"] == "deviceTurnedOff"
+    assert resp["payload"] == response_payload
 
 
 async def test_webhook_msg(hass, caplog):

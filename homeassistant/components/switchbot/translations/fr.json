@@ -7,10 +7,20 @@
             "switchbot_unsupported_type": "Type Switchbot non pris en charge.",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Voulez-vous configurer {name}\u00a0?"
+            },
+            "password": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "L'appareil {name} requiert un mot de passe"
+            },
             "user": {
                 "data": {
+                    "address": "Adresse de l'appareil",
                     "mac": "Adresse MAC de l'appareil",
                     "name": "Nom",
                     "password": "Mot de passe"

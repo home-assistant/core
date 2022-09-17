@@ -240,7 +240,6 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     self.device_conn_type, "GetInfo"
                 ).get("NewEnable")
 
-    @callback
     async def _async_update_data(self) -> None:
         """Update FritzboxTools data."""
         try:
@@ -877,11 +876,6 @@ class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
         if self._mac:
             return self._avm_wrapper.devices[self._mac].hostname
         return None
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     async def async_process_update(self) -> None:
         """Update device."""

@@ -1,6 +1,8 @@
 """Support for Fibaro binary sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
@@ -49,7 +51,7 @@ async def async_setup_entry(
 class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: Any) -> None:
         """Initialize the binary_sensor."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
@@ -62,6 +64,6 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
             self._attr_device_class = SENSOR_TYPES[stype][2]
             self._attr_icon = SENSOR_TYPES[stype][1]
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self._attr_is_on = self.current_binary_state

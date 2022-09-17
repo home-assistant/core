@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -10,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -19,7 +22,9 @@ SHARKIQ_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def _validate_input(
+    hass: core.HomeAssistant, data: Mapping[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     ayla_api = get_ayla_api(
         username=data[CONF_USERNAME],
@@ -45,14 +50,16 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_input(self, user_input):
+    async def _async_validate_input(
+        self, user_input: Mapping[str, Any]
+    ) -> tuple[dict[str, str] | None, dict[str, str]]:
         """Validate form input."""
         errors = {}
         info = None
 
         # noinspection PyBroadException
         try:
-            info = await validate_input(self.hass, user_input)
+            info = await _validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -62,9 +69,11 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return info, errors
 
-    async def async_step_user(self, user_input: dict | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             info, errors = await self._async_validate_input(user_input)
             if info:
@@ -76,9 +85,9 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=SHARKIQ_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: dict | None = None):
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle re-auth if login is invalid."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             _, errors = await self._async_validate_input(user_input)

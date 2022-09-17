@@ -71,7 +71,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_APPARENT_POWERUSAGE: {
-        ICON: "mdi:flash",
+        DEVICE_CLASS: SensorDeviceClass.APPARENT_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_BATTERY: {
@@ -162,7 +162,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
-        ICON: "mdi:flash",
+        DEVICE_CLASS: SensorDeviceClass.REACTIVE_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},

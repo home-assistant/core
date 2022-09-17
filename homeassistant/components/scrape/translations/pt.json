@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Conta j\u00e1 configurada"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "unit_of_measurement": "Unidade de Medida"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unidade de Medida"
+                }
+            }
+        }
+    }
+}

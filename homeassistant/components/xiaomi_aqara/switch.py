@@ -149,6 +149,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         self._load_power = None
         self._power_consumed = None
         self._supports_power_consumption = supports_power_consumption
+        # Polling needed for Zigbee plug only.
+        self._attr_should_poll = supports_power_consumption
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
@@ -176,11 +178,6 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
             attrs = {}
         attrs.update(super().extra_state_attributes)
         return attrs
-
-    @property
-    def should_poll(self):
-        """Return the polling state. Polling needed for Zigbee plug only."""
-        return self._supports_power_consumption
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

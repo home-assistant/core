@@ -1,4 +1,6 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -114,7 +116,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> Ws66iOptionsFlowHandler:
         """Define the config flow to handle options."""
         return Ws66iOptionsFlowHandler(config_entry)
 
@@ -131,7 +135,7 @@ def _key_for_source(index, source, previous_sources):
 class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a WS66i options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 

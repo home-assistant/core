@@ -4,17 +4,17 @@
             "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar",
+            "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chave de API",
+                    "api_key": "Chave da API",
                     "default_channel": "Canal padr\u00e3o",
                     "icon": "\u00cdcone",
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 },
                 "data_description": {
                     "api_key": "O token da API do Slack a ser usado para enviar mensagens do Slack.",
