@@ -138,7 +138,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     @callback
     def _unsub_firmware_events_and_reset_progress(
-        self, write_state: bool = False
+        self, write_state: bool = True
     ) -> None:
         """Unsubscribe from firmware events and reset update install progress."""
         if self._progress_unsub:
@@ -224,7 +224,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         """Install an update."""
         firmware = self._latest_version_firmware
         assert firmware
-        self._unsub_firmware_events_and_reset_progress(True)
+        self._unsub_firmware_events_and_reset_progress(False)
+        self._attr_in_progress = True
+        self.async_write_ha_state()
 
         self._progress_unsub = self.node.on(
             "firmware update progress", self._update_progress
@@ -319,4 +321,4 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._poll_unsub()
             self._poll_unsub = None
 
-        self._unsub_firmware_events_and_reset_progress()
+        self._unsub_firmware_events_and_reset_progress(False)
