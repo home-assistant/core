@@ -216,21 +216,21 @@ ATTR_TO_PROPERTY = [
 # mypy: disallow-any-generics
 
 
-class CacheImage(TypedDict, total=False):
+class _CacheImage(TypedDict, total=False):
     """Class to hold a cached image."""
 
     lock: asyncio.Lock
     content: tuple[bytes | None, str | None]
 
 
-class ImageCache(TypedDict):
+class _ImageCache(TypedDict):
     """Class to hold a cached image."""
 
-    images: collections.OrderedDict[str, CacheImage]
+    images: collections.OrderedDict[str, _CacheImage]
     maxsize: int
 
 
-ENTITY_IMAGE_CACHE = ImageCache(images=collections.OrderedDict(), maxsize=16)
+_ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
 
 
 @bind_hass
@@ -1078,8 +1078,8 @@ class MediaPlayerEntity(Entity):
 
         Images are cached in memory (the images are typically 10-100kB in size).
         """
-        cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
-        cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
+        cache_images = _ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+        cache_maxsize = _ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
         if urlparse(url).hostname is None:
             url = f"{get_url(self.hass)}{url}"
