@@ -35,7 +35,7 @@ class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEnti
 
 @dataclass
 class RobotBinarySensorEntityDescriptionMixIn:
-    """A value value mixin for Litter-Robot binary sensors."""
+    """Value mixin for Litter-Robot binary sensors."""
 
     is_on_fn: Callable[[Robot], bool]
 
