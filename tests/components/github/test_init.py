@@ -74,3 +74,12 @@ async def test_subscription_setup_polling_disabled(
         "https://api.github.com/repos/home-assistant/core/events" not in x[1]
         for x in aioclient_mock.mock_calls
     )
+
+    # Prove that we subscribed if the user enabled polling again
+    mock_config_entry.pref_disable_polling = False
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        "https://api.github.com/repos/home-assistant/core/events" in x[1]
+        for x in aioclient_mock.mock_calls
+    )
