@@ -110,10 +110,20 @@ async def async_setup_entry(
         location[CONF_LOCATION][CONF_LATITUDE],
         location[CONF_LOCATION][CONF_LONGITUDE],
         session=session,
+        hourly=False,
     )
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
 
-    async_add_entities([entity], True)
+    entity_hourly = SmhiWeather(
+        location[CONF_NAME],
+        location[CONF_LOCATION][CONF_LATITUDE],
+        location[CONF_LOCATION][CONF_LONGITUDE],
+        session=session,
+        hourly=True,
+    )
+    entity_hourly.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name + "_hourly")
+
+    async_add_entities([entity, entity_hourly], True)
 
 
 class SmhiWeather(WeatherEntity):
@@ -134,18 +144,23 @@ class SmhiWeather(WeatherEntity):
         latitude: str,
         longitude: str,
         session: aiohttp.ClientSession,
+        hourly: bool,
     ) -> None:
         """Initialize the SMHI weather entity."""
-        self._attr_unique_id = f"{latitude}, {longitude}"
+        self._hourly = hourly
+        self._attr_unique_id = (
+            f"{latitude}, {longitude}" + ", hourly" if self._hourly else ""
+        )
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(longitude, latitude, session=session)
+
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
             manufacturer="SMHI",
             model="v2",
-            name=name,
+            name=name + (" Hourly" if self._hourly else ""),
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
         self._attr_condition = None
@@ -172,7 +187,10 @@ class SmhiWeather(WeatherEntity):
         """Refresh the forecast data from SMHI weather API."""
         try:
             async with async_timeout.timeout(TIMEOUT):
-                self._forecasts = await self._smhi_api.async_get_forecast()
+                if self._hourly:
+                    self._forecasts = await self._smhi_api.async_get_forecast_hour()
+                else:
+                    self._forecasts = await self._smhi_api.async_get_forecast()
                 self._fail_count = 0
         except (asyncio.TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
@@ -220,13 +238,17 @@ class SmhiWeather(WeatherEntity):
                 {
                     ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
                     ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,
                     ATTR_FORECAST_CONDITION: condition,
                     ATTR_FORECAST_NATIVE_PRESSURE: forecast.pressure,
                     ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
                     ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
                 }
+                | (
+                    {ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min}
+                    if not self._hourly
+                    else {}
+                )
             )
 
         return data
