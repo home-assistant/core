@@ -23,12 +23,11 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import verify_domain_control
 
@@ -345,12 +344,6 @@ class OpenUvEntity(Entity):
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
         coordinates = f"{openuv.client.latitude}, {openuv.client.longitude}"
-        self._attr_device_info = DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinates)},
-            manufacturer="OpenUV Team",
-            name=coordinates,
-        )
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
         self._attr_unique_id = f"{coordinates}_{description.key}"
