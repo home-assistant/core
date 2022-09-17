@@ -423,7 +423,7 @@ class HKDevice:
         if self._polling_interval_remover:
             self._polling_interval_remover()
 
-        await self.pairing.close()
+        await self.pairing.shutdown()
 
         await self.hass.config_entries.async_unload_platforms(
             self.config_entry, self.platforms
