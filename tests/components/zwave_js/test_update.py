@@ -13,8 +13,10 @@ from homeassistant.components.update.const import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
+    ATTR_SKIPPED_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
+    SERVICE_SKIP,
 )
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
@@ -64,7 +66,6 @@ async def test_update_entity_states(
 ):
     """Test update entity states."""
     ws_client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
 
     assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
 
@@ -453,3 +454,63 @@ async def test_update_entity_install_failed(
     # validate that the install task failed
     with pytest.raises(HomeAssistantError):
         await install_task
+
+
+async def test_update_entity_reload(
+    hass,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+):
+    """Test update entity maintains state after reload."""
+    assert hass.states.get(UPDATE_ENTITY).state == STATE_OFF
+
+    client.async_send_command.return_value = {"updates": []}
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert not attrs[ATTR_AUTO_UPDATE]
+    assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+    assert attrs[ATTR_RELEASE_URL] is None
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_SKIP,
+        {
+            ATTR_ENTITY_ID: UPDATE_ENTITY,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "11.2.4"
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # Trigger another update and make sure the skipped version is still skipped
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=4))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "11.2.4"
