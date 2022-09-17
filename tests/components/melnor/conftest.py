@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from melnor_bluetooth.device import Device, Valve
+from melnor_bluetooth.device import Device
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN
@@ -52,6 +52,34 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
 )
 
 
+class MockedValve:
+    """Mocked class for a Valve."""
+
+    _id: int
+    _is_watering: bool
+    _manual_watering_minutes: int
+
+    def __init__(self, identifier: int) -> None:
+        """Initialize a mocked valve."""
+        self._id = identifier
+        self._is_watering = False
+        self._manual_watering_minutes = 0
+
+    @property
+    def id(self) -> int:
+        """Return the valve id."""
+        return self._id
+
+    @property
+    def is_watering(self):
+        """Return true if the valve is currently watering."""
+        return self._is_watering
+
+    async def set_is_watering(self, is_watering: bool):
+        """Set the valve to manual watering."""
+        self._is_watering = is_watering
+
+
 def mock_config_entry(hass: HomeAssistant):
     """Return a mock config entry."""
 
@@ -83,10 +111,10 @@ def mock_melnor_device():
         device.name = "test_melnor"
         device.rssi = -50
 
-        device.zone1 = Valve(0, device)
-        device.zone2 = Valve(1, device)
-        device.zone3 = Valve(2, device)
-        device.zone4 = Valve(3, device)
+        device.zone1 = MockedValve(0)
+        device.zone2 = MockedValve(1)
+        device.zone3 = MockedValve(2)
+        device.zone4 = MockedValve(3)
 
         device.__getitem__.side_effect = lambda key: getattr(device, key)
 
