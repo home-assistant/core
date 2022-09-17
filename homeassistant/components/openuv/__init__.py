@@ -230,13 +230,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    # We used to have a bug where a user couldn't configure multiple OpenUV instances.
-    # As part of https://github.com/home-assistant/core/pull/76878, we added that
-    # ability, but also notified the user that these services are deprecated and going
-    # away. To avoid a breaking change, we insert the current config entry into the
-    # service call if the user doesn't provide one (and since the docs point them toward
-    # the `homeassistant.update_entity` service, they likely won't. Once the deprecation
-    # period passes (2022.12.0), we'll remove all service-related code (including this):
     service_schema = vol.Schema(
         {
             vol.Optional(CONF_ENTRY_ID, default=entry.entry_id): cv.string,
