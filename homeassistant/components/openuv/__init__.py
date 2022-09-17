@@ -70,24 +70,6 @@ SERVICE_SCHEMA = vol.Schema(
 )
 
 
-# @callback
-# def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) -> OpenUV:
-#     """Get the OpenUV object related to a service call (by device ID)."""
-#     device_id = call.data[CONF_DEVICE_ID]
-#     device_registry = dr.async_get(hass)
-
-#     if (device_entry := device_registry.async_get(device_id)) is None:
-#         raise ValueError(f"Invalid OpenUV service ID: {device_id}")
-
-#     for entry_id in device_entry.config_entries:
-#         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-#             continue
-#         if entry.domain == DOMAIN:
-#             return cast(OpenUV, hass.data[DOMAIN][entry_id])
-
-#     raise ValueError(f"No OpenUV object for service ID: {device_id}")
-
-
 @callback
 def async_log_deprecated_service_call(
     hass: HomeAssistant,
