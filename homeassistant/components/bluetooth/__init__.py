@@ -267,6 +267,7 @@ def _async_check_haos(hass: HomeAssistant) -> None:
         "haos_outdated",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
+        learn_more_url="/config/updates",
         translation_key="haos_outdated",
     )
 
