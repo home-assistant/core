@@ -109,7 +109,6 @@ async def test_sensor(hass, aioclient_mock):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_co")
