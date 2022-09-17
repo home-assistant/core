@@ -6,11 +6,17 @@
         "step": {
             "user": {
                 "data": {
+                    "area": "Area",
                     "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "area": "Area"
+                    "longitude": "Longitude"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Brottsplatskartan using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Brottsplatskartan YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Brottsplatskartan YAML configuration is being removed"
         }
     }
 }

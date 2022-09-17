@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import AREAS, CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN, LOGGER
@@ -43,10 +44,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Brottsplatskartan platform."""
 
-    LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.8, remove import flow in 2022.10
-        "Loading Brottsplatskartan via platform setup is deprecated and will be removed in 2022.10 "
-        "Please remove it from your configuration"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
 
     hass.async_create_task(
