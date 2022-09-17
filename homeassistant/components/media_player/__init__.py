@@ -223,7 +223,7 @@ class CacheImage(TypedDict, total=False):
     content: tuple[bytes | None, str | None]
 
 
-class ImageCache(TypedDict, total=True):
+class ImageCache(TypedDict):
     """Class to hold a cached image."""
 
     images: collections.OrderedDict[str, CacheImage]
