@@ -69,27 +69,27 @@ def async_finish_entity_domain_replacements(
         except ValueError:
             continue
 
-        removed_entity_id = registry_entry.entity_id
+        old_entity_id = registry_entry.entity_id
         translation_key = "replaced_old_entity"
 
         async_create_issue(
             hass,
             DOMAIN,
-            f"{translation_key}_{removed_entity_id}",
+            f"{translation_key}_{old_entity_id}",
             breaks_in_ha_version=strategy.breaks_in_ha_version,
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,
             translation_key=translation_key,
             translation_placeholders={
-                "removed_entity_id": removed_entity_id,
+                "old_entity_id": old_entity_id,
                 "replacement_entity_id": strategy.replacement_entity_id,
             },
         )
 
         if strategy.remove_old_entity:
-            LOGGER.info('Removing old entity: "%s"', removed_entity_id)
-            ent_reg.async_remove(removed_entity_id)
+            LOGGER.info('Removing old entity: "%s"', old_entity_id)
+            ent_reg.async_remove(old_entity_id)
 
 
 def key_exists(data: dict[str, Any], search_key: str) -> bool:
