@@ -42,6 +42,7 @@ async def test_options_flow_disabled_not_setup(
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_async_step_user_macos(hass, macos_adapter):
@@ -314,6 +315,7 @@ async def test_options_flow_linux(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PASSIVE] is False
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_options_flow_disabled_macos(
@@ -344,6 +346,7 @@ async def test_options_flow_disabled_macos(
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_options_flow_enabled_linux(
@@ -373,3 +376,4 @@ async def test_options_flow_enabled_linux(
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
+    await hass.config_entries.async_unload(entry.entry_id)
