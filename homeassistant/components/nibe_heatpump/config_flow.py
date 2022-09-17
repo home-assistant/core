@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import errno
-import logging
 from typing import Any
 
 from nibe.connection.nibegw import NibeGW
@@ -25,10 +24,8 @@ from .const import (
     CONF_REMOTE_WRITE_PORT,
     CONF_WORD_SWAP,
     DOMAIN,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -81,10 +78,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         word_swap = coil.value == "ON"
         coil = await connection.write_coil(coil)
     except CoilReadException as exception:
-        _LOGGER.exception("Timeout on read from pump")
+        LOGGER.exception("Timeout on read from pump")
         raise FieldError("base", "read") from exception
     except CoilWriteException as exception:
-        _LOGGER.exception("Timeout on writing to pump")
+        LOGGER.exception("Timeout on writing to pump")
         raise FieldError("base", "write") from exception
     finally:
         await connection.stop()
@@ -116,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             errors[exception.field] = exception.error
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             data = {

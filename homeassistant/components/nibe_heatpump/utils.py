@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
-_LOGGER = logging.getLogger(__name__)
+from . import LOGGER
 
 
 class TooManyTriesException(Exception):
@@ -25,7 +24,7 @@ def retry(retry_delays: list[float], exceptions: tuple[type[Exception]]):
                     if not isinstance(exception, exceptions):
                         raise
 
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Attempt failed (%d left). Exception: %s",
                         len(delays),
                         exception,
@@ -34,7 +33,7 @@ def retry(retry_delays: list[float], exceptions: tuple[type[Exception]]):
                     if delays:
                         delay = delays.pop(0)
                         if delay > 0:
-                            _LOGGER.debug("Sleeping %s before retry", delay)
+                            LOGGER.debug("Sleeping %s before retry", delay)
                             await asyncio.sleep(delay)
                     else:
                         raise TooManyTriesException() from exception

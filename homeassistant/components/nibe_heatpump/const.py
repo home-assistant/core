@@ -1,5 +1,8 @@
 """Constants for the Nibe Heat Pump integration."""
+import logging
+
 DOMAIN = "nibe_heatpump"
+LOGGER = logging.getLogger(__name__)
 
 CONF_LISTENING_PORT = "listening_port"
 CONF_REMOTE_READ_PORT = "remote_read_port"

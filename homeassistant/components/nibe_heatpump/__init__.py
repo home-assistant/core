@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import logging
 
 from nibe.coil import Coil
 from nibe.connection import Connection
@@ -30,10 +29,9 @@ from .const import (
     CONF_REMOTE_WRITE_PORT,
     CONF_WORD_SWAP,
     DOMAIN,
+    LOGGER,
 )
 from .utils import TooManyTriesException, retry
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -111,7 +109,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, _LOGGER, name="Nibe Heat Pump", update_interval=timedelta(seconds=60)
+            hass, LOGGER, name="Nibe Heat Pump", update_interval=timedelta(seconds=60)
         )
 
         self.connection = connection
