@@ -54,16 +54,8 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            latitude: float = (
-                user_input[CONF_LOCATION].get("latitude")
-                if user_input.get(CONF_LOCATION)
-                else None
-            )
-            longitude: float = (
-                user_input[CONF_LOCATION].get("longitude")
-                if user_input.get(CONF_LOCATION)
-                else None
-            )
+            latitude: float = user_input.get(CONF_LOCATION, {}).get(CONF_LATITUDE)
+            longitude: float = user_input.get(CONF_LOCATION, {}).get(CONF_LONGITUDE)
             area: str = user_input[CONF_AREA]
 
             if area != "N/A":

@@ -101,7 +101,7 @@ class BrottsplatskartanSensor(SensorEntity):
     def update(self) -> None:
         """Update device state."""
 
-        incident_counts: dict = defaultdict(int)
+        incident_counts: dict[str, int] = defaultdict(int)
         incidents = self._bpk.get_incidents()
 
         if incidents is False:
