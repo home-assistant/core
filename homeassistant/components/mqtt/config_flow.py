@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .client import MqttClientSetup
@@ -30,12 +30,13 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_WILL_MESSAGE,
-    DATA_MQTT_CONFIG,
+    DATA_MQTT,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
     DOMAIN,
 )
+from .mixins import MqttData
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
 MQTT_TIMEOUT = 5
@@ -164,9 +165,10 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the MQTT broker configuration."""
+        mqtt_data: MqttData = self.hass.data.setdefault(DATA_MQTT, MqttData())
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
+        yaml_config = mqtt_data.config or {}
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
@@ -214,9 +216,10 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the MQTT options."""
+        mqtt_data: MqttData = self.hass.data.setdefault(DATA_MQTT, MqttData())
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
+        yaml_config = mqtt_data.config or {}
         options_config: dict[str, Any] = {}
         if user_input is not None:
             bad_birth = False
@@ -334,14 +337,22 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def try_connection(hass, broker, port, username, password, protocol="3.1"):
+def try_connection(
+    hass: HomeAssistant,
+    broker: str,
+    port: int,
+    username: str | None,
+    password: str | None,
+    protocol: str = "3.1",
+) -> bool:
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
     # should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
     # Get the config from configuration.yaml
-    yaml_config = hass.data.get(DATA_MQTT_CONFIG, {})
+    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    yaml_config = mqtt_data.config or {}
     entry_config = {
         CONF_BROKER: broker,
         CONF_PORT: port,
@@ -351,7 +362,7 @@ def try_connection(hass, broker, port, username, password, protocol="3.1"):
     }
     client = MqttClientSetup({**yaml_config, **entry_config}).client
 
-    result = queue.Queue(maxsize=1)
+    result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(client_, userdata, flags, result_code):
         """Handle connection result."""
