@@ -26,10 +26,11 @@ class _BaseFlowManagerView(HomeAssistantView):
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
             data = result.copy()
             data.pop("result")
             data.pop("data")
+            data.pop("context")
             return data
 
         if "data_schema" not in result:
@@ -102,7 +103,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
 
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
     async def post(
-        self, request: web.Request, flow_id: str, data: dict[str, Any]
+        self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:
         """Handle a POST request."""
         try:

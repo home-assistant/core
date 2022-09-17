@@ -3,10 +3,13 @@
         "abort": {
             "already_configured": "A conta j\u00e1 foi configurada",
             "email_2fa_timed_out": "Expirou enquanto aguardava a autentica\u00e7\u00e3o de dois fatores enviada por e-mail.",
-            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "wrong_account": "As credenciais de usu\u00e1rio fornecidas n\u00e3o correspondem a esta conta SimpliSafe."
         },
         "error": {
+            "identifier_exists": "Conta j\u00e1 cadastrada",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "invalid_auth_code_length": "Os c\u00f3digos de autoriza\u00e7\u00e3o SimpliSafe t\u00eam 45 caracteres",
             "unknown": "Erro inesperado"
         },
         "progress": {
@@ -28,10 +31,11 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "C\u00f3digo de autoriza\u00e7\u00e3o",
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
                 },
-                "description": "Insira seu nome de usu\u00e1rio e senha."
+                "description": "O SimpliSafe autentica os usu\u00e1rios por meio de seu aplicativo da web. Por limita\u00e7\u00f5es t\u00e9cnicas, existe uma etapa manual ao final deste processo; certifique-se de ler a [documenta\u00e7\u00e3o](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) antes de come\u00e7ar. \n\n Quando estiver pronto, clique [aqui]( {url} ) para abrir o aplicativo da web SimpliSafe e insira suas credenciais. Se voc\u00ea j\u00e1 fez login no SimpliSafe em seu navegador, voc\u00ea pode querer abrir uma nova guia e copiar/colar o URL acima nessa guia. \n\n Quando o processo estiver conclu\u00eddo, retorne aqui e insira o c\u00f3digo de autoriza\u00e7\u00e3o da URL `com.simplisafe.mobile`."
             }
         }
     },

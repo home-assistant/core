@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from slugify import slugify
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -44,9 +45,12 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     _LOGGER.debug(
         "Successfully connected to fibaro home center %s with name %s",
         controller.hub_serial,
-        controller.name,
+        controller.hub_name,
     )
-    return {"serial_number": controller.hub_serial, "name": controller.name}
+    return {
+        "serial_number": slugify(controller.hub_serial),
+        "name": controller.hub_name,
+    }
 
 
 class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,7 +73,7 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(info["serial_number"])
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["name"], data=user_input)
 
         return self.async_show_form(

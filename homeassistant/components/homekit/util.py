@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_TYPE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
@@ -400,16 +400,16 @@ def temperature_to_states(temperature: float | int, unit: str) -> float:
 
 
 def density_to_air_quality(density: float) -> int:
-    """Map PM2.5 density to HomeKit AirQuality level."""
-    if density <= 35:
+    """Map PM2.5 µg/m3 density to HomeKit AirQuality level."""
+    if density <= 12:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
-    if density <= 75:
+    if density <= 35.4:  # US AQI 51-100 (HomeKit: Good)
         return 2
-    if density <= 115:
+    if density <= 55.4:  # US AQI 101-150 (HomeKit: Fair)
         return 3
-    if density <= 150:
+    if density <= 150.4:  # US AQI 151-200 (HomeKit: Inferior)
         return 4
-    return 5
+    return 5  # US AQI 201+ (HomeKit: Poor)
 
 
 def density_to_air_quality_pm10(density: float) -> int:
@@ -419,19 +419,6 @@ def density_to_air_quality_pm10(density: float) -> int:
     if density <= 80:
         return 2
     if density <= 120:
-        return 3
-    if density <= 300:
-        return 4
-    return 5
-
-
-def density_to_air_quality_pm25(density: float) -> int:
-    """Map PM2.5 density to HomeKit AirQuality level."""
-    if density <= 25:
-        return 1
-    if density <= 50:
-        return 2
-    if density <= 100:
         return 3
     if density <= 300:
         return 4
@@ -572,3 +559,11 @@ def state_needs_accessory_mode(state: State) -> bool:
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
+
+
+def state_changed_event_is_same_state(event: Event) -> bool:
+    """Check if a state changed event is the same state."""
+    event_data = event.data
+    old_state: State | None = event_data.get("old_state")
+    new_state: State | None = event_data.get("new_state")
+    return bool(new_state and old_state and new_state.state == old_state.state)

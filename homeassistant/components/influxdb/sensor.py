@@ -242,7 +242,7 @@ class InfluxSensor(SensorEntity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
         if (value := self.data.value) is None:

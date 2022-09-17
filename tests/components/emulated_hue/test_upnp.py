@@ -2,6 +2,7 @@
 from http import HTTPStatus
 import json
 import unittest
+from unittest.mock import patch
 
 from aiohttp import web
 import defusedxml.ElementTree as ET
@@ -52,11 +53,15 @@ def hue_client(aiohttp_client):
 
 async def setup_hue(hass):
     """Set up the emulated_hue integration."""
-    assert await setup.async_setup_component(
-        hass,
-        emulated_hue.DOMAIN,
-        {emulated_hue.DOMAIN: {emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT}},
-    )
+    with patch(
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+    ):
+        assert await setup.async_setup_component(
+            hass,
+            emulated_hue.DOMAIN,
+            {emulated_hue.DOMAIN: {emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT}},
+        )
+        await hass.async_block_till_done()
 
 
 def test_upnp_discovery_basic():
@@ -157,7 +162,7 @@ async def test_description_xml(hass, hue_client):
         root = ET.fromstring(await result.text())
         ns = {"s": "urn:schemas-upnp-org:device-1-0"}
         assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
-    except:  # noqa: E722 pylint: disable=bare-except
+    except Exception:  # pylint: disable=broad-except
         pytest.fail("description.xml is not valid XML!")
 
 

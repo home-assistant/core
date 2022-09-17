@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Otomatis dilewatkan saat baterai lemah"
+                },
+                "description": "Otomatis melewatkan zona saat baterai lemah dilaporkan.",
+                "title": "Opsi TotalConnect"
+            }
+        }
     }
 }

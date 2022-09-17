@@ -8,11 +8,11 @@ forward exercising the triggers.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import datetime
 import logging
 import secrets
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest

@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
         },
         "error": {
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
             "no_stations": "\u7bc4\u56f2\u5185\u306b\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f\u3002"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "\u66f4\u65b0\u9593\u9694",
-                    "show_on_map": "\u5730\u56f3\u4e0a\u306b\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u3092\u8868\u793a\u3059\u308b"
+                    "show_on_map": "\u5730\u56f3\u4e0a\u306b\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u3092\u8868\u793a\u3059\u308b",
+                    "stations": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3"
                 },
                 "title": "Tankerkoenig\u30aa\u30d7\u30b7\u30e7\u30f3"
             }

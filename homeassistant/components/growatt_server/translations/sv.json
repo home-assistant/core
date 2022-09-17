@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "no_plants": "Inga v\u00e4xter har hittats p\u00e5 detta konto"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "Anl\u00e4ggning"
+                },
+                "title": "V\u00e4lj din anl\u00e4ggning"
+            },
+            "user": {
+                "data": {
+                    "name": "Namn",
+                    "password": "L\u00f6senord",
+                    "url": "URL",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "title": "Ange din Growatt-information"
+            }
+        }
+    },
+    "title": "Growatt-server"
+}

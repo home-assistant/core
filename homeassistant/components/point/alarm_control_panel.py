@@ -1,4 +1,7 @@
 """Support for Minut Point."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
 
 from homeassistant.components.alarm_control_panel import (
@@ -17,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import MinutPointClient
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,21 +55,29 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
 
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
 
-    def __init__(self, point_client, home_id):
+    def __init__(self, point_client: MinutPointClient, home_id: str) -> None:
         """Initialize the entity."""
         self._client = point_client
         self._home_id = home_id
-        self._async_unsub_hook_dispatcher_connect = None
-        self._changed_by = None
+        self._async_unsub_hook_dispatcher_connect: Callable[[], None] | None = None
+        self._home = point_client.homes[self._home_id]
 
-    async def async_added_to_hass(self):
+        self._attr_name = self._home["name"]
+        self._attr_unique_id = f"point.{home_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(POINT_DOMAIN, home_id)},
+            manufacturer="Minut",
+            name=self._attr_name,
+        )
+
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
         self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_WEBHOOK, self._webhook_event
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         await super().async_will_remove_from_hass()
         if self._async_unsub_hook_dispatcher_connect:
@@ -83,51 +95,22 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
             return
         _LOGGER.debug("Received webhook: %s", _type)
         self._home["alarm_status"] = _type
-        self._changed_by = _changed_by
+        self._attr_changed_by = _changed_by
         self.async_write_ha_state()
 
     @property
-    def _home(self):
-        """Return the home object."""
-        return self._client.homes[self._home_id]
-
-    @property
-    def name(self):
-        """Return name of the device."""
-        return self._home["name"]
-
-    @property
-    def state(self):
+    def state(self) -> str:
         """Return state of the device."""
         return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
 
-    @property
-    def changed_by(self):
-        """Return the user the last change was triggered by."""
-        return self._changed_by
-
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         status = await self._client.async_alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         status = await self._client.async_alarm_arm(self._home_id)
         if status:
             self._home["alarm_status"] = "on"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"point.{self._home_id}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(POINT_DOMAIN, self._home_id)},
-            manufacturer="Minut",
-            name=self.name,
-        )

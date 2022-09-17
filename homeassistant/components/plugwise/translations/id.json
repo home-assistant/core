@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Layanan sudah dikonfigurasi"
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "anna_with_adam": "Baik Anna dan Adam terdeteksi. Tambahkan Adam, bukan Anna"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -13,10 +14,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Jenis koneksi"
+                    "flow_type": "Jenis koneksi",
+                    "host": "Alamat IP",
+                    "password": "ID Smile",
+                    "port": "Port",
+                    "username": "Nama Pengguna Smile"
                 },
-                "description": "Produk:",
-                "title": "Jenis Plugwise"
+                "description": "Masukkan",
+                "title": "Hubungkan ke Smile"
             },
             "user_gateway": {
                 "data": {

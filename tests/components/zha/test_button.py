@@ -28,6 +28,7 @@ from homeassistant.const import (
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -35,6 +36,23 @@ from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
+
+
+@pytest.fixture(autouse=True)
+def button_platform_only():
+    """Only setup the button and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BINARY_SENSOR,
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture

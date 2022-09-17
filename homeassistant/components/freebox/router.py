@@ -113,7 +113,7 @@ class FreeboxRouter:
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor["value"]
+            self.sensors_temperature[sensor["name"]] = sensor.get("value")
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()

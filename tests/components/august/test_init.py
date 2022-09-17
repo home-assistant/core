@@ -17,6 +17,9 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.august.mocks import (
@@ -26,6 +29,7 @@ from tests.components.august.mocks import (
     _mock_doorsense_missing_august_lock_detail,
     _mock_get_config,
     _mock_inoperative_august_lock_detail,
+    _mock_lock_with_offline_key,
     _mock_operative_august_lock_detail,
 )
 
@@ -318,3 +322,71 @@ async def test_load_unload(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_load_triggers_ble_discovery(hass):
+    """Test that loading a lock that supports offline ble operation passes the keys to yalexe_ble."""
+
+    august_lock_with_key = await _mock_lock_with_offline_key(hass)
+    august_lock_without_key = await _mock_operative_august_lock_detail(hass)
+
+    with patch(
+        "homeassistant.components.august.yalexs_ble.async_discovery"
+    ) as mock_discovery:
+        config_entry = await _create_august_with_devices(
+            hass, [august_lock_with_key, august_lock_without_key]
+        )
+        await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert len(mock_discovery.mock_calls) == 1
+    assert mock_discovery.mock_calls[0][1][1] == {
+        "name": "Front Door Lock",
+        "address": None,
+        "serial": "X2FSW05DGA",
+        "key": "kkk01d4300c1dcxxx1c330f794941111",
+        "slot": 1,
+    }
+
+
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
+async def test_device_remove_devices(hass, hass_ws_client):
+    """Test we can only remove a device that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
+    config_entry = await _create_august_with_devices(hass, [august_operative_lock])
+    registry: EntityRegistry = er.async_get(hass)
+    entity = registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(entity.device_id)
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
+        )
+        is False
+    )
+
+    dead_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "remove-device-id")},
+    )
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
+        )
+        is True
+    )

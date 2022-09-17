@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Ingin menyiapkan {name}?"
             },
+            "confirm_hardware": {
+                "description": "Ingin menyiapkan {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Jenis Radio"
@@ -46,10 +49,13 @@
             "title": "Opsi Panel Kontrol Alarm"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Selalu pilih mode warna XY",
             "consider_unavailable_battery": "Anggap perangkat bertenaga baterai sebagai tidak tersedia setelah (detik)",
             "consider_unavailable_mains": "Anggap perangkat bertenaga listrik sebagai tidak tersedia setelah (detik)",
             "default_light_transition": "Waktu transisi lampu default (detik)",
             "enable_identify_on_join": "Aktifkan efek identifikasi saat perangkat bergabung dengan jaringan",
+            "enhanced_light_transition": "Aktifkan versi canggih untuk transisi warna/suhu cahaya dari keadaan tidak aktif",
+            "light_transitioning_flag": "Aktifkan penggeser kecerahan yang lebih canggih pada waktu transisi lampu",
             "title": "Opsi Global"
         }
     },

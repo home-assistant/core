@@ -10,15 +10,13 @@ import requests
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ATTRIBUTION, DOMAIN
+from . import DOMAIN
 from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
@@ -33,6 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     cams = []
     for camera in chain(
@@ -41,7 +40,7 @@ async def async_setup_entry(
         if not camera.has_subscription:
             continue
 
-        cams.append(RingCam(config_entry.entry_id, hass.data[DATA_FFMPEG], camera))
+        cams.append(RingCam(config_entry.entry_id, ffmpeg_manager, camera))
 
     async_add_entities(cams)
 
@@ -105,7 +104,6 @@ class RingCam(RingEntityMixin, Camera):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "video_url": self._video_url,
             "last_video_id": self._last_video_id,
         }

@@ -1,6 +1,7 @@
 """Config flow for Geocaching."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -24,9 +25,9 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm(user_input=user_input)
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None

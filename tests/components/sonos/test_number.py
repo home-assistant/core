@@ -22,6 +22,16 @@ async def test_number_entities(hass, async_autosetup_sonos, soco):
     audio_delay_state = hass.states.get(audio_delay_number.entity_id)
     assert audio_delay_state.state == "2"
 
+    surround_level_number = entity_registry.entities["number.zone_a_surround_level"]
+    surround_level_state = hass.states.get(surround_level_number.entity_id)
+    assert surround_level_state.state == "3"
+
+    music_surround_level_number = entity_registry.entities[
+        "number.zone_a_music_surround_level"
+    ]
+    music_surround_level_state = hass.states.get(music_surround_level_number.entity_id)
+    assert music_surround_level_state.state == "4"
+
     with patch("soco.SoCo.audio_delay") as mock_audio_delay:
         await hass.services.async_call(
             NUMBER_DOMAIN,

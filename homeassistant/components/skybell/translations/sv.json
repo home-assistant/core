@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "L\u00f6senord"
+                }
+            }
+        }
+    }
+}

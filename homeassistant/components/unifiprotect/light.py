@@ -4,16 +4,23 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Light
+from pyunifiprotect.data import (
+    Light,
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+)
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +32,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up lights for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        ProtectLight(
-            data,
-            device,
-        )
-        for device in data.api.bootstrap.lights.values()
-    ]
 
-    if not entities:
-        return
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        if device.model == ModelType.LIGHT and device.can_write(
+            data.api.bootstrap.auth_user
+        ):
+            async_add_entities([ProtectLight(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
+    entities = []
+    for device in data.get_by_types({ModelType.LIGHT}):
+        if device.can_write(data.api.bootstrap.auth_user):
+            entities.append(ProtectLight(data, device))
 
     async_add_entities(entities)
 
@@ -59,8 +71,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_is_on = self.device.is_light_on
         self._attr_brightness = unifi_brightness_to_hass(
             self.device.light_device_settings.led_level

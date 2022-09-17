@@ -11,8 +11,6 @@ DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 DATA_CONFIG = "config"
 
-DISCOVER_CALENDAR = "google_discover_calendar"
-
 
 class FeatureAccess(Enum):
     """Class to represent different access scopes."""
@@ -31,3 +29,15 @@ class FeatureAccess(Enum):
 
 
 DEFAULT_FEATURE_ACCESS = FeatureAccess.read_write
+
+
+EVENT_DESCRIPTION = "description"
+EVENT_END_DATE = "end_date"
+EVENT_END_DATETIME = "end_date_time"
+EVENT_IN = "in"
+EVENT_IN_DAYS = "days"
+EVENT_IN_WEEKS = "weeks"
+EVENT_START_DATE = "start_date"
+EVENT_START_DATETIME = "start_date_time"
+EVENT_SUMMARY = "summary"
+EVENT_TYPES_CONF = "event_types"

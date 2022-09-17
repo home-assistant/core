@@ -5,16 +5,17 @@ import logging
 from typing import Any
 
 from pyeight.eight import EightSleep
+import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import EightSleepBaseEntity
-from .const import DATA_API, DATA_HEAT, DATA_USER, DOMAIN
+from . import EightSleepBaseEntity, EightSleepConfigEntryData
+from .const import ATTR_DURATION, ATTR_TARGET, DOMAIN, SERVICE_HEAT_SET
 
 ATTR_ROOM_TEMP = "Room Temperature"
 ATTR_AVG_ROOM_TEMP = "Average Room Temperature"
@@ -53,36 +54,49 @@ EIGHT_USER_SENSORS = [
 EIGHT_HEAT_SENSORS = ["bed_state"]
 EIGHT_ROOM_SENSORS = ["room_temperature"]
 
+VALID_TARGET_HEAT = vol.All(vol.Coerce(int), vol.Clamp(min=-100, max=100))
+VALID_DURATION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=28800))
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+SERVICE_EIGHT_SCHEMA = {
+    ATTR_TARGET: VALID_TARGET_HEAT,
+    ATTR_DURATION: VALID_DURATION,
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: ep.AddEntitiesCallback
 ) -> None:
     """Set up the eight sleep sensors."""
-    if discovery_info is None:
-        return
-
-    eight: EightSleep = hass.data[DOMAIN][DATA_API]
-    heat_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_HEAT]
-    user_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_USER]
+    config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
+    eight = config_entry_data.api
+    heat_coordinator = config_entry_data.heat_coordinator
+    user_coordinator = config_entry_data.user_coordinator
 
     all_sensors: list[SensorEntity] = []
 
     for obj in eight.users.values():
-        for sensor in EIGHT_USER_SENSORS:
-            all_sensors.append(
-                EightUserSensor(user_coordinator, eight, obj.userid, sensor)
-            )
-        for sensor in EIGHT_HEAT_SENSORS:
-            all_sensors.append(
-                EightHeatSensor(heat_coordinator, eight, obj.userid, sensor)
-            )
-    for sensor in EIGHT_ROOM_SENSORS:
-        all_sensors.append(EightRoomSensor(user_coordinator, eight, sensor))
+        all_sensors.extend(
+            EightUserSensor(entry, user_coordinator, eight, obj.user_id, sensor)
+            for sensor in EIGHT_USER_SENSORS
+        )
+        all_sensors.extend(
+            EightHeatSensor(entry, heat_coordinator, eight, obj.user_id, sensor)
+            for sensor in EIGHT_HEAT_SENSORS
+        )
+
+    all_sensors.extend(
+        EightRoomSensor(entry, user_coordinator, eight, sensor)
+        for sensor in EIGHT_ROOM_SENSORS
+    )
 
     async_add_entities(all_sensors)
+
+    platform = ep.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_HEAT_SET,
+        SERVICE_EIGHT_SCHEMA,
+        "async_heat_set",
+    )
 
 
 class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
@@ -92,13 +106,14 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         eight: EightSleep,
         user_id: str,
         sensor: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, eight, user_id, sensor)
+        super().__init__(entry, coordinator, eight, user_id, sensor)
         assert self._user_obj
 
         _LOGGER.debug(
@@ -109,7 +124,7 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         assert self._user_obj
         return self._user_obj.heating_level
@@ -147,13 +162,14 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         eight: EightSleep,
         user_id: str,
         sensor: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, eight, user_id, sensor)
+        super().__init__(entry, coordinator, eight, user_id, sensor)
         assert self._user_obj
 
         if self._sensor == "bed_temperature":
@@ -260,14 +276,15 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
 
     def __init__(
         self,
+        entry,
         coordinator: DataUpdateCoordinator,
         eight: EightSleep,
         sensor: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, eight, None, sensor)
+        super().__init__(entry, coordinator, eight, None, sensor)
 
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        return self._eight.room_temperature()
+        return self._eight.room_temperature

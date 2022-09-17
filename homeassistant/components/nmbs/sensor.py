@@ -215,10 +215,9 @@ class NMBSSensor(SensorEntity):
 
         delay = get_delay_in_minutes(self._attrs["departure"]["delay"])
         departure = get_time_until(self._attrs["departure"]["time"])
+        canceled = int(self._attrs["departure"]["canceled"])
 
         attrs = {
-            "departure": f"In {departure} minutes",
-            "departure_minutes": departure,
             "destination": self._station_to,
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
@@ -226,6 +225,15 @@ class NMBSSensor(SensorEntity):
             "vehicle_id": self._attrs["departure"]["vehicle"],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
+
+        if canceled != 1:
+            attrs["departure"] = f"In {departure} minutes"
+            attrs["departure_minutes"] = departure
+            attrs["canceled"] = False
+        else:
+            attrs["departure"] = None
+            attrs["departure_minutes"] = None
+            attrs["canceled"] = True
 
         if self._show_on_map and self.station_coordinates:
             attrs[ATTR_LATITUDE] = self.station_coordinates[0]

@@ -16,10 +16,10 @@ async def test_tracking_home(hass, mock_weather):
     # Test the hourly sensor is disabled by default
     registry = er.async_get(hass)
 
-    state = hass.states.get("weather.test_home_hourly")
+    state = hass.states.get("weather.forecast_test_home_hourly")
     assert state is None
 
-    entry = registry.async_get("weather.test_home_hourly")
+    entry = registry.async_get("weather.forecast_test_home_hourly")
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
@@ -50,7 +50,7 @@ async def test_not_tracking_home(hass, mock_weather):
         WEATHER_DOMAIN,
         DOMAIN,
         "10-20-hourly",
-        suggested_object_id="somewhere_hourly",
+        suggested_object_id="forecast_somewhere_hourly",
         disabled_by=None,
     )
 

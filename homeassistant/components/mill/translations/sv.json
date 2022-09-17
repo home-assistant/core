@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "IP-adress"
+                },
+                "description": "Lokal IP-adress f\u00f6r enheten."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "V\u00e4lj anslutningstyp"
+                },
+                "description": "V\u00e4lj anslutningstyp. Lokalt kr\u00e4ver generation 3 v\u00e4rmare"
+            }
+        }
+    }
+}

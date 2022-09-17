@@ -47,7 +47,7 @@ async def assert_distance(hass, distance):
     assert state.attributes.get("distance") == distance
 
 
-async def test_room_update(hass, mqtt_mock):
+async def test_room_update(hass, mqtt_mock_entry_with_yaml_config):
     """Test the updating between rooms."""
     assert await async_setup_component(
         hass,

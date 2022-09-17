@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "API-nyckel",
+                    "heating_type": "V\u00e4rmel\u00e4ge",
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "description": "Konfigurera ViCare-integration. F\u00f6r att generera API-nyckel g\u00e5 till https://developer.viessmann.com"
+            }
+        }
+    }
+}

@@ -83,6 +83,8 @@ async def async_setup_entry(
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
@@ -161,11 +163,6 @@ class OpenThermBinarySensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this device."""
         return self._device_class
-
-    @property
-    def should_poll(self):
-        """Return False because entity pushes its state."""
-        return False
 
 
 class DeprecatedOpenThermBinarySensor(OpenThermBinarySensor):

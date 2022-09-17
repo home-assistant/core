@@ -27,6 +27,20 @@ CLEAR_PIN_CODE = 7
 SET_USER_STATUS = 9
 
 
+@pytest.fixture(autouse=True)
+def lock_platform_only():
+    """Only setup the lock and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.LOCK,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
     """Lock cluster fixture."""

@@ -190,9 +190,9 @@ def async_setup_entry_rpc(
             ] and not description.supported(wrapper.device.status[key]):
                 continue
 
-            # Filter and remove entities that according to settings should not create an entity
+            # Filter and remove entities that according to settings/status should not create an entity
             if description.removal_condition and description.removal_condition(
-                wrapper.device.config, key
+                wrapper.device.config, wrapper.device.status, key
             ):
                 domain = sensor_class.__module__.split(".")[-1]
                 unique_id = f"{wrapper.mac}-{key}-{sensor_id}"
@@ -268,7 +268,7 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
-    removal_condition: Callable[[dict, str], bool] | None = None
+    removal_condition: Callable[[dict, dict, str], bool] | None = None
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_wrapper: bool = False
     supported: Callable = lambda _: False

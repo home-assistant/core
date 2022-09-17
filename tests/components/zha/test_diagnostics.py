@@ -1,6 +1,8 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
 
+from unittest.mock import patch
+
 import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
@@ -8,6 +10,7 @@ import zigpy.zcl.clusters.security as security
 from homeassistant.components.diagnostics.const import REDACTED
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get
 
@@ -24,6 +27,15 @@ CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
     "application_state",
     "versions",
 ]
+
+
+@pytest.fixture(autouse=True)
+def required_platforms_only():
+    """Only setup the required platform and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
+    ):
+        yield
 
 
 @pytest.fixture

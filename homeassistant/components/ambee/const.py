@@ -27,7 +27,7 @@ SERVICE_AIR_QUALITY: Final = "air_quality"
 SERVICE_POLLEN: Final = "pollen"
 
 SERVICES: dict[str, str] = {
-    SERVICE_AIR_QUALITY: "Air Quality",
+    SERVICE_AIR_QUALITY: "Air quality",
     SERVICE_POLLEN: "Pollen",
 }
 
@@ -35,25 +35,25 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
     SERVICE_AIR_QUALITY: [
         SensorEntityDescription(
             key="particulate_matter_2_5",
-            name="Particulate Matter < 2.5 μm",
+            name="Particulate matter < 2.5 μm",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="particulate_matter_10",
-            name="Particulate Matter < 10 μm",
+            name="Particulate matter < 10 μm",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="sulphur_dioxide",
-            name="Sulphur Dioxide (SO2)",
+            name="Sulphur dioxide (SO2)",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="nitrogen_dioxide",
-            name="Nitrogen Dioxide (NO2)",
+            name="Nitrogen dioxide (NO2)",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -65,60 +65,60 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="carbon_monoxide",
-            name="Carbon Monoxide (CO)",
+            name="Carbon monoxide (CO)",
             device_class=SensorDeviceClass.CO,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="air_quality_index",
-            name="Air Quality Index (AQI)",
+            name="Air quality index (AQI)",
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ],
     SERVICE_POLLEN: [
         SensorEntityDescription(
             key="grass",
-            name="Grass Pollen",
+            name="Grass",
             icon="mdi:grass",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         ),
         SensorEntityDescription(
             key="tree",
-            name="Tree Pollen",
+            name="Tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         ),
         SensorEntityDescription(
             key="weed",
-            name="Weed Pollen",
+            name="Weed",
             icon="mdi:sprout",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         ),
         SensorEntityDescription(
             key="grass_risk",
-            name="Grass Pollen Risk",
+            name="Grass risk",
             icon="mdi:grass",
             device_class=DEVICE_CLASS_AMBEE_RISK,
         ),
         SensorEntityDescription(
             key="tree_risk",
-            name="Tree Pollen Risk",
+            name="Tree risk",
             icon="mdi:tree",
             device_class=DEVICE_CLASS_AMBEE_RISK,
         ),
         SensorEntityDescription(
             key="weed_risk",
-            name="Weed Pollen Risk",
+            name="Weed risk",
             icon="mdi:sprout",
             device_class=DEVICE_CLASS_AMBEE_RISK,
         ),
         SensorEntityDescription(
             key="grass_poaceae",
-            name="Poaceae Grass Pollen",
+            name="Poaceae grass",
             icon="mdi:grass",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -126,7 +126,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_alder",
-            name="Alder Tree Pollen",
+            name="Alder tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -134,7 +134,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_birch",
-            name="Birch Tree Pollen",
+            name="Birch tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -142,7 +142,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_cypress",
-            name="Cypress Tree Pollen",
+            name="Cypress tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -150,7 +150,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_elm",
-            name="Elm Tree Pollen",
+            name="Elm tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -158,7 +158,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_hazel",
-            name="Hazel Tree Pollen",
+            name="Hazel tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -166,7 +166,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_oak",
-            name="Oak Tree Pollen",
+            name="Oak tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -174,7 +174,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_pine",
-            name="Pine Tree Pollen",
+            name="Pine tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -182,7 +182,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_plane",
-            name="Plane Tree Pollen",
+            name="Plane tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -190,7 +190,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="tree_poplar",
-            name="Poplar Tree Pollen",
+            name="Poplar tree",
             icon="mdi:tree",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -198,7 +198,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="weed_chenopod",
-            name="Chenopod Weed Pollen",
+            name="Chenopod weed",
             icon="mdi:sprout",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -206,7 +206,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="weed_mugwort",
-            name="Mugwort Weed Pollen",
+            name="Mugwort weed",
             icon="mdi:sprout",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -214,7 +214,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="weed_nettle",
-            name="Nettle Weed Pollen",
+            name="Nettle weed",
             icon="mdi:sprout",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
@@ -222,7 +222,7 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         ),
         SensorEntityDescription(
             key="weed_ragweed",
-            name="Ragweed Weed Pollen",
+            name="Ragweed weed",
             icon="mdi:sprout",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,

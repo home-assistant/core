@@ -51,7 +51,7 @@ async def test_config_auth_failed(hass):
     )
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=AuthFailed("Authorization has failed"),
     ):
         entry.add_to_hass(hass)

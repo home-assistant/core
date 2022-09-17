@@ -113,6 +113,8 @@ async def async_setup_platform(
 class SerialSensor(SensorEntity):
     """Representation of a Serial sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name,
@@ -241,11 +243,6 @@ class SerialSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

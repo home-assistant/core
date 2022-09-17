@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Esclusione automatica della batteria scarica"
+                },
+                "description": "Esclusione automatica delle zone nel momento in cui segnalano una batteria scarica.",
+                "title": "Opzioni TotalConnect"
+            }
+        }
     }
 }

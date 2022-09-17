@@ -783,3 +783,59 @@ async def test_person_storage_fixing_device_trackers(storage_collection):
         await storage_collection.async_load()
 
     assert storage_collection.data["bla"]["device_trackers"] == []
+
+
+async def test_persons_with_entity(hass):
+    """Test finding persons with an entity."""
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "id": "abcd",
+                    "name": "Paulus",
+                    "device_trackers": [
+                        "device_tracker.paulus_iphone",
+                        "device_tracker.paulus_ipad",
+                    ],
+                },
+                {
+                    "id": "efgh",
+                    "name": "Anne Therese",
+                    "device_trackers": [
+                        "device_tracker.at_pixel",
+                    ],
+                },
+            ]
+        },
+    )
+
+    assert person.persons_with_entity(hass, "device_tracker.paulus_iphone") == [
+        "person.paulus"
+    ]
+
+
+async def test_entities_in_person(hass):
+    """Test finding entities tracked by person."""
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "id": "abcd",
+                    "name": "Paulus",
+                    "device_trackers": [
+                        "device_tracker.paulus_iphone",
+                        "device_tracker.paulus_ipad",
+                    ],
+                }
+            ]
+        },
+    )
+
+    assert person.entities_in_person(hass, "person.paulus") == [
+        "device_tracker.paulus_iphone",
+        "device_tracker.paulus_ipad",
+    ]

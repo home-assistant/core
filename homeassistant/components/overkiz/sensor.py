@@ -366,6 +366,12 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
+    # ThreeWayWindowHandle/WindowHandle
+    OverkizSensorDescription(
+        key=OverkizState.CORE_THREE_WAY_HANDLE_DIRECTION,
+        name="Three Way Handle Direction",
+        device_class=OverkizDeviceClass.THREE_WAY_HANDLE_DIRECTION,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}

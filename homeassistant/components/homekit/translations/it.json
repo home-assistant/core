@@ -44,14 +44,14 @@
                 "data": {
                     "entities": "Entit\u00e0"
                 },
-                "description": "Tutte le entit\u00e0 \"{domini}\" saranno incluse a eccezione delle entit\u00e0 escluse e delle entit\u00e0 categorizzate.",
+                "description": "Tutte le entit\u00e0 \"{domains}\" saranno incluse ad eccezione delle entit\u00e0 escluse e delle entit\u00e0 categorizzate.",
                 "title": "Seleziona le entit\u00e0 da escludere"
             },
             "include": {
                 "data": {
                     "entities": "Entit\u00e0"
                 },
-                "description": "Tutte le entit\u00e0 \"{domini}\" saranno incluse a eccezione delle entit\u00e0 escluse e delle entit\u00e0 categorizzate.",
+                "description": "Tutte le entit\u00e0 \"{domains}\" saranno incluse a meno che non siano selezionate entit\u00e0 specifiche.",
                 "title": "Seleziona le entit\u00e0 da includere"
             },
             "init": {

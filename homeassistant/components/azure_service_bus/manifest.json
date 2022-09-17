@@ -2,7 +2,7 @@
   "domain": "azure_service_bus",
   "name": "Azure Service Bus",
   "documentation": "https://www.home-assistant.io/integrations/azure_service_bus",
-  "requirements": ["azure-servicebus==0.50.3"],
+  "requirements": ["azure-servicebus==7.8.0"],
   "codeowners": ["@hfurubotten"],
   "iot_class": "cloud_push",
   "loggers": ["azure"]

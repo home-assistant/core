@@ -3,7 +3,7 @@
   "host": null,
   "connectionHost": "192.168.102.63",
   "type": "UFP-LOCK-R",
-  "name": "Wkltg Qcjxv",
+  "name": "Test Lock",
   "upSince": 1643050461849,
   "uptime": null,
   "lastSeen": 1643052750858,
@@ -23,9 +23,9 @@
   "canAdopt": false,
   "isAttemptingToConnect": false,
   "credentials": "955756200c7f43936df9d5f7865f058e1528945aac0f0cb27cef960eb58f17db",
-  "lockStatus": "CLOSING",
+  "lockStatus": "OPEN",
   "enableHomekit": false,
-  "autoCloseTimeMs": 15000,
+  "autoCloseTimeMs": 45000,
   "wiredConnectionState": {
     "phyRate": null
   },

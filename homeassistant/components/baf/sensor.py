@@ -39,7 +39,7 @@ class BAFSensorDescription(
     """Class describing BAF sensor entities."""
 
 
-BASE_SENSORS = (
+AUTO_COMFORT_SENSORS = (
     BAFSensorDescription(
         key="temperature",
         name="Temperature",
@@ -103,10 +103,12 @@ async def async_setup_entry(
     """Set up BAF fan sensors."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     device = data.device
-    sensors_descriptions = list(BASE_SENSORS)
+    sensors_descriptions: list[BAFSensorDescription] = []
     for description in DEFINED_ONLY_SENSORS:
         if getattr(device, description.key):
             sensors_descriptions.append(description)
+    if device.has_auto_comfort:
+        sensors_descriptions.extend(AUTO_COMFORT_SENSORS)
     if device.has_fan:
         sensors_descriptions.extend(FAN_SENSORS)
     async_add_entities(

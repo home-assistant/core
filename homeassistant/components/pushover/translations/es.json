@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_api_key": "Clave API no v\u00e1lida",
+            "invalid_user_key": "Clave de usuario no v\u00e1lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clave API"
+                },
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "name": "Nombre",
+                    "user_key": "Clave de usuario"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Se va a eliminar la configuraci\u00f3n de Pushover mediante YAML. \n\nTu configuraci\u00f3n YAML existente se ha importado a la IU autom\u00e1ticamente. \n\nElimina la configuraci\u00f3n YAML de Pushover de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "title": "Se va a eliminar la configuraci\u00f3n YAML de Pushover"
+        }
+    }
+}

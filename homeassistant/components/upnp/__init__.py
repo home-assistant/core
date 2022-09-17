@@ -5,13 +5,10 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from ipaddress import ip_address
 from typing import Any
 
 from async_upnp_client.exceptions import UpnpCommunicationError, UpnpConnectionError
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
@@ -19,10 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,58 +25,32 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_LOCAL_IP,
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    IDENTIFIER_HOST,
+    IDENTIFIER_SERIAL_NUMBER,
     LOGGER,
 )
-from .device import Device, async_create_device, async_get_mac_address_from_host
+from .device import Device, async_create_device
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                vol.All(
-                    cv.deprecated(CONF_LOCAL_IP),
-                    {
-                        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-                    },
-                )
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up UPnP component."""
-    hass.data[DOMAIN] = {}
-
-    # Only start if set up via configuration.yaml.
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.entry_id)
+
+    hass.data.setdefault(DOMAIN, {})
 
     udn = entry.data[CONFIG_ENTRY_UDN]
     st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
@@ -140,24 +109,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device.original_udn = entry.data[CONFIG_ENTRY_ORIGINAL_UDN]
 
     # Store mac address for changed UDN matching.
-    if device.host:
-        device.mac_address = await async_get_mac_address_from_host(hass, device.host)
-    if device.mac_address and not entry.data.get("CONFIG_ENTRY_MAC_ADDRESS"):
+    device_mac_address = await device.async_get_mac_address()
+    if device_mac_address and not entry.data.get(CONFIG_ENTRY_MAC_ADDRESS):
         hass.config_entries.async_update_entry(
             entry=entry,
             data={
                 **entry.data,
-                CONFIG_ENTRY_MAC_ADDRESS: device.mac_address,
+                CONFIG_ENTRY_MAC_ADDRESS: device_mac_address,
+                CONFIG_ENTRY_HOST: device.host,
             },
         )
 
+    identifiers = {(DOMAIN, device.usn)}
+    if device.host:
+        identifiers.add((IDENTIFIER_HOST, device.host))
+    if device.serial_number:
+        identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
+
     connections = {(dr.CONNECTION_UPNP, device.udn)}
-    if device.mac_address:
-        connections.add((dr.CONNECTION_NETWORK_MAC, device.mac_address))
+    if device_mac_address:
+        connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
-        identifiers=set(), connections=connections
+        identifiers=identifiers, connections=connections
     )
     if device_entry:
         LOGGER.debug(
@@ -170,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections=connections,
-            identifiers={(DOMAIN, device.usn)},
+            identifiers=identifiers,
             name=device.name,
             manufacturer=device.manufacturer,
             model=device.model_name,
@@ -182,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Update identifier.
         device_entry = device_registry.async_update_device(
             device_entry.id,
-            new_identifiers={(DOMAIN, device.usn)},
+            new_identifiers=identifiers,
         )
 
     assert device_entry
@@ -201,7 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Setup platforms, creating sensors/binary_sensors.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

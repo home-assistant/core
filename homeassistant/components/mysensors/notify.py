@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components import mysensors
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .. import mysensors
 from .const import DevId, DiscoveryInfo
 
 

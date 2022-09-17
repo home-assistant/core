@@ -73,6 +73,7 @@ class PhilipsTVMediaPlayer(
     """Representation of a Philips TV exposing the JointSpace API."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -80,11 +81,9 @@ class PhilipsTVMediaPlayer(
     ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
-        self._sources = {}
-        self._channels = {}
+        self._sources: dict[str, str] = {}
         self._supports = SUPPORT_PHILIPS_JS
         self._system = coordinator.system
-        self._attr_name = coordinator.system["name"]
         self._attr_unique_id = coordinator.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={

@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
+    EVENT_USER_UPDATED,
     InvalidAuthError,
     auth_store,
     const as auth_const,
@@ -167,12 +168,12 @@ async def test_create_new_user(hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     credential = step["result"]
     assert credential is not None
 
@@ -236,12 +237,12 @@ async def test_login_as_existing_user(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     credential = step["result"]
     user = await manager.async_get_user_by_credentials(credential)
@@ -727,14 +728,14 @@ async def test_login_with_auth_module(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request auth module input form
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -742,7 +743,7 @@ async def test_login_with_auth_module(mock_hass):
     )
 
     # Invalid code error
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
     assert step["errors"] == {"base": "invalid_code"}
 
@@ -751,7 +752,7 @@ async def test_login_with_auth_module(mock_hass):
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -802,21 +803,21 @@ async def test_login_with_multi_auth_module(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request select auth module
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "select_mfa_module"
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"multi_factor_auth_module": "module2"}
     )
 
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -824,7 +825,7 @@ async def test_login_with_multi_auth_module(mock_hass):
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -870,13 +871,13 @@ async def test_auth_module_expired_session(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     with patch(
@@ -887,7 +888,7 @@ async def test_auth_module_expired_session(mock_hass):
             step["flow_id"], {"pin": "test-pin"}
         )
         # login flow abort due session timeout
-        assert step["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert step["type"] == data_entry_flow.FlowResultType.ABORT
         assert step["reason"] == "login_expired"
 
 
@@ -1097,3 +1098,20 @@ async def test_rename_does_not_change_refresh_token(mock_hass):
     token_after = list(user.refresh_tokens.values())[0]
 
     assert token_before == token_after
+
+
+async def test_event_user_updated_fires(hass):
+    """Test the user updated event fires."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    assert len(list(user.refresh_tokens.values())) == 1
+
+    events = async_capture_events(hass, EVENT_USER_UPDATED)
+
+    await manager.async_update_user(user, name="new name")
+    assert user.name == "new name"
+
+    await hass.async_block_till_done()
+    assert len(events) == 1

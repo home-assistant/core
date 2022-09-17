@@ -184,6 +184,7 @@ async def test_setup_when_certificate_changed(
     plextv_account,
     plextv_resources,
     plextv_shared_users,
+    mock_websocket,
 ):
     """Test setup component when the Plex certificate has changed."""
 

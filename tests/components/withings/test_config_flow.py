@@ -62,11 +62,17 @@ async def test_config_reauth_profile(
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "profile": "person0"},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "title_placeholders": {"name": config_entry.title},
+            "unique_id": config_entry.unique_id,
+        },
+        data={"profile": "person0"},
     )
     assert result
     assert result["type"] == "form"
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {const.PROFILE: "person0"}
 
     result = await hass.config_entries.flow.async_configure(

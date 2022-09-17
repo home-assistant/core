@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "invalid_user_key": "Invalid user key"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "name": "Name",
+                    "user_key": "User key"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Pushover using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Pushover YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Pushover YAML configuration is being removed"
+        }
+    }
+}

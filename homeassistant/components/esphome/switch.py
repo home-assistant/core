@@ -28,10 +28,6 @@ async def async_setup_entry(
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
@@ -40,6 +36,7 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""

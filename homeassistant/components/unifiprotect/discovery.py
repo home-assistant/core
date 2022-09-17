@@ -11,6 +11,7 @@ from unifi_discovery import AIOUnifiScanner, UnifiDevice, UnifiService
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
@@ -54,10 +55,9 @@ def async_trigger_discovery(
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
         if device.services[UnifiService.Protect] and device.hw_addr:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                    data=asdict(device),
-                )
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data=asdict(device),
             )
