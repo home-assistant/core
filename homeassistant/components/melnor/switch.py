@@ -94,11 +94,9 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.on_off_fn(self._valve, True)
-        await self._device.push_state()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.on_off_fn(self._valve, False)
-        await self._device.push_state()
         self.async_write_ha_state()
