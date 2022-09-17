@@ -5,12 +5,18 @@ from ibeacon_ble import parse
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get
 
 from .const import (
+    APPLE_MFR_ID,
+    CONF_IGNORE_ADDRESSES,
     DOMAIN,
+    IBEACON_FIRST_BYTE,
+    IBEACON_SECOND_BYTE,
+    MAX_UNIQUE_IDS_PER_ADDRESS,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
@@ -30,14 +36,15 @@ def signal_seen(unique_id: str) -> str:
 class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
+        self._entry = entry
         self._update_cancel: CALLBACK_TYPE | None = None
         self._unique_id_power: dict[str, dict[str, int]] = {}
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
         self._address_to_unique_id: dict[str, set[str]] = {}
-        self._ignore_addresses: set[str] = set()
+        self._ignore_addresses: set[str] = set(entry.data[CONF_IGNORE_ADDRESSES])
 
     @callback
     def _async_handle_unavailable(
@@ -61,13 +68,18 @@ class IBeaconCoordinator:
         """Remove an address that does not follow the spec and any entities created by it."""
         self._ignore_addresses.add(address)
         unique_ids = self._address_to_unique_id.pop(address)
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            data=self._entry.data
+            | {CONF_IGNORE_ADDRESSES: sorted(self._ignore_addresses)},
+        )
         ent_reg = async_get(self.hass)
         for unique_id in unique_ids:
             address_callbacks = self._unique_id_unavailable[unique_id]
             # Cancel the unavailable tracker
             address_callbacks.pop(address)()
             # Remove the power
-            self._unique_id_power[unique_id].pop(address)
+            self._unique_id_power[unique_id].pop(address, None)
             if not address_callbacks and (
                 entry := ent_reg.async_get_entity_id(
                     "device_tracker", DOMAIN, unique_id
@@ -108,7 +120,7 @@ class IBeaconCoordinator:
         # data. Once we see more than 3 unique ids from the same address
         # we remove all the trackers for that address since we know
         # its garbage data.
-        if len(self._address_to_unique_id[address]) >= 4:
+        if len(self._address_to_unique_id[address]) >= MAX_UNIQUE_IDS_PER_ADDRESS:
             self._async_remove_address(address)
             return
 
@@ -154,17 +166,19 @@ class IBeaconCoordinator:
             self.hass,
             self._async_update_ibeacon,
             BluetoothCallbackMatcher(
-                connectable=False, manufacturer_id=76, manufacturer_data_start=[2, 21]
+                connectable=False,
+                manufacturer_id=APPLE_MFR_ID,
+                manufacturer_data_start=[IBEACON_FIRST_BYTE, IBEACON_SECOND_BYTE],
             ),  # We will take data from any source
             bluetooth.BluetoothScanningMode.PASSIVE,
         )
         # Replay any that are already there.
         for service_info in bluetooth.async_discovered_service_info(self.hass):
             if (
-                (apple_adv := service_info.manufacturer_data.get(76))
+                (apple_adv := service_info.manufacturer_data.get(APPLE_MFR_ID))
                 and len(apple_adv) > 2
-                and apple_adv[0] == 2
-                and apple_adv[1] == 21
+                and apple_adv[0] == IBEACON_FIRST_BYTE
+                and apple_adv[1] == IBEACON_SECOND_BYTE
             ):
                 self._async_update_ibeacon(
                     service_info, bluetooth.BluetoothChange.ADVERTISEMENT

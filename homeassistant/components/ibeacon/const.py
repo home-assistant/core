@@ -11,3 +11,13 @@ ATTR_MAJOR = "major"
 ATTR_MINOR = "minor"
 ATTR_POWER_BY_ADDRESS = "power_by_address"
 ATTR_RSSI_BY_ADDRESS = "rssi_by_address"
+
+# If a device broadcasts this many unique ids from the same address
+# we will add it to the ignore list since its probably garbage data.
+MAX_UNIQUE_IDS_PER_ADDRESS = 5
+
+CONF_IGNORE_ADDRESSES = "ignore_addresses"
+
+APPLE_MFR_ID = 76
+IBEACON_FIRST_BYTE = 0x02
+IBEACON_SECOND_BYTE = 0x15
