@@ -25,11 +25,11 @@ def signal_seen(unique_id: str) -> str:
     return f"{SIGNAL_IBEACON_DEVICE_SEEN}_{unique_id}"
 
 
-class IBeaconScanner:
-    """Set up the iBeacon Scanner."""
+class IBeaconCoordinator:
+    """Set up the iBeacon Coordinator."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the scanner."""
+        """Initialize the Coordinator."""
         self.hass = hass
         self._update_cancel: CALLBACK_TYPE | None = None
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
@@ -89,7 +89,7 @@ class IBeaconScanner:
 
     @callback
     def async_stop(self) -> None:
-        """Stop the scanner."""
+        """Stop the Coordinator."""
         if self._update_cancel:
             self._update_cancel()
             self._update_cancel = None
@@ -100,7 +100,7 @@ class IBeaconScanner:
 
     @callback
     def async_start(self) -> None:
-        """Start the scanner."""
+        """Start the Coordinator."""
         self._update_cancel = bluetooth.async_register_callback(
             self.hass,
             self._async_update_ibeacon,
