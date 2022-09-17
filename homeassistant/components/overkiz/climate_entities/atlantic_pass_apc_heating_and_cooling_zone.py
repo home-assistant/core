@@ -65,22 +65,19 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        commands = []
-        commands.append(
+        commands = [
             Command(
                 OverkizCommand.SET_PASS_APC_HEATING_MODE,
                 [HVAC_MODE_TO_OVERKIZ[hvac_mode]],
-            )
-        )
-        # We also needs to execute these 3 commands to make it work correctly
-        commands.append(
+            ),
+            # We also needs to execute these 3 commands to make it work correctly
             Command(
                 OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
                 [OverkizCommandParam.OFF],
-            )
-        )
-        commands.append(Command(OverkizCommand.REFRESH_PASS_APC_HEATING_MODE))
-        commands.append(Command(OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE))
+            ),
+            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_MODE),
+            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE),
+        ]
         await self.executor.async_execute_commands(commands)
 
     @property
@@ -92,22 +89,20 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        commands = []
-        commands.append(
+        commands = [
             Command(
                 OverkizCommand.SET_PASS_APC_HEATING_MODE,
                 [PRESET_MODES_TO_OVERKIZ[preset_mode]],
-            )
-        )
-        # We also needs to execute these 3 commands to make it work correctly
-        commands.append(
+            ),
+            # We also needs to execute these 3 commands to make it work correctly
             Command(
                 OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
                 [OverkizCommandParam.OFF],
-            )
-        )
-        commands.append(Command(OverkizCommand.REFRESH_PASS_APC_HEATING_MODE))
-        commands.append(Command(OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE))
+            ),
+            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_MODE),
+            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE),
+        ]
+
         await self.executor.async_execute_commands(commands)
 
     @property
