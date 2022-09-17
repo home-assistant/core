@@ -1,6 +1,7 @@
 """Const for forked-daapd."""
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 
+CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
 CAN_PLAY_TYPE = {
     "audio/mp4",
     "audio/aac",
@@ -11,8 +12,6 @@ CAN_PLAY_TYPE = {
     "audio/aiff",
     "audio/wav",
 }
-
-CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
 CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
 CONF_MAX_PLAYLISTS = "max_playlists"
 CONF_TTS_PAUSE_TIME = "tts_pause_time"

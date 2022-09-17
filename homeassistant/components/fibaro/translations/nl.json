@@ -14,7 +14,8 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Update je wachtwoord voor {username}"
+                "description": "Update je wachtwoord voor {username}",
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

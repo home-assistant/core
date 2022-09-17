@@ -9,20 +9,29 @@ from typing import Any, cast
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     _LOGGER,
     ATTR_REMAINING,
+    DOMAIN,
     IDENTIFY_WAVEFORM,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
     TARGET_ANY,
     UNAVAILABLE_GRACE,
 )
-from .util import async_execute_lifx, get_real_mac_addr, lifx_features
+from .util import (
+    async_execute_lifx,
+    get_real_mac_addr,
+    infrared_brightness_option_to_value,
+    infrared_brightness_value_to_option,
+    lifx_features,
+)
 
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
@@ -83,6 +92,18 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Return the label of the bulb."""
         return cast(str, self.device.label)
 
+    @property
+    def current_infrared_brightness(self) -> str | None:
+        """Return the current infrared brightness as a string."""
+        return infrared_brightness_value_to_option(self.device.infrared_brightness)
+
+    def async_get_entity_id(self, platform: Platform, key: str) -> str | None:
+        """Return the entity_id from the platform and key provided."""
+        ent_reg = er.async_get(self.hass)
+        return ent_reg.async_get_entity_id(
+            platform, DOMAIN, f"{self.serial_number}_{key}"
+        )
+
     async def async_identify_bulb(self) -> None:
         """Identify the device by flashing it three times."""
         bulb: Light = self.device
@@ -103,6 +124,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 self.device.get_hostfirmware()
             if self.device.product is None:
                 self.device.get_version()
+
             response = await async_execute_lifx(self.device.get_color)
 
             if self.device.product is None:
@@ -114,11 +136,15 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
 
+            # Update model-specific configuration
             if lifx_features(self.device)["multizone"]:
                 await self.async_update_color_zones()
 
             if lifx_features(self.device)["hev"]:
                 await self.async_get_hev_cycle()
+
+            if lifx_features(self.device)["infrared"]:
+                response = await async_execute_lifx(self.device.get_infrared)
 
     async def async_update_color_zones(self) -> None:
         """Get updated color information for each zone."""
@@ -199,3 +225,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             await async_execute_lifx(
                 partial(self.device.set_hev_cycle, enable=enable, duration=duration)
             )
+
+    async def async_set_infrared_brightness(self, option: str) -> None:
+        """Set infrared brightness."""
+        infrared_brightness = infrared_brightness_option_to_value(option)
+        await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))

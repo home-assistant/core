@@ -143,9 +143,11 @@ class BluetoothManager:
         self.hass = hass
         self._integration_matcher = integration_matcher
         self._cancel_unavailable_tracking: list[CALLBACK_TYPE] = []
-        self._unavailable_callbacks: dict[str, list[Callable[[str], None]]] = {}
+        self._unavailable_callbacks: dict[
+            str, list[Callable[[BluetoothServiceInfoBleak], None]]
+        ] = {}
         self._connectable_unavailable_callbacks: dict[
-            str, list[Callable[[str], None]]
+            str, list[Callable[[BluetoothServiceInfoBleak], None]]
         ] = {}
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._bleak_callbacks: list[
@@ -269,12 +271,12 @@ class BluetoothManager:
             }
             disappeared = history_set.difference(active_addresses)
             for address in disappeared:
-                del history[address]
+                service_info = history.pop(address)
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
                 for callback in callbacks:
                     try:
-                        callback(address)
+                        callback(service_info)
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
 
@@ -321,12 +323,23 @@ class BluetoothManager:
             return
 
         self._history[address] = service_info
-        source = service_info.source
 
         if connectable:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
 
+        # If the advertisement data is the same as the last time we saw it, we
+        # don't need to do anything else.
+        if old_service_info and not (
+            service_info.manufacturer_data != old_service_info.manufacturer_data
+            or service_info.service_data != old_service_info.service_data
+            or service_info.service_uuids != old_service_info.service_uuids
+        ):
+            return
+
+        source = service_info.source
+        if connectable:
+            # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
@@ -358,7 +371,10 @@ class BluetoothManager:
 
     @hass_callback
     def async_track_unavailable(
-        self, callback: Callable[[str], None], address: str, connectable: bool
+        self,
+        callback: Callable[[BluetoothServiceInfoBleak], None],
+        address: str,
+        connectable: bool,
     ) -> Callable[[], None]:
         """Register a callback."""
         unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
@@ -430,8 +446,15 @@ class BluetoothManager:
     def async_discovered_service_info(
         self, connectable: bool
     ) -> Iterable[BluetoothServiceInfoBleak]:
-        """Return if the address is present."""
+        """Return all the discovered services info."""
         return self._get_history_by_type(connectable).values()
+
+    @hass_callback
+    def async_last_service_info(
+        self, address: str, connectable: bool
+    ) -> BluetoothServiceInfoBleak | None:
+        """Return the last service info for an address."""
+        return self._get_history_by_type(connectable).get(address)
 
     @hass_callback
     def async_rediscover_address(self, address: str) -> None:
@@ -448,7 +471,7 @@ class BluetoothManager:
 
     def _get_unavailable_callbacks_by_type(
         self, connectable: bool
-    ) -> dict[str, list[Callable[[str], None]]]:
+    ) -> dict[str, list[Callable[[BluetoothServiceInfoBleak], None]]]:
         """Return the unavailable callbacks by type."""
         return (
             self._connectable_unavailable_callbacks

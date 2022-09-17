@@ -148,7 +148,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         plates = {
             plate: confidence
             for plate, confidence in plates.items()
-            if confidence >= self.confidence
+            if self.confidence is None or confidence >= self.confidence
         }
         new_plates = set(plates) - set(self.plates)
 

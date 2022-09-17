@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
-from homeassistant.core import CoreState, callback, valid_entity_id
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -342,13 +342,6 @@ async def test_filter_on_load(hass, hass_storage):
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",  # We store the string representation
                 },
-                # This entry should not be loaded because the entity_id is invalid
-                {
-                    "entity_id": "test.invalid__entity",
-                    "platform": "super_platform",
-                    "unique_id": "invalid-hass",
-                    "disabled_by": "hass",  # We store the string representation
-                },
                 # This entry should have the entity_category reset to None
                 {
                     "entity_id": "test.system_entity",
@@ -466,38 +459,6 @@ async def test_removing_area_id(registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_yaml_to_json(hass):
-    """Test migration from old (yaml) data to new."""
-    mock_config = MockConfigEntry(domain="test-platform", entry_id="test-config-id")
-
-    old_conf = {
-        "light.kitchen": {
-            "config_entry_id": "test-config-id",
-            "unique_id": "test-unique",
-            "platform": "test-platform",
-            "name": "Test Name",
-            "disabled_by": er.RegistryEntryDisabler.HASS,
-        }
-    }
-    with patch("os.path.isfile", return_value=True), patch("os.remove"), patch(
-        "homeassistant.helpers.entity_registry.load_yaml", return_value=old_conf
-    ):
-        await er.async_load(hass)
-        registry = er.async_get(hass)
-
-    assert registry.async_is_registered("light.kitchen")
-    entry = registry.async_get_or_create(
-        domain="light",
-        platform="test-platform",
-        unique_id="test-unique",
-        config_entry=mock_config,
-    )
-    assert entry.name == "Test Name"
-    assert entry.disabled_by is er.RegistryEntryDisabler.HASS
-    assert entry.config_entry_id == "test-config-id"
-
-
-@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_1_1(hass, hass_storage):
     """Test migration from version 1.1."""
     hass_storage[er.STORAGE_KEY] = {
@@ -594,63 +555,6 @@ async def test_migration_1_7(hass, hass_storage):
     entry = registry.async_get_or_create("cover", "super_platform", "very_unique")
     assert entry.device_class == "class_by_user"
     assert entry.original_device_class == "class_by_integration"
-
-
-@pytest.mark.parametrize("load_registries", [False])
-async def test_loading_invalid_entity_id(hass, hass_storage):
-    """Test we skip entities with invalid entity IDs."""
-    hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION_MAJOR,
-        "minor_version": er.STORAGE_VERSION_MINOR,
-        "data": {
-            "entities": [
-                {
-                    "entity_id": "test.invalid__middle",
-                    "platform": "super_platform",
-                    "unique_id": "id-invalid-middle",
-                    "name": "registry override 1",
-                },
-                {
-                    "entity_id": "test.invalid_end_",
-                    "platform": "super_platform",
-                    "unique_id": "id-invalid-end",
-                    "name": "registry override 2",
-                },
-                {
-                    "entity_id": "test._invalid_start",
-                    "platform": "super_platform",
-                    "unique_id": "id-invalid-start",
-                    "name": "registry override 3",
-                },
-            ]
-        },
-    }
-
-    await er.async_load(hass)
-    registry = er.async_get(hass)
-    assert len(registry.entities) == 0
-
-    entity_invalid_middle = registry.async_get_or_create(
-        "test", "super_platform", "id-invalid-middle"
-    )
-
-    assert valid_entity_id(entity_invalid_middle.entity_id)
-    # Check name to make sure we created a new entity
-    assert entity_invalid_middle.name is None
-
-    entity_invalid_end = registry.async_get_or_create(
-        "test", "super_platform", "id-invalid-end"
-    )
-
-    assert valid_entity_id(entity_invalid_end.entity_id)
-    assert entity_invalid_end.name is None
-
-    entity_invalid_start = registry.async_get_or_create(
-        "test", "super_platform", "id-invalid-start"
-    )
-
-    assert valid_entity_id(entity_invalid_start.entity_id)
-    assert entity_invalid_start.name is None
 
 
 async def test_update_entity_unique_id(registry):

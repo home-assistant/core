@@ -29,7 +29,7 @@ async def test_async_setup_entry(hass, aioclient_mock):
     state = hass.states.get("sensor.home_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "14"
+    assert state.state == "4"
 
 
 async def test_config_not_ready(hass, aioclient_mock):
