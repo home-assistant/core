@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity
-from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN, LOGGER
+from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
 from .model import (
     RainMachineEntityDescription,
     RainMachineEntityDescriptionMixinDataKey,
@@ -151,11 +151,4 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         raw_value = self.coordinator.data[self.entity_description.data_key]
-
-        try:
-            label = self._api_value_to_label_map[raw_value]
-        except KeyError:
-            LOGGER.error("Cannot translate raw value: %s", raw_value)
-            label = None
-
-        self._attr_current_option = label
+        self._attr_current_option = self._api_value_to_label_map[raw_value]
