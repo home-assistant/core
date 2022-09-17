@@ -138,3 +138,19 @@ async def test_unexpected_exception(hass: HomeAssistant, mock_connection: Mock) 
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_invalid_ip(hass: HomeAssistant, mock_connection: Mock) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_connection.return_value.read_coil.side_effect = Exception()
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**MOCK_FLOW_USERDATA, "ip_address": "abcd"}
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"ip_address": "address"}
