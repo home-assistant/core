@@ -8,12 +8,15 @@ import pytest
 @pytest.fixture(name="operating_system_85")
 def mock_operating_system_85():
     """Mock running Home Assistant Operating system 8.5."""
-    with patch(
-        "homeassistant.components.bluetooth.async_get_system_info",
+    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
+        "homeassistant.components.hassio.get_os_info",
         return_value={
-            "hassos": "8.5",
-            "hassio": True,
-            "docker": True,
+            "version": "8.5",
+            "version_latest": "10.0.dev20220912",
+            "update_available": False,
+            "board": "odroid-n2",
+            "boot": "B",
+            "data_disk": "/dev/mmcblk1p4",
         },
     ):
         yield
@@ -22,12 +25,15 @@ def mock_operating_system_85():
 @pytest.fixture(name="operating_system_90")
 def mock_operating_system_90():
     """Mock running Home Assistant Operating system 9.0."""
-    with patch(
-        "homeassistant.components.bluetooth.async_get_system_info",
+    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
+        "homeassistant.components.hassio.get_os_info",
         return_value={
-            "hassos": "9.0",
-            "hassio": True,
-            "docker": True,
+            "version": "9.0.dev20220912",
+            "version_latest": "10.0.dev20220912",
+            "update_available": False,
+            "board": "odroid-n2",
+            "boot": "B",
+            "data_disk": "/dev/mmcblk1p4",
         },
     ):
         yield

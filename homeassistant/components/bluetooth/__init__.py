@@ -234,15 +234,15 @@ def _async_haos_is_new_enough(hass: HomeAssistant) -> bool:
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.source != SOURCE_IGNORE
     ):
-        return False
+        return True
     if (
         not hass.components.hassio.is_hassio()
         or not (os_info := hass.components.hassio.get_os_info())
         or not (haos_version := os_info.get("version"))
         or AwesomeVersion(haos_version) >= RECOMMENDED_HAOS_VERSION
     ):
-        return False
-    return True
+        return True
+    return False
 
 
 @hass_callback
