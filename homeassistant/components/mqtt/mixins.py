@@ -70,7 +70,6 @@ from .const import (
     CONF_QOS,
     CONF_TOPIC,
     DATA_MQTT,
-    DATA_MQTT_RELOAD_HANDLERS,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -286,6 +285,9 @@ class MqttData:
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
+    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
+        default_factory=dict
+    )
     reload_needed: bool = False
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     updated_config: ConfigType = field(default_factory=dict)
@@ -381,7 +383,7 @@ async def async_setup_entry_helper(
         )
 
     # discover manual configured MQTT items
-    hass.data.setdefault(DATA_MQTT_RELOAD_HANDLERS, {})[domain] = _async_setup_entities
+    mqtt_data.reload_handlers[domain] = _async_setup_entities
     await _async_setup_entities()
 
 

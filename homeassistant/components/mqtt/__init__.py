@@ -67,7 +67,6 @@ from .const import (  # noqa: F401
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT,
-    DATA_MQTT_RELOAD_HANDLERS,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -440,9 +439,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await asyncio.gather(
                 *(
                     [
-                        hass.data[DATA_MQTT_RELOAD_HANDLERS][component]()
+                        mqtt_data.reload_handlers[component]()
                         for component in RELOADABLE_PLATFORMS
-                        if component in hass.data[DATA_MQTT_RELOAD_HANDLERS]
+                        if component in mqtt_data.reload_handlers
                     ]
                 )
             )
