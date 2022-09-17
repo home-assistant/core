@@ -574,3 +574,17 @@ toggle:
       description: Light effect.
       selector:
         text:
+brightness_increase:
+  name: Brightness Increase
+  description: >
+    Increase the brightness by 10%
+  target:
+    entity:
+      domain: light
+brightness_decrease:
+  name: Brightness Decrease
+  description: >
+    Decrease the brightness by 10%
+  target:
+    entity:
+      domain: light
