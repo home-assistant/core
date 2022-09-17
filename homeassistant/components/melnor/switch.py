@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,16 +21,11 @@ from .const import DOMAIN
 from .models import MelnorDataUpdateCoordinator, MelnorZoneEntity
 
 
-def set_is_watering(valve: Valve, value: bool) -> None:
-    """Set the is_watering state of a valve."""
-    valve.is_watering = value
-
-
 @dataclass
 class MelnorSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    on_off_fn: Callable[[Valve, bool], Any]
+    on_off_fn: Callable[[Valve, bool], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
 
 
@@ -39,6 +34,18 @@ class MelnorSwitchEntityDescription(
     SwitchEntityDescription, MelnorSwitchEntityDescriptionMixin
 ):
     """Describes Melnor switch entity."""
+
+
+switches = [
+    MelnorSwitchEntityDescription(
+        device_class=SwitchDeviceClass.SWITCH,
+        icon="mdi:sprinkler",
+        key="manual",
+        name="Manual",
+        on_off_fn=lambda valve, bool: valve.set_is_watering(bool),
+        state_fn=lambda valve: valve.is_watering,
+    )
+]
 
 
 async def async_setup_entry(
@@ -56,20 +63,8 @@ async def async_setup_entry(
         valve = coordinator.data[f"zone{i}"]
         if valve is not None:
 
-            entities.append(
-                MelnorZoneSwitch(
-                    coordinator,
-                    valve,
-                    MelnorSwitchEntityDescription(
-                        device_class=SwitchDeviceClass.SWITCH,
-                        icon="mdi:sprinkler",
-                        key="manual",
-                        name="Manual",
-                        on_off_fn=set_is_watering,
-                        state_fn=lambda valve: valve.is_watering,
-                    ),
-                )
-            )
+            for description in switches:
+                entities.append(MelnorZoneSwitch(coordinator, valve, description))
 
     async_add_devices(entities)
 
@@ -98,12 +93,10 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self.entity_description.on_off_fn(self._valve, True)
-        await self._device.push_state()
+        await self.entity_description.on_off_fn(self._valve, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.entity_description.on_off_fn(self._valve, False)
-        await self._device.push_state()
+        await self.entity_description.on_off_fn(self._valve, False)
         self.async_write_ha_state()

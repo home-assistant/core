@@ -11,6 +11,8 @@ ATTR_MAJOR = "major"
 ATTR_MINOR = "minor"
 ATTR_POWER_BY_ADDRESS = "power_by_address"
 ATTR_RSSI_BY_ADDRESS = "rssi_by_address"
+ATTR_SOURCE_BY_ADDRESS = "source_by_address"
+ATTR_DISTANCE_BY_ADDRESS = "distance_by_address"
 
 # If a device broadcasts this many unique ids from the same address
 # we will add it to the ignore list since its garbage data.
