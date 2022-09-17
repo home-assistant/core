@@ -14,12 +14,12 @@ from switchbee.const import (
 )
 from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeThermostat
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -27,7 +27,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -75,31 +75,31 @@ HVAC_UNIT_SB_TO_HASS = {
     ThermostatTemperatureUnit.FAHRENHEIT: TEMP_FAHRENHEIT,
 }
 
+SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbee thermostat."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        Device(hass, device, coordinator)
-        for device in coordinator.data.values()
-        if device.type == DeviceType.Thermostat
+        SwitchBeeClimate(switchbee_device, coordinator)
+        for switchbee_device in coordinator.data.values()
+        if switchbee_device.type == DeviceType.Thermostat
     )
 
 
-class Device(CoordinatorEntity, ClimateEntity):
+class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
     """Representation of an Switchbee button."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
         device: SwitchBeeThermostat,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
-        self._session = aiohttp_client.async_get_clientsession(hass)
         self._attr_name = f"{device.zone} {device.name}"
         self._device_id = device.id
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
@@ -108,14 +108,14 @@ class Device(CoordinatorEntity, ClimateEntity):
         )
 
         # set HVAC capabilities
-        self._attr_fan_modes = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
         self._attr_target_temperature_step = 1
         self._attr_max_temp = device.max_temperature
         self._attr_min_temp = device.min_temperature
+        self._attr_fan_modes = SUPPORTED_FAN_MODES
         self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
-        self._device = device
+        self._device: SwitchBeeThermostat = device
         self._attr_device_info = DeviceInfo(
             name=f"SwitchBee_{str(self._device.id)}",
             identifiers={
@@ -145,7 +145,7 @@ class Device(CoordinatorEntity, ClimateEntity):
         self._update_device_attrs(self.coordinator.data[self._device_id])
         super()._handle_coordinator_update()
 
-    def _update_device_attrs(self, device: SwitchBeeThermostat):
+    def _update_device_attrs(self, device: SwitchBeeThermostat) -> None:
         if device.state == ApiStateCommand.OFF:
             self._attr_hvac_mode: HVACMode = HVACMode.OFF
         else:
@@ -175,7 +175,7 @@ class Device(CoordinatorEntity, ClimateEntity):
             ApiAttribute.MODE: mode
             if mode
             else HVAC_MODE_HASS_TO_SB[self._attr_hvac_mode],
-            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB["a"],
+            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB[fan],
             ApiAttribute.CONFIGURED_TEMPERATURE: target_temperature
             if target_temperature
             else self._attr_target_temperature,
@@ -205,14 +205,13 @@ class Device(CoordinatorEntity, ClimateEntity):
         """Set AC fand mode."""
         await self.operate(self._create_switchbee_request(fan=FAN_HASS_TO_SB[fan_mode]))
 
-    async def operate(self, state: dict[str, str | int]):
+    async def operate(self, state: dict[str, str | int]) -> None:
         """Send request to central unit."""
         try:
             await self.coordinator.api.set_state(self._device_id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
-            _LOGGER.error(
-                "Failed to set %s state %s, error: %s", self._attr_name, state, exp
-            )
-            self._async_write_ha_state()
+            raise HomeAssistantError(
+                f"Failed to set {self._attr_name} state {state}, error: {str(exp)}"
+            ) from exp
         else:
             await self.coordinator.async_refresh()
