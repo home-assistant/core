@@ -81,7 +81,7 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-RECOMMENDED_HAOS_VERSION = AwesomeVersion("9.0")
+RECOMMENDED_MIN_HAOS_VERSION = AwesomeVersion("9.0.dev0")
 
 
 def _get_manager(hass: HomeAssistant) -> BluetoothManager:
@@ -249,7 +249,7 @@ def _async_haos_is_new_enough(hass: HomeAssistant) -> bool:
         not hass.components.hassio.is_hassio()
         or not (os_info := hass.components.hassio.get_os_info())
         or not (haos_version := os_info.get("version"))
-        or AwesomeVersion(haos_version) >= RECOMMENDED_HAOS_VERSION
+        or AwesomeVersion(haos_version) >= RECOMMENDED_MIN_HAOS_VERSION
     ):
         return True
     return False

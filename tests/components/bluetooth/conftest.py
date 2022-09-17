@@ -18,6 +18,8 @@ def mock_operating_system_85():
             "boot": "B",
             "data_disk": "/dev/mmcblk1p4",
         },
+    ), patch("homeassistant.components.hassio.get_info", return_value={}), patch(
+        "homeassistant.components.hassio.get_host_info", return_value={}
     ):
         yield
 
@@ -35,6 +37,8 @@ def mock_operating_system_90():
             "boot": "B",
             "data_disk": "/dev/mmcblk1p4",
         },
+    ), patch("homeassistant.components.hassio.get_info", return_value={}), patch(
+        "homeassistant.components.hassio.get_host_info", return_value={}
     ):
         yield
 
