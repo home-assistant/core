@@ -236,6 +236,13 @@ async def _async_check_haos_version(hass: HomeAssistant) -> None:
         if entry.source != SOURCE_IGNORE
     ):
         return
+    if not hass.components.hassio.is_hassio():
+        return
+    os_info = hass.components.hassio.get_os_info()
+    host_info = hass.components.hassio.get_host_info()
+    _LOGGER.warning("os_info: %s", os_info)
+    _LOGGER.warning("host_info: %s", host_info)
+
     system_info = await async_get_system_info(hass)
     if (
         not (haos_version := system_info.get("hassos"))
