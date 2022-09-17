@@ -1,6 +1,8 @@
 """Tracking for iBeacon devices."""
 from __future__ import annotations
 
+from typing import cast
+
 from ibeacon_ble import parse
 
 from homeassistant.components import bluetooth
@@ -44,6 +46,8 @@ class IBeaconCoordinator:
         self._entry = entry
         self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
         self._unique_id_power: dict[str, dict[str, int]] = {}
+        self._unique_id_source: dict[str, dict[str, str]] = {}
+        self._unique_id_distance: dict[str, dict[str, float]] = {}
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
         self._address_to_unique_id: dict[str, set[str]] = {}
         self._ignore_addresses: set[str] = set(
@@ -73,6 +77,9 @@ class IBeaconCoordinator:
         address_callbacks.pop(address)()
         # Remove the power
         self._unique_id_power[unique_id].pop(address)
+        self._unique_id_source[unique_id].pop(address)
+        self._unique_id_distance[unique_id].pop(address)
+
         # If its the last beacon broadcasting that unique_id, its now unavailable
         return not bool(address_callbacks)
 
@@ -114,9 +121,13 @@ class IBeaconCoordinator:
         if unique_id not in self._unique_id_unavailable:
             self._unique_id_unavailable[unique_id] = {}
             self._unique_id_power[unique_id] = {}
+            self._unique_id_source[unique_id] = {}
+            self._unique_id_distance[unique_id] = {}
             new = True
         unavailable_trackers = self._unique_id_unavailable[unique_id]
         power_by_address = self._unique_id_power[unique_id]
+        source_by_address = self._unique_id_source[unique_id]
+        distance_by_address = self._unique_id_distance[unique_id]
         if address not in unavailable_trackers:
             self._address_to_unique_id.setdefault(address, set()).add(unique_id)
             unavailable_trackers[address] = bluetooth.async_track_unavailable(
@@ -124,6 +135,8 @@ class IBeaconCoordinator:
             )
 
         power_by_address[address] = parsed.power
+        source_by_address[address] = parsed.source
+        distance_by_address[address] = calculate_distance(parsed.power, parsed.rssi)
 
         # Some manufacturers violate the spec and flood us with random
         # data. Once we see more than MAX_UNIQUE_IDS_PER_ADDRESS unique ids
@@ -137,6 +150,7 @@ class IBeaconCoordinator:
         for address in unavailable_trackers:
             device = bluetooth.async_ble_device_from_address(self.hass, address)
             rssi_by_address[address] = device.rssi if device else None
+
         if new:
             async_dispatcher_send(
                 self.hass,
@@ -146,6 +160,8 @@ class IBeaconCoordinator:
                 parsed,
                 rssi_by_address,
                 power_by_address,
+                source_by_address,
+                distance_by_address,
             )
             return
         async_dispatcher_send(
@@ -154,6 +170,8 @@ class IBeaconCoordinator:
             parsed,
             rssi_by_address,
             power_by_address,
+            source_by_address,
+            distance_by_address,
         )
 
     @callback
@@ -198,3 +216,12 @@ class IBeaconCoordinator:
                 self._async_update_ibeacon(
                     service_info, bluetooth.BluetoothChange.ADVERTISEMENT
                 )
+
+
+def calculate_distance(power: int, rssi: int) -> float:
+    """Calculate the distance between the device and the beacon."""
+    if rssi == 0:
+        return -1.0
+    if (ratio := rssi * 1.0 / power) < 1.0:
+        return pow(ratio, 10)
+    return cast(float, 0.89976 * pow(ratio, 7.7095) + 0.111)
