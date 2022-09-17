@@ -59,7 +59,11 @@ class IBeaconCoordinator:
 
     @callback
     def _async_remove_address(self, unique_id: str, address: str) -> bool:
-        """Remove an address that has gone unavailable."""
+        """Remove an address that has gone unavailable.
+
+        Returns True if the unique_id is now unavailable.
+        Returns False it the unique_id is still available.
+        """
         address_callbacks = self._unique_id_unavailable[unique_id]
         # Cancel the unavailable tracker
         address_callbacks.pop(address)()
