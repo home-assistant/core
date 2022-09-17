@@ -5,9 +5,6 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.components.lutron_caseta import (
     ATTR_ACTION,
     ATTR_AREA_NAME,
@@ -153,10 +150,11 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    with pytest.raises(InvalidDeviceAutomationConfig):
-        await async_get_device_automations(
-            hass, DeviceAutomationType.TRIGGER, invalid_device.id
-        )
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_device.id
+    )
+
+    assert triggers == []
 
 
 async def test_get_triggers_for_non_button_device(hass, device_reg):
