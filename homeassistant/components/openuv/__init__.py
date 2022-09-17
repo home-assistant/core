@@ -67,12 +67,6 @@ SERVICES = (
     SERVICE_NAME_UPDATE_UV_INDEX_DATA,
 )
 
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTRY_ID): cv.string,
-    }
-)
-
 
 @callback
 def async_get_entity_id_from_unique_id_suffix(
@@ -236,6 +230,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
+    # We used to have a bug where a user couldn't configure multiple OpenUV instances.
+    # As part of https://github.com/home-assistant/core/pull/76878, we added that
+    # ability, but also notified the user that these services are deprecated and going
+    # away. To avoid a breaking change, we insert the current config entry into the
+    # service call if the user doesn't provide one (and since the docs point them toward
+    # the `homeassistant.update_entity` service, they likely won't. Once the deprecation
+    # period passes (2022.12.0), we'll remove all service-related code (including this):
+    service_schema = vol.Schema(
+        {
+            vol.Optional(CONF_ENTRY_ID, default=entry.entry_id): cv.string,
+        }
+    )
+
     for service, method in (
         (SERVICE_NAME_UPDATE_DATA, update_data),
         (SERVICE_NAME_UPDATE_UV_INDEX_DATA, update_uv_index_data),
@@ -243,7 +250,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         if hass.services.has_service(DOMAIN, service):
             continue
-        hass.services.async_register(DOMAIN, service, method, schema=SERVICE_SCHEMA)
+        hass.services.async_register(DOMAIN, service, method, schema=service_schema)
 
     return True
 
