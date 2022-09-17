@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_MAJOR,
     ATTR_MINOR,
+    ATTR_POWER_BY_ADDRESS,
     ATTR_RSSI_BY_ADDRESS,
     ATTR_UUID,
     DOMAIN,
@@ -34,12 +35,18 @@ async def async_setup_entry(
         name: str,
         parsed: iBeaconAdvertisement,
         rssi_by_address: dict[str, int],
+        power_by_address: dict[str, int],
     ) -> None:
         """Signal a new device."""
         async_add_entities(
             [
                 IBeaconTrackerEntity(
-                    coordinator, name, unique_id, parsed, rssi_by_address
+                    coordinator,
+                    name,
+                    unique_id,
+                    parsed,
+                    rssi_by_address,
+                    power_by_address,
                 )
             ]
         )
@@ -61,9 +68,11 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
         unique_id: str,
         parsed: iBeaconAdvertisement,
         rssi_by_address: dict[str, int],
+        power_by_address: dict[str, int],
     ) -> None:
         """Initialize an iBeacon tracker entity."""
         self._rssi_by_address = rssi_by_address
+        self._power_by_address = power_by_address
         self._coordinator = coordinator
         self._parsed = parsed
         self._attr_unique_id = unique_id
@@ -92,17 +101,22 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
             ATTR_UUID: str(self._parsed.uuid),
             ATTR_MAJOR: self._parsed.major,
             ATTR_MINOR: self._parsed.minor,
+            ATTR_POWER_BY_ADDRESS: self._power_by_address,
             ATTR_RSSI_BY_ADDRESS: self._rssi_by_address,
         }
 
     @callback
     def _async_seen(
-        self, parsed: iBeaconAdvertisement, rssi_by_address: dict[str, int]
+        self,
+        parsed: iBeaconAdvertisement,
+        rssi_by_address: dict[str, int],
+        power_by_address: dict[str, int],
     ) -> None:
         """Update state."""
         self._active = True
         self._parsed = parsed
         self._rssi_by_address = rssi_by_address
+        self._power_by_address = power_by_address
         self.async_write_ha_state()
 
     @callback

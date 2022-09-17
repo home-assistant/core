@@ -32,6 +32,7 @@ class IBeaconCoordinator:
         """Initialize the Coordinator."""
         self.hass = hass
         self._update_cancel: CALLBACK_TYPE | None = None
+        self._unique_id_power: dict[str, dict[str, int]] = {}
         self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
         self._address_to_unique_id: dict[str, set[str]] = {}
 
@@ -46,6 +47,8 @@ class IBeaconCoordinator:
             address_callbacks = self._unique_id_unavailable[unique_id]
             # Cancel the unavailable tracker
             address_callbacks.pop(address)()
+            # Remove the power
+            self._unique_id_power[unique_id].pop(address)
             # If its the last beacon broadcasting that unique_id, its now unavailable
             if not address_callbacks:
                 async_dispatcher_send(self.hass, signal_unavailable(unique_id))
@@ -67,13 +70,16 @@ class IBeaconCoordinator:
         new = False
         if unique_id not in self._unique_id_unavailable:
             self._unique_id_unavailable[unique_id] = {}
+            self._unique_id_power[unique_id] = {}
             new = True
         unavailable_trackers = self._unique_id_unavailable[unique_id]
+        power_by_address = self._unique_id_power[unique_id]
         if address not in unavailable_trackers:
             self._address_to_unique_id.setdefault(address, set()).add(unique_id)
             unavailable_trackers[address] = bluetooth.async_track_unavailable(
                 self.hass, self._async_handle_unavailable, address
             )
+        power_by_address[address] = parsed.power
         rssi_by_address: dict[str, int] = {}
         for address in unavailable_trackers:
             device = bluetooth.async_ble_device_from_address(self.hass, address)
@@ -86,10 +92,15 @@ class IBeaconCoordinator:
                 service_info.name,
                 parsed,
                 rssi_by_address,
+                power_by_address,
             )
         else:
             async_dispatcher_send(
-                self.hass, signal_seen(unique_id), parsed, rssi_by_address
+                self.hass,
+                signal_seen(unique_id),
+                parsed,
+                rssi_by_address,
+                power_by_address,
             )
 
     @callback
