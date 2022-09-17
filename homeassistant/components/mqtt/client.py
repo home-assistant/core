@@ -652,7 +652,7 @@ class MQTT:
                     )
                     continue
             self.hass.async_run_hass_job(
-                subscription.job,  # type: ignore[arg-type]
+                subscription.job,
                 ReceiveMessage(
                     msg.topic,
                     payload,
