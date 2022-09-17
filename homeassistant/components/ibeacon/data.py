@@ -16,12 +16,12 @@ from .const import (
 
 
 def signal_unavailable(unique_id: str) -> str:
-    """Signal for the device going unavailable."""
+    """Signal for the unique_id going unavailable."""
     return f"{SIGNAL_IBEACON_DEVICE_UNAVAILABLE}_{unique_id}"
 
 
 def signal_seen(unique_id: str) -> str:
-    """Signal for the device being seen."""
+    """Signal for the unique_id being seen."""
     return f"{SIGNAL_IBEACON_DEVICE_SEEN}_{unique_id}"
 
 
