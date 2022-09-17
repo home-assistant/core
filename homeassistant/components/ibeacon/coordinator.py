@@ -109,10 +109,7 @@ class IBeaconCoordinator:
         if not (parsed := parse(service_info)):
             return
         address = service_info.address
-        uuid = parsed.uuid
-        major = parsed.major
-        minor = parsed.minor
-        unique_id = f"{uuid}_{major}_{minor}"
+        unique_id = f"{parsed.uuid}_{parsed.major}_{parsed.minor}"
         new = False
         if unique_id not in self._unique_id_unavailable:
             self._unique_id_unavailable[unique_id] = {}
@@ -150,14 +147,14 @@ class IBeaconCoordinator:
                 rssi_by_address,
                 power_by_address,
             )
-        else:
-            async_dispatcher_send(
-                self.hass,
-                signal_seen(unique_id),
-                parsed,
-                rssi_by_address,
-                power_by_address,
-            )
+            return
+        async_dispatcher_send(
+            self.hass,
+            signal_seen(unique_id),
+            parsed,
+            rssi_by_address,
+            power_by_address,
+        )
 
     @callback
     def _async_stop(self) -> None:
