@@ -31,6 +31,7 @@ class EntityDomainReplacementStrategy:
     old_domain: str
     old_unique_id: str
     replacement_entity_id: str
+    breaks_in_ha_version: str
     remove_old_entity: bool = True
 
 
@@ -61,6 +62,7 @@ def async_finish_entity_domain_replacements(
             hass,
             DOMAIN,
             f"{translation_key}_{removed_entity_id}",
+            breaks_in_ha_version=strategy.breaks_in_ha_version,
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,

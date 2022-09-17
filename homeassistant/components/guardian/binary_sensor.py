@@ -91,9 +91,10 @@ async def async_setup_entry(
         entry,
         (
             EntityDomainReplacementStrategy(
-                old_domain=BINARY_SENSOR_DOMAIN,
-                old_unique_id=f"{uid}_ap_enabled",
-                replacement_entity_id=f"switch.guardian_valve_controller_{uid}_onboard_ap",
+                BINARY_SENSOR_DOMAIN,
+                f"{uid}_ap_enabled",
+                f"switch.guardian_valve_controller_{uid}_onboard_ap",
+                "2022.12.0",
                 remove_old_entity=False,
             ),
         ),
