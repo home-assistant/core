@@ -216,13 +216,13 @@ class BluetoothManager:
     async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         install_multiple_bleak_catcher()
-        self.async_setup_unavailable_tracking()
         history = await async_load_history_from_system()
         # Everything is connectable so it fall into both
         # buckets since the host system can only provide
         # connectable devices
         self._history = history.copy()
         self._connectable_history = history.copy()
+        self.async_setup_unavailable_tracking()
 
     @hass_callback
     def async_stop(self, event: Event) -> None:
