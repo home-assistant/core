@@ -50,9 +50,6 @@ CONF_ENTRY_ID = "entry_id"
 
 DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
-NOTIFICATION_ID = "openuv_notification"
-NOTIFICATION_TITLE = "OpenUV Component Setup"
-
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
