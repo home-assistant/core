@@ -21,7 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    entity_registry,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -71,15 +75,35 @@ SERVICE_SCHEMA = vol.Schema(
 
 
 @callback
+def async_get_entity_id_from_unique_id_suffix(
+    hass: HomeAssistant, entry: ConfigEntry, unique_id_suffix: str
+) -> str:
+    """Get the entity ID for a config entry based on unique ID suffix."""
+    ent_reg = entity_registry.async_get(hass)
+    [registry_entry] = [
+        registry_entry
+        for registry_entry in ent_reg.entities.values()
+        if registry_entry.config_entry_id == entry.entry_id
+        and registry_entry.unique_id.endswith(unique_id_suffix)
+    ]
+    return registry_entry.entity_id
+
+
+@callback
 def async_log_deprecated_service_call(
     hass: HomeAssistant,
     call: ServiceCall,
     alternate_service: str,
-    alternate_target: str,
+    alternate_targets: list[str],
     breaks_in_ha_version: str,
 ) -> None:
     """Log a warning about a deprecated service call."""
     deprecated_service = f"{call.domain}.{call.service}"
+
+    if len(alternate_targets) > 1:
+        translation_key = "deprecated_service_multiple_alternate_targets"
+    else:
+        translation_key = "deprecated_service_single_alternate_target"
 
     async_create_issue(
         hass,
@@ -89,10 +113,10 @@ def async_log_deprecated_service_call(
         is_fixable=False,
         is_persistent=True,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_service",
+        translation_key=translation_key,
         translation_placeholders={
             "alternate_service": alternate_service,
-            "alternate_target": alternate_target,
+            "alternate_targets": ", ".join(alternate_targets),
             "deprecated_service": deprecated_service,
         },
     )
@@ -159,6 +183,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return wrapper
 
+    # We determine entity IDs needed to help the user migrate from deprecated services:
+    current_uv_index_entity_id = async_get_entity_id_from_unique_id_suffix(
+        hass, entry, "current_uv_index"
+    )
+    protection_window_entity_id = async_get_entity_id_from_unique_id_suffix(
+        hass, entry, "protection_window"
+    )
+
     @_verify_domain_control
     @extract_openuv
     async def update_data(call: ServiceCall, openuv: OpenUV) -> None:
@@ -168,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             call,
             "homeassistant.update_entity",
-            "binary_sensor.protection_window, sensor.current_uv_index",
+            [protection_window_entity_id, current_uv_index_entity_id],
             "2022.12.0",
         )
         await openuv.async_update()
@@ -183,7 +215,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             call,
             "homeassistant.update_entity",
-            "sensor.current_uv_index",
+            [current_uv_index_entity_id],
             "2022.12.0",
         )
         await openuv.async_update_uv_index_data()
@@ -198,7 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             call,
             "homeassistant.update_entity",
-            "binary_sensor.protection_window",
+            [protection_window_entity_id],
             "2022.12.0",
         )
         await openuv.async_update_protection_data()
