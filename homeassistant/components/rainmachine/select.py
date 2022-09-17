@@ -145,7 +145,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
                 {self.entity_description.data_key: self._label_to_api_value_map[option]}
             )
         except RainMachineError as err:
-            LOGGER.error("Error while setting %s: %s", self.name, err)
+            raise ValueError(f"Error while setting {self.name}: {err}") from err
 
     @callback
     def update_from_latest_data(self) -> None:
