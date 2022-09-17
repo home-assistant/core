@@ -1,4 +1,4 @@
-"""Adds config flow for Trafikverket Train integration."""
+"""Adds config flow for Brottsplatskartan integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -28,7 +28,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Trafikverket Train integration."""
+    """Handle a config flow for Brottsplatskartan integration."""
 
     VERSION = 1
 
