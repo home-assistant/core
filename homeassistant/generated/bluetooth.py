@@ -118,6 +118,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         ]
     },
     {
+        "domain": "ibeacon",
+        "manufacturer_id": 76,
+        "manufacturer_data_start": [
+            2,
+            21
+        ]
+    },
+    {
         "domain": "inkbird",
         "local_name": "sps",
         "connectable": False

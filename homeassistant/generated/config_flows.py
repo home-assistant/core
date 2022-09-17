@@ -172,6 +172,7 @@ FLOWS = {
         "hyperion",
         "ialarm",
         "iaqualink",
+        "ibeacon",
         "icloud",
         "ifttt",
         "inkbird",
