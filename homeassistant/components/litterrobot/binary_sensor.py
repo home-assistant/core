@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
+from typing import Generic, cast
 
 from pylitterbot import Robot
 
@@ -64,7 +64,7 @@ BINARY_SENSOR_MAP: tuple[BinarySensorEntityDescription, ...] = (
         icon="mdi:sleep",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        is_on_fn=lambda robot: str(getattr(robot, "sleep_mode_enabled")) == "True",
+        is_on_fn=lambda robot: cast(bool, getattr(robot, "sleep_mode_enabled")),
     ),
     RobotBinarySensorEntityDescription(
         key="power_status",

@@ -22,7 +22,7 @@ async def test_binary_sensors(
     state = hass.states.get("binary_sensor.test_is_sleeping")
     assert state.state == "off"
     state = hass.states.get("binary_sensor.test_sleep_mode_enabled")
-    assert state.state == "off"
+    assert state.state == "on"
     state = hass.states.get("binary_sensor.test_power_status")
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PLUG
     assert state.state == "on"
