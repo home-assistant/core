@@ -60,7 +60,7 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
         self._parsed = parsed
         self._attr_unique_id = unique_id
         self._active = True
-        self._attr_name = "{parsed.uuid} {parsed.major} {parsed.minor}"
+        self._attr_name = f"{parsed.uuid} {parsed.major} {parsed.minor}"
 
     @property
     def state(self) -> str:

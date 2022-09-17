@@ -109,3 +109,14 @@ class IBeaconCoordinator:
             ),  # We will take data from any source
             bluetooth.BluetoothScanningMode.PASSIVE,
         )
+        # Replay any that are already there.
+        for service_info in bluetooth.async_discovered_service_info(self.hass):
+            if (
+                (apple_adv := service_info.manufacturer_data.get(76))
+                and len(apple_adv) > 2
+                and apple_adv[0] == 2
+                and apple_adv[1] == 21
+            ):
+                self._async_update_ibeacon(
+                    service_info, bluetooth.BluetoothChange.ADVERTISEMENT
+                )
