@@ -23,13 +23,17 @@ from .hub import LitterRobotHub
 
 
 @dataclass
+class RequiredKeysMixin(Generic[_RobotT]):
+    """A class that describes robot binary sensor entity required keys."""
+
+    is_on_fn: Callable[[_RobotT], bool]
+
+
+@dataclass
 class RobotBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    Generic[_RobotT],
+    BinarySensorEntityDescription, RequiredKeysMixin[_RobotT]
 ):
     """A class that describes robot binary sensor entities."""
-
-    is_on_fn: Callable[[_RobotT], bool] = lambda _: True
 
 
 class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEntity):
