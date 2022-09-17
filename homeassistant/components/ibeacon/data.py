@@ -80,7 +80,12 @@ class IBeaconCoordinator:
             rssi_by_address[address] = device.rssi if device else None
         if new:
             async_dispatcher_send(
-                self.hass, SIGNAL_IBEACON_DEVICE_NEW, unique_id, parsed, rssi_by_address
+                self.hass,
+                SIGNAL_IBEACON_DEVICE_NEW,
+                unique_id,
+                service_info.name,
+                parsed,
+                rssi_by_address,
             )
         else:
             async_dispatcher_send(
