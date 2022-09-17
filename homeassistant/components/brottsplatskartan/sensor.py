@@ -70,7 +70,7 @@ async def async_setup_entry(
     name = entry.title
     unique_id = f"bpk-{latitude}-{longitude}-{area}"
 
-    bpk = BrottsplatsKartan(app=app, area=area, latitude=latitude, longitude=longitude)
+    bpk = BrottsplatsKartan(app=app, areas=area, latitude=latitude, longitude=longitude)
 
     async_add_entities([BrottsplatskartanSensor(bpk, name, unique_id)], True)
 
