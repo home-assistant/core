@@ -35,7 +35,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
+    """Set up the climate platform."""
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     client = entry_data[DATA_CLIENT]
     coordinator = entry_data[DATA_COORDINATOR]
