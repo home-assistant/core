@@ -47,8 +47,6 @@ DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 SERVICE_NAME_DISABLE_AP = "disable_ap"
 SERVICE_NAME_ENABLE_AP = "enable_ap"
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
-SERVICE_NAME_REBOOT = "reboot"
-SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
@@ -56,8 +54,6 @@ SERVICES = (
     SERVICE_NAME_DISABLE_AP,
     SERVICE_NAME_ENABLE_AP,
     SERVICE_NAME_PAIR_SENSOR,
-    SERVICE_NAME_REBOOT,
-    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
     SERVICE_NAME_UNPAIR_SENSOR,
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
@@ -267,32 +263,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await data.paired_sensor_manager.async_pair_sensor(uid)
 
     @call_with_data
-    async def async_reboot(call: ServiceCall, data: GuardianData) -> None:
-        """Reboot the valve controller."""
-        async_log_deprecated_service_call(
-            hass,
-            call,
-            "button.press",
-            f"button.guardian_valve_controller_{data.entry.data[CONF_UID]}_reboot",
-            "2022.10.0",
-        )
-        await data.client.system.reboot()
-
-    @call_with_data
-    async def async_reset_valve_diagnostics(
-        call: ServiceCall, data: GuardianData
-    ) -> None:
-        """Fully reset system motor diagnostics."""
-        async_log_deprecated_service_call(
-            hass,
-            call,
-            "button.press",
-            f"button.guardian_valve_controller_{data.entry.data[CONF_UID]}_reset_valve_diagnostics",
-            "2022.10.0",
-        )
-        await data.client.valve.reset()
-
-    @call_with_data
     async def async_unpair_sensor(call: ServiceCall, data: GuardianData) -> None:
         """Remove a paired sensor."""
         uid = call.data[CONF_UID]
@@ -315,12 +285,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
-        ),
-        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
-        (
-            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
-            SERVICE_BASE_SCHEMA,
-            async_reset_valve_diagnostics,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
