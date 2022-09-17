@@ -52,8 +52,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator):
             if (
                 device.has_powermeter
                 and device.present
-                and hasattr(device, "voltage")
+                and isinstance(device.voltage, int)
                 and device.voltage <= 0
+                and isinstance(device.power, int)
                 and device.power <= 0
                 and device.energy <= 0
             ):
