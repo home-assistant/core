@@ -45,6 +45,8 @@ class EntityDomainReplacementStrategy:
     old_domain: str
     old_unique_id: str
     replacement_entity_id: str
+    breaks_in_ha_version: str
+    remove_old_entity: bool = True
 
 
 @callback
@@ -74,6 +76,7 @@ def async_finish_entity_domain_replacements(
             hass,
             DOMAIN,
             f"{translation_key}_{removed_entity_id}",
+            breaks_in_ha_version=strategy.breaks_in_ha_version,
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,
@@ -84,8 +87,9 @@ def async_finish_entity_domain_replacements(
             },
         )
 
-        LOGGER.info('Removing old entity: "%s"', removed_entity_id)
-        ent_reg.async_remove(removed_entity_id)
+        if strategy.remove_old_entity:
+            LOGGER.info('Removing old entity: "%s"', removed_entity_id)
+            ent_reg.async_remove(removed_entity_id)
 
 
 def key_exists(data: dict[str, Any], search_key: str) -> bool:
