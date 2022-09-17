@@ -814,7 +814,7 @@ nextcord==2.0.0a8
 nextdns==1.1.1
 
 # homeassistant.components.nibe_heatpump
-nibe==0.4.0
+nibe==0.5.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
