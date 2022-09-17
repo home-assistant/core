@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, cast
+from typing import Generic
 
-from pylitterbot import Robot
+from pylitterbot import LitterRobot, Robot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -22,10 +22,20 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
+@dataclass
+class RobotBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    Generic[_RobotT],
+):
+    """A class that describes robot binary sensor entities."""
+
+    is_on_fn: Callable[[_RobotT], bool] = lambda _: True
+
+
 class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEntity):
     """Litter-Robot binary sensor entity."""
 
-    entity_description: RobotBinarySensorEntityDescription
+    entity_description: RobotBinarySensorEntityDescription[_RobotT]
 
     @property
     def is_on(self) -> bool:
@@ -33,48 +43,36 @@ class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEnti
         return self.entity_description.is_on_fn(self.robot)
 
 
-@dataclass
-class RobotBinarySensorEntityDescriptionMixIn:
-    """Value mixin for Litter-Robot binary sensors."""
-
-    is_on_fn: Callable[[Robot], bool]
-
-
-@dataclass
-class RobotBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    RobotBinarySensorEntityDescriptionMixIn,
-    Generic[_RobotT],
-):
-    """A class that describes robot binary sensor entities."""
-
-
-BINARY_SENSOR_MAP: tuple[BinarySensorEntityDescription, ...] = (
-    RobotBinarySensorEntityDescription(
-        key="is_sleeping",
-        name="Is sleeping",
-        icon="mdi:sleep",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        is_on_fn=lambda robot: str(getattr(robot, "is_sleeping")) == "True",
+BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, ...]] = {
+    LitterRobot: (
+        RobotBinarySensorEntityDescription[LitterRobot](
+            key="is_sleeping",
+            name="Is sleeping",
+            icon="mdi:sleep",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: robot.is_sleeping,
+        ),
+        RobotBinarySensorEntityDescription[LitterRobot](
+            key="sleep_mode_enabled",
+            name="Sleep mode enabled",
+            icon="mdi:sleep",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: robot.sleep_mode_enabled,
+        ),
     ),
-    RobotBinarySensorEntityDescription(
-        key="sleep_mode_enabled",
-        name="Sleep mode enabled",
-        icon="mdi:sleep",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        is_on_fn=lambda robot: cast(bool, getattr(robot, "sleep_mode_enabled")),
+    Robot: (
+        RobotBinarySensorEntityDescription[Robot](
+            key="power_status",
+            name="Power status",
+            device_class=BinarySensorDeviceClass.PLUG,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: robot.power_status == "AC",
+        ),
     ),
-    RobotBinarySensorEntityDescription(
-        key="power_status",
-        name="Power status",
-        device_class=BinarySensorDeviceClass.PLUG,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        is_on_fn=lambda robot: robot.power_status == "AC",
-    ),
-)
+}
 
 
 async def async_setup_entry(
@@ -86,6 +84,8 @@ async def async_setup_entry(
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         LitterRobotBinarySensorEntity(robot=robot, hub=hub, description=description)
-        for description in BINARY_SENSOR_MAP
         for robot in hub.account.robots
+        for robot_type, entity_descriptions in BINARY_SENSOR_MAP.items()
+        if isinstance(robot, robot_type)
+        for description in entity_descriptions
     )
