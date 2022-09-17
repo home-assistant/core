@@ -23,6 +23,9 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
     TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant
@@ -140,12 +143,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             native_unit_of_measurement=TIME_MINUTES,
         ),
         SensorEntityDescription(
-            name="Distance",
-            icon=ICONS.get(travel_mode, ICON_CAR),
-            key=ATTR_DISTANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
             name="Route",
             icon="mdi:directions",
             key=ATTR_ROUTE,
@@ -198,6 +195,7 @@ async def async_setup_entry(
         )
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
+    sensors.append(DistanceSensor(entry_id, name, coordinator))
     async_add_entities(sensors)
 
 
@@ -301,3 +299,29 @@ class DestinationSensor(HERETravelTimeSensor):
                 ATTR_LONGITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[1],
             }
         return None
+
+
+class DistanceSensor(HERETravelTimeSensor):
+    """Sensor holding information about the distance."""
+
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: HereTravelTimeDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        sensor_description = SensorEntityDescription(
+            name="Distance",
+            icon=ICONS.get(coordinator.config.travel_mode, ICON_CAR),
+            key=ATTR_DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
+        super().__init__(unique_id_prefix, name, sensor_description, coordinator)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor."""
+        if self.coordinator.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
+            return LENGTH_MILES
+        return LENGTH_KILOMETERS

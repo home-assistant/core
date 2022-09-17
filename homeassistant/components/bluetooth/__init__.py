@@ -116,6 +116,16 @@ def async_discovered_service_info(
 
 
 @hass_callback
+def async_last_service_info(
+    hass: HomeAssistant, address: str, connectable: bool = True
+) -> BluetoothServiceInfoBleak | None:
+    """Return the last service info for an address."""
+    if DATA_MANAGER not in hass.data:
+        return None
+    return _get_manager(hass).async_last_service_info(address, connectable)
+
+
+@hass_callback
 def async_ble_device_from_address(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> BLEDevice | None:
@@ -185,7 +195,7 @@ async def async_process_advertisements(
 @hass_callback
 def async_track_unavailable(
     hass: HomeAssistant,
-    callback: Callable[[str], None],
+    callback: Callable[[BluetoothServiceInfoBleak], None],
     address: str,
     connectable: bool = True,
 ) -> Callable[[], None]:
