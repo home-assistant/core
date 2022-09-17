@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .data import IBeaconCoordinator
+from .coordinator import IBeaconCoordinator
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 

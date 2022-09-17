@@ -19,14 +19,14 @@ from .const import (
     DOMAIN,
     SIGNAL_IBEACON_DEVICE_NEW,
 )
-from .data import IBeaconCoordinator, signal_seen, signal_unavailable
+from .coordinator import IBeaconCoordinator, signal_seen, signal_unavailable
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for iBeacon Tracker component."""
-    ibeacon_coordinator: IBeaconCoordinator = hass.data[DOMAIN]
+    coordinator: IBeaconCoordinator = hass.data[DOMAIN]
 
     @callback
     def _async_device_new(
@@ -39,7 +39,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 IBeaconTrackerEntity(
-                    ibeacon_coordinator, name, unique_id, parsed, rssi_by_address
+                    coordinator, name, unique_id, parsed, rssi_by_address
                 )
             ]
         )
@@ -56,7 +56,7 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
 
     def __init__(
         self,
-        ibeacon_coordinator: IBeaconCoordinator,
+        coordinator: IBeaconCoordinator,
         name: str,
         unique_id: str,
         parsed: iBeaconAdvertisement,
@@ -64,7 +64,7 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
     ) -> None:
         """Initialize an iBeacon tracker entity."""
         self._rssi_by_address = rssi_by_address
-        self._ibeacon_coordinator = ibeacon_coordinator
+        self._coordinator = coordinator
         self._parsed = parsed
         self._attr_unique_id = unique_id
         self._active = True
