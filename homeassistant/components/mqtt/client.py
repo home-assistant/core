@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -139,7 +139,7 @@ async def async_publish(
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
-    [str, ReceivePayloadType, int], Awaitable[None]
+    [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
 
