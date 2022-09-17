@@ -136,11 +136,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
         """Return a coil with data and check for validity."""
         if not self.data or not coil:
             return None
-
-        coil = self.data.get(coil.address)
-        if coil and coil.value != -3276.8:
-            return coil
-        return None
+        return self.data.get(coil.address)
 
     def get_coil_value(self, coil: Coil | None) -> int | str | float | None:
         """Return a coil with data and check for validity."""
