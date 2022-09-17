@@ -341,6 +341,11 @@ async def test_update_entity_progress(
     # Sleep so that task starts
     await asyncio.sleep(0.1)
 
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] is True
+
     event = Event(
         type="firmware update progress",
         data={
@@ -421,6 +426,11 @@ async def test_update_entity_progress_multiple(
 
     # Sleep so that task starts
     await asyncio.sleep(0.1)
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] is True
 
     event = Event(
         type="firmware update progress",
