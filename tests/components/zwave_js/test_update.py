@@ -7,7 +7,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.firmware import FirmwareUpdateStatus
 
-from homeassistant.components.update.const import (
+from homeassistant.components.update import (
     ATTR_AUTO_UPDATE,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -49,6 +49,19 @@ FIRMWARE_UPDATES = {
             "changelog": "blah 3",
             "files": [
                 {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+        },
+    ]
+}
+
+FIRMWARE_UPDATE_MULTIPLE_FILES = {
+    "updates": [
+        {
+            "version": "11.2.4",
+            "changelog": "blah 2",
+            "files": [
+                {"target": 0, "url": "https://example2.com", "integrity": "sha2"},
+                {"target": 1, "url": "https://example4.com", "integrity": "sha4"},
             ],
         },
     ]
@@ -345,6 +358,124 @@ async def test_update_entity_progress(
     assert state
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] == 5
+
+    event = Event(
+        type="firmware update finished",
+        data={
+            "source": "node",
+            "event": "firmware update finished",
+            "nodeId": node.node_id,
+            "status": FirmwareUpdateStatus.OK_NO_RESTART,
+        },
+    )
+
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Validate that progress is reset and entity reflects new version
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+    assert state.state == STATE_OFF
+
+    await install_task
+
+
+async def test_update_entity_progress_multiple(
+    hass,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+):
+    """Test update entity progress with multiple files."""
+    node = climate_radio_thermostat_ct100_plus_different_endpoints
+    client.async_send_command.return_value = FIRMWARE_UPDATE_MULTIPLE_FILES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
+    assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = None
+
+    # Test successful install call without a version
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: UPDATE_ENTITY,
+            },
+            blocking=True,
+        )
+    )
+
+    # Sleep so that task starts
+    await asyncio.sleep(0.1)
+
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "node",
+            "event": "firmware update progress",
+            "nodeId": node.node_id,
+            "sentFragments": 1,
+            "totalFragments": 20,
+        },
+    )
+    node.receive_event(event)
+
+    # Validate that the progress is updated (two files means progress is 50% of 5)
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] == 2
+
+    event = Event(
+        type="firmware update finished",
+        data={
+            "source": "node",
+            "event": "firmware update finished",
+            "nodeId": node.node_id,
+            "status": FirmwareUpdateStatus.OK_NO_RESTART,
+        },
+    )
+
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    # One file done, progress should be 50%
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] == 50
+
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "node",
+            "event": "firmware update progress",
+            "nodeId": node.node_id,
+            "sentFragments": 1,
+            "totalFragments": 20,
+        },
+    )
+    node.receive_event(event)
+
+    # Validate that the progress is updated (50% + 50% of 5)
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] == 52
 
     event = Event(
         type="firmware update finished",

@@ -244,6 +244,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
             # We need to block until we receive the `firmware update finished` event
             await self._finished_event.wait()
+            # Clear the event so that a second firmware update blocks again
+            self._finished_event.clear()
             assert self._finished_status is not None
 
             # If status is not OK, we should throw an error to let the user know
@@ -262,8 +264,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._attr_in_progress = floor(
                 100 * self._num_files_installed / len(firmware.files)
             )
+
+            # Clear the status so we can get a new one
+            self._finished_status = None
             self.async_write_ha_state()
 
+        # If we get here, all files were installed successfully
         self._attr_installed_version = self._attr_latest_version = firmware.version
         self._latest_version_firmware = None
         self._unsub_firmware_events_and_reset_progress()
