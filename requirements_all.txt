@@ -2254,7 +2254,7 @@ slixmpp==1.8.2
 smart-meter-texas==0.4.7
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.15
+smhi-pkg==1.0.16
 
 # homeassistant.components.snapcast
 snapcast==2.1.3

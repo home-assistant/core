@@ -1539,7 +1539,7 @@ slackclient==2.5.0
 smart-meter-texas==0.4.7
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.15
+smhi-pkg==1.0.16
 
 # homeassistant.components.sonos
 soco==0.28.0
