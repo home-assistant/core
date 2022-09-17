@@ -376,7 +376,7 @@ async def test_update_entity_progress(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_IN_PROGRESS] == 0
     assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_OFF
@@ -494,7 +494,7 @@ async def test_update_entity_progress_multiple(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_IN_PROGRESS] == 0
     assert attrs[ATTR_INSTALLED_VERSION] == "11.2.4"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_OFF
@@ -577,7 +577,7 @@ async def test_update_entity_install_failed(
     state = hass.states.get(UPDATE_ENTITY)
     assert state
     attrs = state.attributes
-    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_IN_PROGRESS] == 0
     assert attrs[ATTR_INSTALLED_VERSION] == "10.7"
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
     assert state.state == STATE_ON
