@@ -341,7 +341,7 @@ blinkpy==0.19.2
 bluemaestro-ble==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.4.1
+bluetooth-adapters==0.5.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.3.3
