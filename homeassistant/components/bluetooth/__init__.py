@@ -17,17 +17,15 @@ from homeassistant.config_entries import (
     ConfigEntry,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    callback as hass_callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
@@ -227,7 +225,8 @@ async def async_get_adapter_from_address(
     return await _get_manager(hass).async_get_adapter_from_address(address)
 
 
-async def _async_check_haos_version(hass: HomeAssistant) -> None:
+@hass_callback
+def _async_haos_is_new_enough(hass: HomeAssistant) -> bool:
     """Check if the version of Home Assistant Operating System is new enough."""
     # Only warn if a USB adapter is plugged in
     if not any(
@@ -235,19 +234,22 @@ async def _async_check_haos_version(hass: HomeAssistant) -> None:
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.source != SOURCE_IGNORE
     ):
-        return
-    if not hass.components.hassio.is_hassio():
-        return
-    os_info = hass.components.hassio.get_os_info()
-    host_info = hass.components.hassio.get_host_info()
-    _LOGGER.warning("os_info: %s", os_info)
-    _LOGGER.warning("host_info: %s", host_info)
-
-    system_info = await async_get_system_info(hass)
+        return False
     if (
-        not (haos_version := system_info.get("hassos"))
+        not hass.components.hassio.is_hassio()
+        or not (os_info := hass.components.hassio.get_os_info())
+        or not (haos_version := os_info.get("version"))
         or AwesomeVersion(haos_version) >= RECOMMENDED_HAOS_VERSION
     ):
+        return False
+    return True
+
+
+@hass_callback
+def _async_check_haos(hass: HomeAssistant) -> None:
+    """Create or delete an the haos_outdated issue."""
+    if _async_haos_is_new_enough(hass):
+        async_delete_issue(hass, DOMAIN, "haos_outdated")
         return
     async_create_issue(
         hass,
@@ -299,11 +301,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Wait to check until after start to make sure
     # that the system info is available.
-    async def _async_haos_checks(event: Event) -> None:
-        """Check if the version of Home Assistant Operating System is new enough."""
-        await _async_check_haos_version(hass)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_haos_checks)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED,
+        hass_callback(lambda event: _async_check_haos(hass)),
+    )
 
     return True
 
