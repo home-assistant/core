@@ -118,22 +118,21 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 
 @overload
 def catch_log_exception(
-    func: Callable[..., Coroutine[Any, Any, None]], format_err: Callable[..., Any]
-) -> Callable[..., Coroutine[Any, Any, None] | None]:
+    func: Callable[..., Coroutine[Any, Any, Any]], format_err: Callable[..., Any]
+) -> Callable[..., Coroutine[Any, Any, None]]:
     """Overload for Coroutine that returns a Coroutine."""
 
 
 @overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any]
-) -> Callable[..., Coroutine[Any, Any, None] | None]:
+) -> Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]:
     """Overload for a callback that returns a callback."""
 
 
 def catch_log_exception(
-    func: Callable[..., Coroutine[Any, Any, None]] | Callable[..., Any],
-    format_err: Callable[..., Any],
-) -> Callable[..., Coroutine[Any, Any, None] | None]:
+    func: Callable[..., Any], format_err: Callable[..., Any]
+) -> Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]:
     """Decorate a function func to catch and log exceptions.
 
     If func is a coroutine function, a coroutine function will be returned.
@@ -144,7 +143,7 @@ def catch_log_exception(
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func: Callable[..., Coroutine[Any, Any, None] | None]
+    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
     if asyncio.iscoroutinefunction(check_func):
         async_func = cast(Callable[..., Coroutine[Any, Any, None]], func)
 
