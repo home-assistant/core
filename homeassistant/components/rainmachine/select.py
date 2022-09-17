@@ -100,17 +100,13 @@ async def async_setup_entry(
     }
 
     async_add_entities(
-        [
-            entity_map[description.key](
-                entry, data, description, hass.config.units.name
-            )
-            for description in SELECT_DESCRIPTIONS
-            if (
-                (coordinator := data.coordinators[description.api_category]) is not None
-                and coordinator.data
-                and key_exists(coordinator.data, description.data_key)
-            )
-        ]
+        entity_map[description.key](entry, data, description, hass.config.units.name)
+        for description in SELECT_DESCRIPTIONS
+        if (
+            (coordinator := data.coordinators[description.api_category]) is not None
+            and coordinator.data
+            and key_exists(coordinator.data, description.data_key)
+        )
     )
 
 
