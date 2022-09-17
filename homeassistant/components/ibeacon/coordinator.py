@@ -54,18 +54,23 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_ids = self._address_to_unique_id.pop(service_info.address)
         for unique_id in unique_ids:
-            address_callbacks = self._unique_id_unavailable[unique_id]
-            # Cancel the unavailable tracker
-            address_callbacks.pop(address)()
-            # Remove the power
-            self._unique_id_power[unique_id].pop(address)
-            # If its the last beacon broadcasting that unique_id, its now unavailable
-            if not address_callbacks:
+            if self._async_remove_address(unique_id, address):
                 async_dispatcher_send(self.hass, signal_unavailable(unique_id))
 
     @callback
-    def _async_remove_address(self, address: str) -> None:
-        """Remove an address that does not follow the spec and any entities created by it."""
+    def _async_remove_address(self, unique_id: str, address: str) -> bool:
+        """Remove an address that has gone unavailable."""
+        address_callbacks = self._unique_id_unavailable[unique_id]
+        # Cancel the unavailable tracker
+        address_callbacks.pop(address)()
+        # Remove the power
+        self._unique_id_power[unique_id].pop(address)
+        # If its the last beacon broadcasting that unique_id, its now unavailable
+        return not bool(address_callbacks)
+
+    @callback
+    def _async_ignore_address(self, address: str) -> None:
+        """Ignore an address that does not follow the spec and any entities created by it."""
         self._ignore_addresses.add(address)
         unique_ids = self._address_to_unique_id.pop(address)
         self.hass.config_entries.async_update_entry(
@@ -75,12 +80,7 @@ class IBeaconCoordinator:
         )
         ent_reg = async_get(self.hass)
         for unique_id in unique_ids:
-            address_callbacks = self._unique_id_unavailable[unique_id]
-            # Cancel the unavailable tracker
-            address_callbacks.pop(address)()
-            # Remove the power
-            self._unique_id_power[unique_id].pop(address, None)
-            if not address_callbacks and (
+            if self._async_remove_address(unique_id, address) and (
                 entry := ent_reg.async_get_entity_id(
                     "device_tracker", DOMAIN, unique_id
                 )
@@ -116,15 +116,16 @@ class IBeaconCoordinator:
                 self.hass, self._async_handle_unavailable, address
             )
 
+        power_by_address[address] = parsed.power
+
         # Some manufacturers violate the spec and flood us with random
         # data. Once we see more than MAX_UNIQUE_IDS_PER_ADDRESS unique ids
         # from the same address we remove all the trackers for that address
         # and add the address to the ignore list since we know its garbage data.
         if len(self._address_to_unique_id[address]) >= MAX_UNIQUE_IDS_PER_ADDRESS:
-            self._async_remove_address(address)
+            self._async_ignore_address(address)
             return
 
-        power_by_address[address] = parsed.power
         rssi_by_address: dict[str, int] = {}
         for address in unavailable_trackers:
             device = bluetooth.async_ble_device_from_address(self.hass, address)
