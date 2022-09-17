@@ -37,6 +37,11 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "title": "Le service {deprecated_service} sera bient\u00f4t supprim\u00e9"
+        }
+    },
     "options": {
         "step": {
             "init": {
