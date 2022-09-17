@@ -32,10 +32,12 @@ DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -52,13 +54,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -243,7 +245,7 @@ class CalendarEventView(http.HomeAssistantView):
     url = "/api/calendars/{entity_id}"
     name = "api:calendars:calendar"
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
         """Initialize calendar view."""
         self.component = component
 
@@ -294,7 +296,7 @@ class CalendarListView(http.HomeAssistantView):
     url = "/api/calendars"
     name = "api:calendars"
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
         """Initialize calendar view."""
         self.component = component
 

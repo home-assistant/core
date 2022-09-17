@@ -141,6 +141,8 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
 
+# mypy: disallow-any-generics
+
 
 def round_temperature(temperature: float | None, precision: float) -> float | None:
     """Convert temperature into preferred precision for display."""
@@ -183,7 +185,7 @@ class Forecast(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -192,13 +194,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 

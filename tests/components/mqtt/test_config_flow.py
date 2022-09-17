@@ -155,7 +155,7 @@ async def test_manual_config_set(
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
     await hass.async_block_till_done()
     # do not try to reload
-    del hass.data["mqtt_reload_needed"]
+    hass.data["mqtt"].reload_needed = False
     assert len(mock_finish_setup.mock_calls) == 0
 
     mock_try_connection.return_value = True

@@ -38,38 +38,39 @@ class MelnorSensorEntityDescription(
     """Describes Melnor sensor entity."""
 
 
+sensors = [
+    MelnorSensorEntityDescription(
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        state_fn=lambda device: device.battery_level,
+    ),
+    MelnorSensorEntityDescription(
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key="rssi",
+        name="RSSI",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        state_fn=lambda device: device.rssi,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
     coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    sensors: list[MelnorSensorEntityDescription] = [
-        MelnorSensorEntityDescription(
-            device_class=SensorDeviceClass.BATTERY,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            key="battery",
-            name="Battery",
-            native_unit_of_measurement=PERCENTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            state_fn=lambda device: device.battery_level,
-        ),
-        MelnorSensorEntityDescription(
-            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            key="rssi",
-            name="RSSI",
-            native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-            state_class=SensorStateClass.MEASUREMENT,
-            state_fn=lambda device: device.rssi,
-        ),
-    ]
-
-    async_add_devices(
+    async_add_entities(
         MelnorSensorEntity(
             coordinator,
             description,
