@@ -222,7 +222,7 @@ async def async_subscribe(
 
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
-        catch_log_exception(  # type: ignore[arg-type]
+        catch_log_exception(
             wrapped_msg_callback,
             lambda msg: (
                 f"Exception in {msg_callback.__name__} when handling msg on "
@@ -652,7 +652,7 @@ class MQTT:
                     )
                     continue
             self.hass.async_run_hass_job(
-                subscription.job,
+                subscription.job,  # type: ignore[arg-type]
                 ReceiveMessage(
                     msg.topic,
                     payload,
