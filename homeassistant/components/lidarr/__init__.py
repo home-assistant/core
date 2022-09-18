@@ -13,7 +13,13 @@ from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import LidarrDataUpdateCoordinator
+from .coordinator import (
+    DiskSpaceDataUpdateCoordinator,
+    LidarrDataUpdateCoordinator,
+    QueueDataUpdateCoordinator,
+    StatusDataUpdateCoordinator,
+    WantedDataUpdateCoordinator,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -25,16 +31,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         url=entry.data[CONF_URL],
     )
-    api_client = LidarrClient(
+    lidarr = LidarrClient(
         host_configuration=host_configuration,
-        session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
+        session=async_get_clientsession(hass, host_configuration.verify_ssl),
         request_timeout=60,
     )
-    coordinator = LidarrDataUpdateCoordinator(hass, host_configuration, api_client)
-    await coordinator.async_config_entry_first_refresh()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    coordinators: dict[str, LidarrDataUpdateCoordinator] = {
+        "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, lidarr),
+        "queue": QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
+        "status": StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
+        "wanted": WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
+    }
+    # Temporary, until we add diagnostic entities
+    _version = None
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
+        if isinstance(coordinator, StatusDataUpdateCoordinator):
+            _version = coordinator.data
+        coordinator.system_version = _version
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -45,11 +61,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator]):
@@ -70,5 +81,5 @@ class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator]):
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
-            sw_version=coordinator.system_status.version,
+            sw_version=coordinator.system_version,
         )

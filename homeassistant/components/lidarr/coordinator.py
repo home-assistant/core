@@ -1,16 +1,11 @@
 """Data update coordinator for the Lidarr integration."""
 from __future__ import annotations
 
-import asyncio
+from abc import abstractmethod
 from datetime import timedelta
+from typing import Generic, TypeVar, cast
 
-from aiopyarr import (
-    LidarrQueue,
-    LidarrRootFolder,
-    LidarrWantedCutoff,
-    SystemStatus,
-    exceptions,
-)
+from aiopyarr import LidarrAlbum, LidarrQueue, LidarrRootFolder, exceptions
 from aiopyarr.lidarr_client import LidarrClient
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 
@@ -21,8 +16,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
+T = TypeVar("T", list[LidarrRootFolder], LidarrQueue, str, LidarrAlbum)
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
+
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: ConfigEntry
@@ -41,28 +38,13 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.api_client = api_client
-        self.disk_space: list[LidarrRootFolder] = []
         self.host_configuration = host_configuration
-        self.queue: LidarrQueue = LidarrQueue({"records": []})
-        self.system_status: SystemStatus = SystemStatus({"": ""})
-        self.wanted: LidarrWantedCutoff = LidarrWantedCutoff({"records": []})
+        self.system_version: str | None = None
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> T:
         """Get the latest data from Lidarr."""
         try:
-            [
-                self.disk_space,
-                self.queue,
-                self.system_status,
-                self.wanted,
-            ] = await asyncio.gather(
-                *[
-                    self.api_client.async_get_root_folders(),
-                    self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS),
-                    self.api_client.async_get_system_status(),
-                    self.api_client.async_get_wanted(page_size=DEFAULT_MAX_RECORDS),
-                ]
-            )
+            return await self._fetch_data()
 
         except exceptions.ArrConnectionException as ex:
             raise UpdateFailed(ex) from ex
@@ -70,3 +52,43 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(
                 "API Key is no longer valid. Please reauthenticate"
             ) from ex
+
+    @abstractmethod
+    async def _fetch_data(self) -> T:
+        """Fetch the actual data."""
+        raise NotImplementedError
+
+
+class DiskSpaceDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+    """Disk space update coordinator for Lidarr."""
+
+    async def _fetch_data(self) -> list[LidarrRootFolder]:
+        """Fetch the data."""
+        return cast(list, await self.api_client.async_get_root_folders())
+
+
+class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+    """Queue update coordinator."""
+
+    async def _fetch_data(self) -> LidarrQueue:
+        """Fetch the album count in queue."""
+        return await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
+
+
+class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+    """Status update coordinator for Lidarr."""
+
+    async def _fetch_data(self) -> str:
+        """Fetch the data."""
+        return (await self.api_client.async_get_system_status()).version
+
+
+class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+    """Wanted update coordinator."""
+
+    async def _fetch_data(self) -> LidarrAlbum:
+        """Fetch the wanted data."""
+        return cast(
+            LidarrAlbum,
+            await self.api_client.async_get_wanted(page_size=DEFAULT_MAX_RECORDS),
+        )
