@@ -43,6 +43,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=_SCHEMA)
 
+        # Abort if an entry with same host and port is present.
         self._async_abort_entries_match(
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
         )
