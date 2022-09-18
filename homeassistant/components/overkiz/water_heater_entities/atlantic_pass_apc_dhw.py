@@ -51,7 +51,6 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-
         boost_state = OverkizCommandParam.OFF
         regular_state = OverkizCommandParam.OFF
         if operation_mode == STATE_PERFORMANCE:
