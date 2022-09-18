@@ -108,6 +108,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
             hass, LOGGER, name="Nibe Heat Pump", update_interval=timedelta(seconds=60)
         )
 
+        self.data = {}
         self.connection = connection
         self.heatpump = heatpump
 
@@ -126,15 +127,9 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
         """Return device information for the main device."""
         return DeviceInfo(identifiers={(DOMAIN, self.unique_id)})
 
-    def get_coil_data(self, coil: Coil) -> Coil | None:
-        """Return a coil with data and check for validity."""
-        if not self.data:
-            return None
-        return self.data.get(coil.address)
-
     def get_coil_value(self, coil: Coil) -> int | str | float | None:
         """Return a coil with data and check for validity."""
-        if coil := self.get_coil_data(coil):
+        if coil := self.data.get(coil.address):
             return coil.value
         return None
 
@@ -170,9 +165,6 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
                 callbacks.setdefault(address, []).append(update_callback)
 
         result: dict[int, Coil] = {}
-
-        if self.data is None:
-            self.data = {}
 
         for address, callback_list in callbacks.items():
             try:
@@ -223,7 +215,7 @@ class CoilEntity(CoordinatorEntity[Coordinator]):
         await self.coordinator.async_write_coil(self._coil, value)
 
     def _handle_coordinator_update(self) -> None:
-        coil = self.coordinator.get_coil_data(self._coil)
+        coil = self.coordinator.data.get(self._coil.address)
         if coil is None:
             return
 
