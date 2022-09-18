@@ -1,6 +1,9 @@
 """Support for iBeacon device sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from ibeacon_ble import iBeaconAdvertisement
 
 from homeassistant.components.sensor import (
@@ -18,25 +21,41 @@ from .const import DOMAIN, SIGNAL_IBEACON_DEVICE_NEW
 from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
 
+
+@dataclass
+class IBeaconRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[iBeaconAdvertisement], int | float | None]
+
+
+@dataclass
+class IBeaconSensorEntityDescription(SensorEntityDescription, IBeaconRequiredKeysMixin):
+    """Describes iBeacon sensor entity."""
+
+
 SENSOR_DESCRIPTIONS = (
-    SensorEntityDescription(
+    IBeaconSensorEntityDescription(
         key="rssi",
         name="Signal Strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
+        value_fn=lambda parsed: parsed.rssi,
     ),
-    SensorEntityDescription(
+    IBeaconSensorEntityDescription(
         key="power",
         name="Power",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
+        value_fn=lambda parsed: parsed.power,
     ),
-    SensorEntityDescription(
+    IBeaconSensorEntityDescription(
         key="distance",
         name="Distance",
         native_unit_of_measurement=LENGTH_METERS,
+        value_fn=lambda parsed: parsed.distance,
     ),
 )
 
@@ -44,7 +63,7 @@ SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up device tracker for iBeacon Tracker component."""
+    """Set up sensors for iBeacon Tracker component."""
     coordinator: IBeaconCoordinator = hass.data[DOMAIN]
 
     @callback
@@ -73,10 +92,12 @@ async def async_setup_entry(
 class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
     """An iBeacon sensor entity."""
 
+    entity_description: IBeaconSensorEntityDescription
+
     def __init__(
         self,
         coordinator: IBeaconCoordinator,
-        description: SensorEntityDescription,
+        description: IBeaconSensorEntityDescription,
         name: str,
         unique_id: str,
         parsed: iBeaconAdvertisement,
@@ -101,3 +122,8 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         """Update state."""
         self._attr_available = False
         self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._parsed)

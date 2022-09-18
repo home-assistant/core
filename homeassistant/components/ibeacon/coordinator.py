@@ -123,17 +123,13 @@ class IBeaconCoordinator:
         self._unique_ids_by_group_id.pop(group_id)
         self._addresses_by_group_id.pop(group_id)
 
-    def _async_track_ibeacon(self, address: str, group_id: str, unique_id: str) -> bool:
+    def _async_track_ibeacon(self, address: str, group_id: str, unique_id: str) -> None:
         """Track an iBeacon."""
-        new = unique_id not in self._unique_ids
-        self._unique_ids.add(unique_id)
-
         self._unique_ids_by_address.setdefault(address, set()).add(unique_id)
         self._group_ids_by_address.setdefault(address, set()).add(group_id)
 
         self._unique_ids_by_group_id.setdefault(group_id, set()).add(unique_id)
         self._addresses_by_group_id.setdefault(group_id, set()).add(address)
-        return new
 
     @callback
     def _async_update_ibeacon(
@@ -154,7 +150,10 @@ class IBeaconCoordinator:
             return
         address = service_info.address
         unique_id = f"{group_id}_{address}"
-        new = self._async_track_ibeacon(address, group_id, unique_id)
+        new = unique_id not in self._unique_ids
+        self._unique_ids.add(unique_id)
+        self._async_track_ibeacon(address, group_id, unique_id)
+
         if address not in self._unavailable_trackers:
             self._unavailable_trackers[address] = bluetooth.async_track_unavailable(
                 self.hass, self._async_handle_unavailable, address
