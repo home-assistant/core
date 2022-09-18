@@ -1,7 +1,6 @@
 """The Nibe Heat Pump integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 
 from nibe.coil import Coil
@@ -89,9 +88,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: Coordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.connection.stop()
-
-        # sleep a bit to make sure sockets are closed
-        await asyncio.sleep(5)
 
     return unload_ok
 
