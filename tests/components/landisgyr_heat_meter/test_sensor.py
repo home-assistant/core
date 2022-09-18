@@ -76,7 +76,7 @@ async def test_create_sensors(mock_heat_meter, hass):
     await hass.async_block_till_done()
 
     # check if 26 attributes have been created
-    assert len(hass.states.async_all()) == 26
+    assert len(hass.states.async_all()) == 27
     entity_reg = entity_registry.async_get(hass)
 
     state = hass.states.get("sensor.heat_meter_heat_usage")
