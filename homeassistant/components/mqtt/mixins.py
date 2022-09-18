@@ -39,7 +39,6 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    discovery,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -286,6 +285,9 @@ class MqttData:
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False
+    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
+        default_factory=dict
+    )
     reload_needed: bool = False
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     updated_config: ConfigType = field(default_factory=dict)
@@ -303,30 +305,6 @@ class SetupEntity(Protocol):
         discovery_data: dict[str, Any] | None = None,
     ) -> None:
         """Define setup_entities type."""
-
-
-async def async_discover_yaml_entities(
-    hass: HomeAssistant, platform_domain: str
-) -> None:
-    """Discover entities for a platform."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
-    if mqtt_data.updated_config:
-        # The platform has been reloaded
-        config_yaml = mqtt_data.updated_config
-    else:
-        config_yaml = mqtt_data.config or {}
-    if not config_yaml:
-        return
-    if platform_domain not in config_yaml:
-        return
-    await asyncio.gather(
-        *(
-            discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
-            for config in await async_get_platform_config_from_yaml(
-                hass, platform_domain, config_yaml
-            )
-        )
-    )
 
 
 async def async_get_platform_config_from_yaml(
@@ -350,7 +328,7 @@ async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
     async_setup: partial[Coroutine[HomeAssistant, str, None]],
-    schema: vol.Schema,
+    discovery_schema: vol.Schema,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
     mqtt_data: MqttData = hass.data[DATA_MQTT]
@@ -367,7 +345,7 @@ async def async_setup_entry_helper(
             return
         discovery_data = discovery_payload.discovery_data
         try:
-            config = schema(discovery_payload)
+            config = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
         except Exception:
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
@@ -382,6 +360,31 @@ async def async_setup_entry_helper(
             hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
         )
     )
+
+    async def _async_setup_entities() -> None:
+        """Set up MQTT items from configuration.yaml."""
+        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        if mqtt_data.updated_config:
+            # The platform has been reloaded
+            config_yaml = mqtt_data.updated_config
+        else:
+            config_yaml = mqtt_data.config or {}
+        if not config_yaml:
+            return
+        if domain not in config_yaml:
+            return
+        await asyncio.gather(
+            *[
+                async_setup(config)
+                for config in await async_get_platform_config_from_yaml(
+                    hass, domain, config_yaml
+                )
+            ]
+        )
+
+    # discover manual configured MQTT items
+    mqtt_data.reload_handlers[domain] = _async_setup_entities
+    await _async_setup_entities()
 
 
 async def async_setup_platform_helper(
