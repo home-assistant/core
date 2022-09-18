@@ -91,7 +91,7 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
     @property
     def extra_state_attributes(
         self,
-    ) -> dict[str, str | int | float]:
+    ) -> dict[str, str | int | float | None]:
         """Return the device state attributes."""
         parsed = self._parsed
         return {

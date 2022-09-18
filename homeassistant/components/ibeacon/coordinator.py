@@ -1,7 +1,13 @@
 """Tracking for iBeacon devices."""
 from __future__ import annotations
 
-from ibeacon_ble import APPLE_MFR_ID, IBEACON_FIRST_BYTE, IBEACON_SECOND_BYTE, parse
+from ibeacon_ble import (
+    APPLE_MFR_ID,
+    IBEACON_FIRST_BYTE,
+    IBEACON_SECOND_BYTE,
+    is_ibeacon_service_info,
+    parse,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -231,12 +237,7 @@ class IBeaconCoordinator:
         self._entry.async_on_unload(self._async_stop)
         # Replay any that are already there.
         for service_info in bluetooth.async_discovered_service_info(self.hass):
-            if (
-                (apple_adv := service_info.manufacturer_data.get(APPLE_MFR_ID))
-                and len(apple_adv) > 2
-                and apple_adv[0] == IBEACON_FIRST_BYTE
-                and apple_adv[1] == IBEACON_SECOND_BYTE
-            ):
+            if is_ibeacon_service_info(service_info):
                 self._async_update_ibeacon(
                     service_info, bluetooth.BluetoothChange.ADVERTISEMENT
                 )
