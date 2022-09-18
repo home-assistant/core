@@ -83,6 +83,7 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
     ) -> None:
         """Initialize an iBeacon sensor entity."""
         super().__init__(coordinator, name, unique_id, parsed)
+        self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
 
     @callback
