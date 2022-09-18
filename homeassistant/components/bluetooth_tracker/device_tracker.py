@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from typing import Final
@@ -12,17 +12,16 @@ from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH,
+    SourceType,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
+    AsyncSeeCallback,
     Device,
     async_load_config,
 )
@@ -61,7 +60,7 @@ def is_bluetooth_device(device: Device) -> bool:
 def discover_devices(device_id: int) -> list[tuple[str, str]]:
     """Discover Bluetooth devices."""
     try:
-        result = bluetooth.discover_devices(  # type: ignore[attr-defined]
+        result = bluetooth.discover_devices(
             duration=8,
             lookup_names=True,
             flush_cache=True,
@@ -78,7 +77,7 @@ def discover_devices(device_id: int) -> list[tuple[str, str]]:
 
 async def see_device(
     hass: HomeAssistant,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     mac: str,
     device_name: str,
     rssi: tuple[int] | None = None,
@@ -92,7 +91,7 @@ async def see_device(
         mac=f"{BT_PREFIX}{mac}",
         host_name=device_name,
         attributes=attributes,
-        source_type=SOURCE_TYPE_BLUETOOTH,
+        source_type=SourceType.BLUETOOTH,
     )
 
 
@@ -124,13 +123,13 @@ async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]
 def lookup_name(mac: str) -> str | None:
     """Lookup a Bluetooth device name."""
     _LOGGER.debug("Scanning %s", mac)
-    return bluetooth.lookup_name(mac, timeout=5)  # type: ignore[attr-defined,no-any-return]
+    return bluetooth.lookup_name(mac, timeout=5)  # type: ignore[no-any-return]
 
 
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth Scanner."""
@@ -180,7 +179,7 @@ async def async_setup_scanner(
             if tasks:
                 await asyncio.wait(tasks)
 
-        except bluetooth.BluetoothError:  # type: ignore[attr-defined]
+        except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
 
     async def update_bluetooth(now: datetime | None = None) -> None:

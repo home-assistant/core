@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,6 +19,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA, entity
@@ -35,8 +32,6 @@ from .const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-
-# mypy: allow-untyped-calls, allow-untyped-defs
 
 ENTITY_ACTIONS = [
     {
@@ -155,12 +150,12 @@ def async_condition_from_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     if config[CONF_TYPE] not in [CONF_TURNED_ON, CONF_TURNED_OFF]:
-        return await entity.async_attach_trigger(hass, config, action, automation_info)
+        return await entity.async_attach_trigger(hass, config, action, trigger_info)
 
     if config[CONF_TYPE] == CONF_TURNED_ON:
         to_state = "on"
@@ -176,7 +171,7 @@ async def async_attach_trigger(
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
-        hass, state_config, action, automation_info, platform_type="device"
+        hass, state_config, action, trigger_info, platform_type="device"
     )
 
 

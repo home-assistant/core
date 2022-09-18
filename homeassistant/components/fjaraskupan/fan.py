@@ -8,7 +8,6 @@ from fjaraskupan import (
     COMMAND_AFTERCOOKINGTIMERMANUAL,
     COMMAND_AFTERCOOKINGTIMEROFF,
     COMMAND_STOP_FAN,
-    Device,
     State,
 )
 
@@ -31,12 +30,10 @@ ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 PRESET_MODE_NORMAL = "normal"
 PRESET_MODE_AFTER_COOKING_MANUAL = "after_cooking_manual"
 PRESET_MODE_AFTER_COOKING_AUTO = "after_cooking_auto"
-PRESET_MODE_PERIODIC_VENTILATION = "periodic_ventilation"
 PRESET_MODES = [
     PRESET_MODE_NORMAL,
     PRESET_MODE_AFTER_COOKING_AUTO,
     PRESET_MODE_AFTER_COOKING_MANUAL,
-    PRESET_MODE_PERIODIC_VENTILATION,
 ]
 
 PRESET_TO_COMMAND = {
@@ -58,7 +55,7 @@ async def async_setup_entry(
     """Set up sensors dynamically through discovery."""
 
     def _constructor(coordinator: Coordinator):
-        return [Fan(coordinator, coordinator.device, coordinator.device_info)]
+        return [Fan(coordinator, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
@@ -72,14 +69,12 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
     def __init__(
         self,
         coordinator: Coordinator,
-        device: Device,
         device_info: DeviceInfo,
     ) -> None:
         """Init fan entity."""
         super().__init__(coordinator)
-        self._device = device
         self._default_on_speed = 25
-        self._attr_unique_id = device.address
+        self._attr_unique_id = coordinator.device.address
         self._attr_device_info = device_info
         self._percentage = 0
         self._preset_mode = PRESET_MODE_NORMAL
@@ -90,8 +85,8 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
         new_speed = percentage_to_ordered_list_item(
             ORDERED_NAMED_FAN_SPEEDS, percentage
         )
-        await self._device.send_fan_speed(int(new_speed))
-        self.coordinator.async_set_updated_data(self._device.state)
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_fan_speed(int(new_speed))
 
     async def async_turn_on(
         self,
@@ -111,34 +106,32 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
             ORDERED_NAMED_FAN_SPEEDS, percentage
         )
 
-        async with self._device:
+        async with self.coordinator.async_connect_and_update() as device:
             if preset_mode != self._preset_mode:
                 if command := PRESET_TO_COMMAND.get(preset_mode):
-                    await self._device.send_command(command)
+                    await device.send_command(command)
                 else:
                     raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
             if preset_mode == PRESET_MODE_NORMAL:
-                await self._device.send_fan_speed(int(new_speed))
+                await device.send_fan_speed(int(new_speed))
             elif preset_mode == PRESET_MODE_AFTER_COOKING_MANUAL:
-                await self._device.send_after_cooking(int(new_speed))
+                await device.send_after_cooking(int(new_speed))
             elif preset_mode == PRESET_MODE_AFTER_COOKING_AUTO:
-                await self._device.send_after_cooking(0)
-
-        self.coordinator.async_set_updated_data(self._device.state)
+                await device.send_after_cooking(0)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if command := PRESET_TO_COMMAND.get(preset_mode):
-            await self._device.send_command(command)
-            self.coordinator.async_set_updated_data(self._device.state)
+            async with self.coordinator.async_connect_and_update() as device:
+                await device.send_command(command)
         else:
             raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._device.send_command(COMMAND_STOP_FAN)
-        self.coordinator.async_set_updated_data(self._device.state)
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_command(COMMAND_STOP_FAN)
 
     @property
     def speed_count(self) -> int:
@@ -183,8 +176,6 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_MANUAL
             else:
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_AUTO
-        elif data.periodic_venting_on:
-            self._preset_mode = PRESET_MODE_PERIODIC_VENTILATION
         else:
             self._preset_mode = PRESET_MODE_NORMAL
 

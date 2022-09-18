@@ -1,17 +1,17 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.1
+    rev: v2.38.0
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
         args:
           - --safe
           - --quiet
-        files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.1.0
     hooks:
@@ -32,7 +32,7 @@ repos:
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
           - flake8-comprehensions==3.10.0
-          - flake8-noqa==1.2.5
+          - flake8-noqa==1.2.8
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit

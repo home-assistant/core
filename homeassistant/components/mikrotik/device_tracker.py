@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER, SourceType
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
-    DOMAIN as DEVICE_TRACKER,
-    SOURCE_TYPE_ROUTER,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -63,7 +60,7 @@ def update_items(
     coordinator: MikrotikDataUpdateCoordinator,
     async_add_entities: AddEntitiesCallback,
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker],
-):
+) -> None:
     """Update tracked device state from the hub."""
     new_tracked: list[MikrotikDataUpdateCoordinatorTracker] = []
     for mac, device in coordinator.api.devices.items():
@@ -101,9 +98,9 @@ class MikrotikDataUpdateCoordinatorTracker(
         return False
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type of the client."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def hostname(self) -> str:
@@ -116,7 +113,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         return self.device.mac
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.device.ip_address
 

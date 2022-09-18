@@ -18,7 +18,7 @@
             "unable_to_pair": "Koppeln fehltgeschlagen, bitte versuche es erneut",
             "unknown_error": "Das Ger\u00e4t meldete einen unbekannten Fehler. Die Kopplung ist fehlgeschlagen."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Breche das Pairing auf allen Controllern ab oder versuche, das Ger\u00e4t neu zu starten, und fahre dann fort, das Pairing fortzusetzen.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Pairing mit unsicheren Setup-Codes zulassen.",
                     "pairing_code": "Kopplungscode"
                 },
-                "description": "HomeKit Controller kommuniziert mit {name} \u00fcber das lokale Netzwerk mit einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. Gib deinen HomeKit-Kopplungscode (im Format XXX-XX-XXX) ein, um dieses Zubeh\u00f6r zu verwenden. Dieser Code befindet sich in der Regel auf dem Ger\u00e4t selbst oder in der Verpackung.",
+                "description": "HomeKit Controller kommuniziert mit {name} ( {category} ) \u00fcber das lokale Netzwerk unter Verwendung einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. Gib deinen HomeKit-Kopplungscode (im Format XXX-XX-XXX) ein, um dieses Zubeh\u00f6r zu verwenden. Dieser Code befindet sich normalerweise auf dem Ger\u00e4t selbst oder in der Verpackung.",
                 "title": "Mit HomeKit Zubeh\u00f6r koppeln"
             },
             "protocol_error": {

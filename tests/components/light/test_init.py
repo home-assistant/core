@@ -48,7 +48,6 @@ async def test_methods(hass):
             light.ATTR_XY_COLOR: "xy_color_val",
             light.ATTR_PROFILE: "profile_val",
             light.ATTR_COLOR_NAME: "color_name_val",
-            light.ATTR_WHITE_VALUE: "white_val",
         },
         blocking=True,
     )
@@ -65,7 +64,6 @@ async def test_methods(hass):
     assert call.data.get(light.ATTR_XY_COLOR) == "xy_color_val"
     assert call.data.get(light.ATTR_PROFILE) == "profile_val"
     assert call.data.get(light.ATTR_COLOR_NAME) == "color_name_val"
-    assert call.data.get(light.ATTR_WHITE_VALUE) == "white_val"
 
     # Test turn_off
     turn_off_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_OFF)
@@ -125,7 +123,6 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
         light.SUPPORT_COLOR
         | light.LightEntityFeature.EFFECT
         | light.LightEntityFeature.TRANSITION
-        | light.SUPPORT_WHITE_VALUE
     )
     ent3.supported_features = (
         light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
@@ -220,7 +217,6 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
             ATTR_ENTITY_ID: ent2.entity_id,
             light.ATTR_EFFECT: "fun_effect",
             light.ATTR_RGB_COLOR: (255, 255, 255),
-            light.ATTR_WHITE_VALUE: 255,
         },
         blocking=True,
     )
@@ -246,7 +242,6 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
     assert data == {
         light.ATTR_EFFECT: "fun_effect",
         light.ATTR_HS_COLOR: (0, 0),
-        light.ATTR_WHITE_VALUE: 255,
     }
 
     _, data = ent3.last_call("turn_on")
@@ -271,7 +266,6 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
             ATTR_ENTITY_ID: ent2.entity_id,
             light.ATTR_BRIGHTNESS: 0,
             light.ATTR_RGB_COLOR: (255, 255, 255),
-            light.ATTR_WHITE_VALUE: 0,
         },
         blocking=True,
     )
@@ -425,13 +419,6 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
                 ATTR_ENTITY_ID: ent1.entity_id,
                 light.ATTR_RGB_COLOR: "yellowish",
             },
-            blocking=True,
-        )
-    with pytest.raises(vol.MultipleInvalid):
-        await hass.services.async_call(
-            light.DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ent2.entity_id, light.ATTR_WHITE_VALUE: "high"},
             blocking=True,
         )
 
@@ -1104,8 +1091,6 @@ async def test_light_backwards_compatibility_supported_color_modes(
     platform.ENTITIES.append(platform.MockLight("Test_2", light_state))
     platform.ENTITIES.append(platform.MockLight("Test_3", light_state))
     platform.ENTITIES.append(platform.MockLight("Test_4", light_state))
-    platform.ENTITIES.append(platform.MockLight("Test_5", light_state))
-    platform.ENTITIES.append(platform.MockLight("Test_6", light_state))
 
     entity0 = platform.ENTITIES[0]
 
@@ -1120,20 +1105,7 @@ async def test_light_backwards_compatibility_supported_color_modes(
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_WHITE_VALUE
-    )
-
-    entity5 = platform.ENTITIES[5]
-    entity5.supported_features = (
         light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_COLOR_TEMP
-    )
-
-    entity6 = platform.ENTITIES[6]
-    entity6.supported_features = (
-        light.SUPPORT_BRIGHTNESS
-        | light.SUPPORT_COLOR
-        | light.SUPPORT_COLOR_TEMP
-        | light.SUPPORT_WHITE_VALUE
     )
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
@@ -1169,29 +1141,8 @@ async def test_light_backwards_compatibility_supported_color_modes(
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes["supported_color_modes"] == [
-        light.ColorMode.HS,
-        light.ColorMode.RGBW,
-    ]
-    if light_state == STATE_OFF:
-        assert "color_mode" not in state.attributes
-    else:
-        assert state.attributes["color_mode"] == light.ColorMode.UNKNOWN
-
-    state = hass.states.get(entity5.entity_id)
-    assert state.attributes["supported_color_modes"] == [
         light.ColorMode.COLOR_TEMP,
         light.ColorMode.HS,
-    ]
-    if light_state == STATE_OFF:
-        assert "color_mode" not in state.attributes
-    else:
-        assert state.attributes["color_mode"] == light.ColorMode.UNKNOWN
-
-    state = hass.states.get(entity6.entity_id)
-    assert state.attributes["supported_color_modes"] == [
-        light.ColorMode.COLOR_TEMP,
-        light.ColorMode.HS,
-        light.ColorMode.RGBW,
     ]
     if light_state == STATE_OFF:
         assert "color_mode" not in state.attributes
@@ -1211,8 +1162,6 @@ async def test_light_backwards_compatibility_color_mode(
     platform.ENTITIES.append(platform.MockLight("Test_2", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_3", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_4", STATE_ON))
-    platform.ENTITIES.append(platform.MockLight("Test_5", STATE_ON))
-    platform.ENTITIES.append(platform.MockLight("Test_6", STATE_ON))
 
     entity0 = platform.ENTITIES[0]
 
@@ -1230,17 +1179,10 @@ async def test_light_backwards_compatibility_color_mode(
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_WHITE_VALUE
-    )
-    entity4.hs_color = (240, 100)
-    entity4.white_value = 100
-
-    entity5 = platform.ENTITIES[5]
-    entity5.supported_features = (
         light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_COLOR_TEMP
     )
-    entity5.hs_color = (240, 100)
-    entity5.color_temp = 100
+    entity4.hs_color = (240, 100)
+    entity4.color_temp = 100
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1266,13 +1208,6 @@ async def test_light_backwards_compatibility_color_mode(
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes["supported_color_modes"] == [
-        light.ColorMode.HS,
-        light.ColorMode.RGBW,
-    ]
-    assert state.attributes["color_mode"] == light.ColorMode.RGBW
-
-    state = hass.states.get(entity5.entity_id)
-    assert state.attributes["supported_color_modes"] == [
         light.ColorMode.COLOR_TEMP,
         light.ColorMode.HS,
     ]
@@ -1281,38 +1216,26 @@ async def test_light_backwards_compatibility_color_mode(
 
 
 async def test_light_service_call_rgbw(hass, enable_custom_integrations):
-    """Test backwards compatibility for rgbw functionality in service calls."""
+    """Test rgbw functionality in service calls."""
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
 
-    platform.ENTITIES.append(platform.MockLight("Test_legacy_white_value", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_rgbw", STATE_ON))
 
     entity0 = platform.ENTITIES[0]
-    entity0.supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_WHITE_VALUE
-    )
-
-    entity1 = platform.ENTITIES[1]
-    entity1.supported_color_modes = {light.ColorMode.RGBW}
+    entity0.supported_color_modes = {light.ColorMode.RGBW}
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert state.attributes["supported_color_modes"] == [
-        light.ColorMode.HS,
-        light.ColorMode.RGBW,
-    ]
-
-    state = hass.states.get(entity1.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.RGBW]
 
     await hass.services.async_call(
         "light",
         "turn_on",
         {
-            "entity_id": [entity0.entity_id, entity1.entity_id],
+            "entity_id": [entity0.entity_id, entity0.entity_id],
             "brightness_pct": 100,
             "rgbw_color": (10, 20, 30, 40),
         },
@@ -1320,8 +1243,6 @@ async def test_light_service_call_rgbw(hass, enable_custom_integrations):
     )
 
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "hs_color": (210.0, 66.667), "white_value": 40}
-    _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbw_color": (10, 20, 30, 40)}
 
 
@@ -1330,47 +1251,21 @@ async def test_light_state_rgbw(hass, enable_custom_integrations):
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
 
-    platform.ENTITIES.append(platform.MockLight("Test_legacy_white_value", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_rgbw", STATE_ON))
 
     entity0 = platform.ENTITIES[0]
-    legacy_supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_WHITE_VALUE
-    )
-    entity0.supported_features = legacy_supported_features
-    entity0.hs_color = (210.0, 66.667)
+    entity0.supported_color_modes = {light.ColorMode.RGBW}
+    entity0.color_mode = light.ColorMode.RGBW
+    entity0.hs_color = "Invalid"  # Should be ignored
     entity0.rgb_color = "Invalid"  # Should be ignored
+    entity0.rgbw_color = (1, 2, 3, 4)
     entity0.rgbww_color = "Invalid"  # Should be ignored
-    entity0.white_value = 40
     entity0.xy_color = "Invalid"  # Should be ignored
-
-    entity1 = platform.ENTITIES[1]
-    entity1.supported_color_modes = {light.ColorMode.RGBW}
-    entity1.color_mode = light.ColorMode.RGBW
-    entity1.hs_color = "Invalid"  # Should be ignored
-    entity1.rgb_color = "Invalid"  # Should be ignored
-    entity1.rgbw_color = (1, 2, 3, 4)
-    entity1.rgbww_color = "Invalid"  # Should be ignored
-    entity1.white_value = "Invalid"  # Should be ignored
-    entity1.xy_color = "Invalid"  # Should be ignored
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert state.attributes == {
-        "color_mode": light.ColorMode.RGBW,
-        "friendly_name": "Test_legacy_white_value",
-        "supported_color_modes": [light.ColorMode.HS, light.ColorMode.RGBW],
-        "supported_features": legacy_supported_features,
-        "hs_color": (210.0, 66.667),
-        "rgb_color": (84, 169, 255),
-        "rgbw_color": (84, 169, 255, 40),
-        "white_value": 40,
-        "xy_color": (0.173, 0.207),
-    }
-
-    state = hass.states.get(entity1.entity_id)
     assert state.attributes == {
         "color_mode": light.ColorMode.RGBW,
         "friendly_name": "Test_rgbw",
@@ -1397,7 +1292,6 @@ async def test_light_state_rgbww(hass, enable_custom_integrations):
     entity0.rgb_color = "Invalid"  # Should be ignored
     entity0.rgbw_color = "Invalid"  # Should be ignored
     entity0.rgbww_color = (1, 2, 3, 4, 5)
-    entity0.white_value = "Invalid"  # Should be ignored
     entity0.xy_color = "Invalid"  # Should be ignored
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
@@ -2264,7 +2158,6 @@ async def test_services_filter_parameters(
             light.ATTR_EFFECT: "fun_effect",
             light.ATTR_FLASH: "short",
             light.ATTR_TRANSITION: 10,
-            light.ATTR_WHITE_VALUE: 0,
         },
         blocking=True,
     )
@@ -2353,7 +2246,6 @@ async def test_services_filter_parameters(
             light.ATTR_EFFECT: "fun_effect",
             light.ATTR_FLASH: "short",
             light.ATTR_TRANSITION: 10,
-            light.ATTR_WHITE_VALUE: 0,
         },
         blocking=True,
     )

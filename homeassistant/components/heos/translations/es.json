@@ -11,7 +11,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Introduce el nombre de host o direcci\u00f3n IP de un dispositivo Heos (preferiblemente conectado por cable a la red).",
+                "description": "Por favor, introduce el nombre de host o la direcci\u00f3n IP de un dispositivo Heos (preferiblemente uno conectado por cable a la red).",
                 "title": "Conectar a Heos"
             }
         }

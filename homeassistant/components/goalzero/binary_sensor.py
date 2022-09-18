@@ -26,7 +26,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="app_online",
-        name="App Online",
+        name="App online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -37,7 +37,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="inputDetected",
-        name="Input Detected",
+        name="Input detected",
         device_class=BinarySensorDeviceClass.POWER,
     ),
 )

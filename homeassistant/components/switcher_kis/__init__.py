@@ -106,7 +106,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_start_bridge(hass, on_device_data_callback)
 
-    @callback
     async def stop_bridge(event: Event) -> None:
         await async_stop_bridge(hass)
 

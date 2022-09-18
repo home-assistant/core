@@ -53,8 +53,8 @@ def async_generate_event_video_url(event: Event) -> str:
     url = url_format.format(
         nvr_id=event.api.bootstrap.nvr.id,
         camera_id=event.camera_id,
-        start=event.start.isoformat(),
-        end=event.end.isoformat(),
+        start=event.start.replace(microsecond=0).isoformat(),
+        end=event.end.replace(microsecond=0).isoformat(),
     )
 
     return url

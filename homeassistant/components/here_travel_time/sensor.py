@@ -23,6 +23,9 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
     TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant
@@ -140,48 +143,10 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             native_unit_of_measurement=TIME_MINUTES,
         ),
         SensorEntityDescription(
-            name="Distance",
-            icon=ICONS.get(travel_mode, ICON_CAR),
-            key=ATTR_DISTANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
             name="Route",
             icon="mdi:directions",
             key=ATTR_ROUTE,
         ),
-    )
-
-
-def create_origin_sensor(
-    config_entry: ConfigEntry, hass: HomeAssistant
-) -> OriginSensor:
-    """Create a origin sensor."""
-    return OriginSensor(
-        config_entry.entry_id,
-        config_entry.data[CONF_NAME],
-        SensorEntityDescription(
-            name="Origin",
-            icon="mdi:store-marker",
-            key=ATTR_ORIGIN_NAME,
-        ),
-        hass.data[DOMAIN][config_entry.entry_id],
-    )
-
-
-def create_destination_sensor(
-    config_entry: ConfigEntry, hass: HomeAssistant
-) -> DestinationSensor:
-    """Create a destination sensor."""
-    return DestinationSensor(
-        config_entry.entry_id,
-        config_entry.data[CONF_NAME],
-        SensorEntityDescription(
-            name="Destination",
-            icon="mdi:store-marker",
-            key=ATTR_DESTINATION_NAME,
-        ),
-        hass.data[DOMAIN][config_entry.entry_id],
     )
 
 
@@ -214,18 +179,23 @@ async def async_setup_entry(
 ) -> None:
     """Add HERE travel time entities from a config_entry."""
 
+    entry_id = config_entry.entry_id
+    name = config_entry.data[CONF_NAME]
+    coordinator = hass.data[DOMAIN][entry_id]
+
     sensors: list[HERETravelTimeSensor] = []
     for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE]):
         sensors.append(
             HERETravelTimeSensor(
-                config_entry.entry_id,
-                config_entry.data[CONF_NAME],
+                entry_id,
+                name,
                 sensor_description,
-                hass.data[DOMAIN][config_entry.entry_id],
+                coordinator,
             )
         )
-    sensors.append(create_origin_sensor(config_entry, hass))
-    sensors.append(create_destination_sensor(config_entry, hass))
+    sensors.append(OriginSensor(entry_id, name, coordinator))
+    sensors.append(DestinationSensor(entry_id, name, coordinator))
+    sensors.append(DistanceSensor(entry_id, name, coordinator))
     async_add_entities(sensors)
 
 
@@ -278,6 +248,20 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
 class OriginSensor(HERETravelTimeSensor):
     """Sensor holding information about the route origin."""
 
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: HereTravelTimeDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        sensor_description = SensorEntityDescription(
+            name="Origin",
+            icon="mdi:store-marker",
+            key=ATTR_ORIGIN_NAME,
+        )
+        super().__init__(unique_id_prefix, name, sensor_description, coordinator)
+
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
@@ -292,6 +276,20 @@ class OriginSensor(HERETravelTimeSensor):
 class DestinationSensor(HERETravelTimeSensor):
     """Sensor holding information about the route destination."""
 
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: HereTravelTimeDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        sensor_description = SensorEntityDescription(
+            name="Destination",
+            icon="mdi:store-marker",
+            key=ATTR_DESTINATION_NAME,
+        )
+        super().__init__(unique_id_prefix, name, sensor_description, coordinator)
+
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
@@ -301,3 +299,29 @@ class DestinationSensor(HERETravelTimeSensor):
                 ATTR_LONGITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[1],
             }
         return None
+
+
+class DistanceSensor(HERETravelTimeSensor):
+    """Sensor holding information about the distance."""
+
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: HereTravelTimeDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        sensor_description = SensorEntityDescription(
+            name="Distance",
+            icon=ICONS.get(coordinator.config.travel_mode, ICON_CAR),
+            key=ATTR_DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
+        super().__init__(unique_id_prefix, name, sensor_description, coordinator)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor."""
+        if self.coordinator.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
+            return LENGTH_MILES
+        return LENGTH_KILOMETERS

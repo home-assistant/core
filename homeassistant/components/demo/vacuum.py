@@ -104,25 +104,17 @@ async def async_setup_platform(
 class DemoVacuum(VacuumEntity):
     """Representation of a demo vacuum."""
 
+    _attr_should_poll = False
+
     def __init__(self, name: str, supported_features: int) -> None:
         """Initialize the vacuum."""
-        self._name = name
+        self._attr_name = name
         self._supported_features = supported_features
         self._state = False
         self._status = "Charging"
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area: float = 0
         self._battery_level = 100
-
-    @property
-    def name(self) -> str:
-        """Return the name of the vacuum."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo vacuum."""
-        return False
 
     @property
     def is_on(self) -> bool:
@@ -240,7 +232,12 @@ class DemoVacuum(VacuumEntity):
         self._battery_level += 5
         self.schedule_update_ha_state()
 
-    def send_command(self, command, params=None, **kwargs: Any) -> None:
+    def send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send a command to the vacuum."""
         if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
             return
@@ -253,24 +250,16 @@ class DemoVacuum(VacuumEntity):
 class StateDemoVacuum(StateVacuumEntity):
     """Representation of a demo vacuum supporting states."""
 
+    _attr_should_poll = False
+
     def __init__(self, name: str) -> None:
         """Initialize the vacuum."""
-        self._name = name
+        self._attr_name = name
         self._supported_features = SUPPORT_STATE_SERVICES
         self._state = STATE_DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area: float = 0
         self._battery_level = 100
-
-    @property
-    def name(self) -> str:
-        """Return the name of the vacuum."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo vacuum."""
-        return False
 
     @property
     def supported_features(self) -> int:

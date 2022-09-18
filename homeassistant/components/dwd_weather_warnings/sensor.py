@@ -164,11 +164,11 @@ class DwdWeatherWarningsSensor(SensorEntity):
         return data
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._api.api.data_valid
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the DWD-Weather-Warnings API."""
         _LOGGER.debug(
             "Update requested for %s (%s) by %s",

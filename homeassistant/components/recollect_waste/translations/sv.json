@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Ogiltigt plats- eller tj\u00e4nst-ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Plats-ID",
+                    "service_id": "Tj\u00e4nst-ID"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Anv\u00e4nd v\u00e4nliga namn f\u00f6r upph\u00e4mtningstyper (n\u00e4r det \u00e4r m\u00f6jligt)"
+                },
+                "title": "Konfigurera Recollect Waste"
+            }
+        }
+    }
+}

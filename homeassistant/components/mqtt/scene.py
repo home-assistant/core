@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
 
 import voluptuous as vol
 
@@ -125,7 +126,7 @@ class MqttScene(
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
-    async def async_activate(self, **kwargs):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene.
 
         This method is a coroutine.

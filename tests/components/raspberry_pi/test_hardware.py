@@ -48,6 +48,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
                     "model": "1",
                     "revision": None,
                 },
+                "dongle": None,
                 "name": "Raspberry Pi",
                 "url": None,
             }

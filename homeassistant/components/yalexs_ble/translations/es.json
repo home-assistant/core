@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
+            "no_devices_found": "No se encontraron dispositivos en la red",
+            "no_unconfigured_devices": "No se encontraron dispositivos no configurados."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_key_format": "La clave sin conexi\u00f3n debe ser una cadena hexadecimal de 32 bytes.",
+            "invalid_key_index": "La ranura de la clave sin conexi\u00f3n debe ser un n\u00famero entero entre 0 y 255.",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "\u00bfQuieres configurar {name} a trav\u00e9s de Bluetooth con la direcci\u00f3n {address}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Direcci\u00f3n Bluetooth",
+                    "key": "Clave sin conexi\u00f3n (cadena hexadecimal de 32 bytes)",
+                    "slot": "Ranura de clave sin conexi\u00f3n (entero entre 0 y 255)"
+                },
+                "description": "Revisa la documentaci\u00f3n para saber c\u00f3mo encontrar la clave sin conexi\u00f3n."
+            }
+        }
+    }
+}
