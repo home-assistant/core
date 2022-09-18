@@ -13,8 +13,8 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
     CONF_IGNORE_ADDRESSES,
@@ -23,7 +23,6 @@ from .const import (
     DEFAULT_MIN_RSSI,
     DOMAIN,
     MAX_IDS,
-    PLATFORMS,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
@@ -46,7 +45,7 @@ class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, registry: EntityRegistry
+        self, hass: HomeAssistant, entry: ConfigEntry, registry: DeviceRegistry
     ) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
@@ -61,7 +60,7 @@ class IBeaconCoordinator:
         self._addresses_by_group_id: dict[str, set[str]] = {}
 
         self._unavailable_trackers: dict[str, CALLBACK_TYPE] = {}
-        self._ent_reg = registry
+        self._dev_reg = registry
 
         self._ignore_addresses: set[str] = set(
             entry.data.get(CONF_IGNORE_ADDRESSES, [])
@@ -103,11 +102,8 @@ class IBeaconCoordinator:
     def _async_purge_untrackable_entities(self, unique_ids: set[str]) -> None:
         """Remove entities that are no longer trackable."""
         for unique_id in unique_ids:
-            for entity_domain in PLATFORMS:
-                if entry := self._ent_reg.async_get_entity_id(
-                    entity_domain, DOMAIN, unique_id
-                ):
-                    self._ent_reg.async_remove(entry)
+            if device := self._dev_reg.async_get_device({(DOMAIN, unique_id)}):
+                self._dev_reg.async_remove_device(device.id)
             self._unique_ids.discard(unique_id)
 
     @callback
@@ -213,10 +209,14 @@ class IBeaconCoordinator:
     @callback
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the entity registry."""
-        for entry in self._ent_reg.entities.values():
-            if entry.domain != PRIMARY_ENTITY_DOMAIN or entry.platform != DOMAIN:
+        for device in self._dev_reg.devices.values():
+            unique_id = None
+            for identifier in device.identifiers:
+                if identifier[0] == DOMAIN:
+                    unique_id = identifier[1]
+                    break
+            if not unique_id:
                 continue
-            unique_id = entry.unique_id
             if unique_id.count("_") != 3:
                 continue
             uuid, major, minor, address = unique_id.split("_")
