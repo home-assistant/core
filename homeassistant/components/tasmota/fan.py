@@ -121,7 +121,7 @@ class TasmotaFan(
         await self.async_set_percentage(
             percentage
             or ordered_list_item_to_percentage(
-                ORDERED_NAMED_FAN_SPEEDS, tasmota_const.FAN_SPEED_MEDIUM
+                ORDERED_NAMED_FAN_SPEEDS, tasmota_const.FAN_SPEED_LOW
             )
         )
 
