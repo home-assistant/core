@@ -407,8 +407,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
                         if single_state not in _SEEN_INVALID_STATES:
                             _SEEN_INVALID_STATES.add(single_state)
                             _LOGGER.warning(
-                                "State `%s` is not a valid media player state!",
+                                "State `%s` is not a valid media player state for %s!",
                                 single_state,
+                                self.name,
                             )
 
             elif any(state for state in states if state not in off_values):
