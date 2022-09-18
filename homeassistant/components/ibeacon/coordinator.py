@@ -1,31 +1,28 @@
 """Tracking for iBeacon devices."""
 from __future__ import annotations
 
-from ibeacon_ble import (
-    APPLE_MFR_ID,
-    IBEACON_FIRST_BYTE,
-    IBEACON_SECOND_BYTE,
-    calculate_distance_meters,
-    parse,
-)
+from ibeacon_ble import APPLE_MFR_ID, IBEACON_FIRST_BYTE, IBEACON_SECOND_BYTE, parse
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
     CONF_IGNORE_ADDRESSES,
+    CONF_IGNORE_GROUP_IDS,
     CONF_MIN_RSSI,
     DEFAULT_MIN_RSSI,
     DOMAIN,
-    MAX_UNIQUE_IDS_PER_ADDRESS,
+    MAX_IDS,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
 )
+
+ENTITY_DOMAIN = "device_tracker"
 
 
 def signal_unavailable(unique_id: str) -> str:
@@ -41,18 +38,29 @@ def signal_seen(unique_id: str) -> str:
 class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, registry: EntityRegistry
+    ) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
         self._entry = entry
         self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
-        self._unique_id_power: dict[str, dict[str, int]] = {}
-        self._unique_id_source: dict[str, dict[str, str]] = {}
-        self._unique_id_distance: dict[str, dict[str, float]] = {}
-        self._unique_id_unavailable: dict[str, dict[str, CALLBACK_TYPE]] = {}
-        self._address_to_unique_id: dict[str, set[str]] = {}
+
+        self._unique_ids: set[str] = set()
+
+        self._group_ids_by_address: dict[str, set[str]] = {}
+        self._unique_ids_by_address: dict[str, set[str]] = {}
+        self._unique_ids_by_group_id: dict[str, set[str]] = {}
+        self._addresses_by_group_id: dict[str, set[str]] = {}
+
+        self._unavailable_trackers: dict[str, CALLBACK_TYPE] = {}
+        self._ent_reg = registry
+
         self._ignore_addresses: set[str] = set(
             entry.data.get(CONF_IGNORE_ADDRESSES, [])
+        )
+        self._ignore_group_ids: set[str] = set(
+            entry.data.get(CONF_IGNORE_GROUP_IDS, [])
         )
 
     @callback
@@ -61,47 +69,63 @@ class IBeaconCoordinator:
     ) -> None:
         """Handle unavailable devices."""
         address = service_info.address
-        unique_ids = self._address_to_unique_id.pop(service_info.address)
-        for unique_id in unique_ids:
-            if self._async_remove_address(unique_id, address):
-                async_dispatcher_send(self.hass, signal_unavailable(unique_id))
+        self._async_cancel_unavailable_tracker(address)
+        for unique_id in self._unique_ids_by_address[address]:
+            async_dispatcher_send(self.hass, signal_unavailable(unique_id))
 
     @callback
-    def _async_remove_address(self, unique_id: str, address: str) -> bool:
-        """Remove an address that has gone unavailable.
-
-        Returns True if the unique_id is now unavailable.
-        Returns False it the unique_id is still available.
-        """
-        address_callbacks = self._unique_id_unavailable[unique_id]
-        # Cancel the unavailable tracker
-        address_callbacks.pop(address)()
-        # Remove the power
-        self._unique_id_power[unique_id].pop(address)
-        self._unique_id_source[unique_id].pop(address)
-        self._unique_id_distance[unique_id].pop(address)
-
-        # If its the last beacon broadcasting that unique_id, its now unavailable
-        return not bool(address_callbacks)
+    def _async_cancel_unavailable_tracker(self, address: str) -> None:
+        """Cancel unavailable tracking for an address."""
+        self._unavailable_trackers.pop(address)()
 
     @callback
     def _async_ignore_address(self, address: str) -> None:
         """Ignore an address that does not follow the spec and any entities created by it."""
         self._ignore_addresses.add(address)
-        unique_ids = self._address_to_unique_id.pop(address)
+        self._async_cancel_unavailable_tracker(address)
         self.hass.config_entries.async_update_entry(
             self._entry,
             data=self._entry.data
             | {CONF_IGNORE_ADDRESSES: sorted(self._ignore_addresses)},
         )
-        ent_reg = async_get(self.hass)
-        for unique_id in unique_ids:
-            if self._async_remove_address(unique_id, address) and (
-                entry := ent_reg.async_get_entity_id(
-                    "device_tracker", DOMAIN, unique_id
-                )
+        for unique_id in self._unique_ids_by_address[address]:
+            if entry := self._ent_reg.async_get_entity_id(
+                ENTITY_DOMAIN, DOMAIN, unique_id
             ):
-                ent_reg.async_remove(entry)
+                self._ent_reg.async_remove(entry)
+            self._unique_ids.discard(unique_id)
+        self._group_ids_by_address.pop(address)
+        self._unique_ids_by_address.pop(address)
+
+    @callback
+    def _async_ignore_group(self, group_id: str) -> None:
+        """Ignore a group that is using rotating mac addresses since its untrackable."""
+        self._ignore_group_ids.add(group_id)
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            data=self._entry.data
+            | {CONF_IGNORE_GROUP_IDS: sorted(self._ignore_group_ids)},
+        )
+        for unique_id in self._unique_ids_by_group_id[group_id]:
+            if entry := self._ent_reg.async_get_entity_id(
+                ENTITY_DOMAIN, DOMAIN, unique_id
+            ):
+                self._ent_reg.async_remove(entry)
+            self._unique_ids.discard(unique_id)
+        self._unique_ids_by_group_id.pop(group_id)
+        self._addresses_by_group_id.pop(group_id)
+
+    def _async_track_ibeacon(self, address: str, group_id: str, unique_id: str) -> bool:
+        """Track an iBeacon."""
+        new = unique_id not in self._unique_ids
+        self._unique_ids.add(unique_id)
+
+        self._unique_ids_by_address.setdefault(address, set()).add(unique_id)
+        self._group_ids_by_address.setdefault(address, set()).add(group_id)
+
+        self._unique_ids_by_group_id.setdefault(group_id, set()).add(unique_id)
+        self._addresses_by_group_id.setdefault(group_id, set()).add(address)
+        return new
 
     @callback
     def _async_update_ibeacon(
@@ -116,43 +140,35 @@ class IBeaconCoordinator:
             return
         if not (parsed := parse(service_info)):
             return
+        uuid_str = str(parsed.uuid)
+        group_id = f"{uuid_str}_{parsed.major}_{parsed.minor}"
+        if group_id in self._ignore_group_ids:
+            return
         address = service_info.address
-        unique_id = f"{parsed.uuid}_{parsed.major}_{parsed.minor}"
-        new = False
-        if unique_id not in self._unique_id_unavailable:
-            self._unique_id_unavailable[unique_id] = {}
-            self._unique_id_power[unique_id] = {}
-            self._unique_id_source[unique_id] = {}
-            self._unique_id_distance[unique_id] = {}
-            new = True
-        unavailable_trackers = self._unique_id_unavailable[unique_id]
-        power_by_address = self._unique_id_power[unique_id]
-        source_by_address = self._unique_id_source[unique_id]
-        distance_by_address = self._unique_id_distance[unique_id]
-        if address not in unavailable_trackers:
-            self._address_to_unique_id.setdefault(address, set()).add(unique_id)
-            unavailable_trackers[address] = bluetooth.async_track_unavailable(
+        unique_id = f"{group_id}_{address}"
+        new = self._async_track_ibeacon(address, group_id, unique_id)
+        if address not in self._unavailable_trackers:
+            self._unavailable_trackers[address] = bluetooth.async_track_unavailable(
                 self.hass, self._async_handle_unavailable, address
             )
 
-        power_by_address[address] = parsed.power
-        source_by_address[address] = parsed.source
-        distance_by_address[address] = round(
-            calculate_distance_meters(parsed.power, parsed.rssi), 3
-        )
-
         # Some manufacturers violate the spec and flood us with random
-        # data. Once we see more than MAX_UNIQUE_IDS_PER_ADDRESS unique ids
-        # from the same address we remove all the trackers for that address
-        # and add the address to the ignore list since we know its garbage data.
-        if len(self._address_to_unique_id[address]) >= MAX_UNIQUE_IDS_PER_ADDRESS:
+        # data (sometimes its temperature data).
+        #
+        # Once we see more than MAX_IDS from the same
+        # address we remove all the trackers for that address and add the
+        # address to the ignore list since we know its garbage data.
+        if len(self._group_ids_by_address[address]) >= MAX_IDS:
             self._async_ignore_address(address)
             return
 
-        rssi_by_address: dict[str, int] = {}
-        for address in unavailable_trackers:
-            device = bluetooth.async_ble_device_from_address(self.hass, address)
-            rssi_by_address[address] = device.rssi if device else None
+        # Once we see more than MAX_IDS from the same
+        # group_id we remove all the trackers for that group_id
+        # as it means the addresses are being rotated and they
+        # cannot be tracked
+        if len(self._addresses_by_group_id[group_id]) >= MAX_IDS:
+            self._async_ignore_group(group_id)
+            return
 
         if new:
             async_dispatcher_send(
@@ -161,37 +177,40 @@ class IBeaconCoordinator:
                 unique_id,
                 service_info.name,
                 parsed,
-                rssi_by_address,
-                power_by_address,
-                source_by_address,
-                distance_by_address,
             )
             return
         async_dispatcher_send(
             self.hass,
             signal_seen(unique_id),
             parsed,
-            rssi_by_address,
-            power_by_address,
-            source_by_address,
-            distance_by_address,
         )
 
     @callback
     def _async_stop(self) -> None:
         """Stop the Coordinator."""
-        for address_cancels in self._unique_id_unavailable.values():
-            for cancel in address_cancels.values():
-                cancel()
-        self._unique_id_unavailable.clear()
+        for cancel in self._unavailable_trackers.values():
+            cancel()
+        self._unavailable_trackers.clear()
 
     async def _entry_updated(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Handle options update."""
         self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
 
     @callback
+    def _async_restore_from_registry(self) -> None:
+        """Restore the state of the Coordinator from the entity registry."""
+        for entry in self._ent_reg.entities.values():
+            if entry.domain != ENTITY_DOMAIN or entry.platform != DOMAIN:
+                continue
+            unique_id = entry.unique_id
+            uuid, major, minor, address = unique_id.split("_")
+            group_id = f"{uuid}_{major}_{minor}"
+            self._async_track_ibeacon(address, group_id, unique_id)
+
+    @callback
     def async_start(self) -> None:
         """Start the Coordinator."""
+        self._async_restore_from_registry()
         self._entry.async_on_unload(
             self._entry.add_update_listener(self._entry_updated)
         )
