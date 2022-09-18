@@ -66,8 +66,16 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(data_service.serial_no)
         self._abort_if_unique_id_configured()
 
+        title = "APC UPS"
+        if data_service.name is not None:
+            title = data_service.name
+        elif data_service.model is not None:
+            title = data_service.model
+        elif data_service.serial_no is not None:
+            title = data_service.serial_no
+
         return self.async_create_entry(
-            title="APCUPSd",
+            title=title,
             data=user_input,
         )
 

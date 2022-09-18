@@ -1,6 +1,6 @@
 {
   "domain": "apcupsd",
-  "name": "apcupsd",
+  "name": "APC UPS Daemon",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
   "requirements": ["apcaccess==0.0.13"],

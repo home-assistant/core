@@ -55,7 +55,6 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
         ("APC", "001,012,0319"),
         ("DATE", "1970-01-01 00:00:00 0000"),
         ("RELEASE", "3.8.5"),
-        ("UPSNAME", "UPS_IDEN"),
         ("CABLE", "APC Cable 940-0128A"),
         ("UPSMODE", "Stand Alone"),
         ("STARTTIME", "1970-01-01 00:00:00 0000"),

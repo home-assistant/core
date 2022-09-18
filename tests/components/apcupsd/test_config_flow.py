@@ -104,7 +104,6 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"] == another_host
-        assert result["title"] == "APCUPSd"
 
 
 async def test_flow_works(hass: HomeAssistant) -> None:
@@ -124,33 +123,56 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "APCUPSd"
+        assert result["title"] == MOCK_STATUS["MODEL"]
         assert result["data"] == CONF_DATA
 
         mock_setup.assert_called_once()
 
 
-async def test_flow_works_minimal_status(hass: HomeAssistant) -> None:
-    """Test successful creation of config entries via user configuration when APCUPSd reports limited number of statuses."""
-    with patch("apcaccess.status.parse", return_value=MOCK_MINIMAL_STATUS), patch(
+async def test_flow_minimal_status(hass: HomeAssistant) -> None:
+    """Test successful creation of config entries via user configuration when minimal status is reported."""
+    with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get", return_value=b""
     ), _patch_setup() as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
+        # We test different combinations of minimal statuses, where the title of the
+        # integration will vary.
+        extras = (
+            {"UPSNAME": "Friendly Name"},
+            {"MODEL": "MODEL X"},
+            {"SERIALNO": "ZZZZ"},
+            {},
         )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        for i, extra in enumerate(extras):
+            status = MOCK_MINIMAL_STATUS | extra
+            mock_parse.return_value = status
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_DATA
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "APCUPSd"
-        assert result["data"] == CONF_DATA
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
+            )
+            await hass.async_block_till_done()
+            assert result["type"] == FlowResultType.CREATE_ENTRY
 
-        mock_setup.assert_called_once()
+            assert result["data"] == CONF_DATA
+
+            assert mock_setup.call_count == i + 1
+
+            # Clear the config entry for next iteration.
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                await hass.config_entries.async_remove(entry.entry_id)
+            if "UPSNAME" in status:
+                assert result["title"] == status["UPSNAME"]
+            elif "MODEL" in status:
+                assert result["title"] == status["MODEL"]
+            elif "SERIALNO" in status:
+                assert result["title"] == status["SERIALNO"]
+            else:
+                assert result["title"] == "APC UPS"
+
+            # Clear the config entry for next iteration.
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                await hass.config_entries.async_remove(entry.entry_id)
+
+            assert mock_setup.call_count == i + 1
 
 
 async def test_flow_import(hass: HomeAssistant) -> None:
@@ -169,7 +191,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "APCUPSd"
+        assert result["title"] == MOCK_STATUS["MODEL"]
         assert result["data"] == CONF_DATA | {CONF_RESOURCES: resources}
 
         mock_setup.assert_called_once()
