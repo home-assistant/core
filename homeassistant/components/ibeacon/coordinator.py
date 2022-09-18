@@ -203,6 +203,8 @@ class IBeaconCoordinator:
             if entry.domain != ENTITY_DOMAIN or entry.platform != DOMAIN:
                 continue
             unique_id = entry.unique_id
+            if unique_id.count("_") != 3:
+                continue
             uuid, major, minor, address = unique_id.split("_")
             group_id = f"{uuid}_{major}_{minor}"
             self._async_track_ibeacon(address, group_id, unique_id)
