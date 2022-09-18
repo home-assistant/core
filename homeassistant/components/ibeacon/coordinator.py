@@ -28,8 +28,6 @@ from .const import (
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
 )
 
-PRIMARY_ENTITY_DOMAIN = "device_tracker"
-
 
 def signal_unavailable(unique_id: str) -> str:
     """Signal for the unique_id going unavailable."""
