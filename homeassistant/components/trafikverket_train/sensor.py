@@ -43,34 +43,34 @@ class TrafikverketSensorEntityDescription(
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time",
-        name="Departure Time",
+        name="Departure time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data["departure_time"],
     ),
     TrafikverketSensorEntityDescription(
         key="departure_state",
-        name="Departure State",
+        name="Departure state",
         icon="mdi:clock",
         value_fn=lambda data: data["departure_state"],
         device_class="trafikverket_train__depart_state",
     ),
     TrafikverketSensorEntityDescription(
         key="cancelled",
-        name="Departure Cancelled",
+        name="Departure cancelled",
         icon="mdi:alert",
         value_fn=lambda data: data["cancelled"],
     ),
     TrafikverketSensorEntityDescription(
         key="delayed_time",
-        name="Delayed Time",
+        name="Delayed time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data["delayed_time"],
     ),
     TrafikverketSensorEntityDescription(
         key="planned_time",
-        name="Planned Time",
+        name="Planned time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data["planned_time"],
@@ -78,7 +78,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="estimated_time",
-        name="Estimated Time",
+        name="Estimated time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data["estimated_time"],
@@ -86,7 +86,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="actual_time",
-        name="Actual Time",
+        name="Actual time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data["actual_time"],
@@ -94,13 +94,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="other_info",
-        name="Other Information",
+        name="Other information",
         icon="mdi:information-variant",
         value_fn=lambda data: data["other_info"],
     ),
     TrafikverketSensorEntityDescription(
         key="deviation",
-        name="Deviation Information",
+        name="Deviation information",
         icon="mdi:alert",
         value_fn=lambda data: data["deviation"],
     ),
