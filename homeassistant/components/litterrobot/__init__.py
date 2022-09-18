@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
-    await hub.login(load_robots=True)
+    await hub.login(load_robots=True, subscribe_for_updates=True)
 
     if platforms := get_platforms_for_robots(hub.account.robots):
         await hass.config_entries.async_forward_entry_setups(entry, platforms)

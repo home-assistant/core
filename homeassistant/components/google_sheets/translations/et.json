@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "create_spreadsheet_failure": "Viga arvutustabeli loomisel, vt vigade logi \u00fcksikasjadeks",
+            "open_spreadsheet_failure": "Viga arvutustabelite avamisel, vt vigade logi \u00fcksikasjade kohta"
+        },
+        "create_entry": {
+            "default": "Autentimine \u00f5nnestus ja arvutustabel loodud aadressil: {url}"
+        },
+        "step": {
+            "auth": {
+                "title": "Google'i konto linkimine"
+            }
+        }
+    }
+}

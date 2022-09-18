@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, Union, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -27,7 +27,15 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -41,8 +49,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import CONF_HIDE_MEMBERS
-
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "group"
 GROUP_ORDER = "group_order"
@@ -79,10 +85,19 @@ _LOGGER = logging.getLogger(__name__)
 current_domain: ContextVar[str] = ContextVar("current_domain")
 
 
-def _conf_preprocess(value):
+class GroupProtocol(Protocol):
+    """Define the format of group platforms."""
+
+    def async_describe_on_off_states(
+        self, hass: HomeAssistant, registry: GroupIntegrationRegistry
+    ) -> None:
+        """Describe group on off states."""
+
+
+def _conf_preprocess(value: Any) -> dict[str, Any]:
     """Preprocess alternative configuration formats."""
     if not isinstance(value, dict):
-        value = {CONF_ENTITIES: value}
+        return {CONF_ENTITIES: value}
 
     return value
 
@@ -104,9 +119,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _async_get_component(hass: HomeAssistant) -> EntityComponent:
+def _async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:
     if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+        component = hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
     return component
 
 
@@ -135,14 +150,15 @@ class GroupIntegrationRegistry:
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if the group state is in its ON-state."""
     if REG_KEY not in hass.data:
         # Integration not setup yet, it cannot be on
         return False
 
     if (state := hass.states.get(entity_id)) is not None:
-        return state.state in hass.data[REG_KEY].on_off_mapping
+        registry: GroupIntegrationRegistry = hass.data[REG_KEY]
+        return state.state in registry.on_off_mapping
 
     return False
 
@@ -272,11 +288,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+        hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
 
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[Group] = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
@@ -286,11 +302,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        auto = [
-            cast(Group, e)
-            for e in component.entities
-            if not cast(Group, e).user_defined
-        ]
+        auto = [e for e in component.entities if not e.user_defined]
 
         if (conf := await component.async_prepare_reload()) is None:
             return
@@ -315,7 +327,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
-        group: Group | None = cast(Union[Group, None], component.get_entity(entity_id))
+        group = component.get_entity(entity_id)
 
         # new group
         if service.service == SERVICE_SET and group is None:
@@ -408,10 +420,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_group_platform(hass, domain, platform):
+async def _process_group_platform(
+    hass: HomeAssistant, domain: str, platform: GroupProtocol
+) -> None:
     """Process a group platform."""
     current_domain.set(domain)
-    platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
+    registry: GroupIntegrationRegistry = hass.data[REG_KEY]
+    platform.async_describe_on_off_states(hass, registry)
 
 
 async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None:
@@ -423,7 +438,7 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 
     for object_id, conf in domain_config.items():
         name: str = conf.get(CONF_NAME, object_id)
-        entity_ids: Iterable[str] = conf.get(CONF_ENTITIES) or []
+        entity_ids: Collection[str] = conf.get(CONF_ENTITIES) or []
         icon: str | None = conf.get(CONF_ICON)
         mode = bool(conf.get(CONF_ALL))
         order: int = hass.data[GROUP_ORDER]
@@ -456,15 +471,12 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling for group."""
-        return False
+    _attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
 
-        async def _update_at_start(_):
+        async def _update_at_start(_: HomeAssistant) -> None:
             self.async_update_group_state()
             self.async_write_ha_state()
 
@@ -487,6 +499,10 @@ class GroupEntity(Entity):
 class Group(Entity):
     """Track a group of entity ids."""
 
+    _attr_should_poll = False
+    tracking: tuple[str, ...]
+    trackable: tuple[str, ...]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -494,7 +510,7 @@ class Group(Entity):
         order: int | None = None,
         icon: str | None = None,
         user_defined: bool = True,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         mode: bool | None = None,
     ) -> None:
         """Initialize a group.
@@ -503,25 +519,25 @@ class Group(Entity):
         """
         self.hass = hass
         self._name = name
-        self._state = None
+        self._state: str | None = None
         self._icon = icon
         self._set_tracked(entity_ids)
-        self._on_off = None
-        self._assumed = None
-        self._on_states = None
+        self._on_off: dict[str, bool] = {}
+        self._assumed: dict[str, bool] = {}
+        self._on_states: set[str] = set()
         self.user_defined = user_defined
         self.mode = any
         if mode:
             self.mode = all
         self._order = order
         self._assumed_state = False
-        self._async_unsub_state_changed = None
+        self._async_unsub_state_changed: CALLBACK_TYPE | None = None
 
     @staticmethod
     def create_group(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         user_defined: bool = True,
         icon: str | None = None,
         object_id: str | None = None,
@@ -541,7 +557,7 @@ class Group(Entity):
     def async_create_group_entity(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         user_defined: bool = True,
         icon: str | None = None,
         object_id: str | None = None,
@@ -577,7 +593,7 @@ class Group(Entity):
     async def async_create_group(
         hass: HomeAssistant,
         name: str,
-        entity_ids: Iterable[str] | None = None,
+        entity_ids: Collection[str] | None = None,
         user_defined: bool = True,
         icon: str | None = None,
         object_id: str | None = None,
@@ -597,37 +613,32 @@ class Group(Entity):
         return group
 
     @property
-    def should_poll(self):
-        """No need to poll because groups will update themselves."""
-        return False
-
-    @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the group."""
         return self._name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: str) -> None:
         """Set Group name."""
         self._name = value
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the group."""
         return self._state
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of the group."""
         return self._icon
 
     @icon.setter
-    def icon(self, value):
+    def icon(self, value: str | None) -> None:
         """Set Icon for group."""
         self._icon = value
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes for the group."""
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
         if not self.user_defined:
@@ -636,17 +647,19 @@ class Group(Entity):
         return data
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Test if any member has an assumed state."""
         return self._assumed_state
 
-    def update_tracked_entity_ids(self, entity_ids):
+    def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
         """Update the member entity IDs."""
         asyncio.run_coroutine_threadsafe(
             self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 
-    async def async_update_tracked_entity_ids(self, entity_ids):
+    async def async_update_tracked_entity_ids(
+        self, entity_ids: Collection[str] | None
+    ) -> None:
         """Update the member entity IDs.
 
         This method must be run in the event loop.
@@ -656,7 +669,7 @@ class Group(Entity):
         self._reset_tracked_state()
         self._async_start()
 
-    def _set_tracked(self, entity_ids):
+    def _set_tracked(self, entity_ids: Collection[str] | None) -> None:
         """Tuple of entities to be tracked."""
         # tracking are the entities we want to track
         # trackable are the entities we actually watch
@@ -666,10 +679,11 @@ class Group(Entity):
             self.trackable = ()
             return
 
-        excluded_domains = self.hass.data[REG_KEY].exclude_domains
+        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        excluded_domains = registry.exclude_domains
 
-        tracking = []
-        trackable = []
+        tracking: list[str] = []
+        trackable: list[str] = []
         for ent_id in entity_ids:
             ent_id_lower = ent_id.lower()
             domain = split_entity_id(ent_id_lower)[0]
@@ -681,14 +695,14 @@ class Group(Entity):
         self.tracking = tuple(tracking)
 
     @callback
-    def _async_start(self, *_):
+    def _async_start(self, _: HomeAssistant | None = None) -> None:
         """Start tracking members and write state."""
         self._reset_tracked_state()
         self._async_start_tracking()
         self.async_write_ha_state()
 
     @callback
-    def _async_start_tracking(self):
+    def _async_start_tracking(self) -> None:
         """Start tracking members.
 
         This method must be run in the event loop.
@@ -701,7 +715,7 @@ class Group(Entity):
         self._async_update_group_state()
 
     @callback
-    def _async_stop(self):
+    def _async_stop(self) -> None:
         """Unregister the group from Home Assistant.
 
         This method must be run in the event loop.
@@ -711,20 +725,20 @@ class Group(Entity):
             self._async_unsub_state_changed = None
 
     @callback
-    def async_update_group_state(self):
+    def async_update_group_state(self) -> None:
         """Query all members and determine current group state."""
         self._state = None
         self._async_update_group_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle addition to Home Assistant."""
         self.async_on_remove(start.async_at_start(self.hass, self._async_start))
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""
         self._async_stop()
 
-    async def _async_state_changed_listener(self, event):
+    async def _async_state_changed_listener(self, event: Event) -> None:
         """Respond to a member state changing.
 
         This method must be run in the event loop.
@@ -742,7 +756,7 @@ class Group(Entity):
         self._async_update_group_state(new_state)
         self.async_write_ha_state()
 
-    def _reset_tracked_state(self):
+    def _reset_tracked_state(self) -> None:
         """Reset tracked state."""
         self._on_off = {}
         self._assumed = {}
@@ -752,13 +766,13 @@ class Group(Entity):
             if (state := self.hass.states.get(entity_id)) is not None:
                 self._see_state(state)
 
-    def _see_state(self, new_state):
+    def _see_state(self, new_state: State) -> None:
         """Keep track of the the state."""
         entity_id = new_state.entity_id
         domain = new_state.domain
         state = new_state.state
-        registry = self.hass.data[REG_KEY]
-        self._assumed[entity_id] = new_state.attributes.get(ATTR_ASSUMED_STATE)
+        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        self._assumed[entity_id] = bool(new_state.attributes.get(ATTR_ASSUMED_STATE))
 
         if domain not in registry.on_states_by_domain:
             # Handle the group of a group case
@@ -769,12 +783,12 @@ class Group(Entity):
             self._on_off[entity_id] = state in registry.on_off_mapping
         else:
             entity_on_state = registry.on_states_by_domain[domain]
-            if domain in self.hass.data[REG_KEY].on_states_by_domain:
+            if domain in registry.on_states_by_domain:
                 self._on_states.update(entity_on_state)
             self._on_off[entity_id] = state in entity_on_state
 
     @callback
-    def _async_update_group_state(self, tr_state=None):
+    def _async_update_group_state(self, tr_state: State | None = None) -> None:
         """Update group state.
 
         Optionally you can provide the only state changed since last update
@@ -818,4 +832,5 @@ class Group(Entity):
         if group_is_on:
             self._state = on_state
         else:
-            self._state = self.hass.data[REG_KEY].on_off_mapping[on_state]
+            registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+            self._state = registry.on_off_mapping[on_state]
