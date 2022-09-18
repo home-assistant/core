@@ -1328,6 +1328,61 @@ async def test_register_callback_by_manufacturer_id(
     assert service_info.manufacturer_id == 21
 
 
+async def test_register_callback_by_connectable(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test registering a callback by connectable."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {CONNECTABLE: False},
+            BluetoothScanningMode.ACTIVE,
+        )
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        apple_device = BLEDevice("44:44:33:11:23:45", "rtx")
+        apple_adv = AdvertisementData(
+            local_name="rtx",
+            manufacturer_data={7676: b"\xd8.\xad\xcd\r\x85"},
+        )
+
+        inject_advertisement(hass, apple_device, apple_adv)
+
+        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_adv = AdvertisementData(local_name="empty")
+
+        inject_advertisement(hass, empty_device, empty_adv)
+        await hass.async_block_till_done()
+
+        cancel()
+
+    assert len(callbacks) == 2
+
+    service_info: BluetoothServiceInfo = callbacks[0][0]
+    assert service_info.name == "rtx"
+    service_info: BluetoothServiceInfo = callbacks[1][0]
+    assert service_info.name == "empty"
+
+
 async def test_not_filtering_wanted_apple_devices(
     hass, mock_bleak_scanner_start, enable_bluetooth
 ):
