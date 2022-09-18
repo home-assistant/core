@@ -356,7 +356,7 @@ boschshcpy==0.2.30
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.2.3
+brother==2.0.0
 
 # homeassistant.components.brunt
 brunt==1.2.0
