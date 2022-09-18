@@ -40,7 +40,7 @@ SENSOR_DESCRIPTIONS = (
         name="Signal Strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        # entity_registry_enabled_default=False,
+        entity_registry_enabled_default=False,
         value_fn=lambda parsed: parsed.rssi,
     ),
     IBeaconSensorEntityDescription(
@@ -48,7 +48,7 @@ SENSOR_DESCRIPTIONS = (
         name="Power",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        # entity_registry_enabled_default=False,
+        entity_registry_enabled_default=False,
         value_fn=lambda parsed: parsed.power,
     ),
     IBeaconSensorEntityDescription(
