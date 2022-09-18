@@ -100,10 +100,12 @@ class BLEScanner:
             async_dispatcher_send(self.hass, signal_battery_update(address), battery)
 
     @callback
-    def _async_handle_unavailable(self, address: str) -> None:
+    def _async_handle_unavailable(
+        self, info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
         """Handle unavailable devices."""
-        async_dispatcher_send(self.hass, signal_unavailable(address))
-        if cancel := self._unavailable_trackers.pop(address, None):
+        async_dispatcher_send(self.hass, signal_unavailable(info.address))
+        if cancel := self._unavailable_trackers.pop(info.address, None):
             cancel()
 
     @callback
@@ -155,3 +157,10 @@ class BLEScanner:
             ),  # We will take data from any source
             bluetooth.BluetoothScanningMode.ACTIVE,
         )
+        # Replay any that are already there.
+        for service_info in bluetooth.async_discovered_service_info(
+            self.hass, connectable=False
+        ):
+            self._async_update_ble(
+                service_info, bluetooth.BluetoothChange.ADVERTISEMENT
+            )
