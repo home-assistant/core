@@ -508,11 +508,12 @@ async def async_setup_entry(
             continue
 
         # To avoid breaking changes, we disable sensors not specified in resources.
-        enabled_by_default = True
+        description = SENSORS[resource]
+        enabled_by_default = description.entity_registry_enabled_default
         if specified_resources is not None:
             enabled_by_default = resource in specified_resources
 
-        entity = APCUPSdSensor(data_service, SENSORS[resource], enabled_by_default)
+        entity = APCUPSdSensor(data_service, description, enabled_by_default)
         entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
