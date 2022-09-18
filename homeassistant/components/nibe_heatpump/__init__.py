@@ -130,19 +130,19 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
         """Return device information for the main device."""
         return DeviceInfo(identifiers={(DOMAIN, self.unique_id)})
 
-    def get_coil_data(self, coil: Coil | None) -> Coil | None:
+    def get_coil_data(self, coil: Coil) -> Coil | None:
         """Return a coil with data and check for validity."""
-        if not self.data or not coil:
+        if not self.data:
             return None
         return self.data.get(coil.address)
 
-    def get_coil_value(self, coil: Coil | None) -> int | str | float | None:
+    def get_coil_value(self, coil: Coil) -> int | str | float | None:
         """Return a coil with data and check for validity."""
         if coil := self.get_coil_data(coil):
             return coil.value
         return None
 
-    def get_coil_float(self, coil: Coil | None) -> float | None:
+    def get_coil_float(self, coil: Coil) -> float | None:
         """Return a coil with float and check for validity."""
         if value := self.get_coil_value(coil):
             return float(value)
