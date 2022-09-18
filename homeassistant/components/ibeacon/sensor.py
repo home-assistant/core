@@ -54,6 +54,7 @@ SENSOR_DESCRIPTIONS = (
     IBeaconSensorEntityDescription(
         key="estimated_distance",
         name="Estimated Distance",
+        icon="mdi:signal-distance-variant",
         native_unit_of_measurement=LENGTH_METERS,
         value_fn=lambda parsed: parsed.distance,
     ),
