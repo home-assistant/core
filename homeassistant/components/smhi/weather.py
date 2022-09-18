@@ -115,7 +115,7 @@ async def async_setup_entry(
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
 
     entity_hourly = SmhiWeather(
-        location[CONF_NAME],
+        f"{location[CONF_NAME]} hourly",
         location[CONF_LOCATION][CONF_LATITUDE],
         location[CONF_LOCATION][CONF_LONGITUDE],
         session=session,
@@ -149,7 +149,7 @@ class SmhiWeather(WeatherEntity):
         """Initialize the SMHI weather entity."""
         self._hourly = hourly
         self._attr_unique_id = (
-            f"{latitude}, {longitude}" + ", hourly" if self._hourly else ""
+            f"{latitude}, {longitude}" + "-hourly" if hourly else ""
         )
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
@@ -160,7 +160,7 @@ class SmhiWeather(WeatherEntity):
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
             manufacturer="SMHI",
             model="v2",
-            name=name + (" Hourly" if self._hourly else ""),
+            name=name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
         self._attr_condition = None
