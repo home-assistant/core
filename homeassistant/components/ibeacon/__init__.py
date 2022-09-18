@@ -2,14 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
 from .coordinator import IBeaconCoordinator
-
-PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
