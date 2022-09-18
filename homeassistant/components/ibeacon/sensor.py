@@ -31,7 +31,7 @@ class IBeaconRequiredKeysMixin:
 
 @dataclass
 class IBeaconSensorEntityDescription(SensorEntityDescription, IBeaconRequiredKeysMixin):
-    """Describes August sensor entity."""
+    """Describes iBeacon sensor entity."""
 
 
 SENSOR_DESCRIPTIONS = (
