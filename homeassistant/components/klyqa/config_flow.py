@@ -178,11 +178,11 @@ class KlyqaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             not self.hass
             or DOMAIN not in self.hass.data
-            or not self.hass.data[DOMAIN].KlyqaAccounts
-            or not self.hass.data[DOMAIN].KlyqaAccounts
+            or not self.hass.data[DOMAIN].klyqa_accounts
+            or not self.hass.data[DOMAIN].klyqa_accounts
         ):
             return None
-        self.klyqa = self.hass.data[DOMAIN].KlyqaAccounts[0]
+        self.klyqa = self.hass.data[DOMAIN].klyqa_accounts[0]
         return self.klyqa
 
     async def _show_setup_form(

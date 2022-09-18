@@ -387,10 +387,9 @@ class KlyqaLight(LightEntity):
         entity_id: str | None = entity_registry.async_get_entity_id(
             Platform.LIGHT, DOMAIN, str(self.unique_id)
         )
+        entity_registry_entry: RegistryEntry | None = None
         if entity_id:
-            entity_registry_entry: RegistryEntry | None = entity_registry.async_get(
-                str(entity_id)
-            )
+            entity_registry_entry = entity_registry.async_get(str(entity_id))
 
         device_registry = dr.async_get(self.hass)
 
