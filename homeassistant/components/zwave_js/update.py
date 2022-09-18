@@ -231,7 +231,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._progress_unsub = self.node.on(
             "firmware update progress", self._update_progress
         )
-        self._finished_unsub = self.node.once(
+        self._finished_unsub = self.node.on(
             "firmware update finished", self._update_finished
         )
 

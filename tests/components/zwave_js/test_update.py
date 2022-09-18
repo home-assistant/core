@@ -432,17 +432,18 @@ async def test_update_entity_progress_multiple(
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] is True
 
-    event = Event(
-        type="firmware update progress",
-        data={
-            "source": "node",
-            "event": "firmware update progress",
-            "nodeId": node.node_id,
-            "sentFragments": 1,
-            "totalFragments": 20,
-        },
+    node.receive_event(
+        Event(
+            type="firmware update progress",
+            data={
+                "source": "node",
+                "event": "firmware update progress",
+                "nodeId": node.node_id,
+                "sentFragments": 1,
+                "totalFragments": 20,
+            },
+        )
     )
-    node.receive_event(event)
 
     # Validate that the progress is updated (two files means progress is 50% of 5)
     state = hass.states.get(UPDATE_ENTITY)
@@ -450,18 +451,19 @@ async def test_update_entity_progress_multiple(
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] == 2
 
-    event = Event(
-        type="firmware update finished",
-        data={
-            "source": "node",
-            "event": "firmware update finished",
-            "nodeId": node.node_id,
-            "status": FirmwareUpdateStatus.OK_NO_RESTART,
-        },
+    node.receive_event(
+        Event(
+            type="firmware update finished",
+            data={
+                "source": "node",
+                "event": "firmware update finished",
+                "nodeId": node.node_id,
+                "status": FirmwareUpdateStatus.OK_NO_RESTART,
+            },
+        )
     )
 
-    node.receive_event(event)
-    await hass.async_block_till_done()
+    await asyncio.sleep(0)
 
     # One file done, progress should be 50%
     state = hass.states.get(UPDATE_ENTITY)
@@ -469,17 +471,18 @@ async def test_update_entity_progress_multiple(
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] == 50
 
-    event = Event(
-        type="firmware update progress",
-        data={
-            "source": "node",
-            "event": "firmware update progress",
-            "nodeId": node.node_id,
-            "sentFragments": 1,
-            "totalFragments": 20,
-        },
+    node.receive_event(
+        Event(
+            type="firmware update progress",
+            data={
+                "source": "node",
+                "event": "firmware update progress",
+                "nodeId": node.node_id,
+                "sentFragments": 1,
+                "totalFragments": 20,
+            },
+        )
     )
-    node.receive_event(event)
 
     # Validate that the progress is updated (50% + 50% of 5)
     state = hass.states.get(UPDATE_ENTITY)
@@ -487,18 +490,19 @@ async def test_update_entity_progress_multiple(
     attrs = state.attributes
     assert attrs[ATTR_IN_PROGRESS] == 52
 
-    event = Event(
-        type="firmware update finished",
-        data={
-            "source": "node",
-            "event": "firmware update finished",
-            "nodeId": node.node_id,
-            "status": FirmwareUpdateStatus.OK_NO_RESTART,
-        },
+    node.receive_event(
+        Event(
+            type="firmware update finished",
+            data={
+                "source": "node",
+                "event": "firmware update finished",
+                "nodeId": node.node_id,
+                "status": FirmwareUpdateStatus.OK_NO_RESTART,
+            },
+        )
     )
 
-    node.receive_event(event)
-    await hass.async_block_till_done()
+    await asyncio.sleep(0)
 
     # Validate that progress is reset and entity reflects new version
     state = hass.states.get(UPDATE_ENTITY)
