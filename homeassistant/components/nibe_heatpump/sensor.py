@@ -40,11 +40,9 @@ async def async_setup_entry(
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            Sensor(coordinator, coil)
-            for coil in coordinator.coils
-            if not coil.is_writable and not coil.is_boolean
-        ]
+        Sensor(coordinator, coil)
+        for coil in coordinator.coils
+        if not coil.is_writable and not coil.is_boolean
     )
 
 
