@@ -52,8 +52,8 @@ SENSOR_DESCRIPTIONS = (
         value_fn=lambda parsed: parsed.power,
     ),
     IBeaconSensorEntityDescription(
-        key="distance",
-        name="Distance",
+        key="estimated_distance",
+        name="Estimated Distance",
         native_unit_of_measurement=LENGTH_METERS,
         value_fn=lambda parsed: parsed.distance,
     ),
