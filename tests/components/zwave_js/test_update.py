@@ -445,6 +445,9 @@ async def test_update_entity_progress_multiple(
         )
     )
 
+    # Block so HA can do its thing
+    await asyncio.sleep(0)
+
     # Validate that the progress is updated (two files means progress is 50% of 5)
     state = hass.states.get(UPDATE_ENTITY)
     assert state
@@ -463,6 +466,7 @@ async def test_update_entity_progress_multiple(
         )
     )
 
+    # Block so HA can do its thing
     await asyncio.sleep(0)
 
     # One file done, progress should be 50%
@@ -484,6 +488,9 @@ async def test_update_entity_progress_multiple(
         )
     )
 
+    # Block so HA can do its thing
+    await asyncio.sleep(0)
+
     # Validate that the progress is updated (50% + 50% of 5)
     state = hass.states.get(UPDATE_ENTITY)
     assert state
@@ -502,6 +509,7 @@ async def test_update_entity_progress_multiple(
         )
     )
 
+    # Block so HA can do its thing
     await asyncio.sleep(0)
 
     # Validate that progress is reset and entity reflects new version
