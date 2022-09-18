@@ -2365,6 +2365,9 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.5.3
 
+# homeassistant.components.nibe_heatpump
+tenacity==8.0.1
+
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 

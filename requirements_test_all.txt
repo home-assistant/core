@@ -1617,6 +1617,9 @@ tellduslive==0.10.11
 # homeassistant.components.lg_soundbar
 temescal==0.5
 
+# homeassistant.components.nibe_heatpump
+tenacity==8.0.1
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.18
 

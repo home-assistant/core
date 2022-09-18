@@ -8,6 +8,7 @@ from nibe.connection import Connection
 from nibe.connection.nibegw import NibeGW
 from nibe.exceptions import CoilNotFoundException, CoilReadException
 from nibe.heatpump import HeatPump, Model
+from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, Platform
@@ -30,7 +31,6 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .utils import TooManyTriesException, retry
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -154,7 +154,9 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
             self.async_update_listeners()
 
     async def _async_update_data(self) -> dict[int, Coil]:
-        @retry([0.0, 0.5], (CoilReadException))
+        @retry(
+            retry=retry_if_exception_type(CoilReadException), stop=stop_after_attempt(2)
+        )
         async def read_coil(coil: Coil):
             return await self.connection.read_coil(coil)
 
@@ -170,7 +172,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
             try:
                 coil = self.heatpump.get_coil_by_address(address)
                 self.data[coil.address] = result[coil.address] = await read_coil(coil)
-            except (CoilReadException, TooManyTriesException) as exception:
+            except (CoilReadException, RetryError) as exception:
                 self.logger.warning("Failed to update: %s", exception)
             except CoilNotFoundException as exception:
                 self.logger.debug("Skipping missing coil: %s", exception)
