@@ -69,7 +69,7 @@ async def async_setup_entry(
     @callback
     def _async_device_new(
         unique_id: str,
-        name: str,
+        identifier: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Signal a new device."""
@@ -77,7 +77,7 @@ async def async_setup_entry(
             IBeaconSensorEntity(
                 coordinator,
                 description,
-                name,
+                identifier,
                 unique_id,
                 parsed,
             )
@@ -98,12 +98,12 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         self,
         coordinator: IBeaconCoordinator,
         description: IBeaconSensorEntityDescription,
-        name: str,
+        identifier: str,
         unique_id: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Initialize an iBeacon sensor entity."""
-        super().__init__(coordinator, name, unique_id, parsed)
+        super().__init__(coordinator, identifier, unique_id, parsed)
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
 
