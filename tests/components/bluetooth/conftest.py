@@ -73,7 +73,7 @@ def windows_adapter():
 
 
 @pytest.fixture(name="no_adapters")
-def no_adapter_fixture():
+def no_adapter_fixture(bluez_dbus_mock):
     """Fixture that mocks no adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
