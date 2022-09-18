@@ -312,7 +312,8 @@ class BluetoothManager:
         advertisement_data = service_info.advertisement
         manufacturer_data = advertisement_data.manufacturer_data
         if (
-            len(manufacturer_data) == 1
+            False
+            and len(manufacturer_data) == 1
             and (apple_data := manufacturer_data.get(APPLE_MFR_ID))
             and apple_data[0] not in APPLE_START_BYTES_WANTED
             and not advertisement_data.service_data
