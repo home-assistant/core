@@ -1,12 +1,15 @@
-"""Support for tracking iBeacon devices."""
+"""Support for iBeacon device sensors."""
 from __future__ import annotations
 
 from ibeacon_ble import iBeaconAdvertisement
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import LENGTH_METERS, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,6 +17,28 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, SIGNAL_IBEACON_DEVICE_NEW
 from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
+
+SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key="rssi",
+        name="Signal Strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="power",
+        name="Power",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="distance",
+        name="Distance",
+        native_unit_of_measurement=LENGTH_METERS,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -30,14 +55,14 @@ async def async_setup_entry(
     ) -> None:
         """Signal a new device."""
         async_add_entities(
-            [
-                IBeaconTrackerEntity(
-                    coordinator,
-                    name,
-                    unique_id,
-                    parsed,
-                )
-            ]
+            IBeaconSensorEntity(
+                coordinator,
+                description,
+                name,
+                unique_id,
+                parsed,
+            )
+            for description in SENSOR_DESCRIPTIONS
         )
 
     entry.async_on_unload(
@@ -45,38 +70,20 @@ async def async_setup_entry(
     )
 
 
-class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
-    """An iBeacon Tracker entity."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
+class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
+    """An iBeacon sensor entity."""
 
     def __init__(
         self,
         coordinator: IBeaconCoordinator,
+        description: SensorEntityDescription,
         name: str,
         unique_id: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
-        """Initialize an iBeacon tracker entity."""
+        """Initialize an iBeacon sensor entity."""
         super().__init__(coordinator, name, unique_id, parsed)
-        self._active = True
-        self._attr_name = "Tracker"
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        return STATE_HOME if self._active else STATE_NOT_HOME
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.BLUETOOTH_LE
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:bluetooth-connect" if self._active else "mdi:bluetooth-off"
+        self.entity_description = description
 
     @callback
     def _async_seen(
@@ -84,12 +91,12 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Update state."""
-        self._active = True
+        self._attr_available = True
         self._parsed = parsed
         self.async_write_ha_state()
 
     @callback
     def _async_unavailable(self) -> None:
-        """Set unavailable."""
-        self._active = False
+        """Update state."""
+        self._attr_available = False
         self.async_write_ha_state()

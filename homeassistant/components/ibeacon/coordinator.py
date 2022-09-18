@@ -23,12 +23,13 @@ from .const import (
     DEFAULT_MIN_RSSI,
     DOMAIN,
     MAX_IDS,
+    PLATFORMS,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
 )
 
-ENTITY_DOMAIN = "device_tracker"
+PRIMARY_ENTITY_DOMAIN = "device_tracker"
 
 
 def signal_unavailable(unique_id: str) -> str:
@@ -94,14 +95,20 @@ class IBeaconCoordinator:
             data=self._entry.data
             | {CONF_IGNORE_ADDRESSES: sorted(self._ignore_addresses)},
         )
-        for unique_id in self._unique_ids_by_address[address]:
-            if entry := self._ent_reg.async_get_entity_id(
-                ENTITY_DOMAIN, DOMAIN, unique_id
-            ):
-                self._ent_reg.async_remove(entry)
-            self._unique_ids.discard(unique_id)
+        self._async_purge_untrackable_entities(self._unique_ids_by_address[address])
         self._group_ids_by_address.pop(address)
         self._unique_ids_by_address.pop(address)
+
+    @callback
+    def _async_purge_untrackable_entities(self, unique_ids: set[str]) -> None:
+        """Remove entities that are no longer trackable."""
+        for unique_id in unique_ids:
+            for entity_domain in PLATFORMS:
+                if entry := self._ent_reg.async_get_entity_id(
+                    entity_domain, DOMAIN, unique_id
+                ):
+                    self._ent_reg.async_remove(entry)
+            self._unique_ids.discard(unique_id)
 
     @callback
     def _async_ignore_group(self, group_id: str) -> None:
@@ -112,12 +119,7 @@ class IBeaconCoordinator:
             data=self._entry.data
             | {CONF_IGNORE_GROUP_IDS: sorted(self._ignore_group_ids)},
         )
-        for unique_id in self._unique_ids_by_group_id[group_id]:
-            if entry := self._ent_reg.async_get_entity_id(
-                ENTITY_DOMAIN, DOMAIN, unique_id
-            ):
-                self._ent_reg.async_remove(entry)
-            self._unique_ids.discard(unique_id)
+        self._async_purge_untrackable_entities(self._unique_ids_by_group_id[group_id])
         self._unique_ids_by_group_id.pop(group_id)
         self._addresses_by_group_id.pop(group_id)
 
@@ -206,7 +208,7 @@ class IBeaconCoordinator:
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the entity registry."""
         for entry in self._ent_reg.entities.values():
-            if entry.domain != ENTITY_DOMAIN or entry.platform != DOMAIN:
+            if entry.domain != PRIMARY_ENTITY_DOMAIN or entry.platform != DOMAIN:
                 continue
             unique_id = entry.unique_id
             if unique_id.count("_") != 3:
