@@ -16,6 +16,7 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
+    SERVICE_RELOAD,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -560,6 +561,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         else:
             await async_handle_light_on_service(light, call)
 
+    async def async_handle_update_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
+        """Handle updating a light."""
+        if light.is_on:
+            await async_handle_light_on_service(light, call)
+        else:
+            # In this version we ignore attempts to "reload" a switched off light
+            # Though I guess we could call light_off just to ensure it's in the right state.
+            pass
+
     # Listen for light on and light off service calls.
 
     component.async_register_entity_service(
@@ -578,6 +590,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         SERVICE_TOGGLE,
         vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_toggle_service,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_RELOAD,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        async_handle_update_service,
     )
 
     return True
