@@ -178,11 +178,18 @@ class IBeaconCoordinator:
             return
 
         if new:
+            if service_info.address in (
+                service_info.name,
+                service_info.name.replace("_", ":"),
+            ):
+                identifier = f"{parsed.uuid} {parsed.major}.{parsed.minor}"
+            else:
+                identifier = service_info.name
             async_dispatcher_send(
                 self.hass,
                 SIGNAL_IBEACON_DEVICE_NEW,
                 unique_id,
-                service_info.name,
+                identifier,
                 parsed,
             )
             return

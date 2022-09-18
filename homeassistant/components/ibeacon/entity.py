@@ -22,7 +22,7 @@ class IBeaconEntity(Entity):
     def __init__(
         self,
         coordinator: IBeaconCoordinator,
-        name: str,
+        identifier: str,
         unique_id: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
@@ -30,7 +30,7 @@ class IBeaconEntity(Entity):
         self._coordinator = coordinator
         self._parsed = parsed
         self._attr_device_info = DeviceInfo(
-            name=f"{name} {parsed.uuid} {parsed.major} {parsed.minor}",
+            name=identifier,
             identifiers={(DOMAIN, unique_id)},
         )
 
