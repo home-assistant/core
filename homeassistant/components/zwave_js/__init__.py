@@ -143,9 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 DOMAIN,
                 "invalid_server_version",
-                data=None,
                 is_fixable=False,
-                severity=IssueSeverity.CRITICAL,
+                severity=IssueSeverity.ERROR,
                 translation_key="invalid_server_version",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err

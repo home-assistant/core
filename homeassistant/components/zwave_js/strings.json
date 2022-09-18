@@ -148,7 +148,7 @@
   "issues": {
     "invalid_server_version": {
       "title": "Newer version of Z-Wave JS Server needed",
-      "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant, please update the Z-Wave JS Server to the latest version."
+      "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue."
     }
   }
 }
