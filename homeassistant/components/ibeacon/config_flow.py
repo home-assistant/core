@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import bluetooth
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
@@ -28,6 +29,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        if not bluetooth.async_scanner_count(self.hass, connectable=False):
+            return self.async_abort(reason="bluetooth_not_available")
 
         if user_input is not None:
             return self.async_create_entry(title="iBeacon Tracker", data={})

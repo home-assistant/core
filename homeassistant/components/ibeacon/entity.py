@@ -23,15 +23,16 @@ class IBeaconEntity(Entity):
         self,
         coordinator: IBeaconCoordinator,
         identifier: str,
-        unique_id: str,
+        device_unique_id: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Initialize an iBeacon sensor entity."""
+        self._device_unique_id = device_unique_id
         self._coordinator = coordinator
         self._parsed = parsed
         self._attr_device_info = DeviceInfo(
             name=identifier,
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, device_unique_id)},
         )
 
     @property
@@ -63,18 +64,17 @@ class IBeaconEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register state update callbacks."""
         await super().async_added_to_hass()
-        assert self.unique_id is not None
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                signal_seen(self.unique_id),
+                signal_seen(self._device_unique_id),
                 self._async_seen,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                signal_unavailable(self.unique_id),
+                signal_unavailable(self._device_unique_id),
                 self._async_unavailable,
             )
         )

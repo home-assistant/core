@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH_METERS, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -42,6 +43,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
         value_fn=lambda parsed: parsed.rssi,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IBeaconSensorEntityDescription(
         key="power",
@@ -50,6 +52,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
         value_fn=lambda parsed: parsed.power,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     IBeaconSensorEntityDescription(
         key="estimated_distance",
@@ -57,6 +60,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:signal-distance-variant",
         native_unit_of_measurement=LENGTH_METERS,
         value_fn=lambda parsed: parsed.distance,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -100,12 +104,12 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         coordinator: IBeaconCoordinator,
         description: IBeaconSensorEntityDescription,
         identifier: str,
-        unique_id: str,
+        device_unique_id: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Initialize an iBeacon sensor entity."""
-        super().__init__(coordinator, identifier, unique_id, parsed)
-        self._attr_unique_id = f"{unique_id}_{description.key}"
+        super().__init__(coordinator, identifier, device_unique_id, parsed)
+        self._attr_unique_id = f"{device_unique_id}_{description.key}"
         self.entity_description = description
 
     @callback
