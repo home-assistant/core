@@ -213,9 +213,7 @@ class IBeaconCoordinator:
                 if identifier[0] == DOMAIN:
                     unique_id = identifier[1]
                     break
-            if not unique_id:
-                continue
-            if unique_id.count("_") != 3:
+            if not unique_id or unique_id.count("_") != 3:
                 continue
             uuid, major, minor, address = unique_id.split("_")
             group_id = f"{uuid}_{major}_{minor}"
