@@ -1,9 +1,13 @@
 """Tracking for iBeacon devices."""
 from __future__ import annotations
 
-from typing import cast
-
-from ibeacon_ble import parse
+from ibeacon_ble import (
+    APPLE_MFR_ID,
+    IBEACON_FIRST_BYTE,
+    IBEACON_SECOND_BYTE,
+    calculate_distance_meters,
+    parse,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -13,13 +17,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get
 
 from .const import (
-    APPLE_MFR_ID,
     CONF_IGNORE_ADDRESSES,
     CONF_MIN_RSSI,
     DEFAULT_MIN_RSSI,
     DOMAIN,
-    IBEACON_FIRST_BYTE,
-    IBEACON_SECOND_BYTE,
     MAX_UNIQUE_IDS_PER_ADDRESS,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
@@ -218,12 +219,3 @@ class IBeaconCoordinator:
                 self._async_update_ibeacon(
                     service_info, bluetooth.BluetoothChange.ADVERTISEMENT
                 )
-
-
-def calculate_distance_meters(power: int, rssi: int) -> float:
-    """Calculate the distance in meters between the device and the beacon."""
-    if rssi == 0:
-        return -1.0
-    if (ratio := rssi * 1.0 / power) < 1.0:
-        return pow(ratio, 10)
-    return cast(float, 0.89976 * pow(ratio, 7.7095) + 0.111)
