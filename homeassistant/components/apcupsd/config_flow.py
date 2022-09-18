@@ -22,6 +22,13 @@ _PORT_SELECTOR = vol.All(
     vol.Coerce(int),
 )
 
+_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default="localhost"): cv.string,
+        vol.Required(CONF_PORT, default=3551): _PORT_SELECTOR,
+    }
+)
+
 
 class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """APCUPSd integration config flow."""
@@ -32,15 +39,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default="localhost"): cv.string,
-                vol.Required(CONF_PORT, default=3551): _PORT_SELECTOR,
-            }
-        )
 
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=schema)
+            return self.async_show_form(step_id="user", data_schema=_SCHEMA)
 
         self._async_abort_entries_match(
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
@@ -53,7 +54,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except OSError:
             errors = {"base": "cannot_connect"}
             return self.async_show_form(
-                step_id="user", data_schema=schema, errors=errors
+                step_id="user", data_schema=_SCHEMA, errors=errors
             )
 
         if not data_service.status:
