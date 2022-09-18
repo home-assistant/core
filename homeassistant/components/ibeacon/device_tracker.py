@@ -62,7 +62,6 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
         super().__init__(coordinator, name, unique_id, parsed)
         self._attr_unique_id = unique_id
         self._active = True
-        self._attr_name = "Tracker"
 
     @property
     def state(self) -> str:
