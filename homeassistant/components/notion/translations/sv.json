@@ -5,6 +5,7 @@
             "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
+            "invalid_auth": "Ogiltig autentisering",
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {

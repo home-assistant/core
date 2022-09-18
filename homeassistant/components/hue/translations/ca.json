@@ -44,6 +44,8 @@
             "button_2": "Segon bot\u00f3",
             "button_3": "Tercer bot\u00f3",
             "button_4": "Quart bot\u00f3",
+            "clock_wise": "Rotaci\u00f3 en sentit horari",
+            "counter_clock_wise": "Rotaci\u00f3 en sentit antihorari",
             "dim_down": "Atenua la brillantor",
             "dim_up": "Augmenta la brillantor",
             "double_buttons_1_3": "primer i tercer botons",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Ambd\u00f3s \"{subtype}\" alliberats",
-            "initial_press": "Bot\u00f3 \"{subtype}\" premut inicialment",
-            "long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
-            "remote_button_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
-            "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
-            "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
+            "initial_press": "\"{subtype}\" premut inicialment",
+            "long_release": "\"{subtype}\" alliberat despr\u00e9s d'una estona premut",
+            "remote_button_long_release": "\"{subtype}\" alliberat despr\u00e9s d'una estona premut",
+            "remote_button_short_press": "\"{subtype}\" premut",
+            "remote_button_short_release": "\"{subtype}\" alliberat",
             "remote_double_button_long_press": "Ambd\u00f3s \"{subtype}\" alliberats despr\u00e9s d'una estona premuts",
             "remote_double_button_short_press": "Ambd\u00f3s \"{subtype}\" alliberats",
-            "repeat": "Bot\u00f3 \"{subtype}\" mantingut premut",
-            "short_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s de pr\u00e9mer breument"
+            "repeat": "\"{subtype}\" mantingut premut",
+            "short_release": "\"{subtype}\" alliberat despr\u00e9s de pr\u00e9mer breument",
+            "start": "\"{subtype}\" premut inicialment"
         }
     },
     "options": {

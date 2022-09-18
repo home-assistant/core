@@ -9,7 +9,7 @@ from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
-from regenmaschine.errors import RainMachineError
+from regenmaschine.errors import RainMachineError, UnknownAPICallError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -31,11 +31,14 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
+from homeassistant.util.dt import as_timestamp, utcnow
 from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
+    DATA_API_VERSIONS,
+    DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
@@ -51,7 +54,13 @@ DEFAULT_SSL = True
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -124,8 +133,10 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
 )
 
 COORDINATOR_UPDATE_INTERVAL_MAP = {
-    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_API_VERSIONS: timedelta(minutes=1),
+    DATA_MACHINE_FIRMWARE_UPDATE_STATUS: timedelta(seconds=15),
     DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
     DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
     DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
     DATA_ZONES: timedelta(seconds=15),
@@ -148,11 +159,15 @@ def async_get_controller_for_service_call(
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-                return data.controller
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Invalid RainMachine device ID: {device_id}")
+
+    for entry_id in device_entry.config_entries:
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if entry.domain == DOMAIN:
+            data: RainMachineData = hass.data[DOMAIN][entry_id]
+            return data.controller
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
@@ -175,7 +190,9 @@ async def async_update_programs_and_zones(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up RainMachine as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
@@ -215,7 +232,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data: dict = {}
 
         try:
-            if api_category == DATA_PROGRAMS:
+            if api_category == DATA_API_VERSIONS:
+                data = await controller.api.versions()
+            elif api_category == DATA_MACHINE_FIRMWARE_UPDATE_STATUS:
+                data = await controller.machine.get_firmware_update_status()
+            elif api_category == DATA_PROGRAMS:
                 data = await controller.programs.all(include_inactive=True)
             elif api_category == DATA_PROVISION_SETTINGS:
                 data = await controller.provisioning.settings()
@@ -225,6 +246,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = await controller.restrictions.universal()
             else:
                 data = await controller.zones.all(details=True, include_inactive=True)
+        except UnknownAPICallError:
+            LOGGER.info(
+                "Skipping unsupported API call for controller %s: %s",
+                controller.name,
+                api_category,
+            )
         except RainMachineError as err:
             raise UpdateFailed(err) from err
 
@@ -285,7 +312,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_restrict_watering(call: ServiceCall) -> None:
         """Restrict watering for a time period."""
         controller = async_get_controller_for_service_call(hass, call)
-        await controller.restrictions.restrict(call.data[CONF_DURATION])
+        duration = call.data[CONF_DURATION]
+        await controller.restrictions.set_universal(
+            {
+                "rainDelayStartTime": round(as_timestamp(utcnow())),
+                "rainDelayDuration": duration.total_seconds(),
+            },
+        )
         await async_update_programs_and_zones(hass, entry)
 
     async def async_stop_all(call: ServiceCall) -> None:
@@ -303,7 +336,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_unrestrict_watering(call: ServiceCall) -> None:
         """Unrestrict watering."""
         controller = async_get_controller_for_service_call(hass, call)
-        await controller.restrictions.unrestrict()
+        await controller.restrictions.set_universal(
+            {
+                "rainDelayStartTime": round(as_timestamp(utcnow())),
+                "rainDelayDuration": 0,
+            },
+        )
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, schema, method in (
@@ -414,28 +452,47 @@ class RainMachineEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(data.coordinators[description.api_category])
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data.controller.mac)},
-            configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
-            connections={(dr.CONNECTION_NETWORK_MAC, data.controller.mac)},
-            name=str(data.controller.name).capitalize(),
-            manufacturer="RainMachine",
-            model=(
-                f"Version {data.controller.hardware_version} "
-                f"(API: {data.controller.api_version})"
-            ),
-            sw_version=data.controller.software_version,
-        )
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{data.controller.mac}_{description.key}"
+        self._entry = entry
         self._data = data
+        self._version_coordinator = data.coordinators[DATA_API_VERSIONS]
         self.entity_description = description
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this controller."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._data.controller.mac)},
+            configuration_url=(
+                f"https://{self._entry.data[CONF_IP_ADDRESS]}:"
+                f"{self._entry.data[CONF_PORT]}"
+            ),
+            connections={(dr.CONNECTION_NETWORK_MAC, self._data.controller.mac)},
+            name=str(self._data.controller.name).capitalize(),
+            manufacturer="RainMachine",
+            model=(
+                f"Version {self._version_coordinator.data['hwVer']} "
+                f"(API: {self._version_coordinator.data['apiVer']})"
+            ),
+            sw_version=self._version_coordinator.data["swVer"],
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         self.update_from_latest_data()
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._version_coordinator.async_add_listener(
+                self._handle_coordinator_update, self.coordinator_context
+            )
+        )
+        self.update_from_latest_data()
 
     @callback
     def update_from_latest_data(self) -> None:

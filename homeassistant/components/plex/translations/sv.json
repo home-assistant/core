@@ -4,6 +4,7 @@
             "all_configured": "Alla l\u00e4nkade servrar har redan konfigurerats",
             "already_configured": "Denna Plex-server \u00e4r redan konfigurerad",
             "already_in_progress": "Plex konfigureras",
+            "reauth_successful": "\u00c5terautentisering lyckades",
             "token_request_timeout": "Timeout att erh\u00e5lla token",
             "unknown": "Misslyckades av ok\u00e4nd anledning"
         },
@@ -14,6 +15,7 @@
             "not_found": "Plex-server hittades inte",
             "ssl_error": "Problem med SSL-certifikat"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
@@ -22,7 +24,8 @@
                     "ssl": "Anv\u00e4nd ett SSL certifikat",
                     "token": "Token (valfritt)",
                     "verify_ssl": "Verifiera SSL-certifikat"
-                }
+                },
+                "title": "Manuell Plex-konfiguration"
             },
             "select_server": {
                 "data": {
@@ -30,6 +33,9 @@
                 },
                 "description": "V\u00e4lj flera servrar tillg\u00e4ngliga, v\u00e4lj en:",
                 "title": "V\u00e4lj Plex-server"
+            },
+            "user": {
+                "description": "Forts\u00e4tt till [plex.tv](https://plex.tv) f\u00f6r att l\u00e4nka en Plex-server."
             },
             "user_advanced": {
                 "data": {

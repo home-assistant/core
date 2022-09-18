@@ -9,6 +9,7 @@
         "error": {
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "Tryck och h\u00e5ll hemknappen p\u00e5 {name} tills enheten genererar ett ljud (cirka tv\u00e5 sekunder), skicka sedan inom 30 sekunder.",
@@ -18,6 +19,7 @@
                 "data": {
                     "password": "L\u00f6senord"
                 },
+                "description": "L\u00f6senordet kunde inte h\u00e4mtas fr\u00e5n enheten automatiskt. F\u00f6lj stegen som beskrivs i dokumentationen p\u00e5: {auth_help_url}",
                 "title": "Ange l\u00f6senord"
             },
             "manual": {

@@ -97,7 +97,7 @@ class EliqSensor(SensorEntity):
         """Return the state of the device."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data."""
         try:
             response = await self._api.get_data_now(channelid=self._channel_id)

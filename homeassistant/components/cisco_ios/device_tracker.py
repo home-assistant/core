@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoDeviceScanner | None:
     """Validate the configuration and return a Cisco scanner."""
     scanner = CiscoDeviceScanner(config[DOMAIN])
 

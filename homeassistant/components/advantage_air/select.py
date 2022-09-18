@@ -29,15 +29,15 @@ class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
     """Representation of Advantage Air MyZone control."""
 
     _attr_icon = "mdi:home-thermometer"
-    _attr_options = [ADVANTAGE_AIR_INACTIVE]
-    _number_to_name = {0: ADVANTAGE_AIR_INACTIVE}
-    _name_to_number = {ADVANTAGE_AIR_INACTIVE: 0}
     _attr_name = "MyZone"
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air MyZone control."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-myzone"
+        self._attr_options = [ADVANTAGE_AIR_INACTIVE]
+        self._number_to_name = {0: ADVANTAGE_AIR_INACTIVE}
+        self._name_to_number = {ADVANTAGE_AIR_INACTIVE: 0}
 
         for zone in instance["coordinator"].data["aircons"][ac_key]["zones"].values():
             if zone["type"] > 0:
@@ -46,11 +46,11 @@ class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
                 self._attr_options.append(zone["name"])
 
     @property
-    def current_option(self):
+    def current_option(self) -> str:
         """Return the current MyZone."""
         return self._number_to_name[self._ac["myZone"]]
 
-    async def async_select_option(self, option):
+    async def async_select_option(self, option: str) -> None:
         """Set the MyZone."""
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._name_to_number[option]}}}

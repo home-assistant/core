@@ -2,15 +2,18 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     input_boolean,
     input_button,
     input_select,
@@ -24,10 +27,8 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
-from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
+from homeassistant.components.media_player import MediaType
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -68,6 +69,10 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt, temperature as temp_util
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from .const import (
     CHALLENGE_ACK_NEEDED,
@@ -82,6 +87,7 @@ from .const import (
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
+    FAN_SPEEDS,
 )
 from .error import ChallengeNeeded, SmartHomeError
 
@@ -156,6 +162,8 @@ COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
 TRAITS = []
+
+FAN_SPEED_MAX_SPEED_COUNT = 5
 
 
 def register_trait(trait):
@@ -1359,6 +1367,20 @@ class ArmDisArmTrait(_Trait):
         )
 
 
+def _get_fan_speed(speed_name: str) -> dict[str, Any]:
+    """Return a fan speed synonyms for a speed name."""
+    speed_synonyms = FAN_SPEEDS.get(speed_name, [f"{speed_name}"])
+    return {
+        "speed_name": speed_name,
+        "speed_values": [
+            {
+                "speed_synonym": speed_synonyms,
+                "lang": "en",
+            }
+        ],
+    }
+
+
 @register_trait
 class FanSpeedTrait(_Trait):
     """Trait to control speed of Fan.
@@ -1368,6 +1390,20 @@ class FanSpeedTrait(_Trait):
 
     name = TRAIT_FANSPEED
     commands = [COMMAND_FANSPEED, COMMAND_REVERSE]
+
+    def __init__(self, hass, state, config):
+        """Initialize a trait for a state."""
+        super().__init__(hass, state, config)
+        if state.domain == fan.DOMAIN:
+            speed_count = min(
+                FAN_SPEED_MAX_SPEED_COUNT,
+                round(
+                    100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
+                ),
+            )
+            self._ordered_speed = [
+                f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
+            ]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1396,6 +1432,18 @@ class FanSpeedTrait(_Trait):
                     "supportsFanSpeedPercent": True,
                 }
             )
+
+            if self._ordered_speed:
+                result.update(
+                    {
+                        "availableFanSpeeds": {
+                            "speeds": [
+                                _get_fan_speed(speed) for speed in self._ordered_speed
+                            ],
+                            "ordered": True,
+                        },
+                    }
+                )
 
         elif domain == climate.DOMAIN:
             modes = self.state.attributes.get(climate.ATTR_FAN_MODES) or []
@@ -1428,6 +1476,9 @@ class FanSpeedTrait(_Trait):
         if domain == fan.DOMAIN:
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             response["currentFanSpeedPercent"] = percent
+            response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
+                self._ordered_speed, percent
+            )
 
         return response
 
@@ -1447,12 +1498,19 @@ class FanSpeedTrait(_Trait):
             )
 
         if domain == fan.DOMAIN:
+            if fan_speed := params.get("fanSpeed"):
+                fan_speed_percent = ordered_list_item_to_percentage(
+                    self._ordered_speed, fan_speed
+                )
+            else:
+                fan_speed_percent = params.get("fanSpeedPercent")
+
             await self.hass.services.async_call(
                 fan.DOMAIN,
                 fan.SERVICE_SET_PERCENTAGE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_PERCENTAGE: params["fanSpeedPercent"],
+                    fan.ATTR_PERCENTAGE: fan_speed_percent,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2289,7 +2347,7 @@ class ChannelTrait(_Trait):
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
-                media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
             },
             blocking=not self.config.should_report_state,
             context=data.context,

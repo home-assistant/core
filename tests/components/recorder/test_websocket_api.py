@@ -4,6 +4,7 @@ from datetime import timedelta
 import threading
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from pytest import approx
 
@@ -18,7 +19,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
@@ -29,15 +30,25 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
-POWER_SENSOR_ATTRIBUTES = {
+POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
     "state_class": "measurement",
     "unit_of_measurement": "kW",
 }
-TEMPERATURE_SENSOR_ATTRIBUTES = {
+PRESSURE_SENSOR_HPA_ATTRIBUTES = {
+    "device_class": "pressure",
+    "state_class": "measurement",
+    "unit_of_measurement": "hPa",
+}
+TEMPERATURE_SENSOR_C_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
     "unit_of_measurement": "°C",
+}
+TEMPERATURE_SENSOR_F_ATTRIBUTES = {
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit_of_measurement": "°F",
 }
 ENERGY_SENSOR_ATTRIBUTES = {
     "device_class": "energy",
@@ -49,6 +60,355 @@ GAS_SENSOR_ATTRIBUTES = {
     "state_class": "total",
     "unit_of_measurement": "m³",
 }
+
+
+@pytest.mark.parametrize(
+    "units, attributes, state, value",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
+    ],
+)
+async def test_statistics_during_period(
+    hass, hass_ws_client, recorder_mock, units, attributes, state, value
+):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", state, attributes=attributes)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "hour",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": now.isoformat(),
+                "end": (now + timedelta(minutes=5)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "units, attributes, state, value",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
+    ],
+)
+async def test_statistics_during_period_in_the_past(
+    hass, hass_ws_client, recorder_mock, units, attributes, state, value
+):
+    """Test statistics_during_period in the past."""
+    hass.config.set_time_zone("UTC")
+    now = dt_util.utcnow().replace()
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    past = now - timedelta(days=3)
+
+    with freeze_time(past):
+        hass.states.async_set("sensor.test", state, attributes=attributes)
+        await async_wait_recording_done(hass)
+
+    sensor_state = hass.states.get("sensor.test")
+    assert sensor_state.last_updated == past
+
+    stats_top_of_hour = past.replace(minute=0, second=0, microsecond=0)
+    stats_start = past.replace(minute=55)
+    do_adhoc_statistics(hass, start=stats_start)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "hour",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    past = now - timedelta(days=3, hours=1)
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/statistics_during_period",
+            "start_time": past.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": stats_start.isoformat(),
+                "end": (stats_start + timedelta(minutes=5)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    start_of_day = stats_top_of_hour.replace(hour=0, minute=0)
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "recorder/statistics_during_period",
+            "start_time": stats_top_of_hour.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "day",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": start_of_day.isoformat(),
+                "end": (start_of_day + timedelta(days=1)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+
+async def test_statistics_during_period_bad_start_time(
+    hass, hass_ws_client, recorder_mock
+):
+    """Test statistics_during_period."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": "cats",
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_statistics_during_period_bad_end_time(
+    hass, hass_ws_client, recorder_mock
+):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
+
+
+@pytest.mark.parametrize(
+    "units, attributes, display_unit, statistics_unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa"),
+    ],
+)
+async def test_list_statistic_ids(
+    hass,
+    hass_ws_client,
+    recorder_mock,
+    units,
+    attributes,
+    display_unit,
+    statistics_unit,
+):
+    """Test list_statistic_ids."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await async_wait_recording_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "display_unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
+        }
+    ]
+
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    # Remove the state, statistics will now be fetched from the database
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 3, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "display_unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
+        }
+    ]
+
+    await client.send_json(
+        {"id": 4, "type": "recorder/list_statistic_ids", "statistic_type": "dogs"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json(
+        {"id": 5, "type": "recorder/list_statistic_ids", "statistic_type": "mean"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "display_unit_of_measurement": display_unit,
+            "statistics_unit_of_measurement": statistics_unit,
+        }
+    ]
+
+    await client.send_json(
+        {"id": 6, "type": "recorder/list_statistic_ids", "statistic_type": "sum"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
 
 
 async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
@@ -78,12 +438,11 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     now = dt_util.utcnow()
 
     units = METRIC_SYSTEM
-    attributes = POWER_SENSOR_ATTRIBUTES
+    attributes = POWER_SENSOR_KW_ATTRIBUTES
     state = 10
-    value = 10000
+    value = 10
 
     hass.config.units = units
-    await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test1", state, attributes=attributes)
@@ -98,7 +457,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     await client.send_json(
         {
             "id": 1,
-            "type": "history/statistics_during_period",
+            "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
             "period": "5minute",
         }
@@ -163,7 +522,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     await client.send_json(
         {
             "id": 3,
-            "type": "history/statistics_during_period",
+            "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
             "period": "5minute",
         }
@@ -187,7 +546,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     await client.send_json(
         {
             "id": 5,
-            "type": "history/statistics_during_period",
+            "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
             "period": "5minute",
         }
@@ -205,11 +564,10 @@ async def test_update_statistics_metadata(
     now = dt_util.utcnow()
 
     units = METRIC_SYSTEM
-    attributes = POWER_SENSOR_ATTRIBUTES
+    attributes = POWER_SENSOR_KW_ATTRIBUTES
     state = 10
 
     hass.config.units = units
-    await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", state, attributes=attributes)
@@ -220,17 +578,18 @@ async def test_update_statistics_metadata(
 
     client = await hass_ws_client()
 
-    await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
+    await client.send_json({"id": 1, "type": "recorder/list_statistic_ids"})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": "W",
+            "statistics_unit_of_measurement": "W",
         }
     ]
 
@@ -246,17 +605,18 @@ async def test_update_statistics_metadata(
     assert response["success"]
     await async_recorder_block_till_done(hass)
 
-    await client.send_json({"id": 3, "type": "history/list_statistic_ids"})
+    await client.send_json({"id": 3, "type": "recorder/list_statistic_ids"})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": new_unit,
+            "statistics_unit_of_measurement": new_unit,
         }
     ]
 
@@ -455,7 +815,6 @@ async def test_get_statistics_metadata(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await async_setup_component(hass, "history", {"history": {}})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
 
@@ -526,11 +885,12 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "statistics_unit_of_measurement": unit,
         }
     ]
 
@@ -552,11 +912,12 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": unit,
             "has_mean": False,
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "unit_of_measurement": unit,
+            "statistics_unit_of_measurement": unit,
         }
     ]
 
@@ -646,12 +1007,13 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -663,6 +1025,7 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
+                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },

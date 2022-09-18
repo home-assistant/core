@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
         "error": {
             "cannot_connect": "Det gick inte att ansluta.",
             "invalid_auth": "Ogiltig autentisering",
@@ -9,7 +12,9 @@
             "reauth_confirm": {
                 "data": {
                     "token": "\u00c5tkomstnyckel"
-                }
+                },
+                "description": "Nuki-integrationen m\u00e5ste autentiseras p\u00e5 nytt med din brygga.",
+                "title": "\u00c5terautenticera integration"
             },
             "user": {
                 "data": {

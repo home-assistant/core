@@ -7,6 +7,9 @@
         },
         "flow_title": "{host}",
         "step": {
+            "confirm": {
+                "description": "Vill du l\u00e4gga till Arcam FMJ p\u00e5 ` {host} ` till Home Assistant?"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd",

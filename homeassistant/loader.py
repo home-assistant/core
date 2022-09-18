@@ -91,9 +91,30 @@ class BluetoothMatcherOptional(TypedDict, total=False):
     service_data_uuid: str
     manufacturer_id: int
     manufacturer_data_start: list[int]
+    connectable: bool
 
 
 class BluetoothMatcher(BluetoothMatcherRequired, BluetoothMatcherOptional):
+    """Matcher for the bluetooth integration."""
+
+
+class USBMatcherRequired(TypedDict, total=True):
+    """Matcher for the usb integration for required fields."""
+
+    domain: str
+
+
+class USBMatcherOptional(TypedDict, total=False):
+    """Matcher for the usb integration for optional fields."""
+
+    vid: str
+    pid: str
+    serial_number: str
+    manufacturer: str
+    description: str
+
+
+class USBMatcher(USBMatcherRequired, USBMatcherOptional):
     """Matcher for the bluetooth integration."""
 
 
@@ -317,9 +338,9 @@ async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     return dhcp
 
 
-async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
+async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     """Return cached list of usb types."""
-    usb: list[dict[str, str]] = USB.copy()
+    usb = cast(list[USBMatcher], USB.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -327,10 +348,13 @@ async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
             continue
         for entry in integration.usb:
             usb.append(
-                {
-                    "domain": integration.domain,
-                    **{k: v for k, v in entry.items() if k != "known_devices"},
-                }
+                cast(
+                    USBMatcher,
+                    {
+                        "domain": integration.domain,
+                        **{k: v for k, v in entry.items() if k != "known_devices"},
+                    },
+                )
             )
 
     return usb
@@ -429,7 +453,7 @@ class Integration:
             try:
                 AwesomeVersion(
                     integration.version,
-                    [
+                    ensure_strategy=[
                         AwesomeVersionStrategy.CALVER,
                         AwesomeVersionStrategy.SEMVER,
                         AwesomeVersionStrategy.SIMPLEVER,

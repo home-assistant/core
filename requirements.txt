@@ -6,7 +6,7 @@ astral==2.2
 async_timeout==4.0.2
 attrs==21.2.0
 atomicwrites-homeassistant==1.4.1
-awesomeversion==22.6.0
+awesomeversion==22.9.0
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
@@ -16,7 +16,7 @@ ifaddr==0.1.7
 jinja2==3.1.2
 lru-dict==1.1.8
 PyJWT==2.4.0
-cryptography==36.0.2
+cryptography==37.0.4
 orjson==3.7.11
 pip>=21.0,<22.3
 python-slugify==4.0.1

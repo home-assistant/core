@@ -8,12 +8,12 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.thermostats import Thermostat
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -74,6 +74,7 @@ async def async_setup_entry(
 class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.AUX_HEAT
@@ -137,11 +138,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return SUPPORT_HVAC
-
-    @property
-    def precision(self) -> int:
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
 
     @property
     def is_aux_heat(self) -> bool:

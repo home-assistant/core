@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 from async_timeout import timeout
+from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
 
@@ -117,6 +118,30 @@ async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> Versio
         raise CannotConnect from err
 
     return version_info
+
+
+def get_usb_ports() -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    ports = list_ports.comports()
+    port_descriptions = {}
+    for port in ports:
+        usb_device = usb.usb_device_from_port(port)
+        dev_path = usb.get_serial_by_id(usb_device.device)
+        human_name = usb.human_readable_device_name(
+            dev_path,
+            usb_device.serial_number,
+            usb_device.manufacturer,
+            usb_device.description,
+            usb_device.vid,
+            usb_device.pid,
+        )
+        port_descriptions[dev_path] = human_name
+    return port_descriptions
+
+
+async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    return await hass.async_add_executor_job(get_usb_ports)
 
 
 class BaseZwaveJSFlow(FlowHandler):
@@ -402,7 +427,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             vid,
             pid,
         )
-        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        self.context["title_placeholders"] = {
+            CONF_NAME: self._title.split(" - ")[0].strip()
+        }
         return await self.async_step_usb_confirm()
 
     async def async_step_usb_confirm(
@@ -579,7 +606,11 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         if not self._usb_discovery:
-            schema = {vol.Required(CONF_USB_PATH, default=usb_path): str, **schema}
+            ports = await async_get_usb_ports(self.hass)
+            schema = {
+                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
+                **schema,
+            }
 
         data_schema = vol.Schema(schema)
 
@@ -761,7 +792,9 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
-                CONF_ADDON_EMULATE_HARDWARE: user_input[CONF_EMULATE_HARDWARE],
+                CONF_ADDON_EMULATE_HARDWARE: user_input.get(
+                    CONF_EMULATE_HARDWARE, False
+                ),
             }
 
             if new_addon_config != addon_config:
@@ -801,9 +834,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
         emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
 
+        ports = await async_get_usb_ports(self.hass)
+
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USB_PATH, default=usb_path): str,
+                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
                 vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
                 vol.Optional(
                     CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key

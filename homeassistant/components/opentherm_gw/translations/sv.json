@@ -2,7 +2,9 @@
     "config": {
         "error": {
             "already_configured": "Gateway redan konfigurerad",
-            "id_exists": "Gateway-id finns redan"
+            "cannot_connect": "Det gick inte att ansluta.",
+            "id_exists": "Gateway-id finns redan",
+            "timeout_connect": "Timeout uppr\u00e4ttar anslutning"
         },
         "step": {
             "init": {

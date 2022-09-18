@@ -1,6 +1,7 @@
 """The rest component."""
 
 import asyncio
+import contextlib
 import logging
 
 import httpx
@@ -26,12 +27,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery, template
-from homeassistant.helpers.entity_component import (
-    DEFAULT_SCAN_INTERVAL,
-    EntityComponent,
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.reload import (
+    async_integration_yaml_config,
+    async_reload_integration_platforms,
 )
-from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -53,12 +55,14 @@ COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rest platforms."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
     _async_setup_shared_data(hass)
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        if (conf := await component.async_prepare_reload()) is None:
+        conf = None
+        with contextlib.suppress(HomeAssistantError):
+            conf = await async_integration_yaml_config(hass, DOMAIN)
+        if conf is None:
             return
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
         _async_setup_shared_data(hass)

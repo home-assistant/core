@@ -33,15 +33,19 @@ from .const import (
     SourceType,
 )
 
+# mypy: disallow-any-generics
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an entry."""
-    component: EntityComponent | None = hass.data.get(DOMAIN)
+    component: EntityComponent[BaseTrackerEntity] | None = hass.data.get(DOMAIN)
 
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     # Clean up old devices created by device tracker entities in the past.
     # Can be removed after 2022.6
@@ -70,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[BaseTrackerEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 

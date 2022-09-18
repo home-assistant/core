@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "replaced": {
+            "description": "Mi Flora integratsioon lakkas t\u00f6\u00f6tamast versioonis Home Assistant 2022.7 ja asendati Xiaomi BLE integratsiooniga versioonis 2022.8.\n\nMigratsiooniteed ei ole v\u00f5imalik, seega peate oma Mi Flora seadme uue integratsiooni abil k\u00e4sitsi lisama.\n\nTeie olemasolevat Mi Flora YAML-konfiguratsiooni ei kasuta Home Assistant enam. Probleemi lahendamiseks eemaldage YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "Mi Flora sidumine on asendatud"
+        }
+    }
+}

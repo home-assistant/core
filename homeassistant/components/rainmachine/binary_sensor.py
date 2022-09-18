@@ -80,7 +80,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Hourly restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="hourly",
     ),
@@ -89,7 +88,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Month restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="month",
     ),
@@ -98,7 +96,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Rain delay restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="rainDelay",
     ),
@@ -116,7 +113,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Weekday restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="weekDay",
     ),
@@ -179,7 +175,9 @@ class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FLOW_SENSOR:
-            self._attr_is_on = self.coordinator.data["system"].get("useFlowSensor")
+            self._attr_is_on = self.coordinator.data.get("system", {}).get(
+                "useFlowSensor"
+            )
 
 
 class UniversalRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):

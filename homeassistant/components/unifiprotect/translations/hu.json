@@ -42,11 +42,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "Egy list\u00e1ra van sz\u00fcks\u00e9g, melyben a MAC-c\u00edmek vessz\u0151vel vannak elv\u00e1lasztva"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Val\u00f3s idej\u0171 m\u00e9r\u0151sz\u00e1mok (FIGYELEM: nagym\u00e9rt\u00e9kben n\u00f6veli a CPU terhel\u00e9st)",
                     "disable_rtsp": "Az RTSP adatfolyam letilt\u00e1sa",
+                    "ignored_devices": "A figyelmen k\u00edv\u00fcl hagyand\u00f3 eszk\u00f6z\u00f6k MAC-c\u00edm\u00e9nek vessz\u0151vel elv\u00e1lasztott list\u00e1ja",
+                    "max_media": "A m\u00e9diab\u00f6ng\u00e9sz\u0151be bet\u00f6ltend\u0151 esem\u00e9nyek maxim\u00e1lis sz\u00e1ma (n\u00f6veli a RAM-haszn\u00e1latot)",
                     "override_connection_host": "Kapcsolat c\u00edm\u00e9nek fel\u00fclb\u00edr\u00e1l\u00e1sa"
                 },
                 "description": "A Val\u00f3s idej\u0171 m\u00e9r\u0151sz\u00e1mokat csak akkor javasolt haszn\u00e1lni, ha enged\u00e9lyezte a diagnosztikai \u00e9rz\u00e9kel\u0151ket, \u00e9s szeretn\u00e9, hogy azok val\u00f3s id\u0151ben friss\u00fcljenek. Ha nincs enged\u00e9lyezve, akkor csak 15 percenk\u00e9nt friss\u00fclnek.",

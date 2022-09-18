@@ -1,15 +1,13 @@
 """Models for Recorder."""
 from __future__ import annotations
 
-import asyncio
-from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 from typing import Any, TypedDict, overload
 
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_LAST_CHANGED,
     COMPRESSED_STATE_LAST_UPDATED,
@@ -30,14 +28,6 @@ EMPTY_JSON_OBJECT = "{}"
 
 class UnsupportedDialect(Exception):
     """The dialect or its version is not supported."""
-
-
-@dataclass
-class RecorderData:
-    """Recorder data stored in hass.data."""
-
-    recorder_platforms: dict[str, Any] = field(default_factory=dict)
-    db_connected: asyncio.Future = field(default_factory=asyncio.Future)
 
 
 class StatisticResult(TypedDict):
@@ -74,6 +64,7 @@ class StatisticMetaData(TypedDict):
     has_sum: bool
     name: str | None
     source: str
+    state_unit_of_measurement: str | None
     statistic_id: str
     unit_of_measurement: str | None
 

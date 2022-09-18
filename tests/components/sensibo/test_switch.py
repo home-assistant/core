@@ -8,7 +8,6 @@ from pysensibo.model import SensiboData
 import pytest
 from pytest import MonkeyPatch
 
-from homeassistant.components.sensibo.switch import build_params
 from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -134,6 +133,7 @@ async def test_switch_pure_boost(
     await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", True)
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_measure_integration", None)
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -223,28 +223,3 @@ async def test_switch_command_failure(
                 },
                 blocking=True,
             )
-
-
-async def test_build_params(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
-    get_data: SensiboData,
-) -> None:
-    """Test the build params method."""
-
-    assert build_params("set_timer", get_data.parsed["ABC999111"]) == {
-        "minutesFromNow": 60,
-        "acState": {**get_data.parsed["ABC999111"].ac_states, "on": False},
-    }
-
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_measure_integration", None)
-    assert build_params("set_pure_boost", get_data.parsed["AAZZAAZZ"]) == {
-        "enabled": True,
-        "sensitivity": "N",
-        "measurementsIntegration": True,
-        "acIntegration": False,
-        "geoIntegration": False,
-        "primeIntegration": False,
-    }
-    assert build_params("incorrect_command", get_data.parsed["ABC999111"]) is None

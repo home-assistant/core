@@ -1,5 +1,16 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Tryck p\u00e5 SKICKA f\u00f6r att bekr\u00e4fta att str\u00f6mf\u00f6rs\u00f6rjningen har bytts ut",
+                        "title": "Str\u00f6mf\u00f6rs\u00f6rjningen m\u00e5ste bytas ut"
+                    }
+                }
+            },
+            "title": "Str\u00f6mf\u00f6rs\u00f6rjningen \u00e4r inte stabil"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

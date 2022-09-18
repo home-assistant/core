@@ -10,11 +10,10 @@ from bleak import BleakClient, BleakError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -139,12 +138,24 @@ async def async_setup_scanner(  # noqa: C901
     ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
+        # We need one we can connect to since the tracker will
+        # accept devices from non-connectable sources
+        if service_info.connectable:
+            device = service_info.device
+        elif connectable_device := bluetooth.async_ble_device_from_address(
+            hass, service_info.device.address, True
+        ):
+            device = connectable_device
+        else:
+            # The device can be seen by a passive tracker but we
+            # don't have a route to make a connection
+            return
         try:
-            async with BleakClient(service_info.device) as client:
+            async with BleakClient(device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Timeout when trying to get battery status for %s", service_info.name
             )
         # Bleak currently has a few places where checking dbus attributes
@@ -192,12 +203,17 @@ async def async_setup_scanner(  # noqa: C901
         # interval so they do not get set to not_home when
         # there have been no callbacks because the RSSI or
         # other properties have not changed.
-        for service_info in bluetooth.async_discovered_service_info(hass):
+        for service_info in bluetooth.async_discovered_service_info(hass, False):
             _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
     cancels = [
         bluetooth.async_register_callback(
-            hass, _async_update_ble, None, bluetooth.BluetoothScanningMode.ACTIVE
+            hass,
+            _async_update_ble,
+            BluetoothCallbackMatcher(
+                connectable=False
+            ),  # We will take data from any source
+            bluetooth.BluetoothScanningMode.ACTIVE,
         ),
         async_track_time_interval(hass, _async_refresh_ble, interval),
     ]

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
+import traceback
 from typing import Any
 
 from aionotion import async_get_client
@@ -31,7 +33,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
 
-DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
@@ -75,6 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"There was a Notion error while updating {attr}: {result}"
                 ) from result
             if isinstance(result, Exception):
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    LOGGER.debug("".join(traceback.format_tb(result.__traceback__)))
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
                 ) from result

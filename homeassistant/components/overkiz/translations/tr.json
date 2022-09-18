@@ -11,7 +11,8 @@
             "server_in_maintenance": "Sunucu bak\u0131m nedeniyle kapal\u0131",
             "too_many_attempts": "Ge\u00e7ersiz anahtarla \u00e7ok fazla deneme, ge\u00e7ici olarak yasakland\u0131",
             "too_many_requests": "\u00c7ok fazla istek var, daha sonra tekrar deneyin",
-            "unknown": "Beklenmeyen hata"
+            "unknown": "Beklenmeyen hata",
+            "unknown_user": "Bilinmeyen kullan\u0131c\u0131. Somfy Protect hesaplar\u0131 bu entegrasyon taraf\u0131ndan desteklenmez."
         },
         "flow_title": "A\u011f ge\u00e7idi: {gateway_id}",
         "step": {

@@ -1,7 +1,7 @@
 """The Mikrotik router class."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import socket
 import ssl
@@ -14,12 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
 
 from .const import (
     ARP,
-    ATTR_DEVICE_TRACKER,
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
@@ -38,64 +35,10 @@ from .const import (
     NAME,
     WIRELESS,
 )
+from .device import Device
 from .errors import CannotConnect, LoginError
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class Device:
-    """Represents a network device."""
-
-    def __init__(self, mac: str, params: dict[str, Any]) -> None:
-        """Initialize the network device."""
-        self._mac = mac
-        self._params = params
-        self._last_seen: datetime | None = None
-        self._attrs: dict[str, Any] = {}
-        self._wireless_params: dict[str, Any] = {}
-
-    @property
-    def name(self) -> str:
-        """Return device name."""
-        return self._params.get("host-name", self.mac)
-
-    @property
-    def ip_address(self) -> str | None:
-        """Return device primary ip address."""
-        return self._params.get("address")
-
-    @property
-    def mac(self) -> str:
-        """Return device mac."""
-        return self._mac
-
-    @property
-    def last_seen(self) -> datetime | None:
-        """Return device last seen."""
-        return self._last_seen
-
-    @property
-    def attrs(self) -> dict[str, Any]:
-        """Return device attributes."""
-        attr_data = self._wireless_params | self._params
-        for attr in ATTR_DEVICE_TRACKER:
-            if attr in attr_data:
-                self._attrs[slugify(attr)] = attr_data[attr]
-        return self._attrs
-
-    def update(
-        self,
-        wireless_params: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
-        active: bool = False,
-    ) -> None:
-        """Update Device params."""
-        if wireless_params:
-            self._wireless_params = wireless_params
-        if params:
-            self._params = params
-        if active:
-            self._last_seen = dt_util.utcnow()
 
 
 class MikrotikData:
@@ -248,8 +191,8 @@ class MikrotikData:
         self, cmd: str, params: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
+        _LOGGER.debug("Running command %s", cmd)
         try:
-            _LOGGER.debug("Running command %s", cmd)
             if params:
                 return list(self.api(cmd=cmd, **params))
             return list(self.api(cmd=cmd))
@@ -273,7 +216,7 @@ class MikrotikData:
             return []
 
 
-class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Mikrotik Hub Object."""
 
     def __init__(
@@ -293,7 +236,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def host(self) -> str:
         """Return the host of this hub."""
-        return self.config_entry.data[CONF_HOST]
+        return str(self.config_entry.data[CONF_HOST])
 
     @property
     def hostname(self) -> str:

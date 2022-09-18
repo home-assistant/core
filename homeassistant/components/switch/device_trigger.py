@@ -3,13 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -23,13 +20,11 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    return await toggle_entity.async_attach_trigger(
-        hass, config, action, automation_info
-    )
+    return await toggle_entity.async_attach_trigger(hass, config, action, trigger_info)
 
 
 async def async_get_triggers(

@@ -14,7 +14,6 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.components.repairs import IssueSeverity, create_issue
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -25,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -102,9 +102,9 @@ async def async_setup_platform(
 class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for ALPR image processing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize base ALPR entity."""
-        self.plates = {}
+        self.plates: dict[str, float] = {}
         self.vehicles = 0
 
     @property
@@ -130,25 +130,25 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
-    def process_plates(self, plates, vehicles):
+    def process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data."""
         run_callback_threadsafe(
             self.hass.loop, self.async_process_plates, plates, vehicles
         ).result()
 
     @callback
-    def async_process_plates(self, plates, vehicles):
+    def async_process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data.
 
         plates are a dict in follow format:
-          { 'plate': confidence }
+          { '<plate>': confidence }
 
         This method must be run in the event loop.
         """
         plates = {
             plate: confidence
             for plate, confidence in plates.items()
-            if confidence >= self.confidence
+            if self.confidence is None or confidence >= self.confidence
         }
         new_plates = set(plates) - set(self.plates)
 

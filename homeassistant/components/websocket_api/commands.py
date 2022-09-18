@@ -74,6 +74,7 @@ def async_register_commands(
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_supported_brands)
+    async_reg(hass, handle_supported_features)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -615,8 +616,7 @@ async def handle_test_condition(
     from homeassistant.helpers import condition
 
     # Do static + dynamic validation of the condition
-    config = cv.CONDITION_SCHEMA(msg["condition"])
-    config = await condition.async_validate_condition_config(hass, config)
+    config = await condition.async_validate_condition_config(hass, msg["condition"])
     # Test the condition
     check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
@@ -721,5 +721,23 @@ async def handle_supported_brands(
     for int_or_exc in ints_or_excs.values():
         if isinstance(int_or_exc, Exception):
             raise int_or_exc
+        # Happens if a custom component without supported brands overrides a built-in one with supported brands
+        if "supported_brands" not in int_or_exc.manifest:
+            continue
         data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
     connection.send_result(msg["id"], data)
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "supported_features",
+        vol.Required("features"): {str: int},
+    }
+)
+def handle_supported_features(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle setting supported features."""
+    connection.supported_features = msg["features"]
+    connection.send_result(msg["id"])
