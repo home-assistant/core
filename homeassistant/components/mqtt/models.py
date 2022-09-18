@@ -1,14 +1,15 @@
 """Models used by multiple MQTT modules."""
 from __future__ import annotations
 
+import asyncio
+import attr
+
 from ast import literal_eval
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
 from typing import TYPE_CHECKING, Any, TypedDict, Union
-
-import attr
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -216,9 +217,16 @@ class MqttData:
         default_factory=dict
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
+    data_config_flow_lock: asyncio.Lock | None = None
+    discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
+    discovery_pending_discovered: dict[
+        tuple[str, str], dict[str, CALLBACK_TYPE | deque]
+    ] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
         default_factory=dict
     )
+    discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
+    integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
     reload_entry: bool = False

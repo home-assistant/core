@@ -13,7 +13,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
+from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_ON,
@@ -152,7 +152,7 @@ async def test_correct_config_discovery(hass, mqtt_mock_entry_no_yaml_config, ca
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("binary_sensor", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("binary_sensor", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN])
@@ -170,7 +170,7 @@ async def test_discover_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("fan", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("fan", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE])
@@ -190,7 +190,7 @@ async def test_discover_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
 
     assert state is not None
     assert state.name == "ClimateTest"
-    assert ("climate", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("climate", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
@@ -212,7 +212,9 @@ async def test_discover_alarm_control_panel(
 
     assert state is not None
     assert state.name == "AlarmControlPanelTest"
-    assert ("alarm_control_panel", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("alarm_control_panel", "bla") in hass.data[
+        "mqtt"
+    ].discovery_already_discovered
 
 
 @pytest.mark.parametrize(
@@ -372,7 +374,7 @@ async def test_discovery_with_object_id(
 
     assert state is not None
     assert state.name == name
-    assert (domain, "object bla") in hass.data[ALREADY_DISCOVERED]
+    assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
@@ -390,7 +392,9 @@ async def test_discovery_incl_nodeid(hass, mqtt_mock_entry_no_yaml_config, caplo
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("binary_sensor", "my_node_id bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("binary_sensor", "my_node_id bla") in hass.data[
+        "mqtt"
+    ].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
@@ -970,7 +974,7 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test_topic/some/base/topic", "ON")
@@ -1023,7 +1027,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
 
@@ -1102,7 +1106,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
@@ -1151,7 +1155,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
@@ -1236,7 +1240,7 @@ async def test_no_implicit_state_topic_switch(
     state = hass.states.get("switch.Test1")
     assert state is not None
     assert state.name == "Test1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
     assert state.attributes["assumed_state"] is True
 
@@ -1280,7 +1284,9 @@ async def test_complex_discovery_topic_prefix(
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("binary_sensor", "node1 object1") in hass.data[ALREADY_DISCOVERED]
+    assert ("binary_sensor", "node1 object1") in hass.data[
+        "mqtt"
+    ].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
