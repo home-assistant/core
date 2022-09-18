@@ -52,12 +52,12 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
         self,
         coordinator: IBeaconCoordinator,
         identifier: str,
-        unique_id: str,
+        device_unique_id: str,
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Initialize an iBeacon tracker entity."""
-        super().__init__(coordinator, identifier, unique_id, parsed)
-        self._attr_unique_id = unique_id
+        super().__init__(coordinator, identifier, device_unique_id, parsed)
+        self._attr_unique_id = device_unique_id
         self._active = True
 
     @property
