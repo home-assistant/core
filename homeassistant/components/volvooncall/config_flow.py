@@ -13,15 +13,19 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_REGION,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import VolvoData
-from .const import CONF_MUTABLE, CONF_SCANDINAVIAN_MILES, DOMAIN
+from .const import (
+    CONF_MUTABLE,
+    DOMAIN,
+    UNIT_SYSTEM_IMPERIAL,
+    UNIT_SYSTEM_METRIC,
+    UNIT_SYSTEM_SCANDINAVIAN_MILES,
+)
 from .errors import InvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +47,7 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: "",
             CONF_REGION: None,
             CONF_MUTABLE: True,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            CONF_UNIT_SYSTEM: UNIT_SYSTEM_METRIC,
         }
 
         if user_input is not None:
@@ -87,9 +91,9 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_UNIT_SYSTEM, default=defaults[CONF_UNIT_SYSTEM]
                 ): vol.In(
                     {
-                        CONF_UNIT_SYSTEM_METRIC: "Metric",
-                        CONF_SCANDINAVIAN_MILES: "Metric with Scandinavian Miles",
-                        CONF_UNIT_SYSTEM_IMPERIAL: "Imperial",
+                        UNIT_SYSTEM_METRIC: "Metric",
+                        UNIT_SYSTEM_SCANDINAVIAN_MILES: "Metric with Scandinavian Miles",
+                        UNIT_SYSTEM_IMPERIAL: "Imperial",
                     }
                 ),
                 vol.Optional(CONF_MUTABLE, default=defaults[CONF_MUTABLE]): bool,
