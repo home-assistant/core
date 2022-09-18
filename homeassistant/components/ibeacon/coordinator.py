@@ -208,7 +208,7 @@ class IBeaconCoordinator:
 
     @callback
     def _async_restore_from_registry(self) -> None:
-        """Restore the state of the Coordinator from the entity registry."""
+        """Restore the state of the Coordinator from the device registry."""
         for device in self._dev_reg.devices.values():
             unique_id = None
             for identifier in device.identifiers:
