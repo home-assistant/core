@@ -244,7 +244,9 @@ class IBeaconCoordinator:
         )
         self._entry.async_on_unload(self._async_stop)
         # Replay any that are already there.
-        for service_info in bluetooth.async_discovered_service_info(self.hass):
+        for service_info in bluetooth.async_discovered_service_info(
+            self.hass, connectable=False
+        ):
             if is_ibeacon_service_info(service_info):
                 self._async_update_ibeacon(
                     service_info, bluetooth.BluetoothChange.ADVERTISEMENT
