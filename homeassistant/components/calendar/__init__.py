@@ -1,7 +1,8 @@
 """Support for Google Calendar event device sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Iterable
+import dataclasses
 import datetime
 from http import HTTPStatus
 import logging
@@ -77,15 +78,51 @@ def get_date(date: dict[str, Any]) -> datetime.datetime:
     return dt.as_local(parsed_datetime)
 
 
-@dataclass
+def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    result: dict[str, str] = {}
+    for name, value in obj:
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            result[name] = value.isoformat()
+        elif value is not None:
+            result[name] = value
+    return result
+
+
+def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
+    """Convert CalendarEvent dataclass items to the API format."""
+    result: dict[str, Any] = {}
+    for name, value in obj:
+        if isinstance(value, datetime.datetime):
+            result[name] = {"dateTime": dt.as_local(value).isoformat()}
+        elif isinstance(value, datetime.date):
+            result[name] = {"date": value.isoformat()}
+        else:
+            result[name] = value
+    return result
+
+
+@dataclasses.dataclass
 class CalendarEvent:
     """An event on a calendar."""
 
     start: datetime.date | datetime.datetime
+    """The start (inclusive) of the event."""
+
     end: datetime.date | datetime.datetime
+    """The end (exclusive) of the event.
+
+    The end should be of the same type as the start.
+    """
+
     summary: str
+    """A short summary or title of the event."""
+
     description: str | None = None
+    """A more complete description of the event."""
+
     location: str | None = None
+    """The intended venue for the activity defined by the event."""
 
     @property
     def start_datetime_local(self) -> datetime.datetime:
@@ -104,17 +141,9 @@ class CalendarEvent:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
-        data = {
-            "start": self.start.isoformat(),
-            "end": self.end.isoformat(),
-            "summary": self.summary,
-            "all_day": self.all_day,
-        }
-        if self.description:
-            data["description"] = self.description
-        if self.location:
-            data["location"] = self.location
-        return data
+        result = dataclasses.asdict(self, dict_factory=_event_dict_factory)
+        result["all_day"] = self.all_day
+        return result
 
 
 def _get_datetime_local(
@@ -124,39 +153,6 @@ def _get_datetime_local(
     if isinstance(dt_or_d, datetime.datetime):
         return dt.as_local(dt_or_d)
     return dt.start_of_local_day(dt_or_d)
-
-
-def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
-    """Convert a calendar event date/datetime to a datetime if needed."""
-    if isinstance(dt_or_d, datetime.datetime):
-        return {"dateTime": dt.as_local(dt_or_d).isoformat()}
-    return {"date": dt_or_d.isoformat()}
-
-
-def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
-    """Normalize a calendar event."""
-    normalized_event: dict[str, Any] = {}
-
-    start = event.get("start")
-    end = event.get("end")
-    start = get_date(start) if start is not None else None
-    end = get_date(end) if end is not None else None
-    normalized_event["dt_start"] = start
-    normalized_event["dt_end"] = end
-
-    start = start.strftime(DATE_STR_FORMAT) if start is not None else None
-    end = end.strftime(DATE_STR_FORMAT) if end is not None else None
-    normalized_event["start"] = start
-    normalized_event["end"] = end
-
-    # cleanup the string so we don't have a bunch of double+ spaces
-    summary = event.get("summary", "")
-    normalized_event["message"] = re.sub("  +", "", summary).strip()
-    normalized_event["location"] = event.get("location", "")
-    normalized_event["description"] = event.get("description", "")
-    normalized_event["all_day"] = "date" in event["start"]
-
-    return normalized_event
 
 
 def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
@@ -276,15 +272,10 @@ class CalendarEventView(http.HomeAssistantView):
             return self.json_message(
                 f"Error reading events: {err}", HTTPStatus.INTERNAL_SERVER_ERROR
             )
+
         return self.json(
             [
-                {
-                    "summary": event.summary,
-                    "description": event.description,
-                    "location": event.location,
-                    "start": _get_api_date(event.start),
-                    "end": _get_api_date(event.end),
-                }
+                dataclasses.asdict(event, dict_factory=_api_event_dict_factory)
                 for event in calendar_event_list
             ]
         )
