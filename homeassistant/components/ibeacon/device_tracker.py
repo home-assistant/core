@@ -12,12 +12,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_DISTANCE_BY_ADDRESS,
+    ATTR_DISTANCE,
     ATTR_MAJOR,
     ATTR_MINOR,
-    ATTR_POWER_BY_ADDRESS,
-    ATTR_RSSI_BY_ADDRESS,
-    ATTR_SOURCE_BY_ADDRESS,
+    ATTR_POWER,
+    ATTR_RSSI,
+    ATTR_SOURCE,
     ATTR_UUID,
     DOMAIN,
     SIGNAL_IBEACON_DEVICE_NEW,
@@ -36,10 +36,6 @@ async def async_setup_entry(
         unique_id: str,
         name: str,
         parsed: iBeaconAdvertisement,
-        rssi_by_address: dict[str, int],
-        power_by_address: dict[str, int],
-        source_by_address: dict[str, str],
-        distance_by_address: dict[str, float],
     ) -> None:
         """Signal a new device."""
         async_add_entities(
@@ -49,10 +45,6 @@ async def async_setup_entry(
                     name,
                     unique_id,
                     parsed,
-                    rssi_by_address,
-                    power_by_address,
-                    source_by_address,
-                    distance_by_address,
                 )
             ]
         )
@@ -73,16 +65,8 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
         name: str,
         unique_id: str,
         parsed: iBeaconAdvertisement,
-        rssi_by_address: dict[str, int],
-        power_by_address: dict[str, int],
-        source_by_address: dict[str, str],
-        distance_by_address: dict[str, float],
     ) -> None:
         """Initialize an iBeacon tracker entity."""
-        self._rssi_by_address = rssi_by_address
-        self._power_by_address = power_by_address
-        self._source_by_address = source_by_address
-        self._distance_by_address = distance_by_address
         self._coordinator = coordinator
         self._parsed = parsed
         self._attr_unique_id = unique_id
@@ -107,34 +91,27 @@ class IBeaconTrackerEntity(BaseTrackerEntity):
     @property
     def extra_state_attributes(
         self,
-    ) -> dict[str, str | int | dict[str, int] | dict[str, float] | dict[str, str]]:
+    ) -> dict[str, str | int | float]:
         """Return the device state attributes."""
+        parsed = self._parsed
         return {
-            ATTR_UUID: str(self._parsed.uuid),
-            ATTR_MAJOR: self._parsed.major,
-            ATTR_MINOR: self._parsed.minor,
-            ATTR_POWER_BY_ADDRESS: self._power_by_address,
-            ATTR_RSSI_BY_ADDRESS: self._rssi_by_address,
-            ATTR_SOURCE_BY_ADDRESS: self._source_by_address,
-            ATTR_DISTANCE_BY_ADDRESS: self._distance_by_address,
+            ATTR_UUID: str(parsed.uuid),
+            ATTR_MAJOR: parsed.major,
+            ATTR_MINOR: parsed.minor,
+            ATTR_POWER: parsed.power,
+            ATTR_RSSI: parsed.rssi,
+            ATTR_SOURCE: parsed.source,
+            ATTR_DISTANCE: parsed.distance,
         }
 
     @callback
     def _async_seen(
         self,
         parsed: iBeaconAdvertisement,
-        rssi_by_address: dict[str, int],
-        power_by_address: dict[str, int],
-        source_by_address: dict[str, str],
-        distance_by_address: dict[str, float],
     ) -> None:
         """Update state."""
         self._active = True
         self._parsed = parsed
-        self._rssi_by_address = rssi_by_address
-        self._power_by_address = power_by_address
-        self._source_by_address = source_by_address
-        self._distance_by_address = distance_by_address
         self.async_write_ha_state()
 
     @callback
