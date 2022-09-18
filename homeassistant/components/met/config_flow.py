@@ -21,7 +21,7 @@ from .const import (
 
 
 @callback
-def configured_instances(hass: HomeAssistant) -> set:
+def configured_instances(hass: HomeAssistant) -> set[str]:
     """Return a set of configured SimpliSafe instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
