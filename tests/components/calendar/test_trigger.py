@@ -108,8 +108,8 @@ class FakeSchedule:
         current_time = dt_util.as_utc(self.freezer())
         if (end - current_time) > datetime.timedelta(minutes=35):
             # Reduce the amount of unnecessary small increments by jumping ahead
-            # closer to the target time. This jump is larger than the trigger
-            # update interval to ensure we still pick up the right sliding set of events
+            # closer to the target time. This is further away than the trigger update
+            # interval to ensure we still pick up the right sliding window of events.
             await self.fire_time(end - datetime.timedelta(minutes=35))
 
         while dt_util.utcnow() < end:
