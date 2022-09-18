@@ -1081,9 +1081,6 @@ pyflic==2.0.3
 # homeassistant.components.flume
 pyflume==0.6.5
 
-# homeassistant.components.flunearyou
-pyflunearyou==2.0.2
-
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
 
