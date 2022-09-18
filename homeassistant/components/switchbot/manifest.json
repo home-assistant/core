@@ -2,7 +2,7 @@
   "domain": "switchbot",
   "name": "SwitchBot",
   "documentation": "https://www.home-assistant.io/integrations/switchbot",
-  "requirements": ["PySwitchbot==0.19.8"],
+  "requirements": ["PySwitchbot==0.19.9"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
   "codeowners": [

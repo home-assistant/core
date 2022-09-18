@@ -9,6 +9,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_ID,
     CONF_MODE,
+    CONF_PATH,
     CONF_PLATFORM,
     CONF_VARIABLES,
     CONF_ZONE,
@@ -224,6 +226,21 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(automation_entity.referenced_areas)
 
 
+@callback
+def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str]:
+    """Return all automations that reference the blueprint."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if automation_entity.referenced_blueprint == blueprint_path
+    ]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
@@ -346,7 +363,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         return self.action_script.referenced_areas
 
     @property
-    def referenced_devices(self):
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+
+    @property
+    def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         if self._referenced_devices is not None:
             return self._referenced_devices

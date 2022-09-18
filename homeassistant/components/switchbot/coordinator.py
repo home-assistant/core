@@ -73,7 +73,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         if adv := switchbot.parse_advertisement_data(
             service_info.device, service_info.advertisement
         ):
-            if "modelName" in self.data:
+            if "modelName" in adv.data:
                 self._ready_event.set()
             _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
             if not self.device.advertisement_changed(adv):
