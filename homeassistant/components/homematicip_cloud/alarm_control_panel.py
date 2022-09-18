@@ -41,6 +41,7 @@ async def async_setup_entry(
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -119,11 +120,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         if self._home.name:
             name = f"{self._home.name} {name}"
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

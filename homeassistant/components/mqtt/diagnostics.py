@@ -43,7 +43,7 @@ def _async_get_diagnostics(
     device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    mqtt_instance: MQTT = hass.data[DATA_MQTT]
+    mqtt_instance: MQTT = hass.data[DATA_MQTT].client
 
     redacted_config = async_redact_data(mqtt_instance.conf, REDACT_CONFIG)
 

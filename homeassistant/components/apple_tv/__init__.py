@@ -67,17 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
-    async def setup_platforms():
-        """Set up platforms and initiate connection."""
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        await manager.init()
-
-    hass.async_create_task(setup_platforms())
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await manager.init()
 
     return True
 

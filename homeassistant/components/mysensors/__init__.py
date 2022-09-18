@@ -1,7 +1,6 @@
 """Connect to a MySensors gateway via pymysensors API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from functools import partial
 import logging
@@ -86,16 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         )
 
-    async def finish() -> None:
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
-            )
-        )
-        await finish_setup(hass, entry, gateway)
-
-    hass.async_create_task(finish())
+    await hass.config_entries.async_forward_entry_setups(
+        entry, PLATFORMS_WITH_ENTRY_SUPPORT
+    )
+    await finish_setup(hass, entry, gateway)
 
     return True
 

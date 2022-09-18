@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, ResponseStatus
 from pyinsteon.device_types import (
+    AccessControl_Morningstar,
     DimmableLightingControl_KeypadLinc_8,
     GeneralController_RemoteLinc,
     Hub,
@@ -59,12 +60,13 @@ class MockDevices:
 
     async def async_load(self, *args, **kwargs):
         """Load the mock devices."""
-        if self._connected:
+        if self._connected and not self._devices:
             addr0 = Address("AA.AA.AA")
             addr1 = Address("11.11.11")
             addr2 = Address("22.22.22")
             addr3 = Address("33.33.33")
             addr4 = Address("44.44.44")
+            addr5 = Address("55.55.55")
             self._devices[addr0] = Hub(addr0, 0x03, 0x00, 0x00, "Hub AA.AA.AA", "0")
             self._devices[addr1] = MockSwitchLinc(
                 addr1, 0x02, 0x00, 0x00, "Device 11.11.11", "1"
@@ -78,9 +80,12 @@ class MockDevices:
             self._devices[addr4] = SensorsActuators_IOLink(
                 addr4, 0x07, 0x00, 0x00, "Device 44.44.44", "4"
             )
+            self._devices[addr5] = AccessControl_Morningstar(
+                addr5, 0x0F, 0x0A, 0x00, "Device 55.55.55", "5"
+            )
 
             for device in [
-                self._devices[addr] for addr in [addr1, addr2, addr3, addr4]
+                self._devices[addr] for addr in [addr1, addr2, addr3, addr4, addr5]
             ]:
                 device.async_read_config = AsyncMock()
                 device.aldb.async_write = AsyncMock()
@@ -99,7 +104,9 @@ class MockDevices:
                     return_value=ResponseStatus.SUCCESS
                 )
 
-            for device in [self._devices[addr] for addr in [addr2, addr3, addr4]]:
+            for device in [
+                self._devices[addr] for addr in [addr2, addr3, addr4, addr5]
+            ]:
                 device.async_status = AsyncMock()
             self._devices[addr1].async_status = AsyncMock(side_effect=AttributeError)
             self._devices[addr0].aldb.async_load = AsyncMock()
@@ -117,6 +124,12 @@ class MockDevices:
                 return_value=ResponseStatus.FAILURE
             )
 
+            self._devices[addr5].async_lock = AsyncMock(
+                return_value=ResponseStatus.SUCCESS
+            )
+            self._devices[addr5].async_unlock = AsyncMock(
+                return_value=ResponseStatus.SUCCESS
+            )
             self.modem = self._devices[addr0]
             self.modem.async_read_config = AsyncMock()
 
@@ -155,6 +168,6 @@ class MockDevices:
             yield address
         await asyncio.sleep(0.01)
 
-    def subscribe(self, listener):
+    def subscribe(self, listener, force_strong_ref=False):
         """Mock the subscribe function."""
         subscribe_topic(listener, DEVICE_LIST_CHANGED)

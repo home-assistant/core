@@ -110,7 +110,7 @@ async def test_abort_if_no_implementation(hass, flow_handler):
     flow = flow_handler()
     flow.hass = hass
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -121,7 +121,7 @@ async def test_missing_credentials_for_domain(hass, flow_handler):
 
     with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
         result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
 
@@ -139,7 +139,7 @@ async def test_abort_if_authorization_timeout(
     ):
         result = await flow.async_step_user()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "authorize_url_timeout"
 
 
@@ -157,7 +157,7 @@ async def test_abort_if_no_url_available(
     ):
         result = await flow.async_step_user()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_url_available"
 
 
@@ -179,7 +179,7 @@ async def test_abort_if_oauth_error(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
     # Pick implementation
@@ -195,7 +195,7 @@ async def test_abort_if_oauth_error(
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -219,7 +219,7 @@ async def test_abort_if_oauth_error(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
 
 
@@ -241,7 +241,7 @@ async def test_abort_if_oauth_rejected(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
     # Pick implementation
@@ -257,7 +257,7 @@ async def test_abort_if_oauth_rejected(
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -273,7 +273,7 @@ async def test_abort_if_oauth_rejected(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "user_rejected_authorize"
     assert result["description_placeholders"] == {"error": "access_denied"}
 
@@ -291,7 +291,7 @@ async def test_step_discovery(hass, flow_handler, local_impl):
         data=data_entry_flow.BaseServiceInfo(),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
 
@@ -308,7 +308,7 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
         data=data_entry_flow.BaseServiceInfo(),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
     result = await hass.config_entries.flow.async_init(
@@ -317,7 +317,7 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
         data=data_entry_flow.BaseServiceInfo(),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -340,7 +340,7 @@ async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl)
         data=data_entry_flow.BaseServiceInfo(),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -362,7 +362,7 @@ async def test_full_flow(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
     # Pick implementation
@@ -378,7 +378,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"

@@ -156,8 +156,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config: ConfigType, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up MQTT sensor."""
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
@@ -229,6 +233,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+        self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
@@ -345,11 +350,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def native_value(self):

@@ -12,5 +12,7 @@
   "active_power_l2_w": 456,
   "active_power_l3_w": 123.456,
   "total_gas_m3": 1122.333,
-  "gas_timestamp": 210314112233
+  "gas_timestamp": 210314112233,
+  "active_liter_lpm": 12.345,
+  "total_liter_m3": 1234.567
 }

@@ -1,6 +1,5 @@
 """UniFi Network switch platform tests."""
 from copy import deepcopy
-from unittest.mock import patch
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE, MESSAGE_EVENT
 
@@ -31,6 +30,8 @@ from .test_controller import (
     ENTRY_CONFIG,
     setup_unifi_integration,
 )
+
+from tests.common import mock_restore_cache
 
 CLIENT_1 = {
     "hostname": "client_1",
@@ -1249,6 +1250,7 @@ async def test_restore_client_succeed(hass, aioclient_mock):
             "poe_mode": "auto",
         },
     )
+    mock_restore_cache(hass, (fake_state,))
 
     config_entry = config_entries.ConfigEntry(
         version=1,
@@ -1269,21 +1271,17 @@ async def test_restore_client_succeed(hass, aioclient_mock):
         config_entry=config_entry,
     )
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await setup_unifi_integration(
-            hass,
-            aioclient_mock,
-            options={
-                CONF_TRACK_CLIENTS: False,
-                CONF_TRACK_DEVICES: False,
-            },
-            clients_response=[],
-            devices_response=[POE_DEVICE],
-            clients_all_response=[POE_CLIENT],
-        )
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        options={
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        },
+        clients_response=[],
+        devices_response=[POE_DEVICE],
+        clients_all_response=[POE_CLIENT],
+    )
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 

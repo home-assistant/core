@@ -2,22 +2,22 @@
     "config": {
         "abort": {
             "already_setup": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
-            "authorize_url_timeout": "Tiempo de espera agotado durante la generaci\u00f3n de la URL de autorizaci\u00f3n.",
-            "external_setup": "Point se ha configurado correctamente a partir de otro flujo.",
-            "no_flows": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "authorize_url_timeout": "Se agot\u00f3 el tiempo de espera para generar la URL de autorizaci\u00f3n.",
+            "external_setup": "Point se ha configurado correctamente desde otro flujo.",
+            "no_flows": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
             "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
         "create_entry": {
             "default": "Autenticado correctamente"
         },
         "error": {
-            "follow_link": "Accede al enlace e identif\u00edcate antes de pulsar Enviar.",
+            "follow_link": "Por favor, sigue el enlace y autent\u00edcate antes de pulsar Enviar",
             "no_token": "Token de acceso no v\u00e1lido"
         },
         "step": {
             "auth": {
-                "description": "Accede al siguiente enlace y <b>Acepta</b> el acceso a tu cuenta Minut, despu\u00e9s vuelve y pulsa en <b>Enviar</b> a continuaci\u00f3n.\n\n[Link]({authorization_url})",
-                "title": "Autenticaci\u00f3n con Point"
+                "description": "Por favor, sigue el enlace a continuaci\u00f3n y **Acepta** el acceso a tu cuenta Minut, luego regresa y pulsa **Enviar** a continuaci\u00f3n. \n\n[Enlace]({authorization_url})",
+                "title": "Autenticar Point"
             },
             "user": {
                 "data": {

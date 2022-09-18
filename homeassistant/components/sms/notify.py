@@ -2,53 +2,50 @@
 import logging
 
 import gammu  # pylint: disable=import-error
-import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_NAME, CONF_RECIPIENT, CONF_TARGET
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import BaseNotificationService
+from homeassistant.const import CONF_TARGET
 
-from .const import DOMAIN, GATEWAY, SMS_GATEWAY
+from .const import CONF_UNICODE, DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
-)
 
-
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
 
-    if SMS_GATEWAY not in hass.data[DOMAIN]:
-        _LOGGER.error("SMS gateway not found, cannot initialize service")
-        return
-
-    gateway = hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
-
     if discovery_info is None:
-        number = config[CONF_RECIPIENT]
-    else:
-        number = discovery_info[CONF_RECIPIENT]
+        return None
 
-    return SMSNotificationService(gateway, number)
+    return SMSNotificationService(hass)
 
 
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, gateway, number):
+    def __init__(self, hass):
         """Initialize the service."""
-        self.gateway = gateway
-        self.number = number
+
+        self.hass = hass
 
     async def async_send_message(self, message="", **kwargs):
         """Send SMS message."""
 
-        targets = kwargs.get(CONF_TARGET, [self.number])
+        if SMS_GATEWAY not in self.hass.data[DOMAIN]:
+            _LOGGER.error("SMS gateway not found, cannot send message")
+            return
+
+        gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
+
+        targets = kwargs.get(CONF_TARGET)
+        if targets is None:
+            _LOGGER.error("No target number specified, cannot send message")
+            return
+
+        is_unicode = kwargs.get(CONF_UNICODE, True)
         smsinfo = {
             "Class": -1,
-            "Unicode": True,
+            "Unicode": is_unicode,
             "Entries": [{"ID": "ConcatenatedTextLong", "Buffer": message}],
         }
         try:
@@ -67,6 +64,6 @@ class SMSNotificationService(BaseNotificationService):
                 encoded_message["Number"] = target
                 try:
                     # Actually send the message
-                    await self.gateway.send_sms_async(encoded_message)
+                    await gateway.send_sms_async(encoded_message)
                 except gammu.GSMError as exc:
                     _LOGGER.error("Sending to %s failed: %s", target, exc)

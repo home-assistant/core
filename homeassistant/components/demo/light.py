@@ -106,21 +106,23 @@ async def async_setup_entry(
 class DemoLight(LightEntity):
     """Representation of a demo light."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         unique_id: str,
         name: str,
-        state,
-        available=False,
-        brightness=180,
-        ct=None,  # pylint: disable=invalid-name
+        state: bool,
+        available: bool = False,
+        brightness: int = 180,
+        ct: int | None = None,  # pylint: disable=invalid-name
         effect_list: list[str] | None = None,
-        effect=None,
-        hs_color=None,
-        rgbw_color=None,
-        rgbww_color=None,
+        effect: str | None = None,
+        hs_color: tuple[int, int] | None = None,
+        rgbw_color: tuple[int, int, int, int] | None = None,
+        rgbww_color: tuple[int, int, int, int, int] | None = None,
         supported_color_modes: set[ColorMode] | None = None,
-    ):
+    ) -> None:
         """Initialize the light."""
         self._available = True
         self._brightness = brightness
@@ -129,7 +131,7 @@ class DemoLight(LightEntity):
         self._effect_list = effect_list
         self._features = 0
         self._hs_color = hs_color
-        self._name = name
+        self._attr_name = name
         self._rgbw_color = rgbw_color
         self._rgbww_color = rgbww_color
         self._state = state
@@ -160,16 +162,6 @@ class DemoLight(LightEntity):
         )
 
     @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo light."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the light if any."""
-        return self._name
-
-    @property
     def unique_id(self) -> str:
         """Return unique ID for light."""
         return self._unique_id
@@ -192,17 +184,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple[float, float]:
+    def hs_color(self) -> tuple[int, int] | None:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple[int, int, int, int]:
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple[int, int, int, int, int]:
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value."""
         return self._rgbww_color
 
@@ -217,7 +209,7 @@ class DemoLight(LightEntity):
         return self._effect_list
 
     @property
-    def effect(self) -> str:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return self._effect
 

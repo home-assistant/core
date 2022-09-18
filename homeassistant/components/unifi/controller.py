@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import ssl
+from types import MappingProxyType
+from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
@@ -36,14 +38,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, entity_registry as er
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ATTR_MANUFACTURER,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
@@ -91,12 +98,15 @@ DEVICE_CONNECTED = (
 class UniFiController:
     """Manages a single UniFi Network instance."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass, config_entry, api):
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
+        self.api = api
+
+        api.callback = self.async_unifi_signalling_callback
+
         self.available = True
-        self.api = None
         self.progress = None
         self.wireless_clients = None
 
@@ -295,36 +305,18 @@ class UniFiController:
             unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
-    async def async_setup(self):
+    async def initialize(self):
         """Set up a UniFi Network instance."""
-        try:
-            self.api = await get_controller(
-                self.hass,
-                host=self.config_entry.data[CONF_HOST],
-                username=self.config_entry.data[CONF_USERNAME],
-                password=self.config_entry.data[CONF_PASSWORD],
-                port=self.config_entry.data[CONF_PORT],
-                site=self.config_entry.data[CONF_SITE_ID],
-                verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
-                async_callback=self.async_unifi_signalling_callback,
-            )
-            await self.api.initialize()
+        await self.api.initialize()
 
-            sites = await self.api.sites()
-            description = await self.api.site_description()
-
-        except CannotConnect as err:
-            raise ConfigEntryNotReady from err
-
-        except AuthenticationRequired as err:
-            raise ConfigEntryAuthFailed from err
-
+        sites = await self.api.sites()
         for site in sites.values():
             if self.site == site["name"]:
                 self.site_id = site["_id"]
                 self._site_name = site["desc"]
                 break
 
+        description = await self.api.site_description()
         self._site_role = description[0]["site_role"]
 
         # Restore clients that are not a part of active clients list.
@@ -357,17 +349,11 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
-
-        self.api.start_websocket()
-
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
-
-        return True
 
     @callback
     def async_heartbeat(
@@ -396,6 +382,22 @@ class UniFiController:
 
         for unique_id in unique_ids_to_remove:
             del self._heartbeat_time[unique_id]
+
+    async def async_update_device_registry(self) -> None:
+        """Update device registry."""
+        if self.mac is None:
+            return
+
+        device_registry = dr.async_get(self.hass)
+
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            configuration_url=self.api.url,
+            connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            default_manufacturer=ATTR_MANUFACTURER,
+            default_model="UniFi Network",
+            default_name="UniFi Network",
+        )
 
     @staticmethod
     async def async_config_entry_updated(
@@ -463,13 +465,14 @@ class UniFiController:
         return True
 
 
-async def get_controller(
-    hass, host, username, password, port, site, verify_ssl, async_callback=None
-):
+async def get_unifi_controller(
+    hass: HomeAssistant,
+    config: MappingProxyType[str, Any],
+) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
     sslcontext = None
 
-    if verify_ssl:
+    if verify_ssl := bool(config.get(CONF_VERIFY_SSL)):
         session = aiohttp_client.async_get_clientsession(hass)
         if isinstance(verify_ssl, str):
             sslcontext = ssl.create_default_context(cafile=verify_ssl)
@@ -479,14 +482,13 @@ async def get_controller(
         )
 
     controller = aiounifi.Controller(
-        host,
-        username=username,
-        password=password,
-        port=port,
-        site=site,
+        host=config[CONF_HOST],
+        username=config[CONF_USERNAME],
+        password=config[CONF_PASSWORD],
+        port=config[CONF_PORT],
+        site=config[CONF_SITE_ID],
         websession=session,
         sslcontext=sslcontext,
-        callback=async_callback,
     )
 
     try:
@@ -498,7 +500,7 @@ async def get_controller(
     except aiounifi.Unauthorized as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but not registered: %s",
-            host,
+            config[CONF_HOST],
             err,
         )
         raise AuthenticationRequired from err
@@ -510,13 +512,15 @@ async def get_controller(
         aiounifi.RequestError,
         aiounifi.ResponseError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
+        LOGGER.error(
+            "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
+        )
         raise CannotConnect from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but login required: %s",
-            host,
+            config[CONF_HOST],
             err,
         )
         raise AuthenticationRequired from err

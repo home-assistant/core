@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
 
 import voluptuous as vol
 
@@ -88,8 +89,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT scene."""
     async_add_entities([MqttScene(hass, config, config_entry, discovery_data)])
 
@@ -121,7 +126,7 @@ class MqttScene(
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
-    async def async_activate(self, **kwargs):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene.
 
         This method is a coroutine.

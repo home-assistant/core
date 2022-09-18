@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import RFXtrx as rfxtrxmod
 
@@ -87,14 +88,14 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
 
         if self._event is None:
             old_state = await self.async_get_last_state()
             if old_state is not None:
-                self._state = old_state.state == STATE_ON
+                self._attr_is_on = old_state.state == STATE_ON
 
     def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply event for a lighting 4 device."""
@@ -103,18 +104,18 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
             assert cmdstr
             cmd = int(cmdstr, 16)
             if cmd == self._cmd_on:
-                self._state = True
+                self._attr_is_on = True
             elif cmd == self._cmd_off:
-                self._state = False
+                self._attr_is_on = False
         else:
-            self._state = True
+            self._attr_is_on = True
 
     def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         assert isinstance(event, rfxtrxmod.ControlEvent)
         if event.values["Command"] in COMMAND_ON_LIST:
-            self._state = True
+            self._attr_is_on = True
         elif event.values["Command"] in COMMAND_OFF_LIST:
-            self._state = False
+            self._attr_is_on = False
 
     def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
@@ -134,25 +135,20 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
 
             self.async_write_ha_state()
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._cmd_on is not None:
             await self._async_send(self._device.send_command, self._cmd_on)
         else:
             await self._async_send(self._device.send_on)
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._cmd_off is not None:
             await self._async_send(self._device.send_command, self._cmd_off)
         else:
             await self._async_send(self._device.send_off)
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()

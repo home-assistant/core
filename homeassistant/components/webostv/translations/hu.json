@@ -6,7 +6,7 @@
             "error_pairing": "Csatlakozva az LG webOS TV-hez, de a p\u00e1ros\u00edt\u00e1s nem siker\u00fclt"
         },
         "error": {
-            "cannot_connect": "Nem siker\u00fclt csatlakozni, k\u00e9rj\u00fck, kapcsolja be a TV-t vagy ellen\u0151rizze az ip-c\u00edmet."
+            "cannot_connect": "Nem siker\u00fclt csatlakozni, k\u00e9rem, kapcsolja be a TV-t vagy ellen\u0151rizze az ip-c\u00edmet."
         },
         "flow_title": "LG webOS Smart TV",
         "step": {

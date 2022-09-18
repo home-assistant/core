@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -121,7 +122,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
         """Return current preset mode."""
         return self._client.get_heatmode(True)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         scale = self._client.get_tempscale()
         newtemp = kwargs[ATTR_TEMPERATURE]
@@ -133,7 +134,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
             await asyncio.sleep(SET_TEMPERATURE_WAIT)
         await self._client.send_temp_change(newtemp)
 
-    async def async_set_preset_mode(self, preset_mode) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         modelist = self._client.get_heatmode_stringlist()
         self._async_validate_mode_or_raise(preset_mode)
@@ -141,7 +142,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
             raise ValueError(f"{preset_mode} is not a valid preset mode")
         await self._client.change_heatmode(modelist.index(preset_mode))
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         await self._client.change_blower(self._ha_to_balboa_blower_map[fan_mode])
 
@@ -150,7 +151,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
         if mode == self._client.HEATMODE_RNR:
             raise ValueError(f"{mode} can only be reported but not set")
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
 
         OFF = Rest

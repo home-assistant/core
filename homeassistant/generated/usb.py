@@ -43,6 +43,12 @@ USB = [
     },
     {
         "domain": "zha",
+        "vid": "1A86",
+        "pid": "55D4",
+        "description": "*sonoff*plus*"
+    },
+    {
+        "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",
         "description": "*sonoff*plus*"
@@ -105,10 +111,5 @@ USB = [
         "vid": "10C4",
         "pid": "8A2A",
         "description": "*z-wave*"
-    },
-    {
-        "domain": "zwave_js",
-        "vid": "10C4",
-        "pid": "EA60"
     }
 ]

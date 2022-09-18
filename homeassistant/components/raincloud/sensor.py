@@ -66,7 +66,7 @@ class RainCloudSensor(RainCloudEntity, SensorEntity):
         """Return the units of measurement."""
         return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
         if self._sensor_type == "battery":

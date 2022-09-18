@@ -16,5 +16,18 @@
                 "title": "Flu Near You weboldal konfigur\u00e1l\u00e1sa"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "A Flu Near You integr\u00e1ci\u00f3t m\u0171k\u00f6dtet\u0151 k\u00fcls\u0151 adatforr\u00e1s m\u00e1r nem el\u00e9rhet\u0151, \u00edgy az integr\u00e1ci\u00f3 m\u00e1r nem m\u0171k\u00f6dik.\n\nNyomja meg a MEHET gombot a Flu Near You elt\u00e1vol\u00edt\u00e1s\u00e1hoz a Home Assistantb\u00f3l.",
+                        "title": "Flu Near You elt\u00e1vol\u00edt\u00e1sa"
+                    }
+                }
+            },
+            "title": "Flu Near You m\u00e1r nem el\u00e9rhet\u0151"
+        }
     }
 }

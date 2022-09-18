@@ -17,5 +17,18 @@
                 "description": "Seadista kohalik Elexa Guardiani seade."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Uuenda k\u00f5iki seda teenust kasutavaid automatiseerimisi v\u00f5i skripte, et need kasutaksid selle asemel teenust `{alternate_service}}, mille siht\u00fcksuse ID on `{alternate_target}}. Seej\u00e4rel kl\u00f5psa allpool nuppu ESITA, et m\u00e4rkida see probleem lahendatuks.",
+                        "title": "Teenus {deprecated_service} eemaldatakse"
+                    }
+                }
+            },
+            "title": "Teenus {deprecated_service} eemaldatakse"
+        }
     }
 }

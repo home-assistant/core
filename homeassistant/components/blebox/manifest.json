@@ -3,7 +3,7 @@
   "name": "BleBox devices",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/blebox",
-  "requirements": ["blebox_uniapi==2.0.1"],
+  "requirements": ["blebox_uniapi==2.0.2"],
   "codeowners": ["@bbx-a", "@riokuu"],
   "iot_class": "local_polling",
   "loggers": ["blebox_uniapi"]

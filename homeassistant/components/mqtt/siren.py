@@ -10,16 +10,14 @@ import voluptuous as vol
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
-    TURN_ON_SCHEMA,
-    SirenEntity,
-    SirenEntityFeature,
-    process_turn_on_params,
-)
-from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
+    TURN_ON_SCHEMA,
+    SirenEntity,
+    SirenEntityFeature,
+    process_turn_on_params,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -152,8 +150,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT siren."""
     async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 

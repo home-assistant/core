@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DOMAIN, LOGGER
@@ -26,6 +27,15 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flu Near You as config entry."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "integration_removal",
+        is_fixable=True,
+        severity=IssueSeverity.ERROR,
+        translation_key="integration_removal",
+    )
+
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -65,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

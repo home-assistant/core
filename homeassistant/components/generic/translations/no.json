@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Et kamera med disse URL-innstillingene finnes allerede.",
             "invalid_still_image": "URL returnerte ikke et gyldig stillbilde",
+            "malformed_url": "Feil utforming p\u00e5 URL",
             "no_still_image_or_stream_url": "Du m\u00e5 angi minst en URL-adresse for stillbilde eller dataflyt",
+            "relative_url": "Relative URL-adresser ikke tillatt",
             "stream_file_not_found": "Filen ble ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m (er ffmpeg installert?)",
             "stream_http_not_found": "HTTP 404 Ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m",
             "stream_io_error": "Inn-/utdatafeil under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Et kamera med disse URL-innstillingene finnes allerede.",
             "invalid_still_image": "URL returnerte ikke et gyldig stillbilde",
+            "malformed_url": "Feil utforming p\u00e5 URL",
             "no_still_image_or_stream_url": "Du m\u00e5 angi minst en URL-adresse for stillbilde eller dataflyt",
+            "relative_url": "Relative URL-adresser ikke tillatt",
             "stream_file_not_found": "Filen ble ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m (er ffmpeg installert?)",
             "stream_http_not_found": "HTTP 404 Ikke funnet under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m",
             "stream_io_error": "Inn-/utdatafeil under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",

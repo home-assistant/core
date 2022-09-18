@@ -11,14 +11,9 @@ from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import async_timeout
-import voluptuous as vol
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
@@ -28,6 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -42,20 +38,7 @@ from .api import (
 )
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,28 +46,17 @@ PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Honeywell Lyric component."""
-    hass.data[DOMAIN] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-
-    _LOGGER.warning(
-        "Configuration of Honeywell Lyric integration in YAML is deprecated "
-        "and will be removed in a future release; Your existing OAuth "
-        "Application Credentials have been imported into the UI "
-        "automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
+    """Set up the Honeywell Lyric integration."""
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
+        )
 
     return True
 
@@ -143,12 +115,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=300),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

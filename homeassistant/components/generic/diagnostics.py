@@ -21,12 +21,12 @@ TO_REDACT = {
 # A very similar redact function is in components.sql.  Possible to be made common.
 def redact_url(data: str) -> str:
     """Redact credentials from string url."""
-    url_in = yarl.URL(data)
+    url = url_in = yarl.URL(data)
     if url_in.user:
-        url = url_in.with_user("****")
+        url = url.with_user("****")
     if url_in.password:
         url = url.with_password("****")
-    if url_in.path:
+    if url_in.path != "/":
         url = url.with_path("****")
     if url_in.query_string:
         url = url.with_query("****=****")

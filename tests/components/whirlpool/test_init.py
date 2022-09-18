@@ -36,6 +36,16 @@ async def test_setup_auth_failed(hass: HomeAssistant, mock_auth_api: MagicMock):
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_fetch_appliances_failed(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+):
+    """Test setup with failed fetch_appliances."""
+    mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
+    entry = await init_integration(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_unload_entry(hass: HomeAssistant):
     """Test successful unload of entry."""
     entry = await init_integration(hass)

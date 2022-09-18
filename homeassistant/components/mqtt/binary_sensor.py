@@ -112,8 +112,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT binary sensor."""
     async_add_entities([MqttBinarySensor(hass, config, config_entry, discovery_data)])
 
@@ -180,6 +184,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
+        self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE),
             entity=self,
@@ -295,11 +300,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def available(self) -> bool:

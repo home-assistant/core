@@ -91,6 +91,9 @@ class OAuth2FlowHandler(
                     self.flow_impl.client_secret,
                     calendar_access,
                 )
+            except TimeoutError as err:
+                _LOGGER.error("Timeout initializing device flow: %s", str(err))
+                return self.async_abort(reason="timeout_connect")
             except OAuthError as err:
                 _LOGGER.error("Error initializing device flow: %s", str(err))
                 return self.async_abort(reason="oauth_error")
