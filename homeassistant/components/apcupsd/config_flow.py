@@ -59,24 +59,13 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if not data_service.status:
             return self.async_abort(reason="no_status")
 
-        # We _try_ to use the serial number of the UPS as the unique id since
-        # this field is not guaranteed to exist on all APC UPS models.
+        # We _try_ to use the serial number of the UPS as the unique id since this field
+        # is not guaranteed to exist on all APC UPS models.
         await self.async_set_unique_id(data_service.serial_no)
         self._abort_if_unique_id_configured()
 
-        # APCNAME or MODEL fields are not always available on all UPS models, here we
-        # try to assign a friendly title for the integration using those fields, but
-        # default to a generic "APC UPS" name.
-        if (name := data_service.name) is not None:
-            title = name
-        elif (model := data_service.model) is not None:
-            title = model
-        else:
-            title = "APC UPS"
-
         return self.async_create_entry(
-            title=title,
-            description="APCUPSd",
+            title="APCUPSd",
             data=user_input,
         )
 
