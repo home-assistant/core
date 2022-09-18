@@ -568,8 +568,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         if light.is_on:
             await async_handle_light_on_service(light, call)
         else:
-            # In this version we ignore attempts to "reload" a switched off light
-            # Though I guess we could call light_off just to ensure it's in the right state.
+            # Obviously this has it's limitations, but works for all hardware and doesn't
+            # require any API changes
             pass
 
     # Listen for light on and light off service calls.
