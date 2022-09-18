@@ -444,8 +444,13 @@ async def async_setup_platform(
     # This is the second step of YAML config imports, first see the comments in
     # async_setup() of __init__.py to get an idea of how we import the YAML configs.
 
-    # Here we retrieve the partial YAML configs from the special entry id, if it does
-    # not exist it means it has already been imported.
+    # We only import configs from YAML if it hasn't been imported. If there is a config
+    # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == SOURCE_IMPORT:
+            return
+
+    # Here we retrieve the partial YAML configs from the special entry id.
     conf = hass.data[DOMAIN].get(SOURCE_IMPORT)
     if conf is None:
         return
@@ -466,7 +471,7 @@ async def async_setup_platform(
     conf[CONF_RESOURCES] = config[CONF_RESOURCES]
 
     _LOGGER.debug(
-        "YAML configurations loaded with host %s, port %s and resources %s ",
+        "YAML configurations loaded with host %s, port %s and resources %s",
         conf[CONF_HOST],
         conf[CONF_PORT],
         conf[CONF_RESOURCES],
