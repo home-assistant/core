@@ -50,7 +50,6 @@ async def test_config_flow_no_status(hass: HomeAssistant) -> None:
 
 async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
     """Test duplicate config flow setup."""
-
     # First add an exiting config entry to hass.
     mock_entry = MockConfigEntry(
         version=1,
@@ -77,8 +76,8 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
-        # Then, we create the integration once again, using a different port. However,
-        # this keep the apcaccess patch to report the same serial number, we should
+        # Then, we create the integration once again using a different port. However,
+        # the apcaccess patch is kept to report the same serial number, we should
         # reject the creation as well.
         another_host = {
             CONF_HOST: CONF_DATA[CONF_HOST],
@@ -92,7 +91,7 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
-        # Now we change the serial number and add it again.
+        # Now we change the serial number and add it again. This should be successful.
         another_device_status = copy(MOCK_STATUS)
         another_device_status["SERIALNO"] = MOCK_STATUS["SERIALNO"] + "ZZZ"
         mock_parse.return_value = another_device_status
