@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers.device_registry import async_get
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import IBeaconCoordinator
