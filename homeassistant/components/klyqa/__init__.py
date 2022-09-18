@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
-
-from klyqa_ctl import klyqa_ctl as api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,7 +14,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_POLLING, CONF_SYNC_ROOMS, DOMAIN, LOGGER
@@ -48,37 +44,36 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-
     """Set up or change Klyqa integration from a config entry."""
-    username = str(entry.data.get(CONF_USERNAME))
+    username = str(entry.data[CONF_USERNAME])
     password = str(entry.data.get(CONF_PASSWORD))
     host = str(entry.data.get(CONF_HOST))
-    scan_interval = int(entry.data.get(CONF_SCAN_INTERVAL))
+    scan_interval = int(entry.data[CONF_SCAN_INTERVAL])
     polling = bool(entry.data.get(CONF_POLLING))
-    global SCAN_INTERVAL
-    SCAN_INTERVAL = timedelta(seconds=scan_interval)
-    sync_rooms = (
-        entry.data.get(CONF_SYNC_ROOMS) if entry.data.get(CONF_SYNC_ROOMS) else False
+
+    sync_rooms: bool = (
+        entry.data[CONF_SYNC_ROOMS] if entry.data[CONF_SYNC_ROOMS] else False
     )
     component: KlyqaDataCoordinator = hass.data[DOMAIN]
     component.scan_interval = timedelta(seconds=scan_interval)
-    klyqa_api: HAKlyqaAccount = None
+
+    klyqa_api: HAKlyqaAccount
     if (
         DOMAIN in hass.data
         and hasattr(component, "entries")
         and entry.entry_id in component.entries
     ):
-        klyqa_api: HAKlyqaAccount = component.entries[entry.entry_id]
+        klyqa_api = component.entries[entry.entry_id]
         await hass.async_add_executor_job(klyqa_api.shutdown)
 
         klyqa_api.username = username
         klyqa_api.password = password
         klyqa_api.host = host
         klyqa_api.sync_rooms = sync_rooms
-        klyqa_api.polling = (polling,)
+        klyqa_api.polling = polling
         klyqa_api.scan_interval = scan_interval
     else:
-        klyqa_api: HAKlyqaAccount = HAKlyqaAccount(
+        klyqa_api = HAKlyqaAccount(
             component.udp,
             component.tcp,
             username,
@@ -123,7 +118,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listener = hass.data[DOMAIN].remove_listeners.pop(-1)
         try:
             listener()
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
 
     if DOMAIN in hass.data:

@@ -1,5 +1,6 @@
 """Klyqa datacoordinator."""
-import asyncio
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import socket
@@ -13,7 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -22,17 +23,16 @@ from homeassistant.helpers.entity_component import (
 from .const import (
     CONF_POLLING,
     CONF_SYNC_ROOMS,
-    DOMAIN,
     EVENT_KLYQA_NEW_LIGHT,
     EVENT_KLYQA_NEW_LIGHT_GROUP,
     LOGGER,
 )
 
 
-class HAKlyqaAccount(api.Klyqa_account):
-    """HAKlyqaAccount"""
+class HAKlyqaAccount(api.Klyqa_account):  # type: ignore[misc]
+    """HAKlyqaAccount."""
 
-    hass: HomeAssistant
+    hass: HomeAssistant | None
 
     udp: socket.socket
     tcp: socket.socket
@@ -42,16 +42,17 @@ class HAKlyqaAccount(api.Klyqa_account):
 
     def __init__(
         self,
-        udp,
-        tcp,
-        username="",
-        password="",
-        host="",
-        hass=None,
-        polling=True,
-        sync_rooms=True,
-        scan_interval=-1.0,
-    ):
+        udp: Any,
+        tcp: Any,
+        username: str = "",
+        password: str = "",
+        host: str = "",
+        hass: HomeAssistant | None = None,
+        polling: bool = True,
+        sync_rooms: bool = True,
+        scan_interval: float = -1.0,
+    ) -> None:
+        """HAKlyqaAccount."""
         super().__init__(username, password, host)
         self.hass = hass
         self.udp = udp
@@ -61,23 +62,29 @@ class HAKlyqaAccount(api.Klyqa_account):
         self.scan_interval_conf = scan_interval
 
     async def send_to_bulbs(
-        self, args, args_in, async_answer_callback=None, timeout_ms=5000
-    ):
-        """_send_to_bulbs"""
+        self,
+        args_parsed: Any,
+        args_in: Any,
+        timeout_ms: Any = 5000,
+        async_answer_callback: Any = None,
+    ) -> Any:
+        """Send_to_bulbs."""
         ret = await super()._send_to_bulbs(
-            args,
+            args_parsed,
             args_in,
             self.udp,
             self.tcp,
-            async_answer_callback=async_answer_callback,
             timeout_ms=timeout_ms,
+            async_answer_callback=async_answer_callback,
         )
         return ret
 
+    # pylint: disable=arguments-differ
     async def login(self, **kwargs: Any) -> bool:
-        ret = await super().login(**kwargs)
+        """Login."""
+        ret: bool = await super().login(**kwargs)
         if ret:
-            integration_data, cached = await api.async_json_cache(
+            await api.async_json_cache(
                 {
                     CONF_USERNAME: self.username,
                     CONF_PASSWORD: self.password,
@@ -90,11 +97,15 @@ class HAKlyqaAccount(api.Klyqa_account):
             )
         return ret
 
-    async def update_account(self):
-        """update_account"""
+    async def update_account(self) -> bool:
+        """Update_account."""
 
         await self.request_account_settings()
-        if EVENT_KLYQA_NEW_LIGHT in self.hass.bus._listeners:
+        if (
+            self.hass
+            and EVENT_KLYQA_NEW_LIGHT
+            in self.hass.bus._listeners  # pylint: disable=protected-access
+        ):
             ha_entities = self.hass.data["light"].entities
 
             for device in self.acc_settings["devices"]:
@@ -109,7 +120,7 @@ class HAKlyqaAccount(api.Klyqa_account):
 
                 if len(light) == 0:
                     if device["productId"].startswith("@klyqa.lighting"):
-                        """found klyqa device not in the light entities"""
+                        # found klyqa device not in the light entities
                         self.hass.bus.fire(EVENT_KLYQA_NEW_LIGHT, device)
 
             for group in self.acc_settings["deviceGroups"]:
@@ -122,7 +133,7 @@ class HAKlyqaAccount(api.Klyqa_account):
                 ]
 
                 if len(light) == 0:
-                    """found klyqa device not in the light entities"""
+                    # found klyqa device not in the light entities
                     if (
                         len(group["devices"]) > 0
                         and "productId" in group["devices"][0]
@@ -135,19 +146,22 @@ class HAKlyqaAccount(api.Klyqa_account):
 
 
 class KlyqaDataCoordinator(EntityComponent):
-    """KlyqaDataCoordinator"""
+    """KlyqaDataCoordinator."""
 
     _instance = None
-    KlyqaAccounts: dict[str, HAKlyqaAccount]
+    klyqa_accounts: dict[str, HAKlyqaAccount]
     udp: socket.socket
     tcp: socket.socket
     remove_listeners: list
+    entries: dict[Any, Any]
 
-    def __init__(self):
+    # pylint: disable = super-init-not-called
+    def __init__(self) -> None:
+        """KlyqaDataCoordinator."""
         raise RuntimeError("Call instance() instead")
 
-    def get_ports(self):
-        """__get_ports"""
+    def get_ports(self) -> int:
+        """Get_ports."""
         try:
             self.udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -156,9 +170,9 @@ class KlyqaDataCoordinator(EntityComponent):
             self.udp.bind(server_address)
             LOGGER.debug("Bound UDP port 2222")
 
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             LOGGER.error(
-                "Error on opening and binding the udp port 2222 on host for initiating the lamp communication."
+                "Error on opening and binding the udp port 2222 on host for initiating the lamp communication"
             )
             return 1
 
@@ -170,11 +184,12 @@ class KlyqaDataCoordinator(EntityComponent):
             LOGGER.debug("Bound TCP port 3333")
             self.tcp.listen(1)
 
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             LOGGER.error(
-                "Error on opening and binding the tcp port 3333 on host for initiating the lamp communication."
+                "Error on opening and binding the tcp port 3333 on host for initiating the lamp communication"
             )
             return 1
+        return 0
 
     def init(
         self,
@@ -182,11 +197,11 @@ class KlyqaDataCoordinator(EntityComponent):
         domain: str,
         hass: HomeAssistant,
         scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ):
-        """__init"""
+    ) -> None:
+        """__init."""
         print("Init new instance")
         super().__init__(logger, domain, hass, scan_interval)
-        self.KlyqaAccounts = {}
+        self.klyqa_accounts = {}
         self.get_ports()
 
         self.entries = {}
@@ -199,8 +214,8 @@ class KlyqaDataCoordinator(EntityComponent):
         domain: str,
         hass: HomeAssistant,
         scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ):
-        """instance"""
+    ) -> KlyqaDataCoordinator:
+        """Instance."""
         if cls._instance is None:
             print("Creating new instance")
             cls._instance = cls.__new__(cls)
