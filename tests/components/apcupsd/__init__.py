@@ -2,6 +2,10 @@
 from collections import OrderedDict
 from typing import Final
 
+from homeassistant.const import CONF_HOST, CONF_PORT
+
+CONF_DATA: Final = {CONF_HOST: "test", CONF_PORT: 1234}
+
 MOCK_STATUS: Final = OrderedDict(
     [
         ("APC", "001,038,0985"),
@@ -43,7 +47,9 @@ MOCK_STATUS: Final = OrderedDict(
     ]
 )
 
-# Minimal status taken from http://www.apcupsd.org/manual/manual.html.
+# Minimal status adapted from http://www.apcupsd.org/manual/manual.html#apcaccess-test.
+# Most importantly, the "MODEL" and "SERIALNO" fields are removed to test the ability
+# of the integration to handle such cases.
 MOCK_MINIMAL_STATUS: Final = OrderedDict(
     [
         ("APC", "001,012,0319"),
@@ -51,7 +57,6 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
         ("RELEASE", "3.8.5"),
         ("UPSNAME", "UPS_IDEN"),
         ("CABLE", "APC Cable 940-0128A"),
-        ("MODEL", "BackUPS"),
         ("UPSMODE", "Stand Alone"),
         ("STARTTIME", "1970-01-01 00:00:00 0000"),
         ("LINEFAIL", "OK"),
