@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.8
+PySwitchbot==0.19.9
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.7
+aiohomekit==1.5.9
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -408,7 +408,7 @@ bimmer_connected==0.10.2
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.15.1
+bleak-retry-connector==1.17.1
 
 # homeassistant.components.bluetooth
 bleak==0.17.0
@@ -558,7 +558,7 @@ defusedxml==0.7.1
 deluge-client==1.7.1
 
 # homeassistant.components.lametric
-demetriek==0.2.2
+demetriek==0.2.4
 
 # homeassistant.components.denonavr
 denonavr==0.10.11
@@ -974,7 +974,7 @@ lakeside==0.12
 laundrify_aio==1.1.2
 
 # homeassistant.components.led_ble
-led-ble==0.10.0
+led-ble==0.10.1
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1826,7 +1826,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.4
+pyrisco==0.5.5
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2005,7 +2005,7 @@ python-ripple-api==0.0.3
 python-smarttub==0.0.33
 
 # homeassistant.components.songpal
-python-songpal==0.15
+python-songpal==0.15.1
 
 # homeassistant.components.tado
 python-tado==0.12.0
@@ -2100,7 +2100,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.6.0
+qingping-ble==0.7.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2369,7 +2369,7 @@ tesla-wall-connector==1.0.2
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.3.1
+thermobeacon-ble==0.3.2
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.3
@@ -2548,7 +2548,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.9.0
+yalexs-ble==1.9.2
 
 # homeassistant.components.august
 yalexs==1.2.1
