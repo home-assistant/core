@@ -7,21 +7,19 @@ from aioesphomeapi import (
     MediaPlayerCommand,
     MediaPlayerEntityState,
     MediaPlayerInfo,
-    MediaPlayerState,
+    MediaPlayerState as EspMediaPlayerState,
 )
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -50,17 +48,13 @@ async def async_setup_entry(
     )
 
 
-_STATES: EsphomeEnumMapper[MediaPlayerState, str] = EsphomeEnumMapper(
+_STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumMapper(
     {
-        MediaPlayerState.IDLE: STATE_IDLE,
-        MediaPlayerState.PLAYING: STATE_PLAYING,
-        MediaPlayerState.PAUSED: STATE_PAUSED,
+        EspMediaPlayerState.IDLE: MediaPlayerState.IDLE,
+        EspMediaPlayerState.PLAYING: MediaPlayerState.PLAYING,
+        EspMediaPlayerState.PAUSED: MediaPlayerState.PAUSED,
     }
 )
-
-
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
 
 
 class EsphomeMediaPlayer(
@@ -70,16 +64,19 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
+    @property  # type: ignore[misc]
     @esphome_state_property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | None:
         """Return current state."""
         return _STATES.from_esphome(self._state.state)
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return self._state.muted
 
+    @property  # type: ignore[misc]
     @esphome_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""

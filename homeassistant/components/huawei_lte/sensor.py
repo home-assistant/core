@@ -299,7 +299,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         )
     ),
     (KEY_MONITORING_CHECK_NOTIFICATIONS, "UnreadMessage"): SensorMeta(
-        name="SMS unread", icon="mdi:email-receive"
+        name="SMS unread", icon="mdi:email-arrow-left"
     ),
     KEY_MONITORING_MONTH_STATISTICS: SensorMeta(
         exclude=re.compile(r"^month(duration|lastcleartime)$", re.IGNORECASE)
@@ -450,7 +450,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "LocalDraft"): SensorMeta(
         name="SMS drafts (device)",
-        icon="mdi:email-send-outline",
+        icon="mdi:email-arrow-right-outline",
     ),
     (KEY_SMS_SMS_COUNT, "LocalInbox"): SensorMeta(
         name="SMS inbox (device)",
@@ -462,15 +462,15 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "LocalOutbox"): SensorMeta(
         name="SMS outbox (device)",
-        icon="mdi:email-send",
+        icon="mdi:email-arrow-right",
     ),
     (KEY_SMS_SMS_COUNT, "LocalUnread"): SensorMeta(
         name="SMS unread (device)",
-        icon="mdi:email-receive",
+        icon="mdi:email-arrow-left",
     ),
     (KEY_SMS_SMS_COUNT, "SimDraft"): SensorMeta(
         name="SMS drafts (SIM)",
-        icon="mdi:email-send-outline",
+        icon="mdi:email-arrow-right-outline",
     ),
     (KEY_SMS_SMS_COUNT, "SimInbox"): SensorMeta(
         name="SMS inbox (SIM)",
@@ -482,15 +482,15 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "SimOutbox"): SensorMeta(
         name="SMS outbox (SIM)",
-        icon="mdi:email-send",
+        icon="mdi:email-arrow-right",
     ),
     (KEY_SMS_SMS_COUNT, "SimUnread"): SensorMeta(
         name="SMS unread (SIM)",
-        icon="mdi:email-receive",
+        icon="mdi:email-arrow-left",
     ),
     (KEY_SMS_SMS_COUNT, "SimUsed"): SensorMeta(
         name="SMS messages (SIM)",
-        icon="mdi:email-receive",
+        icon="mdi:email-arrow-left",
     ),
 }
 
@@ -548,6 +548,10 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     _state: StateType = field(default=STATE_UNKNOWN, init=False)
     _unit: str | None = field(default=None, init=False)
 
+    def __post_init__(self) -> None:
+        """Initialize remaining attributes."""
+        self._attr_name = self.meta.name or self.item
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
@@ -557,10 +561,6 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
         self.router.subscriptions[self.key].remove(f"{SENSOR_DOMAIN}/{self.item}")
-
-    @property
-    def _entity_name(self) -> str:
-        return self.meta.name or self.item
 
     @property
     def _device_unique_id(self) -> str:

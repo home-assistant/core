@@ -13,7 +13,7 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
@@ -90,7 +90,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
-
+        assert self._host
         current_host = await self.hass.async_add_executor_job(
             socket.gethostbyname, self._host
         )

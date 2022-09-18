@@ -9,14 +9,14 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import AsyncMock, MockConfigEntry
 
-YAML_CONFIG = {"username": "test-user", "password": "test-password"}
+CONFIG = {"username": "test-user", "password": "test-password"}
 
 
 async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
     """Test component setup Get Doors Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=YAML_CONFIG,
+        data=CONFIG,
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
@@ -38,7 +38,7 @@ async def test_setup_login_error(
     """Test component setup Login Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=YAML_CONFIG,
+        data=CONFIG,
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
@@ -57,7 +57,7 @@ async def test_setup_connection_error(
     """Test component setup Login Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=YAML_CONFIG,
+        data=CONFIG,
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
@@ -74,7 +74,7 @@ async def test_setup_component_no_error(hass: HomeAssistant) -> None:
     """Test component setup No Error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=YAML_CONFIG,
+        data=CONFIG,
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
@@ -116,7 +116,7 @@ async def test_load_and_unload(
     """Test loading and unloading Aladdin Connect entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=YAML_CONFIG,
+        data=CONFIG,
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)

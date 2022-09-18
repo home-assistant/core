@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "authorize_url_timeout": "Yetkilendirme URL'si olu\u015ftururken zaman a\u015f\u0131m\u0131.",
+            "invalid_discovery_info": "Ge\u00e7ersiz ke\u015fif bilgisi al\u0131nd\u0131",
+            "link_local_address": "Ba\u011flant\u0131 yerel adresleri desteklenmiyor",
+            "missing_configuration": "LaMetric entegrasyonu yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin.",
+            "no_devices": "Yetkili kullan\u0131c\u0131n\u0131n LaMetric cihaz\u0131 yok",
+            "no_url_available": "Kullan\u0131labilir URL yok. Bu hata hakk\u0131nda bilgi i\u00e7in [yard\u0131m b\u00f6l\u00fcm\u00fcne bak\u0131n]({docs_url})"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "choice_enter_manual_or_fetch_cloud": {
+                "description": "Bir LaMetric cihaz\u0131, Home Assistant'ta iki farkl\u0131 \u015fekilde kurulabilir. \n\n T\u00fcm cihaz bilgilerini ve API belirte\u00e7lerini kendiniz girebilirsiniz veya Home Assistant bunlar\u0131 LaMetric.com hesab\u0131n\u0131zdan i\u00e7e aktarabilir.",
+                "menu_options": {
+                    "manual_entry": "Manuel olarak giriniz",
+                    "pick_implementation": "LaMetric.com'dan i\u00e7e aktar (\u00f6nerilir)"
+                }
+            },
+            "manual_entry": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "host": "Sunucu"
+                },
+                "data_description": {
+                    "api_key": "Bu API anahtar\u0131n\u0131 [LaMetric geli\u015ftirici hesab\u0131n\u0131zdaki cihazlar sayfas\u0131nda] (https://developer.lametric.com/user/devices) bulabilirsiniz.",
+                    "host": "A\u011f\u0131n\u0131zdaki LaMetric TIME'\u0131n\u0131z\u0131n IP adresi veya ana bilgisayar ad\u0131."
+                }
+            },
+            "pick_implementation": {
+                "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
+            },
+            "user_cloud_select_device": {
+                "data": {
+                    "device": "Eklenecek LaMetric cihaz\u0131n\u0131 se\u00e7in"
+                }
+            }
+        }
+    },
+    "issues": {
+        "manual_migration": {
+            "description": "LaMetric entegrasyonu modernle\u015ftirildi: Art\u0131k kullan\u0131c\u0131 aray\u00fcz\u00fc \u00fczerinden yap\u0131land\u0131r\u0131ld\u0131 ve kuruldu ve ileti\u015fimler art\u0131k yerel. \n\n Maalesef otomatik ge\u00e7i\u015f yolu m\u00fcmk\u00fcn de\u011fildir ve bu nedenle LaMetric'inizi Home Assistant ile yeniden kurman\u0131z\u0131 gerektirir. L\u00fctfen nas\u0131l kurulaca\u011f\u0131na ili\u015fkin Home Assistant LaMetric entegrasyon belgelerine bak\u0131n. \n\n Bu sorunu d\u00fczeltmek i\u00e7in eski LaMetric YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "LaMetric i\u00e7in manuel ge\u00e7i\u015f gerekli"
+        }
+    }
+}

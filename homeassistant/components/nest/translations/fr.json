@@ -88,5 +88,10 @@
             "camera_sound": "Son d\u00e9tect\u00e9",
             "doorbell_chime": "Sonnette enfonc\u00e9e"
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Nest sera bient\u00f4t supprim\u00e9e"
+        }
     }
 }

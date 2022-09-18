@@ -16,7 +16,7 @@
                     "api_key": "API kulcs",
                     "api_token": "API jelsz\u00f3"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg API kulcs\u00e1nak adatait a Coinbase \u00e1ltal megadott m\u00f3don.",
+                "description": "K\u00e9rem, adja meg API kulcs\u00e1nak adatait a Coinbase \u00e1ltal megadott m\u00f3don.",
                 "title": "Coinbase API kulcs r\u00e9szletei"
             }
         }

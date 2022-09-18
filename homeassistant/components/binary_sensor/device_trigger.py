@@ -1,25 +1,20 @@
 """Provides device triggers for binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.const import (
+from homeassistant.components.device_automation import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
+    DEVICE_TRIGGER_BASE_SCHEMA,
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 
@@ -263,8 +258,8 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
@@ -283,7 +278,7 @@ async def async_attach_trigger(
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
-        hass, state_config, action, automation_info, platform_type="device"
+        hass, state_config, action, trigger_info, platform_type="device"
     )
 
 

@@ -184,6 +184,10 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "awair",
+            "name": "awair*"
+        },
+        {
             "domain": "bosch_shc",
             "name": "bosch shc*"
         },
@@ -407,6 +411,12 @@ ZEROCONF = {
             "name": "*zigate*"
         }
     ],
+    "_zigstar_gw._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigstar*"
+        }
+    ],
     "_zwave-js-server._tcp.local.": [
         {
             "domain": "zwave_js"
@@ -426,6 +436,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "Escea": "escea",
     "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",

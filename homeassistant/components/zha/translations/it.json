@@ -6,12 +6,63 @@
             "usb_probe_failed": "Impossibile interrogare il dispositivo USB"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_backup_json": "Backup JSON non valido"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Scegli un backup automatico"
+                },
+                "description": "Ripristina le impostazioni di rete da un backup automatico",
+                "title": "Ripristina backup automatico"
+            },
+            "choose_formation_strategy": {
+                "description": "Scegli le impostazioni di rete per la tua radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Ripristina un backup automatico",
+                    "form_new_network": "Cancella le impostazioni di rete e crea una nuova rete",
+                    "reuse_settings": "Mantieni le impostazioni della rete radio",
+                    "upload_manual_backup": "Carica un backup manuale"
+                },
+                "title": "Formazione di rete"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Seleziona la porta seriale per la tua radio Zigbee",
+                "title": "Seleziona una porta seriale"
+            },
             "confirm": {
                 "description": "Vuoi configurare {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Vuoi configurare {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipo di radio"
+                },
+                "description": "Scegli il tuo tipo di radio Zigbee",
+                "title": "Tipo di radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocit\u00e0 della porta",
+                    "flow_control": "controllo del flusso di dati",
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Inserire le impostazioni della porta seriale",
+                "title": "Impostazioni della porta seriale"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Sostituire definitivamente l'indirizzo IEEE radio"
+                },
+                "description": "Il tuo backup ha un indirizzo IEEE diverso dalla tua radio. Affinch\u00e9 la rete funzioni correttamente, \u00e8 necessario modificare anche l'indirizzo IEEE della radio. \n\nQuesta \u00e8 un'operazione permanente.",
+                "title": "Sovrascrivi indirizzo IEEE radio"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Inserire le impostazioni specifiche della porta",
                 "title": "Impostazioni"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Carica un file"
+                },
+                "description": "Ripristina le impostazioni di rete da un file JSON di backup caricato. Puoi scaricarne uno da un'installazione ZHA diversa da **Impostazioni di rete** o utilizzare un file Zigbee2MQTT `coordinator_backup.json`.",
+                "title": "Carica un backup manuale"
             },
             "user": {
                 "data": {
@@ -46,10 +104,13 @@
             "title": "Opzioni del pannello di controllo degli allarmi"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Preferisci sempre la modalit\u00e0 colore XY",
             "consider_unavailable_battery": "Considera i dispositivi alimentati a batteria non disponibili dopo (secondi)",
             "consider_unavailable_mains": "Considera i dispositivi alimentati dalla rete non disponibili dopo (secondi)",
             "default_light_transition": "Tempo di transizione della luce predefinito (secondi)",
             "enable_identify_on_join": "Abilita l'effetto di identificazione quando i dispositivi si uniscono alla rete",
+            "enhanced_light_transition": "Abilita una transizione migliorata del colore/temperatura della luce da uno stato spento",
+            "light_transitioning_flag": "Abilita il cursore della luminosit\u00e0 avanzata durante la transizione della luce",
             "title": "Opzioni globali"
         }
     },
@@ -107,6 +168,78 @@
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_button_triple_press": "Pulsante \"{subtype}\" cliccato tre volte"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Questo dispositivo non \u00e8 un dispositivo zha",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "usb_probe_failed": "Impossibile interrogare il dispositivo USB"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_backup_json": "Backup JSON non valido"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Scegli un backup automatico"
+                },
+                "description": "Ripristina le impostazioni di rete da un backup automatico",
+                "title": "Ripristina backup automatico"
+            },
+            "choose_formation_strategy": {
+                "description": "Scegli le impostazioni di rete per la tua radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Ripristina un backup automatico",
+                    "form_new_network": "Cancella le impostazioni di rete e crea una nuova rete",
+                    "reuse_settings": "Mantieni le impostazioni della rete radio",
+                    "upload_manual_backup": "Carica un backup manuale"
+                },
+                "title": "Formazione di rete"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Seleziona la porta seriale per la tua radio Zigbee",
+                "title": "Seleziona una porta seriale"
+            },
+            "init": {
+                "description": "ZHA verr\u00e0 interrotto. Vuoi continuare?",
+                "title": "Riconfigura ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipo di radio"
+                },
+                "description": "Scegli il tuo tipo di radio Zigbee",
+                "title": "Tipo di radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocit\u00e0 della porta",
+                    "flow_control": "controllo del flusso di dati",
+                    "path": "Percorso del dispositivo seriale"
+                },
+                "description": "Inserire le impostazioni della porta seriale",
+                "title": "Impostazioni della porta seriale"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Sostituire definitivamente l'indirizzo IEEE radio"
+                },
+                "description": "Il tuo backup ha un indirizzo IEEE diverso dalla tua radio. Affinch\u00e9 la rete funzioni correttamente, \u00e8 necessario modificare anche l'indirizzo IEEE della radio. \n\nQuesta \u00e8 un'operazione permanente.",
+                "title": "Sovrascrivi indirizzo IEEE radio"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Carica un file"
+                },
+                "description": "Ripristina le impostazioni di rete da un file JSON di backup caricato. Puoi scaricarne uno da un'installazione ZHA diversa da **Impostazioni di rete** o utilizzare un file Zigbee2MQTT `coordinator_backup.json`.",
+                "title": "Carica un backup manuale"
+            }
         }
     }
 }

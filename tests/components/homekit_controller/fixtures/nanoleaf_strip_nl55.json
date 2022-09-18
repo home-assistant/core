@@ -1,0 +1,354 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Nanoleaf",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "NL55",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Nanoleaf Strip 3B32",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "AAAA011111111111",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.4.40",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.2.4",
+            "description": "Hardware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "iid": 9,
+            "perms": ["pr", "hd"],
+            "format": "string",
+            "value": "5.0;dfeceb3a",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr", "hd"],
+            "format": "data",
+            "value": "cf0c2e5a4476e152"
+          }
+        ]
+      },
+      {
+        "iid": 11,
+        "type": "00000055-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000004C-0000-1000-8000-0026BB765291",
+            "iid": 34,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Setup"
+          },
+          {
+            "type": "0000004E-0000-1000-8000-0026BB765291",
+            "iid": 35,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Verify"
+          },
+          {
+            "type": "0000004F-0000-1000-8000-0026BB765291",
+            "iid": 36,
+            "perms": [],
+            "format": "uint8",
+            "description": "Pairing Features"
+          },
+          {
+            "type": "00000050-0000-1000-8000-0026BB765291",
+            "iid": 37,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": null,
+            "description": "Pairing Pairings"
+          }
+        ]
+      },
+      {
+        "iid": 16,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2.2.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 19,
+        "type": "00000043-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 49,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "iid": 51,
+            "perms": ["pr", "pw", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "On"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 50,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Nanoleaf Light Strip",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "iid": 52,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 100,
+            "description": "Brightness",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "000000CE-0000-1000-8000-0026BB765291",
+            "iid": 55,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint32",
+            "value": 470,
+            "description": "Color Temperature",
+            "minValue": 153,
+            "maxValue": 470,
+            "minStep": 1
+          },
+          {
+            "type": "00000013-0000-1000-8000-0026BB765291",
+            "iid": 53,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 30.0,
+            "description": "Hue",
+            "unit": "arcdegrees",
+            "minValue": 0.0,
+            "maxValue": 360.0,
+            "minStep": 1.0
+          },
+          {
+            "type": "0000002F-0000-1000-8000-0026BB765291",
+            "iid": 54,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 89.0,
+            "description": "Saturation",
+            "unit": "percentage",
+            "minValue": 0.0,
+            "maxValue": 100.0,
+            "minStep": 1.0
+          },
+          {
+            "type": "A28E1902-CFA1-4D37-A10F-0071CEEEEEBD",
+            "iid": 60,
+            "perms": ["pr", "pw", "hd"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00000143-0000-1000-8000-0026BB765291",
+            "iid": 56,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "00000144-0000-1000-8000-0026BB765291",
+            "iid": 57,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "010901013402040100000000000109010137020402000000"
+          },
+          {
+            "type": "0000024B-0000-1000-8000-0026BB765291",
+            "iid": 58,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 2
+          }
+        ]
+      },
+      {
+        "iid": 31,
+        "type": "00000701-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 113,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000706-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "",
+            "maxLen": 64
+          },
+          {
+            "type": "00000702-0000-1000-8000-0026BB765291",
+            "iid": 115,
+            "perms": ["pr"],
+            "format": "uint16",
+            "value": 31,
+            "description": "Thread Node Capabilities",
+            "minValue": 0,
+            "maxValue": 31
+          },
+          {
+            "type": "00000703-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "uint16",
+            "value": 127,
+            "description": "Thread Status",
+            "minValue": 0,
+            "maxValue": 127
+          },
+          {
+            "type": "0000022B-0000-1000-8000-0026BB765291",
+            "iid": 118,
+            "perms": ["pr"],
+            "format": "bool",
+            "value": false
+          },
+          {
+            "type": "00000704-0000-1000-8000-0026BB765291",
+            "iid": 119,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": null
+          }
+        ]
+      },
+      {
+        "iid": 38,
+        "type": "00000239-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 2564,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "0000023A-0000-1000-8000-0026BB765291",
+            "iid": 2561,
+            "perms": ["pr"],
+            "format": "uint32",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 67108863
+          },
+          {
+            "type": "0000023C-0000-1000-8000-0026BB765291",
+            "iid": 2562,
+            "perms": ["pr"],
+            "format": "data",
+            "value": ""
+          },
+          {
+            "type": "0000024A-0000-1000-8000-0026BB765291",
+            "iid": 2565,
+            "perms": ["pr", "ev"],
+            "format": "uint32",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "iid": 43,
+        "type": "0E9CC677-A71F-8B83-B84D-568278790CB3",
+        "characteristics": []
+      },
+      {
+        "iid": 44,
+        "type": "6D2AE1C4-9AEA-11EA-BB37-0242AC130002",
+        "characteristics": []
+      }
+    ]
+  }
+]

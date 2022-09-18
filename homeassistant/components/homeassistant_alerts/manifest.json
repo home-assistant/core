@@ -1,0 +1,7 @@
+{
+  "domain": "homeassistant_alerts",
+  "name": "Home Assistant Alerts",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_alerts",
+  "codeowners": ["@home-assistant/core"]
+}

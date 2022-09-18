@@ -23,7 +23,7 @@ PATH_CACHE = LRU(512)
 
 
 def _get_file_path(
-    filename: str, directory: Path, follow_symlinks: bool
+    filename: str | Path, directory: Path, follow_symlinks: bool
 ) -> Path | None:
     filepath = directory.joinpath(filename).resolve()
     if not follow_symlinks:
@@ -33,7 +33,7 @@ def _get_file_path(
         return None
     if filepath.is_file():
         return filepath
-    raise HTTPNotFound
+    raise FileNotFoundError
 
 
 class CachingStaticResource(StaticResource):

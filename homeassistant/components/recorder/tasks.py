@@ -124,18 +124,18 @@ class StatisticsTask(RecorderTask):
 
 
 @dataclass
-class ExternalStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run an external statistics task."""
+class ImportStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run an import statistics task."""
 
     metadata: StatisticMetaData
     statistics: Iterable[StatisticData]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.add_external_statistics(instance, self.metadata, self.statistics):
+        if statistics.import_statistics(instance, self.metadata, self.statistics):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(ExternalStatisticsTask(self.metadata, self.statistics))
+        instance.queue_task(ImportStatisticsTask(self.metadata, self.statistics))
 
 
 @dataclass
@@ -249,7 +249,7 @@ class AddRecorderPlatformTask(RecorderTask):
         domain = self.domain
         platform = self.platform
 
-        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
         if hasattr(self.platform, "exclude_attributes"):
             hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)

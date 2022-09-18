@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
-from homeassistant.core import CoreState, callback, valid_entity_id
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -73,14 +73,13 @@ def test_get_or_create_updates_data(registry):
         "light",
         "hue",
         "5678",
-        area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=orig_config_entry,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
-        hidden_by=er.RegistryEntryHider.INTEGRATION,
         has_entity_name=True,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -92,17 +91,16 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
-        area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
         device_class=None,
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
         icon=None,
         id=orig_entry.id,
-        has_entity_name=True,
         name=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -117,14 +115,13 @@ def test_get_or_create_updates_data(registry):
         "light",
         "hue",
         "5678",
-        area_id="new-mock-area-id",
-        capabilities={"new-max": 100},
+        capabilities={"new-max": 150},
         config_entry=new_config_entry,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.USER,
-        entity_category=None,
-        hidden_by=er.RegistryEntryHider.USER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=False,
+        hidden_by=er.RegistryEntryHider.USER,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
@@ -136,23 +133,64 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
-        area_id="new-mock-area-id",
-        capabilities={"new-max": 100},
+        area_id=None,
+        capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
         device_class=None,
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
-        entity_category=EntityCategory.CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=False,
         hidden_by=er.RegistryEntryHider.INTEGRATION,  # Should not be updated
         icon=None,
         id=orig_entry.id,
-        has_entity_name=False,
         name=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
         unit_of_measurement="updated-unit_of_measurement",
+    )
+
+    new_entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        capabilities=None,
+        config_entry=None,
+        device_id=None,
+        disabled_by=None,
+        entity_category=None,
+        has_entity_name=None,
+        hidden_by=None,
+        original_device_class=None,
+        original_icon=None,
+        original_name=None,
+        supported_features=None,
+        unit_of_measurement=None,
+    )
+
+    assert new_entry == er.RegistryEntry(
+        "light.hue_5678",
+        "5678",
+        "hue",
+        area_id=None,
+        capabilities=None,
+        config_entry_id=None,
+        device_class=None,
+        device_id=None,
+        disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
+        entity_category=None,
+        has_entity_name=None,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,  # Should not be updated
+        icon=None,
+        id=orig_entry.id,
+        name=None,
+        original_device_class=None,
+        original_icon=None,
+        original_name=None,
+        supported_features=0,  # supported_features is stored as an int
+        unit_of_measurement=None,
     )
 
 
@@ -193,7 +231,6 @@ async def test_loading_saving_data(hass, registry):
         "light",
         "hue",
         "5678",
-        area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=mock_config,
         device_id="mock-dev-id",
@@ -209,6 +246,7 @@ async def test_loading_saving_data(hass, registry):
     )
     registry.async_update_entity(
         orig_entry2.entity_id,
+        area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
         icon="hass:user-icon",
@@ -302,13 +340,6 @@ async def test_filter_on_load(hass, hass_storage):
                     "entity_id": "test.disabled_hass",
                     "platform": "super_platform",
                     "unique_id": "disabled-hass",
-                    "disabled_by": "hass",  # We store the string representation
-                },
-                # This entry should not be loaded because the entity_id is invalid
-                {
-                    "entity_id": "test.invalid__entity",
-                    "platform": "super_platform",
-                    "unique_id": "invalid-hass",
                     "disabled_by": "hass",  # We store the string representation
                 },
                 # This entry should have the entity_category reset to None
@@ -428,38 +459,6 @@ async def test_removing_area_id(registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_yaml_to_json(hass):
-    """Test migration from old (yaml) data to new."""
-    mock_config = MockConfigEntry(domain="test-platform", entry_id="test-config-id")
-
-    old_conf = {
-        "light.kitchen": {
-            "config_entry_id": "test-config-id",
-            "unique_id": "test-unique",
-            "platform": "test-platform",
-            "name": "Test Name",
-            "disabled_by": er.RegistryEntryDisabler.HASS,
-        }
-    }
-    with patch("os.path.isfile", return_value=True), patch("os.remove"), patch(
-        "homeassistant.helpers.entity_registry.load_yaml", return_value=old_conf
-    ):
-        await er.async_load(hass)
-        registry = er.async_get(hass)
-
-    assert registry.async_is_registered("light.kitchen")
-    entry = registry.async_get_or_create(
-        domain="light",
-        platform="test-platform",
-        unique_id="test-unique",
-        config_entry=mock_config,
-    )
-    assert entry.name == "Test Name"
-    assert entry.disabled_by is er.RegistryEntryDisabler.HASS
-    assert entry.config_entry_id == "test-config-id"
-
-
-@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_1_1(hass, hass_storage):
     """Test migration from version 1.1."""
     hass_storage[er.STORAGE_KEY] = {
@@ -487,30 +486,54 @@ async def test_migration_1_1(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_invalid_entity_id(hass, hass_storage):
-    """Test we skip entities with invalid entity IDs."""
+async def test_migration_1_7(hass, hass_storage):
+    """Test migration from version 1.7.
+
+    This tests cleanup after frontend bug which incorrectly updated device_class
+    """
+    entity_dict = {
+        "area_id": None,
+        "capabilities": {},
+        "config_entry_id": None,
+        "device_id": None,
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "id": "12345",
+        "name": None,
+        "options": None,
+        "original_icon": None,
+        "original_name": None,
+        "platform": "super_platform",
+        "supported_features": 0,
+        "unique_id": "very_unique",
+        "unit_of_measurement": None,
+    }
+
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION_MAJOR,
-        "minor_version": er.STORAGE_VERSION_MINOR,
+        "version": 1,
+        "minor_version": 7,
         "data": {
             "entities": [
                 {
-                    "entity_id": "test.invalid__middle",
-                    "platform": "super_platform",
-                    "unique_id": "id-invalid-middle",
-                    "name": "registry override 1",
+                    **entity_dict,
+                    "device_class": "original_class_by_integration",
+                    "entity_id": "test.entity",
+                    "original_device_class": "new_class_by_integration",
                 },
                 {
-                    "entity_id": "test.invalid_end_",
-                    "platform": "super_platform",
-                    "unique_id": "id-invalid-end",
-                    "name": "registry override 2",
+                    **entity_dict,
+                    "device_class": "class_by_user",
+                    "entity_id": "binary_sensor.entity",
+                    "original_device_class": "class_by_integration",
                 },
                 {
-                    "entity_id": "test._invalid_start",
-                    "platform": "super_platform",
-                    "unique_id": "id-invalid-start",
-                    "name": "registry override 3",
+                    **entity_dict,
+                    "device_class": "class_by_user",
+                    "entity_id": "cover.entity",
+                    "original_device_class": "class_by_integration",
                 },
             ]
         },
@@ -518,29 +541,20 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
 
     await er.async_load(hass)
     registry = er.async_get(hass)
-    assert len(registry.entities) == 0
 
-    entity_invalid_middle = registry.async_get_or_create(
-        "test", "super_platform", "id-invalid-middle"
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+    assert entry.device_class is None
+    assert entry.original_device_class == "new_class_by_integration"
+
+    entry = registry.async_get_or_create(
+        "binary_sensor", "super_platform", "very_unique"
     )
+    assert entry.device_class == "class_by_user"
+    assert entry.original_device_class == "class_by_integration"
 
-    assert valid_entity_id(entity_invalid_middle.entity_id)
-    # Check name to make sure we created a new entity
-    assert entity_invalid_middle.name is None
-
-    entity_invalid_end = registry.async_get_or_create(
-        "test", "super_platform", "id-invalid-end"
-    )
-
-    assert valid_entity_id(entity_invalid_end.entity_id)
-    assert entity_invalid_end.name is None
-
-    entity_invalid_start = registry.async_get_or_create(
-        "test", "super_platform", "id-invalid-start"
-    )
-
-    assert valid_entity_id(entity_invalid_start.entity_id)
-    assert entity_invalid_start.name is None
+    entry = registry.async_get_or_create("cover", "super_platform", "very_unique")
+    assert entry.device_class == "class_by_user"
+    assert entry.original_device_class == "class_by_integration"
 
 
 async def test_update_entity_unique_id(registry):

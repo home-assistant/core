@@ -5,13 +5,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import zabbix
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .. import zabbix
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ class ZabbixTriggerCountSensor(SensorEntity):
             output="extend", only_true=1, monitored=1, filter={"value": 1}
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         _LOGGER.debug("Updating ZabbixTriggerCountSensor: %s", str(self._name))
         triggers = self._call_zabbix_api()

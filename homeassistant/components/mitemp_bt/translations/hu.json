@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "replaced": {
+            "description": "A Xiaomi Mijia BLE h\u0151m\u00e9rs\u00e9klet- \u00e9s p\u00e1ratartalom-\u00e9rz\u00e9kel\u0151 integr\u00e1ci\u00f3ja le\u00e1llt a 2022.7-es Home Assistantban, \u00e9s a 2022.8-as kiad\u00e1sban a Xiaomi BLE integr\u00e1ci\u00f3val v\u00e1ltott\u00e1k fel.\n\nNincs lehet\u0151s\u00e9g migr\u00e1ci\u00f3ra, ez\u00e9rt a Xiaomi Mijia BLE eszk\u00f6zt az \u00faj integr\u00e1ci\u00f3 haszn\u00e1lat\u00e1val manu\u00e1lisan \u00fajra be kell \u00e1ll\u00edtani.\n\nA megl\u00e9v\u0151 Xiaomi Mijia BLE h\u0151m\u00e9rs\u00e9klet- \u00e9s p\u00e1ratartalom \u00e9rz\u00e9kel\u0151 YAML konfigur\u00e1ci\u00f3j\u00e1t a Home Assistant m\u00e1r nem haszn\u00e1lja. A probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Xiaomi Mijia BLE h\u0151m\u00e9rs\u00e9klet- \u00e9s p\u00e1ratartalom-\u00e9rz\u00e9kel\u0151 integr\u00e1ci\u00f3ja lecser\u00e9l\u0151d\u00f6tt"
+        }
+    }
+}

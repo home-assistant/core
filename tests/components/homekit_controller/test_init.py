@@ -119,6 +119,7 @@ async def test_offline_device_raises(hass, controller):
             nonlocal is_connected
             if not is_connected:
                 raise AccessoryNotFoundError("any")
+            await super().async_populate_accessories_state(*args, **kwargs)
 
         async def get_characteristics(self, chars, *args, **kwargs):
             nonlocal is_connected
@@ -173,6 +174,7 @@ async def test_ble_device_only_checks_is_available(hass, controller):
             nonlocal is_available
             if not is_available:
                 raise AccessoryNotFoundError("any")
+            await super().async_populate_accessories_state(*args, **kwargs)
 
         async def get_characteristics(self, chars, *args, **kwargs):
             nonlocal is_available

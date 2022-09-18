@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Ogiltig s\u00f6kv\u00e4g f\u00f6r dongle",
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
+        "error": {
+            "invalid_dongle_path": "Ingen giltig dongel hittades f\u00f6r denna s\u00f6kv\u00e4g"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB-dongle-s\u00f6kv\u00e4g"
+                },
+                "title": "V\u00e4lj s\u00f6kv\u00e4g till din ENOcean dongle"
+            },
+            "manual": {
+                "data": {
+                    "path": "USB-dongle-s\u00f6kv\u00e4g"
+                },
+                "title": "Ange s\u00f6kv\u00e4gen till din ENOcean-dongel"
+            }
+        }
+    }
+}

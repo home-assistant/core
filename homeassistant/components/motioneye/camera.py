@@ -266,10 +266,10 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
 
     async def async_set_text_overlay(
         self,
-        left_text: str = None,
-        right_text: str = None,
-        custom_left_text: str = None,
-        custom_right_text: str = None,
+        left_text: str | None = None,
+        right_text: str | None = None,
+        custom_left_text: str | None = None,
+        custom_right_text: str | None = None,
     ) -> None:
         """Set text overlay for a camera."""
         # Fetch the very latest camera config to reduce the risk of updating with a

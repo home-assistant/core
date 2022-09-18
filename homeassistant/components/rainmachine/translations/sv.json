@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "Denna RainMachine-enhet \u00e4r redan konfigurerad"
         },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +21,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "zone_run_time": "Standardzonens k\u00f6rtid (i sekunder)"
+                },
                 "title": "Konfigurera RainMachine"
             }
         }

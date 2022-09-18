@@ -116,7 +116,8 @@ def _fuel_distance_remaining_value(data, unit_system):
 
 def _odometer_value(data, unit_system):
     """Get the odometer value."""
-    return round(unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS))
+    # In order to match the behavior of the Mazda mobile app, we always round down
+    return int(unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS))
 
 
 def _front_left_tire_pressure_value(data, unit_system):

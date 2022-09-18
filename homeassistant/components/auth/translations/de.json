@@ -9,11 +9,11 @@
             },
             "step": {
                 "init": {
-                    "description": "Bitte w\u00e4hlen Sie einen der Benachrichtigungsdienste:",
+                    "description": "Bitte w\u00e4hle einen der Benachrichtigungsdienste:",
                     "title": "Einmal Passwort f\u00fcr Notify einrichten"
                 },
                 "setup": {
-                    "description": "Ein Einmal-Passwort wurde per **notify.{notify_service}** gesendet. Bitte geben Sie es unten ein:",
+                    "description": "Ein Einmal-Passwort wurde per **notify.{notify_service}** gesendet. Bitte gib es unten ein:",
                     "title": "\u00dcberpr\u00fcfe das Setup"
                 }
             },
