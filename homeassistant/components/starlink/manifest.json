@@ -3,7 +3,7 @@
   "name": "Starlink",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starlink",
-  "requirements": ["starlink-grpc-core==1.0.2"],
+  "requirements": ["starlink-grpc-core==1.1.0"],
   "codeowners": ["@boswelja"],
   "iot_class": "local_polling"
 }

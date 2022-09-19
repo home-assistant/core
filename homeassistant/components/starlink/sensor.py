@@ -20,7 +20,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TIME_MILLISECONDS,
-        value_fn=lambda data: round(data.pop_ping_latency_ms),
+        value_fn=lambda data: round(data["pop_ping_latency_ms"]),
     ),
     StarlinkSensorEntityDescription(
         key="azimuth",
@@ -29,7 +29,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
-        value_fn=lambda data: round(data.direction_azimuth, 3),
+        value_fn=lambda data: round(data["direction_azimuth"]),
     ),
     StarlinkSensorEntityDescription(
         key="elevation",
@@ -38,7 +38,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
-        value_fn=lambda data: round(data.direction_elevation, 3),
+        value_fn=lambda data: round(data["direction_elevation"]),
     ),
     StarlinkSensorEntityDescription(
         key="uplink_throughput",
@@ -46,7 +46,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        value_fn=lambda data: round(data.uplink_throughput_bps / 1000000, 2),
+        value_fn=lambda data: round(data["uplink_throughput_bps"] / 1000000),
     ),
     StarlinkSensorEntityDescription(
         key="downlink_throughput",
@@ -54,7 +54,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        value_fn=lambda data: round(data.downlink_throughput_bps / 1000000, 2),
+        value_fn=lambda data: round(data["downlink_throughput_bps"] / 1000000),
     ),
     StarlinkSensorEntityDescription(
         key="last_boot_time",
@@ -63,7 +63,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: datetime.now().astimezone()
-        - timedelta(seconds=data.uptime),
+        - timedelta(seconds=data["uptime"]),
     ),
 )
 

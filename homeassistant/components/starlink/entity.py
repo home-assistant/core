@@ -5,6 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from starlink_grpc import StatusDict
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
@@ -12,14 +14,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DISHY_HARDWARE, DISHY_ID
 from .coordinator import StarlinkUpdateCoordinator
-from .dish_status import DishyStatus
 
 
 @dataclass
 class StarlinkSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[DishyStatus], datetime | StateType]
+    value_fn: Callable[[StatusDict], datetime | StateType]
 
 
 @dataclass
@@ -44,7 +45,7 @@ class StarlinkSensorEntity(CoordinatorEntity[StarlinkUpdateCoordinator], SensorE
         """Initialize the sensor and set the update coordinator."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.id}_{description.key}"
+        self._attr_unique_id = f"{self.coordinator.data['id']}_{description.key}"
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -57,11 +58,11 @@ class StarlinkSensorEntity(CoordinatorEntity[StarlinkUpdateCoordinator], SensorE
         config_url = f"http://{self.coordinator.channel_context.target.split(':')[0]}"
         return DeviceInfo(
             identifiers={
-                (DISHY_ID, self.coordinator.data.id),
-                (DISHY_HARDWARE, self.coordinator.data.hardware_version),
+                (DISHY_ID, self.coordinator.data["id"]),
+                (DISHY_HARDWARE, self.coordinator.data["hardware_version"]),
             },
-            sw_version=self.coordinator.data.software_version,
-            hw_version=self.coordinator.data.hardware_version,
+            sw_version=self.coordinator.data["software_version"],
+            hw_version=self.coordinator.data["hardware_version"],
             name="Starlink",
             configuration_url=config_url,
             manufacturer="SpaceX",

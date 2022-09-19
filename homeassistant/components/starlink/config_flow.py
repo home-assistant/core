@@ -28,7 +28,6 @@ class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             # Input validation. If everything looks good, create the entry
             uid = await self.get_device_id(url=user_input[CONF_IP_ADDRESS])
-            print(f"UID: {uid}")
             if uid:
                 # Make sure we're not configuring the same device
                 await self.async_set_unique_id(uid)
