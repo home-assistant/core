@@ -201,7 +201,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
         except ClientResponseError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED.value:
+            if err.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from err
 
         async_block_device_setup(hass, entry, device)
