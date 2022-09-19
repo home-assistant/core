@@ -25,6 +25,7 @@ from tests.components.recorder import db_schema_0
 DEFAULT_PURGE_TASKS = 3
 
 
+# Add comment
 @dataclass
 class BlockRecorderTask(RecorderTask):
     """A task to block the recorder for testing only."""
