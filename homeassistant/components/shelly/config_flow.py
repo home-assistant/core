@@ -297,9 +297,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-        schema = {vol.Required(CONF_PASSWORD): str}
         if self.entry.data.get("gen", 1) == 1:
-            schema.update({vol.Required(CONF_USERNAME): str})
+            schema = {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        else:
+            schema = {vol.Required(CONF_PASSWORD): str}
 
         return self.async_show_form(
             step_id="reauth_confirm",
