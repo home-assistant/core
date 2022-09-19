@@ -1,0 +1,47 @@
+turn_off:
+  name: Turn off
+  description: Turn off device with optional transition time.
+  target:
+    entity:
+      domain: fan
+  fields:
+    transition:
+      name: Transition duration
+      description: Duration to transition from current volume to off.
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+
+turn_on:
+  name: Turn on
+  description: Turn on device with optional transition time.
+  target:
+    entity:
+      domain: fan
+  fields:
+    transition:
+      name: Transition duration
+      description: Duration to transition from current volume to new volume. If volume is not specified, the last volume state on the device is be used.
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+    volume:
+      name: Volume level
+      description: Number indicating volume level to set. If a transition is specified, this is the final volume level.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+disconnect:
+  name: Disconnect
+  description: Disconnect the underlying bluetooth connection
+  target:
+    entity:
+      domain: fan
