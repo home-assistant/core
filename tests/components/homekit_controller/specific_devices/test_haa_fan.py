@@ -3,7 +3,7 @@
 from homeassistant.components.fan import ATTR_PERCENTAGE, SUPPORT_SET_SPEED
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
