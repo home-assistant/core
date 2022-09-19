@@ -19,8 +19,9 @@ from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from . import db_schema_0
+
 from tests.common import async_fire_time_changed, fire_time_changed
-from tests.components.recorder import db_schema_0
 
 DEFAULT_PURGE_TASKS = 3
 
