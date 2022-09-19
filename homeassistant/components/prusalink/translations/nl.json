@@ -1,18 +1,16 @@
 {
     "config": {
-        "abort": {
-            "already_in_progress": "De configuratie is momenteel al bezig"
-        },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
+            "not_supported": "Alleen PrusaLink API V2 wordt ondersteund",
             "unknown": "Onverwachte fout"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "address": "Bluetooth-adres"
+                    "api_key": "API-sleutel",
+                    "host": "Host"
                 }
             }
         }
