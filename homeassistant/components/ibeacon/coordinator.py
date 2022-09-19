@@ -1,7 +1,7 @@
 """Tracking for iBeacon devices."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 
 from ibeacon_ble import (
@@ -31,9 +31,8 @@ from .const import (
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
     UNAVAILABLE_TIMEOUT,
+    UPDATE_INTERVAL,
 )
-
-UPDATE_INTERVAL = timedelta(seconds=60)
 
 MONOTONIC_TIME = time.monotonic
 
