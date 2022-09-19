@@ -1,7 +1,7 @@
 """Test the Advantage Air Select Platform."""
 from json import loads
 
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,

@@ -16,8 +16,7 @@ from homeassistant.components.homekit.const import (
     PROP_VALID_VALUES,
 )
 from homeassistant.components.homekit.type_humidifiers import HumidifierDehumidifier
-from homeassistant.components.humidifier import HumidifierDeviceClass
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -27,6 +26,7 @@ from homeassistant.components.humidifier.const import (
     DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
+    HumidifierDeviceClass,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (

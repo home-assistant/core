@@ -13,7 +13,7 @@ from homeassistant.components.asuswrt.const import (
     CONF_TRACK_UNKNOWN,
     DOMAIN,
 )
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,

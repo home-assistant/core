@@ -20,7 +20,7 @@ from aioairzone.const import (
 from aiohttp import ClientSession
 
 from homeassistant.components.airzone.const import DOMAIN
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 

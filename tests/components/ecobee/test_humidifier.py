@@ -4,8 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.ecobee.humidifier import MODE_MANUAL, MODE_OFF
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -13,6 +12,7 @@ from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASS_HUMIDIFIER,
+    DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
