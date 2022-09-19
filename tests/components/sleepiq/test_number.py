@@ -1,10 +1,10 @@
 """The tests for SleepIQ number platform."""
-from homeassistant.components.number import DOMAIN
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
+    DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
