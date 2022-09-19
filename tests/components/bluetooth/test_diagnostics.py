@@ -186,7 +186,7 @@ async def test_diagnostics_macos(
                 "Core Bluetooth": {
                     "address": "00:00:00:00:00:00",
                     "passive_scan": False,
-                    "sw_version": "21.6.0",
+                    "sw_version": ANY,
                 }
             },
             "manager": {
@@ -194,7 +194,7 @@ async def test_diagnostics_macos(
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
                         "passive_scan": False,
-                        "sw_version": "21.6.0",
+                        "sw_version": ANY,
                     }
                 },
                 "connectable_history": [],
