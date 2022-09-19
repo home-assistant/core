@@ -97,3 +97,27 @@ def two_adapters_fixture(bluez_dbus_mock):
         },
     ):
         yield
+
+
+@pytest.fixture(name="one_adapter_old_bluez")
+def one_adapter_old_bluez(bluez_dbus_mock):
+    """Fixture that mocks two adapters on Linux."""
+    with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.platform.system",
+        return_value="Linux",
+    ), patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.43",
+                }
+            },
+        },
+    ):
+        yield
