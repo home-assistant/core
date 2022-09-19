@@ -19,37 +19,6 @@ def mock_bluetooth(enable_bluetooth):
     """Auto mock bluetooth."""
 
 
-async def test_random_addresses_are_ignored(hass):
-    """Test the same uuid, major, minor from many addresses removes all associated entities."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance") is not None
-
-    for i in range(12):
-        service_info = BluetoothServiceInfo(
-            name="BlueCharm_177999",
-            address=str(i),
-            rssi=-63,
-            service_data={},
-            manufacturer_data={76: b"\x02\x15BlueCharmBeacons\x0e\xfe\x13U\xc5"},
-            service_uuids=[],
-            source="local",
-        )
-        inject_bluetooth_service_info(hass, service_info)
-
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance") is None
-
-
 async def test_many_groups_same_address_ignored(hass):
     """Test the different uuid, major, minor from many addresses removes all associated entities."""
     entry = MockConfigEntry(
@@ -63,7 +32,9 @@ async def test_many_groups_same_address_ignored(hass):
     inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance") is not None
+    assert (
+        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is not None
+    )
 
     for i in range(12):
         service_info = BluetoothServiceInfo(
@@ -80,7 +51,7 @@ async def test_many_groups_same_address_ignored(hass):
         inject_bluetooth_service_info(hass, service_info)
 
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance") is None
+    assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
 
 
 async def test_ignore_anything_less_than_min_rssi(hass):
@@ -99,7 +70,7 @@ async def test_ignore_anything_less_than_min_rssi(hass):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance") is None
+    assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
 
     inject_bluetooth_service_info(
         hass,
@@ -111,7 +82,9 @@ async def test_ignore_anything_less_than_min_rssi(hass):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance") is not None
+    assert (
+        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is not None
+    )
 
 
 async def test_ignore_not_ibeacons(hass):

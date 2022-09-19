@@ -40,3 +40,12 @@ NO_NAME_BEACON_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=["0000feaa-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+BEACON_RANDOM_ADDRESS_SERVICE_INFO = BluetoothServiceInfo(
+    name="RandomAddress_1234",
+    address="AA:BB:CC:DD:EE:00",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={76: b"\x02\x15RandCharmBeacons\x0e\xfe\x13U\xc5"},
+    service_uuids=[],
+    source="local",
+)

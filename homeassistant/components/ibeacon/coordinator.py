@@ -1,7 +1,7 @@
 """Tracking for iBeacon devices."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 
 from ibeacon_ble import (
@@ -31,9 +31,10 @@ from .const import (
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
     UNAVAILABLE_TIMEOUT,
+    UPDATE_INTERVAL,
 )
 
-UPDATE_INTERVAL = timedelta(seconds=60)
+MONOTONIC_TIME = time.monotonic
 
 
 def signal_unavailable(unique_id: str) -> str:
@@ -46,17 +47,29 @@ def signal_seen(unique_id: str) -> str:
     return f"{SIGNAL_IBEACON_DEVICE_SEEN}_{unique_id}"
 
 
+def short_address(address: str) -> str:
+    """Convert a Bluetooth address to a short address."""
+    results = address.replace("-", ":").split(":")
+    return f"{results[-2].upper()}{results[-1].upper()}"[-4:]
+
+
 @callback
 def async_name(
-    service_info: bluetooth.BluetoothServiceInfoBleak, parsed: iBeaconAdvertisement
+    service_info: bluetooth.BluetoothServiceInfoBleak,
+    parsed: iBeaconAdvertisement,
+    unique_address: bool = False,
 ) -> str:
     """Return a name for the device."""
     if service_info.address in (
         service_info.name,
         service_info.name.replace("_", ":"),
     ):
-        return f"{parsed.uuid} {parsed.major}.{parsed.minor}"
-    return service_info.name
+        base_name = f"{parsed.uuid} {parsed.major}.{parsed.minor}"
+    else:
+        base_name = service_info.name
+    if unique_address:
+        return f"{base_name} {short_address(service_info.address)}"
+    return base_name
 
 
 @callback
@@ -66,6 +79,7 @@ def _async_dispatch_update(
     service_info: bluetooth.BluetoothServiceInfoBleak,
     parsed: iBeaconAdvertisement,
     new: bool,
+    unique_address: bool,
 ) -> None:
     """Dispatch an update."""
     if new:
@@ -73,7 +87,7 @@ def _async_dispatch_update(
             hass,
             SIGNAL_IBEACON_DEVICE_NEW,
             device_id,
-            async_name(service_info, parsed),
+            async_name(service_info, parsed, unique_address),
             parsed,
         )
         return
@@ -95,22 +109,26 @@ class IBeaconCoordinator:
         self.hass = hass
         self._entry = entry
         self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
+        self._dev_reg = registry
 
+        # iBeacon devices that do not follow the spec
+        # and broadcast custom data in the major and minor fields
+        self._ignore_addresses: set[str] = set(
+            entry.data.get(CONF_IGNORE_ADDRESSES, [])
+        )
+
+        # iBeacons with fixed MAC addresses
         self._last_rssi_by_unique_id: dict[str, int] = {}
-
         self._group_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_group_id: dict[str, set[str]] = {}
         self._addresses_by_group_id: dict[str, set[str]] = {}
-
         self._unavailable_trackers: dict[str, CALLBACK_TYPE] = {}
-        self._dev_reg = registry
 
-        self._ignore_addresses: set[str] = set(
-            entry.data.get(CONF_IGNORE_ADDRESSES, [])
-        )
+        # iBeacon with Random Macs
         self._group_ids_random_macs: set[str] = set()
         self._last_seen_by_group_id: dict[str, bluetooth.BluetoothServiceInfoBleak] = {}
+        self._unavailable_group_ids: set[str] = set()
 
     @callback
     def _async_handle_unavailable(
@@ -161,13 +179,7 @@ class IBeaconCoordinator:
         self._async_purge_untrackable_entities(self._unique_ids_by_group_id[group_id])
         self._unique_ids_by_group_id.pop(group_id)
         self._addresses_by_group_id.pop(group_id)
-        async_dispatcher_send(
-            self.hass,
-            SIGNAL_IBEACON_DEVICE_NEW,
-            group_id,
-            async_name(service_info, parsed),
-            parsed,
-        )
+        self._async_update_ibeacon_with_random_mac(group_id, service_info, parsed)
 
     def _async_track_ibeacon_with_unique_address(
         self, address: str, group_id: str, unique_id: str
@@ -196,11 +208,32 @@ class IBeaconCoordinator:
 
         if group_id in self._group_ids_random_macs:
             # Handle iBeacon with a rotating mac address
-            new = group_id not in self._last_seen_by_group_id
-            self._last_seen_by_group_id[group_id] = service_info
-            _async_dispatch_update(self.hass, group_id, service_info, parsed, new)
+            self._async_update_ibeacon_with_random_mac(group_id, service_info, parsed)
             return
 
+        self._async_update_ibeacon_with_unique_address(group_id, service_info, parsed)
+
+    @callback
+    def _async_update_ibeacon_with_random_mac(
+        self,
+        group_id: str,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        parsed: iBeaconAdvertisement,
+    ) -> None:
+        """Update iBeacons with random mac addresses."""
+        # Handle iBeacon with a rotating mac address
+        new = group_id not in self._last_seen_by_group_id
+        self._last_seen_by_group_id[group_id] = service_info
+        self._unavailable_group_ids.discard(group_id)
+        _async_dispatch_update(self.hass, group_id, service_info, parsed, new, False)
+
+    @callback
+    def _async_update_ibeacon_with_unique_address(
+        self,
+        group_id: str,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        parsed: iBeaconAdvertisement,
+    ) -> None:
         # Handle iBeacon with a fixed mac address
         # and or detect if the iBeacon is using a rotating mac address
         # and switch to random mac tracking method
@@ -230,7 +263,7 @@ class IBeaconCoordinator:
             self._async_convert_to_group_tracking(group_id, service_info, parsed)
             return
 
-        _async_dispatch_update(self.hass, unique_id, service_info, parsed, new)
+        _async_dispatch_update(self.hass, unique_id, service_info, parsed, new, True)
 
     @callback
     def _async_stop(self) -> None:
@@ -246,15 +279,16 @@ class IBeaconCoordinator:
     @callback
     def _async_check_unavailable_groups_with_random_macs(self) -> None:
         """Check for random mac groups that have not been seen in a while and mark them as unavailable."""
-        now = time.monotonic()
+        now = MONOTONIC_TIME()
         gone_unavailable = [
             group_id
             for group_id in self._group_ids_random_macs
-            if (service_info := self._last_seen_by_group_id.get(group_id))
+            if group_id not in self._unavailable_group_ids
+            and (service_info := self._last_seen_by_group_id.get(group_id))
             and now - service_info.time > UNAVAILABLE_TIMEOUT
         ]
         for group_id in gone_unavailable:
-            del self._last_seen_by_group_id[group_id]
+            self._unavailable_group_ids.add(group_id)
             async_dispatcher_send(self.hass, signal_unavailable(group_id))
 
     @callback
