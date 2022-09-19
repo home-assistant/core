@@ -10,7 +10,7 @@ from scapy.layers.l2 import Ether
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
     ATTR_IP,
     ATTR_MAC,

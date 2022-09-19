@@ -2,8 +2,8 @@
 from pyhap.loader import get_loader
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
