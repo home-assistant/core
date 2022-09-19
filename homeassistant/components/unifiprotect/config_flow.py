@@ -78,12 +78,17 @@ async def _async_console_is_offline(
     are failing and the console is unreachable
     since protect may be updating.
     """
-    return bool(
-        entry.state in ENTRY_FAILURE_STATES
-        or not async_last_update_was_successful(hass, entry)
-    ) and not await async_console_is_alive(
-        async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
-    )
+    if entry.state not in ENTRY_FAILURE_STATES and async_last_update_was_successful(
+        hass, entry
+    ):
+        return False
+
+    try:
+        return not await async_console_is_alive(
+            async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
+        )
+    except TimeoutError:
+        return True
 
 
 class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
