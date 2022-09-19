@@ -99,7 +99,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
     with open(str(zeroconf_path)) as fp:
-        current = fp.read().strip()
+        current = fp.read()
         if current != content:
             config.add_error(
                 "zeroconf",

@@ -49,7 +49,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
     with open(str(mqtt_path)) as fp:
-        if fp.read().strip() != content:
+        if fp.read() != content:
             config.add_error(
                 "mqtt",
                 "File mqtt.py is not up to date. Run python3 -m script.hassfest",

@@ -44,7 +44,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    if application_credentials_path.read_text(encoding="utf-8").strip() != content:
+    if application_credentials_path.read_text(encoding="utf-8") != content:
         config.add_error(
             "application_credentials",
             "File application_credentials.py is not up to date. Run python3 -m script.hassfest",

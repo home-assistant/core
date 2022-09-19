@@ -12,7 +12,7 @@ BASE = """
 To update, run python3 -m script.hassfest
 \"\"\"
 
-HAS_SUPPORTED_BRANDS = ({})
+HAS_SUPPORTED_BRANDS = {}
 """.strip()
 
 
@@ -38,7 +38,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    if supported_brands_path.read_text(encoding="utf-8").strip() != content:
+    if supported_brands_path.read_text(encoding="utf-8") != content:
         config.add_error(
             "supported_brands",
             "File supported_brands.py is not up to date. Run python3 -m script.hassfest",

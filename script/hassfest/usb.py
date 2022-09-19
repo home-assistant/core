@@ -51,7 +51,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         return
 
     with open(str(usb_path)) as fp:
-        current = fp.read().strip()
+        current = fp.read()
         if current != content:
             config.add_error(
                 "usb",

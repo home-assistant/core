@@ -96,7 +96,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
     with open(str(config_flow_path)) as fp:
-        if fp.read().strip() != content:
+        if fp.read() != content:
             config.add_error(
                 "config_flow",
                 "File config_flows.py is not up to date. "
