@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import math
 from typing import Any
 
 from melnor_bluetooth.device import Device, Valve
@@ -17,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TIME_SECONDS,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -37,9 +38,10 @@ from .models import (
 def watering_seconds_left(valve: Valve) -> float:
     """Calculate the number of minutes left in the current watering cycle."""
 
-    seconds_remaining = (
-        dt_util.utc_from_timestamp(valve.watering_end_time) - dt_util.now()
-    ).seconds
+    seconds_remaining = math.ceil(
+        (dt_util.utc_from_timestamp(valve.watering_end_time) - dt_util.now()).seconds
+        / 60
+    )
 
     if valve.is_watering is not True or seconds_remaining > 360 * 60:
         return 0
@@ -102,7 +104,7 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
         device_class=SensorDeviceClass.DURATION,
         key="minutes_remaining",
         name="Time Remaining",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=watering_seconds_left,
     ),

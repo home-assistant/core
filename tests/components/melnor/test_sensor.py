@@ -8,7 +8,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TIME_SECONDS,
+    TIME_MINUTES,
 )
 from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
@@ -63,7 +63,7 @@ async def test_minutes_remaining_sensor(hass):
         # Valve is off, report 0
         minutes_sensor = hass.states.get("sensor.zone_1_time_remaining")
         assert minutes_sensor.state == "0"
-        assert minutes_sensor.attributes["unit_of_measurement"] == TIME_SECONDS
+        assert minutes_sensor.attributes["unit_of_measurement"] == TIME_MINUTES
         assert minutes_sensor.attributes["device_class"] == SensorDeviceClass.DURATION
         assert minutes_sensor.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
@@ -75,7 +75,7 @@ async def test_minutes_remaining_sensor(hass):
 
         # Valve is on, report 10
         minutes_remaining_sensor = hass.states.get("sensor.zone_1_time_remaining")
-        assert minutes_remaining_sensor.state == "600"
+        assert minutes_remaining_sensor.state == "10"
 
 
 async def test_rssi_sensor(hass):
