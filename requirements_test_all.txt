@@ -362,7 +362,7 @@ boschshcpy==0.2.30
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.2.3
+brother==2.0.0
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -662,6 +662,9 @@ hyperion-py==0.7.5
 
 # homeassistant.components.iaqualink
 iaqualink==0.4.1
+
+# homeassistant.components.ibeacon
+ibeacon_ble==0.6.4
 
 # homeassistant.components.ping
 icmplib==3.0
