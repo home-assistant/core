@@ -338,11 +338,17 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         for module, _alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
-            if (
-                not self.current_package.startswith("tests.components.")
-                and module.startswith("homeassistant.components.")
-                and module.endswith("const")
+                continue
+            if module.startswith("homeassistant.components.") and module.endswith(
+                "const"
             ):
+                if (
+                    self.current_package.startswith("tests.components.")
+                    and self.current_package.split(".")[2] == module.split(".")[2]
+                ):
+                    # Ignore check if the component being tested matches
+                    # the component being imported from
+                    continue
                 self.add_message("hass-component-root-import", node=node)
 
     def _visit_importfrom_relative(
@@ -388,14 +394,17 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             ):
                 self.add_message("hass-relative-import", node=node)
                 return
-        if (
-            not self.current_package.startswith("tests.components.")
-            and node.modname.startswith("homeassistant.components.")
-            and (
-                node.modname.endswith(".const")
-                or "const" in {names[0] for names in node.names}
-            )
+        if node.modname.startswith("homeassistant.components.") and (
+            node.modname.endswith(".const")
+            or "const" in {names[0] for names in node.names}
         ):
+            if (
+                self.current_package.startswith("tests.components.")
+                and self.current_package.split(".")[2] == node.modname.split(".")[2]
+            ):
+                # Ignore check if the component being tested matches
+                # the component being imported from
+                return
             self.add_message("hass-component-root-import", node=node)
             return
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
