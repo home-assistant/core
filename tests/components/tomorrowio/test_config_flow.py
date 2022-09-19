@@ -9,7 +9,7 @@ from pytomorrowio.exceptions import (
 )
 
 from homeassistant import data_entry_flow
-from homeassistant.components.climacell.const import DOMAIN as CC_DOMAIN
+from homeassistant.components.climacell import DOMAIN as CC_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
