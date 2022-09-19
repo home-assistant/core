@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_setup_user_no_bluetooth(hass):
+async def test_setup_user_no_bluetooth(hass, mock_bluetooth_adapters):
     """Test setting up via user interaction when bluetooth is not enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
