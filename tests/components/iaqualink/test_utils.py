@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.iaqualink.utils import await_or_reraise
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.components.iaqualink.conftest import async_raises, async_returns
+from .conftest import async_raises, async_returns
 
 
 async def test_await_or_reraise(hass):

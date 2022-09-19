@@ -29,8 +29,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .const import MOCK_VEHICLES
+
 from tests.common import load_fixture
-from tests.components.renault.const import MOCK_VEHICLES
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
