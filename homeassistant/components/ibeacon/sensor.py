@@ -27,7 +27,7 @@ from .entity import IBeaconEntity
 class IBeaconRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[iBeaconAdvertisement], int | float | None]
+    value_fn: Callable[[iBeaconAdvertisement], int | None]
 
 
 @dataclass
@@ -129,6 +129,6 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._parsed)
