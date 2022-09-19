@@ -118,7 +118,6 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_CO,
-        device_class=SensorDeviceClass.CO,
         name=ATTR_API_CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
