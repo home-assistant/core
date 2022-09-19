@@ -11,7 +11,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
 )
-from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
+from homeassistant.components.siren import ATTR_VOLUME_LEVEL
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 

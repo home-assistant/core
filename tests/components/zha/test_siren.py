@@ -9,7 +9,7 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.siren.const import (
+from homeassistant.components.siren import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
