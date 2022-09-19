@@ -27,7 +27,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
 from homeassistant.helpers import extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -303,7 +303,6 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
 
     def __init__(self, hass, object_id, cfg, raw_config, blueprint_inputs):
         """Initialize the script."""
-        self.object_id = object_id
         self.icon = cfg.get(CONF_ICON)
         self.description = cfg[CONF_DESCRIPTION]
         self.fields = cfg[CONF_FIELDS]
@@ -366,6 +365,11 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         if self._blueprint_inputs is None:
             return None
         return self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+
+    @property
+    def object_id(self):
+        """Return the object_id."""
+        return split_entity_id(self.entity_id)[1]
 
     @callback
     def async_change_listener(self):
