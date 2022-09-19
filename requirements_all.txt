@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.9
+PySwitchbot==0.19.10
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -449,7 +449,7 @@ boto3==1.20.24
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.2.3
+brother==2.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -830,7 +830,7 @@ hass-nabucasa==0.55.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.6.0
+hatasmota==0.6.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -2378,7 +2378,7 @@ tesla-wall-connector==1.0.2
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.3.1
+thermobeacon-ble==0.3.2
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.3
