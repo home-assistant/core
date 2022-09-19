@@ -99,8 +99,7 @@ async def test_thermostat_device_available(
             "sdm.devices.traits.Humidity": {
                 "ambientHumidityPercent": 35.0,
             },
-            "sdm.devices.traits.Connectivity": {
-                "status": "ONLINE"
+            "sdm.devices.traits.Connectivity": {"status": "ONLINE"},
             },
         }
     )
@@ -127,9 +126,7 @@ async def test_thermostat_device_unavailable(
             "sdm.devices.traits.Humidity": {
                 "ambientHumidityPercent": 35.0,
             },
-            "sdm.devices.traits.Connectivity": {
-                "status": "OFFLINE"
-            },
+            "sdm.devices.traits.Connectivity": {"status": "OFFLINE"},
         }
     )
     await setup_platform()
