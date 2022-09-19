@@ -18,7 +18,7 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 
-from tests.components.homekit_controller.common import setup_test_component
+from .common import setup_test_component
 
 # Test thermostat devices
 

@@ -1249,7 +1249,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.0
+pyoverkiz==1.5.3
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0

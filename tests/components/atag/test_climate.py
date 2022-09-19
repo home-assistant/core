@@ -23,7 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.components.atag import UID, init_integration
+from . import UID, init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
