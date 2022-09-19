@@ -5,7 +5,7 @@ import logging
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
-from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
+from google_nest_sdm.device_traits import ConnectivityTrait, HumidityTrait, TemperatureTrait
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +17,7 @@ from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
+from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,6 +67,14 @@ class SensorBase(SensorEntity):
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
+
+    @property
+    def available(self) -> bool:
+        if ConnectivityTrait.NAME in self._device.traits:
+            trait: ConnectivityTrait = self._device.traits[ConnectivityTrait.NAME]
+            if trait.status == CONNECTIVITY_TRAIT_OFFLINE:
+                return False
+        return super().available
 
 
 class TemperatureSensor(SensorBase):
