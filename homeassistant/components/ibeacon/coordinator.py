@@ -127,7 +127,7 @@ class IBeaconCoordinator:
         self._addresses_by_group_id: dict[str, set[str]] = {}
         self._unavailable_trackers: dict[str, CALLBACK_TYPE] = {}
 
-        # iBeacon with Random Macs
+        # iBeacon with random MAC addresses
         self._group_ids_random_macs: set[str] = set()
         self._last_seen_by_group_id: dict[str, bluetooth.BluetoothServiceInfoBleak] = {}
         self._unavailable_group_ids: set[str] = set()
@@ -170,7 +170,7 @@ class IBeaconCoordinator:
             self._last_rssi_by_unique_id.pop(unique_id, None)
 
     @callback
-    def _async_convert_to_group_tracking(
+    def _async_convert_random_mac_tracking(
         self,
         group_id: str,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -209,7 +209,6 @@ class IBeaconCoordinator:
         group_id = f"{parsed.uuid}_{parsed.major}_{parsed.minor}"
 
         if group_id in self._group_ids_random_macs:
-            # Handle iBeacon with a rotating mac address
             self._async_update_ibeacon_with_random_mac(group_id, service_info, parsed)
             return
 
@@ -223,7 +222,6 @@ class IBeaconCoordinator:
         parsed: iBeaconAdvertisement,
     ) -> None:
         """Update iBeacons with random mac addresses."""
-        # Handle iBeacon with a rotating mac address
         new = group_id not in self._last_seen_by_group_id
         self._last_seen_by_group_id[group_id] = service_info
         self._unavailable_group_ids.discard(group_id)
@@ -262,7 +260,7 @@ class IBeaconCoordinator:
         # group_id we remove all the trackers for that group_id
         # as it means the addresses are being rotated.
         if len(self._addresses_by_group_id[group_id]) >= MAX_IDS:
-            self._async_convert_to_group_tracking(group_id, service_info, parsed)
+            self._async_convert_random_mac_tracking(group_id, service_info, parsed)
             return
 
         _async_dispatch_update(self.hass, unique_id, service_info, parsed, new, True)
@@ -335,12 +333,14 @@ class IBeaconCoordinator:
                     break
             if not unique_id:
                 continue
+            # iBeacons with a fixed MAC address
             if unique_id.count("_") == 3:
                 uuid, major, minor, address = unique_id.split("_")
                 group_id = f"{uuid}_{major}_{minor}"
                 self._async_track_ibeacon_with_unique_address(
                     address, group_id, unique_id
                 )
+            # iBeacons with a random MAC address
             elif unique_id.count("_") == 2:
                 uuid, major, minor = unique_id.split("_")
                 group_id = f"{uuid}_{major}_{minor}"
