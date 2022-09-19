@@ -41,7 +41,11 @@ from homeassistant.components.climate.const import (
     PRESET_SLEEP,
     ClimateEntityFeature,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -1470,9 +1474,7 @@ async def test_thermostat_available(
             "sdm.devices.traits.ThermostatTemperatureSetpoint": {
                 "coolCelsius": 28.0,
             },
-            "sdm.devices.traits.Connectivity": {
-                "status": "ONLINE"
-            },
+            "sdm.devices.traits.Connectivity": {"status": "ONLINE"},
         },
     )
     await setup_platform()
@@ -1502,9 +1504,7 @@ async def test_thermostat_unavailable(
             "sdm.devices.traits.ThermostatTemperatureSetpoint": {
                 "coolCelsius": 28.0,
             },
-            "sdm.devices.traits.Connectivity": {
-                "status": "OFFLINE"
-            },
+            "sdm.devices.traits.Connectivity": {"status": "OFFLINE"},
         },
     )
     await setup_platform()
