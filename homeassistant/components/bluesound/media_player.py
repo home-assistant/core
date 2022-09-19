@@ -881,7 +881,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             reverse=True,
         )
         bluesound_group = [
-            entity.name
+            entity.entity_id
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
