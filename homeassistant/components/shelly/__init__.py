@@ -9,7 +9,7 @@ from typing import Any, Final, cast
 from aiohttp import ClientResponseError
 import aioshelly
 from aioshelly.block_device import BlockDevice
-from aioshelly.exceptions import AuthRequired
+from aioshelly.exceptions import AuthRequired, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
 import async_timeout
 import voluptuous as vol
@@ -258,6 +258,8 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
     except OSError as err:
         raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
+    except (AuthRequired, InvalidAuthError) as err:
+        raise ConfigEntryAuthFailed from err
 
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
