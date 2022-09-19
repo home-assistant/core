@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
 )
 
-from tests.components.google_travel_time.const import MOCK_CONFIG
+from .const import MOCK_CONFIG
 
 
 @pytest.mark.usefixtures("validate_config_entry", "bypass_setup")
