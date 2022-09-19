@@ -10,7 +10,7 @@ from homeassistant.components.homekit_controller.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
-from tests.components.homekit_controller.common import Helper, setup_test_component
+from .common import Helper, setup_test_component
 
 
 def create_temperature_sensor_service(accessory):

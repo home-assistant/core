@@ -636,7 +636,7 @@ def _apply_update(  # noqa: C901
                         fake_start_time += timedelta(minutes=5)
 
         # When querying the database, be careful to only explicitly query for columns
-        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # which were present in schema version 22. If querying the table, SQLAlchemy
         # will refer to future columns.
         with session_scope(session=session_maker()) as session:
             for sum_statistic in session.query(StatisticsMeta.id).filter_by(
@@ -747,6 +747,25 @@ def _apply_update(  # noqa: C901
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
             )
+    elif new_version == 30:
+        _add_columns(
+            session_maker,
+            "statistics_meta",
+            ["state_unit_of_measurement VARCHAR(255)"],
+        )
+        # When querying the database, be careful to only explicitly query for columns
+        # which were present in schema version 30. If querying the table, SQLAlchemy
+        # will refer to future columns.
+        with session_scope(session=session_maker()) as session:
+            for statistics_meta in session.query(
+                StatisticsMeta.id, StatisticsMeta.unit_of_measurement
+            ):
+                session.query(StatisticsMeta).filter_by(id=statistics_meta.id).update(
+                    {
+                        StatisticsMeta.state_unit_of_measurement: statistics_meta.unit_of_measurement,
+                    },
+                    synchronize_session=False,
+                )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

@@ -1,8 +1,18 @@
 """Tests for the bluetooth component."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+
+@pytest.fixture(name="bluez_dbus_mock")
+def bluez_dbus_mock():
+    """Fixture that mocks out the bluez dbus calls."""
+    # Must patch directly since this is loaded on demand only
+    with patch(
+        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
+    ):
+        yield
 
 
 @pytest.fixture(name="macos_adapter")
@@ -25,7 +35,7 @@ def windows_adapter():
 
 
 @pytest.fixture(name="one_adapter")
-def one_adapter_fixture():
+def one_adapter_fixture(bluez_dbus_mock):
     """Fixture that mocks one adapter on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -54,7 +64,7 @@ def one_adapter_fixture():
 
 
 @pytest.fixture(name="two_adapters")
-def two_adapters_fixture():
+def two_adapters_fixture(bluez_dbus_mock):
     """Fixture that mocks two adapters on Linux."""
     with patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Linux"
@@ -83,6 +93,30 @@ def two_adapters_fixture():
                     "SupportedMonitorTypes": ["or_patterns"],
                     "SupportedFeatures": [],
                 },
+            },
+        },
+    ):
+        yield
+
+
+@pytest.fixture(name="one_adapter_old_bluez")
+def one_adapter_old_bluez(bluez_dbus_mock):
+    """Fixture that mocks two adapters on Linux."""
+    with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.platform.system",
+        return_value="Linux",
+    ), patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.43",
+                }
             },
         },
     ):

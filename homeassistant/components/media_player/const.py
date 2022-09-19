@@ -41,6 +41,18 @@ ATTR_SOUND_MODE_LIST = "sound_mode_list"
 DOMAIN = "media_player"
 
 
+class MediaPlayerState(StrEnum):
+    """State of media player entities."""
+
+    OFF = "off"
+    ON = "on"
+    IDLE = "idle"
+    PLAYING = "playing"
+    PAUSED = "paused"
+    STANDBY = "standby"
+    BUFFERING = "buffering"
+
+
 class MediaClass(StrEnum):
     """Media class for media player entities."""
 

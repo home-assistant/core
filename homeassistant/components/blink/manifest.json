@@ -2,7 +2,7 @@
   "domain": "blink",
   "name": "Blink",
   "documentation": "https://www.home-assistant.io/integrations/blink",
-  "requirements": ["blinkpy==0.19.0"],
+  "requirements": ["blinkpy==0.19.2"],
   "codeowners": ["@fronzbot"],
   "dhcp": [
     {

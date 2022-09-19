@@ -19,5 +19,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Volvo\u00a0On\u00a0Call sera bient\u00f4t supprim\u00e9e"
+        }
     }
 }

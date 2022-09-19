@@ -9,7 +9,7 @@ from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
-from regenmaschine.errors import RainMachineError
+from regenmaschine.errors import RainMachineError, UnknownAPICallError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -190,7 +190,9 @@ async def async_update_programs_and_zones(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up RainMachine as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
@@ -244,6 +246,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = await controller.restrictions.universal()
             else:
                 data = await controller.zones.all(details=True, include_inactive=True)
+        except UnknownAPICallError:
+            LOGGER.info(
+                "Skipping unsupported API call for controller %s: %s",
+                controller.name,
+                api_category,
+            )
         except RainMachineError as err:
             raise UpdateFailed(err) from err
 

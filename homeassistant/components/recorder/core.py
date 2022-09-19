@@ -13,6 +13,7 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
+import async_timeout
 from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
@@ -615,6 +616,10 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_set_db_ready)
 
+        # Catch up with missed statistics
+        with session_scope(session=self.get_session()) as session:
+            self._schedule_compile_missing_statistics(session)
+
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
@@ -1026,7 +1031,8 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            await asyncio.wait_for(database_locked.wait(), timeout=DB_LOCK_TIMEOUT)
+            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+                await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
@@ -1118,7 +1124,6 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
-            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
 
