@@ -160,6 +160,6 @@ class TellstickSensor(SensorEntity):
         self._attr_native_unit_of_measurement = sensor_info.unit or None
         self._attr_name = f"{name} {sensor_info.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update tellstick sensor."""
         self._attr_native_value = self._tellcore_sensor.value(self._datatype).value

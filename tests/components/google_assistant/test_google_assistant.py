@@ -10,16 +10,16 @@ import pytest
 from homeassistant import const, core, setup
 from homeassistant.components import (
     alarm_control_panel,
+    climate,
     cover,
     fan,
     google_assistant as ga,
+    humidifier,
     light,
     lock,
     media_player,
     switch,
 )
-from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory

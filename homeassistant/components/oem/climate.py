@@ -1,12 +1,15 @@
 """OpenEnergyMonitor Thermostat Support."""
 from __future__ import annotations
 
+from typing import Any
+
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -122,12 +125,12 @@ class ThermostatDevice(ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         self.thermostat.setpoint = temp
 
-    def update(self):
+    def update(self) -> None:
         """Update local state."""
         self._setpoint = self.thermostat.setpoint
         self._temperature = self.thermostat.temperature

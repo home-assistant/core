@@ -1,12 +1,12 @@
 """Make sure that Vocolinc Flowerbud is enumerated properly."""
 
-from homeassistant.components.humidifier.const import SUPPORT_MODES
+from homeassistant.components.humidifier import SUPPORT_MODES
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,

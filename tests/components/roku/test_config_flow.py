@@ -11,8 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-from tests.components.roku import (
+from . import (
     HOMEKIT_HOST,
     HOST,
     MOCK_HOMEKIT_DISCOVERY_INFO,
@@ -20,6 +19,8 @@ from tests.components.roku import (
     NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(

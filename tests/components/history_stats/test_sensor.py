@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.history_stats import DOMAIN
-from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component, setup_component
@@ -1496,3 +1496,46 @@ async def test_end_time_with_microseconds_zeroed(time_zone, hass, recorder_mock)
         async_fire_time_changed(hass, rolled_to_next_day_plus_18)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
+
+
+async def test_device_classes(hass, recorder_mock):
+    """Test the device classes."""
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "time",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ as_timestamp(now()) + 3600 }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "count",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ as_timestamp(now()) + 3600 }}",
+                    "type": "count",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "ratio",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ as_timestamp(now()) + 3600 }}",
+                    "type": "ratio",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.time").attributes[ATTR_DEVICE_CLASS] == "duration"
+    assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.ratio").attributes
+    assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.count").attributes

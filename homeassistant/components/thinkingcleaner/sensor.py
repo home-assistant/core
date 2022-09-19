@@ -107,7 +107,7 @@ class ThinkingCleanerSensor(SensorEntity):
 
         self._attr_name = f"{tc_object.name} {description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         self._update_devices()
 

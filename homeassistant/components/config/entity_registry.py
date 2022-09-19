@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import require_admin
 from homeassistant.components.websocket_api.messages import (
     IDEN_JSON_TEMPLATE,
@@ -237,6 +237,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "entity_id": entry.entity_id,
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
+        "id": entry.id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,

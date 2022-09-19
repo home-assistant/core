@@ -5,9 +5,8 @@ import logging
 
 from pytile.tile import Tile
 
-from homeassistant.components.device_tracker import AsyncSeeCallback
+from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback

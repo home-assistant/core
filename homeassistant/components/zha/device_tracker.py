@@ -59,7 +59,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         self._keepalive_interval = 60
         self._battery_level = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._battery_channel:
@@ -69,7 +69,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
                 self.async_battery_percentage_remaining_updated,
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Handle polling."""
         if self.zha_device.last_seen is None:
             self._connected = False
