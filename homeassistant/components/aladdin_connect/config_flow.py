@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
-from aiohttp import ClientError
+from AIOAladdinConnect.session_manager import InvalidPasswordError
 from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
@@ -48,7 +48,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     except (ClientConnectionError, asyncio.TimeoutError) as ex:
         raise ex
 
-    except ClientError as ex:
+    except InvalidPasswordError as ex:
         raise InvalidAuth from ex
 
 
