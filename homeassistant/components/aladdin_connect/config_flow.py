@@ -43,9 +43,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         async_get_clientsession(hass),
         CLIENT_ID,
     )
-    login = await acc.login()
-    if not login:
-        raise InvalidAuth
+    try:
+        await acc.login()
+    except (ClientConnectionError, asyncio.TimeoutError) as ex:
+        raise ex
+
+    except ClientError as ex:
+        raise InvalidAuth from ex
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -80,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+            except (ClientConnectionError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
 
             else:
@@ -117,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
-        except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+        except (ClientConnectionError, asyncio.TimeoutError):
             errors["base"] = "cannot_connect"
 
         else:

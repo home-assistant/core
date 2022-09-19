@@ -4,7 +4,7 @@ import logging
 from typing import Final
 
 from AIOAladdinConnect import AladdinConnectClient
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -27,10 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username, password, async_get_clientsession(hass), CLIENT_ID
     )
     try:
-        if not await acc.login():
-            raise ConfigEntryAuthFailed("Incorrect Password")
+        await acc.login()
     except (ClientConnectionError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
+    except ClientError as ex:
+        raise ConfigEntryAuthFailed("Incorrect Password") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
