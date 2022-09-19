@@ -20,6 +20,18 @@
             "reauth_successful": "Re-authentication was successful"
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_system": "Unit System"
+                }
+            }
+        },
+        "abort": {
+            "config_updated": "Configuration updated"
+        }
+    },
     "issues": {
         "deprecated_yaml": {
             "title": "The Volvo On Call YAML configuration is being removed",

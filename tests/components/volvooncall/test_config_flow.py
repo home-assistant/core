@@ -220,3 +220,41 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+async def test_options(hass: HomeAssistant) -> None:
+    """Test that we handle the options flow."""
+
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "region": "na",
+            "unit_system": "metric",
+            "mutable": True,
+        },
+    )
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        first_entry.entry_id,
+        context={
+            "source": config_entries.SOURCE_USER,
+            "entry_id": first_entry.entry_id,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "unit_system": "imperial",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "config_updated"

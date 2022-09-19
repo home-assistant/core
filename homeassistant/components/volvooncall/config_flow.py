@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -115,6 +116,14 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user()
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return VolvoOnCallOptionsFlow(config_entry)
+
     async def is_valid(self, user_input):
         """Check for user input errors."""
 
@@ -133,3 +142,46 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         test_volvo_data = VolvoData(self.hass, connection, user_input)
 
         await test_volvo_data.auth_is_valid()
+
+
+class VolvoOnCallOptionsFlow(config_entries.OptionsFlow):
+    """Volvo On Call Options Flow Handler."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            new_conf = {**self.config_entry.data}
+
+            new_conf[CONF_UNIT_SYSTEM] = user_input[CONF_UNIT_SYSTEM]
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=new_conf
+            )
+
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+            return self.async_abort(reason="config_updated")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_UNIT_SYSTEM,
+                        default=self.config_entry.data[CONF_UNIT_SYSTEM],
+                    ): vol.In(
+                        {
+                            UNIT_SYSTEM_METRIC: "Metric",
+                            UNIT_SYSTEM_SCANDINAVIAN_MILES: "Metric with Scandinavian Miles",
+                            UNIT_SYSTEM_IMPERIAL: "Imperial",
+                        }
+                    ),
+                },
+            ),
+        )
