@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from ast import literal_eval
+from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, TypedDict, Union
 
 import attr
 
@@ -14,10 +15,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType,TemplateVarsType
 
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
+    from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
 
 _SENTINEL = object()
@@ -31,7 +33,7 @@ PublishPayloadType = Union[str, bytes, int, float, None]
 class PublishMessage:
     """MQTT Message."""
 
-    topic: str = attr.ib()
+    topic: str = attr.ib)
     payload: PublishPayloadType = attr.ib()
     qos: int = attr.ib()
     retain: bool = attr.ib()
@@ -51,6 +53,35 @@ class ReceiveMessage:
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
 MessageCallbackType = Callable[[ReceiveMessage], None]
+
+
+class SubscriptionDebugInfo(TypedDict):
+    """Class for holding subscription debug info."""
+
+    messages: deque[ReceiveMessage]
+    count: int
+
+
+class EntityDebugInfo(TypedDict):
+    """Class for holding entity based debug info."""
+
+    subscriptions: dict[str, SubscriptionDebugInfo]
+    discovery_data: DiscoveryInfoType
+    transmitted: dict[str, dict[str, deque[TimestampedPublishMessage]]]
+
+
+class TriggerDebugInfo(TypedDict):
+    """Class for holding trigger based debug info."""
+
+    device_id: str
+    discovery_data: DiscoveryInfoType
+
+
+class DebugInfo(TypedDict, total=False):
+    """Class for holding MQTT debug info."""
+
+    entities: dict[str, EntityDebugInfo]
+    triggers: dict[tuple[str, str], TriggerDebugInfo]
 
 
 class MqttCommandTemplate:
@@ -187,6 +218,7 @@ class MqttData:
 
     client: MQTT | None = None
     config: ConfigType | None = None
+    debug_info: DebugInfo = None  # type: ignore[assignment]
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
         default_factory=dict
