@@ -5,11 +5,9 @@ from aiohomekit.model.services import ServicesTypes
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
 from homeassistant.components.homekit_controller.storage import EntityMapStorage
 
+from .common import setup_platform, setup_test_component
+
 from tests.common import flush_store
-from tests.components.homekit_controller.common import (
-    setup_platform,
-    setup_test_component,
-)
 
 
 async def test_load_from_storage(hass, hass_storage):
