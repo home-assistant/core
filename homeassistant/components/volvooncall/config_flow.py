@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
 
-    VERSION = 2
+    VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
