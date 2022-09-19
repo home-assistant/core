@@ -15,13 +15,13 @@ ATTR_MAJOR = "major"
 ATTR_MINOR = "minor"
 ATTR_SOURCE = "source"
 
+UNAVAILABLE_TIMEOUT = 180  # Number of seconds we wait for a beacon to be seen before marking it unavailable
 
 # If a device broadcasts this many unique ids from the same address
 # we will add it to the ignore list since its garbage data.
 MAX_IDS = 10
 
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
-CONF_IGNORE_GROUP_IDS = "ignore_group_ids"
 
 CONF_MIN_RSSI = "min_rssi"
 DEFAULT_MIN_RSSI = -85
