@@ -9,6 +9,7 @@ from ipaddress import IPv4Address
 import logging
 from urllib.parse import urlparse
 
+import async_timeout
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
@@ -154,7 +155,8 @@ class YeelightScanner:
             listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
-            await asyncio.wait_for(host_event.wait(), timeout=DISCOVERY_TIMEOUT)
+            async with async_timeout.timeout(DISCOVERY_TIMEOUT):
+                await host_event.wait()
 
         self._host_discovered_events[host].remove(host_event)
         return self._host_capabilities.get(host)

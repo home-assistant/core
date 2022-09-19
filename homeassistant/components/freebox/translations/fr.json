@@ -10,7 +10,7 @@
         },
         "step": {
             "link": {
-                "description": "Cliquez sur \u00abSoumettre\u00bb, puis appuyez sur la fl\u00e8che droite du routeur pour enregistrer Freebox avec Home Assistant. \n\n ! [Emplacement du bouton sur le routeur](/static/images/config_freebox.png)",
+                "description": "Cliquez sur \u00ab\u00a0Valider\u00a0\u00bb puis appuyez sur la fl\u00e8che droite du routeur pour enregistrer la Freebox aupr\u00e8s de Home Assistant. \n\n![Emplacement du bouton sur le routeur](/static/images/config_freebox.png)",
                 "title": "Lien routeur Freebox"
             },
             "user": {

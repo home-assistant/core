@@ -1,4 +1,6 @@
 """Test entity_registry API."""
+from unittest.mock import ANY
+
 import pytest
 
 from homeassistant.components.config import entity_registry
@@ -67,6 +69,7 @@ async def test_list_entities(hass, client):
             "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
+            "id": ANY,
             "name": "Hello World",
             "original_name": None,
             "platform": "test_platform",
@@ -81,6 +84,7 @@ async def test_list_entities(hass, client):
             "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
+            "id": ANY,
             "name": None,
             "original_name": None,
             "platform": "test_platform",
@@ -117,6 +121,7 @@ async def test_list_entities(hass, client):
             "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
+            "id": ANY,
             "name": "Hello World",
             "original_name": None,
             "platform": "test_platform",
@@ -159,6 +164,7 @@ async def test_get_entity(hass, client):
         "entity_id": "test_domain.name",
         "hidden_by": None,
         "icon": None,
+        "id": ANY,
         "has_entity_name": False,
         "name": "Hello World",
         "options": {},
@@ -189,6 +195,7 @@ async def test_get_entity(hass, client):
         "entity_id": "test_domain.no_name",
         "hidden_by": None,
         "icon": None,
+        "id": ANY,
         "has_entity_name": False,
         "name": None,
         "options": {},
@@ -252,6 +259,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "id": ANY,
             "has_entity_name": False,
             "name": "after update",
             "options": {},
@@ -324,6 +332,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "id": ANY,
             "has_entity_name": False,
             "name": "after update",
             "options": {},
@@ -361,6 +370,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "id": ANY,
             "has_entity_name": False,
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
@@ -409,6 +419,7 @@ async def test_update_entity_require_restart(hass, client):
             "entity_category": None,
             "entity_id": entity_id,
             "icon": None,
+            "id": ANY,
             "hidden_by": None,
             "has_entity_name": False,
             "name": None,
@@ -515,6 +526,7 @@ async def test_update_entity_no_changes(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": None,
             "icon": None,
+            "id": ANY,
             "has_entity_name": False,
             "name": "name of entity",
             "options": {},
@@ -601,6 +613,7 @@ async def test_update_entity_id(hass, client):
             "entity_id": "test_domain.planet",
             "hidden_by": None,
             "icon": None,
+            "id": ANY,
             "has_entity_name": False,
             "name": None,
             "options": {},

@@ -10,16 +10,14 @@ import voluptuous as vol
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
-    TURN_ON_SCHEMA,
-    SirenEntity,
-    SirenEntityFeature,
-    process_turn_on_params,
-)
-from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
+    TURN_ON_SCHEMA,
+    SirenEntity,
+    SirenEntityFeature,
+    process_turn_on_params,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -51,7 +49,6 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -142,9 +139,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, siren.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

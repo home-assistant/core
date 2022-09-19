@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Clau API inv\u00e0lida",
+            "no_site": "No s'ha proporcionat cap lloc",
+            "unknown_error": "Error inesperat"
+        },
         "step": {
             "site": {
                 "data": {

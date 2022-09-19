@@ -7,13 +7,18 @@ from typing import Any, Generic, Union
 
 from pylitterbot import FeederRobot, LitterRobot
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as PLATFORM,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity, _RobotT
+from .entity import LitterRobotEntity, _RobotT, async_update_unique_id
 from .hub import LitterRobotHub
 
 
@@ -22,12 +27,14 @@ class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot switch entity required keys."""
 
     icons: tuple[str, str]
-    set_fn: Callable[[_RobotT], Callable[[bool], Coroutine[Any, Any, bool]]]
+    set_fn: Callable[[_RobotT, bool], Coroutine[Any, Any, bool]]
 
 
 @dataclass
 class RobotSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot switch entities."""
+
+    entity_category: EntityCategory = EntityCategory.CONFIG
 
 
 ROBOT_SWITCHES = [
@@ -35,38 +42,25 @@ ROBOT_SWITCHES = [
         key="night_light_mode_enabled",
         name="Night Light Mode",
         icons=("mdi:lightbulb-on", "mdi:lightbulb-off"),
-        set_fn=lambda robot: robot.set_night_light,
+        set_fn=lambda robot, value: robot.set_night_light(value),
     ),
     RobotSwitchEntityDescription[Union[LitterRobot, FeederRobot]](
         key="panel_lock_enabled",
         name="Panel Lockout",
         icons=("mdi:lock", "mdi:lock-open"),
-        set_fn=lambda robot: robot.set_panel_lockout,
+        set_fn=lambda robot, value: robot.set_panel_lockout(value),
     ),
 ]
 
 
-class RobotSwitchEntity(LitterRobotConfigEntity[_RobotT], SwitchEntity):
+class RobotSwitchEntity(LitterRobotEntity[_RobotT], SwitchEntity):
     """Litter-Robot switch entity."""
 
     entity_description: RobotSwitchEntityDescription[_RobotT]
 
-    def __init__(
-        self,
-        robot: _RobotT,
-        hub: LitterRobotHub,
-        description: RobotSwitchEntityDescription[_RobotT],
-    ) -> None:
-        """Initialize a Litter-Robot switch entity."""
-        assert description.name
-        super().__init__(robot, description.name, hub)
-        self.entity_description = description
-
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        if self._refresh_callback is not None:
-            return self._assumed_state
         return bool(getattr(self.robot, self.entity_description.key))
 
     @property
@@ -77,13 +71,11 @@ class RobotSwitchEntity(LitterRobotConfigEntity[_RobotT], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        set_fn = self.entity_description.set_fn
-        await self.perform_action_and_assume_state(set_fn(self.robot), True)
+        await self.entity_description.set_fn(self.robot, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        set_fn = self.entity_description.set_fn
-        await self.perform_action_and_assume_state(set_fn(self.robot), False)
+        await self.entity_description.set_fn(self.robot, False)
 
 
 async def async_setup_entry(
@@ -93,9 +85,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities = [
         RobotSwitchEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SWITCHES
         for robot in hub.account.robots
         if isinstance(robot, (LitterRobot, FeederRobot))
-    )
+    ]
+    async_update_unique_id(hass, PLATFORM, entities)
+    async_add_entities(entities)

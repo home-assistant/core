@@ -28,8 +28,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 DEVICE_CLASS_NONE = "none"
 
 CONF_APPARENT_POWER = "apparent_power"
@@ -42,6 +40,7 @@ CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
+CONF_MOISTURE = "moisture"
 CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 CONF_NITROUS_OXIDE = "nitrous_oxide"
@@ -71,6 +70,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
+    SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
     SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
@@ -109,6 +109,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_GAS,
                     CONF_HUMIDITY,
                     CONF_ILLUMINANCE,
+                    CONF_MOISTURE,
                     CONF_NITROGEN_DIOXIDE,
                     CONF_NITROGEN_MONOXIDE,
                     CONF_NITROUS_OXIDE,

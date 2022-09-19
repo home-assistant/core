@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 from typing_extensions import TypeGuard
 import voluptuous as vol
@@ -47,6 +47,8 @@ from .typing import ConfigType, TemplateVarsType
 if TYPE_CHECKING:
     from .entity import Entity
     from .entity_platform import EntityPlatform
+
+    _EntityT = TypeVar("_EntityT", bound=Entity)
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
@@ -276,10 +278,10 @@ def extract_entity_ids(
 @bind_hass
 async def async_extract_entities(
     hass: HomeAssistant,
-    entities: Iterable[Entity],
+    entities: Iterable[_EntityT],
     service_call: ServiceCall,
     expand_group: bool = True,
-) -> list[Entity]:
+) -> list[_EntityT]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.

@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import switchbot
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
@@ -17,7 +19,7 @@ from .entity import SwitchbotEntity
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -34,6 +36,7 @@ class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _device: switchbot.Switchbot
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
@@ -69,21 +72,19 @@ class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
     @property
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
-        if not self.data["data"]["switchMode"]:
-            return True
-        return False
+        return not self._device.switch_mode()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        if not self.data["data"]["switchMode"]:
+        if not self._device.switch_mode():
             return self._attr_is_on
-        return self.data["data"]["isOn"]
+        return self._device.is_on()
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
             **super().extra_state_attributes,
-            "switch_mode": self.data["data"]["switchMode"],
+            "switch_mode": self._device.switch_mode(),
         }

@@ -8,6 +8,11 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
+        "domain": "bluemaestro",
+        "manufacturer_id": 307,
+        "connectable": False
+    },
+    {
         "domain": "bthome",
         "connectable": False,
         "service_data_uuid": "0000181c-0000-1000-8000-00805f9b34fb"
@@ -54,6 +59,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "govee_ble",
         "manufacturer_id": 26589,
+        "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+        "connectable": False
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 57391,
         "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
         "connectable": False
     },
@@ -150,6 +161,18 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "led_ble",
         "local_name": "LEDBlue*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "Dream~*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "QHM-*"
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "AP-*"
     },
     {
         "domain": "melnor",
@@ -253,12 +276,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False
     },
     {
+        "domain": "thermopro",
+        "local_name": "TP39*",
+        "connectable": False
+    },
+    {
+        "domain": "tilt_ble",
+        "manufacturer_id": 76
+    },
+    {
         "domain": "xiaomi_ble",
         "connectable": False,
         "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
     },
     {
         "domain": "yalexs_ble",
-        "manufacturer_id": 465
+        "manufacturer_id": 465,
+        "service_uuid": "0000fe24-0000-1000-8000-00805f9b34fb"
     }
 ]
