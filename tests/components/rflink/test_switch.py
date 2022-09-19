@@ -15,8 +15,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, State, callback
 
+from .test_init import mock_rflink
+
 from tests.common import mock_restore_cache
-from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = "switch"
 
