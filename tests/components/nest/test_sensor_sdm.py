@@ -100,7 +100,6 @@ async def test_thermostat_device_available(
                 "ambientHumidityPercent": 35.0,
             },
             "sdm.devices.traits.Connectivity": {"status": "ONLINE"},
-            },
         }
     )
     await setup_platform()
