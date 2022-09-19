@@ -1,6 +1,5 @@
 """The device tracker tests for the Mazda Connected Services integration."""
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.const import ATTR_SOURCE_TYPE
+from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
