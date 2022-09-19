@@ -6,7 +6,7 @@ from aiohomekit.testing import FAKE_CAMERA_IMAGE
 
 from homeassistant.components import camera
 
-from tests.components.homekit_controller.common import setup_test_component
+from .common import setup_test_component
 
 
 def create_camera(accessory):

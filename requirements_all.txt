@@ -181,7 +181,7 @@ aiohttp_cors==0.7.0
 aiohue==4.5.0
 
 # homeassistant.components.imap
-aioimaplib==1.0.0
+aioimaplib==1.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
@@ -1325,7 +1325,7 @@ proxmoxer==1.3.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.1
+psutil==5.9.2
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
@@ -1775,7 +1775,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.0
+pyoverkiz==1.5.3
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0

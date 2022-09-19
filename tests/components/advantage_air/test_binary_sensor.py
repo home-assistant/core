@@ -6,14 +6,15 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
-from tests.common import async_fire_time_changed
-from tests.components.advantage_air import (
+from . import (
     TEST_SET_RESPONSE,
     TEST_SET_URL,
     TEST_SYSTEM_DATA,
     TEST_SYSTEM_URL,
     add_mock_config,
 )
+
+from tests.common import async_fire_time_changed
 
 
 async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
