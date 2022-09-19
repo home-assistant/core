@@ -1471,7 +1471,7 @@ async def test_thermostat_available(
                 "coolCelsius": 28.0,
             },
             "sdm.devices.traits.Connectivity": {
-              "status": "ONLINE"
+                "status": "ONLINE"
             },
         },
     )
@@ -1503,7 +1503,7 @@ async def test_thermostat_unavailable(
                 "coolCelsius": 28.0,
             },
             "sdm.devices.traits.Connectivity": {
-              "status": "OFFLINE"
+                "status": "OFFLINE"
             },
         },
     )
