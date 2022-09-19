@@ -1116,6 +1116,23 @@ async def test_ignore_flow_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
+async def test_list_flows(hass, hass_ws_client):
+    """Test we can list flows."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/list_flows",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"]
+
+
 async def test_get_entries_ws(hass, hass_ws_client, clear_handlers):
     """Test get entries with the websocket api."""
     assert await async_setup_component(hass, "config", {})

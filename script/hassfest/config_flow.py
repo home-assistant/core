@@ -1,9 +1,12 @@
 """Generate config flow file."""
 from __future__ import annotations
 
+import pathlib
+
 import black
 
-from .model import Config, Integration
+from .brand import validate as validate_brands
+from .model import Brand, Config, Integration
 from .serializer import to_string
 
 BASE = """
@@ -87,13 +90,81 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
     return black.format_str(BASE.format(to_string(domains)), mode=black.Mode())
 
 
+def _populate_sub_integrations(
+    integrations: dict[str, Integration],
+    primary_metadata: dict,
+    sub_integrations: list[str],
+) -> None:
+    primary_metadata.setdefault("integrations", {})
+    for domain in sub_integrations:
+        integration = integrations.get(domain)
+        if not integration:
+            continue
+        metadata = {}
+        metadata["name"] = integration.name
+        if integration.translated_name:
+            metadata["translated_name"] = True
+        primary_metadata["integrations"][domain] = metadata
+
+
+def _generate_v2(
+    brands: dict[str, Brand], integrations: dict[str, Integration], config: Config
+):
+    """Generate extended config flow data."""
+
+    primary_domains = {
+        "integration": {},
+        "helper": {},
+    }
+
+    # Secondary integrations are integrations which are referenced from a brand
+    secondary_integration_domains = {
+        secondary_domain
+        for brand in brands.values()
+        for secondary_domain in brand.integrations or []
+    }
+
+    # Primary integrations are brands and integrations which are not referenced from a brand
+    primary_integration_domains = {
+        domain
+        for domain, integration in integrations.items()
+        if integration.manifest
+        and integration.config_flow
+        and domain not in secondary_integration_domains
+    }
+    primary_integration_domains |= set(brands)
+
+    for domain in sorted(primary_integration_domains):
+        metadata = {}
+
+        if brand := brands.get(domain):
+            metadata["name"] = brand.name
+            if brand.integrations:
+                _populate_sub_integrations(integrations, metadata, brand.integrations)
+            if brand.iot_standards:
+                metadata["iot_standards"] = brand.iot_standards
+            primary_domains["integration"][domain] = metadata
+        else:  # integration
+            integration = integrations[domain]
+            metadata["name"] = integration.name
+            if integration.translated_name:
+                metadata["translated_name"] = True
+            primary_domains[integration.integration_type][domain] = metadata
+
+    return black.format_str(BASE.format(to_string(primary_domains)), mode=black.Mode())
+
+
 def validate(integrations: dict[str, Integration], config: Config):
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
+    config_flow_v2_path = config.root / "homeassistant/generated/config_flows_v2.py"
     config.cache["config_flow"] = content = _generate_and_validate(integrations, config)
 
     if config.specific_integrations:
         return
+
+    brands = Brand.load_dir(pathlib.Path(config.root / "homeassistant/brands"), config)
+    validate_brands(brands, integrations, config)
 
     with open(str(config_flow_path)) as fp:
         if fp.read() != content:
@@ -103,11 +174,25 @@ def validate(integrations: dict[str, Integration], config: Config):
                 "Run python3 -m script.hassfest",
                 fixable=True,
             )
-        return
+
+    config.cache["config_flow_v2"] = content = _generate_v2(
+        brands, integrations, config
+    )
+    with open(str(config_flow_v2_path)) as fp:
+        if fp.read() != content:
+            config.add_error(
+                "config_flow",
+                "File config_flows_v2.py is not up to date. "
+                "Run python3 -m script.hassfest",
+                fixable=True,
+            )
 
 
 def generate(integrations: dict[str, Integration], config: Config):
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
+    config_flow_v2_path = config.root / "homeassistant/generated/config_flows_v2.py"
     with open(str(config_flow_path), "w") as fp:
         fp.write(f"{config.cache['config_flow']}")
+    with open(str(config_flow_v2_path), "w") as fp:
+        fp.write(f"{config.cache['config_flow_v2']}")

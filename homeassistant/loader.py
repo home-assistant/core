@@ -250,6 +250,26 @@ async def async_get_config_flows(
     return flows
 
 
+async def async_get_config_flows_v2(
+    hass: HomeAssistant,
+) -> dict[str, Any]:
+    """Return cached list of config flows."""
+    # pylint: disable=import-outside-toplevel
+    from .generated.config_flows_v2 import FLOWS
+
+    integrations = await async_get_custom_components(hass)
+    flows: dict[str, Any] = {}
+
+    flows |= FLOWS
+
+    for integration in integrations.values():
+        if not integration.config_flow:
+            continue
+        flows[integration.domain] = {"name": integration.name}
+
+    return flows
+
+
 async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
     """Return cached list of application credentials."""
     integrations = await async_get_custom_components(hass)
