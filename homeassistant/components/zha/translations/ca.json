@@ -6,12 +6,63 @@
             "usb_probe_failed": "No s'ha pogut provar el dispositiu USB"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_backup_json": "JSON de c\u00f2pia de seguretat inv\u00e0lid"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Trieu una c\u00f2pia de seguretat autom\u00e0tica"
+                },
+                "description": "Restaura la configuraci\u00f3 de la xarxa des d'una c\u00f2pia de seguretat autom\u00e0tica",
+                "title": "Restauraci\u00f3 de la c\u00f2pia de seguretat autom\u00e0tica"
+            },
+            "choose_formation_strategy": {
+                "description": "Trieu la configuraci\u00f3 de xarxa per a la vostra r\u00e0dio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Restaura una c\u00f2pia de seguretat autom\u00e0tica",
+                    "form_new_network": "Esborra la configuraci\u00f3 de xarxa i crea una xarxa nova",
+                    "reuse_settings": "Mant\u00e9 la configuraci\u00f3 de xarxa r\u00e0dio",
+                    "upload_manual_backup": "Puja c\u00f2pia de seguretat manual"
+                },
+                "title": "Formaci\u00f3 de xarxa"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Selecciona el port s\u00e8rie de la r\u00e0dio Zigbee",
+                "title": "Selecciona un port s\u00e8rie"
+            },
             "confirm": {
                 "description": "Vols configurar {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Vols configurar {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "description": "Tria el tipus de r\u00e0dio Zigbee",
+                "title": "Tipus de r\u00e0dio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocitat del port",
+                    "flow_control": "control de flux de dades",
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Introdueix la configuraci\u00f3 del port s\u00e8rie",
+                "title": "Configuraci\u00f3 del port s\u00e8rie"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Sobreescriu permanentment l'adre\u00e7a IEEE r\u00e0dio"
+                },
+                "description": "La teva c\u00f2pia de seguretat t\u00e9 una adre\u00e7a IEEE diferent de la teva r\u00e0dio. Perqu\u00e8 la xarxa funcioni correctament, tamb\u00e9 s'ha de canviar l'adre\u00e7a IEEE de la teva r\u00e0dio. \n\nAquesta \u00e9s una operaci\u00f3 permanent.",
+                "title": "Sobreescriu l'adre\u00e7a IEEE r\u00e0dio"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Introdueix la configuraci\u00f3 espec\u00edfica de port",
                 "title": "Configuraci\u00f3"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Puja un fitxer"
+                },
+                "description": "Restaura la configuraci\u00f3 de xarxa des d'un fitxer JSON de c\u00f2pia de seguretat penjat. Pots baixar-ne un des d'una instal\u00b7laci\u00f3 ZHA diferent anant a **Configuraci\u00f3 de xarxa** o utilitzar un fitxer `coordinator_backup.json` de Zigbee2MQTT.",
+                "title": "Pujada de c\u00f2pia de seguretat manual"
             },
             "user": {
                 "data": {
@@ -46,10 +104,13 @@
             "title": "Opcions del panell de control d'alarma"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Utilitza preferentment el mode de color XY",
             "consider_unavailable_battery": "Considera els dispositius amb bateria com a no disponibles al cap de (segons)",
             "consider_unavailable_mains": "Considera els dispositius connectats a la xarxa el\u00e8ctrica com a no disponibles al cap de (segons)",
             "default_light_transition": "Temps de transici\u00f3 predeterminat (segons)",
             "enable_identify_on_join": "Activa l'efecte d'identificaci\u00f3 quan els dispositius s'uneixin a la xarxa",
+            "enhanced_light_transition": "Activa la transici\u00f3 millorada de color/temperatura de llum des de l'estat apagat",
+            "light_transitioning_flag": "Activa el control lliscant de brillantor millorat durant la transici\u00f3",
             "title": "Opcions globals"
         }
     },
@@ -107,6 +168,78 @@
             "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
             "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Aquest no \u00e9s un dispositiu zha",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "usb_probe_failed": "No s'ha pogut provar el dispositiu USB"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_backup_json": "JSON de c\u00f2pia de seguretat inv\u00e0lid"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Trieu una c\u00f2pia de seguretat autom\u00e0tica"
+                },
+                "description": "Restaura la configuraci\u00f3 de la xarxa des d'una c\u00f2pia de seguretat autom\u00e0tica",
+                "title": "Restauraci\u00f3 de la c\u00f2pia de seguretat autom\u00e0tica"
+            },
+            "choose_formation_strategy": {
+                "description": "Trieu la configuraci\u00f3 de xarxa per a la vostra r\u00e0dio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Restaura una c\u00f2pia de seguretat autom\u00e0tica",
+                    "form_new_network": "Esborra la configuraci\u00f3 de xarxa i crea una xarxa nova",
+                    "reuse_settings": "Mant\u00e9 la configuraci\u00f3 de xarxa r\u00e0dio",
+                    "upload_manual_backup": "Puja c\u00f2pia de seguretat manual"
+                },
+                "title": "Formaci\u00f3 de xarxa"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Selecciona el port s\u00e8rie de la r\u00e0dio Zigbee",
+                "title": "Selecciona un port s\u00e8rie"
+            },
+            "init": {
+                "description": "ZHA s'aturar\u00e0. Vols continuar?",
+                "title": "Reconfiguraci\u00f3 de ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "description": "Tria el tipus de r\u00e0dio Zigbee",
+                "title": "Tipus de r\u00e0dio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocitat del port",
+                    "flow_control": "control de flux de dades",
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Introdueix la configuraci\u00f3 del port s\u00e8rie",
+                "title": "Configuraci\u00f3 del port s\u00e8rie"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Sobreescriu permanentment l'adre\u00e7a IEEE r\u00e0dio"
+                },
+                "description": "La teva c\u00f2pia de seguretat t\u00e9 una adre\u00e7a IEEE diferent de la teva r\u00e0dio. Perqu\u00e8 la xarxa funcioni correctament, tamb\u00e9 s'ha de canviar l'adre\u00e7a IEEE de la teva r\u00e0dio. \n\nAquesta \u00e9s una operaci\u00f3 permanent.",
+                "title": "Sobreescriu l'adre\u00e7a IEEE r\u00e0dio"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Puja un fitxer"
+                },
+                "description": "Restaura la configuraci\u00f3 de xarxa des d'un fitxer JSON de c\u00f2pia de seguretat penjat. Pots baixar-ne un des d'una instal\u00b7laci\u00f3 ZHA diferent anant a **Configuraci\u00f3 de xarxa** o utilitzar un fitxer `coordinator_backup.json` de Zigbee2MQTT.",
+                "title": "Pujada de c\u00f2pia de seguretat manual"
+            }
         }
     }
 }

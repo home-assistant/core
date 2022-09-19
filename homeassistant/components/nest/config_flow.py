@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from enum import Enum
 import logging
 import os
@@ -218,15 +218,10 @@ class NestFlowHandler(
             return await self.async_step_finish()
         return await self.async_step_pubsub()
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
-        if user_input is None:
-            _LOGGER.error("Reauth invoked with empty config entry data")
-            return self.async_abort(reason="missing_configuration")
-        self._data.update(user_input)
+        self._data.update(entry_data)
 
         return await self.async_step_reauth_confirm()
 

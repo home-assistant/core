@@ -438,13 +438,15 @@ async def test_async_remove_with_platform_update_finishes(hass):
 
 
 async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
-    """Test for not adding duplicate entities."""
+    """Test for not adding duplicate entities.
+
+    Also test that the entity registry is not updated for duplicates.
+    """
     caplog.set_level(logging.ERROR)
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_add_entities(
-        [MockEntity(name="test1", unique_id="not_very_unique")]
-    )
+    ent1 = MockEntity(name="test1", unique_id="not_very_unique")
+    await component.async_add_entities([ent1])
 
     assert len(hass.states.async_entity_ids()) == 1
     assert not caplog.text
@@ -465,6 +467,11 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
     assert ent2.hass is None
     assert ent2.platform is None
     assert len(hass.states.async_entity_ids()) == 1
+
+    registry = er.async_get(hass)
+    # test the entity name was not updated
+    entry = registry.async_get_or_create(DOMAIN, DOMAIN, "not_very_unique")
+    assert entry.original_name == "test1"
 
 
 async def test_using_prescribed_entity_id(hass):
@@ -575,6 +582,28 @@ async def test_registry_respect_entity_disabled(hass):
     await platform.async_add_entities([entity])
     assert entity.entity_id == "test_domain.world"
     assert hass.states.async_entity_ids() == []
+
+
+async def test_unique_id_conflict_has_priority_over_disabled_entity(hass, caplog):
+    """Test that an entity that is not unique has priority over a disabled entity."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = MockEntity(
+        name="test1", unique_id="not_very_unique", enabled_by_default=False
+    )
+    entity2 = MockEntity(
+        name="test2", unique_id="not_very_unique", enabled_by_default=False
+    )
+    await component.async_add_entities([entity1])
+    await component.async_add_entities([entity2])
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert "Platform test_domain does not generate unique IDs." in caplog.text
+    assert entity1.registry_entry is not None
+    assert entity2.registry_entry is None
+    registry = er.async_get(hass)
+    # test the entity name was not updated
+    entry = registry.async_get_or_create(DOMAIN, DOMAIN, "not_very_unique")
+    assert entry.original_name == "test1"
 
 
 async def test_entity_registry_updates_name(hass):
@@ -1194,6 +1223,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capability_attributes={"max": 100},
         device_class="mock-device-class",
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         icon="nice:icon",
         name="best name",
         supported_features=5,
@@ -1213,6 +1243,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capabilities={"max": 100},
         device_class=None,
         entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
         icon=None,
         id=ANY,
         name=None,
@@ -1392,3 +1423,49 @@ class SlowEntity(MockEntity):
         """Make sure control is returned to the event loop on add."""
         await asyncio.sleep(0.1)
         await super().async_added_to_hass()
+
+
+@pytest.mark.parametrize(
+    "has_entity_name, entity_name, expected_entity_id",
+    (
+        (False, "Entity Blu", "test_domain.entity_blu"),
+        (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        (True, "Entity Blu", "test_domain.device_bla_entity_blu"),
+        (True, None, "test_domain.device_bla"),
+    ),
+)
+async def test_entity_name_influences_entity_id(
+    hass, has_entity_name, entity_name, expected_entity_id
+):
+    """Test entity_id is influenced by entity name."""
+    registry = er.async_get(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=has_entity_name,
+                    name=entity_name,
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert registry.async_get(expected_entity_id) is not None

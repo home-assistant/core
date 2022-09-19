@@ -53,36 +53,36 @@
   "neighbors": [1, 5, 10, 12, 13, 14, 15, 18, 21],
   "interviewAttempts": 1,
   "interviewStage": 7,
-  "commandClasses": [
-    {
-      "id": 37,
-      "name": "Binary Switch",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 64,
-      "name": "Thermostat Mode",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 1,
-      "isSecure": false
-    }
-  ],
   "endpoints": [
     {
       "nodeId": 20,
-      "index": 0
+      "index": 0,
+      "commandClasses": [
+        {
+          "id": 37,
+          "name": "Binary Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
     }
   ],
   "values": [

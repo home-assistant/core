@@ -19,6 +19,7 @@ from pyunifiprotect.data import (
     LightModeEnableType,
     LightModeType,
     MountType,
+    ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     RecordingMode,
     Sensor,
@@ -32,14 +33,15 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
-from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
+from .const import ATTR_DURATION, ATTR_MESSAGE, DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
-from .utils import async_get_light_motion_current
+from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -320,6 +322,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities = async_all_device_entities(
+            data,
+            ProtectSelects,
+            camera_descs=CAMERA_SELECTS,
+            light_descs=LIGHT_SELECTS,
+            sense_descs=SENSE_SELECTS,
+            viewer_descs=VIEWER_SELECTS,
+            lock_descs=DOORLOCK_SELECTS,
+            ufp_device=device,
+        )
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectSelects,

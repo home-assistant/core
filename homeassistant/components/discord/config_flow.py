@@ -23,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discord."""
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 

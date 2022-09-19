@@ -1,12 +1,18 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{name} ({address})",
     "step": {
       "user": {
-        "title": "Setup Switchbot device",
         "data": {
-          "mac": "Device MAC address",
-          "name": "[%key:common::config_flow::data::name%]",
+          "address": "Device address"
+        }
+      },
+      "confirm": {
+        "description": "Do you want to setup {name}?"
+      },
+      "password": {
+        "description": "The {name} device requires a password",
+        "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
@@ -24,10 +30,7 @@
     "step": {
       "init": {
         "data": {
-          "update_time": "Time between updates (seconds)",
-          "retry_count": "Retry count",
-          "retry_timeout": "Timeout between retries",
-          "scan_timeout": "How long to scan for advertisement data"
+          "retry_count": "Retry count"
         }
       }
     }

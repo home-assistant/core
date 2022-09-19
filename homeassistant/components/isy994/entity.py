@@ -75,7 +75,7 @@ class ISYEntity(Entity):
             # New state attributes may be available, update the state.
             self.async_write_ha_state()
 
-        self.hass.bus.fire("isy994_control", event_data)
+        self.hass.bus.async_fire("isy994_control", event_data)
 
     @property
     def device_info(self) -> DeviceInfo | None:

@@ -26,6 +26,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -42,6 +43,7 @@ if TYPE_CHECKING:
     from .gateway import ZHAGateway
 
 _T = TypeVar("_T")
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -169,9 +171,23 @@ def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     """Get a ZHA device for the given device registry id."""
     device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)
+    if not registry_device:
+        _LOGGER.error("Device id `%s` not found in registry", device_id)
+        raise KeyError(f"Device id `{device_id}` not found in registry.")
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ieee_address = list(list(registry_device.identifiers)[0])[1]
-    ieee = zigpy.types.EUI64.convert(ieee_address)
+    if not zha_gateway.initialized:
+        _LOGGER.error("Attempting to get a ZHA device when ZHA is not initialized")
+        raise IntegrationError("ZHA is not initialized yet")
+    try:
+        ieee_address = list(list(registry_device.identifiers)[0])[1]
+        ieee = zigpy.types.EUI64.convert(ieee_address)
+    except (IndexError, ValueError) as ex:
+        _LOGGER.error(
+            "Unable to determine device IEEE for device with device id `%s`", device_id
+        )
+        raise KeyError(
+            f"Unable to determine device IEEE for device with device id `{device_id}`."
+        ) from ex
     return zha_gateway.devices[ieee]
 
 

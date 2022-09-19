@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import datetime
 import logging
 from typing import Any, cast
@@ -19,9 +18,12 @@ from oauth2client.client import (
 
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_time_interval,
+)
 from homeassistant.util import dt
 
 from .const import (
@@ -76,6 +78,9 @@ class DeviceFlow:
         self._oauth_flow = oauth_flow
         self._device_flow_info: DeviceFlowInfo = device_flow_info
         self._exchange_task_unsub: CALLBACK_TYPE | None = None
+        self._timeout_unsub: CALLBACK_TYPE | None = None
+        self._listener: CALLBACK_TYPE | None = None
+        self._creds: Credentials | None = None
 
     @property
     def verification_url(self) -> str:
@@ -87,15 +92,22 @@ class DeviceFlow:
         """Return the code that the user should enter at the verification url."""
         return self._device_flow_info.user_code  # type: ignore[no-any-return]
 
-    async def start_exchange_task(
-        self, finished_cb: Callable[[Credentials | None], Awaitable[None]]
+    @callback
+    def async_set_listener(
+        self,
+        update_callback: CALLBACK_TYPE,
     ) -> None:
-        """Start the device auth exchange flow polling.
+        """Invoke the update callback when the exchange finishes or on timeout."""
+        self._listener = update_callback
 
-        The callback is invoked with the valid credentials or with None on timeout.
-        """
+    @property
+    def creds(self) -> Credentials | None:
+        """Return result of exchange step or None on timeout."""
+        return self._creds
+
+    def async_start_exchange(self) -> None:
+        """Start the device auth exchange flow polling."""
         _LOGGER.debug("Starting exchange flow")
-        assert not self._exchange_task_unsub
         max_timeout = dt.utcnow() + datetime.timedelta(seconds=EXCHANGE_TIMEOUT_SECONDS)
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
@@ -104,31 +116,40 @@ class DeviceFlow:
         )
         expiration_time = min(user_code_expiry, max_timeout)
 
-        def _exchange() -> Credentials:
-            return self._oauth_flow.step2_exchange(
-                device_flow_info=self._device_flow_info
-            )
-
-        async def _poll_attempt(now: datetime.datetime) -> None:
-            assert self._exchange_task_unsub
-            _LOGGER.debug("Attempting OAuth code exchange")
-            # Note: The callback is invoked with None when the device code has expired
-            creds: Credentials | None = None
-            if now < expiration_time:
-                try:
-                    creds = await self._hass.async_add_executor_job(_exchange)
-                except FlowExchangeError:
-                    _LOGGER.debug("Token not yet ready; trying again later")
-                    return
-            self._exchange_task_unsub()
-            self._exchange_task_unsub = None
-            await finished_cb(creds)
-
         self._exchange_task_unsub = async_track_time_interval(
             self._hass,
-            _poll_attempt,
+            self._async_poll_attempt,
             datetime.timedelta(seconds=self._device_flow_info.interval),
         )
+        self._timeout_unsub = async_track_point_in_utc_time(
+            self._hass, self._async_timeout, expiration_time
+        )
+
+    async def _async_poll_attempt(self, now: datetime.datetime) -> None:
+        _LOGGER.debug("Attempting OAuth code exchange")
+        try:
+            self._creds = await self._hass.async_add_executor_job(self._exchange)
+        except FlowExchangeError:
+            _LOGGER.debug("Token not yet ready; trying again later")
+            return
+        self._finish()
+
+    def _exchange(self) -> Credentials:
+        return self._oauth_flow.step2_exchange(device_flow_info=self._device_flow_info)
+
+    @callback
+    def _async_timeout(self, now: datetime.datetime) -> None:
+        _LOGGER.debug("OAuth token exchange timeout")
+        self._finish()
+
+    @callback
+    def _finish(self) -> None:
+        if self._exchange_task_unsub:
+            self._exchange_task_unsub()
+        if self._timeout_unsub:
+            self._timeout_unsub()
+        if self._listener:
+            self._listener()
 
 
 def get_feature_access(

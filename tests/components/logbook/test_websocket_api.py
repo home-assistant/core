@@ -11,6 +11,7 @@ from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook import websocket_api
+from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
@@ -51,7 +52,6 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
-@callback
 async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""
@@ -567,6 +567,15 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     hass.states.async_set("light.exc", STATE_ON)
     hass.states.async_set("light.exc", STATE_OFF)
     hass.states.async_set("switch.any", STATE_ON)
@@ -589,12 +598,8 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -748,6 +753,13 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await hass.async_block_till_done()
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     for entity_id in test_entities:
         hass.states.async_set(entity_id, STATE_ON)
         hass.states.async_set(entity_id, STATE_OFF)
@@ -757,12 +769,7 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -959,6 +966,14 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     hass.states.async_set("light.exc", STATE_ON)
     hass.states.async_set("light.exc", STATE_OFF)
     hass.states.async_set("switch.any", STATE_ON)
@@ -983,12 +998,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1122,6 +1132,14 @@ async def test_subscribe_unsubscribe_logbook_stream(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     hass.states.async_set("light.alpha", "on")
     hass.states.async_set("light.alpha", "off")
     alpha_off_state: State = hass.states.get("light.alpha")
@@ -1138,12 +1156,6 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1428,12 +1440,8 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         }
     ]
 
-    hass.states.async_set("light.alpha", STATE_ON)
-    hass.states.async_set("light.alpha", STATE_OFF)
-    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
-
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
-
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
@@ -1441,6 +1449,13 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     assert "end_time" in msg["event"]
     assert "partial" not in msg["event"]
     assert msg["event"]["events"] == []
+
+    hass.states.async_set("light.alpha", STATE_ON)
+    hass.states.async_set("light.alpha", STATE_OFF)
+    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
+
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1456,6 +1471,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 
     hass.states.async_remove("light.alpha")
     hass.states.async_remove("light.small")
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     await websocket_client.send_json(
@@ -1521,10 +1537,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
         }
     ]
 
-    hass.states.async_set("light.alpha", STATE_ON)
-    hass.states.async_set("light.alpha", STATE_OFF)
-    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
-
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -1532,6 +1545,12 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     assert msg["type"] == "event"
     assert "partial" not in msg["event"]
     assert msg["event"]["events"] == []
+
+    hass.states.async_set("light.alpha", STATE_ON)
+    hass.states.async_set("light.alpha", STATE_OFF)
+    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
+
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -2177,7 +2196,6 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
-@patch("homeassistant.components.logbook.websocket_api.MAX_RECORDER_WAIT", 0.15)
 async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplog):
     """Test we still start live streaming if the recorder is far behind."""
     now = dt_util.utcnow()
@@ -2250,8 +2268,6 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
     assert msg["id"] == 8
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-
-    assert "Recorder is behind" in caplog.text
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2410,24 +2426,43 @@ async def test_subscribe_entities_some_have_uom_multiple(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    _cycle_entities()
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert msg["event"]["partial"] is True
-    assert msg["event"]["events"] == [
-        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
-    ]
-
-    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
+    ]
+    assert msg["event"]["partial"] is True
+
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]
     assert msg["event"]["events"] == []
+
+    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"entity_id": "sensor.keep", "state": "on", "when": ANY},
+        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
+    ]
     assert "partial" not in msg["event"]
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -2438,11 +2473,8 @@ async def test_subscribe_entities_some_have_uom_multiple(
         {"entity_id": "sensor.keep", "state": "off", "when": ANY},
         {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
         {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep", "state": "on", "when": ANY},
-        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
     ]
+
     assert "partial" not in msg["event"]
 
     await websocket_client.close()
@@ -2561,6 +2593,99 @@ async def test_logbook_stream_ignores_forced_updates(
     assert msg["id"] == 8
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_all_entities_are_continuous_with_device(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test subscribe/unsubscribe logbook stream with entities that are always filtered and a device."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    await async_wait_recording_done(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass)
+    device = devices[0]
+    device2 = devices[1]
+
+    entity_ids = ("sensor.uom", "sensor.uom_two")
+
+    def _create_events():
+        for entity_id in entity_ids:
+            for state in ("1", "2", "3"):
+                hass.states.async_set(
+                    entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
+                )
+                hass.states.async_set("counter.any", state)
+                hass.states.async_set("proximity.any", state)
+        hass.bus.async_fire("mock_event", {"device_id": device.id})
+        hass.bus.async_fire("mock_event", {"device_id": device2.id})
+
+    init_count = sum(hass.bus.async_listeners().values())
+    _create_events()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
+            "device_ids": [device.id, device2.id],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY},
+        {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY},
+    ]
+    assert msg["event"]["partial"] is True
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
+
+    for _ in range(2):
+        _create_events()
+        msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+        assert msg["id"] == 7
+        assert msg["type"] == "event"
+        assert msg["event"]["events"] == [
+            {
+                "domain": "test",
+                "message": "is on fire",
+                "name": "device name",
+                "when": ANY,
+            },
+            {
+                "domain": "test",
+                "message": "is on fire",
+                "name": "device name",
+                "when": ANY,
+            },
+        ]
+        assert "partial" not in msg["event"]
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
     assert sum(hass.bus.async_listeners().values()) == init_count

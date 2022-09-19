@@ -6,12 +6,60 @@
             "usb_probe_failed": "\u00c9chec de l'analyse du p\u00e9riph\u00e9rique USB"
         },
         "error": {
-            "cannot_connect": "\u00c9chec de connexion"
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_backup_json": "JSON de sauvegarde non valide"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "S\u00e9lectionnez une sauvegarde automatique"
+                },
+                "description": "Restaurer vos param\u00e8tres r\u00e9seau \u00e0 partir d'une sauvegarde automatique",
+                "title": "Restaurer une sauvegarde automatique"
+            },
+            "choose_formation_strategy": {
+                "description": "S\u00e9lectionnez les param\u00e8tres r\u00e9seau de votre radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Restaurer une sauvegarde automatique",
+                    "form_new_network": "Effacer les param\u00e8tres r\u00e9seau pour cr\u00e9er un nouveau r\u00e9seau",
+                    "reuse_settings": "Conserver les param\u00e8tres r\u00e9seau de la radio",
+                    "upload_manual_backup": "T\u00e9l\u00e9charger une sauvegarde manuelle"
+                }
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Chemin d\u2019acc\u00e8s du p\u00e9riph\u00e9rique s\u00e9rie"
+                },
+                "description": "S\u00e9lectionnez le port s\u00e9rie de votre radio Zigbee",
+                "title": "S\u00e9lectionnez un port s\u00e9rie"
+            },
             "confirm": {
                 "description": "Voulez-vous configurer {name}\u00a0?"
+            },
+            "confirm_hardware": {
+                "description": "Voulez-vous configurer {name}\u00a0?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Type de radio"
+                },
+                "description": "S\u00e9lectionnez le type de votre radio Zigbee",
+                "title": "Type de radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "vitesse du port",
+                    "path": "Chemin d\u2019acc\u00e8s du p\u00e9riph\u00e9rique s\u00e9rie"
+                },
+                "description": "Saisissez les param\u00e8tres du port s\u00e9rie",
+                "title": "Param\u00e8tres du port s\u00e9rie"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Remplacer d\u00e9finitivement l'adresse IEEE de la radio"
+                },
+                "title": "\u00c9craser l'adresse IEEE de la radio"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +76,12 @@
                 },
                 "description": "Saisir les param\u00e8tres sp\u00e9cifiques au port",
                 "title": "R\u00e9glages"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "T\u00e9l\u00e9verser un fichier"
+                },
+                "title": "T\u00e9l\u00e9verser une sauvegarde manuelle"
             },
             "user": {
                 "data": {
@@ -107,6 +161,74 @@
             "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
             "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
             "remote_button_triple_press": "Bouton \"{subtype}\" \u00e0 trois clics"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Cet appareil n'est pas un appareil zha",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
+            "usb_probe_failed": "\u00c9chec de l'analyse du p\u00e9riph\u00e9rique USB"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_backup_json": "JSON de sauvegarde non valide"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "S\u00e9lectionnez une sauvegarde automatique"
+                },
+                "description": "Restaurer vos param\u00e8tres r\u00e9seau \u00e0 partir d'une sauvegarde automatique",
+                "title": "Restaurer une sauvegarde automatique"
+            },
+            "choose_formation_strategy": {
+                "description": "S\u00e9lectionnez les param\u00e8tres r\u00e9seau de votre radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Restaurer une sauvegarde automatique",
+                    "form_new_network": "Effacer les param\u00e8tres r\u00e9seau pour cr\u00e9er un nouveau r\u00e9seau",
+                    "reuse_settings": "Conserver les param\u00e8tres r\u00e9seau de la radio",
+                    "upload_manual_backup": "T\u00e9l\u00e9charger une sauvegarde manuelle"
+                }
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Chemin d\u2019acc\u00e8s du p\u00e9riph\u00e9rique s\u00e9rie"
+                },
+                "description": "S\u00e9lectionnez le port s\u00e9rie de votre radio Zigbee",
+                "title": "S\u00e9lectionnez un port s\u00e9rie"
+            },
+            "init": {
+                "description": "ZHA sera arr\u00eat\u00e9. Souhaitez-vous continuer\u00a0?",
+                "title": "Reconfigurer ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Type de radio"
+                },
+                "description": "S\u00e9lectionnez le type de votre radio Zigbee",
+                "title": "Type de radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "vitesse du port",
+                    "path": "Chemin d\u2019acc\u00e8s du p\u00e9riph\u00e9rique s\u00e9rie"
+                },
+                "description": "Saisissez les param\u00e8tres du port s\u00e9rie",
+                "title": "Param\u00e8tres du port s\u00e9rie"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Remplacer d\u00e9finitivement l'adresse IEEE de la radio"
+                },
+                "title": "\u00c9craser l'adresse IEEE de la radio"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "T\u00e9l\u00e9verser un fichier"
+                },
+                "title": "T\u00e9l\u00e9verser une sauvegarde manuelle"
+            }
         }
     }
 }

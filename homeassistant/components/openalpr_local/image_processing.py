@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+import logging
 import re
 
 import voluptuous as vol
@@ -23,8 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
+
+_LOGGER = logging.getLogger(__name__)
 
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
@@ -69,6 +73,18 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the OpenALPR local platform."""
+    create_issue(
+        hass,
+        "openalpr_local",
+        "pending_removal",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The OpenALPR Local is deprecated and will be removed in Home Assistant 2022.10"
+    )
     command = [config[CONF_ALPR_BIN], "-c", config[CONF_REGION], "-"]
     confidence = config[CONF_CONFIDENCE]
 
@@ -86,9 +102,9 @@ async def async_setup_platform(
 class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for ALPR image processing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize base ALPR entity."""
-        self.plates = {}
+        self.plates: dict[str, float] = {}
         self.vehicles = 0
 
     @property
@@ -114,25 +130,25 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
-    def process_plates(self, plates, vehicles):
+    def process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data."""
         run_callback_threadsafe(
             self.hass.loop, self.async_process_plates, plates, vehicles
         ).result()
 
     @callback
-    def async_process_plates(self, plates, vehicles):
+    def async_process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data.
 
         plates are a dict in follow format:
-          { 'plate': confidence }
+          { '<plate>': confidence }
 
         This method must be run in the event loop.
         """
         plates = {
             plate: confidence
             for plate, confidence in plates.items()
-            if confidence >= self.confidence
+            if self.confidence is None or confidence >= self.confidence
         }
         new_plates = set(plates) - set(self.plates)
 

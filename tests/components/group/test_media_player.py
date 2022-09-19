@@ -126,8 +126,24 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    # Initial state with no group member in the state machine -> unknown
-    assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
+
+    # All group members unavailable -> unavailable
+    hass.states.async_set("media_player.player_1", STATE_UNAVAILABLE)
+    hass.states.async_set("media_player.player_2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
+
+    # The group state is unknown if all group members are unknown or unavailable.
+    for state_1 in (
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        hass.states.async_set("media_player.player_1", state_1)
+        hass.states.async_set("media_player.player_2", STATE_UNKNOWN)
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
 
     # All group members buffering -> buffering
     # All group members idle -> idle
@@ -156,30 +172,18 @@ async def test_state_reporting(hass):
             await hass.async_block_till_done()
             assert hass.states.get("media_player.media_group").state == STATE_ON
 
+    # Otherwise off
     for state_1 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
         hass.states.async_set("media_player.player_1", state_1)
         hass.states.async_set("media_player.player_2", STATE_OFF)
         await hass.async_block_till_done()
         assert hass.states.get("media_player.media_group").state == STATE_OFF
 
-    # Otherwise off
-    for state_1 in (STATE_OFF, STATE_UNKNOWN):
-        hass.states.async_set("media_player.player_1", state_1)
-        hass.states.async_set("media_player.player_2", STATE_UNAVAILABLE)
-        await hass.async_block_till_done()
-        assert hass.states.get("media_player.media_group").state == STATE_OFF
-
-    for state_1 in (STATE_OFF, STATE_UNAVAILABLE):
-        hass.states.async_set("media_player.player_1", state_1)
-        hass.states.async_set("media_player.player_2", STATE_UNKNOWN)
-        await hass.async_block_till_done()
-        assert hass.states.get("media_player.media_group").state == STATE_OFF
-
-    # All group members removed from the state machine -> unknown
+    # All group members removed from the state machine -> unavailable
     hass.states.async_remove("media_player.player_1")
     hass.states.async_remove("media_player.player_2")
     await hass.async_block_till_done()
-    assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
+    assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
 
 
 async def test_supported_features(hass):

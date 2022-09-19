@@ -20,8 +20,7 @@ from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.button import DOMAIN, ButtonDeviceClass
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,

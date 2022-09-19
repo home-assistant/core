@@ -4,10 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from homeassistant.components.logbook.const import (
-    LOGBOOK_ENTRY_MESSAGE,
-    LOGBOOK_ENTRY_NAME,
-)
+from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
@@ -62,16 +59,20 @@ def async_describe_events(
                 break
 
         if event_type is None:
-            event_type = event_data[ATTR_COMMAND]
+            event_type = event_data.get(ATTR_COMMAND, ZHA_EVENT)
 
         if event_subtype is not None and event_subtype != event_type:
             event_type = f"{event_type} - {event_subtype}"
 
-        event_type = event_type.replace("_", " ").title()
+        if event_type is not None:
+            event_type = event_type.replace("_", " ").title()
+            if "event" in event_type.lower():
+                message = f"{event_type} was fired"
+            else:
+                message = f"{event_type} event was fired"
 
-        message = f"{event_type} event was fired"
-        if event_data["params"]:
-            message = f"{message} with parameters: {event_data['params']}"
+        if params := event_data.get("params"):
+            message = f"{message} with parameters: {params}"
 
         return {
             LOGBOOK_ENTRY_NAME: device_name,

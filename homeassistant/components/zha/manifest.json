@@ -4,15 +4,15 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.30.0",
+    "bellows==0.33.1",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.75",
-    "zigpy-deconz==0.16.0",
-    "zigpy==0.46.0",
-    "zigpy-xbee==0.14.0",
-    "zigpy-zigate==0.7.4",
-    "zigpy-znp==0.7.0"
+    "zha-quirks==0.0.79",
+    "zigpy-deconz==0.18.1",
+    "zigpy==0.50.3",
+    "zigpy-xbee==0.15.0",
+    "zigpy-zigate==0.9.2",
+    "zigpy-znp==0.8.2"
   ],
   "usb": [
     {
@@ -20,6 +20,12 @@
       "pid": "EA60",
       "description": "*2652*",
       "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "1A86",
+      "pid": "55D4",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus v2"]
     },
     {
       "vid": "10C4",
@@ -76,7 +82,7 @@
       "known_devices": ["Bitron Video AV2010/10"]
     }
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "zeroconf": [
     {
       "type": "_esphomelib._tcp.local.",
@@ -85,8 +91,13 @@
     {
       "type": "_zigate-zigbee-gateway._tcp.local.",
       "name": "*zigate*"
+    },
+    {
+      "type": "_zigstar_gw._tcp.local.",
+      "name": "*zigstar*"
     }
   ],
+  "dependencies": ["file_upload"],
   "after_dependencies": ["onboarding", "usb", "zeroconf"],
   "iot_class": "local_polling",
   "loggers": [

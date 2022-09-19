@@ -10,7 +10,9 @@ from pyunifiprotect.data import (
     Camera,
     Event,
     Light,
+    ModelType,
     MountType,
+    ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     Sensor,
 )
@@ -23,10 +25,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
     EventThumbnailMixin,
@@ -35,6 +38,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectRequiredKeysMixin
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
@@ -110,8 +114,9 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         name="System Sounds",
         icon="mdi:speaker",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_required_field="feature_flags.has_speaker",
+        ufp_required_field="has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
+        ufp_enabled="feature_flags.has_speaker",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -147,7 +152,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
-        key="motion",
+        key="motion_enabled",
         name="Detections: Motion",
         icon="mdi:run-fast",
         ufp_value="recording_settings.enable_motion_detection",
@@ -268,7 +273,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
-        key="motion",
+        key="motion_enabled",
         name="Motion Detection",
         icon="mdi:walk",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -364,6 +369,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities: list[ProtectDeviceEntity] = async_all_device_entities(
+            data,
+            ProtectDeviceBinarySensor,
+            camera_descs=CAMERA_SENSORS,
+            light_descs=LIGHT_SENSORS,
+            sense_descs=SENSE_SENSORS,
+            lock_descs=DOORLOCK_SENSORS,
+            viewer_descs=VIEWER_SENSORS,
+            ufp_device=device,
+        )
+        if device.is_adopted and isinstance(device, Camera):
+            entities += _async_motion_entities(data, ufp_device=device)
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectDeviceBinarySensor,
@@ -382,12 +407,13 @@ async def async_setup_entry(
 @callback
 def _async_motion_entities(
     data: ProtectData,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
-    for device in data.api.bootstrap.cameras.values():
-        if not device.is_adopted_by_us:
-            continue
-
+    devices = (
+        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
+    )
+    for device in devices:
         for description in MOTION_SENSORS:
             entities.append(ProtectEventBinarySensor(data, device, description))
             _LOGGER.debug(

@@ -109,32 +109,36 @@ async def test_state(hass, setup_comp):
     Otherwise, the group state is closed.
     """
     state = hass.states.get(COVER_GROUP)
-    # No entity has a valid state -> group state unknown
-    assert state.state == STATE_UNKNOWN
+    # No entity has a valid state -> group state unavailable
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert ATTR_ENTITY_ID not in state.attributes
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+    # Test group members exposed as attribute
+    hass.states.async_set(DEMO_COVER, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
     assert state.attributes[ATTR_ENTITY_ID] == [
         DEMO_COVER,
         DEMO_COVER_POS,
         DEMO_COVER_TILT,
         DEMO_TILT,
     ]
-    assert ATTR_ASSUMED_STATE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert ATTR_CURRENT_POSITION not in state.attributes
-    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+    # The group state is unavailable if all group members are unavailable.
+    hass.states.async_set(DEMO_COVER, STATE_UNAVAILABLE, {})
+    hass.states.async_set(DEMO_COVER_POS, STATE_UNAVAILABLE, {})
+    hass.states.async_set(DEMO_COVER_TILT, STATE_UNAVAILABLE, {})
+    hass.states.async_set(DEMO_TILT, STATE_UNAVAILABLE, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_UNAVAILABLE
 
     # The group state is unknown if all group members are unknown or unavailable.
-    for state_1 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        for state_2 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            for state_3 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-                hass.states.async_set(DEMO_COVER, state_1, {})
-                hass.states.async_set(DEMO_COVER_POS, state_2, {})
-                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
-                hass.states.async_set(DEMO_TILT, STATE_UNAVAILABLE, {})
-                await hass.async_block_till_done()
-                state = hass.states.get(COVER_GROUP)
-                assert state.state == STATE_UNKNOWN
-
     for state_1 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
         for state_2 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             for state_3 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -233,28 +237,23 @@ async def test_state(hass, setup_comp):
                 state = hass.states.get(COVER_GROUP)
                 assert state.state == STATE_CLOSED
 
-    # All group members removed from the state machine -> unknown
+    # All group members removed from the state machine -> unavailable
     hass.states.async_remove(DEMO_COVER)
     hass.states.async_remove(DEMO_COVER_POS)
     hass.states.async_remove(DEMO_COVER_TILT)
     hass.states.async_remove(DEMO_TILT)
     await hass.async_block_till_done()
     state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
 async def test_attributes(hass, setup_comp):
     """Test handling of state attributes."""
     state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
-    assert state.attributes[ATTR_ENTITY_ID] == [
-        DEMO_COVER,
-        DEMO_COVER_POS,
-        DEMO_COVER_TILT,
-        DEMO_TILT,
-    ]
+    assert ATTR_ENTITY_ID not in state.attributes
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
@@ -266,6 +265,12 @@ async def test_attributes(hass, setup_comp):
 
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_ENTITY_ID] == [
+        DEMO_COVER,
+        DEMO_COVER_POS,
+        DEMO_COVER_TILT,
+        DEMO_TILT,
+    ]
 
     # Set entity as opening
     hass.states.async_set(DEMO_COVER, STATE_OPENING, {})

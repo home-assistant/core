@@ -4,19 +4,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pyunifiprotect.data import Camera, Doorlock, Light, ProtectModelWithId
+from pyunifiprotect.data import (
+    Camera,
+    Doorlock,
+    Light,
+    ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TIME_SECONDS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
+from .utils import async_dispatch_id as _ufpd
 
 
 @dataclass
@@ -74,8 +82,9 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -184,6 +193,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities = async_all_device_entities(
+            data,
+            ProtectNumbers,
+            camera_descs=CAMERA_NUMBERS,
+            light_descs=LIGHT_NUMBERS,
+            sense_descs=SENSE_NUMBERS,
+            lock_descs=DOORLOCK_NUMBERS,
+            chime_descs=CHIME_NUMBERS,
+            ufp_device=device,
+        )
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectNumbers,

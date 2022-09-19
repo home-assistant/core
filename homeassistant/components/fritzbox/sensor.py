@@ -8,7 +8,7 @@ from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
-from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
+from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -87,7 +87,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: device.power / 1000 if device.power else 0.0,
+        native_value=lambda device: round((device.power or 0.0) / 1000, 3),
     ),
     FritzSensorEntityDescription(
         key="voltage",
@@ -96,9 +96,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: device.voltage
-        if getattr(device, "voltage", None)
-        else 0.0,
+        native_value=lambda device: round((device.voltage or 0.0) / 1000, 2),
     ),
     FritzSensorEntityDescription(
         key="electric_current",
@@ -107,7 +105,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: device.power / device.voltage / 1000
+        native_value=lambda device: round(device.power / device.voltage, 3)
         if device.power and getattr(device, "voltage", None)
         else 0.0,
     ),
@@ -118,7 +116,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: device.energy / 1000 if device.energy else 0.0,
+        native_value=lambda device: (device.energy or 0.0) / 1000,
     ),
     # Thermostat Sensors
     FritzSensorEntityDescription(

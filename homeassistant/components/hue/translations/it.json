@@ -44,6 +44,8 @@
             "button_2": "Secondo pulsante",
             "button_3": "Terzo pulsante",
             "button_4": "Quarto pulsante",
+            "clock_wise": "Rotazione in senso orario",
+            "counter_clock_wise": "Rotazione in senso antiorario",
             "dim_down": "Diminuisce luminosit\u00e0",
             "dim_up": "Aumenta luminosit\u00e0",
             "double_buttons_1_3": "Pulsanti Primo e Terzo",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Entrambi \"{subtype}\" rilasciati",
-            "initial_press": "Pulsante \"{subtype}\" premuto inizialmente",
-            "long_release": "Pulsante \"{subtype}\" rilasciato dopo una pressione prolungata",
-            "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
-            "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
-            "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
+            "initial_press": "\"{subtype}\" premuto inizialmente",
+            "long_release": "\"{subtype}\" rilasciato dopo una pressione prolungata",
+            "remote_button_long_release": "\"{subtype}\" rilasciato dopo una lunga pressione",
+            "remote_button_short_press": "\"{subtype}\" premuto",
+            "remote_button_short_release": "\"{subtype}\" rilasciato",
             "remote_double_button_long_press": "Entrambi i \"{subtype}\" rilasciati dopo una lunga pressione",
             "remote_double_button_short_press": "Entrambi i \"{subtype}\" rilasciati",
-            "repeat": "Pulsante \"{subtype}\" tenuto premuto",
-            "short_release": "Pulsante \"{subtype}\" rilasciato dopo una breve pressione"
+            "repeat": "\"{subtype}\" tenuto premuto",
+            "short_release": "\"{subtype}\" rilasciato dopo una breve pressione",
+            "start": "\"{subtype}\" premuto inizialmente"
         }
     },
     "options": {

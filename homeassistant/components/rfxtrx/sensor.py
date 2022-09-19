@@ -63,12 +63,14 @@ class RfxtrxSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES = (
     RfxtrxSensorEntityDescription(
         key="Barometer",
+        name="Barometer",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRESSURE_HPA,
     ),
     RfxtrxSensorEntityDescription(
         key="Battery numeric",
+        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -77,42 +79,49 @@ SENSOR_TYPES = (
     ),
     RfxtrxSensorEntityDescription(
         key="Current",
+        name="Current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 1",
+        name="Current Ch. 1",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 2",
+        name="Current Ch. 2",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 3",
+        name="Current Ch. 3",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Energy usage",
+        name="Instantaneous power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     RfxtrxSensorEntityDescription(
         key="Humidity",
+        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     RfxtrxSensorEntityDescription(
         key="Rssi numeric",
+        name="Signal strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -121,86 +130,104 @@ SENSOR_TYPES = (
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature",
+        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature2",
+        name="Temperature 2",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Total usage",
+        name="Total energy usage",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Voltage",
+        name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind direction",
+        name="Wind direction",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DEGREE,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain rate",
+        name="Rain rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
+        name="Sound",
     ),
     RfxtrxSensorEntityDescription(
         key="Sensor Status",
+        name="Sensor status",
     ),
     RfxtrxSensorEntityDescription(
         key="Count",
+        name="Count",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
+        name="Counter value",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Chill",
+        name="Chill",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind average speed",
+        name="Wind average speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind gust",
+        name="Wind gust",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain total",
+        name="Rain total",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
     ),
     RfxtrxSensorEntityDescription(
         key="Forecast",
+        name="Forecast status",
     ),
     RfxtrxSensorEntityDescription(
         key="Forecast numeric",
+        name="Forecast",
     ),
     RfxtrxSensorEntityDescription(
         key="Humidity status",
+        name="Humidity status",
     ),
     RfxtrxSensorEntityDescription(
         key="UV",
+        name="UV index",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
     ),
@@ -246,18 +273,18 @@ async def async_setup_entry(
 class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor."""
 
+    _attr_force_update = True
+    """We should force updates. Repeated states have meaning."""
+
     entity_description: RfxtrxSensorEntityDescription
 
     def __init__(self, device, device_id, entity_description, event=None):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.entity_description = entity_description
-        self._name = f"{device.type_string} {device.id_string} {entity_description.key}"
-        self._unique_id = "_".join(
-            x for x in (*self._device_id, entity_description.key)
-        )
+        self._attr_unique_id = "_".join(x for x in (*device_id, entity_description.key))
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
 
@@ -275,16 +302,6 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             return None
         value = self._event.values.get(self.entity_description.key)
         return self.entity_description.convert(value)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """We should force updates. Repeated states have meaning."""
-        return True
 
     @callback
     def _handle_event(self, event, device_id):

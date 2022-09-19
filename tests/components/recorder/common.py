@@ -19,8 +19,9 @@ from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from . import db_schema_0
+
 from tests.common import async_fire_time_changed, fire_time_changed
-from tests.components.recorder import db_schema_0
 
 DEFAULT_PURGE_TASKS = 3
 
@@ -62,7 +63,7 @@ def wait_recording_done(hass: HomeAssistant) -> None:
     hass.block_till_done()
     trigger_db_commit(hass)
     hass.block_till_done()
-    hass.data[recorder.DATA_INSTANCE].block_till_done()
+    recorder.get_instance(hass).block_till_done()
     hass.block_till_done()
 
 
@@ -105,8 +106,7 @@ def async_trigger_db_commit(hass: HomeAssistant) -> None:
 
 async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
     """Non blocking version of recorder.block_till_done()."""
-    instance: recorder.Recorder = hass.data[recorder.DATA_INSTANCE]
-    await hass.async_add_executor_job(instance.block_till_done)
+    await hass.async_add_executor_job(recorder.get_instance(hass).block_till_done)
 
 
 def corrupt_db_file(test_db_file):

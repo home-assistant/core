@@ -107,20 +107,17 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # Do not set_status=True as device will report progress.
         await self._device.set_level(kwargs[ATTR_POSITION], 0)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the attrs of the cover."""
-        value = None
         if Capability.door_control in self._device.capabilities:
             self._device_class = CoverDeviceClass.DOOR
-            value = self._device.status.door
+            self._state = VALUE_TO_STATE.get(self._device.status.door)
         elif Capability.window_shade in self._device.capabilities:
             self._device_class = CoverDeviceClass.SHADE
-            value = self._device.status.window_shade
+            self._state = VALUE_TO_STATE.get(self._device.status.window_shade)
         elif Capability.garage_door_control in self._device.capabilities:
             self._device_class = CoverDeviceClass.GARAGE
-            value = self._device.status.door
-
-        self._state = VALUE_TO_STATE.get(value)
+            self._state = VALUE_TO_STATE.get(self._device.status.door)
 
         self._state_attrs = {}
         battery = self._device.status.attributes[Attribute.battery].value

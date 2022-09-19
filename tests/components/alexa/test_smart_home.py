@@ -26,10 +26,11 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .test_common import (
     MockConfig,
@@ -182,8 +183,12 @@ async def test_switch(hass, events):
     assert appliance["endpointId"] == "switch#test"
     assert appliance["displayCategories"][0] == "SWITCH"
     assert appliance["friendlyName"] == "Test switch"
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ContactSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     await assert_power_controller_works(
@@ -192,6 +197,14 @@ async def test_switch(hass, events):
 
     properties = await reported_properties(hass, "switch#test")
     properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+    properties.assert_equal("Alexa.ContactSensor", "detectionState", "DETECTED")
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
+
+    contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
+    assert contact_sensor_capability is not None
+    properties = contact_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
 
 
 async def test_outlet(hass, events):
@@ -207,7 +220,11 @@ async def test_outlet(hass, events):
     assert appliance["displayCategories"][0] == "SMARTPLUG"
     assert appliance["friendlyName"] == "Test switch"
     assert_endpoint_capabilities(
-        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance,
+        "Alexa",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa.ContactSensor",
     )
 
 
@@ -335,8 +352,12 @@ async def test_input_boolean(hass):
     assert appliance["endpointId"] == "input_boolean#test"
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test input boolean"
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ContactSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     await assert_power_controller_works(
@@ -346,6 +367,17 @@ async def test_input_boolean(hass):
         hass,
         "2022-04-19T07:53:05Z",
     )
+
+    properties = await reported_properties(hass, "input_boolean#test")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+    properties.assert_equal("Alexa.ContactSensor", "detectionState", "NOT_DETECTED")
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
+
+    contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
+    assert contact_sensor_capability is not None
+    properties = contact_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
 
 
 @freeze_time("2022-04-19 07:53:05")
@@ -1988,7 +2020,7 @@ async def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+    hass.config.units = IMPERIAL_SYSTEM
     device = (
         "climate.test_thermostat",
         "cool",
@@ -1999,7 +2031,7 @@ async def test_thermostat(hass):
             "current_temperature": 75.0,
             "friendly_name": "Test Thermostat",
             "supported_features": 1 | 2 | 4 | 128,
-            "hvac_modes": ["off", "heat", "cool", "auto", "dry"],
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
             "preset_mode": None,
             "preset_modes": ["eco"],
             "min_temp": 50,
@@ -2189,7 +2221,7 @@ async def test_thermostat(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
 
-    # Assert we can call custom modes
+    # Assert we can call custom modes for dry and fan_only
     call, msg = await assert_request_calls_service(
         "Alexa.ThermostatController",
         "SetThermostatMode",
@@ -2199,6 +2231,18 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "CUSTOM", "customName": "DEHUMIDIFY"}},
     )
     assert call.data["hvac_mode"] == "dry"
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_hvac_mode",
+        hass,
+        payload={"thermostatMode": {"value": "CUSTOM", "customName": "FAN"}},
+    )
+    assert call.data["hvac_mode"] == "fan_only"
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
 
@@ -2243,9 +2287,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
-
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_exclude_filters(hass):
@@ -4003,7 +4044,11 @@ async def test_button(hass, domain):
     assert appliance["friendlyName"] == "Ring Doorbell"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.SceneController", "Alexa"
+        appliance,
+        "Alexa.SceneController",
+        "Alexa.EventDetectionSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
     )
     scene_capability = get_capability(capabilities, "Alexa.SceneController")
     assert scene_capability["supportsDeactivation"] is False
@@ -4014,6 +4059,21 @@ async def test_button(hass, domain):
         False,
         hass,
         "2022-04-19T07:53:05Z",
+    )
+
+    event_detection_capability = get_capability(
+        capabilities, "Alexa.EventDetectionSensor"
+    )
+    assert event_detection_capability is not None
+    properties = event_detection_capability["properties"]
+    assert properties["proactivelyReported"] is True
+    assert not properties["retrievable"]
+    assert {"name": "humanPresenceDetectionState"} in properties["supported"]
+    assert (
+        event_detection_capability["configuration"]["detectionModes"]["humanPresence"][
+            "supportsNotDetected"
+        ]
+        is False
     )
 
 

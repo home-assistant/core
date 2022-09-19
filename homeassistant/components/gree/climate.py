@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from greeclimate.device import (
     TEMP_MAX,
@@ -15,8 +16,7 @@ from greeclimate.device import (
     VerticalSwing,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -30,6 +30,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -112,6 +113,7 @@ async def async_setup_entry(
 class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -152,11 +154,6 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return TEMP_CELSIUS if units == TemperatureUnits.C else TEMP_FAHRENHEIT
 
     @property
-    def precision(self) -> float:
-        """Return the precision of temperature for the device."""
-        return PRECISION_WHOLE
-
-    @property
     def current_temperature(self) -> float:
         """Return the reported current temperature for the device."""
         return self.coordinator.device.current_temperature
@@ -166,7 +163,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Missing parameter {ATTR_TEMPERATURE}")
@@ -198,14 +195,14 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return TARGET_TEMPERATURE_STEP
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode for the device."""
         if not self.coordinator.device.power:
             return HVACMode.OFF
 
         return HVAC_MODES.get(self.coordinator.device.mode)
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Invalid hvac_mode: {hvac_mode}")
@@ -246,7 +243,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the HVAC modes support by the device."""
         modes = [*HVAC_MODES_REVERSE]
         modes.append(HVACMode.OFF)
@@ -265,7 +262,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             return PRESET_BOOST
         return PRESET_NONE
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in PRESET_MODES:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
@@ -299,12 +296,12 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return PRESET_MODES
 
     @property
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Return the current fan mode for the device."""
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in FAN_MODES_REVERSE:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
@@ -332,7 +329,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             return SWING_VERTICAL
         return SWING_OFF
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if swing_mode not in SWING_MODES:
             raise ValueError(f"Invalid swing mode: {swing_mode}")

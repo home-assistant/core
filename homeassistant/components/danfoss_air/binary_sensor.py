@@ -50,7 +50,7 @@ class DanfossAirBinarySensor(BinarySensorEntity):
         self._type = sensor_type
         self._attr_device_class = device_class
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         self._data.update()
 

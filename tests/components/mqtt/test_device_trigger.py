@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config as hass_config
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
@@ -11,6 +12,8 @@ from homeassistant.const import Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
+
+from .test_common import help_test_unload_config_entry
 
 from tests.common import (
     assert_lists_same,
@@ -694,6 +697,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 ):
     """Test triggers not firing after removal."""
     assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
     await mqtt_mock_entry_no_yaml_config()
 
@@ -945,6 +949,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
+                "hw_version": "rev1",
                 "sw_version": "0.1-beta",
             },
         }
@@ -960,6 +965,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
 
 
@@ -979,6 +985,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
+                "hw_version": "rev1",
                 "sw_version": "0.1-beta",
             },
         }
@@ -992,6 +999,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
 
 
@@ -1372,3 +1380,70 @@ async def test_trigger_debug_info(hass, mqtt_mock_entry_no_yaml_config):
         == "homeassistant/device_automation/bla2/config"
     )
     assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2
+
+
+async def test_unload_entry(hass, calls, device_reg, mqtt_mock, tmp_path) -> None:
+    """Test unloading the MQTT entry."""
+
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake short press 1
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    await help_test_unload_config_entry(hass, tmp_path, {})
+
+    # Rediscover message and fake short press 2 (non impact)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    mqtt_entry = hass.config_entries.async_entries("mqtt")[0]
+
+    # Load the entry again
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config_file.write_text("")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        await hass.config_entries.async_setup(mqtt_entry.entry_id)
+
+    # Rediscover and fake short press 3
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 2

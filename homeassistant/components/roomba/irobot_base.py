@@ -60,6 +60,8 @@ STATE_MAP = {
 class IRobotEntity(Entity):
     """Base class for iRobot Entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
@@ -68,11 +70,6 @@ class IRobotEntity(Entity):
         self._name = self.vacuum_state.get("name")
         self._version = self.vacuum_state.get("softwareVer")
         self._sku = self.vacuum_state.get("sku")
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
 
     @property
     def robot_unique_id(self):

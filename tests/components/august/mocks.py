@@ -1,10 +1,11 @@
 """Mocks for the august component."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import json
 import os
 import time
-from typing import Any, Iterable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from yalexs.activity import (
@@ -299,6 +300,10 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
 
 async def _mock_operative_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online.json")
+
+
+async def _mock_lock_with_offline_key(hass):
+    return await _mock_lock_from_fixture(hass, "get_lock.online_with_keys.json")
 
 
 async def _mock_inoperative_august_lock_detail(hass):

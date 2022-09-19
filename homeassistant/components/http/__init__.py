@@ -7,7 +7,7 @@ import logging
 import os
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Optional, TypedDict, Union, cast
+from typing import Any, Final, TypedDict, Union, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
@@ -33,7 +33,12 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
+from .const import (  # noqa: F401
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+)
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import current_request, setup_request_context
@@ -125,10 +130,10 @@ class ConfData(TypedDict, total=False):
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> dict | None:
+async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    return cast(Optional[dict], await store.async_load())
+    store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    return await store.async_load()
 
 
 class ApiConfig:
@@ -475,7 +480,9 @@ async def start_http_server_and_save_config(
     await server.start()
 
     # If we are set up successful, we store the HTTP settings for safe mode.
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store: storage.Store[dict[str, Any]] = storage.Store(
+        hass, STORAGE_VERSION, STORAGE_KEY
+    )
 
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [

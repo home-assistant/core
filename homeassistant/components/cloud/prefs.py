@@ -50,6 +50,7 @@ class CloudPreferences:
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._prefs = None
         self._listeners = []
+        self.last_updated: set[str] = set()
 
     async def async_initialize(self):
         """Finish initializing the preferences."""
@@ -308,6 +309,9 @@ class CloudPreferences:
 
     async def _save_prefs(self, prefs):
         """Save preferences to disk."""
+        self.last_updated = {
+            key for key, value in prefs.items() if value != self._prefs.get(key)
+        }
         self._prefs = prefs
         await self._store.async_save(self._prefs)
 

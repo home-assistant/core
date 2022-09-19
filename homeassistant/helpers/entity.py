@@ -38,7 +38,7 @@ from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
-from . import entity_registry as er
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
@@ -221,6 +221,7 @@ class EntityDescription:
     entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
+    has_entity_name: bool = False
     name: str | None = None
     unit_of_measurement: str | None = None
 
@@ -273,10 +274,12 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
+    _attr_capability_attributes: Mapping[str, Any] | None = None
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
+    _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -304,6 +307,15 @@ class Entity(ABC):
         return self._attr_unique_id
 
     @property
+    def has_entity_name(self) -> bool:
+        """Return if the name of the entity is describing only the entity itself."""
+        if hasattr(self, "_attr_has_entity_name"):
+            return self._attr_has_entity_name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.has_entity_name
+        return False
+
+    @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -326,7 +338,7 @@ class Entity(ABC):
         Implemented by component base class. Convention for attribute names
         is lowercase snake_case.
         """
-        return None
+        return self._attr_capability_attributes
 
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -583,7 +595,26 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (name := (entry and entry.name) or self.name) is not None:
+        def friendly_name() -> str | None:
+            """Return the friendly name.
+
+            If has_entity_name is False, this returns self.name
+            If has_entity_name is True, this returns device.name + self.name
+            """
+            if not self.has_entity_name or not self.registry_entry:
+                return self.name
+
+            device_registry = dr.async_get(self.hass)
+            if not (device_id := self.registry_entry.device_id) or not (
+                device_entry := device_registry.async_get(device_id)
+            ):
+                return self.name
+
+            if not self.name:
+                return device_entry.name_by_user or device_entry.name
+            return f"{device_entry.name_by_user or device_entry.name} {self.name}"
+
+        if (name := (entry and entry.name) or friendly_name()) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
@@ -906,7 +937,7 @@ class Entity(ABC):
         """Suggest to report an issue."""
         report_issue = ""
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom component author."
+            report_issue = "report it to the custom integration author."
         else:
             report_issue = (
                 "create a bug report at "

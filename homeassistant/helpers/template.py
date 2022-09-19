@@ -19,10 +19,11 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, cast
+from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -91,6 +92,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "object_id",
     "name",
 }
+
+_T = TypeVar("_T")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
@@ -196,8 +199,6 @@ class TupleWrapper(tuple, ResultWrapper):
     def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
-
-    # pylint: disable=super-init-not-called
 
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
@@ -946,6 +947,31 @@ def _resolve_state(
     return None
 
 
+@overload
+def forgiving_boolean(value: Any) -> bool | object:
+    ...
+
+
+@overload
+def forgiving_boolean(value: Any, default: _T) -> bool | _T:
+    ...
+
+
+def forgiving_boolean(
+    value: Any, default: _T | object = _SENTINEL
+) -> bool | _T | object:
+    """Try to convert value to a boolean."""
+    try:
+        # Import here, not at top-level to avoid circular import
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+        return cv.boolean(value)
+    except vol.Invalid:
+        if default is _SENTINEL:
+            raise_no_default("bool", value)
+        return default
+
+
 def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
@@ -956,13 +982,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
     if template_result is None:
         return False
 
-    try:
-        # Import here, not at top-level to avoid circular import
-        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
-
-        return cv.boolean(template_result)
-    except vol.Invalid:
-        return False
+    return forgiving_boolean(template_result, default=False)
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
@@ -1368,7 +1388,7 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def raise_no_default(function, value):
+def raise_no_default(function: str, value: Any) -> NoReturn:
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
     raise ValueError(
@@ -1508,6 +1528,11 @@ def arc_tangent2(*args, default=_SENTINEL):
         if default is _SENTINEL:
             raise_no_default("atan2", args)
         return default
+
+
+def version(value):
+    """Filter and function to get version object of the value."""
+    return AwesomeVersion(value)
 
 
 def square_root(value, default=_SENTINEL):
@@ -1694,7 +1719,13 @@ def regex_match(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return bool(re.match(find, value, flags))
+    return bool(_regex_cache(find, flags).match(value))
+
+
+@lru_cache(maxsize=128)
+def _regex_cache(find: str, flags: int) -> re.Pattern:
+    """Cache compiled regex."""
+    return re.compile(find, flags)
 
 
 def regex_replace(value="", find="", replace="", ignorecase=False):
@@ -1702,8 +1733,7 @@ def regex_replace(value="", find="", replace="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    regex = re.compile(find, flags)
-    return regex.sub(replace, value)
+    return _regex_cache(find, flags).sub(replace, value)
 
 
 def regex_search(value, find="", ignorecase=False):
@@ -1711,7 +1741,7 @@ def regex_search(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return bool(re.search(find, value, flags))
+    return bool(_regex_cache(find, flags).search(value))
 
 
 def regex_findall_index(value, find="", index=0, ignorecase=False):
@@ -1724,7 +1754,7 @@ def regex_findall(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return re.findall(find, value, flags)
+    return _regex_cache(find, flags).findall(value)
 
 
 def bitwise_and(first_value, second_value):
@@ -1981,6 +2011,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
+        self.filters["bool"] = forgiving_boolean
+        self.filters["version"] = version
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2012,6 +2044,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
+        self.globals["bool"] = forgiving_boolean
+        self.globals["version"] = version
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search

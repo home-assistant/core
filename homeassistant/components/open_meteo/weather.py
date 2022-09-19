@@ -37,6 +37,7 @@ class OpenMeteoWeatherEntity(
 ):
     """Defines an Open-Meteo weather entity."""
 
+    _attr_has_entity_name = True
     _attr_native_precipitation_unit = LENGTH_MILLIMETERS
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
@@ -50,7 +51,6 @@ class OpenMeteoWeatherEntity(
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = entry.entry_id
-        self._attr_name = entry.title
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

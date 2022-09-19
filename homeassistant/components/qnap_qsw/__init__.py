@@ -1,17 +1,27 @@
 """The QNAP QSW integration."""
 from __future__ import annotations
 
+import logging
+
 from aioqsw.localapi import ConnectionOptions, QnapQswApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
-from .coordinator import QswUpdateCoordinator
+from .const import DOMAIN, QSW_COORD_DATA, QSW_COORD_FW
+from .coordinator import QswDataCoordinator, QswFirmwareCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.UPDATE,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -24,12 +34,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     qsw = QnapQswApi(aiohttp_client.async_get_clientsession(hass), options)
 
-    coordinator = QswUpdateCoordinator(hass, qsw)
-    await coordinator.async_config_entry_first_refresh()
+    coord_data = QswDataCoordinator(hass, qsw)
+    await coord_data.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    coord_fw = QswFirmwareCoordinator(hass, qsw)
+    try:
+        await coord_fw.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as error:
+        _LOGGER.warning(error)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        QSW_COORD_DATA: coord_data,
+        QSW_COORD_FW: coord_fw,
+    }
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

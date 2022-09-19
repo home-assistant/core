@@ -1,6 +1,5 @@
 """The device tracker tests for the Mazda Connected Services integration."""
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.const import ATTR_SOURCE_TYPE
+from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -20,7 +19,7 @@ async def test_device_tracker(hass):
 
     state = hass.states.get("device_tracker.my_mazda3_device_tracker")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Device Tracker"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Device tracker"
     assert state.attributes.get(ATTR_ICON) == "mdi:car"
     assert state.attributes.get(ATTR_LATITUDE) == 1.234567
     assert state.attributes.get(ATTR_LONGITUDE) == -2.345678

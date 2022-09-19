@@ -113,11 +113,14 @@ class SensorDeviceClass(StrEnum):
     # gas (m³ or ft³)
     GAS = "gas"
 
-    # % of humidity in the air
+    # Relative humidity (%)
     HUMIDITY = "humidity"
 
     # current light level (lx/lm)
     ILLUMINANCE = "illuminance"
+
+    # moisture (%)
+    MOISTURE = "moisture"
 
     # Amount of money (currency)
     MONETARY = "monetary"
@@ -223,10 +226,12 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     SensorDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
 }
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[SensorEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -236,13 +241,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[SensorEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[SensorEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -264,7 +269,7 @@ class SensorEntity(Entity):
     _attr_device_class: SensorDeviceClass | str | None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
-    _attr_native_value: StateType | date | datetime = None
+    _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_unit_of_measurement: None = (
@@ -349,7 +354,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 

@@ -41,7 +41,7 @@ class DemoCamera(Camera):
     _attr_motion_detection_enabled = False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
-    def __init__(self, name, content_type):
+    def __init__(self, name: str, content_type: str) -> None:
         """Initialize demo camera component."""
         super().__init__()
         self._attr_name = name
@@ -58,23 +58,23 @@ class DemoCamera(Camera):
 
         return await self.hass.async_add_executor_job(image_path.read_bytes)
 
-    async def async_enable_motion_detection(self):
+    async def async_enable_motion_detection(self) -> None:
         """Enable the Motion detection in base station (Arm)."""
         self._attr_motion_detection_enabled = True
         self.async_write_ha_state()
 
-    async def async_disable_motion_detection(self):
+    async def async_disable_motion_detection(self) -> None:
         """Disable the motion detection in base station (Disarm)."""
         self._attr_motion_detection_enabled = False
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off camera."""
         self._attr_is_streaming = False
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on camera."""
         self._attr_is_streaming = True
         self._attr_is_on = True

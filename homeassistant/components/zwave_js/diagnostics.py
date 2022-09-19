@@ -11,7 +11,7 @@ from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -51,6 +51,9 @@ VALUES_TO_REDACT = (
 
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
+    # If the value has no value, there is nothing to redact
+    if zwave_value.get("value") in (None, ""):
+        return zwave_value
     for value_to_redact in VALUES_TO_REDACT:
         command_class = None
         if "commandClass" in zwave_value:
@@ -94,20 +97,23 @@ def get_device_entities(
         # If the value ID returns as None, we don't need to include this entity
         if (value_id := get_value_id_from_unique_id(entry.unique_id)) is None:
             continue
-        state_key = get_state_key_from_unique_id(entry.unique_id)
 
-        zwave_value = node.values[value_id]
-        primary_value_data = {
-            "command_class": zwave_value.command_class,
-            "command_class_name": zwave_value.command_class_name,
-            "endpoint": zwave_value.endpoint,
-            "property": zwave_value.property_,
-            "property_name": zwave_value.property_name,
-            "property_key": zwave_value.property_key,
-            "property_key_name": zwave_value.property_key_name,
-        }
-        if state_key is not None:
-            primary_value_data["state_key"] = state_key
+        primary_value_data = None
+        if (zwave_value := node.values.get(value_id)) is not None:
+            primary_value_data = {
+                "command_class": zwave_value.command_class,
+                "command_class_name": zwave_value.command_class_name,
+                "endpoint": zwave_value.endpoint,
+                "property": zwave_value.property_,
+                "property_name": zwave_value.property_name,
+                "property_key": zwave_value.property_key,
+                "property_key_name": zwave_value.property_key_name,
+            }
+
+            state_key = get_state_key_from_unique_id(entry.unique_id)
+            if state_key is not None:
+                primary_value_data["state_key"] = state_key
+
         entity = {
             "domain": entry.domain,
             "entity_id": entry.entity_id,
@@ -120,6 +126,7 @@ def get_device_entities(
             "entity_category": entry.entity_category,
             "supported_features": entry.supported_features,
             "unit_of_measurement": entry.unit_of_measurement,
+            "value_id": value_id,
             "primary_value": primary_value_data,
         }
         entities.append(entity)

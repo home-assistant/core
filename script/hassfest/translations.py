@@ -21,7 +21,7 @@ REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 
-# Only allow translatino of integration names if they contain non-brand names
+# Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
@@ -185,7 +185,7 @@ def gen_data_entry_schema(
     return vol.All(*validators)
 
 
-def gen_strings_schema(config: Config, integration: Integration):
+def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
         {
@@ -226,6 +226,25 @@ def gen_strings_schema(config: Config, integration: Integration):
             ),
             vol.Optional("application_credentials"): {
                 vol.Optional("description"): cv.string_with_no_html,
+            },
+            vol.Optional("issues"): {
+                str: vol.All(
+                    cv.has_at_least_one_key("description", "fix_flow"),
+                    vol.Schema(
+                        {
+                            vol.Required("title"): cv.string_with_no_html,
+                            vol.Exclusive(
+                                "description", "fixable"
+                            ): cv.string_with_no_html,
+                            vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
+                                config=config,
+                                integration=integration,
+                                flow_title=UNDEFINED,
+                                require_step_title=False,
+                            ),
+                        },
+                    ),
+                )
             },
         }
     )

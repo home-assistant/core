@@ -90,28 +90,10 @@ async def test_state_reporting(hass):
     await hass.async_block_till_done()
     assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
 
-    # At least one member unknown or unavailable -> group unknown
+    # The group state is unknown if all group members are unknown or unavailable.
     for state_1 in (
-        STATE_JAMMED,
-        STATE_LOCKED,
-        STATE_LOCKING,
-        STATE_UNKNOWN,
-        STATE_UNLOCKED,
-        STATE_UNLOCKING,
-    ):
-        hass.states.async_set("lock.test1", state_1)
-        hass.states.async_set("lock.test2", STATE_UNAVAILABLE)
-        await hass.async_block_till_done()
-        assert hass.states.get("lock.lock_group").state == STATE_UNKNOWN
-
-    for state_1 in (
-        STATE_JAMMED,
-        STATE_LOCKED,
-        STATE_LOCKING,
         STATE_UNAVAILABLE,
         STATE_UNKNOWN,
-        STATE_UNLOCKED,
-        STATE_UNLOCKING,
     ):
         hass.states.async_set("lock.test1", state_1)
         hass.states.async_set("lock.test2", STATE_UNKNOWN)
@@ -123,6 +105,8 @@ async def test_state_reporting(hass):
         STATE_JAMMED,
         STATE_LOCKED,
         STATE_LOCKING,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
         STATE_UNLOCKED,
         STATE_UNLOCKING,
     ):
@@ -135,6 +119,8 @@ async def test_state_reporting(hass):
     for state_1 in (
         STATE_LOCKED,
         STATE_LOCKING,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
         STATE_UNLOCKED,
         STATE_UNLOCKING,
     ):
@@ -146,6 +132,8 @@ async def test_state_reporting(hass):
     # At least one member unlocking -> group unlocking
     for state_1 in (
         STATE_LOCKED,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
         STATE_UNLOCKED,
         STATE_UNLOCKING,
     ):
@@ -157,6 +145,8 @@ async def test_state_reporting(hass):
     # At least one member unlocked -> group unlocked
     for state_1 in (
         STATE_LOCKED,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
         STATE_UNLOCKED,
     ):
         hass.states.async_set("lock.test1", state_1)

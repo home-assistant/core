@@ -73,10 +73,12 @@ __all__ = [
     "UpdateEntityFeature",
 ]
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[UpdateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -109,13 +111,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -437,11 +439,11 @@ class UpdateEntity(RestoreEntity):
 async def websocket_release_notes(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Get the full release notes for a entity."""
-    component = hass.data[DOMAIN]
-    entity: UpdateEntity | None = component.get_entity(msg["entity_id"])
+    component: EntityComponent[UpdateEntity] = hass.data[DOMAIN]
+    entity = component.get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(

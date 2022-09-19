@@ -51,7 +51,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -186,6 +185,16 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(
+    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
+    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
+    # are no longer supported, support was removed in release 2021.12
+    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
+    cv.removed(CONF_PAYLOAD_LOW_SPEED),
+    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.removed(CONF_SPEED_COMMAND_TOPIC),
+    cv.removed(CONF_SPEED_LIST),
+    cv.removed(CONF_SPEED_STATE_TOPIC),
+    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -231,9 +240,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(await async_setup_platform_discovery(hass, fan.DOMAIN))
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -241,8 +247,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT fan."""
     async_add_entities([MqttFan(hass, config, config_entry, discovery_data)])
 
