@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
+from http import HTTPStatus
 from typing import Any, Final, cast
 
 from aiohttp import ClientResponseError
@@ -200,7 +201,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
         except ClientResponseError as err:
-            if err.status == 401:
+            if err.status == HTTPStatus.UNAUTHORIZED.value:
                 raise ConfigEntryAuthFailed from err
 
         async_block_device_setup(hass, entry, device)
