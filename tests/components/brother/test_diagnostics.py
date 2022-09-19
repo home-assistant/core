@@ -9,8 +9,9 @@ from aiohttp import ClientSession
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
+from . import init_integration
+
 from tests.common import load_fixture
-from tests.components.brother import init_integration
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 

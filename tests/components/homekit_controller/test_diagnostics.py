@@ -5,13 +5,11 @@ from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .common import setup_accessories_from_file, setup_test_accessories
+
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-)
-from tests.components.homekit_controller.common import (
-    setup_accessories_from_file,
-    setup_test_accessories,
 )
 
 

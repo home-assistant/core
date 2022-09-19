@@ -35,6 +35,7 @@ from . import assert_adds_messages, assert_no_messages
         ("homeassistant.components.pylint_test.api.hub", "..const", "CONSTANT"),
         ("homeassistant.components.pylint_test.api.hub", "..", "CONSTANT"),
         ("homeassistant.components.pylint_test.api.hub", "...", "pylint_test"),
+        ("tests.components.pylint_test.api.hub", "..const", "CONSTANT"),
     ],
 )
 def test_good_import(
@@ -100,6 +101,18 @@ def test_good_import(
             "homeassistant.components.pylint_test.const",
             "CONSTANT",
             "hass-relative-import",
+        ),
+        (
+            "tests.components.pylint_test.api.hub",
+            "tests.components.pylint_test.const",
+            "CONSTANT",
+            "hass-relative-import",
+        ),
+        (
+            "tests.components.pylint_test.api.hub",
+            "...const",
+            "CONSTANT",
+            "hass-absolute-import",
         ),
     ],
 )
