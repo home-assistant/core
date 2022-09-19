@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_conf.pop(CONF_SCANDINAVIAN_MILES)
 
         new_conf[CONF_UNIT_SYSTEM] = (
-            CONF_SCANDINAVIAN_MILES if scandinavian_miles else UNIT_SYSTEM_METRIC
+            UNIT_SYSTEM_SCANDINAVIAN_MILES if scandinavian_miles else UNIT_SYSTEM_METRIC
         )
 
         hass.config_entries.async_update_entry(entry, data=new_conf)
