@@ -934,3 +934,74 @@ async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
 
     # Verify service calls
     mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
+
+
+async def test_boost_mode(hass, aioclient_mock, mock_deconz_websocket):
+    """Test that a climate device with bost mode and different state works."""
+    data = {
+        "sensors": {
+            "0": {
+                "config": {
+                    "battery": 58,
+                    "heatsetpoint": 2200,
+                    "locked": False,
+                    "mode": "heat",
+                    "offset": -200,
+                    "on": True,
+                    "preset": "manual",
+                    "reachable": True,
+                    "schedule": {},
+                    "schedule_on": False,
+                    "setvalve": False,
+                    "windowopen_set": False,
+                },
+                "ep": 1,
+                "etag": "404c15db68c318ebe7832ce5aa3d1e30",
+                "lastannounced": "2022-08-31T03:00:59Z",
+                "lastseen": "2022-09-19T11:58Z",
+                "manufacturername": "_TZE200_b6wax7g0",
+                "modelid": "TS0601",
+                "name": "Thermostat",
+                "state": {
+                    "lastupdated": "2022-09-19T11:58:24.204",
+                    "lowbattery": False,
+                    "on": False,
+                    "temperature": 2200,
+                    "valve": 0,
+                },
+                "type": "ZHAThermostat",
+                "uniqueid": "84:fd:27:ff:fe:8a:eb:89-01-0201",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 3
+
+    climate_thermostat = hass.states.get("climate.thermostat")
+
+    assert climate_thermostat.state == HVACMode.HEAT
+
+    assert climate_thermostat.attributes["preset_mode"] is DECONZ_PRESET_MANUAL
+    assert climate_thermostat.attributes["hvac_action"] is HVACAction.IDLE
+
+    # Event signals thermostat preset boost and valve 100 (real data)
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "0",
+        "config": {"preset": "boost"},
+        "state": {"valve": 100},
+    }
+
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    climate_thermostat = hass.states.get("climate.thermostat")
+    assert climate_thermostat.attributes["preset_mode"] is PRESET_BOOST
+    assert climate_thermostat.attributes["hvac_action"] is HVACAction.HEATING
+
+    # Verify service calls
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
