@@ -47,7 +47,7 @@ def signal_seen(unique_id: str) -> str:
     return f"{SIGNAL_IBEACON_DEVICE_SEEN}_{unique_id}"
 
 
-def short_address(address: str) -> str:
+def make_short_address(address: str) -> str:
     """Convert a Bluetooth address to a short address."""
     results = address.replace("-", ":").split(":")
     return f"{results[-2].upper()}{results[-1].upper()}"[-4:]
@@ -68,7 +68,9 @@ def async_name(
     else:
         base_name = service_info.name
     if unique_address:
-        return f"{base_name} {short_address(service_info.address)}"
+        short_address = make_short_address(service_info.address)
+        if not base_name.endswith(short_address):
+            return f"{base_name} {short_address}"
     return base_name
 
 
