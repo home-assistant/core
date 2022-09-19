@@ -50,7 +50,7 @@ async def test_sensors_updates(hass):
 
     distance_sensor = hass.states.get("sensor.bluecharm_177999_estimated_distance")
     distance_attributes = distance_sensor.attributes
-    assert distance_sensor.state == "1.6"
+    assert distance_sensor.state == "2"
     assert (
         distance_attributes[ATTR_FRIENDLY_NAME] == "BlueCharm_177999 Estimated Distance"
     )
@@ -63,7 +63,7 @@ async def test_sensors_updates(hass):
 
     distance_sensor = hass.states.get("sensor.bluecharm_177999_estimated_distance")
     distance_attributes = distance_sensor.attributes
-    assert distance_sensor.state == "0.3"
+    assert distance_sensor.state == "0"
     assert (
         distance_attributes[ATTR_FRIENDLY_NAME] == "BlueCharm_177999 Estimated Distance"
     )
@@ -118,7 +118,7 @@ async def test_sensor_sees_last_service_info(hass):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "1.6"
+    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "2"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -135,7 +135,7 @@ async def test_can_unload_and_reload(hass):
     await hass.async_block_till_done()
     inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "1.6"
+    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "2"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -145,4 +145,4 @@ async def test_can_unload_and_reload(hass):
     )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "1.6"
+    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "2"
