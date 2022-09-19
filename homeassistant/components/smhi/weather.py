@@ -151,7 +151,7 @@ class SmhiWeather(WeatherEntity):
         self._attr_unique_id = (
             f"{latitude}, {longitude}-hourly" if hourly else f"{latitude}, {longitude}"
         )
-        self._attr_name = "hourly" if hourly else ""
+        self._attr_name = "hourly" if hourly else None
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(longitude, latitude, session=session)
