@@ -1513,4 +1513,3 @@ async def test_thermostat_unavailable(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == STATE_UNAVAILABLE
-    
