@@ -4,18 +4,19 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratie is momenteel al bezig",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "reauth_successful": "Herauthenticatie geslaagd"
+            "no_unconfigured_devices": "Geen niet-geconfigureerde apparaten gevonden.",
+            "not_supported": "Apparaat is niet ondersteund"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
         },
         "flow_title": "{name}",
         "step": {
-            "bluetooth_confirm": {
-                "description": "Wilt u {name} instellen?"
-            },
             "user": {
                 "data": {
-                    "address": "Apparaat"
-                },
-                "description": "Kies een apparaat om in te stellen"
+                    "address": "Bluetooth-adres"
+                }
             }
         }
     }
