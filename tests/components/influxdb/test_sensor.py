@@ -413,7 +413,7 @@ async def test_config_failure(hass, config_ext):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock",
+    "mock_client, config_ext, queries, set_query_mock, make_resultset",
     [
         (
             DEFAULT_API_VERSION,
@@ -424,15 +424,16 @@ async def test_config_failure(hass, config_ext):
                 ],
             },
             _set_query_mock_v1,
+            _make_v1_resultset,
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_state_for_inconsistent_field(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
     """Test state of sensor if configuration field doesn't match query result field."""
-    set_query_mock(mock_client)
+    set_query_mock(mock_client, return_value=make_resultset(42))
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
     assert sensors[0].state == STATE_UNKNOWN
@@ -716,6 +717,22 @@ async def test_error_querying_influx(
             _make_v2_resultset,
             "query",
         ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "queries_raw": [
+                    {
+                        "name": "test",
+                        "unique_id": "unique_test_id",
+                        "query": "{{ illegal.template }}",
+                    }
+                ]
+            },
+            _set_query_mock_v2,
+            _make_v2_resultset,
+            "query",
+        ),
     ],
     indirect=["mock_client"],
 )
@@ -834,6 +851,23 @@ async def test_connection_error_at_startup(
                 "bucket": "bad_bucket",
             },
             BASE_V2_QUERY,
+            _set_query_mock_v2,
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {"database": "bad_db"},
+            BASE_V1_QUERY_RAW,
+            _set_query_mock_v1,
+        ),
+        (
+            API_VERSION_2,
+            {
+                "api_version": API_VERSION_2,
+                "organization": "org",
+                "token": "token",
+                "bucket": "bad_bucket",
+            },
+            BASE_V2_QUERY_RAW,
             _set_query_mock_v2,
         ),
     ],
