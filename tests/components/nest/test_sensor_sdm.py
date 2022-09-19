@@ -90,7 +90,7 @@ async def test_thermostat_device(
 async def test_thermostat_device_available(
     hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ):
-    """Test a thermostat with temperature and humidity sensors."""
+    """Test a thermostat with temperature and humidity sensors that is Online."""
     create_device.create(
         {
             "sdm.devices.traits.Temperature": {
@@ -118,7 +118,7 @@ async def test_thermostat_device_available(
 async def test_thermostat_device_unavailable(
     hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
 ):
-    """Test a thermostat with temperature and humidity sensors."""
+    """Test a thermostat with temperature and humidity sensors that is Offline."""
     create_device.create(
         {
             "sdm.devices.traits.Temperature": {

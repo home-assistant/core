@@ -114,7 +114,7 @@ class ThermostatEntity(ClimateEntity):
 
     @property
     def available(self) -> bool:
-        """Determines if the entity is available"""
+        """Return entity availability."""
         if ConnectivityTrait.NAME in self._device.traits:
             trait: ConnectivityTrait = self._device.traits[ConnectivityTrait.NAME]
             if trait.status == CONNECTIVITY_TRAIT_OFFLINE:

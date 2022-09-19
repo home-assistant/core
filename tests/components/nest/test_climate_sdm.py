@@ -1454,7 +1454,7 @@ async def test_thermostat_hvac_mode_failure(
 async def test_thermostat_available(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
-    """Test a thermostat that is cooling."""
+    """Test a thermostat that is available."""
     create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
@@ -1486,7 +1486,7 @@ async def test_thermostat_available(
 async def test_thermostat_unavailable(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ):
-    """Test a thermostat that is cooling."""
+    """Test a thermostat that is unavailable."""
     create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {
