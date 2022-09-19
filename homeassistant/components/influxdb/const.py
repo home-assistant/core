@@ -130,7 +130,6 @@ QUERIES_RAW_FIELD_ERROR = (
     f"{CONF_FIELD} is not allowed when {CONF_API_VERSION} is {API_VERSION_2}."
 )
 QUERY_FIELD_CONSISTENCY = "Query returned no %s field. Please check consistency between 'query' and 'field' parameters."
-QUERY_FIELD_CONSISTENCY_V2 = "Query returned no %s field. Please check your query."
 QUERY_NO_RESULTS_MESSAGE = "Query returned no results, sensor state set to UNKNOWN: %s."
 QUERY_MULTIPLE_RESULTS_MESSAGE = (
     "Query returned multiple results, only value from first one is shown: %s."

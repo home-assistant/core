@@ -62,7 +62,6 @@ from .const import (
     QUERIES_RAW_DATABASE_ERROR,
     QUERIES_RAW_FIELD_ERROR,
     QUERY_FIELD_CONSISTENCY,
-    QUERY_FIELD_CONSISTENCY_V2,
     QUERY_MULTIPLE_RESULTS_MESSAGE,
     QUERY_NO_RESULTS_MESSAGE,
     RENDERING_QUERY_ERROR_MESSAGE,
@@ -487,9 +486,6 @@ class InfluxRawSensorData:
 
             if not tables:
                 _LOGGER.warning(QUERY_NO_RESULTS_MESSAGE, self.full_query)
-                self.value = None
-            elif INFLUX_CONF_VALUE_V2 not in tables[0].records[0].values:
-                _LOGGER.warning(QUERY_FIELD_CONSISTENCY_V2, INFLUX_CONF_VALUE_V2)
                 self.value = None
             else:
                 if len(tables) > 1 or len(tables[0].records) > 1:
