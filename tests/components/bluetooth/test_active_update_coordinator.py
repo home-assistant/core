@@ -47,6 +47,7 @@ GENERIC_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
 )
 
 
+# Add comment
 async def test_basic_usage(
     hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
