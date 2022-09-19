@@ -19,6 +19,7 @@ from . import (
     BLUECHARM_BEACON_SERVICE_INFO,
     BLUECHARM_BEACON_SERVICE_INFO_2,
     BLUECHARM_BLE_DEVICE,
+    NO_NAME_BEACON_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -33,7 +34,7 @@ def mock_bluetooth(enable_bluetooth):
     """Auto mock bluetooth."""
 
 
-async def test_sensors(hass):
+async def test_sensors_updates(hass):
     """Test creating and updating sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -81,3 +82,67 @@ async def test_sensors(hass):
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_sensor_with_no_local_name(hass):
+    """Test creating and updating sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, NO_NAME_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(
+            "sensor.4e6f4e61_6d65_6172_6d42_6561636f6e73_3838_4949_estimated_distance"
+        )
+        is not None
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_sensor_sees_last_service_info(hass):
+    """Test sensors are created from recent history."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "1.6"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_can_unload_and_reload(hass):
+    """Test sensors get recreated on unload/setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "1.6"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.bluecharm_177999_estimated_distance").state
+        == STATE_UNAVAILABLE
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "1.6"

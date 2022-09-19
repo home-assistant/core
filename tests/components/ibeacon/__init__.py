@@ -28,3 +28,15 @@ BLUECHARM_BEACON_SERVICE_INFO_2 = BluetoothServiceInfo(
     service_uuids=["0000feaa-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+NO_NAME_BEACON_SERVICE_INFO = BluetoothServiceInfo(
+    name="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+    address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+    rssi=-53,
+    manufacturer_data={76: b"\x02\x15NoNamearmBeacons\x0e\xfe\x13U\xc5"},
+    service_data={
+        "00002080-0000-1000-8000-00805f9b34fb": b"j\x0c\x0e\xfe\x13U",
+        "0000feaa-0000-1000-8000-00805f9b34fb": b" \x00\x0c\x00\x1c\x00\x00\x00\x06h\x00\x008\x10",
+    },
+    service_uuids=["0000feaa-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
