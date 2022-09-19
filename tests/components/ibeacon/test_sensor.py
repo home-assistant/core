@@ -48,11 +48,12 @@ async def test_sensors_updates(hass):
         inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
         await hass.async_block_till_done()
 
-    distance_sensor = hass.states.get("sensor.bluecharm_177999_estimated_distance")
+    distance_sensor = hass.states.get("sensor.bluecharm_177999_8105_estimated_distance")
     distance_attributes = distance_sensor.attributes
     assert distance_sensor.state == "2"
     assert (
-        distance_attributes[ATTR_FRIENDLY_NAME] == "BlueCharm_177999 Estimated Distance"
+        distance_attributes[ATTR_FRIENDLY_NAME]
+        == "BlueCharm_177999 8105 Estimated Distance"
     )
     assert distance_attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
     assert distance_attributes[ATTR_STATE_CLASS] == "measurement"
@@ -61,11 +62,12 @@ async def test_sensors_updates(hass):
         inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO_2)
         await hass.async_block_till_done()
 
-    distance_sensor = hass.states.get("sensor.bluecharm_177999_estimated_distance")
+    distance_sensor = hass.states.get("sensor.bluecharm_177999_8105_estimated_distance")
     distance_attributes = distance_sensor.attributes
     assert distance_sensor.state == "0"
     assert (
-        distance_attributes[ATTR_FRIENDLY_NAME] == "BlueCharm_177999 Estimated Distance"
+        distance_attributes[ATTR_FRIENDLY_NAME]
+        == "BlueCharm_177999 8105 Estimated Distance"
     )
     assert distance_attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
     assert distance_attributes[ATTR_STATE_CLASS] == "measurement"
@@ -77,7 +79,7 @@ async def test_sensors_updates(hass):
         )
         await hass.async_block_till_done()
 
-    distance_sensor = hass.states.get("sensor.bluecharm_177999_estimated_distance")
+    distance_sensor = hass.states.get("sensor.bluecharm_177999_8105_estimated_distance")
     assert distance_sensor.state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -99,7 +101,7 @@ async def test_sensor_with_no_local_name(hass):
 
     assert (
         hass.states.get(
-            "sensor.4e6f4e61_6d65_6172_6d42_6561636f6e73_3838_4949_estimated_distance"
+            "sensor.4e6f4e61_6d65_6172_6d42_6561636f6e73_3838_4949_8105_estimated_distance"
         )
         is not None
     )
@@ -118,7 +120,9 @@ async def test_sensor_sees_last_service_info(hass):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "2"
+    assert (
+        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance").state == "2"
+    )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -135,14 +139,18 @@ async def test_can_unload_and_reload(hass):
     await hass.async_block_till_done()
     inject_bluetooth_service_info(hass, BLUECHARM_BEACON_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "2"
+    assert (
+        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance").state == "2"
+    )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert (
-        hass.states.get("sensor.bluecharm_177999_estimated_distance").state
+        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance").state
         == STATE_UNAVAILABLE
     )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.bluecharm_177999_estimated_distance").state == "2"
+    assert (
+        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance").state == "2"
+    )
