@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured_account": "Account is already configured",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Reauth successfully"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
+            "invalid_auth": "Invalid email or password",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -16,10 +16,9 @@
                     "password": "Password"
                 }
             },
-            "reauth_confirm": {
-                "title": "Reauthenticate Integration",
-                "description": "The Discovergy integration needs to be manually re-authenticated for the account with {email}.",
+            "reauth": {
                 "data": {
+                    "email": "E-Mail",
                     "password": "Password"
                 }
             }

@@ -7,10 +7,9 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title%]",
-        "description": "[%key:common::config_flow::description%]",
+      "reauth": {
         "data": {
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }

@@ -11,23 +11,12 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_ACCESS_TOKEN_SECRET,
-    CONF_CONSUMER_KEY,
-    CONF_CONSUMER_SECRET,
-    COORDINATORS,
-    DOMAIN,
-    METERS,
-)
+from . import DiscovergyData
+from .const import DOMAIN
 
 TO_REDACT_CONFIG_ENTRY = {
     CONF_EMAIL,
     CONF_PASSWORD,
-    CONF_ACCESS_TOKEN,
-    CONF_ACCESS_TOKEN_SECRET,
-    CONF_CONSUMER_KEY,
-    CONF_CONSUMER_SECRET,
 }
 
 TO_REDACT_METER = {
@@ -46,18 +35,16 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     flattened_meter: list[dict] = []
     last_readings: dict[str, dict] = {}
-    meters: list[Meter] = hass.data[DOMAIN][entry.entry_id][METERS]
+    data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
+    meters: list[Meter] = data.meters  # always returns a list
 
-    if len(meters) > 0:
-        for meter in meters:
-            # make dict of meter data and redact some data
-            flattened_meter.append(async_redact_data(meter.__dict__, TO_REDACT_METER))
+    for meter in meters:
+        # make dict of meter data and redact some data
+        flattened_meter.append(async_redact_data(meter.__dict__, TO_REDACT_METER))
 
-            # get last reading for meter and make dict it
-            coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-                COORDINATORS
-            ][meter.get_meter_id()]
-            last_readings[meter.get_meter_id()] = coordinator.data.__dict__
+        # get last reading for meter and make dict it
+        coordinator: DataUpdateCoordinator = data.coordinators[meter.get_meter_id()]
+        last_readings[meter.get_meter_id()] = coordinator.data.__dict__
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT_CONFIG_ENTRY),
