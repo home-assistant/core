@@ -55,6 +55,7 @@ from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
+CONF_ADJUSTMENT = "adjustment"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
@@ -65,6 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
         vol.Optional(CONF_ALL): cv.boolean,
+        vol.Optional(CONF_ADJUSTMENT): cv.boolean,
     }
 )
 
@@ -89,6 +91,7 @@ async def async_setup_platform(
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
                 config.get(CONF_ALL),
+                config.get(CONF_ADJUSTMENT),
             )
         ]
     )
@@ -105,9 +108,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_ENTITIES]
     )
     mode = config_entry.options.get(CONF_ALL, False)
+    adjustment = config_entry.options.get(CONF_ADJUSTMENT, False)
 
     async_add_entities(
-        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]
+        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode, adjustment)]
     )
 
 
@@ -138,7 +142,12 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: str | None
+        self,
+        unique_id: str | None,
+        name: str,
+        entity_ids: list[str],
+        mode: str | None,
+        adjustment: str | None
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
@@ -146,7 +155,9 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
+        self.adjustment = adjustment
         self.mode = any
+
         if mode:
             self.mode = all
 
@@ -172,7 +183,18 @@ class LightGroup(GroupEntity, LightEntity):
         data = {
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
-        data[ATTR_ENTITY_ID] = self._entity_ids
+
+        if(adjustment) {
+            # In this mode, we never turn_on a light unless it is already on.
+            ids = [
+                entity_id
+                for entity_id in self._entity_ids
+                if (state := self.hass.states.get(entity_id)) is not None and state.state == STATE_ON
+            ]
+            data[ATTR_ENTITY_ID] = ids
+        } else {
+            data[ATTR_ENTITY_ID] = self._entity_ids
+        }
 
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 

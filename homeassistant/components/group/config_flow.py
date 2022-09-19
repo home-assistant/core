@@ -20,6 +20,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
+from .light import CONF_ADJUSTMENT
 from .const import CONF_HIDE_MEMBERS
 
 
@@ -81,7 +82,8 @@ def light_switch_options_schema(
     return basic_group_options_schema(domain, handler, options).extend(
         {
             vol.Required(
-                CONF_ALL, default=False, description={"advanced": True}
+                CONF_ALL, default=False, description={"advanced": True},
+                CONF_ADJUSTMENT, default=False, description={"advanced": True},
             ): selector.BooleanSelector(),
         }
     )
