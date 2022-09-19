@@ -345,8 +345,10 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
         """Called when a ImportFrom node is visited."""
-        if node.level <= 1 or not current_package.startswith(
-            "homeassistant.components"
+        if (
+            node.level <= 1
+            or not current_package.startswith("homeassistant.components.")
+            and not current_package.startswith("tests.components.")
         ):
             return
         split_package = current_package.split(".")
@@ -372,18 +374,17 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         ):
             self.add_message("hass-relative-import", node=node)
             return
-        if self.current_package.startswith("homeassistant.components."):
-            current_component = self.current_package.split(".")[2]
-            if node.modname == "homeassistant.components":
-                for name in node.names:
-                    if name[0] == current_component:
-                        self.add_message("hass-relative-import", node=node)
-                return
-            if node.modname.startswith(
-                f"homeassistant.components.{current_component}."
-            ):
-                self.add_message("hass-relative-import", node=node)
-                return
+        for root in ("homeassistant", "tests"):
+            if self.current_package.startswith(f"{root}.components."):
+                current_component = self.current_package.split(".")[2]
+                if node.modname == f"{root}.components":
+                    for name in node.names:
+                        if name[0] == current_component:
+                            self.add_message("hass-relative-import", node=node)
+                    return
+                if node.modname.startswith(f"{root}.components.{current_component}."):
+                    self.add_message("hass-relative-import", node=node)
+                    return
         if node.modname.startswith("homeassistant.components.") and (
             node.modname.endswith(".const")
             or "const" in {names[0] for names in node.names}
