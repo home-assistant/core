@@ -115,7 +115,7 @@ async def async_setup_entry(
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
 
     entity_hourly = SmhiWeather(
-        f"{location[CONF_NAME]} hourly",
+        f"{location[CONF_NAME]}",
         location[CONF_LOCATION][CONF_LATITUDE],
         location[CONF_LOCATION][CONF_LONGITUDE],
         session=session,
@@ -149,8 +149,9 @@ class SmhiWeather(WeatherEntity):
         """Initialize the SMHI weather entity."""
         self._hourly = hourly
         self._attr_unique_id = (
-            f"{latitude}, {longitude}" + "-hourly" if hourly else ""
+            f"{latitude}, {longitude}-hourly" if hourly else f"{latitude}, {longitude}"
         )
+        self._attr_name = "hourly" if hourly else ""
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(longitude, latitude, session=session)
@@ -165,6 +166,11 @@ class SmhiWeather(WeatherEntity):
         )
         self._attr_condition = None
         self._attr_native_temperature = None
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._hourly
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -234,7 +240,7 @@ class SmhiWeather(WeatherEntity):
                 (k for k, v in CONDITION_CLASSES.items() if forecast.symbol in v), None
             )
 
-            data.append(
+            forecast_dict = Forecast(
                 {
                     ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
                     ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
@@ -244,11 +250,10 @@ class SmhiWeather(WeatherEntity):
                     ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
                     ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
                 }
-                | (
-                    {ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min}
-                    if not self._hourly
-                    else {}
-                )
             )
+            if not self._hourly:
+                forecast_dict[ATTR_FORECAST_NATIVE_TEMP_LOW] = forecast.temperature_min
+
+            data.append(forecast_dict)
 
         return data
