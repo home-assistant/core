@@ -9,10 +9,10 @@ from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
 )
 import pytest
 
-from homeassistant.components.select import DOMAIN
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
+    DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
