@@ -68,23 +68,23 @@ def mock_printer_api(hass):
 @pytest.fixture
 def mock_job_api_idle(hass):
     """Mock PrusaLink job API having no job."""
-    with patch(
-        "pyprusalink.PrusaLink.get_job",
-        return_value={
-            "state": "Operational",
-            "job": None,
-            "progress": None,
-        },
-    ):
-        yield
+    resp = {
+        "state": "Operational",
+        "job": None,
+        "progress": None,
+    }
+    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
+        yield resp
 
 
 @pytest.fixture
-def mock_job_api_active(hass):
-    """Mock PrusaLink job API having no job."""
-    with patch(
-        "pyprusalink.PrusaLink.get_job",
-        return_value={
+def mock_job_api_printing(hass, mock_printer_api, mock_job_api_idle):
+    """Mock PrusaLink printing."""
+    mock_printer_api["state"]["text"] = "Printing"
+    mock_printer_api["state"]["flags"]["printing"] = True
+
+    mock_job_api_idle.update(
+        {
             "state": "Printing",
             "job": {
                 "estimatedPrintTime": 117007,
@@ -99,9 +99,18 @@ def mock_job_api_active(hass):
                 "printTime": 43987,
                 "printTimeLeft": 73020,
             },
-        },
-    ):
-        yield
+        }
+    )
+
+
+@pytest.fixture
+def mock_job_api_paused(hass, mock_printer_api, mock_job_api_idle):
+    """Mock PrusaLink paused printing."""
+    mock_printer_api["state"]["text"] = "Paused"
+    mock_printer_api["state"]["flags"]["printing"] = False
+    mock_printer_api["state"]["flags"]["paused"] = True
+
+    mock_job_api_idle["state"] = "Paused"
 
 
 @pytest.fixture
