@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from tests.components.ruckus_unleashed import (
+from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,

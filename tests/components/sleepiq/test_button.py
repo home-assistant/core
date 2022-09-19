@@ -3,12 +3,7 @@ from homeassistant.components.button import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
-    BED_ID,
-    BED_NAME,
-    BED_NAME_LOWER,
-    setup_platform,
-)
+from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
 
 
 async def test_button_calibrate(hass, mock_asyncsleepiq):
