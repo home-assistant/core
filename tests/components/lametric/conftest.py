@@ -79,3 +79,18 @@ def mock_lametric_cloud_config_flow() -> Generator[MagicMock, None, None]:
             list[CloudDevice], load_fixture("cloud_devices.json", DOMAIN)
         )
         yield lametric
+
+
+@pytest.fixture
+def mock_lametric() -> Generator[MagicMock, None, None]:
+    """Return a mocked LaMetric client."""
+    with patch(
+        "homeassistant.components.lametric.coordinator.LaMetricDevice", autospec=True
+    ) as lametric_mock:
+        lametric = lametric_mock.return_value
+        lametric.api_key = "mock-api-key"
+        lametric.host = "127.0.0.1"
+        lametric.device.return_value = Device.parse_raw(
+            load_fixture("device.json", DOMAIN)
+        )
+        yield lametric
