@@ -3,12 +3,12 @@ pause_watering:
   name: Pause All Watering
   description: Pause all watering activities for a number of seconds
   fields:
-    device_id:
-      name: Controller
-      description: The controller whose watering activities should be paused
+    entry_id:
+      name: Config Entry
+      description: The configured instance of the RainMachine integration to use
       required: true
       selector:
-        device:
+        config_entry:
           integration: rainmachine
     seconds:
       name: Duration
@@ -23,12 +23,12 @@ restrict_watering:
   name: Restrict All Watering
   description: Restrict all watering activities from starting for a time period
   fields:
-    device_id:
-      name: Controller
-      description: The controller whose watering activities should be restricted
+    entry_id:
+      name: Config Entry
+      description: The configured instance of the RainMachine integration to use
       required: true
       selector:
-        device:
+        config_entry:
           integration: rainmachine
     duration:
       name: Duration
@@ -65,12 +65,12 @@ stop_all:
   name: Stop All Watering
   description: Stop all watering activities
   fields:
-    device_id:
-      name: Controller
-      description: The controller whose watering activities should be stopped
+    entry_id:
+      name: Config Entry
+      description: The configured instance of the RainMachine integration to use
       required: true
       selector:
-        device:
+        config_entry:
           integration: rainmachine
 stop_program:
   name: Stop Program
@@ -90,12 +90,12 @@ unpause_watering:
   name: Unpause All Watering
   description: Unpause all paused watering activities
   fields:
-    device_id:
-      name: Controller
-      description: The controller whose watering activities should be unpaused
+    entry_id:
+      name: Config Entry
+      description: The configured instance of the RainMachine integration to use
       required: true
       selector:
-        device:
+        config_entry:
           integration: rainmachine
 push_weather_data:
   name: Push Weather Data
@@ -107,12 +107,12 @@ push_weather_data:
 
     See details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post
   fields:
-    device_id:
-      name: Controller
-      description: The controller for the weather data to be pushed.
+    entry_id:
+      name: Config Entry
+      description: The configured instance of the RainMachine integration to use
       required: true
       selector:
-        device:
+        config_entry:
           integration: rainmachine
     timestamp:
       name: Timestamp
@@ -235,10 +235,10 @@ unrestrict_watering:
   name: Unrestrict All Watering
   description: Unrestrict all watering activities
   fields:
-    device_id:
-      name: Controller
-      description: The controller whose watering activities should be unrestricted
+    entry_id:
+      name: Config Entry
+      description: The configured instance of the RainMachine integration to use
       required: true
       selector:
-        device:
+        config_entry:
           integration: rainmachine

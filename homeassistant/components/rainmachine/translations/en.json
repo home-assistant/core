@@ -18,6 +18,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_selector_device_id": {
+            "description": "You recently called the `rainmachine.{called_service}` service with `device_id` as part of the data payload. This behavior is deprecated and will be removed.\n\nTo address this, update any automations or scripts that use this service to (1) remove the `device_id` parameter and (2) pass an `entry_id` parameter with a value of `{entry_id}`.",
+            "title": "RainMachine services now require a entry ID data parameter"
+        }
+    },
     "options": {
         "step": {
             "init": {

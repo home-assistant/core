@@ -31,6 +31,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 from homeassistant.util.dt import as_timestamp, utcnow
 from homeassistant.util.network import is_ip_address
@@ -66,6 +67,7 @@ PLATFORMS = [
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
 CONF_DURATION = "duration"
+CONF_ENTRY_ID = "entry_id"
 CONF_ET = "et"
 CONF_MAXRH = "maxrh"
 CONF_MAXTEMP = "maxtemp"
@@ -96,19 +98,32 @@ SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
 SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
 
-SERVICE_SCHEMA = vol.Schema(
+_SELECTOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Exclusive(CONF_DEVICE_ID, "selector"): cv.string,
+        vol.Exclusive(CONF_ENTRY_ID, "selector"): cv.string,
     }
 )
 
-SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
+
+def build_service_schema(extension: dict[str, Any] | None = None) -> vol.All:
+    """Build a service schema with the appropriate selector keys."""
+    if extension:
+        schema = _SELECTOR_SCHEMA.extend(extension)
+    else:
+        schema = _SELECTOR_SCHEMA
+    return vol.All(cv.has_at_least_one_key(CONF_DEVICE_ID, CONF_ENTRY_ID), schema)
+
+
+SERVICE_BASE_SCHEMA = build_service_schema()
+
+SERVICE_PAUSE_WATERING_SCHEMA = build_service_schema(
     {
         vol.Required(CONF_SECONDS): cv.positive_int,
     }
 )
 
-SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
+SERVICE_PUSH_WEATHER_DATA_SCHEMA = build_service_schema(
     {
         vol.Optional(CONF_TIMESTAMP): cv.positive_float,
         vol.Optional(CONF_MINTEMP): CV_WX_DATA_VALID_TEMP_RANGE,
@@ -127,7 +142,7 @@ SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
     }
 )
 
-SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
+SERVICE_RESTRICT_WATERING_SCHEMA = build_service_schema(
     {
         vol.Required(CONF_DURATION): cv.time_period,
     }
@@ -291,13 +306,22 @@ async def async_setup_entry(  # noqa: C901
     def call_with_controller(update_programs_and_zones: bool = True) -> Callable:
         """Hydrate a service call with the appropriate controller."""
 
-        def decorator(func: Callable) -> Callable[..., Awaitable]:
+        def decorator(func: Callable) -> Callable[[ServiceCall], Awaitable[None]]:
             """Define the decorator."""
 
             @wraps(func)
             async def wrapper(call: ServiceCall) -> None:
                 """Wrap the service function."""
-                entry = async_get_entry_for_service_call(hass, call)
+                entry: ConfigEntry | None = None
+
+                if CONF_DEVICE_ID in call.data:
+                    entry = async_get_entry_for_service_call(hass, call)
+                else:
+                    entry_id = call.data[CONF_ENTRY_ID]
+                    entry = hass.config_entries.async_get_entry(entry_id)
+                    if not entry:
+                        raise ValueError(f"No controller for entry ID: {entry_id}")
+
                 data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
                 try:
@@ -314,12 +338,42 @@ async def async_setup_entry(  # noqa: C901
 
         return decorator
 
+    def warn_on_deprecated_device_id_usage(
+        func: Callable[[ServiceCall, Controller], Awaitable[None]],
+    ) -> Callable[[ServiceCall, Controller], Awaitable[None]]:
+        """Warn on the use of a deprecated device ID selector in a service call."""
+
+        @wraps(func)
+        def wrapper(call: ServiceCall, controller: Controller) -> Awaitable[None]:
+            """Wrap the service function."""
+            if CONF_DEVICE_ID in call.data:
+                entry = async_get_entry_for_service_call(hass, call)
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_service_selector_device_id_{call.service}",
+                    breaks_in_ha_version="2022.12.0",
+                    is_fixable=False,
+                    is_persistent=True,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_service_selector_device_id",
+                    translation_placeholders={
+                        "called_service": call.service,
+                        "entry_id": entry.entry_id,
+                    },
+                )
+            return func(call, controller)
+
+        return wrapper
+
     @call_with_controller()
+    @warn_on_deprecated_device_id_usage
     async def async_pause_watering(call: ServiceCall, controller: Controller) -> None:
         """Pause watering for a set number of seconds."""
         await controller.watering.pause_all(call.data[CONF_SECONDS])
 
     @call_with_controller(update_programs_and_zones=False)
+    @warn_on_deprecated_device_id_usage
     async def async_push_weather_data(
         call: ServiceCall, controller: Controller
     ) -> None:
@@ -337,6 +391,7 @@ async def async_setup_entry(  # noqa: C901
         )
 
     @call_with_controller()
+    @warn_on_deprecated_device_id_usage
     async def async_restrict_watering(
         call: ServiceCall, controller: Controller
     ) -> None:
@@ -350,16 +405,19 @@ async def async_setup_entry(  # noqa: C901
         )
 
     @call_with_controller()
+    @warn_on_deprecated_device_id_usage
     async def async_stop_all(call: ServiceCall, controller: Controller) -> None:
         """Stop all watering."""
         await controller.watering.stop_all()
 
     @call_with_controller()
+    @warn_on_deprecated_device_id_usage
     async def async_unpause_watering(call: ServiceCall, controller: Controller) -> None:
         """Unpause watering."""
         await controller.watering.unpause_all()
 
     @call_with_controller()
+    @warn_on_deprecated_device_id_usage
     async def async_unrestrict_watering(
         call: ServiceCall, controller: Controller
     ) -> None:
@@ -387,11 +445,11 @@ async def async_setup_entry(  # noqa: C901
             SERVICE_RESTRICT_WATERING_SCHEMA,
             async_restrict_watering,
         ),
-        (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
-        (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
+        (SERVICE_NAME_STOP_ALL, SERVICE_BASE_SCHEMA, async_stop_all),
+        (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_BASE_SCHEMA, async_unpause_watering),
         (
             SERVICE_NAME_UNRESTRICT_WATERING,
-            SERVICE_SCHEMA,
+            SERVICE_BASE_SCHEMA,
             async_unrestrict_watering,
         ),
     ):
