@@ -135,22 +135,29 @@ def test_bad_import(
 
 
 @pytest.mark.parametrize(
-    "import_node",
+    "import_node,module_name",
     [
-        "from homeassistant.components import climate",
-        "from homeassistant.components.climate import ClimateEntityFeature",
+        (
+            "from homeassistant.components import climate",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate import ClimateEntityFeature",
+            "homeassistant.components.pylint_test.climate",
+        ),
     ],
 )
 def test_good_root_import(
     linter: UnittestLinter,
     imports_checker: BaseChecker,
     import_node: str,
+    module_name: str,
 ) -> None:
     """Ensure bad root imports are rejected."""
 
     node = astroid.extract_node(
         f"{import_node} #@",
-        "homeassistant.components.pylint_test.climate",
+        module_name,
     )
     imports_checker.visit_module(node.parent)
 
@@ -162,23 +169,33 @@ def test_good_root_import(
 
 
 @pytest.mark.parametrize(
-    "import_node",
+    "import_node,module_name",
     [
-        "import homeassistant.components.climate.const as climate",
-        "from homeassistant.components.climate import const",
-        "from homeassistant.components.climate.const import ClimateEntityFeature",
+        (
+            "import homeassistant.components.climate.const as climate",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate import const",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.components.climate.const import ClimateEntityFeature",
+            "homeassistant.components.pylint_test.climate",
+        ),
     ],
 )
 def test_bad_root_import(
     linter: UnittestLinter,
     imports_checker: BaseChecker,
     import_node: str,
+    module_name: str,
 ) -> None:
     """Ensure bad root imports are rejected."""
 
     node = astroid.extract_node(
         f"{import_node} #@",
-        "homeassistant.components.pylint_test.climate",
+        module_name,
     )
     imports_checker.visit_module(node.parent)
 
