@@ -283,7 +283,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, info, user_input)
-            except (aiohttp.ClientResponseError, aioshelly.exceptions.InvalidAuthError):
+            except (
+                aiohttp.ClientResponseError,
+                aioshelly.exceptions.InvalidAuthError,
+                asyncio.TimeoutError,
+                aiohttp.ClientError,
+            ):
                 return self.async_abort(reason="reauth_unsuccessful")
             else:
                 self.hass.config_entries.async_update_entry(
@@ -292,15 +297,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-        if self.entry.data.get("gen", 1) == 2:
-            schema = {
-                vol.Required(CONF_PASSWORD): str,
-            }
-        else:
-            schema = {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
+        schema = {vol.Required(CONF_PASSWORD): str}
+        if self.entry.data.get("gen", 1) == 1:
+            schema.update({vol.Required(CONF_USERNAME): str})
 
         return self.async_show_form(
             step_id="reauth_confirm",
