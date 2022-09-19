@@ -93,6 +93,7 @@ class TrainSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -106,7 +107,6 @@ class TrainSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self._train_api = train_api
-        self._attr_name = name
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
