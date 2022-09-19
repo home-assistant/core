@@ -6,8 +6,10 @@ from collections.abc import Coroutine
 from datetime import timedelta
 from typing import Any, Final, cast
 
+from aiohttp import ClientResponseError
 import aioshelly
 from aioshelly.block_device import BlockDevice
+from aioshelly.exceptions import AuthRequired
 from aioshelly.rpc_device import RpcDevice
 import async_timeout
 import voluptuous as vol
@@ -22,7 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
@@ -197,6 +199,9 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
             ) from err
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
+        except ClientResponseError as err:
+            if err.status == 401:
+                raise ConfigEntryAuthFailed from err
 
         async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
@@ -280,9 +285,12 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
-            update_interval = (
-                UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
-            )
+            try:
+                update_interval = (
+                    UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+                )
+            except AuthRequired as err:
+                raise ConfigEntryAuthFailed from err
 
         device_name = (
             get_block_device_name(device) if device.initialized else entry.title
