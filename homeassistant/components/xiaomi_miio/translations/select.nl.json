@@ -4,6 +4,11 @@
             "bright": "Helder",
             "dim": "Dim",
             "off": "Uit"
+        },
+        "xiaomi_miio__ptc_level": {
+            "high": "Hoog",
+            "low": "Laag",
+            "medium": "Medium"
         }
     }
 }

@@ -16,5 +16,16 @@
                 "title": "Configureer \nFlu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Flu Near You verwijderen"
+                    }
+                }
+            }
+        }
     }
 }

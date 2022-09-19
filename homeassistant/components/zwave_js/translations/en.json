@@ -91,6 +91,12 @@
             "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue.",
+            "title": "Newer version of Z-Wave JS Server needed"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
