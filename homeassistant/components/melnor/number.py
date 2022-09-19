@@ -1,4 +1,4 @@
-"""Switch support for Melnor Bluetooth water timer."""
+"""Number support for Melnor Bluetooth water timer."""
 
 from __future__ import annotations
 
@@ -15,7 +15,11 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .models import MelnorDataUpdateCoordinator, MelnorZoneEntity
+from .models import (
+    MelnorDataUpdateCoordinator,
+    MelnorZoneEntity,
+    get_entities_for_valves,
+)
 
 
 @dataclass
@@ -30,12 +34,11 @@ class MelnorZoneNumberEntityDescriptionMixin:
 class MelnorZoneNumberEntityDescription(
     NumberEntityDescription, MelnorZoneNumberEntityDescriptionMixin
 ):
-    """Describes Melnor switch entity."""
+    """Describes Melnor number entity."""
 
 
-numbers = [
+ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneNumberEntityDescription] = [
     MelnorZoneNumberEntityDescription(
-        # native_unit_of_measurement="minutes",
         entity_category=EntityCategory.CONFIG,
         native_max_value=360,
         native_min_value=1,
@@ -51,47 +54,40 @@ numbers = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the switch platform."""
-    entities: list[MelnorZoneNumber] = []
+    """Set up the number platform."""
 
     coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # This device may not have 4 valves total, but the library will only expose the right number of valves
-    for i in range(1, 5):
-        valve = coordinator.data[f"zone{i}"]
-
-        if valve is not None:
-
-            for description in numbers:
-                entities.append(MelnorZoneNumber(coordinator, valve, description))
-
-    async_add_devices(entities)
+    async_add_entities(
+        get_entities_for_valves(
+            coordinator,
+            ZONE_ENTITY_DESCRIPTIONS,
+            lambda valve, description: MelnorZoneNumber(
+                coordinator, description, valve
+            ),
+        )
+    )
 
 
 class MelnorZoneNumber(MelnorZoneEntity, NumberEntity):
-    """A switch implementation for a melnor device."""
+    """A number implementation for a melnor device."""
 
     entity_description: MelnorZoneNumberEntityDescription
 
     def __init__(
         self,
         coordinator: MelnorDataUpdateCoordinator,
-        valve: Valve,
         entity_description: MelnorZoneNumberEntityDescription,
+        valve: Valve,
     ) -> None:
-        """Initialize a switch for a melnor device."""
-        super().__init__(coordinator, valve)
-
-        self._attr_unique_id = (
-            f"{self._device.mac}-zone{valve.id}-{entity_description.key}"
-        )
-        self.entity_description = entity_description
+        """Initialize a number for a melnor device."""
+        super().__init__(coordinator, entity_description, valve)
 
     @property
     def native_value(self) -> float | None:
-        """Return true if device is on."""
+        """Return the current value."""
         return self._valve.manual_watering_minutes
 
     async def async_set_native_value(self, value: float) -> None:
