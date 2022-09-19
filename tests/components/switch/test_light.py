@@ -6,8 +6,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.setup import async_setup_component
 
+from . import common as switch_common
+
 from tests.components.light import common
-from tests.components.switch import common as switch_common
 
 
 async def test_default_state(hass):
