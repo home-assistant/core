@@ -114,11 +114,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Volvo On Call component from a ConfigEntry."""
 
-    if CONF_UNIT_SYSTEM not in entry.data.keys():
+    # added CONF_UNIT_SYSTEM / deprecated CONF_SCANDINAVIAN_MILES in 2022.10 to support imperial units
+    if CONF_UNIT_SYSTEM not in entry.data:
         new_conf = {**entry.data}
 
         scandinavian_miles: bool = entry.data[CONF_SCANDINAVIAN_MILES]
-        new_conf.pop(CONF_SCANDINAVIAN_MILES)
 
         new_conf[CONF_UNIT_SYSTEM] = (
             UNIT_SYSTEM_SCANDINAVIAN_MILES if scandinavian_miles else UNIT_SYSTEM_METRIC
