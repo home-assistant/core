@@ -194,12 +194,15 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
+                await device.update_status()
         except asyncio.TimeoutError as err:
             raise ConfigEntryNotReady(
                 str(err) or "Timeout during device setup"
             ) from err
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
+        except AuthRequired as err:
+            raise ConfigEntryAuthFailed from err
         except ClientResponseError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from err
@@ -288,12 +291,9 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
-            try:
-                update_interval = (
-                    UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
-                )
-            except AuthRequired as err:
-                raise ConfigEntryAuthFailed from err
+            update_interval = (
+                UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+            )
 
         device_name = (
             get_block_device_name(device) if device.initialized else entry.title
