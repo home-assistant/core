@@ -108,6 +108,12 @@ def test_good_import(
             "CONSTANT",
             "hass-relative-import",
         ),
+        (
+            "tests.components.pylint_test.api.hub",
+            "...const",
+            "CONSTANT",
+            "hass-absolute-import",
+        ),
     ],
 )
 def test_bad_import(
