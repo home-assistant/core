@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import math
+from datetime import datetime
 from typing import Any
 
 from melnor_bluetooth.device import Device, Valve
@@ -15,11 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TIME_MINUTES,
-)
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,18 +31,15 @@ from .models import (
 )
 
 
-def watering_seconds_left(valve: Valve) -> float:
+def watering_seconds_left(valve: Valve) -> datetime | None:
     """Calculate the number of minutes left in the current watering cycle."""
 
-    seconds_remaining = math.ceil(
-        (dt_util.utc_from_timestamp(valve.watering_end_time) - dt_util.now()).seconds
-        / 60
-    )
+    if valve.is_watering is not True or dt_util.now() > dt_util.utc_from_timestamp(
+        valve.watering_end_time
+    ):
+        return None
 
-    if valve.is_watering is not True or seconds_remaining > 360 * 60:
-        return 0
-
-    return seconds_remaining
+    return dt_util.utc_from_timestamp(valve.watering_end_time)
 
 
 @dataclass
@@ -101,11 +94,9 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
 
 ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
     MelnorZoneSensorEntityDescription(
-        device_class=SensorDeviceClass.DURATION,
-        key="minutes_remaining",
-        name="Time Remaining",
-        native_unit_of_measurement=TIME_MINUTES,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        key="manual_cycle_end",
+        name="Manual Cycle End",
         state_fn=watering_seconds_left,
     ),
 ]
