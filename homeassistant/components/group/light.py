@@ -184,7 +184,7 @@ class LightGroup(GroupEntity, LightEntity):
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
 
-        if(adjustment) {
+        if(self.adjustment) {
             # In this mode, we never turn_on a light unless it is already on.
             ids = [
                 entity_id
