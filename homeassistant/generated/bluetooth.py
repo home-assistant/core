@@ -281,6 +281,13 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "tilt_ble",
         "manufacturer_id": 76,
+        "manufacturer_data_start": [
+            2,
+            21,
+            164,
+            149,
+            187,
+        ],
     },
     {
         "domain": "xiaomi_ble",
