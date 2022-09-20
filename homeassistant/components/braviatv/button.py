@@ -1,7 +1,7 @@
 """Button support for Bravia TV."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 
 from homeassistant.components.button import (
@@ -23,7 +23,7 @@ from .entity import BraviaTVEntity
 class BraviaTVButtonDescriptionMixin:
     """Mixin to describe a Bravia TV Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[BraviaTVCoordinator], Coroutine]
 
 
 @dataclass
