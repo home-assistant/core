@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from abc import ABC
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
@@ -20,31 +20,31 @@ from .helper import Plenticore, SelectDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class SelectData(NamedTuple):
-    """Representation of a SelectData tuple."""
+@dataclass
+class PlenticoreRequiredKeysMixin:
+    """A class that describes required properties for plenticore select entities."""
 
     module_id: str
-    data_id: str
-    name: str
-    options: list
-    is_on: str
+    options: list[str]
 
 
-# Defines all entities for select widgets.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - options
-#  - entity is enabled by default (bool)
+@dataclass
+class PlenticoreSelectEntityDescription(
+    SelectEntityDescription, PlenticoreRequiredKeysMixin
+):
+    """A class that describes plenticore select entities."""
+
+
 SELECT_SETTINGS_DATA = [
-    SelectData(
-        "devices:local",
-        "battery_charge",
-        "Battery Charging / Usage mode",
-        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
-        "1",
+    PlenticoreSelectEntityDescription(
+        module_id="devices:local",
+        key="battery_charge",
+        name="Battery Charging / Usage mode",
+        options=[
+            "None",
+            "Battery:SmartBatteryControl:Enable",
+            "Battery:TimeControl:Enable",
+        ],
     )
 ]
 
@@ -81,11 +81,10 @@ async def async_setup_entry(
                 platform_name=entry.title,
                 device_class="kostal_plenticore__battery",
                 module_id=select.module_id,
-                data_id=select.data_id,
+                data_id=select.key,
                 name=select.name,
                 current_option="None",
                 options=select.options,
-                is_on=select.is_on,
                 device_info=plenticore.device_info,
                 unique_id=f"{entry.entry_id}_{select.module_id}",
             )
@@ -101,16 +100,15 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: SelectDataUpdateCoordinator,
         entry_id: str,
         platform_name: str,
         device_class: str | None,
         module_id: str,
         data_id: str,
-        name: str,
+        name: str | None,
         current_option: str | None,
         options: list[str],
-        is_on: str,
         device_info: DeviceInfo,
         unique_id: str,
     ) -> None:
@@ -124,7 +122,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         self._attr_options = options
         self.all_options = options
         self._attr_current_option = current_option
-        self._is_on = is_on
         self._device_info = device_info
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = unique_id
