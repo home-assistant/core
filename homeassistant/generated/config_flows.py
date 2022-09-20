@@ -204,6 +204,7 @@ FLOWS = {
         "laundrify",
         "led_ble",
         "lg_soundbar",
+        "lidarr",
         "life360",
         "lifx",
         "litejet",
