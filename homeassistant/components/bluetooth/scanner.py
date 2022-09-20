@@ -25,6 +25,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.package import is_docker_env
 
 from .const import (
+    DEFAULT_ADDRESS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
@@ -132,7 +133,7 @@ class HaScanner(BaseHaScanner):
         self._start_time = 0.0
         self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
-        self.source = self.adapter or SOURCE_LOCAL
+        self.source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
