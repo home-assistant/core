@@ -51,23 +51,33 @@ MACHINE_STATE = {
     MachineState.SystemInit: "System Initialize",
 }
 
+WASHER_STATE = {
+    0: "Cycle Filling",
+    1: "Cycle Rinsing",
+    2: "Cycle Sensing",
+    3: "Cycle Soaking",
+    4: "Cycle Spinning",
+    5: "Cycle Washing",
+}
+
+CYCLE_FUNC = [
+    WasherDryer.get_cycle_status_filling,
+    WasherDryer.get_cycle_status_rinsing,
+    WasherDryer.get_cycle_status_sensing,
+    WasherDryer.get_cycle_status_soaking,
+    WasherDryer.get_cycle_status_spinning,
+    WasherDryer.get_cycle_status_washing,
+]
+
 
 def washer_state(washer: WasherDryer) -> str | None:
     """Determine correct states for a washer."""
     machine_state = washer.get_machine_state()
     machine_cycle = None
-    if washer.get_cycle_status_filling():
-        machine_cycle = "Cycle Filling"
-    if washer.get_cycle_status_rinsing():
-        machine_cycle = "Cycle Rinsing"
-    if washer.get_cycle_status_sensing():
-        machine_cycle = "Cycle Sensing"
-    if washer.get_cycle_status_soaking():
-        machine_cycle = "Cycle Soaking"
-    if washer.get_cycle_status_spinning():
-        machine_cycle = "Cycle Spinning"
-    if washer.get_cycle_status_washing():
-        machine_cycle = "Cycle Washing"
+    for count, func in zip(range(len(CYCLE_FUNC)), CYCLE_FUNC):
+        if func(washer):
+            machine_cycle = WASHER_STATE.get(count)
+            break
 
     if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
         machine_cycle = "Door open"
