@@ -9,10 +9,21 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
+import homeassistant.util.pressure as pressure_util
+import homeassistant.util.temperature as temperature_util
 
 from .const import MAX_QUEUE_BACKLOG
 from .statistics import (
@@ -47,15 +58,18 @@ def _ws_get_statistics_during_period(
     hass: HomeAssistant,
     msg_id: int,
     start_time: dt,
-    end_time: dt | None = None,
-    statistic_ids: list[str] | None = None,
-    period: Literal["5minute", "day", "hour", "month"] = "hour",
+    end_time: dt | None,
+    statistic_ids: list[str] | None,
+    period: Literal["5minute", "day", "hour", "month"],
+    units: dict[str, str],
 ) -> str:
     """Fetch statistics and convert them to json in the executor."""
     return JSON_DUMP(
         messages.result_message(
             msg_id,
-            statistics_during_period(hass, start_time, end_time, statistic_ids, period),
+            statistics_during_period(
+                hass, start_time, end_time, statistic_ids, period, units=units
+            ),
         )
     )
 
@@ -91,6 +105,7 @@ async def ws_handle_get_statistics_during_period(
             end_time,
             msg.get("statistic_ids"),
             msg.get("period"),
+            msg.get("units"),
         )
     )
 
@@ -102,6 +117,17 @@ async def ws_handle_get_statistics_during_period(
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
         vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
+        vol.Optional("units"): vol.Schema(
+            {
+                vol.Optional("energy"): vol.Any(
+                    ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR
+                ),
+                vol.Optional("power"): vol.Any(POWER_WATT, POWER_KILO_WATT),
+                vol.Optional("pressure"): vol.In(pressure_util.VALID_UNITS),
+                vol.Optional("temperature"): vol.In(temperature_util.VALID_UNITS),
+                vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+            }
+        ),
     }
 )
 @websocket_api.async_response
@@ -236,13 +262,18 @@ def ws_update_statistics_metadata(
         vol.Required("statistic_id"): str,
         vol.Required("start_time"): str,
         vol.Required("adjustment"): vol.Any(float, int),
+        vol.Required("display_unit"): vol.Any(str, None),
     }
 )
-@callback
-def ws_adjust_sum_statistics(
+@websocket_api.async_response
+async def ws_adjust_sum_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Adjust sum statistics."""
+    """Adjust sum statistics.
+
+    If the statistics is stored as kWh, it's allowed to make an adjustment in Wh or MWh
+    If the statistics is stored as m³, it's allowed to make an adjustment in ft³
+    """
     start_time_str = msg["start_time"]
 
     if start_time := dt_util.parse_datetime(start_time_str):
@@ -251,8 +282,38 @@ def ws_adjust_sum_statistics(
         connection.send_error(msg["id"], "invalid_start_time", "Invalid start time")
         return
 
+    instance = get_instance(hass)
+    metadatas = await instance.async_add_executor_job(
+        list_statistic_ids, hass, (msg["statistic_id"],)
+    )
+    if not metadatas:
+        connection.send_error(msg["id"], "unknown_statistic_id", "Unknown statistic ID")
+        return
+    metadata = metadatas[0]
+
+    def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
+        if statistics_unit == display_unit:
+            return True
+        if statistics_unit == ENERGY_KILO_WATT_HOUR and display_unit in (
+            ENERGY_MEGA_WATT_HOUR,
+            ENERGY_WATT_HOUR,
+        ):
+            return True
+        if statistics_unit == VOLUME_CUBIC_METERS and display_unit == VOLUME_CUBIC_FEET:
+            return True
+        return False
+
+    stat_unit = metadata["statistics_unit_of_measurement"]
+    if not valid_units(stat_unit, msg["display_unit"]):
+        connection.send_error(
+            msg["id"],
+            "invalid_units",
+            f"Can't convert {stat_unit} to {msg['display_unit']}",
+        )
+        return
+
     get_instance(hass).async_adjust_statistics(
-        msg["statistic_id"], start_time, msg["adjustment"]
+        msg["statistic_id"], start_time, msg["adjustment"], msg["display_unit"]
     )
     connection.send_result(msg["id"])
 
@@ -286,7 +347,7 @@ def ws_adjust_sum_statistics(
 def ws_import_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Adjust sum statistics."""
+    """Import statistics."""
     metadata = msg["metadata"]
     stats = msg["stats"]
     metadata["state_unit_of_measurement"] = metadata["unit_of_measurement"]
