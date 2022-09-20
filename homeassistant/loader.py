@@ -23,6 +23,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from . import generated
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
@@ -254,13 +255,14 @@ async def async_get_config_flows_v2(
     hass: HomeAssistant,
 ) -> dict[str, Any]:
     """Return cached list of config flows."""
-    # pylint: disable=import-outside-toplevel
-    from .generated.config_flows_v2 import FLOWS
+    for base in generated.__path__:
+        config_flow_path = pathlib.Path(base) / "config_flows_v2.json"
+
+        if not config_flow_path.is_file():
+            continue
 
     integrations = await async_get_custom_components(hass)
-    flows: dict[str, Any] = {}
-
-    flows |= FLOWS
+    flows: dict[str, Any] = json_loads(config_flow_path.read_text())
 
     for integration in integrations.values():
         if not integration.config_flow:

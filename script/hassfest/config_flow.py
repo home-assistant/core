@@ -1,6 +1,7 @@
 """Generate config flow file."""
 from __future__ import annotations
 
+import json
 import pathlib
 
 import black
@@ -151,13 +152,13 @@ def _generate_v2(
                 metadata["translated_name"] = True
             primary_domains[integration.integration_type][domain] = metadata
 
-    return black.format_str(BASE.format(to_string(primary_domains)), mode=black.Mode())
+    return json.dumps(primary_domains, indent=2)
 
 
 def validate(integrations: dict[str, Integration], config: Config):
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
-    config_flow_v2_path = config.root / "homeassistant/generated/config_flows_v2.py"
+    config_flow_v2_path = config.root / "homeassistant/generated/config_flows_v2.json"
     config.cache["config_flow"] = content = _generate_and_validate(integrations, config)
 
     if config.specific_integrations:
@@ -182,7 +183,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         if fp.read() != content:
             config.add_error(
                 "config_flow",
-                "File config_flows_v2.py is not up to date. "
+                "File config_flows_v2.json is not up to date. "
                 "Run python3 -m script.hassfest",
                 fixable=True,
             )
@@ -191,8 +192,8 @@ def validate(integrations: dict[str, Integration], config: Config):
 def generate(integrations: dict[str, Integration], config: Config):
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
-    config_flow_v2_path = config.root / "homeassistant/generated/config_flows_v2.py"
+    config_flow_v2_path = config.root / "homeassistant/generated/config_flows_v2.json"
     with open(str(config_flow_path), "w") as fp:
         fp.write(f"{config.cache['config_flow']}")
     with open(str(config_flow_v2_path), "w") as fp:
-        fp.write(f"{config.cache['config_flow_v2']}")
+        fp.write(f"{config.cache['config_flow_v2']}\n")

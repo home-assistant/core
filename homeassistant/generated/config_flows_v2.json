@@ -1,0 +1,1431 @@
+{
+  "integration": {
+    "abode": {
+      "name": "Abode"
+    },
+    "accuweather": {
+      "name": "AccuWeather"
+    },
+    "acmeda": {
+      "name": "Rollease Acmeda Automate"
+    },
+    "adax": {
+      "name": "Adax"
+    },
+    "adguard": {
+      "name": "AdGuard Home"
+    },
+    "advantage_air": {
+      "name": "Advantage Air"
+    },
+    "aemet": {
+      "name": "AEMET OpenData"
+    },
+    "agent_dvr": {
+      "name": "Agent DVR"
+    },
+    "airly": {
+      "name": "Airly"
+    },
+    "airnow": {
+      "name": "AirNow"
+    },
+    "airthings": {
+      "name": "Airthings"
+    },
+    "airtouch4": {
+      "name": "AirTouch 4"
+    },
+    "airvisual": {
+      "name": "AirVisual"
+    },
+    "airzone": {
+      "name": "Airzone"
+    },
+    "aladdin_connect": {
+      "name": "Aladdin Connect"
+    },
+    "alarmdecoder": {
+      "name": "AlarmDecoder"
+    },
+    "almond": {
+      "name": "Almond"
+    },
+    "amberelectric": {
+      "name": "Amber Electric"
+    },
+    "ambiclimate": {
+      "name": "Ambiclimate"
+    },
+    "ambient_station": {
+      "name": "Ambient Weather Station"
+    },
+    "android_ip_webcam": {
+      "name": "Android IP Webcam"
+    },
+    "androidtv": {
+      "name": "Android TV"
+    },
+    "anthemav": {
+      "name": "Anthem A/V Receivers"
+    },
+    "apple_tv": {
+      "name": "Apple TV"
+    },
+    "arcam_fmj": {
+      "name": "Arcam FMJ Receivers"
+    },
+    "aseko_pool_live": {
+      "name": "Aseko Pool Live"
+    },
+    "asuswrt": {
+      "name": "ASUSWRT"
+    },
+    "atag": {
+      "name": "Atag"
+    },
+    "august": {
+      "name": "August"
+    },
+    "aurora": {
+      "name": "Aurora",
+      "translated_name": true
+    },
+    "aurora_abb_powerone": {
+      "name": "Aurora ABB PowerOne Solar PV"
+    },
+    "aussie_broadband": {
+      "name": "Aussie Broadband"
+    },
+    "awair": {
+      "name": "Awair"
+    },
+    "axis": {
+      "name": "Axis"
+    },
+    "azure_devops": {
+      "name": "Azure DevOps"
+    },
+    "azure_event_hub": {
+      "name": "Azure Event Hub"
+    },
+    "baf": {
+      "name": "Big Ass Fans"
+    },
+    "balboa": {
+      "name": "Balboa Spa Client"
+    },
+    "blebox": {
+      "name": "BleBox devices"
+    },
+    "blink": {
+      "name": "Blink"
+    },
+    "bluemaestro": {
+      "name": "BlueMaestro"
+    },
+    "bluetooth": {
+      "name": "Bluetooth"
+    },
+    "bmw_connected_drive": {
+      "name": "BMW Connected Drive"
+    },
+    "bond": {
+      "name": "Bond"
+    },
+    "bosch_shc": {
+      "name": "Bosch SHC"
+    },
+    "braviatv": {
+      "name": "Sony Bravia TV"
+    },
+    "broadlink": {
+      "name": "Broadlink"
+    },
+    "brother": {
+      "name": "Brother Printer"
+    },
+    "brunt": {
+      "name": "Brunt Blind Engine"
+    },
+    "bsblan": {
+      "name": "BSB-Lan"
+    },
+    "bthome": {
+      "name": "BTHome"
+    },
+    "buienradar": {
+      "name": "Buienradar"
+    },
+    "canary": {
+      "name": "Canary"
+    },
+    "cast": {
+      "name": "Google Cast"
+    },
+    "cert_expiry": {
+      "name": "Certificate Expiry",
+      "translated_name": true
+    },
+    "cloudflare": {
+      "name": "Cloudflare"
+    },
+    "co2signal": {
+      "name": "CO2 Signal"
+    },
+    "coinbase": {
+      "name": "Coinbase"
+    },
+    "control4": {
+      "name": "Control4"
+    },
+    "coolmaster": {
+      "name": "CoolMasterNet"
+    },
+    "coronavirus": {
+      "name": "Coronavirus (COVID-19)"
+    },
+    "cpuspeed": {
+      "name": "CPU Speed",
+      "translated_name": true
+    },
+    "crownstone": {
+      "name": "Crownstone"
+    },
+    "daikin": {
+      "name": "Daikin AC"
+    },
+    "deconz": {
+      "name": "deCONZ"
+    },
+    "deluge": {
+      "name": "Deluge"
+    },
+    "denonavr": {
+      "name": "Denon AVR Network Receivers"
+    },
+    "devolo_home_control": {
+      "name": "devolo Home Control"
+    },
+    "devolo_home_network": {
+      "name": "devolo Home Network"
+    },
+    "dexcom": {
+      "name": "Dexcom"
+    },
+    "dialogflow": {
+      "name": "Dialogflow"
+    },
+    "directv": {
+      "name": "DirecTV"
+    },
+    "discord": {
+      "name": "Discord"
+    },
+    "dlna_dmr": {
+      "name": "DLNA Digital Media Renderer"
+    },
+    "dlna_dms": {
+      "name": "DLNA Digital Media Server"
+    },
+    "dnsip": {
+      "name": "DNS IP"
+    },
+    "doorbird": {
+      "name": "DoorBird"
+    },
+    "dsmr": {
+      "name": "DSMR Slimme Meter"
+    },
+    "dsmr_reader": {
+      "name": "DSMR Reader"
+    },
+    "dunehd": {
+      "name": "Dune HD"
+    },
+    "dynalite": {
+      "name": "Philips Dynalite"
+    },
+    "eafm": {
+      "name": "Environment Agency Flood Gauges"
+    },
+    "ecobee": {
+      "name": "ecobee"
+    },
+    "econet": {
+      "name": "Rheem EcoNet Products"
+    },
+    "ecowitt": {
+      "name": "Ecowitt"
+    },
+    "efergy": {
+      "name": "Efergy"
+    },
+    "eight_sleep": {
+      "name": "Eight Sleep"
+    },
+    "elgato": {
+      "name": "Elgato Light"
+    },
+    "elkm1": {
+      "name": "Elk-M1 Control"
+    },
+    "elmax": {
+      "name": "Elmax"
+    },
+    "emonitor": {
+      "name": "SiteSage Emonitor"
+    },
+    "emulated_roku": {
+      "name": "Emulated Roku",
+      "translated_name": true
+    },
+    "enocean": {
+      "name": "EnOcean"
+    },
+    "enphase_envoy": {
+      "name": "Enphase Envoy"
+    },
+    "environment_canada": {
+      "name": "Environment Canada"
+    },
+    "epson": {
+      "name": "Epson"
+    },
+    "escea": {
+      "name": "Escea"
+    },
+    "esphome": {
+      "name": "ESPHome"
+    },
+    "evil_genius_labs": {
+      "name": "Evil Genius Labs"
+    },
+    "ezviz": {
+      "name": "Ezviz"
+    },
+    "faa_delays": {
+      "name": "FAA Delays"
+    },
+    "fibaro": {
+      "name": "Fibaro"
+    },
+    "filesize": {
+      "name": "File Size",
+      "translated_name": true
+    },
+    "fireservicerota": {
+      "name": "FireServiceRota"
+    },
+    "fivem": {
+      "name": "FiveM"
+    },
+    "fjaraskupan": {
+      "name": "Fj\u00e4r\u00e5skupan"
+    },
+    "flick_electric": {
+      "name": "Flick Electric"
+    },
+    "flipr": {
+      "name": "Flipr"
+    },
+    "flo": {
+      "name": "Flo"
+    },
+    "flume": {
+      "name": "Flume"
+    },
+    "flux_led": {
+      "name": "Magic Home"
+    },
+    "forecast_solar": {
+      "name": "Forecast.Solar"
+    },
+    "forked_daapd": {
+      "name": "forked-daapd"
+    },
+    "foscam": {
+      "name": "Foscam"
+    },
+    "freebox": {
+      "name": "Freebox"
+    },
+    "freedompro": {
+      "name": "Freedompro"
+    },
+    "fritz": {
+      "name": "AVM FRITZ!Box Tools"
+    },
+    "fritzbox": {
+      "name": "AVM FRITZ!SmartHome"
+    },
+    "fritzbox_callmonitor": {
+      "name": "AVM FRITZ!Box Call Monitor"
+    },
+    "fronius": {
+      "name": "Fronius"
+    },
+    "fully_kiosk": {
+      "name": "Fully Kiosk Browser"
+    },
+    "garages_amsterdam": {
+      "name": "Garages Amsterdam",
+      "translated_name": true
+    },
+    "gdacs": {
+      "name": "Global Disaster Alert and Coordination System (GDACS)"
+    },
+    "generic": {
+      "name": "Generic Camera"
+    },
+    "geocaching": {
+      "name": "Geocaching"
+    },
+    "geofency": {
+      "name": "Geofency"
+    },
+    "geonetnz_quakes": {
+      "name": "GeoNet NZ Quakes"
+    },
+    "geonetnz_volcano": {
+      "name": "GeoNet NZ Volcano"
+    },
+    "gios": {
+      "name": "GIO\u015a"
+    },
+    "github": {
+      "name": "GitHub"
+    },
+    "glances": {
+      "name": "Glances"
+    },
+    "goalzero": {
+      "name": "Goal Zero Yeti"
+    },
+    "gogogate2": {
+      "name": "Gogogate2 and ismartgate"
+    },
+    "goodwe": {
+      "name": "GoodWe Inverter"
+    },
+    "google": {
+      "name": "Google",
+      "integrations": {
+        "google": {
+          "name": "Google Calendars"
+        },
+        "google_sheets": {
+          "name": "Google Sheets"
+        }
+      }
+    },
+    "google_travel_time": {
+      "name": "Google Maps Travel Time",
+      "translated_name": true
+    },
+    "govee_ble": {
+      "name": "Govee Bluetooth"
+    },
+    "gpslogger": {
+      "name": "GPSLogger"
+    },
+    "gree": {
+      "name": "Gree Climate"
+    },
+    "growatt_server": {
+      "name": "Growatt",
+      "translated_name": true
+    },
+    "guardian": {
+      "name": "Elexa Guardian"
+    },
+    "habitica": {
+      "name": "Habitica"
+    },
+    "hangouts": {
+      "name": "Google Chat"
+    },
+    "harmony": {
+      "name": "Logitech Harmony Hub"
+    },
+    "heos": {
+      "name": "Denon HEOS"
+    },
+    "here_travel_time": {
+      "name": "HERE Travel Time"
+    },
+    "hisense_aehw4a1": {
+      "name": "Hisense AEH-W4A1"
+    },
+    "hive": {
+      "name": "Hive"
+    },
+    "hlk_sw16": {
+      "name": "Hi-Link HLK-SW16"
+    },
+    "home_connect": {
+      "name": "Home Connect"
+    },
+    "home_plus_control": {
+      "name": "Legrand Home+ Control"
+    },
+    "homekit": {
+      "name": "HomeKit"
+    },
+    "homekit_controller": {
+      "name": "HomeKit Controller",
+      "translated_name": true
+    },
+    "homematicip_cloud": {
+      "name": "HomematicIP Cloud"
+    },
+    "homewizard": {
+      "name": "HomeWizard Energy"
+    },
+    "honeywell": {
+      "name": "Honeywell Total Connect Comfort (US)"
+    },
+    "huawei_lte": {
+      "name": "Huawei LTE"
+    },
+    "hue": {
+      "name": "Philips Hue"
+    },
+    "huisbaasje": {
+      "name": "Huisbaasje"
+    },
+    "hunterdouglas_powerview": {
+      "name": "Hunter Douglas PowerView"
+    },
+    "hvv_departures": {
+      "name": "HVV Departures"
+    },
+    "hyperion": {
+      "name": "Hyperion"
+    },
+    "ialarm": {
+      "name": "Antifurto365 iAlarm"
+    },
+    "iaqualink": {
+      "name": "Jandy iAqualink"
+    },
+    "ibeacon": {
+      "name": "iBeacon Tracker"
+    },
+    "icloud": {
+      "name": "Apple iCloud"
+    },
+    "ifttt": {
+      "name": "IFTTT"
+    },
+    "inkbird": {
+      "name": "INKBIRD"
+    },
+    "insteon": {
+      "name": "Insteon"
+    },
+    "intellifire": {
+      "name": "IntelliFire"
+    },
+    "ios": {
+      "name": "Home Assistant iOS"
+    },
+    "iotawatt": {
+      "name": "IoTaWatt"
+    },
+    "ipma": {
+      "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)"
+    },
+    "ipp": {
+      "name": "Internet Printing Protocol (IPP)"
+    },
+    "iqvia": {
+      "name": "IQVIA"
+    },
+    "islamic_prayer_times": {
+      "name": "Islamic Prayer Times",
+      "translated_name": true
+    },
+    "iss": {
+      "name": "International Space Station (ISS)"
+    },
+    "isy994": {
+      "name": "Universal Devices ISY994"
+    },
+    "izone": {
+      "name": "iZone"
+    },
+    "jellyfin": {
+      "name": "Jellyfin"
+    },
+    "juicenet": {
+      "name": "JuiceNet"
+    },
+    "justnimbus": {
+      "name": "JustNimbus"
+    },
+    "kaleidescape": {
+      "name": "Kaleidescape"
+    },
+    "keenetic_ndms2": {
+      "name": "Keenetic NDMS2 Router"
+    },
+    "kegtron": {
+      "name": "Kegtron"
+    },
+    "keymitt_ble": {
+      "name": "Keymitt MicroBot Push"
+    },
+    "kmtronic": {
+      "name": "KMtronic"
+    },
+    "knx": {
+      "name": "KNX"
+    },
+    "kodi": {
+      "name": "Kodi"
+    },
+    "konnected": {
+      "name": "Konnected.io"
+    },
+    "kostal_plenticore": {
+      "name": "Kostal Plenticore Solar Inverter"
+    },
+    "kraken": {
+      "name": "Kraken"
+    },
+    "kulersky": {
+      "name": "Kuler Sky"
+    },
+    "lacrosse_view": {
+      "name": "LaCrosse View"
+    },
+    "lametric": {
+      "name": "LaMetric"
+    },
+    "landisgyr_heat_meter": {
+      "name": "Landis+Gyr Heat Meter"
+    },
+    "launch_library": {
+      "name": "Launch Library"
+    },
+    "laundrify": {
+      "name": "laundrify"
+    },
+    "led_ble": {
+      "name": "LED BLE"
+    },
+    "lg_soundbar": {
+      "name": "LG Soundbars"
+    },
+    "lidarr": {
+      "name": "Lidarr"
+    },
+    "life360": {
+      "name": "Life360"
+    },
+    "lifx": {
+      "name": "LIFX"
+    },
+    "litejet": {
+      "name": "LiteJet"
+    },
+    "litterrobot": {
+      "name": "Litter-Robot"
+    },
+    "local_ip": {
+      "name": "Local IP Address",
+      "translated_name": true
+    },
+    "locative": {
+      "name": "Locative"
+    },
+    "logi_circle": {
+      "name": "Logi Circle"
+    },
+    "lookin": {
+      "name": "LOOKin"
+    },
+    "luftdaten": {
+      "name": "Sensor.Community"
+    },
+    "lutron_caseta": {
+      "name": "Lutron Cas\u00e9ta"
+    },
+    "lyric": {
+      "name": "Honeywell Lyric"
+    },
+    "mailgun": {
+      "name": "Mailgun"
+    },
+    "mazda": {
+      "name": "Mazda Connected Services"
+    },
+    "meater": {
+      "name": "Meater"
+    },
+    "melcloud": {
+      "name": "MELCloud"
+    },
+    "melnor": {
+      "name": "Melnor Bluetooth"
+    },
+    "met": {
+      "name": "Meteorologisk institutt (Met.no)"
+    },
+    "met_eireann": {
+      "name": "Met \u00c9ireann"
+    },
+    "meteo_france": {
+      "name": "M\u00e9t\u00e9o-France"
+    },
+    "meteoclimatic": {
+      "name": "Meteoclimatic"
+    },
+    "metoffice": {
+      "name": "Met Office"
+    },
+    "mikrotik": {
+      "name": "Mikrotik"
+    },
+    "mill": {
+      "name": "Mill"
+    },
+    "minecraft_server": {
+      "name": "Minecraft Server"
+    },
+    "mjpeg": {
+      "name": "MJPEG IP Camera"
+    },
+    "moat": {
+      "name": "Moat"
+    },
+    "mobile_app": {
+      "name": "Mobile App",
+      "translated_name": true
+    },
+    "modem_callerid": {
+      "name": "Phone Modem"
+    },
+    "modern_forms": {
+      "name": "Modern Forms"
+    },
+    "moehlenhoff_alpha2": {
+      "name": "M\u00f6hlenhoff Alpha 2",
+      "translated_name": true
+    },
+    "monoprice": {
+      "name": "Monoprice 6-Zone Amplifier"
+    },
+    "moon": {
+      "name": "Moon",
+      "translated_name": true
+    },
+    "motion_blinds": {
+      "name": "Motion Blinds"
+    },
+    "motioneye": {
+      "name": "motionEye"
+    },
+    "mqtt": {
+      "name": "MQTT"
+    },
+    "mullvad": {
+      "name": "Mullvad VPN"
+    },
+    "mutesync": {
+      "name": "mutesync"
+    },
+    "myq": {
+      "name": "MyQ"
+    },
+    "mysensors": {
+      "name": "MySensors"
+    },
+    "nam": {
+      "name": "Nettigo Air Monitor"
+    },
+    "nanoleaf": {
+      "name": "Nanoleaf"
+    },
+    "neato": {
+      "name": "Neato Botvac"
+    },
+    "nest": {
+      "name": "Nest"
+    },
+    "netatmo": {
+      "name": "Netatmo"
+    },
+    "netgear": {
+      "name": "NETGEAR"
+    },
+    "nexia": {
+      "name": "Nexia/American Standard/Trane"
+    },
+    "nextdns": {
+      "name": "NextDNS"
+    },
+    "nfandroidtv": {
+      "name": "Notifications for Android TV / Fire TV"
+    },
+    "nibe_heatpump": {
+      "name": "Nibe Heat Pump"
+    },
+    "nightscout": {
+      "name": "Nightscout"
+    },
+    "nina": {
+      "name": "NINA"
+    },
+    "nmap_tracker": {
+      "name": "Nmap Tracker",
+      "translated_name": true
+    },
+    "nobo_hub": {
+      "name": "Nob\u00f8 Ecohub"
+    },
+    "notion": {
+      "name": "Notion"
+    },
+    "nuheat": {
+      "name": "NuHeat"
+    },
+    "nuki": {
+      "name": "Nuki"
+    },
+    "nut": {
+      "name": "Network UPS Tools (NUT)"
+    },
+    "nws": {
+      "name": "National Weather Service (NWS)"
+    },
+    "nzbget": {
+      "name": "NZBGet"
+    },
+    "octoprint": {
+      "name": "OctoPrint"
+    },
+    "omnilogic": {
+      "name": "Hayward Omnilogic"
+    },
+    "oncue": {
+      "name": "Oncue by Kohler"
+    },
+    "ondilo_ico": {
+      "name": "Ondilo ICO"
+    },
+    "onewire": {
+      "name": "1-Wire"
+    },
+    "onvif": {
+      "name": "ONVIF"
+    },
+    "open_meteo": {
+      "name": "Open-Meteo"
+    },
+    "openexchangerates": {
+      "name": "Open Exchange Rates"
+    },
+    "opengarage": {
+      "name": "OpenGarage"
+    },
+    "opentherm_gw": {
+      "name": "OpenTherm Gateway"
+    },
+    "openuv": {
+      "name": "OpenUV"
+    },
+    "openweathermap": {
+      "name": "OpenWeatherMap"
+    },
+    "overkiz": {
+      "name": "Overkiz"
+    },
+    "ovo_energy": {
+      "name": "OVO Energy"
+    },
+    "owntracks": {
+      "name": "OwnTracks"
+    },
+    "p1_monitor": {
+      "name": "P1 Monitor"
+    },
+    "panasonic_viera": {
+      "name": "Panasonic Viera"
+    },
+    "peco": {
+      "name": "PECO Outage Counter"
+    },
+    "philips_js": {
+      "name": "Philips TV"
+    },
+    "pi_hole": {
+      "name": "Pi-hole"
+    },
+    "picnic": {
+      "name": "Picnic"
+    },
+    "plaato": {
+      "name": "Plaato"
+    },
+    "plex": {
+      "name": "Plex Media Server"
+    },
+    "plugwise": {
+      "name": "Plugwise"
+    },
+    "plum_lightpad": {
+      "name": "Plum Lightpad"
+    },
+    "point": {
+      "name": "Minut Point"
+    },
+    "poolsense": {
+      "name": "PoolSense"
+    },
+    "powerwall": {
+      "name": "Tesla Powerwall"
+    },
+    "profiler": {
+      "name": "Profiler"
+    },
+    "progettihwsw": {
+      "name": "ProgettiHWSW Automation"
+    },
+    "prosegur": {
+      "name": "Prosegur Alarm"
+    },
+    "prusalink": {
+      "name": "PrusaLink"
+    },
+    "ps4": {
+      "name": "Sony PlayStation 4"
+    },
+    "pure_energie": {
+      "name": "Pure Energie"
+    },
+    "pushover": {
+      "name": "Pushover"
+    },
+    "pvoutput": {
+      "name": "PVOutput"
+    },
+    "pvpc_hourly_pricing": {
+      "name": "Spain electricity hourly pricing (PVPC)"
+    },
+    "qingping": {
+      "name": "Qingping"
+    },
+    "qnap_qsw": {
+      "name": "QNAP QSW"
+    },
+    "rachio": {
+      "name": "Rachio"
+    },
+    "radarr": {
+      "name": "Radarr"
+    },
+    "radio_browser": {
+      "name": "Radio Browser"
+    },
+    "radiotherm": {
+      "name": "Radio Thermostat"
+    },
+    "rainforest_eagle": {
+      "name": "Rainforest Eagle"
+    },
+    "rainmachine": {
+      "name": "RainMachine"
+    },
+    "rdw": {
+      "name": "RDW"
+    },
+    "recollect_waste": {
+      "name": "ReCollect Waste"
+    },
+    "renault": {
+      "name": "Renault"
+    },
+    "rfxtrx": {
+      "name": "RFXCOM RFXtrx"
+    },
+    "rhasspy": {
+      "name": "Rhasspy"
+    },
+    "ridwell": {
+      "name": "Ridwell"
+    },
+    "ring": {
+      "name": "Ring"
+    },
+    "risco": {
+      "name": "Risco"
+    },
+    "rituals_perfume_genie": {
+      "name": "Rituals Perfume Genie"
+    },
+    "roku": {
+      "name": "Roku"
+    },
+    "roomba": {
+      "name": "iRobot Roomba and Braava"
+    },
+    "roon": {
+      "name": "RoonLabs music player"
+    },
+    "rpi_power": {
+      "name": "Raspberry Pi Power Supply Checker",
+      "translated_name": true
+    },
+    "rtsp_to_webrtc": {
+      "name": "RTSPtoWebRTC"
+    },
+    "ruckus_unleashed": {
+      "name": "Ruckus Unleashed"
+    },
+    "sabnzbd": {
+      "name": "SABnzbd"
+    },
+    "samsungtv": {
+      "name": "Samsung Smart TV"
+    },
+    "screenlogic": {
+      "name": "Pentair ScreenLogic"
+    },
+    "season": {
+      "name": "Season"
+    },
+    "sense": {
+      "name": "Sense"
+    },
+    "senseme": {
+      "name": "SenseME"
+    },
+    "sensibo": {
+      "name": "Sensibo"
+    },
+    "sensorpro": {
+      "name": "SensorPro"
+    },
+    "sensorpush": {
+      "name": "SensorPush"
+    },
+    "sentry": {
+      "name": "Sentry"
+    },
+    "senz": {
+      "name": "nVent RAYCHEM SENZ"
+    },
+    "sharkiq": {
+      "name": "Shark IQ"
+    },
+    "shelly": {
+      "name": "Shelly"
+    },
+    "shopping_list": {
+      "name": "Shopping List",
+      "translated_name": true
+    },
+    "sia": {
+      "name": "SIA Alarm Systems"
+    },
+    "simplepush": {
+      "name": "Simplepush"
+    },
+    "simplisafe": {
+      "name": "SimpliSafe"
+    },
+    "skybell": {
+      "name": "SkyBell"
+    },
+    "slack": {
+      "name": "Slack"
+    },
+    "sleepiq": {
+      "name": "SleepIQ"
+    },
+    "slimproto": {
+      "name": "SlimProto (Squeezebox players)"
+    },
+    "sma": {
+      "name": "SMA Solar"
+    },
+    "smappee": {
+      "name": "Smappee"
+    },
+    "smart_meter_texas": {
+      "name": "Smart Meter Texas"
+    },
+    "smartthings": {
+      "name": "SmartThings"
+    },
+    "smarttub": {
+      "name": "SmartTub"
+    },
+    "smhi": {
+      "name": "SMHI"
+    },
+    "sms": {
+      "name": "SMS notifications via GSM-modem"
+    },
+    "solaredge": {
+      "name": "SolarEdge"
+    },
+    "solarlog": {
+      "name": "Solar-Log"
+    },
+    "solax": {
+      "name": "SolaX Power"
+    },
+    "soma": {
+      "name": "Soma Connect"
+    },
+    "somfy_mylink": {
+      "name": "Somfy MyLink"
+    },
+    "sonarr": {
+      "name": "Sonarr"
+    },
+    "songpal": {
+      "name": "Sony Songpal"
+    },
+    "sonos": {
+      "name": "Sonos"
+    },
+    "soundtouch": {
+      "name": "Bose SoundTouch"
+    },
+    "speedtestdotnet": {
+      "name": "Speedtest.net"
+    },
+    "spider": {
+      "name": "Itho Daalderop Spider"
+    },
+    "spotify": {
+      "name": "Spotify"
+    },
+    "sql": {
+      "name": "SQL"
+    },
+    "squeezebox": {
+      "name": "Squeezebox (Logitech Media Server)"
+    },
+    "srp_energy": {
+      "name": "SRP Energy"
+    },
+    "starline": {
+      "name": "StarLine"
+    },
+    "steam_online": {
+      "name": "Steam"
+    },
+    "steamist": {
+      "name": "Steamist"
+    },
+    "stookalert": {
+      "name": "RIVM Stookalert"
+    },
+    "subaru": {
+      "name": "Subaru"
+    },
+    "sun": {
+      "name": "Sun",
+      "translated_name": true
+    },
+    "surepetcare": {
+      "name": "Sure Petcare"
+    },
+    "switchbee": {
+      "name": "SwitchBee"
+    },
+    "switchbot": {
+      "name": "SwitchBot"
+    },
+    "switcher_kis": {
+      "name": "Switcher"
+    },
+    "syncthing": {
+      "name": "Syncthing"
+    },
+    "syncthru": {
+      "name": "Samsung SyncThru Printer"
+    },
+    "synology_dsm": {
+      "name": "Synology DSM"
+    },
+    "system_bridge": {
+      "name": "System Bridge"
+    },
+    "tado": {
+      "name": "Tado"
+    },
+    "tailscale": {
+      "name": "Tailscale"
+    },
+    "tankerkoenig": {
+      "name": "Tankerkoenig"
+    },
+    "tasmota": {
+      "name": "Tasmota"
+    },
+    "tautulli": {
+      "name": "Tautulli"
+    },
+    "tellduslive": {
+      "name": "Telldus Live"
+    },
+    "tesla_wall_connector": {
+      "name": "Tesla Wall Connector"
+    },
+    "thermobeacon": {
+      "name": "ThermoBeacon"
+    },
+    "thermopro": {
+      "name": "ThermoPro"
+    },
+    "tibber": {
+      "name": "Tibber"
+    },
+    "tile": {
+      "name": "Tile"
+    },
+    "tilt_ble": {
+      "name": "Tilt Hydrometer BLE"
+    },
+    "tolo": {
+      "name": "TOLO Sauna"
+    },
+    "tomorrowio": {
+      "name": "Tomorrow.io"
+    },
+    "toon": {
+      "name": "Toon"
+    },
+    "totalconnect": {
+      "name": "Total Connect"
+    },
+    "tplink": {
+      "name": "TP-Link Kasa Smart"
+    },
+    "traccar": {
+      "name": "Traccar"
+    },
+    "tractive": {
+      "name": "Tractive"
+    },
+    "tradfri": {
+      "name": "IKEA TR\u00c5DFRI"
+    },
+    "trafikverket_ferry": {
+      "name": "Trafikverket Ferry"
+    },
+    "trafikverket_train": {
+      "name": "Trafikverket Train"
+    },
+    "trafikverket_weatherstation": {
+      "name": "Trafikverket Weather Station"
+    },
+    "transmission": {
+      "name": "Transmission"
+    },
+    "tuya": {
+      "name": "Tuya"
+    },
+    "twentemilieu": {
+      "name": "Twente Milieu"
+    },
+    "twilio": {
+      "name": "Twilio"
+    },
+    "twinkly": {
+      "name": "Twinkly"
+    },
+    "ukraine_alarm": {
+      "name": "Ukraine Alarm"
+    },
+    "unifi": {
+      "name": "UniFi Network"
+    },
+    "unifiprotect": {
+      "name": "UniFi Protect"
+    },
+    "upb": {
+      "name": "Universal Powerline Bus (UPB)"
+    },
+    "upcloud": {
+      "name": "UpCloud"
+    },
+    "upnp": {
+      "name": "UPnP/IGD"
+    },
+    "uptime": {
+      "name": "Uptime",
+      "translated_name": true
+    },
+    "uptimerobot": {
+      "name": "UptimeRobot"
+    },
+    "vallox": {
+      "name": "Vallox"
+    },
+    "velbus": {
+      "name": "Velbus"
+    },
+    "venstar": {
+      "name": "Venstar"
+    },
+    "vera": {
+      "name": "Vera"
+    },
+    "verisure": {
+      "name": "Verisure"
+    },
+    "version": {
+      "name": "Version"
+    },
+    "vesync": {
+      "name": "VeSync"
+    },
+    "vicare": {
+      "name": "Viessmann ViCare"
+    },
+    "vilfo": {
+      "name": "Vilfo Router"
+    },
+    "vizio": {
+      "name": "VIZIO SmartCast"
+    },
+    "vlc_telnet": {
+      "name": "VLC media player via Telnet"
+    },
+    "volumio": {
+      "name": "Volumio"
+    },
+    "volvooncall": {
+      "name": "Volvo On Call"
+    },
+    "vulcan": {
+      "name": "Uonet+ Vulcan"
+    },
+    "wallbox": {
+      "name": "Wallbox"
+    },
+    "watttime": {
+      "name": "WattTime"
+    },
+    "waze_travel_time": {
+      "name": "Waze Travel Time",
+      "translated_name": true
+    },
+    "webostv": {
+      "name": "LG webOS Smart TV"
+    },
+    "wemo": {
+      "name": "Belkin WeMo"
+    },
+    "whirlpool": {
+      "name": "Whirlpool Sixth Sense"
+    },
+    "whois": {
+      "name": "Whois"
+    },
+    "wiffi": {
+      "name": "Wiffi"
+    },
+    "wilight": {
+      "name": "WiLight"
+    },
+    "withings": {
+      "name": "Withings"
+    },
+    "wiz": {
+      "name": "WiZ"
+    },
+    "wled": {
+      "name": "WLED"
+    },
+    "wolflink": {
+      "name": "Wolf SmartSet Service"
+    },
+    "ws66i": {
+      "name": "Soundavo WS66i 6-Zone Amplifier"
+    },
+    "xbox": {
+      "name": "Xbox"
+    },
+    "xiaomi_aqara": {
+      "name": "Xiaomi Gateway (Aqara)"
+    },
+    "xiaomi_ble": {
+      "name": "Xiaomi BLE"
+    },
+    "xiaomi_miio": {
+      "name": "Xiaomi Miio"
+    },
+    "yale_smart_alarm": {
+      "name": "Yale Smart Living"
+    },
+    "yalexs_ble": {
+      "name": "Yale Access Bluetooth"
+    },
+    "yamaha_musiccast": {
+      "name": "MusicCast"
+    },
+    "yeelight": {
+      "name": "Yeelight"
+    },
+    "yolink": {
+      "name": "YoLink"
+    },
+    "youless": {
+      "name": "YouLess"
+    },
+    "zerproc": {
+      "name": "Zerproc"
+    },
+    "zha": {
+      "name": "Zigbee Home Automation"
+    },
+    "zwave_js": {
+      "name": "Z-Wave"
+    },
+    "zwave_me": {
+      "name": "Z-Wave.Me"
+    }
+  },
+  "helper": {
+    "derivative": {
+      "name": "Derivative",
+      "translated_name": true
+    },
+    "group": {
+      "name": "Group",
+      "translated_name": true
+    },
+    "integration": {
+      "name": "Integration - Riemann sum integral",
+      "translated_name": true
+    },
+    "min_max": {
+      "name": "Min/Max",
+      "translated_name": true
+    },
+    "switch_as_x": {
+      "name": "Switch as X",
+      "translated_name": true
+    },
+    "threshold": {
+      "name": "Threshold",
+      "translated_name": true
+    },
+    "tod": {
+      "name": "Times of the Day",
+      "translated_name": true
+    },
+    "utility_meter": {
+      "name": "Utility Meter",
+      "translated_name": true
+    }
+  }
+}
