@@ -12,8 +12,8 @@ import pytest
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -63,7 +63,7 @@ async def test_thermostat_device(
     assert (
         temperature.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     )
-    assert temperature.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert temperature.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert temperature.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Temperature"
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
@@ -71,7 +71,7 @@ async def test_thermostat_device(
     assert humidity.state == "35"
     assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert humidity.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
-    assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert humidity.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert humidity.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Humidity"
 
     registry = er.async_get(hass)

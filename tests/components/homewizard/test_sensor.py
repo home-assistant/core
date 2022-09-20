@@ -8,9 +8,8 @@ from homewizard_energy.models import Data
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -206,7 +205,7 @@ async def test_sensor_entity_total_power_import_t1_kwh(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total power import T1"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
@@ -248,7 +247,7 @@ async def test_sensor_entity_total_power_import_t2_kwh(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total power import T2"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
@@ -290,7 +289,7 @@ async def test_sensor_entity_total_power_export_t1_kwh(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total power export T1"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
@@ -332,7 +331,7 @@ async def test_sensor_entity_total_power_export_t2_kwh(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total power export T2"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
@@ -370,7 +369,7 @@ async def test_sensor_entity_active_power(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active power"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
@@ -410,7 +409,7 @@ async def test_sensor_entity_active_power_l1(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active power L1"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
@@ -450,7 +449,7 @@ async def test_sensor_entity_active_power_l2(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active power L2"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
@@ -490,7 +489,7 @@ async def test_sensor_entity_active_power_l3(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Active power L3"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
@@ -526,7 +525,7 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Total gas"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert ATTR_ICON not in state.attributes
@@ -567,7 +566,7 @@ async def test_sensor_entity_active_liters(
         == "Product Name (aabbccddeeff) Active water usage"
     )
 
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "l/min"
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
@@ -608,7 +607,7 @@ async def test_sensor_entity_total_liters(
         == "Product Name (aabbccddeeff) Total water usage"
     )
 
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
