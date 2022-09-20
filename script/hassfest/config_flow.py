@@ -119,6 +119,10 @@ def _generate_v2(
         "helper": {},
     }
 
+    # Not all integrations will have an item in the brands collection.
+    # The config flow data index will be the union of the integrations without a brands item
+    # and the brand domain names from the brands collection.
+
     # Compile a set of integrations which are referenced from at least one brand's
     # integrations list. These integrations will not be present in the root level of the
     # generated config flow index.
