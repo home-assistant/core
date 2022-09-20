@@ -1,6 +1,7 @@
 """Test for Aladdin Connect init logic."""
 from unittest.mock import MagicMock, patch
 
+from AIOAladdinConnect.session_manager import InvalidPasswordError
 from aiohttp import ClientConnectionError
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
@@ -43,6 +44,7 @@ async def test_setup_login_error(
     )
     config_entry.add_to_hass(hass)
     mock_aladdinconnect_api.login.return_value = False
+    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -100,6 +102,7 @@ async def test_entry_password_fail(
     )
     entry.add_to_hass(hass)
     mock_aladdinconnect_api.login = AsyncMock(return_value=False)
+    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,

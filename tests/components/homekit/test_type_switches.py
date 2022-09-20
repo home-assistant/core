@@ -17,7 +17,7 @@ from homeassistant.components.homekit.type_switches import (
     Vacuum,
     Valve,
 )
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
