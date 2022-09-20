@@ -31,13 +31,8 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     PRESET_SLEEP,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
-)
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
@@ -135,7 +130,7 @@ async def test_thermostat_off(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -179,7 +174,7 @@ async def test_thermostat_heat(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -221,7 +216,7 @@ async def test_thermostat_cool(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -264,7 +259,7 @@ async def test_thermostat_heatcool(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT_COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -313,7 +308,7 @@ async def test_thermostat_eco_off(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT_COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -362,7 +357,7 @@ async def test_thermostat_eco_on(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT_COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -408,7 +403,7 @@ async def test_thermostat_eco_heat_only(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -444,7 +439,7 @@ async def test_thermostat_set_hvac_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
 
     await common.async_set_hvac_mode(hass, HVACMode.HEAT)
     await hass.async_block_till_done()
@@ -460,7 +455,7 @@ async def test_thermostat_set_hvac_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
 
     # Simulate pubsub message when mode changes
     await create_event(
@@ -475,7 +470,7 @@ async def test_thermostat_set_hvac_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
     # Simulate pubsub message when the thermostat starts heating
     await create_event(
@@ -489,7 +484,7 @@ async def test_thermostat_set_hvac_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
 
 
 async def test_thermostat_invalid_hvac_mode(
@@ -514,7 +509,7 @@ async def test_thermostat_invalid_hvac_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
 
     with pytest.raises(ValueError):
         await common.async_set_hvac_mode(hass, HVACMode.DRY)
@@ -553,7 +548,7 @@ async def test_thermostat_set_eco_preset(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     # Turn on eco mode
@@ -571,7 +566,7 @@ async def test_thermostat_set_eco_preset(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     # Simulate pubsub message when mode changes
@@ -589,7 +584,7 @@ async def test_thermostat_set_eco_preset(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_ECO
 
     # Turn off eco mode
@@ -805,7 +800,7 @@ async def test_thermostat_fan_off(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -852,7 +847,7 @@ async def test_thermostat_fan_on(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -896,7 +891,7 @@ async def test_thermostat_cool_with_fan(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
         HVACMode.COOL,
@@ -1040,7 +1035,7 @@ async def test_thermostat_fan_empty(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -1091,7 +1086,7 @@ async def test_thermostat_invalid_fan_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -1180,7 +1175,7 @@ async def test_thermostat_missing_mode_traits(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == set()
     assert ATTR_TEMPERATURE not in thermostat.attributes
@@ -1221,7 +1216,7 @@ async def test_thermostat_missing_temperature_trait(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -1297,7 +1292,7 @@ async def test_thermostat_missing_set_point(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT_COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -1335,7 +1330,7 @@ async def test_thermostat_unexepected_hvac_mode(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.OFF
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVACMode.HEAT,
@@ -1424,7 +1419,7 @@ async def test_thermostat_hvac_mode_failure(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVACMode.COOL
-    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     with pytest.raises(HomeAssistantError):

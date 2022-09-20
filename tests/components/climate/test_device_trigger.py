@@ -3,7 +3,13 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, HVACMode, const, device_trigger
+from homeassistant.components.climate import (
+    DOMAIN,
+    HVACAction,
+    HVACMode,
+    const,
+    device_trigger,
+)
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -54,7 +60,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -116,7 +122,7 @@ async def test_get_triggers_hidden_auxiliary(
         entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -148,7 +154,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -210,7 +216,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -224,7 +230,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },
@@ -238,7 +244,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 7,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },

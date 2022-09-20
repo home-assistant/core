@@ -40,14 +40,8 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
+    HVACAction,
     HVACMode,
-)
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
 )
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
@@ -136,7 +130,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 22.2,
             ATTR_CURRENT_TEMPERATURE: 17.8,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -160,7 +154,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 23.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -184,7 +178,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 20.0,
             ATTR_CURRENT_TEMPERATURE: 25.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+            ATTR_HVAC_ACTION: HVACAction.COOLING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -208,7 +202,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 20.0,
             ATTR_CURRENT_TEMPERATURE: 19.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
         },
     )
     await hass.async_block_till_done()
@@ -236,7 +230,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -260,7 +254,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 25.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+            ATTR_HVAC_ACTION: HVACAction.COOLING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -284,7 +278,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -308,7 +302,7 @@ async def test_thermostat(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_FAN,
+            ATTR_HVAC_ACTION: HVACAction.FAN,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -333,7 +327,7 @@ async def test_thermostat(hass, hk_driver, events):
             ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_DRY,
+            ATTR_HVAC_ACTION: HVACAction.DRYING,
         },
     )
     await hass.async_block_till_done()
@@ -471,7 +465,7 @@ async def test_thermostat_auto(hass, hk_driver, events):
             ATTR_TARGET_TEMP_HIGH: 22.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -497,7 +491,7 @@ async def test_thermostat_auto(hass, hk_driver, events):
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 24.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+            ATTR_HVAC_ACTION: HVACAction.COOLING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -523,7 +517,7 @@ async def test_thermostat_auto(hass, hk_driver, events):
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -625,7 +619,7 @@ async def test_thermostat_mode_and_temp_change(hass, hk_driver, events):
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+            ATTR_HVAC_ACTION: HVACAction.COOLING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -764,7 +758,7 @@ async def test_thermostat_power_state(hass, hk_driver, events):
             ATTR_SUPPORTED_FEATURES: 4096,
             ATTR_TEMPERATURE: 23.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT_COOL,
                 HVACMode.COOL,
@@ -790,7 +784,7 @@ async def test_thermostat_power_state(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 23.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT_COOL,
                 HVACMode.COOL,
@@ -810,7 +804,7 @@ async def test_thermostat_power_state(hass, hk_driver, events):
         {
             ATTR_TEMPERATURE: 23.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT_COOL,
                 HVACMode.COOL,
@@ -1560,7 +1554,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_HIGH: 22.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
@@ -1587,7 +1581,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 24.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_COOL,
+            ATTR_HVAC_ACTION: HVACAction.COOLING,
             ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
@@ -1614,7 +1608,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
@@ -1668,7 +1662,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
         },
     )
@@ -1919,7 +1913,7 @@ async def test_thermostat_with_no_modes_when_we_first_see(hass, hk_driver, event
             ATTR_TARGET_TEMP_HIGH: 22.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.AUTO],
         },
     )
@@ -1972,7 +1966,7 @@ async def test_thermostat_with_no_off_after_recheck(hass, hk_driver, events):
             ATTR_TARGET_TEMP_HIGH: 22.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
         },
     )
@@ -2026,7 +2020,7 @@ async def test_thermostat_with_temp_clamps(hass, hk_driver, events):
             ATTR_TARGET_TEMP_HIGH: 822.0,
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 9918.0,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_HEAT,
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
             ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
         },
     )
@@ -2052,7 +2046,7 @@ async def test_thermostat_with_fan_modes_with_auto(hass, hk_driver, events):
             | SUPPORT_SWING_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_SWING_MODE: SWING_BOTH,
             ATTR_HVAC_MODES: [
@@ -2091,7 +2085,7 @@ async def test_thermostat_with_fan_modes_with_auto(hass, hk_driver, events):
             | SUPPORT_SWING_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_LOW,
             ATTR_SWING_MODE: SWING_BOTH,
             ATTR_HVAC_MODES: [
@@ -2256,7 +2250,7 @@ async def test_thermostat_with_fan_modes_with_off(hass, hk_driver, events):
             | SUPPORT_SWING_MODE,
             ATTR_FAN_MODES: [FAN_ON, FAN_OFF],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_ON,
             ATTR_SWING_MODE: SWING_BOTH,
             ATTR_HVAC_MODES: [
@@ -2295,7 +2289,7 @@ async def test_thermostat_with_fan_modes_with_off(hass, hk_driver, events):
             | SUPPORT_SWING_MODE,
             ATTR_FAN_MODES: [FAN_ON, FAN_OFF],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_OFF,
             ATTR_SWING_MODE: SWING_BOTH,
             ATTR_HVAC_MODES: [
@@ -2363,7 +2357,7 @@ async def test_thermostat_with_fan_modes_set_to_none(hass, hk_driver, events):
             | SUPPORT_SWING_MODE,
             ATTR_FAN_MODES: None,
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_SWING_MODE: SWING_BOTH,
             ATTR_HVAC_MODES: [
@@ -2406,7 +2400,7 @@ async def test_thermostat_with_fan_modes_set_to_none_not_supported(
             | SUPPORT_SWING_MODE,
             ATTR_FAN_MODES: None,
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_SWING_MODE: SWING_BOTH,
             ATTR_HVAC_MODES: [
@@ -2453,7 +2447,7 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
             ATTR_TARGET_TEMP_LOW: None,
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_FAN_MODES: None,
-            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_PRESET_MODE: "home",
             ATTR_FRIENDLY_NAME: "Rec Room",

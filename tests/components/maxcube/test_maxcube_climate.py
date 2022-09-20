@@ -33,12 +33,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
-)
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
 )
 from homeassistant.components.maxcube.climate import (
     MAX_TEMPERATURE,
@@ -73,7 +69,7 @@ async def test_setup_thermostat(hass, cube: MaxCube):
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "TestRoom TestThermostat"
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_HEAT
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
         HVACMode.AUTO,
@@ -109,7 +105,7 @@ async def test_setup_wallthermostat(hass, cube: MaxCube):
     state = hass.states.get(WALL_ENTITY_ID)
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "TestRoom TestWallThermostat"
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_HEAT
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_NONE
     assert state.attributes.get(ATTR_MAX_TEMP) == 29.0
     assert state.attributes.get(ATTR_MIN_TEMP) == 5.0
@@ -141,11 +137,11 @@ async def test_thermostat_set_hvac_mode_off(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_TEMPERATURE) is None
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_OFF
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
     assert state.attributes.get(VALVE_POSITION) == 0
 
     wall_state = hass.states.get(WALL_ENTITY_ID)
-    assert wall_state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_OFF
+    assert wall_state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
 
 
 async def test_thermostat_set_hvac_mode_heat(
@@ -205,7 +201,7 @@ async def test_thermostat_set_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
     assert state.attributes.get(ATTR_TEMPERATURE) == 10.0
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_IDLE
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
 
 
 async def test_thermostat_set_no_temperature(
