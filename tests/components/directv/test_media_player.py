@@ -12,8 +12,7 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
 )
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
@@ -27,9 +26,6 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
     DOMAIN as MP_DOMAIN,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
     SERVICE_PLAY_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -39,6 +35,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
+    MediaPlayerDeviceClass,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -218,7 +216,7 @@ async def test_check_attributes(
     assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "17016356"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_MOVIE
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.MOVIE
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 7200
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 4437
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
@@ -237,7 +235,7 @@ async def test_check_attributes(
     assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "4405732"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_TVSHOW
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.TVSHOW
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 1791
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 263
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
@@ -256,7 +254,7 @@ async def test_check_attributes(
     assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "76917562"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_MUSIC
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.MUSIC
     assert state.attributes.get(ATTR_MEDIA_DURATION) == 86400
     assert state.attributes.get(ATTR_MEDIA_POSITION) == 15050
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)

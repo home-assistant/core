@@ -19,23 +19,6 @@ from homeassistant.components.forked_daapd.const import (
     SUPPORTED_FEATURES_ZONE,
 )
 from homeassistant.components.media_player import (
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-)
-from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -51,8 +34,22 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
+    SERVICE_CLEAR_PLAYLIST,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
+    SERVICE_SHUFFLE_SET,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    MediaType,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -360,7 +357,7 @@ def test_master_state(hass, mock_api_object):
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
     assert state.attributes[ATTR_MEDIA_CONTENT_ID] == 12322
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert state.attributes[ATTR_MEDIA_DURATION] == 0.05
     assert state.attributes[ATTR_MEDIA_POSITION] == 0.005
     assert state.attributes[ATTR_MEDIA_TITLE] == "No album"  # reversed for url
@@ -556,7 +553,7 @@ async def test_async_play_media_from_paused(hass, mock_api_object):
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
         },
     )
@@ -580,7 +577,7 @@ async def test_async_play_media_from_stopped(
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
         },
     )
@@ -597,7 +594,7 @@ async def test_async_play_media_unsupported(hass, mock_api_object):
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_TVSHOW,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
             ATTR_MEDIA_CONTENT_ID: "wontwork.mp4",
         },
     )
@@ -615,7 +612,7 @@ async def test_async_play_media_tts_timeout(hass, mock_api_object):
             TEST_MASTER_ENTITY_NAME,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
             },
         )
@@ -724,7 +721,7 @@ async def test_librespot_java_play_media(hass, pipe_control_api_object):
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
         },
     )
@@ -746,7 +743,7 @@ async def test_librespot_java_play_media_pause_timeout(hass, pipe_control_api_ob
             TEST_MASTER_ENTITY_NAME,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
             },
         )
