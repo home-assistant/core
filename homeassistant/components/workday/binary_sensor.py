@@ -1,12 +1,12 @@
 """Sensor to indicate whether the current day is a workday."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import logging
 from typing import Any
 
 import holidays
-from holidays import HolidayBase
+from holidays import DateLike, HolidayBase
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -87,7 +87,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[date | datetime | str | float | int] = config[CONF_ADD_HOLIDAYS]
+    add_holidays: list[DateLike] = config[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
     country: str = config[CONF_COUNTRY]
     days_offset: int = config[CONF_OFFSET]
