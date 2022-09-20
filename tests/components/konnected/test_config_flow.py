@@ -295,6 +295,50 @@ async def test_import_no_host_user_finish(hass, mock_panel):
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
+async def test_async_step_user_cant_connect(hass, mock_panel):
+    """Test importing a panel with no host info."""
+
+    with patch.object(
+        mock_panel,
+        "get_status",
+        side_effect=mock_panel.ClientError(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "default_options": {
+                    "blink": True,
+                    "discovery": True,
+                    "io": {
+                        "1": "Disabled",
+                        "10": "Disabled",
+                        "11": "Disabled",
+                        "12": "Disabled",
+                        "2": "Disabled",
+                        "3": "Disabled",
+                        "4": "Disabled",
+                        "5": "Disabled",
+                        "6": "Disabled",
+                        "7": "Disabled",
+                        "8": "Disabled",
+                        "9": "Disabled",
+                        "alarm1": "Disabled",
+                        "alarm2_out2": "Disabled",
+                        "out": "Disabled",
+                        "out1": "Disabled",
+                    },
+                },
+                "id": "somechipid",
+                "host": "1.2.3.4",
+                "port": 1234,
+                "model": "Konnected Alarm Panel",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+
 async def test_import_ssdp_host_user_finish(hass, mock_panel):
     """Test importing a pro panel with no host info which ssdp discovers."""
     mock_panel.get_status.return_value = {
