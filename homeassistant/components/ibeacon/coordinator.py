@@ -152,11 +152,10 @@ class IBeaconCoordinator:
         """Ignore an address that does not follow the spec and any entities created by it."""
         self._ignore_addresses.add(address)
         self._async_cancel_unavailable_tracker(address)
-        self.hass.config_entries.async_update_entry(
-            self._entry,
-            data=self._entry.data
-            | {CONF_IGNORE_ADDRESSES: sorted(self._ignore_addresses)},
-        )
+        new_data = self._entry.data | {
+            CONF_IGNORE_ADDRESSES: list(self._ignore_addresses)
+        }
+        self.hass.config_entries.async_update_entry(self._entry, data=new_data)
         self._async_purge_untrackable_entities(self._unique_ids_by_address[address])
         self._group_ids_by_address.pop(address)
         self._unique_ids_by_address.pop(address)
