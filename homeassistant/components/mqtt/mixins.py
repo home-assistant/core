@@ -59,7 +59,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import debug_info, subscription
+from . import debug_info, get_mqtt_data, subscription
 from .client import MQTT, Subscription, async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -69,7 +69,6 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
-    DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -314,7 +313,7 @@ async def async_get_platform_config_from_yaml(
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
 
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     if config_yaml is None:
         config_yaml = mqtt_data.config
     if not config_yaml:
@@ -331,7 +330,7 @@ async def async_setup_entry_helper(
     discovery_schema: vol.Schema,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT entity, automation or tag."""
@@ -363,7 +362,7 @@ async def async_setup_entry_helper(
 
     async def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
-        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        mqtt_data = get_mqtt_data(hass)
         if mqtt_data.updated_config:
             # The platform has been reloaded
             config_yaml = mqtt_data.updated_config
@@ -395,7 +394,7 @@ async def async_setup_platform_helper(
     async_setup_entities: SetupEntity,
 ) -> None:
     """Help to set up the platform for manual configured MQTT entities."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     if mqtt_data.reload_entry:
         _LOGGER.debug(
             "MQTT integration is %s, skipping setup of manually configured MQTT items while unloading the config entry",
@@ -621,7 +620,7 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        mqtt_data: MqttData = self.hass.data[DATA_MQTT]
+        mqtt_data = get_mqtt_data(self.hass)
         assert mqtt_data.client is not None
         client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
@@ -844,7 +843,7 @@ class MqttDiscoveryUpdate(Entity):
         self._removed_from_hass = False
         if discovery_data is None:
             return
-        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        mqtt_data = get_mqtt_data(hass)
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
         if discovery_hash in self._registry_hooks:

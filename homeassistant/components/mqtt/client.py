@@ -36,6 +36,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
+from . import get_mqtt_data
 from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
@@ -46,7 +47,6 @@ from .const import (
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
     CONF_WILL_MESSAGE,
-    DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     MQTT_CONNECTED,
@@ -67,9 +67,6 @@ if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
-
-    from .mixins import MqttData
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,11 +97,7 @@ async def async_publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from .mixins import MqttData
-
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    mqtt_data = get_mqtt_data(hass, True)
     if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot publish to topic '{topic}', MQTT is not enabled"
@@ -190,11 +183,7 @@ async def async_subscribe(
 
     Call the return value to unsubscribe.
     """
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from .mixins import MqttData
-
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    mqtt_data = get_mqtt_data(hass, True)
     if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
@@ -332,7 +321,7 @@ class MQTT:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        self._mqtt_data: MqttData = hass.data[DATA_MQTT]
+        self._mqtt_data = get_mqtt_data(hass)
 
         self.hass = hass
         self.config_entry = config_entry

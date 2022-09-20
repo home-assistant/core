@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import debug_info, trigger as mqtt_trigger
+from . import debug_info, get_mqtt_data, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -33,13 +33,11 @@ from .const import (
     CONF_PAYLOAD,
     CONF_QOS,
     CONF_TOPIC,
-    DATA_MQTT,
     DOMAIN,
 )
 from .discovery import MQTT_DISCOVERY_DONE
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MqttData,
     MqttDiscoveryDeviceUpdate,
     send_discovery_done,
     update_device,
@@ -203,7 +201,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
-        self._mqtt_data: MqttData = hass.data[DATA_MQTT]
+        self._mqtt_data = get_mqtt_data(hass)
 
         MqttDiscoveryDeviceUpdate.__init__(
             self,
@@ -281,7 +279,7 @@ async def async_setup_trigger(
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
         device_trigger: Trigger = mqtt_data.device_triggers.pop(trig[CONF_DISCOVERY_ID])
@@ -296,7 +294,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     triggers: list[dict[str, str]] = []
 
     if not mqtt_data.device_triggers:
@@ -325,7 +323,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 
