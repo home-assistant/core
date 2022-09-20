@@ -29,10 +29,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SERVICE_PLAY_MEDIA,
-)
+from homeassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -3169,7 +3166,7 @@ async def test_channel(hass):
     assert media_player_calls[0].data == {
         ATTR_ENTITY_ID: "media_player.demo",
         media_player.ATTR_MEDIA_CONTENT_ID: "1",
-        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
     }
 
     with pytest.raises(SmartHomeError, match="Channel is not available"):
