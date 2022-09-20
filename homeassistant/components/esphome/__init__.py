@@ -52,15 +52,15 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
+# Import config flow so that it's added to the registry
+from .entry_data import RuntimeEntryData
+
 _LOGGER = logging.getLogger(__name__)
 
 try:
     from .bluetooth import async_connect_scanner
 except Exception as ex:
     _LOGGER.error("Bleak exception: %s", ex)
-
-# Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
