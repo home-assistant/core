@@ -1,7 +1,7 @@
 """Sensor to indicate whether the current day is a workday."""
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
@@ -87,7 +87,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[str] = config[CONF_ADD_HOLIDAYS]
+    add_holidays: list[date | datetime | str | float | int] = config[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
     country: str = config[CONF_COUNTRY]
     days_offset: int = config[CONF_OFFSET]
@@ -138,8 +138,10 @@ def setup_platform(
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
     _LOGGER.debug("Found the following holidays for your configuration:")
-    for remove_holiday, name in sorted(obj_holidays.items()):
-        _LOGGER.debug("%s %s", remove_holiday, name)
+    for holiday_date, name in sorted(obj_holidays.items()):
+        # Make explicit str variable to avoid "Incompatible types in assignment"
+        _holiday_string = holiday_date.strftime("%Y-%m-%d")
+        _LOGGER.debug("%s %s", _holiday_string, name)
 
     add_entities(
         [IsWorkdaySensor(obj_holidays, workdays, excludes, days_offset, sensor_name)],
