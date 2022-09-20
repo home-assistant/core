@@ -1,3 +1,33 @@
 {
+    "issues": {
+        "invalid_price_state": {
+            "description": "The energy price sensor's state must be numeric, otherwise costs for {energy_entity_id} can't be calculated.",
+            "title": "The energy price sensor {price_entity_id} has a non-numeric state '{price_state}'"
+        },
+        "invalid_state": {
+            "description": "The energy sensor's state must be numeric, otherwise costs for {energy_entity_id} can't be calculated.",
+            "title": "The energy sensor {energy_entity_id} has a non-numeric state '{energy_state}'"
+        },
+        "invalid_state_class": {
+            "description": "The energy sensor's state class must be either of 'measurement', 'increasing' or 'total_increasing', otherwise costs for {energy_entity_id} can't be calculated.",
+            "title": "The energy sensor {energy_entity_id} has an unsupported state class '{state_class}'"
+        },
+        "invalid_unit": {
+            "description": "The energy sensor's unit must be either of {supported_units}, otherwise costs for {energy_entity_id} can't be calculated.",
+            "title": "The energy sensor {energy_entity_id} has an unsupported unit '{unit}'"
+        },
+        "no_last_reset": {
+            "description": "The energy price sensor with state_class 'measurement' must set 'last_reset', otherwise costs for {energy_entity_id} can't be calculated.",
+            "title": "The energy sensor {energy_entity_id} has no last_reset"
+        },
+        "no_price_state": {
+            "description": "The energy price sensor is missing, this prevents costs for {energy_entity_id} from being calculated.",
+            "title": "The energy price sensor {price_entity_id} is missing"
+        },
+        "no_unit": {
+            "description": "The energy price sensor's unit must be set, otherwise costs for {energy_entity_id} can't be calculated..",
+            "title": "The energy sensor {energy_entity_id} has no unit"
+        }
+    },
     "title": "Energy"
 }

@@ -20,6 +20,8 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
@@ -33,6 +35,11 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -243,17 +250,28 @@ class EnergyCostSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
-    def _update_cost(self) -> None:
+    def _update_cost(self) -> None:  # noqa: C901
         """Update incurred costs."""
-        energy_state = self.hass.states.get(
-            cast(str, self._config[self._adapter.entity_energy_key])
-        )
+        energy_entity_id = self._config[self._adapter.entity_energy_key]
+        energy_state = self.hass.states.get(energy_entity_id)
 
         if energy_state is None:
             return
 
         state_class = energy_state.attributes.get(ATTR_STATE_CLASS)
         if state_class not in SUPPORTED_STATE_CLASSES:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"invalid_state_class_{energy_entity_id}",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="invalid_state_class",
+                translation_placeholders={
+                    "energy_entity_id": energy_entity_id,
+                    "state_class": state_class or "<None>",
+                },
+            )
             if not self._wrong_state_class_reported:
                 self._wrong_state_class_reported = True
                 _LOGGER.warning(
@@ -262,32 +280,92 @@ class EnergyCostSensor(SensorEntity):
                     energy_state.entity_id,
                 )
             return
+        async_delete_issue(self.hass, DOMAIN, f"invalid_state_class_{energy_entity_id}")
 
         # last_reset must be set if the sensor is SensorStateClass.MEASUREMENT
         if (
             state_class == SensorStateClass.MEASUREMENT
             and ATTR_LAST_RESET not in energy_state.attributes
         ):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"no_last_reset_{energy_entity_id}",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="no_last_reset",
+                translation_placeholders={"energy_entity_id": energy_entity_id},
+            )
             return
+        async_delete_issue(self.hass, DOMAIN, f"no_last_reset_{energy_entity_id}")
 
         try:
             energy = float(energy_state.state)
         except ValueError:
+            if energy_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"invalid_state_{energy_entity_id}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="invalid_state",
+                    translation_placeholders={
+                        "energy_entity_id": energy_entity_id,
+                        "energy_state": energy_state.state,
+                    },
+                )
             return
+        async_delete_issue(self.hass, DOMAIN, f"invalid_state_{energy_entity_id}")
 
         # Determine energy price
         if self._config["entity_energy_price"] is not None:
-            energy_price_state = self.hass.states.get(
-                self._config["entity_energy_price"]
-            )
+            price_entity_id = self._config["entity_energy_price"]
+            energy_price_state = self.hass.states.get(price_entity_id)
 
             if energy_price_state is None:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"no_price_state_{energy_entity_id}_{price_entity_id}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="no_price_state",
+                    translation_placeholders={
+                        "energy_entity_id": energy_entity_id,
+                        "price_entity_id": price_entity_id,
+                    },
+                )
                 return
+            async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"no_price_state_{energy_entity_id}_{price_entity_id}",
+            )
 
             try:
                 energy_price = float(energy_price_state.state)
             except ValueError:
+                if energy_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                    async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        f"invalid_price_state_{energy_entity_id}_{price_entity_id}",
+                        is_fixable=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="invalid_price_state",
+                        translation_placeholders={
+                            "energy_entity_id": energy_entity_id,
+                            "price_entity_id": price_entity_id,
+                            "price_state": energy_price_state.state,
+                        },
+                    )
                 return
+            async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"invalid_price_state_{energy_entity_id}_{price_entity_id}",
+            )
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
                 f"/{ENERGY_WATT_HOUR}"
@@ -324,6 +402,38 @@ class EnergyCostSensor(SensorEntity):
             energy_price *= 1000
 
         if energy_unit is None:
+            if (
+                invalid_unit := energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            ) is None:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"no_unit_{energy_entity_id}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="no_unit",
+                    translation_placeholders={
+                        "energy_entity_id": energy_entity_id,
+                    },
+                )
+            else:
+                if self._adapter.source_type == "grid":
+                    supported_units = VALID_ENERGY_UNITS
+                else:
+                    supported_units = VALID_ENERGY_UNITS_GAS
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"invalid_unit_{energy_entity_id}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="invalid_unit",
+                    translation_placeholders={
+                        "energy_entity_id": energy_entity_id,
+                        "supported_units": "'" + "', '".join(supported_units) + "'",
+                        "unit": invalid_unit,
+                    },
+                )
             if not self._wrong_unit_reported:
                 self._wrong_unit_reported = True
                 _LOGGER.warning(
@@ -332,6 +442,8 @@ class EnergyCostSensor(SensorEntity):
                     energy_state.entity_id,
                 )
             return
+        async_delete_issue(self.hass, DOMAIN, f"no_unit_{energy_entity_id}")
+        async_delete_issue(self.hass, DOMAIN, f"invalid_unit_{energy_entity_id}")
 
         if (
             state_class != SensorStateClass.TOTAL_INCREASING
@@ -344,7 +456,7 @@ class EnergyCostSensor(SensorEntity):
             self._reset(energy_state_copy)
         elif state_class == SensorStateClass.TOTAL_INCREASING and reset_detected(
             self.hass,
-            cast(str, self._config[self._adapter.entity_energy_key]),
+            cast(str, energy_entity_id),
             energy,
             float(self._last_energy_sensor_state.state),
             self._last_energy_sensor_state,
@@ -362,24 +474,19 @@ class EnergyCostSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        energy_state = self.hass.states.get(
-            self._config[self._adapter.entity_energy_key]
-        )
+        energy_entity_id = self._config[self._adapter.entity_energy_key]
+        energy_state = self.hass.states.get(energy_entity_id)
         if energy_state:
             name = energy_state.name
         else:
-            name = split_entity_id(self._config[self._adapter.entity_energy_key])[
-                0
-            ].replace("_", " ")
+            name = split_entity_id(energy_entity_id)[0].replace("_", " ")
 
         self._attr_name = f"{name} {self._adapter.name_suffix}"
 
         self._update_cost()
 
         # Store stat ID in hass.data so frontend can look it up
-        self.hass.data[DOMAIN]["cost_sensors"][
-            self._config[self._adapter.entity_energy_key]
-        ] = self.entity_id
+        self.hass.data[DOMAIN]["cost_sensors"][energy_entity_id] = self.entity_id
 
         @callback
         def async_state_changed_listener(*_: Any) -> None:
@@ -390,7 +497,7 @@ class EnergyCostSensor(SensorEntity):
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
-                cast(str, self._config[self._adapter.entity_energy_key]),
+                cast(str, energy_entity_id),
                 async_state_changed_listener,
             )
         )
@@ -406,6 +513,25 @@ class EnergyCostSensor(SensorEntity):
         self.hass.data[DOMAIN]["cost_sensors"].pop(
             self._config[self._adapter.entity_energy_key]
         )
+        # Clear any issues related to this cost sensor
+        energy_entity_id = self._config[self._adapter.entity_energy_key]
+        async_delete_issue(self.hass, DOMAIN, f"invalid_state_class_{energy_entity_id}")
+        async_delete_issue(self.hass, DOMAIN, f"no_last_reset_{energy_entity_id}")
+        async_delete_issue(self.hass, DOMAIN, f"invalid_state_{energy_entity_id}")
+        async_delete_issue(self.hass, DOMAIN, f"no_unit_{energy_entity_id}")
+        async_delete_issue(self.hass, DOMAIN, f"invalid_unit_{energy_entity_id}")
+        if (price_entity_id := self._config["entity_energy_price"]) is not None:
+            async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"no_price_state_{energy_entity_id}_{price_entity_id}",
+            )
+            async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"invalid_price_state_{energy_entity_id}_{price_entity_id}",
+            )
+
         await super().async_will_remove_from_hass()
 
     @callback

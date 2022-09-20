@@ -23,7 +23,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -994,6 +994,13 @@ async def test_cost_sensor_wrong_state_class(
         f"Found unexpected state_class {state_class} for sensor.energy_consumption"
         in caplog.text
     )
+    issue_id = "invalid_state_class_sensor.energy_consumption"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption",
+        "state_class": "<None>",
+    }
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -1005,6 +1012,19 @@ async def test_cost_sensor_wrong_state_class(
 
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == STATE_UNKNOWN
+    assert issue_registry.async_get_issue("energy", issue_id)
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes | {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
 
 
 @pytest.mark.parametrize("state_class", [SensorStateClass.MEASUREMENT])
@@ -1052,6 +1072,12 @@ async def test_cost_sensor_state_class_measurement_no_reset(
 
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == STATE_UNKNOWN
+    issue_id = "no_last_reset_sensor.energy_consumption"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption"
+    }
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -1063,6 +1089,410 @@ async def test_cost_sensor_state_class_measurement_no_reset(
 
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == STATE_UNKNOWN
+    assert issue_registry.async_get_issue("energy", issue_id)
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes | {ATTR_LAST_RESET: dt_util.utcnow().isoformat()},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
+
+
+@pytest.mark.parametrize("state_class", [SensorStateClass.TOTAL_INCREASING])
+async def test_cost_sensor_invalid_energy_state(
+    hass, hass_storage, setup_integration, caplog, state_class
+) -> None:
+    """Test energy sensor reports non-float energy state."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: state_class,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": 0.5,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        "tenthousand",
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    issue_id = "invalid_state_sensor.energy_consumption"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption",
+        "energy_state": "tenthousand",
+    }
+
+    # Energy use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        "twentythousand",
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    assert issue_registry.async_get_issue("energy", issue_id)
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
+
+
+@pytest.mark.parametrize("state_class", [SensorStateClass.TOTAL_INCREASING])
+async def test_cost_sensor_missing_price_state(
+    hass, hass_storage, setup_integration, caplog, state_class
+) -> None:
+    """Test energy sensor reports missing price entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: state_class,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": "sensor.energy_price",
+                    "number_energy_price": None,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    issue_id = "no_price_state_sensor.energy_consumption_sensor.energy_price"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption",
+        "price_entity_id": "sensor.energy_price",
+    }
+
+    # Energy use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20000,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    assert issue_registry.async_get_issue("energy", issue_id)
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set("sensor.energy_price", "1")
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20001,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
+
+
+@pytest.mark.parametrize("state_class", [SensorStateClass.TOTAL_INCREASING])
+async def test_cost_sensor_invalid_price_state(
+    hass, hass_storage, setup_integration, caplog, state_class
+) -> None:
+    """Test energy sensor reports invalid price entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: state_class,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": "sensor.energy_price",
+                    "number_energy_price": None,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes,
+    )
+    hass.states.async_set("sensor.energy_price", "too expensive")
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    issue_id = "invalid_price_state_sensor.energy_consumption_sensor.energy_price"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption",
+        "price_entity_id": "sensor.energy_price",
+        "price_state": "too expensive",
+    }
+
+    # Energy use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20000,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    assert issue_registry.async_get_issue("energy", issue_id)
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set("sensor.energy_price", "1")
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20001,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
+
+
+@pytest.mark.parametrize("state_class", [SensorStateClass.TOTAL_INCREASING])
+async def test_cost_sensor_missing_energy_unit(
+    hass, hass_storage, setup_integration, caplog, state_class
+) -> None:
+    """Test energy sensor reports missing energy unit."""
+    energy_attributes = {
+        ATTR_STATE_CLASS: state_class,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": 0.5,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+
+    # Energy use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20000,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    issue_id = "no_unit_sensor.energy_consumption"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption",
+    }
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes | {ATTR_UNIT_OF_MEASUREMENT: "kWh"},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
+
+
+@pytest.mark.parametrize("state_class", [SensorStateClass.TOTAL_INCREASING])
+async def test_cost_sensor_invalid_energy_unit(
+    hass, hass_storage, setup_integration, caplog, state_class
+) -> None:
+    """Test energy sensor reports invalid energy unit."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: "BTU",
+        ATTR_STATE_CLASS: state_class,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": 0.5,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+
+    # Energy use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20000,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    issue_id = "invalid_unit_sensor.energy_consumption"
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("energy", issue_id)
+    assert issue.translation_placeholders == {
+        "energy_entity_id": "sensor.energy_consumption",
+        "supported_units": "'Wh', 'kWh', 'MWh'",
+        "unit": "BTU",
+    }
+
+    # Fix the problem - issue should be removed
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes | {ATTR_UNIT_OF_MEASUREMENT: "kWh"},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert not issue_registry.async_get_issue("energy", issue_id)
 
 
 async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
