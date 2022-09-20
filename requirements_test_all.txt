@@ -206,6 +206,7 @@ aiopvapi==2.0.1
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
 
+# homeassistant.components.lidarr
 # homeassistant.components.sonarr
 aiopyarr==22.7.0
 
