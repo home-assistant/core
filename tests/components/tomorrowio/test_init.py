@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.climacell.const import CONF_TIMESTEP, DOMAIN as CC_DOMAIN
+from homeassistant.components.climacell import CONF_TIMESTEP, DOMAIN as CC_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,

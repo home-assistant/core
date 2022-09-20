@@ -56,6 +56,8 @@ def data_uv_index_fixture():
 async def setup_openuv_fixture(hass, config, data_protection_window, data_uv_index):
     """Define a fixture to set up OpenUV."""
     with patch(
+        "homeassistant.components.openuv.async_get_entity_id_from_unique_id_suffix",
+    ), patch(
         "homeassistant.components.openuv.Client.uv_index", return_value=data_uv_index
     ), patch(
         "homeassistant.components.openuv.Client.uv_protection_window",
