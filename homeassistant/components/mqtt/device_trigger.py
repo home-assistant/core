@@ -42,7 +42,7 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
-from .models import get_mqtt_data
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 

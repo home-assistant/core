@@ -35,8 +35,7 @@ from .const import (
     DEFAULT_WILL,
     DOMAIN,
 )
-from .models import get_mqtt_data
-from .util import MQTT_WILL_BIRTH_SCHEMA
+from .util import MQTT_WILL_BIRTH_SCHEMA, get_mqtt_data
 
 MQTT_TIMEOUT = 5
 

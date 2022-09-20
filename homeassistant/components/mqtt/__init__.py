@@ -82,10 +82,10 @@ from .models import (  # noqa: F401
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
-    get_mqtt_data,
 )
 from .util import (
     _VALID_QOS_SCHEMA,
+    get_mqtt_data,
     mqtt_config_entry_enabled,
     valid_publish_topic,
     valid_subscribe_topic,

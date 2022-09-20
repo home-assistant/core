@@ -16,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import DATA_MQTT
-
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
     from .device_trigger import Trigger
@@ -202,10 +200,3 @@ class MqttData:
     reload_needed: bool = False
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     updated_config: ConfigType = field(default_factory=dict)
-
-
-def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
-    """Return typed MqttData from hass.data[DATA_MQTT]."""
-    if ensure_exists:
-        return hass.data.setdefault(DATA_MQTT, MqttData())
-    return hass.data[DATA_MQTT]

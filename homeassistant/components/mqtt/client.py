@@ -59,9 +59,8 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
-    get_mqtt_data,
 )
-from .util import mqtt_config_entry_enabled
+from .util import get_mqtt_data, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally

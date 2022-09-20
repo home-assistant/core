@@ -17,7 +17,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import debug_info, is_connected
-from .models import get_mqtt_data
+from .util import get_mqtt_data
 
 REDACT_CONFIG = {CONF_PASSWORD, CONF_USERNAME}
 REDACT_STATE_DEVICE_TRACKER = {ATTR_LATITUDE, ATTR_LONGITUDE}

@@ -30,7 +30,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .models import get_mqtt_data
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 

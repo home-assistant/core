@@ -77,13 +77,13 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage, get_mqtt_data
+from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import mqtt_config_entry_enabled, valid_subscribe_topic
+from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
