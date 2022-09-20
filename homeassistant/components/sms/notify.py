@@ -42,7 +42,7 @@ class SMSNotificationService(BaseNotificationService):
             _LOGGER.error("No target number specified, cannot send message")
             return
 
-        extended_data = kwargs.get(ATTR_DATA, {})
+        extended_data = kwargs.get(ATTR_DATA)
         _LOGGER.debug("Extended data:%s", extended_data)
 
         if extended_data is None:
