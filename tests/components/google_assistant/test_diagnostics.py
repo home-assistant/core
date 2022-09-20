@@ -80,6 +80,12 @@ async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
                 },
             ],
         },
+        "query": {
+            "devices": {
+                "switch.ac": {"on": False, "online": True},
+                "switch.decorative_lights": {"on": True, "online": True},
+            }
+        },
         "yaml_config": {
             "expose_by_default": True,
             "exposed_domains": [
