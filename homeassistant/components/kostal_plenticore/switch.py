@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from abc import ABC
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, NamedTuple
+from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -19,12 +20,11 @@ from .helper import SettingDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchData(NamedTuple):
-    """Representation of a SelectData tuple."""
+@dataclass
+class PlenticoreRequiredKeysMixin:
+    """A class that describes required properties for plenticore switch entities."""
 
     module_id: str
-    data_id: str
-    name: str
     is_on: str
     on_value: str
     on_label: str
@@ -32,26 +32,23 @@ class SwitchData(NamedTuple):
     off_label: str
 
 
-# Defines all entities for switches.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - on Value (str)
-#  - on Label (str)
-#  - off Value (str)
-#  - off Label (str)
+@dataclass
+class PlenticoreSwitchEntityDescription(
+    SwitchEntityDescription, PlenticoreRequiredKeysMixin
+):
+    """A class that describes plenticore switch entities."""
+
+
 SWITCH_SETTINGS_DATA = [
-    SwitchData(
-        "devices:local",
-        "Battery:Strategy",
-        "Battery Strategy",
-        "1",
-        "1",
-        "Automatic",
-        "2",
-        "Automatic economical",
+    PlenticoreSwitchEntityDescription(
+        module_id="devices:local",
+        key="Battery:Strategy",
+        name="Battery Strategy",
+        is_on="1",
+        on_value="1",
+        on_label="Automatic",
+        off_value="2",
+        off_label="Automatic economical",
     ),
 ]
 
@@ -73,13 +70,13 @@ async def async_setup_entry(
         plenticore,
     )
     for switch in SWITCH_SETTINGS_DATA:
-        if switch.module_id not in available_settings_data or switch.data_id not in (
+        if switch.module_id not in available_settings_data or switch.key not in (
             setting.id for setting in available_settings_data[switch.module_id]
         ):
             _LOGGER.debug(
                 "Skipping non existing setting data %s/%s",
                 switch.module_id,
-                switch.data_id,
+                switch.key,
             )
             continue
 
@@ -89,7 +86,7 @@ async def async_setup_entry(
                 entry.entry_id,
                 entry.title,
                 switch.module_id,
-                switch.data_id,
+                switch.key,
                 switch.name,
                 switch.is_on,
                 switch.on_value,
@@ -98,7 +95,7 @@ async def async_setup_entry(
                 switch.off_label,
                 plenticore.device_info,
                 f"{entry.title} {switch.name}",
-                f"{entry.entry_id}_{switch.module_id}_{switch.data_id}",
+                f"{entry.entry_id}_{switch.module_id}_{switch.key}",
             )
         )
 
@@ -112,12 +109,12 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: SettingDataUpdateCoordinator,
         entry_id: str,
         platform_name: str,
         module_id: str,
         data_id: str,
-        name: str,
+        name: str | None,
         is_on: str,
         on_value: str,
         on_label: str,
@@ -126,7 +123,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         device_info: DeviceInfo,
         attr_name: str,
         attr_unique_id: str,
-    ):
+    ) -> None:
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
