@@ -49,7 +49,6 @@ class SMSNotificationService(BaseNotificationService):
             is_unicode = True
         else:
             is_unicode = extended_data.get(CONF_UNICODE, True)
-        _LOGGER.debug("Unicode:%s", is_unicode)
 
         smsinfo = {
             "Class": -1,
