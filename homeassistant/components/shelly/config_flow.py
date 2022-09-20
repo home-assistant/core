@@ -279,7 +279,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             info = await self._async_get_info(host)
-            if self.entry.data.get("gen", 1) == 2:
+            if self.entry.data.get("gen", 1) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, info, user_input)
