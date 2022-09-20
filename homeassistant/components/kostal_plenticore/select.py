@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,10 +14,39 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SELECT_SETTINGS_DATA
+from .const import DOMAIN
 from .helper import Plenticore, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SelectData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    options: list
+    is_on: str
+
+
+# Defines all entities for select widgets.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - options
+#  - entity is enabled by default (bool)
+SELECT_SETTINGS_DATA = [
+    SelectData(
+        "devices:local",
+        "battery_charge",
+        "Battery Charging / Usage mode",
+        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
+        "1",
+    )
+]
 
 
 async def async_setup_entry(
