@@ -57,6 +57,11 @@ def bluez_dbus_mock():
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
     with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.platform.system",
+        return_value="Darwin",
+    ), patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
     ):
         yield
