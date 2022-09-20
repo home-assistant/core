@@ -60,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 try:
     from .bluetooth import async_connect_scanner
 except Exception as ex:
-    _LOGGER.error("Bleak exception: %s", ex)
+    _LOGGER.error("Bluetooth exception: %s", ex)
 
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
