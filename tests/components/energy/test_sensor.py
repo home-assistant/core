@@ -1249,11 +1249,6 @@ async def test_cost_sensor_missing_price_state(
 
     # Fix the problem - issue should be removed
     hass.states.async_set("sensor.energy_price", "1")
-    hass.states.async_set(
-        "sensor.energy_consumption",
-        20001,
-        energy_attributes,
-    )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
@@ -1330,11 +1325,6 @@ async def test_cost_sensor_invalid_price_state(
 
     # Fix the problem - issue should be removed
     hass.states.async_set("sensor.energy_price", "1")
-    hass.states.async_set(
-        "sensor.energy_consumption",
-        20001,
-        energy_attributes,
-    )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")

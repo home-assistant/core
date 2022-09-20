@@ -501,6 +501,16 @@ class EnergyCostSensor(SensorEntity):
                 async_state_changed_listener,
             )
         )
+        if (price_entity_id := self._config["entity_energy_price"]) is not None:
+            # Listen to price entity changes to clear up repairs issues
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass,
+                    cast(str, price_entity_id),
+                    async_state_changed_listener,
+                )
+            )
+
         self.add_finished.set()
 
     @callback
