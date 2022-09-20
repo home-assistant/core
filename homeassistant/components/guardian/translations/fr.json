@@ -34,7 +34,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Cette entit\u00e9 a \u00e9t\u00e9 remplac\u00e9e par `{replacement_entity_id}`.",
+                        "description": "Modifiez tout script ou automatisation utilisant cette entit\u00e9 afin qu'ils utilisent `{replacement_entity_id}` \u00e0 la place.",
                         "title": "L'entit\u00e9 {old_entity_id} sera supprim\u00e9e"
                     }
                 }

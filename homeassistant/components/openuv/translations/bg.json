@@ -18,6 +18,14 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "title": "\u0423\u0441\u043b\u0443\u0433\u0430\u0442\u0430 {deprecated_service} \u0441\u0435 \u043f\u0440\u0435\u043c\u0430\u0445\u0432\u0430"
+        },
+        "deprecated_service_single_alternate_target": {
+            "title": "\u0423\u0441\u043b\u0443\u0433\u0430\u0442\u0430 {deprecated_service} \u0441\u0435 \u043f\u0440\u0435\u043c\u0430\u0445\u0432\u0430"
+        }
+    },
     "options": {
         "step": {
             "init": {
