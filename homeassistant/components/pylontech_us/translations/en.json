@@ -11,9 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Port",
-                    "baud": "Baudrate",
-                    "battery_count": "Number of Batteries"
+                    "pylontech_us_port": "Port",
+                    "pylontech_us_baud": "Baud rate",
+                    "pylontech_us_battery_count": "Number of Batteries"
                 }
             }
         }

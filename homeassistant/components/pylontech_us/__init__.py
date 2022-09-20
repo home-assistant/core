@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
-from aioesphomeapi import Any
 import async_timeout
 from pylontech import PylontechStack
 
@@ -15,11 +15,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
+# from typing_extensions import Self
+
+
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
+# currently needs to be run with:
+# pip install git+https://github.com/danielschramm/pylontech-python.git@url_issues
 
 
 class PylontechCoordinator(DataUpdateCoordinator):
@@ -38,12 +44,31 @@ class PylontechCoordinator(DataUpdateCoordinator):
         self._stack = PylontechStack(
             device=port, baud=baud, manualBattcountLimit=battery_count
         )
-        self._last_result = self._stack.update()
-        self._hass = hass
+        self._last_result = None
 
     def update(self):
         """Create callable for call from async."""
-        self._stack.update()
+        retry = 0
+        while retry < 3:
+            try:
+                self._stack.update()
+            except ValueError:
+                print("Pylontech retry update, ValueError")
+            except Exception as exc:  # pylint: disable=broad-except
+                print("Pylontech retry update, Exception ", exc)
+            retry = retry + 1
+
+    async def async_config_entry_first_refresh(self):
+        """Refresh on first start."""
+        retry = 0
+        while retry < 3:
+            try:
+                self._last_result = self._stack.update()
+            except ValueError:
+                print("Pylontech retry update, ValueError")
+            except Exception as exc:  # pylint: disable=broad-except
+                print("Pylontech retry update, Exception ", exc)
+            retry = retry + 1
 
     async def _async_update_data(self) -> (Any | None):
         """Fetch data from Battery."""
@@ -51,8 +76,8 @@ class PylontechCoordinator(DataUpdateCoordinator):
         # try:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
-        async with async_timeout.timeout(15):
-            await self._hass.async_add_executor_job(self.update)
+        async with async_timeout.timeout(45):
+            await self.hass.async_add_executor_job(self.update)
             return self._stack.pylonData
         # except TypeError as err:
         #    print('TypeError')
@@ -70,13 +95,18 @@ class PylontechCoordinator(DataUpdateCoordinator):
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Set up pylontech_rs485 from a config entry."""
+    """Set up pylontech_us from a config entry."""
     # TOODOO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
+    port = config_entry.data["pylontech_us_port"]
+    baud = config_entry.data["pylontech_us_baud"]
+    battery_count = config_entry.data["pylontech_us_battery_count"]
+
     coordinator = PylontechCoordinator(
-        hass, port="/dev/ttyUSB0", baud=115200, battery_count=7
+        hass, port=port, baud=baud, battery_count=battery_count
     )
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator

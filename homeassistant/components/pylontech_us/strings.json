@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "data": {
-          "port": "[%key:common::config_flow::data::port%]",
-          "baud": "Baud",
-          "battery_count": "Battery Count"
+          "pylontech_us_port": "Port",
+          "pylontech_us_baud": "Baus rate",
+          "pylontech_us_battery_count": "Number of Batteries"
         }
       }
     },

@@ -21,9 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 # TOODOP adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("port", default="/dev/ttyUSB0"): str,
-        vol.Required("baud", default=115200): int,
-        vol.Required("battery_count", default=7): int,
+        vol.Required("pylontech_us_port", default="/dev/ttyUSB0"): str,
+        # Port examples: "/dev/ttyUSB0", "socket://10.10.4.13:23", "rfc2217://10.10.4.13:23"
+        vol.Required("pylontech_us_baud", default=115200): int,
+        vol.Required("pylontech_us_battery_count", default=7): int,
     }
 )
 
@@ -43,18 +44,18 @@ class PylontechHub:
         # InvalidAuth
         # config['port']
 
-        stack = PylontechStack(
-            device=self._config["port"],
-            baud=self._config["baud"],
-            manualBattcountLimit=self._config["battery_count"],
-        )
-        stack.update()
+        try:
+            stack = PylontechStack(
+                device=self._config["pylontech_us_port"],
+                baud=self._config["pylontech_us_baud"],
+                manualBattcountLimit=self._config["pylontech_us_battery_count"],
+            )
+            stack.update()
+        except Exception as exc:
+            raise CannotConnect("Connection Error, check Port and Baudrate") from exc
 
-        if stack is None:
-            raise CannotConnect("Connection Error, check Port and Baudrate")
-
-        if stack.battcount != self._config["battery_count"]:
-            self._config["battery_count"] = stack.battcount
+        if stack.battcount != self._config["pylontech_us_battery_count"]:
+            self._config["pylontech_us_battery_count"] = stack.battcount
             raise CannotConnect(
                 "Wrong battery count will result in slow update please count again."
             )
@@ -105,7 +106,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title="Pylontech " + user_input["port"], data=user_input
+                    title="Pylontech " + user_input["pylontech_us_port"],
+                    data=user_input,
                 )
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
