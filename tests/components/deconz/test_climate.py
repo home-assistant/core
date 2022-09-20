@@ -937,7 +937,7 @@ async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
 
 
 async def test_boost_mode(hass, aioclient_mock, mock_deconz_websocket):
-    """Test that a climate device with bost mode and different state works."""
+    """Test that a climate device with boost mode and different state works."""
     data = {
         "sensors": {
             "0": {
