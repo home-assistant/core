@@ -7,7 +7,6 @@ import functools
 import logging
 import re
 import time
-from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -29,12 +28,9 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_TOPIC,
-    DATA_MQTT,
     DOMAIN,
 )
-
-if TYPE_CHECKING:
-    from .mixins import MqttData
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +94,7 @@ async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic, config_entry=None
 ) -> None:
     """Start MQTT Discovery."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     mqtt_integrations = {}
 
     async def async_discovery_message_received(msg):
