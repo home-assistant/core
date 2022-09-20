@@ -3,7 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, const, device_trigger
+from homeassistant.components.climate import DOMAIN, HVACMode, const, device_trigger
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -52,7 +52,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     entity_id = f"{DOMAIN}.test_5678"
     hass.states.async_set(
         entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
             const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -114,7 +114,7 @@ async def test_get_triggers_hidden_auxiliary(
     entity_id = f"{DOMAIN}.test_5678"
     hass.states.async_set(
         entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
             const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -146,7 +146,7 @@ async def test_if_fires_on_state_change(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
             const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -166,7 +166,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "device_id": "",
                         "entity_id": "climate.entity",
                         "type": "hvac_mode_changed",
-                        "to": const.HVAC_MODE_AUTO,
+                        "to": HVACMode.AUTO,
                     },
                     "action": {
                         "service": "test.automation",
@@ -208,7 +208,7 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the HVAC mode is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -222,7 +222,7 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the temperature is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -236,7 +236,7 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the humidity is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 7,
