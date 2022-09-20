@@ -2,19 +2,19 @@
   "title": "Energy",
   "issues": {
     "invalid_price_state": {
-      "title": "The energy price sensor {price_entity_id} has a non-numeric state '{price_state}'",
+      "title": "The energy price sensor {price_entity_id} has a non-numeric state \"{price_state}\"",
       "description": "The energy price sensor's state must be numeric, otherwise costs for {energy_entity_id} can't be calculated."
     },
     "invalid_state": {
-      "title": "The energy sensor {energy_entity_id} has a non-numeric state '{energy_state}'",
+      "title": "The energy sensor {energy_entity_id} has a non-numeric state \"{energy_state}\"",
       "description": "The energy sensor's state must be numeric, otherwise costs for {energy_entity_id} can't be calculated."
     },
     "invalid_state_class": {
-      "title": "The energy sensor {energy_entity_id} has an unsupported state class '{state_class}'",
+      "title": "The energy sensor {energy_entity_id} has an unsupported state class \"{state_class}\"",
       "description": "The energy sensor's state class must be either of 'measurement', 'increasing' or 'total_increasing', otherwise costs for {energy_entity_id} can't be calculated."
     },
     "invalid_unit": {
-      "title": "The energy sensor {energy_entity_id} has an unsupported unit '{unit}'",
+      "title": "The energy sensor {energy_entity_id} has an unsupported unit \"{unit}\"",
       "description": "The energy sensor's unit must be either of {supported_units}, otherwise costs for {energy_entity_id} can't be calculated."
     },
     "no_price_state": {
