@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.44
+AIOAladdinConnect==0.1.46
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.9
+PySwitchbot==0.19.10
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -181,7 +181,7 @@ aiohttp_cors==0.7.0
 aiohue==4.5.0
 
 # homeassistant.components.imap
-aioimaplib==1.0.0
+aioimaplib==1.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
@@ -449,7 +449,7 @@ boto3==1.20.24
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.2.3
+brother==2.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1325,7 +1325,7 @@ proxmoxer==1.3.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.1
+psutil==5.9.2
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
@@ -1674,7 +1674,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.3
+pylitterbot==2022.9.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.15.1
@@ -1775,7 +1775,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.0
+pyoverkiz==1.5.3
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2473,7 +2473,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.3.2
 
 # homeassistant.components.volvooncall
-volvooncall==0.10.0
+volvooncall==0.10.1
 
 # homeassistant.components.verisure
 vsure==1.8.1

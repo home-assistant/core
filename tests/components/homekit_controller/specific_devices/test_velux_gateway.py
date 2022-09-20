@@ -16,7 +16,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,

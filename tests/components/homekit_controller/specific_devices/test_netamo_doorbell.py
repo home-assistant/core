@@ -4,7 +4,7 @@ Regression tests for Netamo Doorbell.
 https://github.com/home-assistant/core/issues/44596
 """
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     DeviceTriggerInfo,

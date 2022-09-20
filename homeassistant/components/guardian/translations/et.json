@@ -29,6 +29,17 @@
                 }
             },
             "title": "Teenus {deprecated_service} eemaldatakse"
+        },
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "See olem on asendatud olemiga \"{replacement_entity_id}\".",
+                        "title": "Olem {old_entity_id} eemaldatakse"
+                    }
+                }
+            },
+            "title": "Olem {old_entity_id} eemaldatakse"
         }
     }
 }

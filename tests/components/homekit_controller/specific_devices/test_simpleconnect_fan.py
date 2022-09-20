@@ -6,7 +6,7 @@ https://github.com/home-assistant/core/issues/26180
 
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
