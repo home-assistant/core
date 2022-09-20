@@ -7,10 +7,6 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import (
-    DOMAIN as MP_DOMAIN,
-    MediaPlayerDeviceClass,
-)
-from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
@@ -18,11 +14,13 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    MEDIA_TYPE_CHANNEL,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET,
+    MediaPlayerDeviceClass,
+    MediaType,
 )
 from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
@@ -304,7 +302,7 @@ async def test_entity_attributes(hass, client, monkeypatch):
     assert attrs[ATTR_MEDIA_VOLUME_LEVEL] == 0.37
     assert attrs[ATTR_INPUT_SOURCE] == "Live TV"
     assert attrs[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
-    assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_CHANNEL
+    assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MediaType.CHANNEL
     assert attrs[ATTR_MEDIA_TITLE] == "Channel 1"
     assert attrs[ATTR_SOUND_OUTPUT] == "speaker"
 
@@ -373,7 +371,7 @@ async def test_play_media(hass, client, media_id, ch_id):
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
         ATTR_MEDIA_CONTENT_ID: media_id,
     }
     assert await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)

@@ -16,10 +16,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_PLAYLIST,
+from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -31,6 +28,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    BrowseMedia,
+    MediaClass,
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -2110,7 +2109,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
             return_value=[
                 BrowseMedia(
                     title="Spotify",
-                    media_class=MEDIA_CLASS_APP,
+                    media_class=MediaClass.APP,
                     media_content_id="",
                     media_content_type="spotify",
                     thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
@@ -2122,7 +2121,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         async_browse_media=AsyncMock(
             return_value=BrowseMedia(
                 title="Spotify Favourites",
-                media_class=MEDIA_CLASS_PLAYLIST,
+                media_class=MediaClass.PLAYLIST,
                 media_content_id="",
                 media_content_type="spotify",
                 can_play=True,
