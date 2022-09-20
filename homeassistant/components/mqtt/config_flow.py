@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
-from . import get_mqtt_data
 from .client import MqttClientSetup
 from .const import (
     ATTR_PAYLOAD,
@@ -36,6 +35,7 @@ from .const import (
     DEFAULT_WILL,
     DOMAIN,
 )
+from .models import get_mqtt_data
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
 MQTT_TIMEOUT = 5

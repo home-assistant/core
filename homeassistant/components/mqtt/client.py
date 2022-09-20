@@ -59,6 +59,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
+    get_mqtt_data,
 )
 from .util import mqtt_config_entry_enabled
 
@@ -97,10 +98,6 @@ async def async_publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import get_mqtt_data
-
     mqtt_data = get_mqtt_data(hass, True)
     if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
@@ -187,10 +184,6 @@ async def async_subscribe(
 
     Call the return value to unsubscribe.
     """
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import get_mqtt_data
-
     mqtt_data = get_mqtt_data(hass, True)
     if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
@@ -328,10 +321,6 @@ class MQTT:
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
-
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import get_mqtt_data
 
         self._mqtt_data = get_mqtt_data(hass)
 

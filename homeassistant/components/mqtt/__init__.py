@@ -76,13 +76,13 @@ from .const import (  # noqa: F401
     PLATFORMS,
     RELOADABLE_PLATFORMS,
 )
-from .mixins import MqttData
 from .models import (  # noqa: F401
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
+    get_mqtt_data,
 )
 from .util import (
     _VALID_QOS_SCHEMA,
@@ -244,13 +244,6 @@ def _merge_extended_config(entry, conf):
     return {**conf, **entry.data}
 
 
-def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
-    """Return typed MqttData from hass.data[DATA_MQTT]."""
-    if ensure_exists:
-        return hass.data.setdefault(DATA_MQTT, MqttData())
-    return hass.data[DATA_MQTT]
-
-
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated.
 
@@ -274,7 +267,8 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | None:
     """Fetch fresh MQTT yaml config from the hass config when (re)loading the entry."""
-    if (mqtt_data := get_mqtt_data(hass)).reload_entry:
+    mqtt_data = get_mqtt_data(hass)
+    if mqtt_data.reload_entry:
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_data.config = CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
 

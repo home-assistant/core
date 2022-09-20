@@ -20,7 +20,6 @@ from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.loader import async_get_mqtt
 
-from . import get_mqtt_data
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 from .const import (
@@ -31,6 +30,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
+from .models import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 

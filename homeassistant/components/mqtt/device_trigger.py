@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import debug_info, get_mqtt_data, trigger as mqtt_trigger
+from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -42,6 +42,7 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
+from .models import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 

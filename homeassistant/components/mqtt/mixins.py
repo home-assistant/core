@@ -4,10 +4,9 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast, final
+from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -29,13 +28,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    async_get_hass,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -59,8 +52,8 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import debug_info, get_mqtt_data, subscription
-from .client import MQTT, Subscription, async_publish
+from . import debug_info, subscription
+from .client import async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -84,16 +77,13 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
+from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage, get_mqtt_data
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
 from .util import mqtt_config_entry_enabled, valid_subscribe_topic
-
-if TYPE_CHECKING:
-    from .device_trigger import Trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,27 +261,6 @@ def warn_for_legacy_schema(domain: str) -> Callable:
     return validator
 
 
-@dataclass
-class MqttData:
-    """Keep the MQTT entry data."""
-
-    client: MQTT | None = None
-    config: ConfigType | None = None
-    device_triggers: dict[str, Trigger] = field(default_factory=dict)
-    discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
-        default_factory=dict
-    )
-    last_discovery: float = 0.0
-    reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_entry: bool = False
-    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
-        default_factory=dict
-    )
-    reload_needed: bool = False
-    subscriptions_to_restore: list[Subscription] = field(default_factory=list)
-    updated_config: ConfigType = field(default_factory=dict)
-
-
 class SetupEntity(Protocol):
     """Protocol type for async_setup_entities."""
 
@@ -312,7 +281,6 @@ async def async_get_platform_config_from_yaml(
     config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
-
     mqtt_data = get_mqtt_data(hass)
     if config_yaml is None:
         config_yaml = mqtt_data.config
