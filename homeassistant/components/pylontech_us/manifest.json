@@ -3,7 +3,7 @@
   "name": "pylontech_us",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pylontech_us",
-  "requirements": ["pylontech==0.1.2"],
+  "requirements": ["pylontech==2.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
