@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
-from homeassistant.components.bluetooth import BluetoothCallback, BluetoothChange
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.tilt_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -13,35 +10,26 @@ from homeassistant.core import HomeAssistant
 from . import TILT_GREEN_SERVICE_INFO
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_sensors(hass: HomeAssistant):
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        unique_id="F6:0F:28:F2:1F:CB",
     )
     entry.add_to_hass(hass)
 
-    saved_callback: BluetoothCallback | None = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    assert saved_callback is not None
-    saved_callback(TILT_GREEN_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    inject_bluetooth_service_info(hass, TILT_GREEN_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert (
+        len(hass.states.async_all()) >= 2
+    )  # may trigger ibeacon integration as well since tilt uses ibeacon
 
     temp_sensor = hass.states.get("sensor.tilt_green_temperature")
     assert temp_sensor is not None

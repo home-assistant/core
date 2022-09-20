@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.44
+AIOAladdinConnect==0.1.46
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.9
+PySwitchbot==0.19.10
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.8
+aiohomekit==1.5.9
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -181,7 +181,7 @@ aiohttp_cors==0.7.0
 aiohue==4.5.0
 
 # homeassistant.components.imap
-aioimaplib==1.0.0
+aioimaplib==1.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
@@ -430,7 +430,7 @@ bluemaestro-ble==0.2.0
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.4.1
+bluetooth-adapters==0.5.1
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.3.3
@@ -449,7 +449,7 @@ boto3==1.20.24
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.2.3
+brother==2.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -535,7 +535,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.4.0
+dbus-fast==1.5.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -555,7 +555,7 @@ defusedxml==0.7.1
 deluge-client==1.7.1
 
 # homeassistant.components.lametric
-demetriek==0.2.2
+demetriek==0.2.4
 
 # homeassistant.components.denonavr
 denonavr==0.10.11
@@ -830,7 +830,7 @@ hass-nabucasa==0.55.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.6.0
+hatasmota==0.6.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -891,6 +891,9 @@ iammeter==0.1.7
 
 # homeassistant.components.iaqualink
 iaqualink==0.4.1
+
+# homeassistant.components.ibeacon
+ibeacon_ble==0.6.4
 
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
@@ -989,7 +992,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==5.1.0
+life360==5.1.1
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -1046,7 +1049,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.15
+melnor-bluetooth==0.0.20
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -1325,7 +1328,7 @@ proxmoxer==1.3.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.1
+psutil==5.9.2
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
@@ -1674,7 +1677,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.1
+pylitterbot==2022.9.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.15.1
@@ -1775,7 +1778,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.0
+pyoverkiz==1.5.3
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1829,7 +1832,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.4
+pyrisco==0.5.5
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1912,7 +1915,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.switchbee
-pyswitchbee==1.4.7
+pyswitchbee==1.4.8
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -2106,7 +2109,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.6.0
+qingping-ble==0.7.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2254,7 +2257,7 @@ slixmpp==1.8.2
 smart-meter-texas==0.4.7
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.15
+smhi-pkg==1.0.16
 
 # homeassistant.components.snapcast
 snapcast==2.1.3
@@ -2375,7 +2378,7 @@ tesla-wall-connector==1.0.2
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.3.1
+thermobeacon-ble==0.3.2
 
 # homeassistant.components.thermopro
 thermopro-ble==0.4.3
@@ -2473,7 +2476,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.3.2
 
 # homeassistant.components.volvooncall
-volvooncall==0.10.0
+volvooncall==0.10.1
 
 # homeassistant.components.verisure
 vsure==1.8.1

@@ -9,7 +9,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import init_integration, init_integration_with_entry
+
+from . import init_integration
 
 from tests.common import MockConfigEntry
 

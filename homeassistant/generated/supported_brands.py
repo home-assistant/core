@@ -3,9 +3,7 @@
 To update, run python3 -m script.hassfest
 """
 
-# fmt: off
-
-HAS_SUPPORTED_BRANDS = (
+HAS_SUPPORTED_BRANDS = [
     "denonavr",
     "hunterdouglas_powerview",
     "inkbird",
@@ -16,5 +14,5 @@ HAS_SUPPORTED_BRANDS = (
     "wemo",
     "whirlpool",
     "yalexs_ble",
-    "zwave_js"
-)
+    "zwave_js",
+]

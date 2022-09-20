@@ -6,7 +6,7 @@ from homeassistant.components import switch
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-from tests.components.switch import common
+from . import common
 
 
 @pytest.fixture(autouse=True)

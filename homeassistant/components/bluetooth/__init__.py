@@ -8,14 +8,24 @@ import platform
 from typing import TYPE_CHECKING, cast
 
 import async_timeout
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components import usb
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_INTEGRATION_DISCOVERY,
+    ConfigEntry,
+)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
@@ -71,6 +81,8 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
+RECOMMENDED_MIN_HAOS_VERSION = AwesomeVersion("9.0.dev0")
+
 
 def _get_manager(hass: HomeAssistant) -> BluetoothManager:
     """Get the bluetooth manager."""
@@ -101,6 +113,16 @@ def async_discovered_service_info(
     if DATA_MANAGER not in hass.data:
         return []
     return _get_manager(hass).async_discovered_service_info(connectable)
+
+
+@hass_callback
+def async_last_service_info(
+    hass: HomeAssistant, address: str, connectable: bool = True
+) -> BluetoothServiceInfoBleak | None:
+    """Return the last service info for an address."""
+    if DATA_MANAGER not in hass.data:
+        return None
+    return _get_manager(hass).async_last_service_info(address, connectable)
 
 
 @hass_callback
@@ -173,7 +195,7 @@ async def async_process_advertisements(
 @hass_callback
 def async_track_unavailable(
     hass: HomeAssistant,
-    callback: Callable[[str], None],
+    callback: Callable[[BluetoothServiceInfoBleak], None],
     address: str,
     connectable: bool = True,
 ) -> Callable[[], None]:
@@ -213,12 +235,49 @@ async def async_get_adapter_from_address(
     return await _get_manager(hass).async_get_adapter_from_address(address)
 
 
+@hass_callback
+def _async_haos_is_new_enough(hass: HomeAssistant) -> bool:
+    """Check if the version of Home Assistant Operating System is new enough."""
+    # Only warn if a USB adapter is plugged in
+    if not any(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.source != SOURCE_IGNORE
+    ):
+        return True
+    if (
+        not hass.components.hassio.is_hassio()
+        or not (os_info := hass.components.hassio.get_os_info())
+        or not (haos_version := os_info.get("version"))
+        or AwesomeVersion(haos_version) >= RECOMMENDED_MIN_HAOS_VERSION
+    ):
+        return True
+    return False
+
+
+@hass_callback
+def _async_check_haos(hass: HomeAssistant) -> None:
+    """Create or delete an the haos_outdated issue."""
+    if _async_haos_is_new_enough(hass):
+        async_delete_issue(hass, DOMAIN, "haos_outdated")
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "haos_outdated",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="/config/updates",
+        translation_key="haos_outdated",
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
     manager = BluetoothManager(hass, integration_matcher)
-    manager.async_setup()
+    await manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
     adapters = await manager.async_get_bluetooth_adapters()
@@ -249,6 +308,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
+    )
+
+    # Wait to check until after start to make sure
+    # that the system info is available.
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED,
+        hass_callback(lambda event: _async_check_haos(hass)),
     )
 
     return True
