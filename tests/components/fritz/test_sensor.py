@@ -10,10 +10,10 @@ from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_TIMESTAMP,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -38,11 +38,11 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
     },
     "sensor.mock_title_device_uptime": {
         # ATTR_STATE: "2022-02-05T17:46:04+00:00",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },
     "sensor.mock_title_connection_uptime": {
         # ATTR_STATE: "2022-03-06T11:27:16+00:00",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },
     "sensor.mock_title_upload_throughput": {
         ATTR_STATE: "3.4",
