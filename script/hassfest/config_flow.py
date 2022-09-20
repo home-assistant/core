@@ -91,12 +91,13 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
     return black.format_str(BASE.format(to_string(domains)), mode=black.Mode())
 
 
-def _populate_sub_integrations(
+def _populate_brand_integrations(
     integrations: dict[str, Integration],
-    primary_metadata: dict,
+    brand_metadata: dict,
     sub_integrations: list[str],
 ) -> None:
-    primary_metadata.setdefault("integrations", {})
+    """Add referenced integrations to a brand's metadata."""
+    brand_metadata.setdefault("integrations", {})
     for domain in sub_integrations:
         integration = integrations.get(domain)
         if not integration:
@@ -105,7 +106,7 @@ def _populate_sub_integrations(
         metadata["name"] = integration.name
         if integration.translated_name:
             metadata["translated_name"] = True
-        primary_metadata["integrations"][domain] = metadata
+        brand_metadata["integrations"][domain] = metadata
 
 
 def _generate_v2(
@@ -113,46 +114,53 @@ def _generate_v2(
 ):
     """Generate extended config flow data."""
 
-    primary_domains = {
+    result = {
         "integration": {},
         "helper": {},
     }
 
-    # Secondary integrations are integrations which are referenced from a brand
-    secondary_integration_domains = {
-        secondary_domain
+    # Compile a set of integrations which are referenced from at least one brand's
+    # integrations list. These integrations will not be present in the root level of the
+    # generated config flow index.
+    brand_integration_domains = {
+        brand_integration_domain
         for brand in brands.values()
-        for secondary_domain in brand.integrations or []
+        for brand_integration_domain in brand.integrations or []
     }
 
-    # Primary integrations are brands and integrations which are not referenced from a brand
-    primary_integration_domains = {
+    # Compile a set of integrations which are not referenced from any brand's
+    # integrations list.
+    primary_domains = {
         domain
         for domain, integration in integrations.items()
         if integration.manifest
         and integration.config_flow
-        and domain not in secondary_integration_domains
+        and domain not in brand_integration_domains
     }
-    primary_integration_domains |= set(brands)
+    # Add all brands to the set
+    primary_domains |= set(brands)
 
-    for domain in sorted(primary_integration_domains):
+    # Generate the config flow index
+    for domain in sorted(primary_domains):
         metadata = {}
 
         if brand := brands.get(domain):
             metadata["name"] = brand.name
             if brand.integrations:
-                _populate_sub_integrations(integrations, metadata, brand.integrations)
+                # Add the integrations which are referenced from the brand's
+                # integrations list
+                _populate_brand_integrations(integrations, metadata, brand.integrations)
             if brand.iot_standards:
                 metadata["iot_standards"] = brand.iot_standards
-            primary_domains["integration"][domain] = metadata
+            result["integration"][domain] = metadata
         else:  # integration
             integration = integrations[domain]
             metadata["name"] = integration.name
             if integration.translated_name:
                 metadata["translated_name"] = True
-            primary_domains[integration.integration_type][domain] = metadata
+            result[integration.integration_type][domain] = metadata
 
-    return json.dumps(primary_domains, indent=2)
+    return json.dumps(result, indent=2)
 
 
 def validate(integrations: dict[str, Integration], config: Config):
@@ -180,7 +188,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         brands, integrations, config
     )
     with open(str(config_flow_v2_path)) as fp:
-        if fp.read() != content:
+        if fp.read() != content + "\n":
             config.add_error(
                 "config_flow",
                 "File config_flows_v2.json is not up to date. "

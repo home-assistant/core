@@ -59,7 +59,7 @@ def _validate_brand(
         config.add_error(
             "brand",
             f"Invalid brand file {brand.path.name}: Brand '{brand.brand['domain']}' "
-            f"shadows core integration '{brand.domain}'",
+            f"is an integration but is missing in the brand's 'integrations' list'",
         )
 
 
