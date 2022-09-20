@@ -7,7 +7,7 @@ import aiohue
 from homeassistant.components import hue
 from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
 from homeassistant.components.hue.v1 import light as hue_light
-from homeassistant.components.light import COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS
+from homeassistant.components.light import ColorMode
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
 
@@ -237,10 +237,10 @@ async def test_lights_color_mode(hass, mock_bridge_v1):
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
     assert "color_temp" not in lamp_1.attributes
-    assert lamp_1.attributes["color_mode"] == COLOR_MODE_HS
+    assert lamp_1.attributes["color_mode"] == ColorMode.HS
     assert lamp_1.attributes["supported_color_modes"] == [
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
 
     new_light1_on = LIGHT_1_ON.copy()
@@ -262,10 +262,10 @@ async def test_lights_color_mode(hass, mock_bridge_v1):
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
     assert "hs_color" in lamp_1.attributes
-    assert lamp_1.attributes["color_mode"] == COLOR_MODE_COLOR_TEMP
+    assert lamp_1.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert lamp_1.attributes["supported_color_modes"] == [
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
 
 
