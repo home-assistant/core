@@ -15,10 +15,12 @@ from .const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    DATA_MQTT,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
 )
+from .models import MqttData
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -111,3 +113,10 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     },
     required=True,
 )
+
+
+def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
+    """Return typed MqttData from hass.data[DATA_MQTT]."""
+    if ensure_exists:
+        return hass.data.setdefault(DATA_MQTT, MqttData())
+    return hass.data[DATA_MQTT]
