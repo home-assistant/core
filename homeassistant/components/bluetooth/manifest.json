@@ -3,6 +3,7 @@
   "name": "Bluetooth",
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
   "dependencies": ["usb"],
+  "after_dependencies": ["hassio"],
   "quality_scale": "internal",
   "requirements": [
     "bleak==0.17.0",
