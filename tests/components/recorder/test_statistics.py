@@ -532,6 +532,7 @@ async def test_import_statistics(
             "name": "Total imported energy",
             "source": source,
             "statistics_unit_of_measurement": "kWh",
+            "unit_class": "energy",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -603,7 +604,7 @@ async def test_import_statistics(
         ]
     }
 
-    # Update the previously inserted statistics + rename and change unit
+    # Update the previously inserted statistics + rename and change display unit
     external_statistics = {
         "start": period1,
         "max": 1,
@@ -620,13 +621,14 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
+            "display_unit_of_measurement": "MWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
             "source": source,
             "statistics_unit_of_measurement": "kWh",
+            "unit_class": "energy",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -651,12 +653,12 @@ async def test_import_statistics(
                 "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
+                "max": approx(1.0 / 1000),
+                "mean": approx(2.0 / 1000),
+                "min": approx(3.0 / 1000),
                 "last_reset": last_reset_utc_str,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "state": approx(4.0 / 1000),
+                "sum": approx(5.0 / 1000),
             },
             {
                 "statistic_id": statistic_id,
@@ -666,8 +668,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": approx(1.0 / 1000),
+                "sum": approx(3.0 / 1000),
             },
         ]
     }
@@ -680,6 +682,7 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
+            "display_unit": "MWh",
         }
     )
     response = await client.receive_json()
@@ -693,12 +696,12 @@ async def test_import_statistics(
                 "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
+                "max": approx(1.0 / 1000),
+                "mean": approx(2.0 / 1000),
+                "min": approx(3.0 / 1000),
                 "last_reset": last_reset_utc_str,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "state": approx(4.0 / 1000),
+                "sum": approx(5.0 / 1000),
             },
             {
                 "statistic_id": statistic_id,
@@ -708,8 +711,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(1003.0),
+                "state": approx(1.0 / 1000),
+                "sum": approx(1000 + 3.0 / 1000),
             },
         ]
     }
