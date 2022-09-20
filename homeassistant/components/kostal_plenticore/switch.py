@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,10 +13,47 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SWITCH_SETTINGS_DATA
+from .const import DOMAIN
 from .helper import SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SwitchData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    is_on: str
+    on_value: str
+    on_label: str
+    off_value: str
+    off_label: str
+
+
+# Defines all entities for switches.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - on Value (str)
+#  - on Label (str)
+#  - off Value (str)
+#  - off Label (str)
+SWITCH_SETTINGS_DATA = [
+    SwitchData(
+        "devices:local",
+        "Battery:Strategy",
+        "Battery Strategy",
+        "1",
+        "1",
+        "Automatic",
+        "2",
+        "Automatic economical",
+    ),
+]
 
 
 async def async_setup_entry(
