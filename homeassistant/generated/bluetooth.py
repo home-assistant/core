@@ -151,7 +151,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "kegtron",
         "connectable": False,
-        "manufacturer_id": 65535
+        "manufacturer_id": 65535,
     },
     {
         "domain": "led_ble",
