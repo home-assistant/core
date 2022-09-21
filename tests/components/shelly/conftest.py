@@ -213,15 +213,15 @@ async def rest_wrapper_none(hass):
     )
     config_entry.add_to_hass(hass)
 
-    MOCK_STATUS_COAP_none = MOCK_STATUS_COAP
-    MOCK_STATUS_COAP_none["update"]["old_version"] = None
-    MOCK_STATUS_COAP_none["update"]["new_version"] = None
+    MOCK_STATUS_COAP_NONE = MOCK_STATUS_COAP
+    MOCK_STATUS_COAP_NONE["update"]["old_version"] = None
+    MOCK_STATUS_COAP_NONE["update"]["new_version"] = None
 
     device = Mock(
         blocks=MOCK_BLOCKS,
         settings=MOCK_SETTINGS,
         shelly=MOCK_SHELLY,
-        status=MOCK_STATUS_COAP_none,
+        status=MOCK_STATUS_COAP_NONE,
         firmware_version="some fw string",
         update=AsyncMock(),
         trigger_ota_update=AsyncMock(),
@@ -332,15 +332,15 @@ async def rpc_poll_wrapper_none(hass):
     )
     config_entry.add_to_hass(hass)
 
-    MOCK_STATUS_RPC_none = MOCK_STATUS_RPC
-    MOCK_STATUS_RPC_none["sys"]["available_updates"] = {}
+    MOCK_STATUS_RPC_NONE = MOCK_STATUS_RPC
+    MOCK_STATUS_RPC_NONE["sys"]["available_updates"] = {}
 
     device = Mock(
         call_rpc=AsyncMock(),
         config=MOCK_CONFIG,
         event={},
         shelly=None,
-        status=MOCK_STATUS_RPC_none,
+        status=MOCK_STATUS_RPC_NONE,
         firmware_version="some fw string",
         update=AsyncMock(),
         trigger_ota_update=AsyncMock(),
