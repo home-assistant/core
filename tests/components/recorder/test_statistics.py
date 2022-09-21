@@ -741,6 +741,7 @@ def test_external_statistics_errors(hass_recorder, caplog):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
     }
@@ -804,6 +805,16 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
+    # Attempt to insert statistics with an invalid unit combination
+    external_metadata = {**_external_metadata, "state_unit_of_measurement": "cats"}
+    external_statistics = {**_external_statistics}
+    with pytest.raises(HomeAssistantError):
+        async_add_external_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+
 
 def test_import_statistics_errors(hass_recorder, caplog):
     """Test validation of imported statistics."""
@@ -828,6 +839,7 @@ def test_import_statistics_errors(hass_recorder, caplog):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "recorder",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "sensor.total_energy_import",
         "unit_of_measurement": "kWh",
     }
@@ -891,6 +903,16 @@ def test_import_statistics_errors(hass_recorder, caplog):
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
 
+    # Attempt to insert statistics with an invalid unit combination
+    external_metadata = {**_external_metadata, "state_unit_of_measurement": "cats"}
+    external_statistics = {**_external_statistics}
+    with pytest.raises(HomeAssistantError):
+        async_import_statistics(hass, external_metadata, (external_statistics,))
+    wait_recording_done(hass)
+    assert statistics_during_period(hass, zero, period="hour") == {}
+    assert list_statistic_ids(hass) == []
+    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
+
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
@@ -940,6 +962,7 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
     }
