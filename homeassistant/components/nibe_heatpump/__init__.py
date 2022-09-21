@@ -10,10 +10,10 @@ from typing import Any, Generic, TypeVar
 
 from nibe.coil import Coil
 from nibe.connection import Connection
+from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW
 from nibe.exceptions import CoilNotFoundException, CoilReadException
 from nibe.heatpump import HeatPump, Model
-from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,8 +34,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_CONNECTION_TYPE,
+    CONF_CONNECTION_TYPE_MODBUS,
     CONF_CONNECTION_TYPE_NIBEGW,
     CONF_LISTENING_PORT,
+    CONF_MODBUS_UNIT,
+    CONF_MODBUS_URL,
     CONF_REMOTE_READ_PORT,
     CONF_REMOTE_WRITE_PORT,
     CONF_WORD_SWAP,
@@ -58,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
     heatpump.word_swap = entry.data[CONF_WORD_SWAP]
-    await hass.async_add_executor_job(heatpump.initialize)
+    await heatpump.initialize()
 
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
@@ -69,6 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_REMOTE_READ_PORT],
             entry.data[CONF_REMOTE_WRITE_PORT],
             listening_port=entry.data[CONF_LISTENING_PORT],
+        )
+    elif connection_type == CONF_CONNECTION_TYPE_MODBUS:
+        connection = Modbus(
+            heatpump, entry.data[CONF_MODBUS_URL], entry.data[CONF_MODBUS_UNIT]
         )
     else:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
@@ -228,33 +235,29 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
             self.task = None
 
     async def _async_update_data_internal(self) -> dict[int, Coil]:
-        @retry(
-            retry=retry_if_exception_type(CoilReadException),
-            stop=stop_after_attempt(COIL_READ_RETRIES),
-        )
-        async def read_coil(coil: Coil):
-            return await self.connection.read_coil(coil)
 
         result: dict[int, Coil] = {}
 
-        for address in self.context_callbacks.keys():
-            if seed := self.seed.pop(address, None):
-                self.logger.debug("Skipping seeded coil: %d", address)
-                result[address] = seed
-                continue
+        def _get_coils() -> Iterable[Coil]:
+            for address in sorted(self.context_callbacks.keys()):
+                if seed := self.seed.pop(address, None):
+                    self.logger.debug("Skipping seeded coil: %d", address)
+                    result[address] = seed
+                    continue
 
-            try:
-                coil = self.heatpump.get_coil_by_address(address)
-            except CoilNotFoundException as exception:
-                self.logger.debug("Skipping missing coil: %s", exception)
-                continue
+                try:
+                    coil = self.heatpump.get_coil_by_address(address)
+                except CoilNotFoundException as exception:
+                    self.logger.debug("Skipping missing coil: %s", exception)
+                    continue
+                yield coil
 
-            try:
-                result[coil.address] = await read_coil(coil)
-            except (CoilReadException, RetryError) as exception:
-                raise UpdateFailed(f"Failed to update: {exception}") from exception
-
-            self.seed.pop(coil.address, None)
+        try:
+            async for coil in self.connection.read_coils(_get_coils()):
+                result[coil.address] = coil
+                self.seed.pop(coil.address, None)
+        except CoilReadException as exception:
+            raise UpdateFailed(f"Failed to update: {exception}") from exception
 
         return result
 

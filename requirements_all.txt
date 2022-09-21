@@ -1147,7 +1147,7 @@ nextcord==2.0.0a8
 nextdns==1.1.1
 
 # homeassistant.components.nibe_heatpump
-nibe==0.5.0
+nibe==1.0.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2378,9 +2378,6 @@ temescal==0.5
 
 # homeassistant.components.temper
 temperusb==1.6.0
-
-# homeassistant.components.nibe_heatpump
-tenacity==8.0.1
 
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
