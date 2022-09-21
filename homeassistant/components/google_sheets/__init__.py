@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import cast
 
 import aiohttp
 from google.auth.exceptions import RefreshError
@@ -13,7 +12,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -105,12 +108,17 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def append_to_sheet(call: ServiceCall) -> None:
         """Append new line of data to a Google Sheets document."""
-
-        entry = cast(
-            ConfigEntry,
-            hass.config_entries.async_get_entry(call.data[DATA_CONFIG_ENTRY]),
+        entry: ConfigEntry | None = hass.config_entries.async_get_entry(
+            call.data[DATA_CONFIG_ENTRY]
         )
-        session: OAuth2Session = hass.data[DOMAIN][entry.entry_id]
+        if not entry:
+            raise HomeAssistantError(
+                "Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}"
+            )
+        if not (session := hass.data[DOMAIN].get(entry.entry_id)):
+            raise HomeAssistantError(
+                "Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}"
+            )
         await session.async_ensure_token_valid()
         await hass.async_add_executor_job(_append_to_sheet, call, entry)
 
