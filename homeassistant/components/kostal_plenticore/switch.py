@@ -109,7 +109,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     def __init__(
         self,
-        coordinator: SettingDataUpdateCoordinator,
+        coordinator,
         entry_id: str,
         platform_name: str,
         module_id: str,
@@ -123,7 +123,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         device_info: DeviceInfo,
         attr_name: str,
         attr_unique_id: str,
-    ) -> None:
+    ):
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
