@@ -3,15 +3,20 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper, RpcPollingWrapper, ShellyDeviceRestWrapper
+from homeassistant.components.shelly import (
+    BlockDeviceWrapper,
+    RpcDeviceWrapper,
+    RpcPollingWrapper,
+    ShellyDeviceRestWrapper,
+)
 from homeassistant.components.shelly.const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     EVENT_SHELLY_CLICK,
+    REST,
     RPC,
     RPC_POLL,
-    REST,
 )
 from homeassistant.setup import async_setup_component
 
@@ -187,7 +192,7 @@ async def rest_wrapper(hass):
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
         REST
     ] = ShellyDeviceRestWrapper(hass, device, config_entry)
-    
+
     block_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
         BLOCK
     ] = BlockDeviceWrapper(hass, config_entry, device)
@@ -265,7 +270,7 @@ async def rpc_poll_wrapper(hass):
         RPC
     ] = RpcDeviceWrapper(hass, config_entry, device)
     wrapper_rpc.async_setup()
-    
+
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
         RPC_POLL
     ] = RpcPollingWrapper(hass, config_entry, device)

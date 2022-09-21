@@ -54,7 +54,9 @@ async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper):
     )
 
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_poll_wrapper.entry, UPDATE_DOMAIN)
+        hass.config_entries.async_forward_entry_setup(
+            rpc_poll_wrapper.entry, UPDATE_DOMAIN
+        )
     )
     await hass.async_block_till_done()
 
