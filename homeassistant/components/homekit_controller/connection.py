@@ -455,7 +455,7 @@ class HKDevice:
                     self.entities.append((accessory.aid, None, None))
                     break
 
-    def add_char_factory(self, add_entities_cb) -> None:
+    def add_char_factory(self, add_entities_cb: AddCharacteristicCb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
         self.char_factories.append(add_entities_cb)
         self._add_new_entities_for_char([add_entities_cb])
@@ -471,7 +471,7 @@ class HKDevice:
                             self.entities.append((accessory.aid, service.iid, char.iid))
                             break
 
-    def add_listener(self, add_entities_cb) -> None:
+    def add_listener(self, add_entities_cb: AddServiceCb) -> None:
         """Add a callback to run when discovering new entities for services."""
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])

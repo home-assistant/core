@@ -4,10 +4,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aiohomekit.model import Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
+from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,6 +27,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -518,6 +521,31 @@ ENTITY_TYPES = {
 }
 
 
+class RSSISensor(HomeKitEntity, SensorEntity):
+    """HomeKit Controller RSSI sensor."""
+
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
+    _attr_name = "Signal strength"
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_should_poll = False
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        return f"homekit-{serial}-rssi"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the current rssi value."""
+        address = self._accessory.pairing_data["AccessoryAddress"]
+        ble_device = async_ble_device_from_address(self.hass, address)
+        return ble_device.rssi if ble_device else None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -525,14 +553,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Homekit sensors."""
     hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
+    entities = []
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entities.append(entity_class(conn, info))
         return True
 
     conn.add_listener(async_add_service)
@@ -544,8 +573,19 @@ async def async_setup_entry(
         if description.probe and not description.probe(char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities([SimpleSensor(conn, info, char, description)], True)
+        entities.append(SimpleSensor(conn, info, char, description))
 
         return True
 
     conn.add_char_factory(async_add_characteristic)
+
+    if conn.pairing.transport == Transport.BLE:
+        accessory = conn.entity_map.accessories[0]
+        # Monitor AccessoryInformation service for availability purposes
+        accessory_info = accessory.services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        )
+        info = {"aid": accessory.aid, "iid": accessory_info.iid}
+        entities.append(RSSISensor(conn, info))
+
+    async_add_entities(entities)
