@@ -179,24 +179,6 @@ class HaBleakScannerWrapper(BaseBleakScanner):
                 asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
 
 
-def client_kwargs(ble_device: BLEDevice, kwargs: dict[str, Any]) -> dict[str, Any]:
-    """Get the client kwargs with the backend set."""
-    if isinstance(ble_device.details, dict) and (
-        client := ble_device.details.get("client")
-    ):
-        return {**kwargs, "client": client}
-    return kwargs
-
-
-class HaBleakClientUndecided(BaseBleakClient):
-    """A BleakClient that does not know its backend yet."""
-
-    @property
-    def is_connected(self) -> bool:
-        """Return True if the client is connected to a device."""
-        return False
-
-
 class HaBleakClientWrapper(BleakClient):
     """Wrap the BleakClient to ensure it does not shutdown our scanner.
 
@@ -208,14 +190,14 @@ class HaBleakClientWrapper(BleakClient):
     when an integration does this.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=super-init-not-called
         self,
         address_or_ble_device: str | BLEDevice,
         *args: Any,
         disconnected_callback: Callable[[BleakClient], None] | None = None,
         timeout: float = 10.0,
         **kwargs: Any,
-    ) -> None:  # pylint: disable=super-init-not-called
+    ) -> None:
         """Initialize the BleakClient."""
         if isinstance(address_or_ble_device, BLEDevice):
             self.__address = address_or_ble_device.address
@@ -229,6 +211,11 @@ class HaBleakClientWrapper(BleakClient):
         self.__disconnected_callback = disconnected_callback
         self.__timeout = timeout
         self._backend: BaseBleakClient | None = None
+
+    @property
+    def is_connected(self) -> bool:
+        """Return True if the client is connected to a device."""
+        return self._backend is not None and self._backend.is_connected
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server.
@@ -252,3 +239,9 @@ class HaBleakClientWrapper(BleakClient):
             timeout=self.__timeout,
         )
         return await super().connect(**kwargs)
+
+    async def disconnect(self) -> bool:
+        """Disconnect from the device."""
+        if self._backend is None:
+            return True
+        return await self._backend.disconnect()
