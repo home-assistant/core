@@ -806,11 +806,8 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
     # Attempt to insert statistics with an invalid unit combination
-    external_metadata = {**_external_metadata}
-    external_statistics = {
-        **_external_statistics,
-        "state_unit_of_measurement": "cats",
-    }
+    external_metadata = {**_external_metadata, "state_unit_of_measurement": "cats"}
+    external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
         async_add_external_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
@@ -907,11 +904,8 @@ def test_import_statistics_errors(hass_recorder, caplog):
     assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
 
     # Attempt to insert statistics with an invalid unit combination
-    external_metadata = {**_external_metadata}
-    external_statistics = {
-        **_external_statistics,
-        "state_unit_of_measurement": "cats",
-    }
+    external_metadata = {**_external_metadata, "state_unit_of_measurement": "cats"}
+    external_statistics = {**_external_statistics}
     with pytest.raises(HomeAssistantError):
         async_import_statistics(hass, external_metadata, (external_statistics,))
     wait_recording_done(hass)
