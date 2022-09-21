@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from aiohomekit.model import Transport
+from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
@@ -589,12 +589,18 @@ async def async_setup_entry(
 
     conn.add_char_factory(async_add_characteristic)
 
-    if conn.pairing.transport == Transport.BLE:
+    @callback
+    def async_add_accessory(accessory: Accessory) -> bool:
+        if conn.pairing.transport != Transport.BLE:
+            return False
+
         _LOGGER.debug("Adding RSSI sensor for %s", conn.entity_map.aid(1).name)
-        accessory = conn.entity_map.accessories[0]
         # Monitor AccessoryInformation service for availability purposes
         accessory_info = accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
         async_add_entities([RSSISensor(conn, info)])
+        return True
+
+    conn.add_accessory_factory(async_add_accessory)
