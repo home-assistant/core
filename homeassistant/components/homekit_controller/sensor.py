@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from aiohomekit.model import Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
@@ -39,6 +40,8 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -528,13 +531,17 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
-    _attr_name = "Signal strength"
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_should_poll = False
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return []
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return "Signal strength"
 
     @property
     def unique_id(self) -> str:
@@ -583,6 +590,7 @@ async def async_setup_entry(
     conn.add_char_factory(async_add_characteristic)
 
     if conn.pairing.transport == Transport.BLE:
+        _LOGGER.debug("Adding RSSI sensor for %s", conn.entity_map.aid(1))
         accessory = conn.entity_map.accessories[0]
         # Monitor AccessoryInformation service for availability purposes
         accessory_info = accessory.services.first(
