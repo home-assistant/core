@@ -116,6 +116,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         ],
     },
     {
+        "domain": "ibeacon",
+        "manufacturer_id": 76,
+        "manufacturer_data_start": [
+            2,
+            21,
+        ],
+    },
+    {
         "domain": "inkbird",
         "local_name": "sps",
         "connectable": False,
@@ -141,16 +149,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
-        "domain": "keymitt_ble",
-        "service_uuid": "00001831-0000-1000-8000-00805f9b34fb"
+        "domain": "kegtron",
+        "connectable": False,
+        "manufacturer_id": 65535,
     },
     {
         "domain": "keymitt_ble",
-        "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00001831-0000-1000-8000-00805f9b34fb",
     },
     {
         "domain": "keymitt_ble",
-        "local_name": "mib*"
+        "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "keymitt_ble",
+        "local_name": "mib*",
     },
     {
         "domain": "led_ble",
@@ -293,6 +306,13 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "tilt_ble",
         "manufacturer_id": 76,
+        "manufacturer_data_start": [
+            2,
+            21,
+            164,
+            149,
+            187,
+        ],
     },
     {
         "domain": "xiaomi_ble",

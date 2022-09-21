@@ -11,12 +11,12 @@ from homeassistant.components.humidifier import (
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
-    SUPPORT_MODES,
+    HumidifierDeviceClass,
+    HumidifierEntityFeature,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -50,8 +50,10 @@ async def test_attributes(hass):
         MODE_MANUAL,
     ]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ecobee"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDIFIER
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_MODES
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == HumidifierDeviceClass.HUMIDIFIER
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES) == HumidifierEntityFeature.MODES
+    )
 
 
 async def test_turn_on(hass):

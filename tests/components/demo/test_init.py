@@ -70,6 +70,7 @@ async def test_demo_statistics(hass, recorder_mock):
         "source": "demo",
         "statistic_id": "demo:temperature_outdoor",
         "statistics_unit_of_measurement": "°C",
+        "unit_class": "temperature",
     } in statistic_ids
     assert {
         "display_unit_of_measurement": "kWh",
@@ -79,6 +80,7 @@ async def test_demo_statistics(hass, recorder_mock):
         "source": "demo",
         "statistic_id": "demo:energy_consumption_kwh",
         "statistics_unit_of_measurement": "kWh",
+        "unit_class": "energy",
     } in statistic_ids
 
 

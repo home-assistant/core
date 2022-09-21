@@ -24,7 +24,6 @@ async def test_manual_watering_minutes(hass):
 
         number = hass.states.get("number.zone_1_manual_minutes")
 
-        print(number)
         assert number.state == "0"
         assert number.attributes["max"] == 360
         assert number.attributes["min"] == 1

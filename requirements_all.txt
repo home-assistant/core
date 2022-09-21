@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.10
+PySwitchbot==0.19.11
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.9
+aiohomekit==1.5.12
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -234,6 +234,7 @@ aiopvapi==2.0.1
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
 
+# homeassistant.components.lidarr
 # homeassistant.components.sonarr
 aiopyarr==22.7.0
 
@@ -538,7 +539,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.4.0
+dbus-fast==1.5.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -895,6 +896,9 @@ iammeter==0.1.7
 # homeassistant.components.iaqualink
 iaqualink==0.4.1
 
+# homeassistant.components.ibeacon
+ibeacon_ble==0.6.4
+
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
 
@@ -954,6 +958,9 @@ kaiterra-async-client==1.0.0
 
 # homeassistant.components.keba
 keba-kecontact==1.1.0
+
+# homeassistant.components.kegtron
+kegtron-ble==0.4.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
@@ -1555,9 +1562,6 @@ pyflic==2.0.3
 
 # homeassistant.components.flume
 pyflume==0.6.5
-
-# homeassistant.components.flunearyou
-pyflunearyou==2.0.2
 
 # homeassistant.components.futurenow
 pyfnip==0.2

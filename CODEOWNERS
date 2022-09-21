@@ -355,8 +355,6 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
-/homeassistant/components/flunearyou/ @bachya
-/tests/components/flunearyou/ @bachya
 /homeassistant/components/flux_led/ @icemanch @bdraco
 /tests/components/flux_led/ @icemanch @bdraco
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
@@ -508,6 +506,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
+/homeassistant/components/ibeacon/ @bdraco
+/tests/components/ibeacon/ @bdraco
 /homeassistant/components/icloud/ @Quentame @nzapponi
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/ign_sismologia/ @exxamalte
@@ -577,6 +577,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
+/homeassistant/components/kegtron/ @Ernst79
+/tests/components/kegtron/ @Ernst79
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
@@ -609,6 +611,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed
+/homeassistant/components/lidarr/ @tkdrob
+/tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
 /homeassistant/components/lifx/ @bdraco @Djelibeybi
