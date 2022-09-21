@@ -10,14 +10,17 @@ from bimmer_connected.models import GPSPosition
 from httpx import HTTPError, HTTPStatusError, TimeoutException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
 
-DEFAULT_SCAN_INTERVAL_SECONDS = 300
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -37,6 +40,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             use_metric_units=True,
         )
         self.read_only = entry.options[CONF_READ_ONLY]
+        self.scan_interval = entry.options[CONF_SCAN_INTERVAL]
         self._entry = entry
 
         if CONF_REFRESH_TOKEN in entry.data:
@@ -46,7 +50,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}-{entry.data['username']}",
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(minutes=entry.options[CONF_SCAN_INTERVAL]),
         )
 
     async def _async_update_data(self) -> None:
@@ -58,9 +62,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
         except (HTTPError, HTTPStatusError, TimeoutException) as err:
             if isinstance(err, HTTPStatusError) and err.response.status_code == 429:
                 # Increase scan interval to not jump to not bring up the issue next time
-                self.update_interval = timedelta(
-                    seconds=DEFAULT_SCAN_INTERVAL_SECONDS * 3
-                )
+                self.update_interval = timedelta(minutes=self.scan_interval * 2)
             if isinstance(err, HTTPStatusError) and err.response.status_code in (
                 401,
                 403,
@@ -78,7 +80,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
         # Reset scan interval after successful update
-        self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
+        self.update_interval = timedelta(minutes=self.scan_interval)
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""

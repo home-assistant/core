@@ -12,7 +12,12 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN as BMW_DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -35,7 +40,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
         CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
     },
-    "options": {CONF_READ_ONLY: False},
+    "options": {CONF_READ_ONLY: False, CONF_SCAN_INTERVAL: 30},
     "source": config_entries.SOURCE_USER,
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }

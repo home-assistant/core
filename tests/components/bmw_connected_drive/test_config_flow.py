@@ -10,7 +10,8 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
 )
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from . import FIXTURE_CONFIG_ENTRY, FIXTURE_REFRESH_TOKEN, FIXTURE_USER_INPUT
 
@@ -25,7 +26,7 @@ def login_sideeffect(self: MyBMWAuthentication):
     self.refresh_token = FIXTURE_REFRESH_TOKEN
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -35,7 +36,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant):
     """Test we show user form on BMW connected drive connection error."""
 
     def _mock_get_oauth_token(*args, **kwargs):
@@ -56,7 +57,7 @@ async def test_connection_error(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_full_user_flow_implementation(hass):
+async def test_full_user_flow_implementation(hass: HomeAssistant):
     """Test registering an integration and finishing flow works."""
     with patch(
         "bimmer_connected.api.authentication.MyBMWAuthentication.login",
@@ -78,7 +79,7 @@ async def test_full_user_flow_implementation(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow_implementation(hass):
+async def test_options_flow_implementation(hass: HomeAssistant):
     """Test config flow options."""
     with patch(
         "bimmer_connected.account.MyBMWAccount.get_vehicles",
@@ -93,19 +94,26 @@ async def test_options_flow_implementation(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+        default_options = hass.config_entries.async_get_entry(
+            config_entry.entry_id
+        ).options
+        assert default_options[CONF_READ_ONLY] is False
+        assert default_options[CONF_SCAN_INTERVAL] == 30
+
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "account_options"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_READ_ONLY: True},
+            user_input={CONF_READ_ONLY: True, CONF_SCAN_INTERVAL: 60},
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             CONF_READ_ONLY: True,
+            CONF_SCAN_INTERVAL: 60,
         }
 
         assert len(mock_setup_entry.mock_calls) == 1

@@ -9,12 +9,23 @@ from httpx import HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_SCAN_INTERVAL,
+    CONF_SOURCE,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REFRESH_TOKEN
+from .const import (
+    CONF_ALLOWED_REGIONS,
+    CONF_READ_ONLY,
+    CONF_REFRESH_TOKEN,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -132,6 +143,12 @@ class BMWOptionsFlow(config_entries.OptionsFlow):
                         CONF_READ_ONLY,
                         default=self.config_entry.options.get(CONF_READ_ONLY, False),
                     ): bool,
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+                        ),
+                    ): vol.All(int, vol.Range(min=5)),
                 }
             ),
         )

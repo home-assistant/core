@@ -8,7 +8,13 @@ from bimmer_connected.vehicle import MyBMWVehicle
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -16,7 +22,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
+from .const import (
+    ATTR_VIN,
+    ATTRIBUTION,
+    CONF_READ_ONLY,
+    DATA_HASS_CONFIG,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+)
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +46,7 @@ SERVICE_SCHEMA = vol.Schema(
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
+    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL_MINUTES,
 }
 
 PLATFORMS = [
@@ -66,6 +80,11 @@ def _async_migrate_options_from_data_if_missing(
     if CONF_READ_ONLY in data or list(options) != list(DEFAULT_OPTIONS):
         options = dict(DEFAULT_OPTIONS, **options)
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
+
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+    if CONF_SCAN_INTERVAL not in options:
+        options = dict(DEFAULT_OPTIONS, **options)
 
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 

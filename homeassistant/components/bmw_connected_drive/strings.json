@@ -21,7 +21,8 @@
     "step": {
       "account_options": {
         "data": {
-          "read_only": "Read-only (only sensors and notify, no execution of services, no lock)"
+          "read_only": "Read-only (only sensors and notify, no execution of services, no lock)",
+          "scan_interval": "Polling interval in minutes"
         }
       }
     }

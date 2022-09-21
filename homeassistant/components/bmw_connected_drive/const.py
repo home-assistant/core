@@ -17,6 +17,8 @@ CONF_READ_ONLY = "read_only"
 CONF_ACCOUNT = "account"
 CONF_REFRESH_TOKEN = "refresh_token"
 
+DEFAULT_SCAN_INTERVAL_MINUTES = 30
+
 DATA_HASS_CONFIG = "hass_config"
 
 UNIT_MAP = {
