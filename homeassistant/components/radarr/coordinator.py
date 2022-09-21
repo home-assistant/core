@@ -7,7 +7,6 @@ from typing import Generic, TypeVar, cast
 
 from aiopyarr import RootFolder, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
-from aiopyarr.models.request import SystemStatus
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +39,6 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
-        self.system_status: SystemStatus = SystemStatus({"": ""})
         self.system_version: str | None = None
 
     async def _async_update_data(self) -> T:
