@@ -101,11 +101,13 @@ class SelectEntity(Entity):
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
+        if hasattr(self, "_attr_options"):
+            return self._attr_options
         if (
             hasattr(self, "entity_description")
-            and (options := self.entity_description.options) is not UNDEFINED
+            and self.entity_description.options is not UNDEFINED
         ):
-            return options
+            return self.entity_description.options
         return self._attr_options
 
     @property
