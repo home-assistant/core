@@ -52,14 +52,6 @@ class PlenticoreSensorEntityDescription(
     """A class that describes plenticore sensor entities."""
 
 
-# Defines all entities for process data.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - sensor properties (dict)
-#  - value formatter (str)
 SENSOR_PROCESS_DATA = [
     PlenticoreSensorEntityDescription(
         module_id="devices:local",
