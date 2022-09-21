@@ -41,8 +41,6 @@ UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_MMHG: 1 / 133.322,
 }
 
-NORMALISED_UNIT = PRESSURE_PA
-
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
@@ -57,17 +55,5 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return value
 
-    return _convert(value, from_unit, to_unit)
-
-
-def normalise(value: float, from_unit: str) -> float:
-    """Convert a pressure from one unit to Pa."""
-    if from_unit == NORMALISED_UNIT:
-        return value
-    return _convert(value, from_unit, NORMALISED_UNIT)
-
-
-def _convert(value: float, from_unit: str, to_unit: str) -> float:
-    """Convert a pressure from one unit to another, bypassing checks."""
     pascals = value / UNIT_CONVERSION[from_unit]
     return pascals * UNIT_CONVERSION[to_unit]

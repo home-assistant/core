@@ -41,8 +41,6 @@ UNIT_CONVERSION: dict[str, float] = {
     VOLUME_CUBIC_FEET: 1 / CUBIC_FOOT_TO_CUBIC_METER,
 }
 
-NORMALISED_UNIT = VOLUME_CUBIC_METERS
-
 
 def liter_to_gallon(liter: float) -> float:
     """Convert a volume measurement in Liter to Gallon."""
@@ -77,13 +75,6 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return volume
     return _convert(volume, from_unit, to_unit)
-
-
-def normalise(volume: float, from_unit: str) -> float:
-    """Convert a volume from one unit to m³."""
-    if from_unit == NORMALISED_UNIT:
-        return volume
-    return _convert(volume, from_unit, NORMALISED_UNIT)
 
 
 def _convert(volume: float, from_unit: str, to_unit: str) -> float:

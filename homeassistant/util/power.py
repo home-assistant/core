@@ -19,8 +19,6 @@ UNIT_CONVERSION: dict[str, float] = {
     POWER_KILO_WATT: 1 / 1000,
 }
 
-NORMALISED_UNIT = POWER_WATT
-
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
@@ -35,17 +33,5 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return value
 
-    return _convert(value, from_unit, to_unit)
-
-
-def normalise(value: float, from_unit: str) -> float:
-    """Convert a power from one unit to W."""
-    if from_unit == NORMALISED_UNIT:
-        return value
-    return _convert(value, from_unit, NORMALISED_UNIT)
-
-
-def _convert(value: float, from_unit: str, to_unit: str) -> float:
-    """Convert a power from one unit to another, bypassing checks."""
     watts = value / UNIT_CONVERSION[from_unit]
     return watts * UNIT_CONVERSION[to_unit]

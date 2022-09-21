@@ -22,8 +22,6 @@ UNIT_CONVERSION: dict[str, float] = {
     ENERGY_MEGA_WATT_HOUR: 1 / 1000,
 }
 
-NORMALISED_UNIT = ENERGY_KILO_WATT_HOUR
-
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
@@ -38,17 +36,5 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return value
 
-    return _convert(value, from_unit, to_unit)
-
-
-def normalise(value: float, from_unit: str) -> float:
-    """Convert an energy from one unit to kWh."""
-    if from_unit == NORMALISED_UNIT:
-        return value
-    return _convert(value, from_unit, NORMALISED_UNIT)
-
-
-def _convert(value: float, from_unit: str, to_unit: str) -> float:
-    """Convert an energy from one unit to another, bypassing checks."""
-    cubic_meter = value / UNIT_CONVERSION[from_unit]
-    return cubic_meter * UNIT_CONVERSION[to_unit]
+    watthours = value / UNIT_CONVERSION[from_unit]
+    return watthours * UNIT_CONVERSION[to_unit]
