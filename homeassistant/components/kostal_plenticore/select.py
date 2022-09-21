@@ -26,6 +26,7 @@ class PlenticoreRequiredKeysMixin:
 
     module_id: str
     options: list[str]
+    is_on: str
 
 
 @dataclass
@@ -45,6 +46,7 @@ SELECT_SETTINGS_DATA = [
             "Battery:SmartBatteryControl:Enable",
             "Battery:TimeControl:Enable",
         ],
+        is_on="1",
     )
 ]
 
@@ -85,6 +87,7 @@ async def async_setup_entry(
                 name=select.name,
                 current_option="None",
                 options=select.options,
+                is_on=select.is_on,
                 device_info=plenticore.device_info,
                 unique_id=f"{entry.entry_id}_{select.module_id}",
             )
@@ -100,7 +103,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
 
     def __init__(
         self,
-        coordinator: SelectDataUpdateCoordinator,
+        coordinator,
         entry_id: str,
         platform_name: str,
         device_class: str | None,
@@ -109,6 +112,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         name: str | None,
         current_option: str | None,
         options: list[str],
+        is_on: str,
         device_info: DeviceInfo,
         unique_id: str,
     ) -> None:
@@ -122,6 +126,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         self._attr_options = options
         self.all_options = options
         self._attr_current_option = current_option
+        self._is_on = is_on
         self._device_info = device_info
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = unique_id
