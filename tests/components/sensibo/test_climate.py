@@ -8,7 +8,7 @@ from pysensibo.model import SensiboData
 import pytest
 from voluptuous import MultipleInvalid
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_SWING_MODE,

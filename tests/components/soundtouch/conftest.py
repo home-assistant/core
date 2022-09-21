@@ -2,7 +2,7 @@
 import pytest
 from requests_mock import Mocker
 
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.soundtouch.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
