@@ -236,9 +236,6 @@ def get_season(
 class SeasonData:
     """Calculate the current season."""
 
-    _attr_device_class = "season__season"
-    _attr_has_entity_name = True
-
     def __init__(self, entry: ConfigEntry, hemisphere: str, time_zone: str) -> None:
         """Initialize the data object."""
         self._attr_unique_id = entry.entry_id
@@ -269,6 +266,9 @@ class SeasonData:
 
 class SeasonSensorEntity(SensorEntity):
     """Representation of the current season."""
+
+    _attr_device_class = "season__season"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
