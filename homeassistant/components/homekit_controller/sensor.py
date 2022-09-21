@@ -539,7 +539,7 @@ class RSSISensor(HomeKitEntity, SensorEntity):
         return []
 
     @property
-    def available(self) -> str:
+    def available(self) -> bool:
         """Return if the bluetooth device is available."""
         address = self._accessory.pairing_data["AccessoryAddress"]
         return async_ble_device_from_address(self.hass, address) is not None
