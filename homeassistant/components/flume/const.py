@@ -8,7 +8,10 @@ from homeassistant.const import Platform
 
 DOMAIN = "flume"
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
 DEFAULT_NAME = "Flume Sensor"
 
