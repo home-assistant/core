@@ -40,14 +40,23 @@ TWO_CHAR = re.compile("..")
 
 async def async_connect_scanner(
     hass: HomeAssistant, entry: ConfigEntry, cli: APIClient
-) -> None:
+) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
     new_info_callback = async_get_advertisement_callback(hass)
     scanner = ESPHomeScanner(hass, entry.unique_id, new_info_callback)
-    entry.async_on_unload(async_register_scanner(hass, scanner, False))
-    entry.async_on_unload(scanner.async_setup())
+    unload_callbacks = [
+        async_register_scanner(hass, scanner, False),
+        scanner.async_setup(),
+    ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+
+    @hass_callback
+    def _async_unload() -> None:
+        for callback in unload_callbacks:
+            callback()
+
+    return _async_unload
 
 
 class ESPHomeScanner(BaseHaScanner):
