@@ -7,25 +7,25 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "zeroconf_failed": "API key not found. Please enter it manually",
+            "unknown": "Unexpected error",
             "wrong_app": "Incorrect application reached. Please try again",
-            "unknown": "Unexpected error"
+            "zeroconf_failed": "API key not found. Please enter it manually"
         },
         "step": {
             "reauth_confirm": {
-                "description": "The Lidarr integration needs to be manually re-authenticated with the Lidarr API",
-                "title": "Reauthenticate Integration",
                 "data": {
                     "api_key": "API Key"
-                }
+                },
+                "description": "The Lidarr integration needs to be manually re-authenticated with the Lidarr API",
+                "title": "Reauthenticate Integration"
             },
             "user": {
-                "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Lidarr Web UI.",
                 "data": {
                     "api_key": "API Key",
                     "url": "URL",
                     "verify_ssl": "Verify SSL certificate"
-                }
+                },
+                "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Lidarr Web UI."
             }
         }
     },
@@ -33,8 +33,8 @@
         "step": {
             "init": {
                 "data": {
-                    "upcoming_days": "Number of upcoming days to display on calendar",
-                    "max_records": "Number of maximum records to display on wanted and queue"
+                    "max_records": "Number of maximum records to display on wanted and queue",
+                    "upcoming_days": "Number of upcoming days to display on calendar"
                 }
             }
         }

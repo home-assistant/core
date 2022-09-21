@@ -4,14 +4,16 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "invalid_serial": "Ongeldig serienummer",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
-            "manual": {
+            "user": {
                 "data": {
-                    "ip_address": "IP-adres",
-                    "serial": "Serienummer (12 cijfers)"
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
                 }
             }
         }
