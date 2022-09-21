@@ -24,7 +24,6 @@ class PlenticoreRequiredKeysMixin:
 
     module_id: str
     options: list[str]
-    current_option: str
 
 
 @dataclass
@@ -44,7 +43,6 @@ SELECT_SETTINGS_DATA = [
             "Battery:SmartBatteryControl:Enable",
             "Battery:TimeControl:Enable",
         ],
-        current_option="None",
         device_class="kostal_plenticore__battery",
     )
 ]
@@ -112,7 +110,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
         self.module_id = description.module_id
         self.data_id = description.key
         self._attr_options = description.options
-        self._attr_current_option = description.current_option
         self._device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
@@ -138,7 +135,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
-        self._attr_current_option = option
         for all_option in self.options:
             if all_option != "None":
                 await self.coordinator.async_write_data(
