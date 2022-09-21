@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
-from pyoverkiz.models import Command
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -92,18 +91,18 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        commands = [
-            Command(
+        commands: list[list | str] = [
+            [
                 OverkizCommand.SET_PASS_APC_HEATING_MODE,
                 [HVAC_MODE_TO_OVERKIZ[hvac_mode]],
-            ),
+            ],
             # We also needs to execute these 3 commands to make it work correctly
-            Command(
+            [
                 OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
                 [OverkizCommandParam.OFF],
-            ),
-            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_MODE),
-            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE),
+            ],
+            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
+            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
         ]
         await self.executor.async_execute_commands(commands)
 
@@ -129,18 +128,18 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        commands = [
-            Command(
+        commands: list[list | str] = [
+            [
                 OverkizCommand.SET_PASS_APC_HEATING_MODE,
                 [PRESET_MODES_TO_OVERKIZ[preset_mode]],
-            ),
+            ],
             # We also needs to execute these 3 commands to make it work correctly
-            Command(
+            [
                 OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
                 [OverkizCommandParam.OFF],
-            ),
-            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_MODE),
-            Command(OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE),
+            ],
+            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
+            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
         ]
 
         await self.executor.async_execute_commands(commands)
@@ -166,27 +165,21 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
 
         if self.hvac_mode == HVACMode.AUTO:
-            commands = [
-                Command(
+            commands_for_auto: list[list | str] = [
+                [
                     OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE,
                     [temperature],
-                ),
-                Command(
-                    OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE,
-                ),
-                Command(
-                    OverkizCommand.REFRESH_TARGET_TEMPERATURE,
-                ),
+                ],
+                OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE,
+                OverkizCommand.REFRESH_TARGET_TEMPERATURE,
             ]
+            await self.executor.async_execute_commands(commands_for_auto)
         else:
-            commands = [
-                Command(
+            commands_for_other: list[list | str] = [
+                [
                     OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE,
                     [temperature],
-                ),
-                Command(
-                    OverkizCommand.REFRESH_TARGET_TEMPERATURE,
-                ),
+                ],
+                OverkizCommand.REFRESH_TARGET_TEMPERATURE,
             ]
-
-        await self.executor.async_execute_commands(commands)
+            await self.executor.async_execute_commands(commands_for_other)

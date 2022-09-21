@@ -95,12 +95,19 @@ class OverkizExecutor:
 
         await self.coordinator.async_refresh()
 
-    async def async_execute_commands(self, commands: list[Command]) -> None:
+    async def async_execute_commands(self, commands: list[list | str]) -> None:
         """Execute device commands in async context."""
+
+        commands_objects = []
+        for cmd in commands:
+            if isinstance(cmd, list):
+                commands_objects.append(Command(cmd[0], cmd[1]))
+            else:
+                commands_objects.append(Command(cmd))
 
         await self.coordinator.client.execute_commands(
             self.device.device_url,
-            commands,
+            commands_objects,
             "Home Assistant",
         )
 
