@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 PING_TIMEOUT = 3
 
 # icmplib timeout
-ICMP_TIMEOUT = 1
+ICMP_TIMEOUT = 4
 
 PING_ATTEMPTS_COUNT = 3
 

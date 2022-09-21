@@ -212,7 +212,7 @@ class PingDataSubProcess(PingData):
             "-q",
             "-c",
             str(self._count),
-            "-W1",
+            f"-W{ICMP_TIMEOUT}",
             self._ip_address,
         ]
 
@@ -226,7 +226,7 @@ class PingDataSubProcess(PingData):
         )
         try:
             out_data, out_error = await asyncio.wait_for(
-                pinger.communicate(), self._count + PING_TIMEOUT
+                pinger.communicate(), self._count + ICMP_TIMEOUT + PING_TIMEOUT
             )
 
             if out_data:
@@ -265,7 +265,7 @@ class PingDataSubProcess(PingData):
             _LOGGER.exception(
                 "Timed out running command: `%s`, after: %ss",
                 self._ping_cmd,
-                self._count + PING_TIMEOUT,
+                self._count + ICMP_TIMEOUT + PING_TIMEOUT,
             )
             if pinger:
                 with suppress(TypeError):

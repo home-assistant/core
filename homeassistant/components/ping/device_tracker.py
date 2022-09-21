@@ -49,7 +49,7 @@ class HostSubProcess:
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
-        self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", ip_address]
+        self._ping_cmd = ["ping", "-n", "-q", "-c1", f"-W{ICMP_TIMEOUT}", ip_address]
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
@@ -57,7 +57,7 @@ class HostSubProcess:
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
         ) as pinger:
             try:
-                pinger.communicate(timeout=1 + PING_TIMEOUT)
+                pinger.communicate(timeout=ICMP_TIMEOUT + PING_TIMEOUT)
                 return pinger.returncode == 0
             except subprocess.TimeoutExpired:
                 kill_subprocess(pinger)
