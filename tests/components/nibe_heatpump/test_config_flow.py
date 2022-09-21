@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from nibe.coil import Coil
 from nibe.connection import Connection
-from nibe.exceptions import CoilReadException, CoilWriteException
+from nibe.exceptions import CoilNotFoundException, CoilReadException, CoilWriteException
 from pytest import fixture
 
 from homeassistant import config_entries
@@ -154,3 +154,19 @@ async def test_invalid_ip(hass: HomeAssistant, mock_connection: Mock) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"ip_address": "address"}
+
+
+async def test_model_missing_coil(hass: HomeAssistant, mock_connection: Mock) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_connection.return_value.read_coil.side_effect = CoilNotFoundException()
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**MOCK_FLOW_USERDATA}
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "model"}
