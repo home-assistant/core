@@ -1094,7 +1094,6 @@ omit =
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/number.py
     homeassistant/components/shelly/sensor.py
-    homeassistant/components/shelly/update.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/shiftr/*
     homeassistant/components/shodan/sensor.py
