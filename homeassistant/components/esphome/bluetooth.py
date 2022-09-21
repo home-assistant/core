@@ -280,7 +280,3 @@ class ESPHomeClient(BaseBleakClient):
                 directly by the BleakGATTCharacteristic object representing it.
         """
         raise NotImplementedError
-
-    async def get_rssi(self) -> int:
-        """To get RSSI value in dBm of the connected Peripheral."""
-        raise NotImplementedError
