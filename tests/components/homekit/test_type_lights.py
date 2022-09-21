@@ -27,12 +27,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_WHITE,
     DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -583,24 +579,24 @@ async def test_light_restore(hass, hk_driver, events):
     "supported_color_modes, state_props, turn_on_props_with_brightness",
     [
         [
-            [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBW],
+            [ColorMode.COLOR_TEMP, ColorMode.RGBW],
             {
                 ATTR_RGBW_COLOR: (128, 50, 0, 255),
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
-                ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+                ATTR_COLOR_MODE: ColorMode.RGBW,
             },
             {ATTR_HS_COLOR: (145, 75), ATTR_BRIGHTNESS_PCT: 25},
         ],
         [
-            [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBWW],
+            [ColorMode.COLOR_TEMP, ColorMode.RGBWW],
             {
                 ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
-                ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
+                ATTR_COLOR_MODE: ColorMode.RGBWW,
             },
             {ATTR_HS_COLOR: (145, 75), ATTR_BRIGHTNESS_PCT: 25},
         ],
@@ -703,24 +699,24 @@ async def test_light_rgb_with_color_temp(
     "supported_color_modes, state_props, turn_on_props_with_brightness",
     [
         [
-            [COLOR_MODE_RGBW],
+            [ColorMode.RGBW],
             {
                 ATTR_RGBW_COLOR: (128, 50, 0, 255),
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
-                ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+                ATTR_COLOR_MODE: ColorMode.RGBW,
             },
             {ATTR_RGBW_COLOR: (0, 0, 0, 191)},
         ],
         [
-            [COLOR_MODE_RGBWW],
+            [ColorMode.RGBWW],
             {
                 ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
-                ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
+                ATTR_COLOR_MODE: ColorMode.RGBWW,
             },
             {ATTR_RGBWW_COLOR: (0, 0, 0, 165, 26)},
         ],
@@ -800,12 +796,12 @@ async def test_light_rgb_or_w_lights(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGB, COLOR_MODE_WHITE],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGB, ColorMode.WHITE],
             ATTR_RGBW_COLOR: (128, 50, 0, 255),
             ATTR_RGB_COLOR: (128, 50, 0),
             ATTR_HS_COLOR: (23.438, 100.0),
             ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_MODE: COLOR_MODE_RGB,
+            ATTR_COLOR_MODE: ColorMode.RGB,
         },
     )
     await hass.async_block_till_done()
@@ -884,9 +880,9 @@ async def test_light_rgb_or_w_lights(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGB, COLOR_MODE_WHITE],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGB, ColorMode.WHITE],
             ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_MODE: COLOR_MODE_WHITE,
+            ATTR_COLOR_MODE: ColorMode.WHITE,
         },
     )
     await hass.async_block_till_done()
@@ -900,23 +896,23 @@ async def test_light_rgb_or_w_lights(
     "supported_color_modes, state_props",
     [
         [
-            [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBW],
+            [ColorMode.COLOR_TEMP, ColorMode.RGBW],
             {
                 ATTR_RGBW_COLOR: (128, 50, 0, 255),
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
-                ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+                ATTR_COLOR_MODE: ColorMode.RGBW,
             },
         ],
         [
-            [COLOR_MODE_COLOR_TEMP, COLOR_MODE_RGBWW],
+            [ColorMode.COLOR_TEMP, ColorMode.RGBWW],
             {
                 ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
                 ATTR_RGB_COLOR: (128, 50, 0),
                 ATTR_HS_COLOR: (23.438, 100.0),
                 ATTR_BRIGHTNESS: 255,
-                ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
+                ATTR_COLOR_MODE: ColorMode.RGBWW,
             },
         ],
     ],
@@ -1013,12 +1009,12 @@ async def test_light_rgbww_with_color_temp_conversion(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBWW],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBWW],
             ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
             ATTR_RGB_COLOR: (128, 50, 0),
             ATTR_HS_COLOR: (23.438, 100.0),
             ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
+            ATTR_COLOR_MODE: ColorMode.RGBWW,
         },
     )
     await hass.async_block_till_done()
@@ -1091,12 +1087,12 @@ async def test_light_rgbww_with_color_temp_conversion(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBWW],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBWW],
             ATTR_RGBWW_COLOR: (0, 0, 0, 128, 255),
             ATTR_RGB_COLOR: (255, 163, 79),
             ATTR_HS_COLOR: (28.636, 69.02),
             ATTR_BRIGHTNESS: 180,
-            ATTR_COLOR_MODE: COLOR_MODE_RGBWW,
+            ATTR_COLOR_MODE: ColorMode.RGBWW,
         },
     )
     await hass.async_block_till_done()
@@ -1134,12 +1130,12 @@ async def test_light_rgbw_with_color_temp_conversion(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_RGBW],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
             ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
             ATTR_RGB_COLOR: (128, 50, 0),
             ATTR_HS_COLOR: (23.438, 100.0),
             ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_MODE: COLOR_MODE_RGBW,
+            ATTR_COLOR_MODE: ColorMode.RGBW,
         },
     )
     await hass.async_block_till_done()
