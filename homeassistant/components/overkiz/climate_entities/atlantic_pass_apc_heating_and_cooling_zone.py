@@ -156,6 +156,33 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return hvac target temperature."""
+        current_profile = cast(
+            str,
+            self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_PROFILE),
+        )
+
+        if current_profile == OverkizCommandParam.ECO:
+            return cast(
+                float,
+                self.executor.select_state(
+                    OverkizState.CORE_ECO_HEATING_TARGET_TEMPERATURE
+                ),
+            )
+        if current_profile == OverkizCommandParam.COMFORT:
+            return cast(
+                float,
+                self.executor.select_state(
+                    OverkizState.CORE_COMFORT_HEATING_TARGET_TEMPERATURE
+                ),
+            )
+        if current_profile == OverkizCommandParam.DEROGATION:
+            return cast(
+                float,
+                self.executor.select_state(
+                    OverkizState.CORE_DEROGATED_TARGET_TEMPERATURE
+                ),
+            )
+
         return cast(
             float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
         )
@@ -180,6 +207,12 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
                     OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE,
                     [temperature],
                 ],
+                [
+                    OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
+                    [OverkizCommandParam.ON],
+                ],
                 OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+                OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
+                OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
             ]
             await self.executor.async_execute_commands(commands_for_other)
