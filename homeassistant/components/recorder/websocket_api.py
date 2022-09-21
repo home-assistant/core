@@ -13,17 +13,18 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    POWER_KILO_WATT,
-    POWER_WATT,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
-from homeassistant.util import dt as dt_util
-import homeassistant.util.pressure as pressure_util
-import homeassistant.util.temperature as temperature_util
+from homeassistant.util import (
+    dt as dt_util,
+    power as power_util,
+    pressure as pressure_util,
+    temperature as temperature_util,
+)
 
 from .const import MAX_QUEUE_BACKLOG
 from .statistics import (
@@ -122,7 +123,7 @@ async def ws_handle_get_statistics_during_period(
                 vol.Optional("energy"): vol.Any(
                     ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR
                 ),
-                vol.Optional("power"): vol.Any(POWER_WATT, POWER_KILO_WATT),
+                vol.Optional("power"): vol.In(power_util.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(pressure_util.VALID_UNITS),
                 vol.Optional("temperature"): vol.In(temperature_util.VALID_UNITS),
                 vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
