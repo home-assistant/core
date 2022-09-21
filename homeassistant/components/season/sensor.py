@@ -237,7 +237,7 @@ class SeasonData:
     """Calculate the current season."""
 
     def __init__(self, entry: ConfigEntry, hemisphere: str, time_zone: str) -> None:
-        """Initialize the data object."""
+        """Initialize the season."""
         self._attr_unique_id = entry.entry_id
         self.hemisphere = hemisphere
         self.time_zone = time_zone
@@ -251,9 +251,8 @@ class SeasonData:
         self._data: dict = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data for season."""
-        # Update data
+    async def async_update(self) -> None:
+        """Update season."""
         self._data = get_season(
             self,
             utcnow().replace(tzinfo=None),
@@ -267,7 +266,6 @@ class SeasonData:
 class SeasonSensorEntity(SensorEntity):
     """Representation of the current season."""
 
-    _attr_device_class = "season__season"
     _attr_has_entity_name = True
 
     def __init__(
@@ -276,7 +274,7 @@ class SeasonSensorEntity(SensorEntity):
         description: SensorEntityDescription,
         entry: ConfigEntry,
     ):
-        """Initialize the sensor."""
+        """Initialize the season."""
         name = entry.title
         unique_id = entry.entry_id
         self.entity_description = description
