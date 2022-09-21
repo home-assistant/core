@@ -5,12 +5,24 @@ import pytest
 
 from homeassistant.components.climacell import CONF_TIMESTEP, DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.const import CONF_API_VERSION
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_VERSION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 
-from .const import API_V3_ENTRY_DATA
-
 from tests.common import MockConfigEntry
+
+API_V3_ENTRY_DATA = {
+    CONF_NAME: "ClimaCell",
+    CONF_API_KEY: "aa",
+    CONF_LATITUDE: 80.0,
+    CONF_LONGITUDE: 80.0,
+    CONF_API_VERSION: 3,
+}
 
 
 async def test_load_and_unload(hass: HomeAssistant) -> None:
