@@ -123,7 +123,7 @@ async def ws_handle_get_statistics_during_period(
                 vol.Optional("energy"): vol.Any(
                     ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR
                 ),
-                vol.Optional("power"): vol.Any(power_util.VALID_UNITS),
+                vol.Optional("power"): vol.In(power_util.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(pressure_util.VALID_UNITS),
                 vol.Optional("temperature"): vol.In(temperature_util.VALID_UNITS),
                 vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
