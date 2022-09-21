@@ -590,7 +590,7 @@ async def async_setup_entry(
     conn.add_char_factory(async_add_characteristic)
 
     if conn.pairing.transport == Transport.BLE:
-        _LOGGER.debug("Adding RSSI sensor for %s", conn.entity_map.aid(1))
+        _LOGGER.debug("Adding RSSI sensor for %s", conn.entity_map.aid(1).name)
         accessory = conn.entity_map.accessories[0]
         # Monitor AccessoryInformation service for availability purposes
         accessory_info = accessory.services.first(
