@@ -589,4 +589,4 @@ async def async_setup_entry(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
-        async_add_entities(RSSISensor(conn, info))
+        async_add_entities([RSSISensor(conn, info)])
