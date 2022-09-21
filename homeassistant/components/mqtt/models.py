@@ -1,15 +1,15 @@
 """Models used by multiple MQTT modules."""
 from __future__ import annotations
 
-import asyncio
-import attr
-
 from ast import literal_eval
+import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
 from typing import TYPE_CHECKING, Any, TypedDict, Union
+
+import attr
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
