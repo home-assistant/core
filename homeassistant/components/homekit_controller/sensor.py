@@ -539,6 +539,12 @@ class RSSISensor(HomeKitEntity, SensorEntity):
         return []
 
     @property
+    def available(self) -> str:
+        """Return if the bluetooth device is available."""
+        address = self._accessory.pairing_data["AccessoryAddress"]
+        return async_ble_device_from_address(self.hass, address) is not None
+
+    @property
     def name(self) -> str:
         """Return the name of the sensor."""
         return "Signal strength"
@@ -594,8 +600,6 @@ async def async_setup_entry(
         if conn.pairing.transport != Transport.BLE:
             return False
 
-        _LOGGER.debug("Adding RSSI sensor for %s", conn.entity_map.aid(1).name)
-        # Monitor AccessoryInformation service for availability purposes
         accessory_info = accessory.services.first(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
