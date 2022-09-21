@@ -45,7 +45,6 @@ class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[Appliance], float | None]
-    enabled_default: bool
     cross_device: bool  # Cross-device sensors should be created only once
 
 
@@ -61,8 +60,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=True,
         value_func=lambda device: device.inside_temperature,
-        enabled_default=True,
         cross_device=False,
     ),
     DaikinSensorEntityDescription(
@@ -71,8 +70,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=True,
         value_func=lambda device: device.outside_temperature,
-        enabled_default=True,
         cross_device=True,
     ),
     DaikinSensorEntityDescription(
@@ -81,8 +80,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=True,
         value_func=lambda device: device.humidity,
-        enabled_default=True,
         cross_device=False,
     ),
     DaikinSensorEntityDescription(
@@ -91,8 +90,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=True,
         value_func=lambda device: device.humidity,
-        enabled_default=True,
         cross_device=False,
     ),
     DaikinSensorEntityDescription(
@@ -101,8 +100,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_KILO_WATT,
+        entity_registry_enabled_default=True,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
-        enabled_default=True,
         cross_device=True,
     ),
     DaikinSensorEntityDescription(
@@ -111,8 +110,8 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         icon="mdi:snowflake",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
-        enabled_default=False,
         cross_device=False,
     ),
     DaikinSensorEntityDescription(
@@ -121,21 +120,18 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         icon="mdi:fire",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
-        enabled_default=False,
         cross_device=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ENERGY_TODAY,
-        name="Today's Energy Consumption",
+        name="Energy Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_func=lambda device: round(
-            device.today_cool_energy_consumption + device.today_heat_energy_consumption,
-            2,
-        ),
-        enabled_default=True,
+        entity_registry_enabled_default=True,
+        value_func=lambda device: round(device.today_energy_consumption, 2),
         cross_device=False,
     ),
     DaikinSensorEntityDescription(
@@ -145,18 +141,18 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_HERTZ,
+        entity_registry_enabled_default=False,
         value_func=lambda device: device.compressor_frequency,
-        enabled_default=False,
         cross_device=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_ENERGY_TODAY,
-        name="All Devices' Today's Energy Consumption",
+        name="All Devices' Energy Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        entity_registry_enabled_default=False,
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
-        enabled_default=False,
         cross_device=True,
     ),
 )
@@ -214,10 +210,7 @@ class DaikinSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._api = api
-        self._attr_entity_registry_enabled_default = description.enabled_default
-        if description.cross_device:
-            self._attr_name = f"Daikin {description.name}"
-        else:
+        if not description.cross_device:
             self._attr_name = f"{api.name} {description.name}"
 
     @property
@@ -225,7 +218,7 @@ class DaikinSensor(SensorEntity):
         """Return a unique ID."""
         if self.entity_description.cross_device:
             # Cross-device sensors should be generated once for all devices
-            return f"daikin-{self.entity_description.key}"
+            return self.entity_description.key
         return f"{self._api.device.mac}-{self.entity_description.key}"
 
     @property
