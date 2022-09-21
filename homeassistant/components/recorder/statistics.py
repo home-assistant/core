@@ -1516,7 +1516,7 @@ def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None
     if statistics_unit == state_unit:
         return
     if (
-        conversion_utility := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
+        unit_converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
     ) is None:
         raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
     if state_unit not in conversion_utility.VALID_UNITS:
