@@ -561,6 +561,9 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==0.3.0
 
+# homeassistant.components.electric_kiwi
+electrickiwi-api==0.8.5
+
 # homeassistant.components.elgato
 elgato==4.0.1
 
