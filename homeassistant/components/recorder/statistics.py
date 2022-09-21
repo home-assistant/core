@@ -195,7 +195,7 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
     VOLUME_CUBIC_METERS: "volume",
 }
 
-STATISTIC_UNIT_TO_VALID_UNITS: dict[str | None, Iterable[str]] = {
+STATISTIC_UNIT_TO_VALID_UNITS: dict[str | None, Iterable[str | None]] = {
     ENERGY_KILO_WATT_HOUR: ["kWh", "MWh", "Wh"],
     POWER_WATT: power_util.VALID_UNITS,
     PRESSURE_PA: pressure_util.VALID_UNITS,
@@ -245,14 +245,16 @@ def _get_statistic_to_display_unit_converter(
     ) is None:
         return no_conversion
 
+    display_unit: str | None
     unit_class = STATISTIC_UNIT_TO_UNIT_CLASS[statistic_unit]
     if requested_units and unit_class in requested_units:
         display_unit = requested_units[unit_class]
     else:
-        if state_unit is None:
-            # Guard against invalid state unit in the DB
-            return no_conversion
         display_unit = state_unit
+
+    if display_unit not in STATISTIC_UNIT_TO_VALID_UNITS[statistic_unit]:
+        # Guard against invalid state unit in the DB
+        return no_conversion
 
     return partial(convert_fn, display_unit)
 
