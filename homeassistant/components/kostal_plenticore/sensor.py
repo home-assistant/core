@@ -834,14 +834,14 @@ async def async_setup_entry(
         plenticore,
     )
     for description in SENSOR_PROCESS_DATA:
+        module_id = description.module_id
+        data_id = description.key
         if (
-            description.module_id not in available_process_data
-            or description.key not in available_process_data[description.module_id]
+            module_id not in available_process_data
+            or data_id not in available_process_data[module_id]
         ):
             _LOGGER.debug(
-                "Skipping non existing process data %s/%s",
-                description.module_id,
-                description.key,
+                "Skipping non existing process data %s/%s", module_id, data_id
             )
             continue
 
