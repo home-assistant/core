@@ -196,7 +196,11 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
 }
 
 STATISTIC_UNIT_TO_VALID_UNITS: dict[str | None, Iterable[str | None]] = {
-    ENERGY_KILO_WATT_HOUR: ["kWh", "MWh", "Wh"],
+    ENERGY_KILO_WATT_HOUR: [
+        ENERGY_KILO_WATT_HOUR,
+        ENERGY_MEGA_WATT_HOUR,
+        ENERGY_WATT_HOUR,
+    ],
     POWER_WATT: power_util.VALID_UNITS,
     PRESSURE_PA: pressure_util.VALID_UNITS,
     TEMP_CELSIUS: temperature_util.VALID_UNITS,
@@ -1523,7 +1527,7 @@ def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None
     """Raise if the statistics unit and state unit are not compatible."""
     if statistics_unit == state_unit:
         return
-    if (valid_units := STATISTIC_UNIT_TO_VALID_UNITS) is None:
+    if (valid_units := STATISTIC_UNIT_TO_VALID_UNITS.get(statistics_unit)) is None:
         raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
     if state_unit not in valid_units:
         raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
