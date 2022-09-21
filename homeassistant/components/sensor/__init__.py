@@ -56,7 +56,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, ConversionUtility, StateType
+from homeassistant.helpers.typing import ConfigType, StateType, UnitConverter
 from homeassistant.util import (
     dt as dt_util,
     pressure as pressure_util,
@@ -207,7 +207,7 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-CONVERSION_UTILITIES: dict[str, ConversionUtility] = {
+UNIT_CONVERTERS: dict[str, UnitConverter] = {
     SensorDeviceClass.PRESSURE: pressure_util,
     SensorDeviceClass.TEMPERATURE: temperature_util,
 }
@@ -426,7 +426,7 @@ class SensorEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in CONVERSION_UTILITIES
+            and device_class in UNIT_CONVERTERS
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
@@ -448,7 +448,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = CONVERSION_UTILITIES[device_class].convert(
+                value_f_new = UNIT_CONVERTERS[device_class].convert(
                     value_f,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -477,10 +477,10 @@ class SensorEntity(Entity):
         if (
             (sensor_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := sensor_options.get(CONF_UNIT_OF_MEASUREMENT))
-            and (device_class := self.device_class) in CONVERSION_UTILITIES
+            and (device_class := self.device_class) in UNIT_CONVERTERS
             and self.native_unit_of_measurement
-            in CONVERSION_UTILITIES[device_class].VALID_UNITS
-            and custom_unit in CONVERSION_UTILITIES[device_class].VALID_UNITS
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             self._sensor_option_unit_of_measurement = custom_unit
             return

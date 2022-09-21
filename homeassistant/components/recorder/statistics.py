@@ -36,7 +36,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import UNDEFINED, ConversionUtility, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType, UnitConverter
 from homeassistant.util import (
     dt as dt_util,
     energy as energy_util,
@@ -186,7 +186,7 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
     VOLUME_CUBIC_METERS: "volume",
 }
 
-STATISTIC_UNIT_TO_CONVERSION_UTILITY: dict[str | None, ConversionUtility] = {
+STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, UnitConverter] = {
     ENERGY_KILO_WATT_HOUR: energy_util,
     POWER_WATT: power_util,
     PRESSURE_PA: pressure_util,
@@ -243,7 +243,7 @@ def _get_statistic_to_display_unit_converter(
     else:
         display_unit = state_unit
 
-    conversion_utility = STATISTIC_UNIT_TO_CONVERSION_UTILITY[statistic_unit]
+    conversion_utility = STATISTIC_UNIT_TO_UNIT_CONVERTER[statistic_unit]
     if display_unit not in conversion_utility.VALID_UNITS:
         # Guard against invalid state unit in the DB
         return no_conversion
@@ -1516,7 +1516,7 @@ def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None
     if statistics_unit == state_unit:
         return
     if (
-        conversion_utility := STATISTIC_UNIT_TO_CONVERSION_UTILITY.get(statistics_unit)
+        conversion_utility := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
     ) is None:
         raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
     if state_unit not in conversion_utility.VALID_UNITS:

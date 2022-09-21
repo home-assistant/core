@@ -27,7 +27,7 @@ class UndefinedType(Enum):
 UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
 
 
-class ConversionUtility(Protocol):
+class UnitConverter(Protocol):
     """Define the format of a conversion utility."""
 
     VALID_UNITS: tuple[str, ...]
