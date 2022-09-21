@@ -25,7 +25,7 @@ class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore select entities."""
 
     module_id: str
-    options: list[str]
+    options: list
     is_on: str
 
 
