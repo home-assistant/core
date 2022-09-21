@@ -41,6 +41,8 @@ UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_MMHG: 1 / 133.322,
 }
 
+NORMALISED_UNIT = PRESSURE_PA
+
 
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
