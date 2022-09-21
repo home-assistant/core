@@ -1100,6 +1100,7 @@ async def test_get_statistics_metadata(
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": unit,
         "statistic_id": "test:total_gas",
         "unit_of_measurement": unit,
     }
@@ -1107,6 +1108,29 @@ async def test_get_statistics_metadata(
     async_add_external_statistics(
         hass, external_energy_metadata_1, external_energy_statistics_1
     )
+    await async_wait_recording_done(hass)
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": ["test:total_gas"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "test:total_gas",
+            "display_unit_of_measurement": unit,
+            "has_mean": False,
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": "test",
+            "statistics_unit_of_measurement": unit,
+            "unit_class": unit_class,
+        }
+    ]
 
     hass.states.async_set("sensor.test", 10, attributes=attributes)
     await async_wait_recording_done(hass)
@@ -1116,7 +1140,7 @@ async def test_get_statistics_metadata(
 
     await client.send_json(
         {
-            "id": 2,
+            "id": 3,
             "type": "recorder/get_statistics_metadata",
             "statistic_ids": ["sensor.test"],
         }
@@ -1144,7 +1168,7 @@ async def test_get_statistics_metadata(
 
     await client.send_json(
         {
-            "id": 3,
+            "id": 4,
             "type": "recorder/get_statistics_metadata",
             "statistic_ids": ["sensor.test"],
         }
