@@ -174,8 +174,7 @@ class MicrosoftProvider(Provider):
     @property
     def default_options(self):
         """Return a dict include default options."""
-        return {CONF_GENDER: self._gender,
-                CONF_TYPE: self._type}
+        return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from Microsoft."""
