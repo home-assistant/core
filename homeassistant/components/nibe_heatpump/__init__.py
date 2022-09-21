@@ -13,7 +13,7 @@ from tenacity import RetryError, retry, retry_if_exception_type, stop_after_atte
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.update_coordinator import (
@@ -56,27 +56,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
 
     await connection.start()
+    coordinator = Coordinator(hass, heatpump, connection)
+
+    data = hass.data.setdefault(DOMAIN, {})
+    data[entry.entry_id] = coordinator
+
     try:
-        coordinator = Coordinator(hass, heatpump, connection)
-
-        data = hass.data.setdefault(DOMAIN, {})
-        data[entry.entry_id] = coordinator
         await coordinator.async_config_entry_first_refresh()
-
-        reg = dr.async_get(hass)
-        reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
-            manufacturer="NIBE Energy Systems",
-            model=heatpump.model.name,
-            name=heatpump.model.name,
-        )
-
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    except Exception:
+    except ConfigEntryNotReady:
         await connection.stop()
         raise
+
+    reg = dr.async_get(hass)
+    reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+        manufacturer="NIBE Energy Systems",
+        model=heatpump.model.name,
+        name=heatpump.model.name,
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Trigger a refresh again now that all platforms have registered
     hass.async_create_task(coordinator.async_refresh())
