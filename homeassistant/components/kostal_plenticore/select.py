@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -67,8 +66,6 @@ async def async_setup_entry(
     for description in SELECT_SETTINGS_DATA:
         if description.module_id not in available_settings_data:
             continue
-        if TYPE_CHECKING:
-            assert isinstance(description.options, list)
         needed_data_ids = {
             data_id for data_id in description.options if data_id != "None"
         }
