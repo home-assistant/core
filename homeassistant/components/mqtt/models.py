@@ -77,13 +77,6 @@ class TriggerDebugInfo(TypedDict):
     discovery_data: DiscoveryInfoType
 
 
-class MqttDebugInfo(TypedDict):
-    """Class for holding MQTT debug info."""
-
-    entities: dict[str, EntityDebugInfo]
-    triggers: dict[tuple[str, str], TriggerDebugInfo]
-
-
 class MqttCommandTemplate:
     """Class for rendering MQTT payload with command templates."""
 
@@ -218,8 +211,9 @@ class MqttData:
 
     client: MQTT | None = None
     config: ConfigType | None = None
-    debug_info: MqttDebugInfo = field(
-        default_factory=lambda: MqttDebugInfo(entities={}, triggers={})
+    debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
+    debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
+        default_factory=dict
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
