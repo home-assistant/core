@@ -195,6 +195,13 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
     VOLUME_CUBIC_METERS: "volume",
 }
 
+STATISTIC_UNIT_TO_VALID_UNITS: dict[str | None, Iterable[str]] = {
+    ENERGY_KILO_WATT_HOUR: ["kWh", "MWh", "Wh"],
+    POWER_WATT: power_util.VALID_UNITS,
+    PRESSURE_PA: pressure_util.VALID_UNITS,
+    TEMP_CELSIUS: temperature_util.VALID_UNITS,
+    VOLUME_CUBIC_METERS: volume_util.VALID_UNITS,
+}
 
 # Convert energy power, pressure, temperature and volume statistics from the
 # normalized unit used for statistics to the unit configured by the user
@@ -239,7 +246,14 @@ def _get_statistic_to_display_unit_converter(
         return no_conversion
 
     unit_class = STATISTIC_UNIT_TO_UNIT_CLASS[statistic_unit]
-    display_unit = requested_units.get(unit_class) if requested_units else state_unit
+    if requested_units and unit_class in requested_units:
+        display_unit = requested_units[unit_class]
+    else:
+        if state_unit is None:
+            # Guard against invalid state unit in the DB
+            return no_conversion
+        display_unit = state_unit
+
     return partial(convert_fn, display_unit)
 
 
@@ -1503,6 +1517,16 @@ def _async_import_statistics(
     get_instance(hass).async_import_statistics(metadata, statistics)
 
 
+def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None:
+    """Raise if the statistics unit and state unit are not compatible."""
+    if statistics_unit == state_unit:
+        return
+    if (valid_units := STATISTIC_UNIT_TO_VALID_UNITS) is None:
+        raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
+    if state_unit not in valid_units:
+        raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
+
+
 @callback
 def async_import_statistics(
     hass: HomeAssistant,
@@ -1519,6 +1543,10 @@ def async_import_statistics(
     # The source must not be empty and must be aligned with the statistic_id
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
+
+    _validate_units(
+        metadata["unit_of_measurement"], metadata["state_unit_of_measurement"]
+    )
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -1541,6 +1569,10 @@ def async_add_external_statistics(
     domain, _object_id = split_statistic_id(metadata["statistic_id"])
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
+
+    _validate_units(
+        metadata["unit_of_measurement"], metadata["state_unit_of_measurement"]
+    )
 
     _async_import_statistics(hass, metadata, statistics)
 
