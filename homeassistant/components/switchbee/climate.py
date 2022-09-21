@@ -202,7 +202,7 @@ class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set AC fand mode."""
+        """Set AC fan mode."""
         await self.operate(self._create_switchbee_request(fan=FAN_HASS_TO_SB[fan_mode]))
 
     async def operate(self, state: dict[str, str | int]) -> None:
