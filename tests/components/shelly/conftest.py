@@ -3,13 +3,15 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper
+from homeassistant.components.shelly import BlockDeviceWrapper, RpcDeviceWrapper, RpcPollingWrapper, ShellyDeviceRestWrapper
 from homeassistant.components.shelly.const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     EVENT_SHELLY_CLICK,
     RPC,
+    RPC_POLL,
+    REST,
 )
 from homeassistant.setup import async_setup_component
 
@@ -70,6 +72,7 @@ MOCK_SHELLY = {
     "auth": False,
     "fw": "20201124-092854/v1.9.0@57ac4ad8",
     "num_outputs": 2,
+    "ver": "20201124-092854/v1.9.0@57ac4ad8",
 }
 
 MOCK_STATUS_COAP = {
@@ -156,8 +159,46 @@ async def coap_wrapper(hass):
 
 
 @pytest.fixture
+async def rest_wrapper(hass):
+    """Setups a rest wrapper with mocked device."""
+    await async_setup_component(hass, "shelly", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"sleep_period": 0, "model": "SHSW-25", "host": "1.2.3.4"},
+        unique_id="12345678",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = Mock(
+        blocks=MOCK_BLOCKS,
+        settings=MOCK_SETTINGS,
+        shelly=MOCK_SHELLY,
+        status=MOCK_STATUS_COAP,
+        firmware_version="some fw string",
+        update=AsyncMock(),
+        trigger_ota_update=AsyncMock(),
+        trigger_reboot=AsyncMock(),
+        initialized=True,
+    )
+
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        REST
+    ] = ShellyDeviceRestWrapper(hass, device, config_entry)
+    
+    block_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        BLOCK
+    ] = BlockDeviceWrapper(hass, config_entry, device)
+    block_wrapper.async_setup()
+
+    return wrapper
+
+
+@pytest.fixture
 async def rpc_wrapper(hass):
-    """Setups a coap wrapper with mocked device."""
+    """Setups a rpc wrapper with mocked device."""
     await async_setup_component(hass, "shelly", {})
 
     config_entry = MockConfigEntry(
@@ -188,5 +229,45 @@ async def rpc_wrapper(hass):
     ] = RpcDeviceWrapper(hass, config_entry, device)
 
     wrapper.async_setup()
+
+    return wrapper
+
+
+@pytest.fixture
+async def rpc_poll_wrapper(hass):
+    """Setups a rpc poll wrapper with mocked device."""
+    await async_setup_component(hass, "shelly", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"sleep_period": 0, "model": "SNSW-001P16EU", "gen": 2, "host": "1.2.3.4"},
+        unique_id="12345678",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = Mock(
+        call_rpc=AsyncMock(),
+        config=MOCK_CONFIG,
+        event={},
+        shelly=MOCK_SHELLY,
+        status=MOCK_STATUS_RPC,
+        firmware_version="some fw string",
+        update=AsyncMock(),
+        trigger_ota_update=AsyncMock(),
+        trigger_reboot=AsyncMock(),
+        initialized=True,
+        shutdown=AsyncMock(),
+    )
+
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
+    wrapper_rpc = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        RPC
+    ] = RpcDeviceWrapper(hass, config_entry, device)
+    wrapper_rpc.async_setup()
+    
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        RPC_POLL
+    ] = RpcPollingWrapper(hass, config_entry, device)
 
     return wrapper
