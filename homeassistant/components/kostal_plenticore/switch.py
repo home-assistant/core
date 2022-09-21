@@ -69,33 +69,28 @@ async def async_setup_entry(
         timedelta(seconds=30),
         plenticore,
     )
-    for switch in SWITCH_SETTINGS_DATA:
-        if switch.module_id not in available_settings_data or switch.key not in (
-            setting.id for setting in available_settings_data[switch.module_id]
+    for description in SWITCH_SETTINGS_DATA:
+        if (
+            description.module_id not in available_settings_data
+            or description.key
+            not in (
+                setting.id for setting in available_settings_data[description.module_id]
+            )
         ):
             _LOGGER.debug(
                 "Skipping non existing setting data %s/%s",
-                switch.module_id,
-                switch.key,
+                description.module_id,
+                description.key,
             )
             continue
 
         entities.append(
             PlenticoreDataSwitch(
                 settings_data_update_coordinator,
+                description,
                 entry.entry_id,
                 entry.title,
-                switch.module_id,
-                switch.key,
-                switch.name,
-                switch.is_on,
-                switch.on_value,
-                switch.on_label,
-                switch.off_value,
-                switch.off_label,
                 plenticore.device_info,
-                f"{entry.title} {switch.name}",
-                f"{entry.entry_id}_{switch.module_id}_{switch.key}",
             )
         )
 
@@ -106,38 +101,31 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
     """Representation of a Plenticore Switch."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    entity_description: PlenticoreSwitchEntityDescription
 
     def __init__(
         self,
-        coordinator,
+        coordinator: SettingDataUpdateCoordinator,
+        description: PlenticoreSwitchEntityDescription,
         entry_id: str,
         platform_name: str,
-        module_id: str,
-        data_id: str,
-        name: str | None,
-        is_on: str,
-        on_value: str,
-        on_label: str,
-        off_value: str,
-        off_label: str,
         device_info: DeviceInfo,
-        attr_name: str,
-        attr_unique_id: str,
-    ):
+    ) -> None:
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
+        self.entity_description = description
         self.entry_id = entry_id
         self.platform_name = platform_name
-        self.module_id = module_id
-        self.data_id = data_id
-        self._name = name
-        self._is_on = is_on
-        self._attr_name = attr_name
-        self.on_value = on_value
-        self.on_label = on_label
-        self.off_value = off_value
-        self.off_label = off_label
-        self._attr_unique_id = attr_unique_id
+        self.module_id = description.module_id
+        self.data_id = description.key
+        self._name = description.name
+        self._is_on = description.is_on
+        self._attr_name = f"{platform_name} {description.name}"
+        self.on_value = description.on_value
+        self.on_label = description.on_label
+        self.off_value = description.off_value
+        self.off_label = description.off_label
+        self._attr_unique_id = f"{entry_id}_{description.module_id}_{description.key}"
 
         self._device_info = device_info
 
