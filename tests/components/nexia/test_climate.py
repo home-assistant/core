@@ -1,5 +1,5 @@
 """The lock tests for the august platform."""
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 
 from .util import async_init_integration
 
