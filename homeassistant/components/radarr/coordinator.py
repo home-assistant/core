@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T", type[None], SystemStatus, list[RootFolder])
+T = TypeVar("T", str, list[RootFolder], int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
@@ -64,9 +64,9 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
 class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator):
     """Status update coordinator for Radarr."""
 
-    async def _fetch_data(self) -> None:
+    async def _fetch_data(self) -> str:
         """Fetch the data."""
-        self.system_status = await self.api_client.async_get_system_status()
+        return (await self.api_client.async_get_system_status()).version
 
 
 class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):

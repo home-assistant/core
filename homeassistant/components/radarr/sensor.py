@@ -71,13 +71,14 @@ class RadarrSensorEntityDescription(
     """Class to describe a Radarr sensor."""
 
     description_fn: Callable[
-        [RadarrSensorEntityDescription, RootFolder], tuple[RadarrSensorEntityDescription, str] | None
+        [RadarrSensorEntityDescription, RootFolder],
+        tuple[RadarrSensorEntityDescription, str] | None,
     ] = lambda _, __: None
 
 
 SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
     "disk_space": RadarrSensorEntityDescription(
-        key="diskspace",
+        key="disk_space",
         name="Disk space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",

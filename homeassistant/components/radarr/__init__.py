@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
         if isinstance(coordinator, StatusDataUpdateCoordinator):
-            _version = coordinator.system_status.version
+            _version = coordinator.data
         coordinator.system_version = _version
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
