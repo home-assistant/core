@@ -85,7 +85,9 @@ class FaceInformation(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent[ImageProcessingEntity](
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
 
     await component.async_setup(config)
 

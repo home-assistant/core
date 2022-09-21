@@ -18,6 +18,14 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
+        },
+        "deprecated_service_single_alternate_target": {
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
+        }
+    },
     "options": {
         "step": {
             "init": {

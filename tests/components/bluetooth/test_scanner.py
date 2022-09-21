@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration scanners."""
+import time
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
@@ -203,7 +204,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
 
         assert called_start == 1
 
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
     scanner = _get_manager()
     mock_discovered = [MagicMock()]
 
@@ -279,7 +280,7 @@ async def test_adapter_recovery(hass, one_adapter):
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
@@ -366,7 +367,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
@@ -471,7 +472,7 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",

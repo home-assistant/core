@@ -403,9 +403,6 @@ omit =
     homeassistant/components/flume/coordinator.py
     homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
-    homeassistant/components/flunearyou/__init__.py
-    homeassistant/components/flunearyou/repairs.py
-    homeassistant/components/flunearyou/sensor.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
@@ -649,10 +646,6 @@ omit =
     homeassistant/components/kostal_plenticore/switch.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
-    homeassistant/components/lametric/__init__.py
-    homeassistant/components/lametric/button.py
-    homeassistant/components/lametric/coordinator.py
-    homeassistant/components/lametric/entity.py
     homeassistant/components/lametric/notify.py
     homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py
@@ -670,6 +663,9 @@ omit =
     homeassistant/components/led_ble/util.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
+    homeassistant/components/lidarr/__init__.py
+    homeassistant/components/lidarr/coordinator.py
+    homeassistant/components/lidarr/sensor.py
     homeassistant/components/life360/__init__.py
     homeassistant/components/life360/const.py
     homeassistant/components/life360/coordinator.py
@@ -1111,6 +1107,7 @@ omit =
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
     homeassistant/components/simplisafe/binary_sensor.py
+    homeassistant/components/simplisafe/button.py
     homeassistant/components/simplisafe/lock.py
     homeassistant/components/simplisafe/sensor.py
     homeassistant/components/simulated/sensor.py
@@ -1216,6 +1213,7 @@ omit =
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
     homeassistant/components/switchbee/const.py
+    homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/switch.py
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/binary_sensor.py
@@ -1393,7 +1391,6 @@ omit =
     homeassistant/components/upnp/__init__.py
     homeassistant/components/upnp/device.py
     homeassistant/components/upnp/sensor.py
-    homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/__init__.py
     homeassistant/components/vallox/fan.py
     homeassistant/components/vallox/sensor.py

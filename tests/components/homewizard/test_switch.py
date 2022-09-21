@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homewizard_energy.models import State
 
 from homeassistant.components import switch
-from homeassistant.components.switch import DEVICE_CLASS_OUTLET, DEVICE_CLASS_SWITCH
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -78,7 +78,7 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
         state_power_on.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff)"
     )
-    assert state_power_on.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_OUTLET
+    assert state_power_on.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET
     assert ATTR_ICON not in state_power_on.attributes
 
     state_switch_lock = hass.states.get("switch.product_name_aabbccddeeff_switch_lock")
@@ -95,7 +95,9 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
         state_switch_lock.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Switch lock"
     )
-    assert state_switch_lock.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SWITCH
+    assert (
+        state_switch_lock.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+    )
     assert ATTR_ICON not in state_switch_lock.attributes
 
 

@@ -355,8 +355,6 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
-/homeassistant/components/flunearyou/ @bachya
-/tests/components/flunearyou/ @bachya
 /homeassistant/components/flux_led/ @icemanch @bdraco
 /tests/components/flux_led/ @icemanch @bdraco
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
@@ -421,6 +419,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/google_assistant/ @home-assistant/cloud
 /tests/components/google_assistant/ @home-assistant/cloud
 /homeassistant/components/google_cloud/ @lufton
+/homeassistant/components/google_sheets/ @tkdrob
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/govee_ble/ @bdraco
@@ -507,6 +506,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
+/homeassistant/components/ibeacon/ @bdraco
+/tests/components/ibeacon/ @bdraco
 /homeassistant/components/icloud/ @Quentame @nzapponi
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/ign_sismologia/ @exxamalte
@@ -606,6 +607,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed
+/homeassistant/components/lidarr/ @tkdrob
+/tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
 /homeassistant/components/lifx/ @bdraco @Djelibeybi
@@ -867,8 +870,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
 /tests/components/pvpc_hourly_pricing/ @azogue
 /homeassistant/components/qbittorrent/ @geoffreylagaisse
-/homeassistant/components/qingping/ @bdraco
-/tests/components/qingping/ @bdraco
+/homeassistant/components/qingping/ @bdraco @skgsergio
+/tests/components/qingping/ @bdraco @skgsergio
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap_qsw/ @Noltari

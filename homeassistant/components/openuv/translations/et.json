@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "V\u00e4rskenda k\u00f5iki automaatikaid v\u00f5i skripte, mis seda teenust kasutavad, et kasutada selle asemel teenust '{alternate_service}', mille sihtm\u00e4rgiks on \u00fcks neist olemi ID-dest: '{alternate_targets}'.",
+            "title": "Teenus {deprecated_service} eemaldatakse"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Uuenda k\u00f5iki seda teenust kasutavaid automatiseerimisi v\u00f5i skripte, et need kasutaksid selle asemel teenust `{alternate_service}}, mille sihtm\u00e4rgiks on `{alternate_targets}}.",
+            "title": "Teenus {deprecated_service} eemaldatakse"
+        }
+    },
     "options": {
         "step": {
             "init": {

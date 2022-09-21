@@ -89,7 +89,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def turn_on(self) -> None:
         """Turn device on."""
         self._device.turn_on()
-        self._state = MediaPlayerState.ON
+        self._attr_state = MediaPlayerState.ON
 
     def clear_playlist(self) -> None:
         """Clear players playlist."""
@@ -98,12 +98,12 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def turn_off(self) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = MediaPlayerState.OFF
+        self._attr_state = MediaPlayerState.OFF
 
     def media_stop(self) -> None:
         """Stop playback."""
         self.send_keypress(KEY_STOP)
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Not supported."""
@@ -124,7 +124,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def media_pause(self) -> None:
         """Pause playback."""
         self.send_keypress(KEY_PAUSE)
-        self._state = MediaPlayerState.PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
 
     def select_source(self, source: str) -> None:
         """Not supported."""
@@ -133,7 +133,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def media_play(self) -> None:
         """Start playback."""
         self.send_keypress(KEY_PLAY)
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     def volume_up(self) -> None:
         """Increase volume."""
@@ -145,25 +145,20 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
 
-    @property
-    def state(self) -> str | None:
-        """Cache state of device."""
-        return self._state
-
     def update(self) -> None:
         """Update device status."""
         device = self._device
         if device.power_status in [POWER_OFF, 3]:
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
         elif not self.support_pause:
             if device.power_status in [POWER_ON, 4]:
-                self._state = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
         elif device.status == STATUS_PLAY:
-            self._state = MediaPlayerState.PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         elif device.status == STATUS_STOP:
-            self._state = MediaPlayerState.IDLE
+            self._attr_state = MediaPlayerState.IDLE
         elif device.status == STATUS_STILL:
-            self._state = MediaPlayerState.PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
         else:
             _LOGGER.warning("Unknown state: %s", device.status)
 
