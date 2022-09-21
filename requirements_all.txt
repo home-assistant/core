@@ -400,7 +400,7 @@ beautifulsoup4==4.11.1
 bellows==0.33.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.10.2
+bimmer_connected==0.10.4
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
