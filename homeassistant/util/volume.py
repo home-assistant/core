@@ -31,7 +31,7 @@ GALLON_TO_CUBIC_METER = 231 * pow(IN_TO_M, 3)  # US gallon is 231 cubic inches
 FLUID_OUNCE_TO_CUBIC_METER = GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
 CUBIC_FOOT_TO_CUBIC_METER = pow(FOOT_TO_M, 3)
 
-# Units in terms of m3
+# Units in terms of m³
 UNIT_CONVERSION: dict[str, float] = {
     VOLUME_LITERS: 1 / L_TO_CUBIC_METER,
     VOLUME_MILLILITERS: 1 / ML_TO_CUBIC_METER,
