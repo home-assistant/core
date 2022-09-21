@@ -32,37 +32,37 @@ from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_ha
 
 SENSOR_DESCRIPTIONS = {
     KegtronSensorDeviceClass.PORT_COUNT: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.PORT_COUNT}",
+        key=KegtronSensorDeviceClass.PORT_COUNT,
         icon="mdi:water-pump",
     ),
     KegtronSensorDeviceClass.KEG_SIZE: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.KEG_SIZE}",
+        key=KegtronSensorDeviceClass.KEG_SIZE,
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.KEG_TYPE: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.KEG_TYPE}",
+        key=KegtronSensorDeviceClass.KEG_TYPE,
         icon="mdi:keg",
     ),
     KegtronSensorDeviceClass.VOLUME_START: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.VOLUME_START}",
+        key=KegtronSensorDeviceClass.VOLUME_START,
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.VOLUME_DISPENSED: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.VOLUME_DISPENSED}",
+        key=KegtronSensorDeviceClass.VOLUME_DISPENSED,
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=SensorStateClass.TOTAL,
     ),
     KegtronSensorDeviceClass.PORT_STATE: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.PORT_STATE}",
+        key=KegtronSensorDeviceClass.PORT_STATE,
         icon="mdi:water-pump",
     ),
     KegtronSensorDeviceClass.PORT_NAME: SensorEntityDescription(
-        key=f"{KegtronSensorDeviceClass.PORT_NAME}",
+        key=KegtronSensorDeviceClass.PORT_NAME,
         icon="mdi:water-pump",
     ),
     KegtronSensorDeviceClass.SIGNAL_STRENGTH: SensorEntityDescription(
