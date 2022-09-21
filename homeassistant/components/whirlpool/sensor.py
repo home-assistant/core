@@ -154,7 +154,7 @@ async def async_setup_entry(
             for description in SENSORS
         ]
 
-    async_add_entities(entities)
+        async_add_entities(entities)
 
 
 class WasherDryerClass(SensorEntity):

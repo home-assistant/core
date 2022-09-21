@@ -110,6 +110,8 @@ def side_effect_function(*args, **kwargs):
     """Return correct value for attribute."""
     if args[0] == "Cavity_TimeStatusEstTimeRemaining":
         return 3540
+    if args[0] == "Cavity_OpStatusDoorOpen":
+        return "0"
 
 
 def get_sensor_mock(said):
@@ -121,7 +123,7 @@ def get_sensor_mock(said):
         whirlpool.washerdryer.MachineState.Standby
     )
     mock_sensor.get_attribute.side_effect = side_effect_function
-    mock_sensor.get_cycle_status_filling.return_value = True
+    mock_sensor.get_cycle_status_filling.return_value = False
     mock_sensor.get_cycle_status_rinsing.return_value = False
     mock_sensor.get_cycle_status_sensing.return_value = False
     mock_sensor.get_cycle_status_soaking.return_value = False
@@ -147,7 +149,8 @@ def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_api):
 def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
     """Set up sensor API fixture."""
     with mock.patch(
-        "homeassistant.components.whirlpool.sensor.WasherDryer"
+        # "homeassistant.components.whirlpool.sensor.WasherDryer"
+        "whirlpool.washerdryer.WasherDryer"
     ) as mock_sensor_api:
         mock_sensor_api.side_effect = [
             mock_sensor1_api,
