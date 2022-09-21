@@ -243,8 +243,8 @@ def _get_statistic_to_display_unit_converter(
     else:
         display_unit = state_unit
 
-    conversion_utility = STATISTIC_UNIT_TO_UNIT_CONVERTER[statistic_unit]
-    if display_unit not in conversion_utility.VALID_UNITS:
+    unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[statistic_unit]
+    if display_unit not in unit_converter.VALID_UNITS:
         # Guard against invalid state unit in the DB
         return no_conversion
 
