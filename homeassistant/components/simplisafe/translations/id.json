@@ -39,6 +39,11 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "title": "Layanan {deprecated_service} dalam proses penghapusan"
+        }
+    },
     "options": {
         "step": {
             "init": {
