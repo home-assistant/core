@@ -62,29 +62,14 @@ GAS_SENSOR_M3_ATTRIBUTES = {
 }
 
 
-@pytest.mark.parametrize(
-    "units, attributes, state, value",
-    [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
-        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, 10, 10),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
-    ],
-)
-async def test_statistics_during_period(
-    hass, hass_ws_client, recorder_mock, units, attributes, state, value
-):
+async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
-    hass.config.units = units
+    hass.config.units = IMPERIAL_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -122,9 +107,9 @@ async def test_statistics_during_period(
                 "statistic_id": "sensor.test",
                 "start": now.isoformat(),
                 "end": (now + timedelta(minutes=5)).isoformat(),
-                "mean": approx(value),
-                "min": approx(value),
-                "max": approx(value),
+                "mean": approx(10),
+                "min": approx(10),
+                "max": approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -368,32 +353,21 @@ async def test_statistics_during_period_invalid_unit_conversion(
     assert response["error"]["code"] == "invalid_format"
 
 
-@pytest.mark.parametrize(
-    "units, attributes, state, value",
-    [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
-        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, 1000, 1000),
-    ],
-)
 async def test_statistics_during_period_in_the_past(
-    hass, hass_ws_client, recorder_mock, units, attributes, state, value
+    hass, hass_ws_client, recorder_mock
 ):
     """Test statistics_during_period in the past."""
     hass.config.set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
-    hass.config.units = units
+    hass.config.units = IMPERIAL_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
 
     past = now - timedelta(days=3)
 
     with freeze_time(past):
-        hass.states.async_set("sensor.test", state, attributes=attributes)
+        hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
         await async_wait_recording_done(hass)
 
     sensor_state = hass.states.get("sensor.test")
@@ -450,9 +424,9 @@ async def test_statistics_during_period_in_the_past(
                 "statistic_id": "sensor.test",
                 "start": stats_start.isoformat(),
                 "end": (stats_start + timedelta(minutes=5)).isoformat(),
-                "mean": approx(value),
-                "min": approx(value),
-                "max": approx(value),
+                "mean": approx(10),
+                "min": approx(10),
+                "max": approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -478,9 +452,9 @@ async def test_statistics_during_period_in_the_past(
                 "statistic_id": "sensor.test",
                 "start": start_of_day.isoformat(),
                 "end": (start_of_day + timedelta(days=1)).isoformat(),
-                "mean": approx(value),
-                "min": approx(value),
-                "max": approx(value),
+                "mean": approx(10),
+                "min": approx(10),
+                "max": approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
