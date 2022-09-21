@@ -5,7 +5,7 @@ import errno
 from typing import Any
 
 from nibe.connection.nibegw import NibeGW
-from nibe.exceptions import CoilReadException, CoilWriteException
+from nibe.exceptions import CoilNotFoundException, CoilReadException, CoilWriteException
 from nibe.heatpump import HeatPump, Model
 import voluptuous as vol
 
@@ -41,9 +41,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class FieldError(Exception):
     """Field with invalid data."""
 
-    def __init__(self, field: str, error: str) -> None:
+    def __init__(self, message: str, field: str, error: str) -> None:
         """Set up error."""
-        super().__init__(f"Error `{error}` in `{field}`")
+        super().__init__(message)
         self.field = field
         self.error = error
 
@@ -52,7 +52,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     if not is_ipv4_address(data[CONF_IP_ADDRESS]):
-        raise FieldError(CONF_IP_ADDRESS, "address")
+        raise FieldError("Not a valid ipv4 address", CONF_IP_ADDRESS, "address")
 
     heatpump = HeatPump(Model[data[CONF_MODEL]])
     heatpump.initialize()
@@ -69,7 +69,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await connection.start()
     except OSError as exception:
         if exception.errno == errno.EADDRINUSE:
-            raise FieldError("listening_port", "address_in_use") from exception
+            raise FieldError(
+                "Address already in use", "listening_port", "address_in_use"
+            ) from exception
         raise
 
     try:
@@ -77,12 +79,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         coil = await connection.read_coil(coil)
         word_swap = coil.value == "ON"
         coil = await connection.write_coil(coil)
+    except CoilNotFoundException as exception:
+        raise FieldError(
+            "Model selected doesn't seem to support expected coils", "base", "model"
+        ) from exception
     except CoilReadException as exception:
-        LOGGER.exception("Timeout on read from pump")
-        raise FieldError("base", "read") from exception
+        raise FieldError("Timeout on read from pump", "base", "read") from exception
     except CoilWriteException as exception:
-        LOGGER.exception("Timeout on writing to pump")
-        raise FieldError("base", "write") from exception
+        raise FieldError("Timeout on writing to pump", "base", "write") from exception
     finally:
         await connection.stop()
 
@@ -111,6 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except FieldError as exception:
+            LOGGER.exception("Validation error")
             errors[exception.field] = exception.error
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")

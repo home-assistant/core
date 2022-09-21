@@ -15,6 +15,7 @@
       "read": "Error on read request from pump. Verify your `Remote read port` or `Remote IP address`.",
       "address": "Invalid remote IP address specified. Address must be a IPV4 address.",
       "address_in_use": "The selected listening port is already in use on this system.",
+      "model": "The model selected doesn't seem to support modbus40",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
