@@ -26,8 +26,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     POWER_WATT,
     PRESSURE_PA,
     TEMP_CELSIUS,
@@ -41,6 +39,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
+    energy as energy_util,
     power as power_util,
     pressure as pressure_util,
     temperature as temperature_util,
@@ -138,20 +137,12 @@ def _convert_energy_from_kwh(to_unit: str, value: float | None) -> float | None:
     """Convert energy in kWh to to_unit."""
     if value is None:
         return None
-    if to_unit == ENERGY_MEGA_WATT_HOUR:
-        return value / 1000
-    if to_unit == ENERGY_WATT_HOUR:
-        return value * 1000
-    return value
+    return energy_util.convert(value, ENERGY_KILO_WATT_HOUR, to_unit)
 
 
 def _convert_energy_to_kwh(from_unit: str, value: float) -> float:
     """Convert energy in from_unit to kWh."""
-    if from_unit == ENERGY_MEGA_WATT_HOUR:
-        return value * 1000
-    if from_unit == ENERGY_WATT_HOUR:
-        return value / 1000
-    return value
+    return energy_util.convert(value, from_unit, ENERGY_KILO_WATT_HOUR)
 
 
 def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:

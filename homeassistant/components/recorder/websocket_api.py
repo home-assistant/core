@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import (
     dt as dt_util,
+    energy as energy_util,
     power as power_util,
     pressure as pressure_util,
     temperature as temperature_util,
@@ -120,9 +121,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
         vol.Optional("units"): vol.Schema(
             {
-                vol.Optional("energy"): vol.Any(
-                    ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR
-                ),
+                vol.Optional("energy"): vol.In(energy_util.VALID_UNITS),
                 vol.Optional("power"): vol.In(power_util.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(pressure_util.VALID_UNITS),
                 vol.Optional("temperature"): vol.In(temperature_util.VALID_UNITS),
