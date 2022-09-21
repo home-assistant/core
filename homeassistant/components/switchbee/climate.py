@@ -150,7 +150,7 @@ class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
             self._attr_hvac_mode: HVACMode = HVACMode.OFF
         else:
             self._attr_hvac_mode = HVAC_MODE_SB_TO_HASS[device.mode]
-        self._attr_fan_mode = FAN_SB_TO_HASS[device.fan]
+        self._attr_fan_mode: str = FAN_SB_TO_HASS[device.fan]
         self._attr_current_temperature = device.temperature
         self._attr_target_temperature = device.target_temperature
 
@@ -175,7 +175,7 @@ class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
             ApiAttribute.MODE: mode
             if mode
             else HVAC_MODE_HASS_TO_SB[self._attr_hvac_mode],
-            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB[fan],
+            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB[self._attr_fan_mode],
             ApiAttribute.CONFIGURED_TEMPERATURE: target_temperature
             if target_temperature
             else self._attr_target_temperature,
