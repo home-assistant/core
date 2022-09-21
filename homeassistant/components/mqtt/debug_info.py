@@ -69,8 +69,7 @@ def log_message(
     retain: bool,
 ) -> None:
     """Log an outgoing MQTT message."""
-    debug_info_entities = get_mqtt_data(hass).debug_info_entities
-    entity_info = debug_info_entities.setdefault(
+    entity_info = get_mqtt_data(hass).debug_info_entities.setdefault(
         entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
     )
     if topic not in entity_info["transmitted"]:
@@ -90,8 +89,7 @@ def add_subscription(
 ) -> None:
     """Prepare debug data for subscription."""
     if entity_id := getattr(message_callback, "__entity_id", None):
-        debug_info_entities = get_mqtt_data(hass).debug_info_entities
-        entity_info = debug_info_entities.setdefault(
+        entity_info = get_mqtt_data(hass).debug_info_entities.setdefault(
             entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
         )
         if subscription not in entity_info["subscriptions"]:
