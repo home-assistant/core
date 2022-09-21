@@ -11,6 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
+from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import (
     AdvertisementData,
@@ -178,6 +179,24 @@ class HaBleakScannerWrapper(BaseBleakScanner):
                 asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
 
 
+def client_kwargs(ble_device: BLEDevice, kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Get the client kwargs with the backend set."""
+    if isinstance(ble_device.details, dict) and (
+        client := ble_device.details.get("client")
+    ):
+        return {**kwargs, "client": client}
+    return kwargs
+
+
+class HaBleakClientUndecided(BaseBleakClient):
+    """A BleakClient that does not know its backend yet."""
+
+    @property
+    def is_connected(self) -> bool:
+        """Return True if the client is connected to a device."""
+        return False
+
+
 class HaBleakClientWrapper(BleakClient):
     """Wrap the BleakClient to ensure it does not shutdown our scanner.
 
@@ -190,19 +209,46 @@ class HaBleakClientWrapper(BleakClient):
     """
 
     def __init__(
-        self, address_or_ble_device: str | BLEDevice, *args: Any, **kwargs: Any
-    ) -> None:
+        self,
+        address_or_ble_device: str | BLEDevice,
+        *args: Any,
+        disconnected_callback: Callable[[BleakClient], None] | None = None,
+        timeout: float = 10.0,
+        **kwargs: Any,
+    ) -> None:  # pylint: disable=super-init-not-called
         """Initialize the BleakClient."""
         if isinstance(address_or_ble_device, BLEDevice):
-            super().__init__(address_or_ble_device, *args, **kwargs)
-            return
-        report(
-            "attempted to call BleakClient with an address instead of a BLEDevice",
-            exclude_integrations={"bluetooth"},
-            error_if_core=False,
-        )
+            self.__address = address_or_ble_device.address
+        else:
+            report(
+                "attempted to call BleakClient with an address instead of a BLEDevice",
+                exclude_integrations={"bluetooth"},
+                error_if_core=False,
+            )
+            self.__address = address_or_ble_device
+        self.__disconnected_callback = disconnected_callback
+        self.__timeout = timeout
+        self._backend: BaseBleakClient | None = None
+
+    async def connect(self, **kwargs: Any) -> bool:
+        """Connect to the specified GATT server.
+
+        Args:
+            **kwargs: For backwards compatibility - should not be used.
+        Returns:
+            Always returns ``True`` for backwards compatibility.
+        """
         assert MANAGER is not None
-        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device, True)
+        ble_device = MANAGER.async_ble_device_from_address(self.__address, True)
         if ble_device is None:
-            raise BleakError(f"No device found for address {address_or_ble_device}")
-        super().__init__(ble_device, *args, **kwargs)
+            raise BleakError(f"No device found for address {self.__address}")
+        if isinstance(ble_device.details, dict) and "client" in ble_device.details:
+            client_cls = ble_device.details["client"]
+        else:
+            client_cls = get_platform_client_backend_type()
+        self._backend = client_cls(
+            ble_device,
+            disconnected_callback=self.__disconnected_callback,
+            timeout=self.__timeout,
+        )
+        return await super().connect(**kwargs)
