@@ -63,7 +63,7 @@ def cubic_feet_to_cubic_meter(cubic_feet: float) -> float:
 
 
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
-    """Convert a temperature from one unit to another."""
+    """Convert a volume from one unit to another."""
     if from_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, VOLUME))
     if to_unit not in VALID_UNITS:
@@ -78,6 +78,6 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
 
 
 def _convert(volume: float, from_unit: str, to_unit: str) -> float:
-    """Convert a temperature from one unit to another, bypassing checks."""
+    """Convert a volume from one unit to another, bypassing checks."""
     cubic_meter = volume / UNIT_CONVERSION[from_unit]
     return cubic_meter * UNIT_CONVERSION[to_unit]
