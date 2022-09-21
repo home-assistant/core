@@ -25,7 +25,7 @@ VALID_UNITS: tuple[str, ...] = (
     VOLUME_CUBIC_FEET,
 )
 
-L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m3
+L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 ML_TO_CUBIC_METER = 0.001 * L_TO_CUBIC_METER  # 1 mL = 0.001 L
 GALLON_TO_CUBIC_METER = 231 * pow(IN_TO_M, 3)  # US gallon is 231 cubic inches
 FLUID_OUNCE_TO_CUBIC_METER = GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
