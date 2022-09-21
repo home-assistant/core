@@ -3,7 +3,7 @@ from numbers import Number
 
 from pyflume import FlumeData
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,7 +14,6 @@ from .const import (
     FLUME_AUTH,
     FLUME_DEVICES,
     FLUME_HTTP_SESSION,
-    FLUME_QUERIES_SENSOR,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
@@ -24,6 +23,44 @@ from .const import (
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
 from .entity import FlumeEntity
+
+FLUME_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="current_interval",
+        name="Current",
+        native_unit_of_measurement="gal/m",
+    ),
+    SensorEntityDescription(
+        key="month_to_date",
+        name="Current Month",
+        native_unit_of_measurement="gal",
+    ),
+    SensorEntityDescription(
+        key="week_to_date",
+        name="Current Week",
+        native_unit_of_measurement="gal",
+    ),
+    SensorEntityDescription(
+        key="today",
+        name="Current Day",
+        native_unit_of_measurement="gal",
+    ),
+    SensorEntityDescription(
+        key="last_60_min",
+        name="60 Minutes",
+        native_unit_of_measurement="gal/h",
+    ),
+    SensorEntityDescription(
+        key="last_24_hrs",
+        name="24 Hours",
+        native_unit_of_measurement="gal/d",
+    ),
+    SensorEntityDescription(
+        key="last_30_days",
+        name="30 Days",
+        native_unit_of_measurement="gal/mo",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -71,7 +108,7 @@ async def async_setup_entry(
                     device_id=device_id,
                     location_name=device_location_name,
                 )
-                for description in FLUME_QUERIES_SENSOR
+                for description in FLUME_SENSORS
             ]
         )
 
@@ -83,15 +120,6 @@ class FlumeSensor(FlumeEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
     coordinator: FlumeDeviceDataUpdateCoordinator
-
-    # def __init__(
-    #     self,
-    #     coordinator: FlumeDeviceDataUpdateCoordinator,
-    #     device_id: str,
-    #     description: SensorEntityDescription,
-    # ) -> None:
-    #     """Inlitializer function with type hints."""
-    #     super().__init__(coordinator, description, device_id)
 
     @property
     def native_value(self):
