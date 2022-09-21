@@ -2,18 +2,16 @@
 from unittest.mock import patch
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
+    PRESET_AWAY,
+    PRESET_BOOST,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-)
-from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
-    PRESET_AWAY,
-    PRESET_BOOST,
     HVACMode,
 )
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE

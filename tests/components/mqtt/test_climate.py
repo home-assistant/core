@@ -7,8 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import climate, mqtt
-from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -16,6 +15,8 @@ from homeassistant.components.climate.const import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     PRESET_ECO,
     ClimateEntityFeature,
     HVACAction,
