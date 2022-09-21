@@ -108,7 +108,7 @@ class SelectEntity(Entity):
             and self.entity_description.options is not UNDEFINED  # type: ignore[comparison-overlap]
         ):
             return self.entity_description.options
-        raise NotImplementedError()
+        raise AttributeError()
 
     @property
     def current_option(self) -> str | None:
