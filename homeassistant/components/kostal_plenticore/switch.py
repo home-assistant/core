@@ -1,7 +1,6 @@
 """Platform for Kostal Plenticore switches."""
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -97,7 +96,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
+class PlenticoreDataSwitch(
+    CoordinatorEntity[SettingDataUpdateCoordinator], SwitchEntity
+):
     """Representation of a Plenticore Switch."""
 
     _attr_entity_category = EntityCategory.CONFIG

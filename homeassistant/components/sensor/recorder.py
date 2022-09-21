@@ -47,10 +47,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-import homeassistant.util.dt as dt_util
-import homeassistant.util.pressure as pressure_util
-import homeassistant.util.temperature as temperature_util
-import homeassistant.util.volume as volume_util
+from homeassistant.util import (
+    dt as dt_util,
+    power as power_util,
+    pressure as pressure_util,
+    temperature as temperature_util,
+    volume as volume_util,
+)
 
 from . import (
     ATTR_LAST_RESET,
@@ -89,8 +92,8 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     },
     # Convert power to W
     SensorDeviceClass.POWER: {
-        POWER_WATT: lambda x: x,
-        POWER_KILO_WATT: lambda x: x * 1000,
+        POWER_WATT: lambda x: x / power_util.UNIT_CONVERSION[POWER_WATT],
+        POWER_KILO_WATT: lambda x: x / power_util.UNIT_CONVERSION[POWER_KILO_WATT],
     },
     # Convert pressure to Pa
     # Note: pressure_util.convert is bypassed to avoid redundant error checking

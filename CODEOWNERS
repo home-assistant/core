@@ -582,6 +582,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
+/homeassistant/components/kegtron/ @Ernst79
+/tests/components/kegtron/ @Ernst79
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle

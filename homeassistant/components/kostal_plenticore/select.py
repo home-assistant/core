@@ -1,14 +1,12 @@
 """Platform for Kostal Plenticore select widgets."""
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,8 +23,7 @@ class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore select entities."""
 
     module_id: str
-    options: list
-    is_on: str
+    options: list[str]
 
 
 @dataclass
@@ -46,7 +43,7 @@ SELECT_SETTINGS_DATA = [
             "Battery:SmartBatteryControl:Enable",
             "Battery:TimeControl:Enable",
         ],
-        is_on="1",
+        device_class="kostal_plenticore__battery",
     )
 ]
 
@@ -84,8 +81,6 @@ async def async_setup_entry(
                 description,
                 entry_id=entry.entry_id,
                 platform_name=entry.title,
-                device_class="kostal_plenticore__battery",
-                current_option="None",
                 device_info=plenticore.device_info,
             )
         )
@@ -93,7 +88,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
+class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
     """Representation of a Plenticore Select."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -105,8 +100,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         description: PlenticoreSelectEntityDescription,
         entry_id: str,
         platform_name: str,
-        device_class: str | None,
-        current_option: str | None,
         device_info: DeviceInfo,
     ) -> None:
         """Create a new Select Entity for Plenticore process data."""
@@ -114,15 +107,10 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         self.entity_description = description
         self.entry_id = entry_id
         self.platform_name = platform_name
-        self._attr_device_class = device_class
         self.module_id = description.module_id
         self.data_id = description.key
         self._attr_options = description.options
-        self.all_options = description.options
-        self._attr_current_option = current_option
-        self._is_on = description.is_on
         self._device_info = device_info
-        self._attr_name = description.name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
@@ -138,19 +126,16 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(
-            self.module_id, self.data_id, self.all_options
-        )
+        self.coordinator.start_fetch_data(self.module_id, self.data_id, self.options)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
-        self.coordinator.stop_fetch_data(self.module_id, self.data_id, self.all_options)
+        self.coordinator.stop_fetch_data(self.module_id, self.data_id, self.options)
         await super().async_will_remove_from_hass()
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
-        self._attr_current_option = option
-        for all_option in self._attr_options:
+        for all_option in self.options:
             if all_option != "None":
                 await self.coordinator.async_write_data(
                     self.module_id, {all_option: "0"}

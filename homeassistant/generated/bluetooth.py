@@ -149,6 +149,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "kegtron",
+        "connectable": False,
+        "manufacturer_id": 65535,
+    },
+    {
         "domain": "keymitt_ble",
         "service_uuid": "00001831-0000-1000-8000-00805f9b34fb",
     },

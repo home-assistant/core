@@ -28,7 +28,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_PA,
     TEMP_CELSIUS,
@@ -40,10 +39,13 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
-import homeassistant.util.pressure as pressure_util
-import homeassistant.util.temperature as temperature_util
-import homeassistant.util.volume as volume_util
+from homeassistant.util import (
+    dt as dt_util,
+    power as power_util,
+    pressure as pressure_util,
+    temperature as temperature_util,
+    volume as volume_util,
+)
 
 from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
@@ -156,9 +158,7 @@ def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:
     """Convert power in W to to_unit."""
     if value is None:
         return None
-    if to_unit == POWER_KILO_WATT:
-        return value / 1000
-    return value
+    return power_util.convert(value, POWER_WATT, to_unit)
 
 
 def _convert_pressure_from_pa(to_unit: str, value: float | None) -> float | None:
