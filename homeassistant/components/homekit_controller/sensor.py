@@ -564,7 +564,7 @@ async def async_setup_entry(
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities(entity_class(conn, info))
+        async_add_entities([entity_class(conn, info)])
         return True
 
     conn.add_listener(async_add_service)
@@ -576,7 +576,7 @@ async def async_setup_entry(
         if description.probe and not description.probe(char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities(SimpleSensor(conn, info, char, description))
+        async_add_entities([SimpleSensor(conn, info, char, description)])
 
         return True
 
