@@ -44,18 +44,30 @@ UNIT_CONVERSION: dict[str, float] = {
 NORMALISED_UNIT = PRESSURE_PA
 
 
-def convert(value: float, unit_1: str, unit_2: str) -> float:
+def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
-    if unit_1 not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, PRESSURE))
-    if unit_2 not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, PRESSURE))
+    if from_unit not in VALID_UNITS:
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, PRESSURE))
+    if to_unit not in VALID_UNITS:
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, PRESSURE))
 
     if not isinstance(value, Number):
         raise TypeError(f"{value} is not of numeric type")
 
-    if unit_1 == unit_2:
+    if from_unit == to_unit:
         return value
 
-    pascals = value / UNIT_CONVERSION[unit_1]
-    return pascals * UNIT_CONVERSION[unit_2]
+    return _convert(value, from_unit, to_unit)
+
+
+def normalise(value: float, from_unit: str) -> float:
+    """Convert a pressure from one unit to Pa."""
+    if from_unit == NORMALISED_UNIT:
+        return value
+    return _convert(value, from_unit, NORMALISED_UNIT)
+
+
+def _convert(value: float, from_unit: str, to_unit: str) -> float:
+    """Convert a pressure from one unit to another, bypassing checks."""
+    pascals = value / UNIT_CONVERSION[from_unit]
+    return pascals * UNIT_CONVERSION[to_unit]
