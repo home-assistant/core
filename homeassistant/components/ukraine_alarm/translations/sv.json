@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plats \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "max_regions": "Max 5 regioner kan konfigureras",
+            "rate_limit": "F\u00f6r mycket f\u00f6rfr\u00e5gningar",
+            "timeout": "Timeout uppr\u00e4ttar anslutning",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Om du inte bara vill \u00f6vervaka stat och distrikt, v\u00e4lj dess specifika gemenskap"
+            },
+            "district": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Om du inte bara vill \u00f6vervaka staten, v\u00e4lj dess specifika distrikt"
+            },
+            "user": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "V\u00e4lj tillst\u00e5nd att \u00f6vervaka"
+            }
+        }
+    }
+}

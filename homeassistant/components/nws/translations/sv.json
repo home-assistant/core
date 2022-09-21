@@ -12,8 +12,11 @@
                 "data": {
                     "api_key": "API nyckel",
                     "latitude": "Latitud",
-                    "longitude": "Longitud"
-                }
+                    "longitude": "Longitud",
+                    "station": "METAR stationskod"
+                },
+                "description": "Om en METAR-stationskod inte anges, kommer latitud och longitud att anv\u00e4ndas f\u00f6r att hitta den n\u00e4rmaste stationen. F\u00f6r n\u00e4rvarande kan en API-nyckel vara vad som helst. Det rekommenderas att anv\u00e4nda en giltig e-postadress.",
+                "title": "Anslut till den nationella v\u00e4dertj\u00e4nsten"
             }
         }
     }

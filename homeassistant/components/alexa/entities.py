@@ -11,6 +11,7 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
@@ -28,7 +29,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -382,7 +382,6 @@ def async_get_entities(hass, config) -> list[AlexaEntity]:
 @ENTITY_ADAPTERS.register(alert.DOMAIN)
 @ENTITY_ADAPTERS.register(automation.DOMAIN)
 @ENTITY_ADAPTERS.register(group.DOMAIN)
-@ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 class GenericCapabilities(AlexaEntity):
     """A generic, on/off device.
 
@@ -405,12 +404,16 @@ class GenericCapabilities(AlexaEntity):
         ]
 
 
+@ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 @ENTITY_ADAPTERS.register(switch.DOMAIN)
 class SwitchCapabilities(AlexaEntity):
     """Class to represent Switch capabilities."""
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
+        if self.entity.domain == input_boolean.DOMAIN:
+            return [DisplayCategory.OTHER]
+
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class == switch.SwitchDeviceClass.OUTLET:
             return [DisplayCategory.SMARTPLUG]
@@ -421,6 +424,7 @@ class SwitchCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         return [
             AlexaPowerController(self.entity),
+            AlexaContactSensor(self.hass, self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
             Alexa(self.hass),
         ]
@@ -439,6 +443,8 @@ class ButtonCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         return [
             AlexaSceneController(self.entity, supports_deactivation=False),
+            AlexaEventDetectionSensor(self.hass, self.entity),
+            AlexaEndpointHealth(self.hass, self.entity),
             Alexa(self.hass),
         ]
 
@@ -454,7 +460,7 @@ class ClimateCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        if climate.HVAC_MODE_OFF in self.entity.attributes.get(
+        if climate.HVACMode.OFF in self.entity.attributes.get(
             climate.ATTR_HVAC_MODES, []
         ):
             yield AlexaPowerController(self.entity)

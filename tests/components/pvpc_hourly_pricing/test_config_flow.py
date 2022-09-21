@@ -43,12 +43,12 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], tst_config
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
@@ -59,11 +59,11 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], tst_config
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert pvpc_aioclient_mock.call_count == 1
 
         # Check removal
@@ -75,12 +75,12 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], tst_config
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
@@ -96,7 +96,7 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         config_entry = current_entries[0]
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(

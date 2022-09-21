@@ -354,10 +354,16 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
         name="Heat Pump Operating Time",
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=TIME_SECONDS,
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_ELECTRIC_BOOSTER_OPERATING_TIME,
         name="Electric Booster Operating Time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=TIME_SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Cover
     OverkizSensorDescription(
@@ -365,6 +371,12 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Target Closure",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+    ),
+    # ThreeWayWindowHandle/WindowHandle
+    OverkizSensorDescription(
+        key=OverkizState.CORE_THREE_WAY_HANDLE_DIRECTION,
+        name="Three Way Handle Direction",
+        device_class=OverkizDeviceClass.THREE_WAY_HANDLE_DIRECTION,
     ),
 ]
 

@@ -1,6 +1,8 @@
 """Support for interface with a Gree climate systems."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -60,13 +62,13 @@ class GreePanelLightSwitchEntity(GreeEntity, SwitchEntity):
         """Return if the light is turned on."""
         return self.coordinator.device.light
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.coordinator.device.light = True
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.coordinator.device.light = False
         await self.coordinator.push_state_update()
@@ -90,13 +92,13 @@ class GreeQuietModeSwitchEntity(GreeEntity, SwitchEntity):
         """Return if the state is turned on."""
         return self.coordinator.device.quiet
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.coordinator.device.quiet = True
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.coordinator.device.quiet = False
         await self.coordinator.push_state_update()
@@ -120,13 +122,13 @@ class GreeFreshAirSwitchEntity(GreeEntity, SwitchEntity):
         """Return if the state is turned on."""
         return self.coordinator.device.fresh_air
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.coordinator.device.fresh_air = True
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.coordinator.device.fresh_air = False
         await self.coordinator.push_state_update()
@@ -150,13 +152,13 @@ class GreeXFanSwitchEntity(GreeEntity, SwitchEntity):
         """Return if the state is turned on."""
         return self.coordinator.device.xfan
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.coordinator.device.xfan = True
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.coordinator.device.xfan = False
         await self.coordinator.push_state_update()

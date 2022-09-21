@@ -15,9 +15,9 @@ CONF_HOUSE_NUMBER = "house_number"
 CONF_HOUSE_LETTER = "house_letter"
 
 WASTE_TYPE_TO_DESCRIPTION = {
-    WasteType.NON_RECYCLABLE: "Non-recyclable Waste Pickup",
-    WasteType.ORGANIC: "Organic Waste Pickup",
-    WasteType.PACKAGES: "Packages Waste Pickup",
-    WasteType.PAPER: "Paper Waste Pickup",
-    WasteType.TREE: "Christmas Tree Pickup",
+    WasteType.NON_RECYCLABLE: "Non-recyclable waste pickup",
+    WasteType.ORGANIC: "Organic waste pickup",
+    WasteType.PACKAGES: "Packages waste pickup",
+    WasteType.PAPER: "Paper waste pickup",
+    WasteType.TREE: "Christmas tree pickup",
 }

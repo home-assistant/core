@@ -20,6 +20,13 @@
                 "description": "Voer uw Hive-verificatiecode in. \n \n Voer code 0000 in om een andere code aan te vragen.",
                 "title": "Hive tweefactorauthenticatie"
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Apparaatnaam"
+                },
+                "description": "Voer uw Hive-configuratie in",
+                "title": "Hive-configuratie."
+            },
             "reauth": {
                 "data": {
                     "password": "Wachtwoord",

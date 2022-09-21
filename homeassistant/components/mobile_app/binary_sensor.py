@@ -75,9 +75,8 @@ class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
         """Return the state of the binary sensor."""
         return self._config[ATTR_SENSOR_STATE]
 
-    @callback
-    def async_restore_last_state(self, last_state):
+    async def async_restore_last_state(self, last_state):
         """Restore previous state."""
 
-        super().async_restore_last_state(last_state)
+        await super().async_restore_last_state(last_state)
         self._config[ATTR_SENSOR_STATE] = last_state.state == STATE_ON

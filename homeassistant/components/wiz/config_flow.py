@@ -9,8 +9,8 @@ from pywizlight.discovery import DiscoveredBulb
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
-from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigEntryState, ConfigFlow
+from homeassistant.components import dhcp, onboarding
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.util.network import is_ip_address
@@ -29,11 +29,12 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _discovered_device: DiscoveredBulb
+    _name: str
+
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_device: DiscoveredBulb | None = None
         self._discovered_devices: dict[str, DiscoveredBulb] = {}
-        self._name: str | None = None
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
@@ -54,19 +55,10 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
         device = self._discovered_device
-        assert device is not None
         _LOGGER.debug("Discovered device: %s", device)
         ip_address = device.ip_address
         mac = device.mac_address
-        if current_entry := await self.async_set_unique_id(mac):
-            if (
-                current_entry.state is ConfigEntryState.SETUP_RETRY
-                and current_entry.data[CONF_HOST] == ip_address
-            ):
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(current_entry.entry_id)
-                )
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
         await self._async_connect_discovered_or_abort()
         return await self.async_step_discovery_confirm()
@@ -74,7 +66,6 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_connect_discovered_or_abort(self) -> None:
         """Connect to the device and verify its responding."""
         device = self._discovered_device
-        assert device is not None
         bulb = wizlight(device.ip_address)
         try:
             bulbtype = await bulb.get_bulbtype()
@@ -92,10 +83,8 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        assert self._discovered_device is not None
-        assert self._name is not None
         ip_address = self._discovered_device.ip_address
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             # Make sure the device is still there and
             # update the name if the firmware has auto
             # updated since discovery

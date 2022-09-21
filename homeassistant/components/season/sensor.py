@@ -16,6 +16,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TYPE, TIME_DAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -234,11 +236,20 @@ def get_season(
 class SeasonData:
     """Calculate the current season."""
 
+    _attr_device_class = "season__season"
+    _attr_has_entity_name = True
+
     def __init__(self, entry: ConfigEntry, hemisphere: str, time_zone: str) -> None:
         """Initialize the data object."""
+        self._attr_unique_id = entry.entry_id
         self.hemisphere = hemisphere
         self.time_zone = time_zone
         self.type = entry.data[CONF_TYPE]
+        self._attr_device_info = DeviceInfo(
+            name=entry.title,
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self.datetime = None
         self._data: dict = {}
 

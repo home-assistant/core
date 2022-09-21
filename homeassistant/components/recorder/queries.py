@@ -9,7 +9,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from .const import MAX_ROWS_TO_PURGE
-from .models import (
+from .db_schema import (
     EventData,
     Events,
     RecorderRuns,
@@ -631,7 +631,7 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
         lambda: select(
             Events.event_id, Events.data_id, States.state_id, States.attributes_id
         )
-        .join(States, Events.event_id == States.event_id)
+        .outerjoin(States, Events.event_id == States.event_id)
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )

@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "OpenALPR Local integration v\u00e4ntar p\u00e5 borttagning fr\u00e5n Home Assistant och kommer inte l\u00e4ngre att vara tillg\u00e4nglig fr\u00e5n och med Home Assistant 2022.10. \n\n Ta bort YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "OpenALPR Local integrationen tas bort"
+        }
+    }
+}

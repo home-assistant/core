@@ -1,9 +1,9 @@
 """Make sure that a H.A.A. fan can be setup."""
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED
+from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -18,7 +18,9 @@ async def test_haa_fan_setup(hass):
     accessories = await setup_accessories_from_file(hass, "haa_fan.json")
     await setup_test_accessories(hass, accessories)
 
-    # FIXME: assert round(state.attributes["percentage_step"], 2) == 33.33
+    haa_fan_state = hass.states.get("fan.haa_c718b3")
+    attributes = haa_fan_state.attributes
+    assert attributes[ATTR_PERCENTAGE] == 66
 
     await assert_devices_and_entities_created(
         hass,
@@ -55,8 +57,8 @@ async def test_haa_fan_setup(hass):
                     entity_id="fan.haa_c718b3",
                     friendly_name="HAA-C718B3",
                     unique_id="homekit-C718B3-1-8",
-                    state="off",
-                    supported_features=SUPPORT_SET_SPEED,
+                    state="on",
+                    supported_features=FanEntityFeature.SET_SPEED,
                     capabilities={
                         "preset_modes": None,
                     },

@@ -50,6 +50,8 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry,
     intent,
+    issue_registry,
+    recorder as recorder_helper,
     restore_state,
     storage,
 )
@@ -296,9 +298,10 @@ async def async_test_home_assistant(loop, load_registries=True):
     # Load the registries
     if load_registries:
         await asyncio.gather(
+            area_registry.async_load(hass),
             device_registry.async_load(hass),
             entity_registry.async_load(hass),
-            area_registry.async_load(hass),
+            issue_registry.async_load(hass),
         )
         await hass.async_block_till_done()
 
@@ -366,7 +369,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"]._mqtt_handle_message(msg)
+    hass.data["mqtt"].client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -378,7 +381,10 @@ def async_fire_time_changed(
 ) -> None:
     """Fire a time changed event."""
     if datetime_ is None:
-        datetime_ = date_util.utcnow()
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
@@ -386,13 +392,16 @@ def async_fire_time_changed(
         if task.cancelled():
             continue
 
-        mock_seconds_into_future = datetime_.timestamp() - time.time()
+        mock_seconds_into_future = timestamp - time.time()
         future_seconds = task.when() - hass.loop.time()
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
                 "homeassistant.helpers.event.time_tracker_utcnow",
-                return_value=date_util.as_utc(datetime_),
+                return_value=utc_datetime,
+            ), patch(
+                "homeassistant.helpers.event.time_tracker_timestamp",
+                return_value=timestamp,
             ):
                 task._run()
                 task.cancel()
@@ -460,12 +469,15 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
+def mock_device_registry(hass, mock_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
-    registry.devices = mock_entries or OrderedDict()
-    registry.deleted_devices = mock_deleted_entries or OrderedDict()
-    registry._rebuild_index()
+    registry.devices = device_registry.DeviceRegistryItems()
+    if mock_entries is None:
+        mock_entries = {}
+    for key, entry in mock_entries.items():
+        registry.devices[key] = entry
+    registry.deleted_devices = device_registry.DeviceRegistryItems()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
@@ -908,6 +920,8 @@ def init_recorder_component(hass, add_config=None):
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.migration.migrate_schema"
     ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
     _LOGGER.info(
@@ -1000,6 +1014,11 @@ class MockEntity(entity.Entity):
     def entity_category(self):
         """Return the entity category."""
         return self._handle("entity_category")
+
+    @property
+    def has_entity_name(self):
+        """Return the has_entity_name name flag."""
+        return self._handle("has_entity_name")
 
     @property
     def entity_registry_enabled_default(self):

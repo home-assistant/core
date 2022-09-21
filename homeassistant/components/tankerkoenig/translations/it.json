@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
             "no_stations": "Impossibile trovare nessuna stazione nel raggio d'azione."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "Stazioni"

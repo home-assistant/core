@@ -17,7 +17,6 @@ from .const import (
     DATA_HANDLER,
     DOMAIN,
     EVENT_TYPE_LIGHT_MODE,
-    MANUFACTURER,
     SIGNAL_NAME,
     TYPE_SECURITY,
     WEBHOOK_LIGHT_MODE,
@@ -63,6 +62,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_has_entity_name = True
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
@@ -76,7 +76,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         LightEntity.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append(
+        self._publishers.append(
             {"name": CAMERA_DATA_CLASS_NAME, SIGNAL_NAME: CAMERA_DATA_CLASS_NAME}
         )
         self._id = camera_id
@@ -84,7 +84,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._model = camera_type
         self._netatmo_type = TYPE_SECURITY
         self._device_name: str = self._data.get_camera(camera_id)["name"]
-        self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._is_on = False
         self._attr_unique_id = f"{self._id}-light"
 
@@ -123,7 +122,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Return data for this entity."""
         return cast(
             pyatmo.AsyncCameraData,
-            self.data_handler.data[self._data_classes[0]["name"]],
+            self.data_handler.data[self._publishers[0]["name"]],
         )
 
     @property

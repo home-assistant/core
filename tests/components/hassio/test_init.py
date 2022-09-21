@@ -8,7 +8,12 @@ import pytest
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.hassio import ADDONS_COORDINATOR, DOMAIN, STORAGE_KEY
+from homeassistant.components.hassio import (
+    ADDONS_COORDINATOR,
+    DOMAIN,
+    STORAGE_KEY,
+    async_get_addon_store_info,
+)
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.device_registry import async_get
@@ -21,12 +26,18 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture()
-def os_info():
+def extra_os_info():
+    """Extra os/info."""
+    return {}
+
+
+@pytest.fixture()
+def os_info(extra_os_info):
     """Mock os/info."""
     return {
         "json": {
             "result": "ok",
-            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
+            "data": {"version_latest": "1.0.0", "version": "1.0.0", **extra_os_info},
         }
     }
 
@@ -342,7 +353,7 @@ async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 15
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
 async def test_fail_setup_without_environ_var(hass):
@@ -715,21 +726,25 @@ async def test_coordinator_updates(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "os_info",
+    "extra_os_info, integration",
     [
-        {
-            "json": {
-                "result": "ok",
-                "data": {"version_latest": "1.0.0", "version": "1.0.0", "board": "rpi"},
-            }
-        }
+        ({"board": "odroid-c2"}, "hardkernel"),
+        ({"board": "odroid-c4"}, "hardkernel"),
+        ({"board": "odroid-n2"}, "hardkernel"),
+        ({"board": "odroid-xu4"}, "hardkernel"),
+        ({"board": "rpi2"}, "raspberry_pi"),
+        ({"board": "rpi3"}, "raspberry_pi"),
+        ({"board": "rpi3-64"}, "raspberry_pi"),
+        ({"board": "rpi4"}, "raspberry_pi"),
+        ({"board": "rpi4-64"}, "raspberry_pi"),
+        ({"board": "yellow"}, "homeassistant_yellow"),
     ],
 )
-async def test_setup_hardware_integration(hass, aioclient_mock):
+async def test_setup_hardware_integration(hass, aioclient_mock, integration):
     """Test setup initiates hardware integration."""
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.raspberry_pi.async_setup_entry",
+        f"homeassistant.components.{integration}.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
@@ -738,3 +753,16 @@ async def test_setup_hardware_integration(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 15
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_get_store_addon_info(hass, hassio_stubs, aioclient_mock):
+    """Test get store add-on info from Supervisor API."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://127.0.0.1/store/addons/test",
+        json={"result": "ok", "data": {"name": "bla"}},
+    )
+
+    data = await async_get_addon_store_info(hass, "test")
+    assert data["name"] == "bla"
+    assert aioclient_mock.call_count == 1

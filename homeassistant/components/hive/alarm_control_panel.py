@@ -1,4 +1,6 @@
 """Support for the Hive alarm."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import (
@@ -25,6 +27,7 @@ HIVETOHA = {
     "home": STATE_ALARM_DISARMED,
     "asleep": STATE_ALARM_ARMED_NIGHT,
     "away": STATE_ALARM_ARMED_AWAY,
+    "sos": STATE_ALARM_TRIGGERED,
 }
 
 
@@ -47,21 +50,26 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_NIGHT
         | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
     )
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.hive.alarm.setMode(self.device, "home")
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.hive.alarm.setMode(self.device, "asleep")
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.hive.alarm.setMode(self.device, "away")
 
-    async def async_update(self):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command."""
+        await self.hive.alarm.setMode(self.device, "sos")
+
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.alarm.getAlarm(self.device)

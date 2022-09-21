@@ -1,5 +1,6 @@
 """Support for VeSync switches."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,7 +54,7 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
     """Base class for VeSync switch Device Representations."""
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self.device.turn_on()
 
@@ -66,19 +67,7 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
         super().__init__(plug)
         self.smartplug = plug
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        if not hasattr(self.smartplug, "weekly_energy_total"):
-            return {}
-        return {
-            "voltage": self.smartplug.voltage,
-            "weekly_energy_total": self.smartplug.weekly_energy_total,
-            "monthly_energy_total": self.smartplug.monthly_energy_total,
-            "yearly_energy_total": self.smartplug.yearly_energy_total,
-        }
-
-    def update(self):
+    def update(self) -> None:
         """Update outlet details and energy usage."""
         self.smartplug.update()
         self.smartplug.update_energy()

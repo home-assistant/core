@@ -1,7 +1,6 @@
 """Representation of Z-Wave locks."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -27,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
     SERVICE_CLEAR_LOCK_USERCODE,
     SERVICE_SET_LOCK_USERCODE,
 )
@@ -34,8 +34,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
     CommandClass.DOOR_LOCK: {

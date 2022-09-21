@@ -42,11 +42,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "Harus berupa daftar alamat MAC yang dipisahkan dengan koma"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Metrik waktu nyata (PERINGATAN: Meningkatkan penggunaan CPU)",
                     "disable_rtsp": "Nonaktifkan aliran RTSP",
+                    "ignored_devices": "Daftar alamat MAC perangkat yang dipisahkan koma untuk diabaikan",
+                    "max_media": "Jumlah maksimum peristiwa yang akan dimuat untuk Browser Media (meningkatkan penggunaan RAM)",
                     "override_connection_host": "Timpa Host Koneksi"
                 },
                 "description": "Opsi metrik waktu nyata hanya boleh diaktifkan jika Anda telah mengaktifkan sensor diagnostik dan ingin memperbaruinya secara waktu nyata. Jika tidak diaktifkan, metrik hanya akan memperbarui setiap 15 menit sekali.",

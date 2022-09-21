@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -12,6 +13,7 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
+import async_timeout
 from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
@@ -35,29 +37,33 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
+    DOMAIN,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
     MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
-from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
+from .db_schema import (
     SCHEMA_VERSION,
     Base,
     EventData,
     Events,
     StateAttributes,
     States,
+    StatisticsRuns,
+)
+from .executor import DBInterruptibleThreadPoolExecutor
+from .models import (
     StatisticData,
     StatisticMetaData,
-    StatisticsRuns,
     UnsupportedDialect,
     process_timestamp,
 )
@@ -70,7 +76,7 @@ from .tasks import (
     CommitTask,
     DatabaseLockTask,
     EventTask,
-    ExternalStatisticsTask,
+    ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
     PurgeTask,
@@ -162,7 +168,12 @@ class Recorder(threading.Thread):
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
         self.engine_version: AwesomeVersion | None = None
+        # Database connection is ready, but non-live migration may be in progress
+        db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
+        self.async_db_connected: asyncio.Future[bool] = db_connected
+        # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = asyncio.Future()
+        # Database is ready to use and all migration steps completed (used by tests)
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
@@ -184,6 +195,7 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
+        self.migration_is_live = False
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
@@ -285,15 +297,16 @@ class Recorder(threading.Thread):
 
     def _stop_executor(self) -> None:
         """Stop the executor."""
-        assert self._db_executor is not None
+        if self._db_executor is None:
+            return
         self._db_executor.shutdown()
         self._db_executor = None
 
     @callback
     def _async_check_queue(self, *_: Any) -> None:
-        """Periodic check of the queue size to ensure we do not exaust memory.
+        """Periodic check of the queue size to ensure we do not exhaust memory.
 
-        The queue grows during migraton or if something really goes wrong.
+        The queue grows during migration or if something really goes wrong.
         """
         size = self.backlog
         _LOGGER.debug("Recorder queue size is: %s", size)
@@ -406,6 +419,7 @@ class Recorder(threading.Thread):
     @callback
     def async_connection_failed(self) -> None:
         """Connect failed tasks."""
+        self.async_db_connected.set_result(False)
         self.async_db_ready.set_result(False)
         persistent_notification.async_create(
             self.hass,
@@ -416,13 +430,29 @@ class Recorder(threading.Thread):
 
     @callback
     def async_connection_success(self) -> None:
-        """Connect success tasks."""
+        """Connect to the database succeeded, schema version and migration need known.
+
+        The database may not yet be ready for use in case of a non-live migration.
+        """
+        self.async_db_connected.set_result(True)
+
+    @callback
+    def async_set_db_ready(self) -> None:
+        """Database live and ready for use.
+
+        Called after non-live migration steps are finished.
+        """
+        if self.async_db_ready.done():
+            return
         self.async_db_ready.set_result(True)
         self.async_start_executor()
 
     @callback
-    def _async_recorder_ready(self) -> None:
-        """Finish start and mark recorder ready."""
+    def _async_set_recorder_ready_migration_done(self) -> None:
+        """Finish start and mark recorder ready.
+
+        Called after all migration steps are finished.
+        """
         self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
@@ -450,10 +480,16 @@ class Recorder(threading.Thread):
 
     @callback
     def async_adjust_statistics(
-        self, statistic_id: str, start_time: datetime, sum_adjustment: float
+        self,
+        statistic_id: str,
+        start_time: datetime,
+        sum_adjustment: float,
+        display_unit: str,
     ) -> None:
         """Adjust statistics."""
-        self.queue_task(AdjustStatisticsTask(statistic_id, start_time, sum_adjustment))
+        self.queue_task(
+            AdjustStatisticsTask(statistic_id, start_time, sum_adjustment, display_unit)
+        )
 
     @callback
     def async_clear_statistics(self, statistic_ids: list[str]) -> None:
@@ -476,11 +512,11 @@ class Recorder(threading.Thread):
         )
 
     @callback
-    def async_external_statistics(
+    def async_import_statistics(
         self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
     ) -> None:
-        """Schedule external statistics."""
-        self.queue_task(ExternalStatisticsTask(metadata, stats))
+        """Schedule import of statistics."""
+        self.queue_task(ImportStatisticsTask(metadata, stats))
 
     @callback
     def _async_setup_periodic_tasks(self) -> None:
@@ -518,9 +554,16 @@ class Recorder(threading.Thread):
 
     def _wait_startup_or_shutdown(self) -> object | None:
         """Wait for startup or shutdown before starting."""
-        return asyncio.run_coroutine_threadsafe(
-            self._async_wait_for_started(), self.hass.loop
-        ).result()
+        try:
+            return asyncio.run_coroutine_threadsafe(
+                self._async_wait_for_started(), self.hass.loop
+            ).result()
+        except CancelledError as ex:
+            _LOGGER.warning(
+                "Recorder startup was externally canceled before it could complete: %s",
+                ex,
+            )
+            return SHUTDOWN_TASK
 
     def run(self) -> None:
         """Start processing events to save."""
@@ -537,16 +580,23 @@ class Recorder(threading.Thread):
             self._setup_run()
         else:
             self.migration_in_progress = True
+            self.migration_is_live = migration.live_migration(current_version)
 
         self.hass.add_job(self.async_connection_success)
 
-        # If shutdown happened before Home Assistant finished starting
-        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-            self.migration_in_progress = False
-            # Make sure we cleanly close the run if
-            # we restart before startup finishes
-            self._shutdown()
-            return
+        if self.migration_is_live or schema_is_current:
+            # If the migrate is live or the schema is current, we need to
+            # wait for startup to complete. If its not live, we need to continue
+            # on.
+            self.hass.add_job(self.async_set_db_ready)
+            # If shutdown happened before Home Assistant finished starting
+            if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+                self.migration_in_progress = False
+                # Make sure we cleanly close the run if
+                # we restart before startup finishes
+                self._shutdown()
+                self.hass.add_job(self.async_set_db_ready)
+                return
 
         # We wait to start the migration until startup has finished
         # since it can be cpu intensive and we do not want it to compete
@@ -566,11 +616,18 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
+                self.hass.add_job(self.async_set_db_ready)
                 self._shutdown()
                 return
 
+        self.hass.add_job(self.async_set_db_ready)
+
+        # Catch up with missed statistics
+        with session_scope(session=self.get_session()) as session:
+            self._schedule_compile_missing_statistics(session)
+
         _LOGGER.debug("Recorder processing the queue")
-        self.hass.add_job(self._async_recorder_ready)
+        self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
 
     def _run_event_loop(self) -> None:
@@ -648,7 +705,7 @@ class Recorder(threading.Thread):
 
         try:
             migration.migrate_schema(
-                self.hass, self.engine, self.get_session, current_version
+                self, self.hass, self.engine, self.get_session, current_version
             )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
@@ -744,11 +801,12 @@ class Recorder(threading.Thread):
             return
 
         try:
-            shared_data = EventData.shared_data_from_event(event)
-        except (TypeError, ValueError) as ex:
+            shared_data_bytes = EventData.shared_data_bytes_from_event(event)
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
             return
 
+        shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
             dbevent.event_data_rel = pending_event_data
@@ -756,7 +814,7 @@ class Recorder(threading.Thread):
         elif data_id := self._event_data_ids.get(shared_data):
             dbevent.data_id = data_id
         else:
-            data_hash = EventData.hash_shared_data(shared_data)
+            data_hash = EventData.hash_shared_data_bytes(shared_data_bytes)
             # Matching attributes found in the database
             if data_id := self._find_shared_data_in_db(data_hash, shared_data):
                 self._event_data_ids[shared_data] = dbevent.data_id = data_id
@@ -775,10 +833,10 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         try:
             dbstate = States.from_event(event)
-            shared_attrs = StateAttributes.shared_attrs_from_event(
+            shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
                 event, self._exclude_attributes_by_domain
             )
-        except (TypeError, ValueError) as ex:
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
                 event.data.get("new_state"),
@@ -786,6 +844,7 @@ class Recorder(threading.Thread):
             )
             return
 
+        shared_attrs = shared_attrs_bytes.decode("utf-8")
         dbstate.attributes = None
         # Matching attributes found in the pending commit
         if pending_attributes := self._pending_state_attributes.get(shared_attrs):
@@ -794,7 +853,7 @@ class Recorder(threading.Thread):
         elif attributes_id := self._state_attributes_ids.get(shared_attrs):
             dbstate.attributes_id = attributes_id
         else:
-            attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
+            attr_hash = StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
             # Matching attributes found in the database
             if attributes_id := self._find_shared_attr_in_db(attr_hash, shared_attrs):
                 dbstate.attributes_id = attributes_id
@@ -978,7 +1037,8 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            await asyncio.wait_for(database_locked.wait(), timeout=DB_LOCK_TIMEOUT)
+            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+                await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
@@ -1070,7 +1130,6 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
-            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
 

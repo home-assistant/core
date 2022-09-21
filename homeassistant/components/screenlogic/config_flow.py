@@ -1,4 +1,6 @@
 """Config flow for ScreenLogic."""
+from __future__ import annotations
+
 import logging
 
 from screenlogicpy import ScreenLogicError, discovery
@@ -69,7 +71,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
         return ScreenLogicOptionsFlowHandler(config_entry)
 

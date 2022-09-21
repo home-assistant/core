@@ -3,7 +3,7 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from tests.components.homekit_controller.common import Helper, setup_test_component
+from .common import Helper, setup_test_component
 
 
 def create_service_with_ecobee_mode(accessory: Accessory):

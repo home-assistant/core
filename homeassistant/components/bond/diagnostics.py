@@ -7,8 +7,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, HUB
-from .utils import BondHub
+from .const import DOMAIN
+from .models import BondData
 
 TO_REDACT = {"access_token"}
 
@@ -17,8 +17,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
     return {
         "entry": {
             "title": entry.title,

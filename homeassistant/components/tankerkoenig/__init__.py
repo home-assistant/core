@@ -23,7 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -187,6 +187,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 station_data = pytankerkoenig.getStationData(self._api_key, station_id)
             except pytankerkoenig.customException as err:
+                if any(x in str(err).lower() for x in ("api-key", "apikey")):
+                    raise ConfigEntryAuthFailed(err) from err
                 station_data = {
                     "ok": False,
                     "message": err,

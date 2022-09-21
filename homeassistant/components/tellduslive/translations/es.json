@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n",
-            "unknown": "Se produjo un error desconocido",
+            "authorize_url_timeout": "Se agot\u00f3 el tiempo de espera para generar la URL de autorizaci\u00f3n.",
+            "unknown": "Error inesperado",
             "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
         "error": {
@@ -11,14 +11,13 @@
         },
         "step": {
             "auth": {
-                "description": "Para vincular tu cuenta de Telldus Live:\n 1. Pulsa el siguiente enlace\n 2. Inicia sesi\u00f3n en Telldus Live\n 3. Autoriza **{app_name}** (pulsa en **Yes**).\n 4. Vuelve atr\u00e1s y pulsa **ENVIAR**.\n\n [Link TelldusLive account]({auth_url})",
-                "title": "Autenticaci\u00f3n contra TelldusLive"
+                "description": "Para vincular tu cuenta de Telldus Live:\n1. Pulsa el siguiente enlace\n2. Inicia sesi\u00f3n en Telldus Live\n3. Autoriza **{app_name}** (pulsa en **Yes**).\n4. Vuelve atr\u00e1s y pulsa **ENVIAR**.\n\n[Enlace a la cuenta TelldusLive]({auth_url})",
+                "title": "Autenticar contra TelldusLive"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Vac\u00edo",
                 "title": "Elige el punto final."
             }
         }

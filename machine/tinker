@@ -3,8 +3,7 @@ FROM homeassistant/armv7-homeassistant:$BUILD_VERSION
 
 RUN apk --no-cache add usbutils \
     && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-        -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
-        --use-deprecated=legacy-resolver \
-        bluepy \
         pybluez \
-        pygatt[GATTTOOL]
+        pygatt[GATTTOOL] \
+        -c /usr/src/homeassistant/requirements_all.txt \
+        --use-deprecated=legacy-resolver

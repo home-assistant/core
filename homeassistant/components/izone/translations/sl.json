@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "V omre\u017eju ni najdenih naprav iZone.",
+            "no_devices_found": "V omre\u017eju ni mogo\u010de najti nobene naprave",
             "single_instance_allowed": "Potrebna je samo ena konfiguracija iZone."
         },
         "step": {

@@ -4,6 +4,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+)
+from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
 
@@ -59,16 +65,18 @@ async def test_validation_empty_config(hass):
 
 
 @pytest.mark.parametrize(
-    "state_class, extra",
+    "state_class, energy_unit, extra",
     [
-        ("total_increasing", {}),
-        ("total", {}),
-        ("total", {"last_reset": "abc"}),
-        ("measurement", {"last_reset": "abc"}),
+        ("total_increasing", ENERGY_KILO_WATT_HOUR, {}),
+        ("total_increasing", ENERGY_MEGA_WATT_HOUR, {}),
+        ("total_increasing", ENERGY_WATT_HOUR, {}),
+        ("total", ENERGY_KILO_WATT_HOUR, {}),
+        ("total", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("measurement", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
     ],
 )
 async def test_validation(
-    hass, mock_energy_manager, mock_get_metadata, state_class, extra
+    hass, mock_energy_manager, mock_get_metadata, state_class, energy_unit, extra
 ):
     """Test validating success."""
     for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
@@ -77,7 +85,7 @@ async def test_validation(
             "123",
             {
                 "device_class": "energy",
-                "unit_of_measurement": "kWh",
+                "unit_of_measurement": energy_unit,
                 "state_class": state_class,
                 **extra,
             },
@@ -408,7 +416,11 @@ async def test_validation_grid(
         },
     )
 
-    assert (await validate.async_validate(hass)).as_dict() == {
+    result = await validate.async_validate(hass)
+    # verify its also json serializable
+    JSON_DUMP(result)
+
+    assert result.as_dict() == {
         "energy_sources": [
             [
                 {

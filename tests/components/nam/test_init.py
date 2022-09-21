@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
-from tests.components.nam import init_integration
 
 
 async def test_async_setup_entry(hass):
@@ -51,7 +52,7 @@ async def test_config_auth_failed(hass):
     )
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=AuthFailed("Authorization has failed"),
     ):
         entry.add_to_hass(hass)

@@ -91,7 +91,7 @@ class TemperSensor(SensorEntity):
         # set calibration data
         self.temper_device.set_calibration_data(scale=self.scale, offset=self.offset)
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         try:
             sensor_value = self.temper_device.get_temperature("celsius")

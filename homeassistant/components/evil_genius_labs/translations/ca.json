@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "timeout": "Temps m\u00e0xim d'espera per establir la connexi\u00f3 esgotat",
+            "timeout": "S'ha esgotat el temps m\u00e0xim d'espera per establir connexi\u00f3",
             "unknown": "Error inesperat"
         },
         "step": {

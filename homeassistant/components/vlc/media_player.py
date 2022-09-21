@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import vlc
 import voluptuous as vol
@@ -12,12 +13,11 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,6 +52,7 @@ def setup_platform(
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -78,11 +79,11 @@ class VlcDevice(MediaPlayerEntity):
         """Get the latest details from the device."""
         status = self._vlc.get_state()
         if status == vlc.State.Playing:
-            self._state = STATE_PLAYING
+            self._state = MediaPlayerState.PLAYING
         elif status == vlc.State.Paused:
-            self._state = STATE_PAUSED
+            self._state = MediaPlayerState.PAUSED
         else:
-            self._state = STATE_IDLE
+            self._state = MediaPlayerState.IDLE
         self._media_duration = self._vlc.get_length() / 1000
         position = self._vlc.get_position() * self._media_duration
         if position != self._media_position:
@@ -115,11 +116,6 @@ class VlcDevice(MediaPlayerEntity):
         return self._muted
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
         return self._media_duration
@@ -134,37 +130,39 @@ class VlcDevice(MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         return self._media_position_updated_at
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""
         track_length = self._vlc.get_length() / 1000
         self._vlc.set_position(position / track_length)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._vlc.audio_set_mute(mute)
         self._muted = mute
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._vlc.audio_set_volume(int(volume * 100))
         self._volume = volume
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._vlc.play()
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._vlc.pause()
-        self._state = STATE_PAUSED
+        self._state = MediaPlayerState.PAUSED
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self._vlc.stop()
-        self._state = STATE_IDLE
+        self._state = MediaPlayerState.IDLE
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
@@ -173,11 +171,11 @@ class VlcDevice(MediaPlayerEntity):
             )
             media_id = sourced_media.url
 
-        elif media_type != MEDIA_TYPE_MUSIC:
+        elif media_type != MediaType.MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
-                MEDIA_TYPE_MUSIC,
+                MediaType.MUSIC,
             )
             return
 
@@ -188,10 +186,12 @@ class VlcDevice(MediaPlayerEntity):
             self._vlc.play()
 
         await self.hass.async_add_executor_job(play)
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

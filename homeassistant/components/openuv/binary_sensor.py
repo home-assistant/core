@@ -18,7 +18,7 @@ ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 
 BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
     key=TYPE_PROTECTION_WINDOW,
-    name="Protection Window",
+    name="Protection window",
     icon="mdi:sunglasses",
 )
 
@@ -35,6 +35,14 @@ async def async_setup_entry(
 
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.openuv.async_update_protection_data()
+        self.async_update_state()
 
     @callback
     def update_from_latest_data(self) -> None:

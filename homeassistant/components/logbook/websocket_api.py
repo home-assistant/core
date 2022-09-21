@@ -14,11 +14,13 @@ from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
+from .const import LOGBOOK_ENTITIES_FILTER
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
@@ -29,7 +31,6 @@ from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
 EVENT_COALESCE_TIME = 0.35
-MAX_RECORDER_WAIT = 10
 # minimum size that we will split the query
 BIG_QUERY_HOURS = 25
 # how many hours to deliver in the first chunk when we split the query
@@ -46,6 +47,7 @@ class LogbookLiveStream:
     subscriptions: list[CALLBACK_TYPE]
     end_time_unsub: CALLBACK_TYPE | None = None
     task: asyncio.Task | None = None
+    wait_sync_task: asyncio.Task | None = None
 
 
 @callback
@@ -55,16 +57,21 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_event_stream)
 
 
-async def _async_wait_for_recorder_sync(hass: HomeAssistant) -> None:
-    """Wait for the recorder to sync."""
-    try:
-        await asyncio.wait_for(
-            get_instance(hass).async_block_till_done(), MAX_RECORDER_WAIT
-        )
-    except asyncio.TimeoutError:
-        _LOGGER.debug(
-            "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
-        )
+@callback
+def _async_send_empty_response(
+    connection: ActiveConnection, msg_id: int, start_time: dt, end_time: dt | None
+) -> None:
+    """Send an empty response.
+
+    The current case for this is when they ask for entity_ids
+    that will all be filtered away because they have UOMs or
+    state_class.
+    """
+    connection.send_result(msg_id)
+    stream_end_time = end_time or dt_util.utcnow()
+    empty_stream_message = _generate_stream_message([], start_time, stream_end_time)
+    empty_response = messages.event_message(msg_id, empty_stream_message)
+    connection.send_message(JSON_DUMP(empty_response))
 
 
 async def _async_send_historical_events(
@@ -171,6 +178,17 @@ async def _async_get_ws_stream_events(
     )
 
 
+def _generate_stream_message(
+    events: list[dict[str, Any]], start_day: dt, end_day: dt
+) -> dict[str, Any]:
+    """Generate a logbook stream message response."""
+    return {
+        "events": events,
+        "start_time": dt_util.utc_to_timestamp(start_day),
+        "end_time": dt_util.utc_to_timestamp(end_day),
+    }
+
+
 def _ws_stream_get_events(
     msg_id: int,
     start_day: dt,
@@ -184,11 +202,7 @@ def _ws_stream_get_events(
     last_time = None
     if events:
         last_time = dt_util.utc_from_timestamp(events[-1]["when"])
-    message = {
-        "events": events,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
-    }
+    message = _generate_stream_message(events, start_day, end_day)
     if partial:
         # This is a hint to consumers of the api that
         # we are about to send a another block of historical
@@ -275,6 +289,10 @@ async def ws_event_stream(
     entity_ids = msg.get("entity_ids")
     if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
+        if not entity_ids and not device_ids:
+            _async_send_empty_response(connection, msg_id, start_time, end_time)
+            return
+
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
     event_processor = EventProcessor(
         hass,
@@ -317,8 +335,11 @@ async def ws_event_stream(
         subscriptions.clear()
         if live_stream.task:
             live_stream.task.cancel()
+        if live_stream.wait_sync_task:
+            live_stream.wait_sync_task.cancel()
         if live_stream.end_time_unsub:
             live_stream.end_time_unsub()
+            live_stream.end_time_unsub = None
 
     if end_time:
         live_stream.end_time_unsub = async_track_point_in_utc_time(
@@ -337,8 +358,18 @@ async def ws_event_stream(
             )
             _unsub()
 
+    entities_filter: EntityFilter | None = None
+    if not event_processor.limited_select:
+        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+
     async_subscribe_events(
-        hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
+        hass,
+        subscriptions,
+        _queue_or_cancel,
+        event_types,
+        entities_filter,
+        entity_ids,
+        device_ids,
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
     connection.subscriptions[msg_id] = _unsub
@@ -355,41 +386,6 @@ async def ws_event_stream(
         partial=True,
     )
 
-    await _async_wait_for_recorder_sync(hass)
-    if not subscriptions:
-        # Unsubscribe happened while waiting for recorder
-        return
-
-    #
-    # Fetch any events from the database that have
-    # not been committed since the original fetch
-    # so we can switch over to using the subscriptions
-    #
-    # We only want events that happened after the last event
-    # we had from the last database query or the maximum
-    # time we allow the recorder to be behind
-    #
-    max_recorder_behind = subscriptions_setup_complete_time - timedelta(
-        seconds=MAX_RECORDER_WAIT
-    )
-    second_fetch_start_time = max(
-        last_event_time or max_recorder_behind, max_recorder_behind
-    )
-    await _async_send_historical_events(
-        hass,
-        connection,
-        msg_id,
-        second_fetch_start_time,
-        subscriptions_setup_complete_time,
-        messages.event_message,
-        event_processor,
-        partial=False,
-    )
-
-    if not subscriptions:
-        # Unsubscribe happened while waiting for formatted events
-        return
-
     live_stream.task = asyncio.create_task(
         _async_events_consumer(
             subscriptions_setup_complete_time,
@@ -398,6 +394,34 @@ async def ws_event_stream(
             stream_queue,
             event_processor,
         )
+    )
+
+    if msg_id not in connection.subscriptions:
+        # Unsubscribe happened while sending historical events
+        return
+
+    live_stream.wait_sync_task = asyncio.create_task(
+        get_instance(hass).async_block_till_done()
+    )
+    await live_stream.wait_sync_task
+
+    #
+    # Fetch any events from the database that have
+    # not been committed since the original fetch
+    # so we can switch over to using the subscriptions
+    #
+    # We only want events that happened after the last event
+    # we had from the last database query
+    #
+    await _async_send_historical_events(
+        hass,
+        connection,
+        msg_id,
+        last_event_time or start_time,
+        subscriptions_setup_complete_time,
+        messages.event_message,
+        event_processor,
+        partial=False,
     )
 
 
@@ -475,7 +499,7 @@ async def ws_get_events(
     )
 
     connection.send_message(
-        await hass.async_add_executor_job(
+        await get_instance(hass).async_add_executor_job(
             _ws_formatted_get_events,
             msg["id"],
             start_time,

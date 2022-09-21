@@ -351,7 +351,7 @@ class Scanner:
 
     async def async_start(self) -> None:
         """Start the scanners."""
-        session = async_get_clientsession(self.hass)
+        session = async_get_clientsession(self.hass, verify_ssl=False)
         requester = AiohttpSessionRequester(session, True, 10)
         self._description_cache = DescriptionCache(requester)
 

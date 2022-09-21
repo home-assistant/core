@@ -20,21 +20,37 @@ from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.button import DOMAIN, ButtonDeviceClass
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
+
+
+@pytest.fixture(autouse=True)
+def button_platform_only():
+    """Only setup the button and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BINARY_SENSOR,
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -120,7 +136,7 @@ async def test_button(hass, contact_sensor):
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     with patch(
         "zigpy.zcl.Cluster.request",
@@ -160,7 +176,7 @@ async def test_frost_unlock(hass, tuya_water_valve):
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category == EntityCategory.CONFIG
 
     with patch(
         "zigpy.zcl.Cluster.request",

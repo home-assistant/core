@@ -20,7 +20,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
+from .const import BRIDGE_MAKE, DOMAIN
+from .models import BondData
 from .utils import BondHub
 
 PLATFORMS = [
@@ -69,11 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
     )
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        HUB: hub,
-        BPUP_SUBS: bpup_subs,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BondData(hub, bpup_subs)
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
@@ -95,15 +92,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
@@ -125,7 +121,8 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove bond config entry from a device."""
-    hub: BondHub = hass.data[DOMAIN][config_entry.entry_id][HUB]
+    data: BondData = hass.data[DOMAIN][config_entry.entry_id]
+    hub = data.hub
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN or len(identifier) != 3:
             continue
