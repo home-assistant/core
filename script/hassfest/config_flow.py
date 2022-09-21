@@ -116,6 +116,7 @@ def _generate_v2(
 
     result = {
         "integration": {},
+        "hardware": {},
         "helper": {},
     }
 

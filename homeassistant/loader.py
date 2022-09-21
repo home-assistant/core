@@ -261,15 +261,21 @@ async def async_get_config_flows_v2(
         if not config_flow_path.is_file():
             continue
 
-    integrations = await async_get_custom_components(hass)
-    flows: dict[str, Any] = json_loads(config_flow_path.read_text())
+    core_flows: dict[str, Any] = json_loads(config_flow_path.read_text())
+    custom_integrations = await async_get_custom_components(hass)
+    custom_flows: dict[str, Any] = {
+        "integration": {},
+        "hardware": {},
+        "helper": {},
+    }
 
-    for integration in integrations.values():
+    for integration in custom_integrations.values():
         if not integration.config_flow:
             continue
-        flows[integration.domain] = {"name": integration.name}
+        metadata = {"name": integration.name}
+        custom_flows[integration.integration_type][integration.domain] = metadata
 
-    return flows
+    return {"core": core_flows, "custom": custom_flows}
 
 
 async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
