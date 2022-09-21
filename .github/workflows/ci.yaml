@@ -520,13 +520,6 @@ jobs:
             libxslt-dev
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        env:
-          # https://github.com/aio-libs/aiohttp/issues/6600  (Python 3.11 beta)
-          AIOHTTP_NO_EXTENSIONS: 1
-          # https://github.com/aio-libs/frozenlist/issues/285 (Python 3.11 beta)
-          FROZENLIST_NO_EXTENSIONS: 1
-          # https://github.com/aio-libs/yarl/issues/680 (Python 3.11 beta)
-          YARL_NO_EXTENSIONS: 1
         run: |
           python -m venv venv
           . venv/bin/activate
