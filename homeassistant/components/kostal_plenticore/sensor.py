@@ -842,14 +842,17 @@ async def async_setup_entry(
         plenticore,
     )
     for description in SENSOR_PROCESS_DATA:
+        module_id = description.module_id
+        data_id = description.key
+        name = description.name
+        sensor_data = description.properties
+        fmt = description.formatter
         if (
-            description.module_id not in available_process_data
-            or description.key not in available_process_data[description.module_id]
+            module_id not in available_process_data
+            or data_id not in available_process_data[module_id]
         ):
             _LOGGER.debug(
-                "Skipping non existing process data %s/%s",
-                description.module_id,
-                description.key,
+                "Skipping non existing process data %s/%s", module_id, data_id
             )
             continue
 
@@ -858,11 +861,11 @@ async def async_setup_entry(
                 process_data_update_coordinator,
                 entry.entry_id,
                 entry.title,
-                description.module_id,
-                description.key,
-                description.name,
-                description.properties,
-                PlenticoreDataFormatter.get_method(description.formatter),
+                module_id,
+                data_id,
+                name,
+                sensor_data,
+                PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
                 None,
             )
@@ -876,7 +879,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: ProcessDataUpdateCoordinator,
+        coordinator,
         entry_id: str,
         platform_name: str,
         module_id: str,
@@ -886,7 +889,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         formatter: Callable[[str], Any],
         device_info: DeviceInfo,
         entity_category: EntityCategory | None,
-    ) -> None:
+    ):
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
