@@ -26,7 +26,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -834,32 +834,24 @@ async def async_setup_entry(
         plenticore,
     )
     for description in SENSOR_PROCESS_DATA:
-        module_id = description.module_id
-        data_id = description.key
-        name = description.name
-        sensor_data = description.properties
-        fmt = description.formatter
         if (
-            module_id not in available_process_data
-            or data_id not in available_process_data[module_id]
+            description.module_id not in available_process_data
+            or description.key not in available_process_data[description.module_id]
         ):
             _LOGGER.debug(
-                "Skipping non existing process data %s/%s", module_id, data_id
+                "Skipping non existing process data %s/%s",
+                description.module_id,
+                description.key,
             )
             continue
 
         entities.append(
             PlenticoreDataSensor(
                 process_data_update_coordinator,
+                description,
                 entry.entry_id,
                 entry.title,
-                module_id,
-                data_id,
-                name,
-                sensor_data,
-                PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
-                None,
             )
         )
 
@@ -869,33 +861,31 @@ async def async_setup_entry(
 class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Plenticore data Sensor."""
 
+    entity_description: PlenticoreSensorEntityDescription
+
     def __init__(
         self,
-        coordinator,
+        coordinator: ProcessDataUpdateCoordinator,
+        description: PlenticoreSensorEntityDescription,
         entry_id: str,
         platform_name: str,
-        module_id: str,
-        data_id: str,
-        sensor_name: str | None,
-        sensor_data: dict[str, Any],
-        formatter: Callable[[str], Any],
         device_info: DeviceInfo,
-        entity_category: EntityCategory | None,
-    ):
+    ) -> None:
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
+        self.entity_description = description
         self.entry_id = entry_id
         self.platform_name = platform_name
-        self.module_id = module_id
-        self.data_id = data_id
+        self.module_id = description.module_id
+        self.data_id = description.key
 
-        self._sensor_name = sensor_name
-        self._sensor_data = sensor_data
-        self._formatter = formatter
+        self._sensor_name = description.name
+        self._sensor_data = description.properties
+        self._formatter: Callable[[str], Any] = PlenticoreDataFormatter.get_method(
+            description.formatter
+        )
 
         self._device_info = device_info
-
-        self._attr_entity_category = entity_category
 
     @property
     def available(self) -> bool:
