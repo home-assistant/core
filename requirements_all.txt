@@ -2445,7 +2445,7 @@ uasiren==0.0.1
 ultraheat-api==0.4.3
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.6
+unifi-discovery==1.1.7
 
 # homeassistant.components.unifiled
 unifiled==0.11
