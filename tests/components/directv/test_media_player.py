@@ -27,15 +27,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.const import (
@@ -180,26 +173,26 @@ async def test_supported_features(
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        SUPPORT_PAUSE
-        | SUPPORT_TURN_ON
-        | SUPPORT_TURN_OFF
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_PLAY
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
         == state.attributes.get("supported_features")
     )
 
     # Feature supported for clients.
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert (
-        SUPPORT_PAUSE
-        | SUPPORT_PLAY_MEDIA
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
-        | SUPPORT_PLAY
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
         == state.attributes.get("supported_features")
     )
 
