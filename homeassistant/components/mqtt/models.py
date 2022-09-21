@@ -15,7 +15,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType,TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
@@ -33,7 +33,7 @@ PublishPayloadType = Union[str, bytes, int, float, None]
 class PublishMessage:
     """MQTT Message."""
 
-    topic: str = attr.ib)
+    topic: str = attr.ib()
     payload: PublishPayloadType = attr.ib()
     qos: int = attr.ib()
     retain: bool = attr.ib()
@@ -77,7 +77,7 @@ class TriggerDebugInfo(TypedDict):
     discovery_data: DiscoveryInfoType
 
 
-class DebugInfo(TypedDict):
+class MqttDebugInfo(TypedDict):
     """Class for holding MQTT debug info."""
 
     entities: dict[str, EntityDebugInfo]
@@ -218,8 +218,8 @@ class MqttData:
 
     client: MQTT | None = None
     config: ConfigType | None = None
-    debug_info: DebugInfo = field(
-        default_factory=lambda: DebugInfo(entities={}, triggers={})
+    debug_info: MqttDebugInfo = field(
+        default_factory=lambda: MqttDebugInfo(entities={}, triggers={})
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
