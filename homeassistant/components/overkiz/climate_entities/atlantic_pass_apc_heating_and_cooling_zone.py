@@ -1,4 +1,6 @@
 """Support for Atlantic Pass APC Heating And Cooling Zone Control."""
+from __future__ import annotations
+
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -8,15 +10,15 @@ from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
+from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
-
-PRESET_FROST_PROTECTION = "frost_protection"
 
 OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
     OverkizCommandParam.AUTO: HVACMode.AUTO,
@@ -43,7 +45,15 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 
-THERMAL_CONFIGURATION_STATE = "core:ThermalConfigurationState"
+OVERKIZ_TO_PROFILE_MODES: dict[str, str] = {
+    OverkizCommandParam.OFF: PRESET_SLEEP,
+    OverkizCommandParam.STOP: PRESET_SLEEP,
+    OverkizCommandParam.ECO: PRESET_ECO,
+    OverkizCommandParam.ABSENCE: PRESET_AWAY,
+    OverkizCommandParam.MANU: PRESET_COMFORT,
+    OverkizCommandParam.DEROGATION: PRESET_COMFORT,
+    OverkizCommandParam.COMFORT: PRESET_COMFORT,
+}
 
 
 class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
@@ -55,6 +65,23 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = TEMP_CELSIUS
+
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
+        """Init method."""
+        super().__init__(device_url, coordinator)
+        self.temperature_device = self.executor.linked_device(
+            int(self.device_url.split("#", 1)[1]) + 1
+        )
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
+            return cast(float, temperature.value)
+
+        return None
 
     @property
     def hvac_mode(self) -> str:
@@ -83,9 +110,22 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
-        return OVERKIZ_TO_PRESET_MODES[
-            cast(str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE))
-        ]
+        heating_mode = cast(
+            str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE)
+        )
+
+        if heating_mode == OverkizCommandParam.INTERNAL_SCHEDULING:
+            # In Internal scheduling, it could be comfort or eco
+            return OVERKIZ_TO_PROFILE_MODES[
+                cast(
+                    str,
+                    self.executor.select_state(
+                        OverkizState.IO_PASS_APC_HEATING_PROFILE
+                    ),
+                )
+            ]
+
+        return OVERKIZ_TO_PRESET_MODES[heating_mode]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -109,7 +149,9 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
     def hvac_action(self) -> str:
         """Return hvac current action."""
         return OVERKIZ_TO_HVAC_MODE[
-            cast(str, self.executor.select_state(THERMAL_CONFIGURATION_STATE))
+            cast(
+                str, self.executor.select_state(OverkizState.CORE_THERMAL_CONFIGURATION)
+            )
         ]
 
     @property
@@ -123,12 +165,28 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
 
-        # This might need more test and conditions here
         if self.hvac_mode == HVACMode.AUTO:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE, temperature
-            )
+            commands = [
+                Command(
+                    OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE,
+                    [temperature],
+                ),
+                Command(
+                    OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE,
+                ),
+                Command(
+                    OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+                ),
+            ]
         else:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE, temperature
-            )
+            commands = [
+                Command(
+                    OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE,
+                    [temperature],
+                ),
+                Command(
+                    OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+                ),
+            ]
+
+        await self.executor.async_execute_commands(commands)
