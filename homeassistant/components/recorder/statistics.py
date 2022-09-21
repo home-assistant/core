@@ -1514,7 +1514,7 @@ def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None
     """Raise if the statistics unit and state unit are not compatible."""
     if statistics_unit == state_unit:
         return
-    if (valid_units := STATISTIC_UNIT_TO_VALID_UNITS) is None:
+    if (valid_units := STATISTIC_UNIT_TO_VALID_UNITS.get(statistics_unit)) is None:
         raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
     if state_unit not in valid_units:
         raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
