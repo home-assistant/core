@@ -49,6 +49,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import (
     dt as dt_util,
+    energy as energy_util,
     power as power_util,
     pressure as pressure_util,
     temperature as temperature_util,
@@ -86,9 +87,11 @@ DEVICE_CLASS_UNITS: dict[str, str] = {
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
     SensorDeviceClass.ENERGY: {
-        ENERGY_KILO_WATT_HOUR: lambda x: x,
-        ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
-        ENERGY_WATT_HOUR: lambda x: x / 1000,
+        ENERGY_KILO_WATT_HOUR: lambda x: x
+        / energy_util.UNIT_CONVERSION[ENERGY_KILO_WATT_HOUR],
+        ENERGY_MEGA_WATT_HOUR: lambda x: x
+        / energy_util.UNIT_CONVERSION[ENERGY_MEGA_WATT_HOUR],
+        ENERGY_WATT_HOUR: lambda x: x / energy_util.UNIT_CONVERSION[ENERGY_WATT_HOUR],
     },
     # Convert power to W
     SensorDeviceClass.POWER: {
