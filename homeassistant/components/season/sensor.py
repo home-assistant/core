@@ -251,7 +251,7 @@ class SeasonData:
         self._data: dict = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Update season."""
         self._data = get_season(
             self,
