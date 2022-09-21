@@ -65,6 +65,7 @@ APPLE_START_BYTES_WANTED: Final = {
 }
 
 RSSI_SWITCH_THRESHOLD = 6
+NO_RSSI_VALUE = -1000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def _prefer_previous_adv(
                 STALE_ADVERTISEMENT_SECONDS,
             )
         return False
-    if new.device.rssi - RSSI_SWITCH_THRESHOLD > old.device.rssi:
+    if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
         # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
         if new.source != old.source:
             _LOGGER.debug(
