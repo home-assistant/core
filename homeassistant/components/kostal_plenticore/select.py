@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from abc import ABC
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
@@ -20,31 +20,33 @@ from .helper import Plenticore, SelectDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class SelectData(NamedTuple):
-    """Representation of a SelectData tuple."""
+@dataclass
+class PlenticoreRequiredKeysMixin:
+    """A class that describes required properties for plenticore select entities."""
 
     module_id: str
-    data_id: str
-    name: str
     options: list
     is_on: str
 
 
-# Defines all entities for select widgets.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - options
-#  - entity is enabled by default (bool)
+@dataclass
+class PlenticoreSelectEntityDescription(
+    SelectEntityDescription, PlenticoreRequiredKeysMixin
+):
+    """A class that describes plenticore select entities."""
+
+
 SELECT_SETTINGS_DATA = [
-    SelectData(
-        "devices:local",
-        "battery_charge",
-        "Battery Charging / Usage mode",
-        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
-        "1",
+    PlenticoreSelectEntityDescription(
+        module_id="devices:local",
+        key="battery_charge",
+        name="Battery Charging / Usage mode",
+        options=[
+            "None",
+            "Battery:SmartBatteryControl:Enable",
+            "Battery:TimeControl:Enable",
+        ],
+        is_on="1",
     )
 ]
 
@@ -65,29 +67,26 @@ async def async_setup_entry(
     )
 
     entities = []
-    for select in SELECT_SETTINGS_DATA:
-        if select.module_id not in available_settings_data:
+    for description in SELECT_SETTINGS_DATA:
+        if description.module_id not in available_settings_data:
             continue
-        needed_data_ids = {data_id for data_id in select.options if data_id != "None"}
+        needed_data_ids = {
+            data_id for data_id in description.options if data_id != "None"
+        }
         available_data_ids = {
-            setting.id for setting in available_settings_data[select.module_id]
+            setting.id for setting in available_settings_data[description.module_id]
         }
         if not needed_data_ids <= available_data_ids:
             continue
         entities.append(
             PlenticoreDataSelect(
                 select_data_update_coordinator,
+                description,
                 entry_id=entry.entry_id,
                 platform_name=entry.title,
                 device_class="kostal_plenticore__battery",
-                module_id=select.module_id,
-                data_id=select.data_id,
-                name=select.name,
                 current_option="None",
-                options=select.options,
-                is_on=select.is_on,
                 device_info=plenticore.device_info,
-                unique_id=f"{entry.entry_id}_{select.module_id}",
             )
         )
 
@@ -98,36 +97,33 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
     """Representation of a Plenticore Select."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    entity_description: PlenticoreSelectEntityDescription
 
     def __init__(
         self,
-        coordinator,
+        coordinator: SelectDataUpdateCoordinator,
+        description: PlenticoreSelectEntityDescription,
         entry_id: str,
         platform_name: str,
         device_class: str | None,
-        module_id: str,
-        data_id: str,
-        name: str,
         current_option: str | None,
-        options: list[str],
-        is_on: str,
         device_info: DeviceInfo,
-        unique_id: str,
     ) -> None:
         """Create a new Select Entity for Plenticore process data."""
         super().__init__(coordinator)
+        self.entity_description = description
         self.entry_id = entry_id
         self.platform_name = platform_name
         self._attr_device_class = device_class
-        self.module_id = module_id
-        self.data_id = data_id
-        self._attr_options = options
-        self.all_options = options
+        self.module_id = description.module_id
+        self.data_id = description.key
+        self._attr_options = description.options
+        self.all_options = description.options
         self._attr_current_option = current_option
-        self._is_on = is_on
+        self._is_on = description.is_on
         self._device_info = device_info
-        self._attr_name = name or DEVICE_DEFAULT_NAME
-        self._attr_unique_id = unique_id
+        self._attr_name = description.name or DEVICE_DEFAULT_NAME
+        self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
     def available(self) -> bool:

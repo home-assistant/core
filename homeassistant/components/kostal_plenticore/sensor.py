@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -10,6 +11,7 @@ from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +26,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -33,772 +35,784 @@ from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# Defines all entities for process data.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - sensor properties (dict)
-#  - value formatter (str)
+
+@dataclass
+class PlenticoreRequiredKeysMixin:
+    """A class that describes required properties for plenticore sensor entities."""
+
+    module_id: str
+    properties: dict[str, Any]
+    formatter: str
+
+
+@dataclass
+class PlenticoreSensorEntityDescription(
+    SensorEntityDescription, PlenticoreRequiredKeysMixin
+):
+    """A class that describes plenticore sensor entities."""
+
+
 SENSOR_PROCESS_DATA = [
-    (
-        "devices:local",
-        "Inverter:State",
-        "Inverter State",
-        {ATTR_ICON: "mdi:state-machine"},
-        "format_inverter_state",
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="Inverter:State",
+        name="Inverter State",
+        properties={ATTR_ICON: "mdi:state-machine"},
+        formatter="format_inverter_state",
     ),
-    (
-        "devices:local",
-        "Dc_P",
-        "Solar Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="Dc_P",
+        name="Solar Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_ENABLED_DEFAULT: True,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local",
-        "Grid_P",
-        "Grid Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="Grid_P",
+        name="Grid Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_ENABLED_DEFAULT: True,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local",
-        "HomeBat_P",
-        "Home Power from Battery",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="HomeBat_P",
+        name="Home Power from Battery",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local",
-        "HomeGrid_P",
-        "Home Power from Grid",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
-            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
-        },
-        "format_round",
-    ),
-    (
-        "devices:local",
-        "HomeOwn_P",
-        "Home Power from Own",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="HomeGrid_P",
+        name="Home Power from Grid",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local",
-        "HomePv_P",
-        "Home Power from PV",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="HomeOwn_P",
+        name="Home Power from Own",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local",
-        "Home_P",
-        "Home Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="HomePv_P",
+        name="Home Power from PV",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:ac",
-        "P",
-        "AC Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="Home_P",
+        name="Home Power",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:ac",
+        key="P",
+        name="AC Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_ENABLED_DEFAULT: True,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv1",
-        "P",
-        "DC1 Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv1",
+        key="P",
+        name="DC1 Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv1",
-        "U",
-        "DC1 Voltage",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv1",
+        key="U",
+        name="DC1 Voltage",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv1",
-        "I",
-        "DC1 Current",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv1",
+        key="I",
+        name="DC1 Current",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_float",
+        formatter="format_float",
     ),
-    (
-        "devices:local:pv2",
-        "P",
-        "DC2 Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv2",
+        key="P",
+        name="DC2 Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv2",
-        "U",
-        "DC2 Voltage",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv2",
+        key="U",
+        name="DC2 Voltage",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv2",
-        "I",
-        "DC2 Current",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv2",
+        key="I",
+        name="DC2 Current",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_float",
+        formatter="format_float",
     ),
-    (
-        "devices:local:pv3",
-        "P",
-        "DC3 Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv3",
+        key="P",
+        name="DC3 Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv3",
-        "U",
-        "DC3 Voltage",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv3",
+        key="U",
+        name="DC3 Voltage",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:pv3",
-        "I",
-        "DC3 Current",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:pv3",
+        key="I",
+        name="DC3 Current",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_float",
+        formatter="format_float",
     ),
-    (
-        "devices:local",
-        "PV2Bat_P",
-        "PV to Battery Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="PV2Bat_P",
+        name="PV to Battery Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local",
-        "EM_State",
-        "Energy Manager State",
-        {ATTR_ICON: "mdi:state-machine"},
-        "format_em_manager_state",
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local",
+        key="EM_State",
+        name="Energy Manager State",
+        properties={ATTR_ICON: "mdi:state-machine"},
+        formatter="format_em_manager_state",
     ),
-    (
-        "devices:local:battery",
-        "Cycles",
-        "Battery Cycles",
-        {ATTR_ICON: "mdi:recycle", ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:battery",
+        key="Cycles",
+        name="Battery Cycles",
+        properties={
+            ATTR_ICON: "mdi:recycle",
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+        formatter="format_round",
     ),
-    (
-        "devices:local:battery",
-        "P",
-        "Battery Power",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:battery",
+        key="P",
+        name="Battery Power",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "devices:local:battery",
-        "SoC",
-        "Battery SoC",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="devices:local:battery",
+        key="SoC",
+        name="Battery SoC",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Autarky:Day",
-        "Autarky Day",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Autarky:Day",
+        name="Autarky Day",
+        properties={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Autarky:Month",
-        "Autarky Month",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Autarky:Month",
+        name="Autarky Month",
+        properties={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Autarky:Total",
-        "Autarky Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Autarky:Total",
+        name="Autarky Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_ICON: "mdi:chart-donut",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Autarky:Year",
-        "Autarky Year",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Autarky:Year",
+        name="Autarky Year",
+        properties={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:OwnConsumptionRate:Day",
-        "Own Consumption Rate Day",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:OwnConsumptionRate:Day",
+        name="Own Consumption Rate Day",
+        properties={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:OwnConsumptionRate:Month",
-        "Own Consumption Rate Month",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:OwnConsumptionRate:Month",
+        name="Own Consumption Rate Month",
+        properties={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:OwnConsumptionRate:Total",
-        "Own Consumption Rate Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:OwnConsumptionRate:Total",
+        name="Own Consumption Rate Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_ICON: "mdi:chart-donut",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
-        "format_round",
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:OwnConsumptionRate:Year",
-        "Own Consumption Rate Year",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
-        "format_round",
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:OwnConsumptionRate:Year",
+        name="Own Consumption Rate Year",
+        properties={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        formatter="format_round",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHome:Day",
-        "Home Consumption Day",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHome:Day",
+        name="Home Consumption Day",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHome:Month",
-        "Home Consumption Month",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHome:Month",
+        name="Home Consumption Month",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHome:Year",
-        "Home Consumption Year",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHome:Year",
+        name="Home Consumption Year",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHome:Total",
-        "Home Consumption Total",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeBat:Day",
-        "Home Consumption from Battery Day",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeBat:Month",
-        "Home Consumption from Battery Month",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeBat:Year",
-        "Home Consumption from Battery Year",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeBat:Total",
-        "Home Consumption from Battery Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHome:Total",
+        name="Home Consumption Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeGrid:Day",
-        "Home Consumption from Grid Day",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeBat:Day",
+        name="Home Consumption from Battery Day",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeGrid:Month",
-        "Home Consumption from Grid Month",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeBat:Month",
+        name="Home Consumption from Battery Month",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeGrid:Year",
-        "Home Consumption from Grid Year",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeBat:Year",
+        name="Home Consumption from Battery Year",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomeGrid:Total",
-        "Home Consumption from Grid Total",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomePv:Day",
-        "Home Consumption from PV Day",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomePv:Month",
-        "Home Consumption from PV Month",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomePv:Year",
-        "Home Consumption from PV Year",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyHomePv:Total",
-        "Home Consumption from PV Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeBat:Total",
+        name="Home Consumption from Battery Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv1:Day",
-        "Energy PV1 Day",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeGrid:Day",
+        name="Home Consumption from Grid Day",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv1:Month",
-        "Energy PV1 Month",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeGrid:Month",
+        name="Home Consumption from Grid Month",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv1:Year",
-        "Energy PV1 Year",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeGrid:Year",
+        name="Home Consumption from Grid Year",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv1:Total",
-        "Energy PV1 Total",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv2:Day",
-        "Energy PV2 Day",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv2:Month",
-        "Energy PV2 Month",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv2:Year",
-        "Energy PV2 Year",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv2:Total",
-        "Energy PV2 Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomeGrid:Total",
+        name="Home Consumption from Grid Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv3:Day",
-        "Energy PV3 Day",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomePv:Day",
+        name="Home Consumption from PV Day",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv3:Month",
-        "Energy PV3 Month",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomePv:Month",
+        name="Home Consumption from PV Month",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv3:Year",
-        "Energy PV3 Year",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomePv:Year",
+        name="Home Consumption from PV Year",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyPv3:Total",
-        "Energy PV3 Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyHomePv:Total",
+        name="Home Consumption from PV Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Yield:Day",
-        "Energy Yield Day",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv1:Day",
+        name="Energy PV1 Day",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv1:Month",
+        name="Energy PV1 Month",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv1:Year",
+        name="Energy PV1 Year",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv1:Total",
+        name="Energy PV1 Total",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv2:Day",
+        name="Energy PV2 Day",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv2:Month",
+        name="Energy PV2 Month",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv2:Year",
+        name="Energy PV2 Year",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv2:Total",
+        name="Energy PV2 Total",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv3:Day",
+        name="Energy PV3 Day",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv3:Month",
+        name="Energy PV3 Month",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv3:Year",
+        name="Energy PV3 Year",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyPv3:Total",
+        name="Energy PV3 Total",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Yield:Day",
+        name="Energy Yield Day",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_ENABLED_DEFAULT: True,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Yield:Month",
-        "Energy Yield Month",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Yield:Month",
+        name="Energy Yield Month",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Yield:Year",
-        "Energy Yield Year",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Yield:Year",
+        name="Energy Yield Year",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:Yield:Total",
-        "Energy Yield Total",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargeGrid:Day",
-        "Battery Charge from Grid Day",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargeGrid:Month",
-        "Battery Charge from Grid Month",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargeGrid:Year",
-        "Battery Charge from Grid Year",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargeGrid:Total",
-        "Battery Charge from Grid Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:Yield:Total",
+        name="Energy Yield Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargePv:Day",
-        "Battery Charge from PV Day",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargeGrid:Day",
+        name="Battery Charge from Grid Day",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargePv:Month",
-        "Battery Charge from PV Month",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargeGrid:Month",
+        name="Battery Charge from Grid Month",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargePv:Year",
-        "Battery Charge from PV Year",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargeGrid:Year",
+        name="Battery Charge from Grid Year",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_energy",
+        formatter="format_energy",
     ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyChargePv:Total",
-        "Battery Charge from PV Total",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyDischargeGrid:Day",
-        "Energy Discharge to Grid Day",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyDischargeGrid:Month",
-        "Energy Discharge to Grid Month",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyDischargeGrid:Year",
-        "Energy Discharge to Grid Year",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        },
-        "format_energy",
-    ),
-    (
-        "scb:statistic:EnergyFlow",
-        "Statistic:EnergyDischargeGrid:Total",
-        "Energy Discharge to Grid Total",
-        {
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargeGrid:Total",
+        name="Battery Charge from Grid Total",
+        properties={
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
-        "format_energy",
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargePv:Day",
+        name="Battery Charge from PV Day",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargePv:Month",
+        name="Battery Charge from PV Month",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargePv:Year",
+        name="Battery Charge from PV Year",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyChargePv:Total",
+        name="Battery Charge from PV Total",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischargeGrid:Day",
+        name="Energy Discharge to Grid Day",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischargeGrid:Month",
+        name="Energy Discharge to Grid Month",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischargeGrid:Year",
+        name="Energy Discharge to Grid Year",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischargeGrid:Total",
+        name="Energy Discharge to Grid Total",
+        properties={
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        formatter="format_energy",
     ),
 ]
 
@@ -819,18 +833,9 @@ async def async_setup_entry(
         timedelta(seconds=10),
         plenticore,
     )
-    module_id: str
-    data_id: str
-    name: str
-    sensor_data: dict[str, Any]
-    fmt: str
-    for (  # type: ignore[assignment]
-        module_id,
-        data_id,
-        name,
-        sensor_data,
-        fmt,
-    ) in SENSOR_PROCESS_DATA:
+    for description in SENSOR_PROCESS_DATA:
+        module_id = description.module_id
+        data_id = description.key
         if (
             module_id not in available_process_data
             or data_id not in available_process_data[module_id]
@@ -843,15 +848,10 @@ async def async_setup_entry(
         entities.append(
             PlenticoreDataSensor(
                 process_data_update_coordinator,
+                description,
                 entry.entry_id,
                 entry.title,
-                module_id,
-                data_id,
-                name,
-                sensor_data,
-                PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
-                None,
             )
         )
 
@@ -861,33 +861,31 @@ async def async_setup_entry(
 class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Plenticore data Sensor."""
 
+    entity_description: PlenticoreSensorEntityDescription
+
     def __init__(
         self,
-        coordinator,
+        coordinator: ProcessDataUpdateCoordinator,
+        description: PlenticoreSensorEntityDescription,
         entry_id: str,
         platform_name: str,
-        module_id: str,
-        data_id: str,
-        sensor_name: str,
-        sensor_data: dict[str, Any],
-        formatter: Callable[[str], Any],
         device_info: DeviceInfo,
-        entity_category: EntityCategory | None,
-    ):
+    ) -> None:
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
+        self.entity_description = description
         self.entry_id = entry_id
         self.platform_name = platform_name
-        self.module_id = module_id
-        self.data_id = data_id
+        self.module_id = description.module_id
+        self.data_id = description.key
 
-        self._sensor_name = sensor_name
-        self._sensor_data = sensor_data
-        self._formatter = formatter
+        self._sensor_name = description.name
+        self._sensor_data = description.properties
+        self._formatter: Callable[[str], Any] = PlenticoreDataFormatter.get_method(
+            description.formatter
+        )
 
         self._device_info = device_info
-
-        self._attr_entity_category = entity_category
 
     @property
     def available(self) -> bool:

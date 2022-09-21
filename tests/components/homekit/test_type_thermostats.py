@@ -33,13 +33,10 @@ from homeassistant.components.climate import (
     FAN_ON,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_SWING_MODE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -88,7 +85,7 @@ async def test_thermostat(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -324,7 +321,7 @@ async def test_thermostat(hass, hk_driver, events):
         entity_id,
         HVACMode.DRY,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
             ATTR_TEMPERATURE: 22.0,
             ATTR_CURRENT_TEMPERATURE: 22.0,
             ATTR_HVAC_ACTION: HVACAction.DRYING,
@@ -429,8 +426,8 @@ async def test_thermostat_auto(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -583,8 +580,8 @@ async def test_thermostat_mode_and_temp_change(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -875,8 +872,8 @@ async def test_thermostat_fahrenheit(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         },
     )
     await hass.async_block_till_done()
@@ -894,8 +891,8 @@ async def test_thermostat_fahrenheit(hass, hk_driver, events):
             ATTR_TARGET_TEMP_LOW: 68.1,
             ATTR_TEMPERATURE: 71.6,
             ATTR_CURRENT_TEMPERATURE: 73.4,
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         },
     )
     await hass.async_block_till_done()
@@ -1528,7 +1525,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE},
+        {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE},
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1555,7 +1552,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_LOW: 20.0,
             ATTR_CURRENT_TEMPERATURE: 18.0,
             ATTR_HVAC_ACTION: HVACAction.HEATING,
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -1582,7 +1579,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 24.0,
             ATTR_HVAC_ACTION: HVACAction.COOLING,
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -1609,7 +1606,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT,
                 HVACMode.HEAT_COOL,
@@ -1663,7 +1660,7 @@ async def test_thermostat_without_target_temp_only_range(hass, hk_driver, events
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         },
     )
     await hass.async_block_till_done()
@@ -1882,8 +1879,8 @@ async def test_thermostat_with_no_modes_when_we_first_see(hass, hk_driver, event
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [],
         },
     )
@@ -1935,8 +1932,8 @@ async def test_thermostat_with_no_off_after_recheck(hass, hk_driver, events):
         entity_id,
         HVACMode.COOL,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [],
         },
     )
@@ -1987,8 +1984,8 @@ async def test_thermostat_with_temp_clamps(hass, hk_driver, events):
         entity_id,
         HVACMode.COOL,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
             ATTR_HVAC_MODES: [],
             ATTR_MAX_TEMP: 50,
             ATTR_MIN_TEMP: 100,
@@ -2040,10 +2037,10 @@ async def test_thermostat_with_fan_modes_with_auto(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_FAN_MODE
-            | SUPPORT_SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -2079,10 +2076,10 @@ async def test_thermostat_with_fan_modes_with_auto(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_FAN_MODE
-            | SUPPORT_SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -2244,10 +2241,10 @@ async def test_thermostat_with_fan_modes_with_off(hass, hk_driver, events):
         entity_id,
         HVACMode.COOL,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_FAN_MODE
-            | SUPPORT_SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_FAN_MODES: [FAN_ON, FAN_OFF],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -2283,10 +2280,10 @@ async def test_thermostat_with_fan_modes_with_off(hass, hk_driver, events):
         entity_id,
         HVACMode.COOL,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_FAN_MODE
-            | SUPPORT_SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_FAN_MODES: [FAN_ON, FAN_OFF],
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -2351,10 +2348,10 @@ async def test_thermostat_with_fan_modes_set_to_none(hass, hk_driver, events):
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_FAN_MODE
-            | SUPPORT_SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_FAN_MODES: None,
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -2395,9 +2392,9 @@ async def test_thermostat_with_fan_modes_set_to_none_not_supported(
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
-            | SUPPORT_SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_FAN_MODES: None,
             ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
             ATTR_HVAC_ACTION: HVACAction.IDLE,
@@ -2438,7 +2435,7 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
         entity_id,
         HVACMode.OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
             ATTR_MIN_TEMP: 44.6,
             ATTR_MAX_TEMP: 95,
             ATTR_PRESET_MODES: ["home", "away"],
