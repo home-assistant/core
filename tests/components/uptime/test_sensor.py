@@ -2,9 +2,10 @@
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.uptime.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -25,3 +26,11 @@ async def test_uptime_sensor(
     entry = entity_registry.async_get("sensor.uptime")
     assert entry
     assert entry.unique_id == init_integration.entry_id
+
+    device_registry = dr.async_get(hass)
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, init_integration.entry_id)}
+    assert device_entry.name == init_integration.title
+    assert device_entry.entry_type == dr.DeviceEntryType.SERVICE

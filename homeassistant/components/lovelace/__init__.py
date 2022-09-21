@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
 from . import dashboard, resources, websocket
-from .const import (
+from .const import (  # noqa: F401
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_SHOW_IN_SIDEBAR,
@@ -23,6 +23,7 @@ from .const import (
     DASHBOARD_BASE_CREATE_FIELDS,
     DEFAULT_ICON,
     DOMAIN,
+    EVENT_LOVELACE_UPDATED,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
@@ -86,11 +87,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         config = await async_process_component_config(hass, conf, integration)
 
+        if config is None:
+            raise HomeAssistantError("Config validation failed")
+
         resource_collection = await create_yaml_resource_col(
             hass, config[DOMAIN].get(CONF_RESOURCES)
         )
         hass.data[DOMAIN]["resources"] = resource_collection
 
+    default_config: dashboard.LovelaceConfig
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
@@ -179,8 +184,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Process YAML dashboards
     for url_path, dashboard_conf in hass.data[DOMAIN]["yaml_dashboards"].items():
         # For now always mode=yaml
-        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
-        hass.data[DOMAIN]["dashboards"][url_path] = config
+        lovelace_config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
+        hass.data[DOMAIN]["dashboards"][url_path] = lovelace_config
 
         try:
             _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)

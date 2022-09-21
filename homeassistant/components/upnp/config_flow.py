@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -63,6 +64,12 @@ async def _async_mac_address_from_discovery(
     return await async_get_mac_address_from_host(hass, host)
 
 
+def _is_igd_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+    """Test if discovery is a complete IGD device."""
+    root_device_info = discovery_info.upnp
+    return root_device_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) in {ST_IGD_V1, ST_IGD_V2}
+
+
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
@@ -108,6 +115,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for discovery in discoveries
             if (
                 _is_complete_discovery(discovery)
+                and _is_igd_device(discovery)
                 and discovery.ssdp_usn not in current_unique_ids
             )
         ]
@@ -144,26 +152,35 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
+        # Ensure device is usable. Ideally we would use IgdDevice.is_profile_device,
+        # but that requires constructing the device completely.
+        if not _is_igd_device(discovery_info):
+            LOGGER.debug("Non IGD device, ignoring")
+            return self.async_abort(reason="non_igd_device")
+
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
+        host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
             # Store mac address for older entries.
             # The location is stored in the config entry such that when the location changes, the entry is reloaded.
             updates={
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
                 CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
+                CONFIG_ENTRY_HOST: host,
             },
         )
 
         # Handle devices changing their UDN, only allow a single host.
         for entry in self._async_current_entries(include_ignore=True):
             entry_mac_address = entry.data.get(CONFIG_ENTRY_MAC_ADDRESS)
-            entry_st = entry.data.get(CONFIG_ENTRY_ST)
-            if entry_mac_address != mac_address:
+            entry_host = entry.data.get(CONFIG_ENTRY_HOST)
+            if entry_mac_address != mac_address and entry_host != host:
                 continue
 
+            entry_st = entry.data.get(CONFIG_ENTRY_ST)
             if discovery_info.ssdp_st != entry_st:
                 # Check ssdp_st to prevent swapping between IGDv1 and IGDv2.
                 continue

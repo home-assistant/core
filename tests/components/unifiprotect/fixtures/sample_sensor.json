@@ -2,7 +2,7 @@
   "mac": "26DBAFF133A4",
   "connectionHost": "192.168.216.198",
   "type": "UFP-SENSE",
-  "name": "Egdczv Urg",
+  "name": "Test Sensor",
   "upSince": 1641256963255,
   "uptime": null,
   "lastSeen": 1641259127934,
@@ -25,7 +25,7 @@
   "mountType": "door",
   "leakDetectedAt": null,
   "tamperingDetectedAt": null,
-  "isOpened": true,
+  "isOpened": false,
   "openStatusChangedAt": 1641269036582,
   "alarmTriggeredAt": null,
   "motionDetectedAt": 1641269044824,
@@ -34,53 +34,53 @@
   },
   "stats": {
     "light": {
-      "value": 0,
+      "value": 10.0,
       "status": "neutral"
     },
     "humidity": {
-      "value": 35,
+      "value": 10.0,
       "status": "neutral"
     },
     "temperature": {
-      "value": 17.23,
+      "value": 10.0,
       "status": "neutral"
     }
   },
   "bluetoothConnectionState": {
     "signalQuality": 15,
-    "signalStrength": -84
+    "signalStrength": -50
   },
   "batteryStatus": {
-    "percentage": 100,
+    "percentage": 10,
     "isLow": false
   },
   "alarmSettings": {
     "isEnabled": false
   },
   "lightSettings": {
-    "isEnabled": true,
+    "isEnabled": false,
     "lowThreshold": null,
     "highThreshold": null,
     "margin": 10
   },
   "motionSettings": {
-    "isEnabled": true,
+    "isEnabled": false,
     "sensitivity": 100
   },
   "temperatureSettings": {
-    "isEnabled": true,
+    "isEnabled": false,
     "lowThreshold": null,
     "highThreshold": null,
     "margin": 0.1
   },
   "humiditySettings": {
-    "isEnabled": true,
+    "isEnabled": false,
     "lowThreshold": null,
     "highThreshold": null,
     "margin": 1
   },
   "ledSettings": {
-    "isEnabled": true
+    "isEnabled": false
   },
   "bridge": "61b3f5c90050a703e700042a",
   "camera": "2f9beb2e6f79af3c32c22d49",

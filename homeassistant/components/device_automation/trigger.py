@@ -1,17 +1,13 @@
 """Offer device oriented automation."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -41,19 +37,19 @@ class DeviceAutomationTriggerProtocol(Protocol):
         self,
         hass: HomeAssistant,
         config: ConfigType,
-        action: AutomationActionType,
-        automation_info: AutomationTriggerInfo,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
-    def async_get_trigger_capabilities(
+    async def async_get_trigger_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema] | Awaitable[dict[str, vol.Schema]]:
+    ) -> dict[str, vol.Schema]:
         """List trigger capabilities."""
 
-    def async_get_triggers(
+    async def async_get_triggers(
         self, hass: HomeAssistant, device_id: str
-    ) -> list[dict[str, Any]] | Awaitable[list[dict[str, Any]]]:
+    ) -> list[dict[str, Any]]:
         """List triggers."""
 
 
@@ -75,11 +71,11 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for trigger."""
     platform = await async_get_device_automation_platform(
         hass, config[CONF_DOMAIN], DeviceAutomationType.TRIGGER
     )
-    return await platform.async_attach_trigger(hass, config, action, automation_info)
+    return await platform.async_attach_trigger(hass, config, action, trigger_info)

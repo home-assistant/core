@@ -26,6 +26,7 @@ from .common import (
     async_enable_traffic,
     async_find_group_entity_id,
     async_test_rejoin,
+    async_wait_for_updates,
     find_entity_id,
     get_zha_gateway,
     send_attributes_report,
@@ -33,12 +34,26 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
-from tests.components.zha.common import async_wait_for_updates
 
 ON = 1
 OFF = 0
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
+
+
+@pytest.fixture(autouse=True)
+def switch_platform_only():
+    """Only setup the switch and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.SENSOR,
+            Platform.SELECT,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture

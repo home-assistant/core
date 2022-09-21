@@ -13,6 +13,9 @@
       "model": "Generic heater",
       "name": "OpenTherm",
       "vendor": "Techneco",
+      "lower_bound": 0.0,
+      "upper_bound": 100.0,
+      "resolution": 1.0,
       "maximum_boiler_temperature": 60.0,
       "binary_sensors": {
         "dhw_state": false,

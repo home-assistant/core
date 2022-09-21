@@ -7,21 +7,20 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.humidifier import (
-    HumidifierDeviceClass,
-    HumidifierEntity,
-    HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
     MODE_NORMAL,
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .entity import HomeKitEntity
 
 HK_MODE_TO_HA = {
     0: "off",

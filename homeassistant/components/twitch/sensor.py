@@ -108,10 +108,8 @@ class TwitchSensor(SensorEntity):
 
     def update(self) -> None:
         """Update device state."""
-
         followers = self._client.get_users_follows(to_id=self.unique_id)["total"]
         channel = self._client.get_users(user_ids=[self.unique_id])["data"][0]
-
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
             ATTR_VIEWS: channel["view_count"],
@@ -151,8 +149,13 @@ class TwitchSensor(SensorEntity):
             self._attr_extra_state_attributes[ATTR_GAME] = stream["game_name"]
             self._attr_extra_state_attributes[ATTR_TITLE] = stream["title"]
             self._attr_entity_picture = stream["thumbnail_url"]
+            if self._attr_entity_picture is not None:
+                self._attr_entity_picture = self._attr_entity_picture.format(
+                    height=24,
+                    width=24,
+                )
         else:
             self._attr_native_value = STATE_OFFLINE
             self._attr_extra_state_attributes[ATTR_GAME] = None
             self._attr_extra_state_attributes[ATTR_TITLE] = None
-            self._attr_entity_picture = channel["offline_image_url"]
+            self._attr_entity_picture = channel["profile_image_url"]

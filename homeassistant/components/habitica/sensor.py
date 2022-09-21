@@ -154,7 +154,7 @@ class HabitipySensor(SensorEntity):
         self._state = None
         self._updater = updater
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Condition and Forecast."""
         await self._updater.update()
         data = self._updater.data
@@ -194,7 +194,7 @@ class HabitipyTaskSensor(SensorEntity):
         self._state = None
         self._updater = updater
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Condition and Forecast."""
         await self._updater.update()
         all_tasks = self._updater.tasks

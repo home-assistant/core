@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_format": "Ogiltigt format. V\u00e4nligen ange som xxx-xxx.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Auth-kod (xxx-xxx)"
+                },
+                "description": "V\u00e4nligen ange din personliga autentiseringskod som visas i laundrify-appen."
+            },
+            "reauth_confirm": {
+                "description": "Laundrify-integrationen m\u00e5ste autentiseras p\u00e5 nytt.",
+                "title": "Autentisera om integration"
+            }
+        }
+    }
+}

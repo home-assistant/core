@@ -10,7 +10,7 @@ import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
@@ -169,6 +169,24 @@ ZCL_ATTR_PLUG = {
     "unoccupied_heating_setpoint": 2200,
     "unoccupied_cooling_setpoint": 2300,
 }
+
+
+@pytest.fixture(autouse=True)
+def climate_platform_only():
+    """Only setup the climate and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.CLIMATE,
+            Platform.BINARY_SENSOR,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture

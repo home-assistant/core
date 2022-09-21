@@ -6,7 +6,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips",
+      "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
       "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_psk": "The transport encryption key is invalid. Please ensure it matches what you have in your configuration"
@@ -17,7 +17,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node."
+        "description": "Please enter connection settings of your [ESPHome]({esphome_url}) node."
       },
       "authenticate": {
         "data": {

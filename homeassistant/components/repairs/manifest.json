@@ -1,0 +1,8 @@
+{
+  "domain": "repairs",
+  "name": "Repairs",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/repairs",
+  "codeowners": ["@home-assistant/core"],
+  "dependencies": ["http"]
+}

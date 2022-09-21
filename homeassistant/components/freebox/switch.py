@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from freebox_api.exceptions import InsufficientPermissionsError
 
@@ -65,15 +66,15 @@ class FreeboxWifiSwitch(SwitchEntity):
                 "Home Assistant does not have permissions to modify the Freebox settings. Please refer to documentation"
             )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_state(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_state(False)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the state and update it."""
         datas = await self._router.wifi.get_global_config()
         active = datas["enabled"]

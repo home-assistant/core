@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 import logging
 import re
 from types import MappingProxyType
@@ -73,6 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
     Platform.SCENE,
@@ -302,7 +304,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "keypads": {},
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -441,13 +443,15 @@ def create_elk_entities(
 class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
         self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
-        self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit: str = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
@@ -462,11 +466,7 @@ class ElkEntity(Entity):
         else:
             uid_start = "elkm1"
         self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
-
-    @property
-    def name(self) -> str:
-        """Name of the element."""
-        return f"{self._name_prefix}{self._element.name}"
+        self._attr_name = element.name
 
     @property
     def unique_id(self) -> str:
@@ -474,14 +474,12 @@ class ElkEntity(Entity):
         return self._unique_id
 
     @property
-    def should_poll(self) -> bool:
-        """Don't poll this device."""
-        return False
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the default attributes of the element."""
-        return {**self._element.as_dict(), **self.initial_attrs()}
+        dict_as_str = {}
+        for key, val in self._element.as_dict().items():
+            dict_as_str[key] = val.value if isinstance(val, Enum) else val
+        return {**dict_as_str, **self.initial_attrs()}
 
     @property
     def available(self) -> bool:

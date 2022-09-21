@@ -5,6 +5,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity, UpnpSensorEntityDescription
@@ -31,6 +32,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_BYTES,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
@@ -38,6 +40,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_BYTES,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
@@ -45,6 +48,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
@@ -52,6 +56,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_IP,
@@ -65,11 +70,14 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
         format="d",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     UpnpSensorEntityDescription(
         key=WAN_STATUS,
         name="wan status",
         icon="mdi:server-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -97,6 +105,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
@@ -105,6 +114,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
+        entity_registry_enabled_default=False,
     ),
 )
 

@@ -52,14 +52,14 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     ),
     DelugeSensorEntityDescription(
         key=DOWNLOAD_SPEED,
-        name="Down Speed",
+        name="Down speed",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, DOWNLOAD_SPEED),
     ),
     DelugeSensorEntityDescription(
         key=UPLOAD_SPEED,
-        name="Up Speed",
+        name="Up speed",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, UPLOAD_SPEED),
@@ -92,7 +92,6 @@ class DelugeSensor(DelugeEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.config_entry.title} {description.name}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property

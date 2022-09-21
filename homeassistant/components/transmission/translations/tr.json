@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -9,6 +10,13 @@
             "name_exists": "Ad zaten var"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "{username} i\u00e7n \u015fifre ge\u00e7ersiz.",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
             "user": {
                 "data": {
                     "host": "Sunucu",

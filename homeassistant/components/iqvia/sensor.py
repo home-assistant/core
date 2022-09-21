@@ -79,17 +79,17 @@ TREND_SUBSIDING = "Subsiding"
 FORECAST_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_FORECAST,
-        name="Allergy Index: Forecasted Average",
+        name="Allergy index: forecasted average",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_FORECAST,
-        name="Asthma Index: Forecasted Average",
+        name="Asthma index: forecasted average",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
-        name="Cold & Flu: Forecasted Average",
+        name="Cold & flu: forecasted average",
         icon="mdi:snowflake",
     ),
 )
@@ -97,29 +97,29 @@ FORECAST_SENSOR_DESCRIPTIONS = (
 INDEX_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_TODAY,
-        name="Allergy Index: Today",
+        name="Allergy index: today",
         icon="mdi:flower",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ALLERGY_TOMORROW,
-        name="Allergy Index: Tomorrow",
+        name="Allergy index: tomorrow",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TODAY,
-        name="Asthma Index: Today",
+        name="Asthma index: today",
         icon="mdi:flower",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TOMORROW,
-        name="Asthma Index: Tomorrow",
+        name="Asthma index: tomorrow",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
-        name="Cold & Flu Index: Today",
+        name="Cold & flu index: today",
         icon="mdi:pill",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -161,7 +161,7 @@ def calculate_trend(indices: list[float]) -> str:
     """Calculate the "moving average" of a set of indices."""
     index_range = np.arange(0, len(indices))
     index_array = np.array(indices)
-    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore[no-untyped-call]
+    linear_fit = np.polyfit(index_range, index_array, 1)
     slope = round(linear_fit[0], 2)
 
     if slope > 0:

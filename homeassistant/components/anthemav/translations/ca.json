@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "cannot_receive_deviceinfo": "No s'ha pogut obtenir l'adre\u00e7a MAC. Assegura't que el dispositiu estigui enc\u00e8s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configuraci\u00f3 d'Anthem A/V Receivers mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant.\n\nLa configuraci\u00f3 YAML existent s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari.\n\nElimina la configuraci\u00f3 YAML d'Anthem A/V Receivers del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML d'Anthem A/V Receivers est\u00e0 sent eliminada"
+        }
+    }
+}

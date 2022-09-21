@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Attribut",
+                    "authentication": "Authentifizierung",
+                    "device_class": "Ger\u00e4teklasse",
+                    "headers": "Header",
+                    "index": "Index",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "resource": "Ressource",
+                    "select": "Ausw\u00e4hlen",
+                    "state_class": "Zustandsklasse",
+                    "unit_of_measurement": "Ma\u00dfeinheit",
+                    "username": "Benutzername",
+                    "value_template": "Wertvorlage",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "data_description": {
+                    "attribute": "Wert eines Attributs auf dem ausgew\u00e4hlten Tag abrufen",
+                    "authentication": "Typ der HTTP-Authentifizierung. Entweder basic oder digest",
+                    "device_class": "Der Typ/die Klasse des Sensors, um das Symbol im Frontend festzulegen",
+                    "headers": "F\u00fcr die Webanforderung zu verwendende Header",
+                    "index": "Definiert, welche der vom CSS-Selektor zur\u00fcckgegebenen Elemente verwendet werden sollen",
+                    "resource": "Die URL der Website, die den Wert enth\u00e4lt",
+                    "select": "Legt fest, nach welchem Tag gesucht werden soll. Siehe Beautifulsoup CSS-Selektoren f\u00fcr Details",
+                    "state_class": "Die state_class des Sensors",
+                    "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln",
+                    "verify_ssl": "Aktiviert/deaktiviert die \u00dcberpr\u00fcfung des SSL/TLS-Zertifikats, z.B. wenn es selbst signiert ist"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attribut",
+                    "authentication": "Authentifizierung",
+                    "device_class": "Ger\u00e4teklasse",
+                    "headers": "Header",
+                    "index": "Index",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "resource": "Ressource",
+                    "select": "Ausw\u00e4hlen",
+                    "state_class": "Zustandsklasse",
+                    "unit_of_measurement": "Ma\u00dfeinheit",
+                    "username": "Benutzername",
+                    "value_template": "Wertvorlage",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "data_description": {
+                    "attribute": "Wert eines Attributs auf dem ausgew\u00e4hlten Tag abrufen",
+                    "authentication": "Typ der HTTP-Authentifizierung. Entweder basic oder digest",
+                    "device_class": "Der Typ/die Klasse des Sensors, um das Symbol im Frontend festzulegen",
+                    "headers": "F\u00fcr die Webanforderung zu verwendende Header",
+                    "index": "Definiert, welche der vom CSS-Selektor zur\u00fcckgegebenen Elemente verwendet werden sollen",
+                    "resource": "Die URL der Website, die den Wert enth\u00e4lt",
+                    "select": "Legt fest, nach welchem Tag gesucht werden soll. Siehe Beautifulsoup CSS-Selektoren f\u00fcr Details",
+                    "state_class": "Die state_class des Sensors",
+                    "value_template": "Definiert eine Vorlage, um den Zustand des Sensors zu ermitteln",
+                    "verify_ssl": "Aktiviert/deaktiviert die \u00dcberpr\u00fcfung des SSL/TLS-Zertifikats, z.B. wenn es selbst signiert ist"
+                }
+            }
+        }
+    }
+}

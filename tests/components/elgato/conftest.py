@@ -38,6 +38,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_onboarding() -> Generator[None, MagicMock, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding
+
+
+@pytest.fixture
 def mock_elgato_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked Elgato client."""
     with patch(

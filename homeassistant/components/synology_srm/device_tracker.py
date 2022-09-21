@@ -70,7 +70,9 @@ ATTRIBUTE_ALIAS = {
 }
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> SynologySrmDeviceScanner | None:
     """Validate the configuration and return Synology SRM scanner."""
     scanner = SynologySrmDeviceScanner(config[DOMAIN])
 

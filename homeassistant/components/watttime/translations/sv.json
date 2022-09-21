@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel",
+            "unknown_coordinates": "Inga data f\u00f6r latitud/longitud"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "Ange latitud och longitud f\u00f6r att \u00f6vervaka:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Plats"
+                },
+                "description": "V\u00e4lj en plats att \u00f6vervaka:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "Ange l\u00f6senordet f\u00f6r {anv\u00e4ndarnamn} p\u00e5 nytt:",
+                "title": "\u00c5terautenticera integration"
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Ange ditt anv\u00e4ndarnamn och l\u00f6senord:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Visa \u00f6vervakad plats p\u00e5 kartan"
+                },
+                "title": "Konfigurera WattTime"
+            }
+        }
+    }
+}

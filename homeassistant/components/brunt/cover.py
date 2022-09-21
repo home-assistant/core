@@ -1,7 +1,6 @@
 """Support for Brunt Blind Engine covers."""
 from __future__ import annotations
 
-from collections.abc import MutableMapping
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -140,7 +139,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         return self.move_state == 2
 
     @property
-    def extra_state_attributes(self) -> MutableMapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the detailed device state attributes."""
         return {
             ATTR_REQUEST_POSITION: self.request_cover_position,

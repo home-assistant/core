@@ -9,6 +9,10 @@
             "unknown": "Ok\u00e4nt fel: f\u00f6rs\u00f6k igen senare"
         },
         "step": {
+            "link": {
+                "description": "Klicka p\u00e5 \"Skicka\" och tryck sedan p\u00e5 h\u00f6gerpilen p\u00e5 routern f\u00f6r att registrera Freebox med Home Assistant. \n\n ![Plats f\u00f6r knappen p\u00e5 routern](/static/images/config_freebox.png)",
+                "title": "L\u00e4nka Freebox-router"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd",

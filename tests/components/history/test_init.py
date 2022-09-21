@@ -6,22 +6,23 @@ import json
 from unittest.mock import patch, sentinel
 
 import pytest
-from pytest import approx
 
 from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components.recorder.websocket_api import (
+    ws_handle_get_statistics_during_period,
+    ws_handle_list_statistic_ids,
+)
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
-    do_adhoc_statistics,
     wait_recording_done,
 )
 
@@ -246,15 +247,11 @@ def test_get_significant_states_exclude(hass_history):
 def test_get_significant_states_exclude_include_entity(hass_history):
     """Test significant states when excluding domains and include entities.
 
-    We should not get back every thermostat and media player test changes.
+    We should not get back every thermostat change unless its specifically included
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test2"]
-    del states["media_player.test3"]
-    del states["thermostat.test"]
     del states["thermostat.test2"]
-    del states["script.can_cancel_this_one"]
 
     config = history.CONFIG_SCHEMA(
         {
@@ -340,14 +337,12 @@ def test_get_significant_states_include(hass_history):
 def test_get_significant_states_include_exclude_domain(hass_history):
     """Test if significant states when excluding and including domains.
 
-    We should not get back any changes since we include only the
-    media_player domain but also exclude it.
+    We should get back all the media_player domain changes
+    only since the include wins over the exclude but will
+    exclude everything else.
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test"]
-    del states["media_player.test2"]
-    del states["media_player.test3"]
     del states["thermostat.test"]
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
@@ -372,7 +367,6 @@ def test_get_significant_states_include_exclude_entity(hass_history):
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test"]
     del states["media_player.test2"]
     del states["media_player.test3"]
     del states["thermostat.test"]
@@ -394,12 +388,12 @@ def test_get_significant_states_include_exclude_entity(hass_history):
 def test_get_significant_states_include_exclude(hass_history):
     """Test if significant states when in/excluding domains and entities.
 
-    We should only get back changes of the media_player.test2 entity.
+    We should get back changes of the media_player.test2, media_player.test3,
+    and thermostat.test.
     """
     hass = hass_history
     zero, four, states = record_states(hass)
     del states["media_player.test"]
-    del states["thermostat.test"]
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
 
@@ -759,7 +753,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
         {
             "history": {
                 "exclude": {
-                    "entity_globs": ["light.many*"],
+                    "entity_globs": ["light.many*", "binary_sensor.*"],
                 },
                 "include": {
                     "entity_globs": ["light.m*"],
@@ -775,6 +769,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     hass.states.async_set("light.many_state_changes", "on")
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
+    hass.states.async_set("binary_sensor.exclude", "on")
 
     await async_wait_recording_done(hass)
 
@@ -784,10 +779,11 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
-    assert len(response_json) == 3
-    assert response_json[0][0]["entity_id"] == "light.match"
-    assert response_json[1][0]["entity_id"] == "media_player.test"
-    assert response_json[2][0]["entity_id"] == "switch.match"
+    assert len(response_json) == 4
+    assert response_json[0][0]["entity_id"] == "light.many_state_changes"
+    assert response_json[1][0]["entity_id"] == "light.match"
+    assert response_json[2][0]["entity_id"] == "media_player.test"
+    assert response_json[3][0]["entity_id"] == "switch.match"
 
 
 async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
@@ -848,51 +844,13 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     assert response_json[1][0]["entity_id"] == "light.cow"
 
 
-POWER_SENSOR_ATTRIBUTES = {
-    "device_class": "power",
-    "state_class": "measurement",
-    "unit_of_measurement": "kW",
-}
-PRESSURE_SENSOR_ATTRIBUTES = {
-    "device_class": "pressure",
-    "state_class": "measurement",
-    "unit_of_measurement": "hPa",
-}
-TEMPERATURE_SENSOR_ATTRIBUTES = {
-    "device_class": "temperature",
-    "state_class": "measurement",
-    "unit_of_measurement": "°C",
-}
-
-
-@pytest.mark.parametrize(
-    "units, attributes, state, value",
-    [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
-    ],
-)
-async def test_statistics_during_period(
-    hass, hass_ws_client, recorder_mock, units, attributes, state, value
-):
-    """Test statistics_during_period."""
+async def test_statistics_during_period(hass, hass_ws_client, recorder_mock, caplog):
+    """Test history/statistics_during_period forwards to recorder."""
     now = dt_util.utcnow()
-
-    hass.config.units = units
     await async_setup_component(hass, "history", {})
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
-    await async_wait_recording_done(hass)
-
-    do_adhoc_statistics(hass, start=now)
-    await async_wait_recording_done(hass)
-
     client = await hass_ws_client()
+
+    # Test the WS API works and issues a warning
     await client.send_json(
         {
             "id": 1,
@@ -907,178 +865,53 @@ async def test_statistics_during_period(
     assert response["success"]
     assert response["result"] == {}
 
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "history/statistics_during_period",
-            "start_time": now.isoformat(),
-            "statistic_ids": ["sensor.test"],
-            "period": "5minute",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {
-        "sensor.test": [
+    assert (
+        "WS API 'history/statistics_during_period' is deprecated and will be removed in "
+        "Home Assistant Core 2022.12. Use 'recorder/statistics_during_period' instead"
+    ) in caplog.text
+
+    # Test the WS API forwards to recorder
+    with patch(
+        "homeassistant.components.history.recorder_ws.ws_handle_get_statistics_during_period",
+        wraps=ws_handle_get_statistics_during_period,
+    ) as ws_mock:
+        await client.send_json(
             {
-                "statistic_id": "sensor.test",
-                "start": now.isoformat(),
-                "end": (now + timedelta(minutes=5)).isoformat(),
-                "mean": approx(value),
-                "min": approx(value),
-                "max": approx(value),
-                "last_reset": None,
-                "state": None,
-                "sum": None,
+                "id": 2,
+                "type": "history/statistics_during_period",
+                "start_time": now.isoformat(),
+                "end_time": now.isoformat(),
+                "statistic_ids": ["sensor.test"],
+                "period": "hour",
             }
-        ]
-    }
+        )
+        await client.receive_json()
+        ws_mock.assert_awaited_once()
 
 
-async def test_statistics_during_period_bad_start_time(
-    hass, hass_ws_client, recorder_mock
-):
-    """Test statistics_during_period."""
-    await async_setup_component(
-        hass,
-        "history",
-        {"history": {}},
-    )
-
+async def test_list_statistic_ids(hass, hass_ws_client, recorder_mock, caplog):
+    """Test history/list_statistic_ids forwards to recorder."""
+    await async_setup_component(hass, "history", {})
     client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/statistics_during_period",
-            "start_time": "cats",
-            "period": "5minute",
-        }
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "invalid_start_time"
 
-
-async def test_statistics_during_period_bad_end_time(
-    hass, hass_ws_client, recorder_mock
-):
-    """Test statistics_during_period."""
-    now = dt_util.utcnow()
-
-    await async_setup_component(
-        hass,
-        "history",
-        {"history": {}},
-    )
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/statistics_during_period",
-            "start_time": now.isoformat(),
-            "end_time": "dogs",
-            "period": "5minute",
-        }
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "invalid_end_time"
-
-
-@pytest.mark.parametrize(
-    "units, attributes, unit",
-    [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
-    ],
-)
-async def test_list_statistic_ids(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
-):
-    """Test list_statistic_ids."""
-    now = dt_util.utcnow()
-
-    hass.config.units = units
-    await async_setup_component(hass, "history", {"history": {}})
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-
-    client = await hass_ws_client()
+    # Test the WS API works and issues a warning
     await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
-    await async_wait_recording_done(hass)
+    assert (
+        "WS API 'history/list_statistic_ids' is deprecated and will be removed in "
+        "Home Assistant Core 2022.12. Use 'recorder/list_statistic_ids' instead"
+    ) in caplog.text
 
-    await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == [
-        {
-            "statistic_id": "sensor.test",
-            "has_mean": True,
-            "has_sum": False,
-            "name": None,
-            "source": "recorder",
-            "unit_of_measurement": unit,
-        }
-    ]
-
-    do_adhoc_statistics(hass, start=now)
-    await async_recorder_block_till_done(hass)
-    # Remove the state, statistics will now be fetched from the database
-    hass.states.async_remove("sensor.test")
-    await hass.async_block_till_done()
-
-    await client.send_json({"id": 3, "type": "history/list_statistic_ids"})
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == [
-        {
-            "statistic_id": "sensor.test",
-            "has_mean": True,
-            "has_sum": False,
-            "name": None,
-            "source": "recorder",
-            "unit_of_measurement": unit,
-        }
-    ]
-
-    await client.send_json(
-        {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-
-    await client.send_json(
-        {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "mean"}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == [
-        {
-            "statistic_id": "sensor.test",
-            "has_mean": True,
-            "has_sum": False,
-            "name": None,
-            "source": "recorder",
-            "unit_of_measurement": unit,
-        }
-    ]
-
-    await client.send_json(
-        {"id": 6, "type": "history/list_statistic_ids", "statistic_type": "sum"}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == []
+    with patch(
+        "homeassistant.components.history.recorder_ws.ws_handle_list_statistic_ids",
+        wraps=ws_handle_list_statistic_ids,
+    ) as ws_mock:
+        await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
+        await client.receive_json()
+        ws_mock.assert_called_once()
 
 
 async def test_history_during_period(hass, hass_ws_client, recorder_mock):
@@ -1099,7 +932,6 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
     hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
     await async_wait_recording_done(hass)
 
-    do_adhoc_statistics(hass, start=now)
     await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
@@ -1218,8 +1050,6 @@ async def test_history_during_period_impossible_conditions(
     hass, hass_ws_client, recorder_mock
 ):
     """Test history_during_period returns when condition cannot be true."""
-    now = dt_util.utcnow()
-
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1234,7 +1064,6 @@ async def test_history_during_period_impossible_conditions(
     hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
     await async_wait_recording_done(hass)
 
-    do_adhoc_statistics(hass, start=now)
     await async_wait_recording_done(hass)
 
     after = dt_util.utcnow()
@@ -1300,7 +1129,6 @@ async def test_history_during_period_significant_domain(
     hass.states.async_set("climate.test", "on", attributes={"temperature": "5"})
     await async_wait_recording_done(hass)
 
-    do_adhoc_statistics(hass, start=now)
     await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
@@ -1524,7 +1352,6 @@ async def test_history_during_period_with_use_include_order(
     hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
     await async_wait_recording_done(hass)
 
-    do_adhoc_statistics(hass, start=now)
     await async_wait_recording_done(hass)
 
     client = await hass_ws_client()

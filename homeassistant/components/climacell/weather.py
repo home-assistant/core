@@ -10,26 +10,22 @@ from pyclimacell.const import CURRENT, DAILY, FORECASTS, HOURLY, NOWCAST
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
-    LENGTH_FEET,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
+    LENGTH_INCHES,
     LENGTH_MILES,
-    PRESSURE_HPA,
     PRESSURE_INHG,
-    SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
@@ -37,8 +33,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import dt as dt_util
-from homeassistant.util.distance import convert as distance_convert
-from homeassistant.util.pressure import convert as pressure_convert
 from homeassistant.util.speed import convert as speed_convert
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
@@ -89,6 +83,12 @@ async def async_setup_entry(
 class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     """Base ClimaCell weather entity."""
 
+    _attr_native_precipitation_unit = LENGTH_INCHES
+    _attr_native_pressure_unit = PRESSURE_INHG
+    _attr_native_temperature_unit = TEMP_FAHRENHEIT
+    _attr_native_visibility_unit = LENGTH_MILES
+    _attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -132,30 +132,15 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         else:
             translated_condition = self._translate_condition(condition, True)
 
-        if self.hass.config.units.is_metric:
-            if precipitation:
-                precipitation = round(
-                    distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS)
-                    * 1000,
-                    4,
-                )
-            if wind_speed:
-                wind_speed = round(
-                    speed_convert(
-                        wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                    ),
-                    4,
-                )
-
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
-            ATTR_FORECAST_PRECIPITATION: precipitation,
+            ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
-            ATTR_FORECAST_TEMP: temp,
-            ATTR_FORECAST_TEMP_LOW: temp_low,
+            ATTR_FORECAST_NATIVE_TEMP: temp,
+            ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
             ATTR_FORECAST_WIND_BEARING: wind_direction,
-            ATTR_FORECAST_WIND_SPEED: wind_speed,
+            ATTR_FORECAST_NATIVE_WIND_SPEED: wind_speed,
         }
 
         return {k: v for k, v in data.items() if v is not None}
@@ -163,20 +148,16 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional state attributes."""
-        wind_gust = self.wind_gust
-        if wind_gust and self.hass.config.units.is_metric:
-            wind_gust = round(
-                speed_convert(
-                    self.wind_gust, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                ),
-                4,
-            )
         cloud_cover = self.cloud_cover
-        return {
+        attrs = {
             ATTR_CLOUD_COVER: cloud_cover,
-            ATTR_WIND_GUST: wind_gust,
             ATTR_PRECIPITATION_TYPE: self.precipitation_type,
         }
+        if (wind_gust := self.wind_gust) is not None:
+            attrs[ATTR_WIND_GUST] = round(
+                speed_convert(wind_gust, SPEED_MILES_PER_HOUR, self._wind_speed_unit), 4
+            )
+        return attrs
 
     @property
     @abstractmethod
@@ -199,12 +180,8 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         """Return the raw pressure."""
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
-        if self.hass.config.units.is_metric and self._pressure:
-            return round(
-                pressure_convert(self._pressure, PRESSURE_INHG, PRESSURE_HPA), 4
-            )
         return self._pressure
 
     @property
@@ -213,15 +190,8 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         """Return the raw wind speed."""
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
-        if self.hass.config.units.is_metric and self._wind_speed:
-            return round(
-                speed_convert(
-                    self._wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                ),
-                4,
-            )
         return self._wind_speed
 
     @property
@@ -230,19 +200,13 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         """Return the raw visibility."""
 
     @property
-    def visibility(self):
+    def native_visibility(self):
         """Return the visibility."""
-        if self.hass.config.units.is_metric and self._visibility:
-            return round(
-                distance_convert(self._visibility, LENGTH_MILES, LENGTH_KILOMETERS), 4
-            )
         return self._visibility
 
 
 class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
     """Entity that talks to ClimaCell v3 API to retrieve weather data."""
-
-    _attr_temperature_unit = TEMP_FAHRENHEIT
 
     @staticmethod
     def _translate_condition(
@@ -259,7 +223,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
         return CONDITIONS_V3[condition]
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the platform temperature."""
         return self._get_cc_value(
             self.coordinator.data[CURRENT], CC_V3_ATTR_TEMPERATURE

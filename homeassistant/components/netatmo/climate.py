@@ -7,11 +7,11 @@ from typing import Any
 import pyatmo
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -127,7 +127,7 @@ async def async_setup_entry(
     for home_id in climate_topology.home_ids:
         signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
 
-        await data_handler.register_data_class(
+        await data_handler.subscribe(
             CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
         )
 
@@ -185,14 +185,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._room = room
         self._id = self._room.entity_id
 
-        self._climate_state_class = (
-            f"{CLIMATE_STATE_CLASS_NAME}-{self._room.home.entity_id}"
-        )
-        self._climate_state: pyatmo.AsyncClimate = data_handler.data[
-            self._climate_state_class
-        ]
+        self._signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{self._room.home.entity_id}"
+        self._climate_state: pyatmo.AsyncClimate = data_handler.data[self._signal_name]
 
-        self._data_classes.extend(
+        self._publishers.extend(
             [
                 {
                     "name": CLIMATE_TOPOLOGY_CLASS_NAME,
@@ -201,7 +197,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 {
                     "name": CLIMATE_STATE_CLASS_NAME,
                     "home_id": self._room.home.entity_id,
-                    SIGNAL_NAME: self._climate_state_class,
+                    SIGNAL_NAME: self._signal_name,
                 },
             ]
         )
@@ -254,7 +250,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     self.data_handler,
                     module,
                     self._id,
-                    self._climate_state_class,
+                    self._signal_name,
                 ),
             )
 
@@ -278,7 +274,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 ATTR_SELECTED_SCHEDULE
             ] = self._selected_schedule
             self.async_write_ha_state()
-            self.data_handler.async_force_update(self._climate_state_class)
+            self.data_handler.async_force_update(self._signal_name)
             return
 
         home = data["home"]
@@ -295,7 +291,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._attr_target_temperature = self._away_temperature
             elif self._attr_preset_mode == PRESET_SCHEDULE:
                 self.async_update_callback()
-                self.data_handler.async_force_update(self._climate_state_class)
+                self.data_handler.async_force_update(self._signal_name)
             self.async_write_ha_state()
             return
 

@@ -243,7 +243,7 @@ class Ted5000Utility(SensorEntity):
         with suppress(KeyError):
             return self._gateway.data_utility[self._ptr]
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from REST API."""
         self._gateway.update()
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from ipaddress import ip_address
+from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -32,7 +33,7 @@ from .const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from .device import AxisNetworkDevice, get_device
+from .device import AxisNetworkDevice, get_axis_device
 from .errors import AuthenticationRequired, CannotConnect
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
@@ -66,13 +67,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         if user_input is not None:
             try:
-                device = await get_device(
-                    self.hass,
-                    host=user_input[CONF_HOST],
-                    port=user_input[CONF_PORT],
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
-                )
+                device = await get_axis_device(self.hass, MappingProxyType(user_input))
 
                 serial = device.vapix.serial_number
                 await self.async_set_unique_id(format_mac(serial))
@@ -139,18 +134,18 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_reauth(self, device_config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
-            CONF_NAME: device_config[CONF_NAME],
-            CONF_HOST: device_config[CONF_HOST],
+            CONF_NAME: entry_data[CONF_NAME],
+            CONF_HOST: entry_data[CONF_HOST],
         }
 
         self.discovery_schema = {
-            vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
+            vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 
         return await self.async_step_user()

@@ -25,7 +25,7 @@ async def test_show_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
 
@@ -67,7 +67,7 @@ async def test_nominal_case(hass, mock_setup):
 
     assert len(mock_flipr_client.mock_calls) == 1
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "flipid"
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",
@@ -91,7 +91,7 @@ async def test_multiple_flip_id(hass, mock_setup):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "flipr_id"
 
         result = await hass.config_entries.flow.async_configure(
@@ -101,7 +101,7 @@ async def test_multiple_flip_id(hass, mock_setup):
 
     assert len(mock_flipr_client.mock_calls) == 1
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "FLIP2"
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",

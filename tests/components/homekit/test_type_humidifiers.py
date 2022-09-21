@@ -16,17 +16,15 @@ from homeassistant.components.homekit.const import (
     PROP_VALID_VALUES,
 )
 from homeassistant.components.homekit.type_humidifiers import HumidifierDehumidifier
-from homeassistant.components.humidifier import HumidifierDeviceClass
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
+    HumidifierDeviceClass,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -88,7 +86,7 @@ async def test_humidifier(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_HUMIDITY: 42, ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDIFIER},
+        {ATTR_HUMIDITY: 42, ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER},
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 42.0
@@ -128,7 +126,7 @@ async def test_dehumidifier(hass, hk_driver, events):
     entity_id = "humidifier.test"
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: DEVICE_CLASS_DEHUMIDIFIER}
+        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER}
     )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(

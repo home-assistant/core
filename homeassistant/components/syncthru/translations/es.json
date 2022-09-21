@@ -6,7 +6,7 @@
         "error": {
             "invalid_url": "URL no v\u00e1lida",
             "syncthru_not_supported": "El dispositivo no es compatible con SyncThru",
-            "unknown_state": "Estado de la impresora desconocido, verifica la URL y la conectividad de la red"
+            "unknown_state": "Estado de la impresora desconocido, verifica la URL y la conectividad de red"
         },
         "flow_title": "{name}",
         "step": {

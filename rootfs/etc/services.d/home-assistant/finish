@@ -2,24 +2,24 @@
 # ==============================================================================
 # Take down the S6 supervision tree when Home Assistant fails
 # ==============================================================================
-declare RESTART_EXIT_CODE 100
-declare SIGNAL_EXIT_CODE 256
-declare SIGTERM 15
+declare RESTART_EXIT_CODE=100
+declare SIGNAL_EXIT_CODE=256
+declare SIGTERM=15
 declare APP_EXIT_CODE=${1}
-declare SYS_EXIT_CODE=${2+x}
+declare SIGNAL_NO=${2}
 declare NEW_EXIT_CODE=
 
-bashio::log.info "Home Assistant Core finish process exit code ${1}"
+bashio::log.info "Home Assistant Core finish process exit code ${APP_EXIT_CODE}"
 
 if [[ ${APP_EXIT_CODE} -eq ${RESTART_EXIT_CODE} ]]; then
   exit 0
 elif [[ ${APP_EXIT_CODE} -eq ${SIGNAL_EXIT_CODE} ]]; then
-  bashio::log.info "Home Assistant Core finish process received signal ${APP_EXIT_CODE}"
+  bashio::log.info "Home Assistant Core finish process received signal ${SIGNAL_NO}"
 
-  NEW_EXIT_CODE=$((128 + SYS_EXIT_CODE))
+  NEW_EXIT_CODE=$((128 + SIGNAL_NO))
   echo ${NEW_EXIT_CODE} > /run/s6-linux-init-container-results/exitcode
 
-  if [[ ${NEW_EXIT_CODE} -eq ${SIGTERM} ]]; then
+  if [[ ${SIGNAL_NO} -eq ${SIGTERM} ]]; then
     /run/s6/basedir/bin/halt
   fi
 else

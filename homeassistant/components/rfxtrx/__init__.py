@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -440,6 +440,14 @@ def get_device_tuple_from_identifiers(
     return DeviceTuple(identifier2[1], identifier2[2], identifier2[3])
 
 
+def get_identifiers_from_device_tuple(
+    device_tuple: DeviceTuple,
+) -> set[tuple[str, str]]:
+    """Calculate the device identifier from a device tuple."""
+    # work around legacy identifier, being a multi tuple value
+    return {(DOMAIN, *device_tuple)}  # type: ignore[arg-type]
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
@@ -456,6 +464,9 @@ class RfxtrxEntity(RestoreEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
+    _attr_assumed_state = True
+    _attr_has_entity_name = True
+    _attr_should_poll = False
     _device: rfxtrxmod.RFXtrxDevice
     _event: rfxtrxmod.RFXtrxEvent | None
 
@@ -466,11 +477,15 @@ class RfxtrxEntity(RestoreEntity):
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
-        self._name = f"{device.type_string} {device.id_string}"
+        self._attr_device_info = DeviceInfo(
+            identifiers=get_identifiers_from_device_tuple(device_id),
+            model=device.type_string,
+            name=f"{device.type_string} {device.id_string}",
+        )
+        self._attr_unique_id = "_".join(x for x in device_id)
         self._device = device
         self._event = event
         self._device_id = device_id
-        self._unique_id = "_".join(x for x in self._device_id)
         # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
         # group events regardless of their group indices.
         (self._group_id, _, _) = device.id_string.partition(":")
@@ -485,40 +500,11 @@ class RfxtrxEntity(RestoreEntity):
         )
 
     @property
-    def should_poll(self):
-        """No polling needed for a RFXtrx switch."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._event:
             return None
         return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
-
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return True
-
-    @property
-    def unique_id(self):
-        """Return unique identifier of remote device."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, *self._device_id)},
-            model=self._device.type_string,
-            name=f"{self._device.type_string} {self._device.id_string}",
-        )
 
     def _event_applies(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
         """Check if event applies to me."""
@@ -559,7 +545,6 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
-        self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]

@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "no_uuid": "Kodi-instansen har inte ett unikt ID. Detta beror troligen p\u00e5 en gammal Kodi-version (17.x eller l\u00e4gre). Du kan konfigurera integrationen manuellt eller uppgradera till en nyare Kodi-version.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "V\u00e4nligen ange ditt Kodi-anv\u00e4ndarnamn och l\u00f6senord. Dessa finns i System/Inst\u00e4llningar/N\u00e4tverk/Tj\u00e4nster."
+            },
+            "discovery_confirm": {
+                "description": "Vill du l\u00e4gga till Kodi (` {name} `) till Home Assistant?",
+                "title": "Uppt\u00e4ckte Kodi"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port",
+                    "ssl": "Anv\u00e4nd ett SSL certifikat"
+                },
+                "description": "Kodi anslutningsinformation. Se till att aktivera \"Till\u00e5t kontroll av Kodi via HTTP\" i System/Inst\u00e4llningar/N\u00e4tverk/Tj\u00e4nster."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "WebSocket-porten (kallas ibland TCP-port i Kodi). F\u00f6r att ansluta \u00f6ver WebSocket m\u00e5ste du aktivera \"Till\u00e5t program ... att styra Kodi\" i System/Inst\u00e4llningar/N\u00e4tverk/Tj\u00e4nster. Om WebSocket inte \u00e4r aktiverat, ta bort porten och l\u00e4mna tom."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} ombads att st\u00e4ngas av",
+            "turn_on": "{entity_name} har ombetts att sl\u00e5 p\u00e5"
+        }
+    }
+}

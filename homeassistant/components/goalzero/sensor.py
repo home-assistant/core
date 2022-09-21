@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import cast
 
-from goalzero import Yeti
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -28,22 +25,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import YetiEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+from .const import DOMAIN
+from .entity import GoalZeroEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wattsIn",
-        name="Watts In",
+        name="Watts in",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ampsIn",
-        name="Amps In",
+        name="Amps in",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -51,14 +47,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wattsOut",
-        name="Watts Out",
+        name="Watts out",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ampsOut",
-        name="Amps Out",
+        name="Amps out",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -66,7 +62,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="whOut",
-        name="WH Out",
+        name="Wh out",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -74,7 +70,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="whStored",
-        name="WH Stored",
+        name="Wh stored",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -88,13 +84,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="socPercent",
-        name="State of Charge Percent",
+        name="State of charge percent",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="timeToEmptyFull",
-        name="Time to Empty/Full",
+        name="Time to empty/full",
         device_class=TIME_MINUTES,
         native_unit_of_measurement=TIME_MINUTES,
     ),
@@ -107,7 +103,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wifiStrength",
-        name="Wifi Strength",
+        name="Wi-Fi strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         entity_registry_enabled_default=False,
@@ -115,7 +111,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="timestamp",
-        name="Total Run Time",
+        name="Total run time",
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -128,7 +124,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="ipAddr",
-        name="IP Address",
+        name="IP address",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -139,39 +135,19 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Goal Zero Yeti sensor."""
-    name = entry.data[CONF_NAME]
-    goalzero_data = hass.data[DOMAIN][entry.entry_id]
-    sensors = [
-        YetiSensor(
-            goalzero_data[DATA_KEY_API],
-            goalzero_data[DATA_KEY_COORDINATOR],
-            name,
+    async_add_entities(
+        GoalZeroSensor(
+            hass.data[DOMAIN][entry.entry_id],
             description,
-            entry.entry_id,
         )
         for description in SENSOR_TYPES
-    ]
-    async_add_entities(sensors, True)
+    )
 
 
-class YetiSensor(YetiEntity, SensorEntity):
+class GoalZeroSensor(GoalZeroEntity, SensorEntity):
     """Representation of a Goal Zero Yeti sensor."""
-
-    def __init__(
-        self,
-        api: Yeti,
-        coordinator: DataUpdateCoordinator,
-        name: str,
-        description: SensorEntityDescription,
-        server_unique_id: str,
-    ) -> None:
-        """Initialize a Goal Zero Yeti sensor."""
-        super().__init__(api, coordinator, name, server_unique_id)
-        self._attr_name = f"{name} {description.name}"
-        self.entity_description = description
-        self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        return cast(StateType, self.api.data[self.entity_description.key])
+        return cast(StateType, self._api.data[self.entity_description.key])

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "cannot_receive_deviceinfo": "Det gick inte att h\u00e4mta MAC-adress. Se till att enheten \u00e4r p\u00e5slagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av Anthem A/V-mottagare med YAML tas bort. \n\n Din befintliga YAML-konfiguration har automatiskt importerats till anv\u00e4ndargr\u00e4nssnittet. \n\n Ta bort Anthem A/V Receivers YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "Anthem A/V-mottagarens YAML-konfiguration tas bort"
+        }
+    }
+}

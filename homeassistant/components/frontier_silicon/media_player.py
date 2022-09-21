@@ -3,28 +3,22 @@ from __future__ import annotations
 
 import logging
 
-from afsapi import AFSAPI, ConnectionError as FSConnectionError, PlayState
+from afsapi import (
+    AFSAPI,
+    ConnectionError as FSConnectionError,
+    NotImplementedException as FSNotImplementedException,
+    PlayState,
+)
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_OPENING,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -74,16 +68,19 @@ async def async_setup_platform(
         webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
             f"http://{host}:{port}/device"
         )
-        afsapi = AFSAPI(webfsapi_url, password)
-        async_add_entities([AFSAPIDevice(name, afsapi)], True)
     except FSConnectionError:
         _LOGGER.error(
             "Could not add the FSAPI device at %s:%s -> %s", host, port, password
         )
+        return
+    afsapi = AFSAPI(webfsapi_url, password)
+    async_add_entities([AFSAPIDevice(name, afsapi)], True)
 
 
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
+
+    _attr_media_content_type: str = MediaType.MUSIC
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -99,6 +96,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
     def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
@@ -109,213 +107,194 @@ class AFSAPIDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
             name=name,
         )
+        self._attr_name = name
 
-        self._state = None
+        self._max_volume: int | None = None
 
-        self._name = name
-        self._title = None
-        self._artist = None
-        self._album_name = None
-        self._mute = None
-        self._source = None
-        self._source_list = None
-        self._media_image_url = None
-        self._max_volume = None
-        self._volume_level = None
+        self.__modes_by_label: dict[str, str] | None = None
+        self.__sound_modes_by_label: dict[str, str] | None = None
 
-        self.__modes_by_label = None
+        self._supports_sound_mode: bool = True
 
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._name
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._title
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self._artist
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self._album_name
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def state(self):
-        """Return the state of the player."""
-        return self._state
-
-    # source
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_list
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
-
-    @property
-    def media_image_url(self):
-        """Image url of current playing media."""
-        return self._media_image_url
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume_level
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest date and update device state."""
         afsapi = self.fs_device
         try:
             if await afsapi.get_power():
                 status = await afsapi.get_play_status()
-                self._state = {
-                    PlayState.PLAYING: STATE_PLAYING,
-                    PlayState.PAUSED: STATE_PAUSED,
-                    PlayState.STOPPED: STATE_IDLE,
-                    PlayState.LOADING: STATE_OPENING,
-                    None: STATE_IDLE,
-                }.get(status, STATE_UNKNOWN)
+                self._attr_state = {
+                    PlayState.PLAYING: MediaPlayerState.PLAYING,
+                    PlayState.PAUSED: MediaPlayerState.PAUSED,
+                    PlayState.STOPPED: MediaPlayerState.IDLE,
+                    PlayState.LOADING: MediaPlayerState.BUFFERING,
+                    None: MediaPlayerState.IDLE,
+                }.get(status)
             else:
-                self._state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
         except FSConnectionError:
             if self._attr_available:
                 _LOGGER.warning(
                     "Could not connect to %s. Did it go offline?",
-                    self._name or afsapi.webfsapi_endpoint,
+                    self.name or afsapi.webfsapi_endpoint,
                 )
-                self._state = STATE_UNAVAILABLE
                 self._attr_available = False
-        else:
-            if not self._attr_available:
-                _LOGGER.info(
-                    "Reconnected to %s",
-                    self._name or afsapi.webfsapi_endpoint,
+                return
+
+        if not self._attr_available:
+            _LOGGER.info(
+                "Reconnected to %s",
+                self.name or afsapi.webfsapi_endpoint,
+            )
+
+            self._attr_available = True
+        if not self._attr_name:
+            self._attr_name = await afsapi.get_friendly_name()
+
+        if not self._attr_source_list:
+            self.__modes_by_label = {
+                mode.label: mode.key for mode in await afsapi.get_modes()
+            }
+            self._attr_source_list = list(self.__modes_by_label)
+
+        if not self._attr_sound_mode_list and self._supports_sound_mode:
+            try:
+                equalisers = await afsapi.get_equalisers()
+            except FSNotImplementedException:
+                self._supports_sound_mode = False
+                # Remove SELECT_SOUND_MODE from the advertised supported features
+                self._attr_supported_features ^= (
+                    MediaPlayerEntityFeature.SELECT_SOUND_MODE
                 )
-
-                self._attr_available = True
-            if not self._name:
-                self._name = await afsapi.get_friendly_name()
-
-            if not self._source_list:
-                self.__modes_by_label = {
-                    mode.label: mode.key for mode in await afsapi.get_modes()
+            else:
+                self.__sound_modes_by_label = {
+                    sound_mode.label: sound_mode.key for sound_mode in equalisers
                 }
-                self._source_list = list(self.__modes_by_label.keys())
+                self._attr_sound_mode_list = list(self.__sound_modes_by_label)
 
-            # The API seems to include 'zero' in the number of steps (e.g. if the range is
-            # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
-            # If call to get_volume fails set to 0 and try again next time.
-            if not self._max_volume:
-                self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
+        # The API seems to include 'zero' in the number of steps (e.g. if the range is
+        # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
+        # If call to get_volume fails set to 0 and try again next time.
+        if not self._max_volume:
+            self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
-        if self._state not in [STATE_OFF, STATE_UNAVAILABLE]:
+        if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
             info_text = await afsapi.get_play_text()
 
-            self._title = " - ".join(filter(None, [info_name, info_text]))
-            self._artist = await afsapi.get_play_artist()
-            self._album_name = await afsapi.get_play_album()
+            self._attr_media_title = " - ".join(filter(None, [info_name, info_text]))
+            self._attr_media_artist = await afsapi.get_play_artist()
+            self._attr_media_album_name = await afsapi.get_play_album()
 
-            self._source = (await afsapi.get_mode()).label
-            self._mute = await afsapi.get_mute()
-            self._media_image_url = await afsapi.get_play_graphic()
+            radio_mode = await afsapi.get_mode()
+            self._attr_source = radio_mode.label if radio_mode is not None else None
+
+            self._attr_is_volume_muted = await afsapi.get_mute()
+            self._attr_media_image_url = await afsapi.get_play_graphic()
+
+            if self._supports_sound_mode:
+                try:
+                    eq_preset = await afsapi.get_eq_preset()
+                except FSNotImplementedException:
+                    self._supports_sound_mode = False
+                    # Remove SELECT_SOUND_MODE from the advertised supported features
+                    self._attr_supported_features ^= (
+                        MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                    )
+                else:
+                    self._attr_sound_mode = (
+                        eq_preset.label if eq_preset is not None else None
+                    )
 
             volume = await self.fs_device.get_volume()
 
             # Prevent division by zero if max_volume not known yet
-            self._volume_level = float(volume or 0) / (self._max_volume or 1)
+            self._attr_volume_level = float(volume or 0) / (self._max_volume or 1)
         else:
-            self._title = None
-            self._artist = None
-            self._album_name = None
+            self._attr_media_title = None
+            self._attr_media_artist = None
+            self._attr_media_album_name = None
 
-            self._source = None
-            self._mute = None
-            self._media_image_url = None
+            self._attr_source = None
 
-            self._volume_level = None
+            self._attr_is_volume_muted = None
+            self._attr_media_image_url = None
+            self._attr_sound_mode = None
+
+            self._attr_volume_level = None
 
     # Management actions
     # power control
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the device."""
         await self.fs_device.set_power(True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the device."""
         await self.fs_device.set_power(False)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.fs_device.play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.fs_device.pause()
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if "playing" in self._state:
+        if self._attr_state == MediaPlayerState.PLAYING:
             await self.fs_device.pause()
         else:
             await self.fs_device.play()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send play/pause command."""
         await self.fs_device.pause()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
         await self.fs_device.rewind()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command (results in fast-forward)."""
         await self.fs_device.forward()
 
-    # mute
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._mute
-
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self.fs_device.set_mute(mute)
 
     # volume
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
         await self.fs_device.set_volume(min(volume, self._max_volume))
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Send volume down command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) - 1
         await self.fs_device.set_volume(max(volume, 0))
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set
             volume = int(volume * self._max_volume)
             await self.fs_device.set_volume(volume)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.fs_device.set_power(True)
-        await self.fs_device.set_mode(self.__modes_by_label.get(source))
+        if (
+            self.__modes_by_label
+            and (mode := self.__modes_by_label.get(source)) is not None
+        ):
+            await self.fs_device.set_mode(mode)
+
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select EQ Preset."""
+        if (
+            self.__sound_modes_by_label
+            and (mode := self.__sound_modes_by_label.get(sound_mode)) is not None
+        ):
+            await self.fs_device.set_eq_preset(mode)
