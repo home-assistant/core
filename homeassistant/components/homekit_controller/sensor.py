@@ -532,6 +532,10 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_should_poll = False
 
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity cares about."""
+        return []
+
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
@@ -554,14 +558,13 @@ async def async_setup_entry(
     """Set up Homekit sensors."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
-    entities = []
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        entities.append(entity_class(conn, info))
+        async_add_entities(entity_class(conn, info))
         return True
 
     conn.add_listener(async_add_service)
@@ -573,7 +576,7 @@ async def async_setup_entry(
         if description.probe and not description.probe(char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        entities.append(SimpleSensor(conn, info, char, description))
+        async_add_entities(SimpleSensor(conn, info, char, description))
 
         return True
 
@@ -586,6 +589,4 @@ async def async_setup_entry(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
-        entities.append(RSSISensor(conn, info))
-
-    async_add_entities(entities)
+        async_add_entities(RSSISensor(conn, info))
