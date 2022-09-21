@@ -32,8 +32,8 @@ from homeassistant.components.media_player import (
     DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_TURN_ON,
     MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.components.samsungtv.const import (
@@ -749,7 +749,8 @@ async def test_supported_features_with_turnon(hass: HomeAssistant) -> None:
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
     assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
 

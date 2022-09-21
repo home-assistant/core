@@ -32,11 +32,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
+    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.const import (
@@ -90,11 +86,11 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Player"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_PLAY
-        | SUPPORT_PAUSE
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
+        == MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | media_player.BASE_SUPPORTED_FEATURES
     )
     assert ATTR_INPUT_SOURCE not in state.attributes
