@@ -231,6 +231,9 @@ class HKDevice:
                 self.async_update_available_state,
                 timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
             )
+            # BLE devices always get an RSSI sensor as well
+            if "sensor" not in self.platforms:
+                await self.async_load_platform("sensor")
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -513,22 +516,24 @@ class HKDevice:
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        tasks = []
+        to_load: set[str] = set()
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 if service.type in HOMEKIT_ACCESSORY_DISPATCH:
                     platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                     if platform not in self.platforms:
-                        tasks.append(self.async_load_platform(platform))
+                        to_load.add(platform)
 
                 for char in service.characteristics:
                     if char.type in CHARACTERISTIC_PLATFORMS:
                         platform = CHARACTERISTIC_PLATFORMS[char.type]
                         if platform not in self.platforms:
-                            tasks.append(self.async_load_platform(platform))
+                            to_load.add(platform)
 
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_load:
+            await asyncio.gather(
+                *[self.async_load_platform(platform) for platform in to_load]
+            )
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
