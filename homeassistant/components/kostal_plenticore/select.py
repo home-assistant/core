@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +24,6 @@ class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore select entities."""
 
     module_id: str
-    options: list[str]
 
 
 @dataclass
@@ -67,6 +67,8 @@ async def async_setup_entry(
     for description in SELECT_SETTINGS_DATA:
         if description.module_id not in available_settings_data:
             continue
+        if TYPE_CHECKING:
+            assert isinstance(description.options, list)
         needed_data_ids = {
             data_id for data_id in description.options if data_id != "None"
         }
@@ -109,7 +111,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
-        self._attr_options = description.options
         self._device_info = device_info
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
