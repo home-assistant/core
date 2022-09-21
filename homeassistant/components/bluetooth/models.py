@@ -190,11 +190,12 @@ class HaBleakClientWrapper(BleakClient):
     when an integration does this.
     """
 
-    def __init__(  # pylint: disable=super-init-not-called
+    def __init__(  # pylint: disable=super-init-not-called, keyword-arg-before-vararg
         self,
         address_or_ble_device: str | BLEDevice,
+        disconnected_callback: Callable[[BleakClient], None]
+        | None = None,  # kwargs first to match parent
         *args: Any,
-        disconnected_callback: Callable[[BleakClient], None] | None = None,
         timeout: float = 10.0,
         **kwargs: Any,
     ) -> None:
