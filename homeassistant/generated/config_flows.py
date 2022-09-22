@@ -254,6 +254,7 @@ FLOWS = {
         "nexia",
         "nextdns",
         "nfandroidtv",
+        "nibe_heatpump",
         "nightscout",
         "nina",
         "nmap_tracker",
