@@ -38,5 +38,17 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return value
 
+    return _convert(value, from_unit, to_unit)
+
+
+def normalize(value: float, from_unit: str) -> float:
+    """Convert an energy from one unit to kWh."""
+    if from_unit == NORMALIZED_UNIT:
+        return value
+    return _convert(value, from_unit, NORMALIZED_UNIT)
+
+
+def _convert(value: float, from_unit: str, to_unit: str) -> float:
+    """Convert an energy from one unit to another, bypassing checks."""
     watthours = value / UNIT_CONVERSION[from_unit]
     return watthours * UNIT_CONVERSION[to_unit]

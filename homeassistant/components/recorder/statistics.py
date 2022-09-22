@@ -133,11 +133,6 @@ def _convert_energy_from_kwh(to_unit: str, value: float | None) -> float | None:
     return energy_util.convert(value, energy_util.NORMALIZED_UNIT, to_unit)
 
 
-def _convert_energy_to_kwh(from_unit: str, value: float) -> float:
-    """Convert energy in from_unit to kWh."""
-    return energy_util.convert(value, from_unit, energy_util.NORMALIZED_UNIT)
-
-
 def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:
     """Convert power in W to to_unit."""
     if value is None:
@@ -164,11 +159,6 @@ def _convert_volume_from_m3(to_unit: str, value: float | None) -> float | None:
     if value is None:
         return None
     return volume_util.convert(value, volume_util.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_volume_to_m3(from_unit: str, value: float) -> float:
-    """Convert volume in from_unit to m³."""
-    return volume_util.convert(value, from_unit, volume_util.NORMALIZED_UNIT)
 
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
@@ -202,9 +192,9 @@ STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
 # Convert energy and volume statistics from the display unit configured by the user
 # to the normalized unit used for statistics.
 # This is used to support adjusting statistics in the display unit
-DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS: dict[str, Callable[[str, float], float]] = {
-    energy_util.NORMALIZED_UNIT: _convert_energy_to_kwh,
-    volume_util.NORMALIZED_UNIT: _convert_volume_to_m3,
+DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERTERS: dict[str, UnitConverter] = {
+    energy_util.NORMALIZED_UNIT: energy_util,
+    volume_util.NORMALIZED_UNIT: volume_util,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,11 +248,11 @@ def _get_display_to_statistic_unit_converter(
         return no_conversion
 
     if (
-        convert_fn := DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS.get(statistic_unit)
+        unit_converter := DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERTERS.get(statistic_unit)
     ) is None:
         return no_conversion
 
-    return partial(convert_fn, display_unit)
+    return partial(unit_converter.normalize, display_unit)
 
 
 @dataclasses.dataclass

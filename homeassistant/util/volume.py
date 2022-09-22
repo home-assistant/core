@@ -79,6 +79,13 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
     return _convert(volume, from_unit, to_unit)
 
 
+def normalize(volume: float, from_unit: str) -> float:
+    """Convert a volume from one unit to m³."""
+    if from_unit == NORMALIZED_UNIT:
+        return volume
+    return _convert(volume, from_unit, NORMALIZED_UNIT)
+
+
 def _convert(volume: float, from_unit: str, to_unit: str) -> float:
     """Convert a volume from one unit to another, bypassing checks."""
     cubic_meter = volume / UNIT_CONVERSION[from_unit]
