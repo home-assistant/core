@@ -1,6 +1,7 @@
 """The Nibe Heat Pump integration."""
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import timedelta
 
 from nibe.coil import Coil
@@ -162,11 +163,11 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
         async def read_coil(coil: Coil):
             return await self.connection.read_coil(coil)
 
-        callbacks: dict[int, list[CALLBACK_TYPE]] = {}
+        callbacks: dict[int, list[CALLBACK_TYPE]] = defaultdict(list)
         for update_callback, context in list(self._listeners.values()):
             assert isinstance(context, set)
             for address in context:
-                callbacks.setdefault(address, []).append(update_callback)
+                callbacks[address].append(update_callback)
 
         result: dict[int, Coil] = {}
 
