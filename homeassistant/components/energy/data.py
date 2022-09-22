@@ -142,6 +142,8 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
         {
             vol.Required("stat_energy_from"): str,
             vol.Optional("stat_cost"): vol.Any(str, None),
+            # entity_energy_from was removed in HA Core 2022.10
+            vol.Remove("entity_energy_from"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
@@ -154,6 +156,8 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("stat_energy_to"): str,
         vol.Optional("stat_compensation"): vol.Any(str, None),
+        # entity_energy_to was removed in HA Core 2022.10
+        vol.Remove("entity_energy_to"): vol.Any(str, None),
         vol.Optional("entity_energy_price"): vol.Any(str, None),
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
     }
@@ -211,6 +215,8 @@ GAS_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "gas",
         vol.Required("stat_energy_from"): str,
         vol.Optional("stat_cost"): vol.Any(str, None),
+        # entity_energy_from was removed in HA Core 2022.10
+        vol.Remove("entity_energy_from"): vol.Any(str, None),
         vol.Optional("entity_energy_price"): vol.Any(str, None),
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
     }
