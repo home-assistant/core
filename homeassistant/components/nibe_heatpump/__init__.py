@@ -139,13 +139,8 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
             return float(value)
         return None
 
-    async def async_write_coil(
-        self, coil: Coil | None, value: int | float | str
-    ) -> None:
+    async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
         """Write coil and update state."""
-        if not coil:
-            raise HomeAssistantError("No coil available")
-
         coil.value = value
         coil = await self.connection.write_coil(coil)
 
