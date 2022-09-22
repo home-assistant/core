@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +21,6 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
     TIME_HOURS,
 )
 from homeassistant.core import HomeAssistant
@@ -28,6 +28,78 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, CoilEntity, Coordinator
+
+UNIT_DESCRIPTIONS = {
+    "°C": SensorEntityDescription(
+        key="°C",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    "°F": SensorEntityDescription(
+        key="°F",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+    ),
+    "A": SensorEntityDescription(
+        key="A",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+    ),
+    "mA": SensorEntityDescription(
+        key="mA",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+    ),
+    "V": SensorEntityDescription(
+        key="V",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+    ),
+    "mV": SensorEntityDescription(
+        key="mV",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+    ),
+    "Wh": SensorEntityDescription(
+        key="Wh",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+    ),
+    "kWh": SensorEntityDescription(
+        key="kWh",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    "MWh": SensorEntityDescription(
+        key="MWh",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
+    ),
+    "h": SensorEntityDescription(
+        key="h",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=TIME_HOURS,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -40,38 +112,27 @@ async def async_setup_entry(
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        Sensor(coordinator, coil)
+        Sensor(coordinator, coil, UNIT_DESCRIPTIONS.get(coil.unit))
         for coil in coordinator.coils
         if not coil.is_writable and not coil.is_boolean
     )
 
 
-class Sensor(SensorEntity, CoilEntity):
+class Sensor(CoilEntity, SensorEntity):
     """Sensor entity."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
+    def __init__(
+        self,
+        coordinator: Coordinator,
+        coil: Coil,
+        entity_description: SensorEntityDescription | None,
+    ) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
-        self._attr_native_unit_of_measurement = coil.unit
-
-        unit = self.native_unit_of_measurement
-        if unit in {TEMP_CELSIUS, TEMP_FAHRENHEIT, TEMP_KELVIN}:
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        elif unit in {ELECTRIC_CURRENT_AMPERE, ELECTRIC_CURRENT_MILLIAMPERE}:
-            self._attr_device_class = SensorDeviceClass.CURRENT
-        elif unit in {ELECTRIC_POTENTIAL_VOLT, ELECTRIC_POTENTIAL_MILLIVOLT}:
-            self._attr_device_class = SensorDeviceClass.VOLTAGE
-        elif unit in {ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR}:
-            self._attr_device_class = SensorDeviceClass.ENERGY
-        elif unit in {TIME_HOURS}:
-            self._attr_device_class = SensorDeviceClass.DURATION
+        if entity_description:
+            self.entity_description = entity_description
         else:
-            self._attr_device_class = None
-
-        if unit:
-            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_native_unit_of_measurement = coil.unit
 
     def _async_read_coil(self, coil: Coil):
         self._attr_native_value = coil.value

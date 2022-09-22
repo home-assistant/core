@@ -91,6 +91,16 @@ async def test_address_inuse(hass: HomeAssistant, mock_connection: Mock) -> None
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"listening_port": "address_in_use"}
 
+    error.errno = errno.EACCES
+    mock_connection.return_value.start.side_effect = error
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_FLOW_USERDATA
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
 
 async def test_read_timeout(hass: HomeAssistant, mock_connection: Mock) -> None:
     """Test we handle cannot connect error."""
