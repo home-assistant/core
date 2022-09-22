@@ -47,7 +47,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-from homeassistant.helpers.typing import UnitConverter
 from homeassistant.util import (
     dt as dt_util,
     energy as energy_util,
@@ -55,6 +54,14 @@ from homeassistant.util import (
     pressure as pressure_util,
     temperature as temperature_util,
     volume as volume_util,
+)
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    EnergyConverter,
+    PowerConverter,
+    PressureConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
 from . import (
@@ -76,12 +83,12 @@ DEFAULT_STATISTICS = {
     STATE_CLASS_TOTAL_INCREASING: {"sum"},
 }
 
-UNIT_CONVERTERS: dict[str, UnitConverter] = {
-    SensorDeviceClass.ENERGY: energy_util,
-    SensorDeviceClass.POWER: power_util,
-    SensorDeviceClass.PRESSURE: pressure_util,
-    SensorDeviceClass.TEMPERATURE: temperature_util,
-    SensorDeviceClass.GAS: volume_util,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.POWER: PowerConverter,
+    SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.GAS: VolumeConverter,
 }
 
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
