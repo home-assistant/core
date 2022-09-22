@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
     heatpump.word_swap = entry.data[CONF_WORD_SWAP]
-    heatpump.initialize()
+    await hass.async_add_executor_job(heatpump.initialize)
 
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
