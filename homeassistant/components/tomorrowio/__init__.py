@@ -321,7 +321,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
         LOGGER.debug(
             "Fetching data for %s entries",
-            len(set(self.entry_id_to_location_dict.keys()) - set(data.keys())),
+            len(set(self.entry_id_to_location_dict) - set(data)),
         )
         for entry_id, location in self.entry_id_to_location_dict.items():
             if entry_id in data:
