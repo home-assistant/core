@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 import functools
 from json import JSONDecoder, loads
 import logging
+import sqlite3
 import ssl
 import threading
 from typing import Any
@@ -103,6 +104,11 @@ def pytest_runtest_setup():
 
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
     freezegun.api.FakeDatetime = HAFakeDatetime
+
+    def adapt_datetime(val):
+        return val.isoformat(" ")
+
+    sqlite3.register_adapter(HAFakeDatetime, adapt_datetime)
 
 
 def ha_datetime_to_fakedatetime(datetime):
@@ -991,6 +997,8 @@ def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
     with patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
     ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={

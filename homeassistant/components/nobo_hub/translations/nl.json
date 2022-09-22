@@ -4,6 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
+            "invalid_serial": "Ongeldig serienummer",
             "unknown": "Onverwachte fout"
         },
         "step": {

@@ -17,5 +17,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour webcam IP Android sera bient\u00f4t supprim\u00e9e"
+        }
     }
 }

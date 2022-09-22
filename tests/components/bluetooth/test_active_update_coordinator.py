@@ -20,7 +20,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 
-from tests.components.bluetooth import inject_bluetooth_service_info
+from . import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +36,20 @@ GENERIC_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+GENERIC_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
+    name="Generic",
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-95,
+    manufacturer_data={1: b"\x01\x01\x01\x01\x01\x01\x01\x01", 2: b"\x02"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 
 
-async def test_basic_usage(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_basic_usage(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test basic usage of the ActiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -83,7 +94,9 @@ async def test_basic_usage(hass: HomeAssistant, mock_bleak_scanner_start):
     cancel()
 
 
-async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_poll_can_be_skipped(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test need_poll callback works and can skip a poll if its not needed."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -128,7 +141,7 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
 
     flag = False
 
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
     assert async_handle_update.mock_calls[-1] == call({"testdata": None})
 
@@ -142,7 +155,7 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
 
 
 async def test_bleak_error_and_recover(
-    hass: HomeAssistant, mock_bleak_scanner_start, caplog
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters, caplog
 ):
     """Test bleak error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -196,14 +209,16 @@ async def test_bleak_error_and_recover(
 
     # Second poll works
     flag = False
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
 
 
-async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_poll_failure_and_recover(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -251,14 +266,16 @@ async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_
 
     # Second poll works
     flag = False
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
 
 
-async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_second_poll_needed(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """If a poll is queued, by the time it starts it may no longer be needed."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -297,7 +314,7 @@ async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start)
     # First poll gets queued
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # Second poll gets stuck behind first poll
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
     await hass.async_block_till_done()
     assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
@@ -305,7 +322,9 @@ async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start)
     cancel()
 
 
-async def test_rate_limit(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_rate_limit(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -343,7 +362,7 @@ async def test_rate_limit(hass: HomeAssistant, mock_bleak_scanner_start):
     # First poll gets queued
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # Second poll gets stuck behind first poll
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Third poll gets stuck behind first poll doesn't get queued
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
 

@@ -1,10 +1,13 @@
 """Tests for the Bluetooth integration manager."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bluetooth_adapters import AdvertisementHistory
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.manager import STALE_ADVERTISEMENT_SECONDS
+from homeassistant.setup import async_setup_component
 
 from . import (
     inject_advertisement_with_source,
@@ -116,6 +119,62 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
 
+async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
+    """Test switching adapters based on zero rssi."""
+
+    address = "44:44:33:11:23:45"
+
+    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal", rssi=0)
+    switchbot_adv_no_rssi = AdvertisementData(
+        local_name="wohand_no_rssi", service_uuids=[]
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_no_rssi, switchbot_adv_no_rssi, "hci0"
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_no_rssi
+    )
+
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal", rssi=-60)
+    switchbot_adv_good_signal = AdvertisementData(
+        local_name="wohand_good_signal", service_uuids=[]
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    inject_advertisement_with_source(
+        hass, switchbot_device_good_signal, switchbot_adv_no_rssi, "hci0"
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    # We should not switch adapters unless the signal hits the threshold
+    switchbot_device_similar_signal = BLEDevice(
+        address, "wohand_similar_signal", rssi=-62
+    )
+    switchbot_adv_similar_signal = AdvertisementData(
+        local_name="wohand_similar_signal", service_uuids=[]
+    )
+
+    inject_advertisement_with_source(
+        hass, switchbot_device_similar_signal, switchbot_adv_similar_signal, "hci0"
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+
 async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
     """Test switching adapters based on the previous advertisement being stale."""
 
@@ -176,3 +235,24 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
         bluetooth.async_ble_device_from_address(hass, address)
         is switchbot_device_poor_signal_hci1
     )
+
+
+async def test_restore_history_from_dbus(hass, one_adapter):
+    """Test we can restore history from dbus."""
+    address = "AA:BB:CC:CC:CC:FF"
+
+    ble_device = BLEDevice(address, "name")
+    history = {
+        address: AdvertisementHistory(
+            ble_device, AdvertisementData(local_name="name"), "hci0"
+        )
+    }
+
+    with patch(
+        "bluetooth_adapters.BlueZDBusObjects",
+        return_value=MagicMock(load=AsyncMock(), history=history),
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert bluetooth.async_ble_device_from_address(hass, address) is ble_device

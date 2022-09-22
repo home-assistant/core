@@ -45,7 +45,7 @@ from .models import (
     BluetoothServiceInfoBleak,
 )
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
-from .util import async_get_bluetooth_adapters
+from .util import async_get_bluetooth_adapters, async_load_history_from_system
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -65,6 +65,7 @@ APPLE_START_BYTES_WANTED: Final = {
 }
 
 RSSI_SWITCH_THRESHOLD = 6
+NO_RSSI_VALUE = -1000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def _prefer_previous_adv(
                 STALE_ADVERTISEMENT_SECONDS,
             )
         return False
-    if new.device.rssi - RSSI_SWITCH_THRESHOLD > old.device.rssi:
+    if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
         # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
         if new.source != old.source:
             _LOGGER.debug(
@@ -213,10 +214,15 @@ class BluetoothManager:
         self._adapters = await async_get_bluetooth_adapters()
         return self._find_adapter_by_address(address)
 
-    @hass_callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         install_multiple_bleak_catcher()
+        history = await async_load_history_from_system()
+        # Everything is connectable so it fall into both
+        # buckets since the host system can only provide
+        # connectable devices
+        self._history = history.copy()
+        self._connectable_history = history.copy()
         self.async_setup_unavailable_tracking()
 
     @hass_callback
@@ -323,12 +329,23 @@ class BluetoothManager:
             return
 
         self._history[address] = service_info
-        source = service_info.source
 
         if connectable:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
 
+        # If the advertisement data is the same as the last time we saw it, we
+        # don't need to do anything else.
+        if old_service_info and not (
+            service_info.manufacturer_data != old_service_info.manufacturer_data
+            or service_info.service_data != old_service_info.service_data
+            or service_info.service_uuids != old_service_info.service_uuids
+        ):
+            return
+
+        source = service_info.source
+        if connectable:
+            # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
@@ -394,11 +411,11 @@ class BluetoothManager:
             callback_matcher[CONNECTABLE] = matcher.get(CONNECTABLE, True)
 
         connectable = callback_matcher[CONNECTABLE]
-        self._callback_index.add_with_address(callback_matcher)
+        self._callback_index.add_callback_matcher(callback_matcher)
 
         @hass_callback
         def _async_remove_callback() -> None:
-            self._callback_index.remove_with_address(callback_matcher)
+            self._callback_index.remove_callback_matcher(callback_matcher)
 
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the

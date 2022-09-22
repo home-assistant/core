@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "A Bluetooth megb\u00edzhat\u00f3s\u00e1g\u00e1nak \u00e9s teljes\u00edtm\u00e9ny\u00e9nek jav\u00edt\u00e1sa \u00e9rdek\u00e9ben er\u0151sen javasoljuk, hogy friss\u00edtse a Home Assistant oper\u00e1ci\u00f3s rendszer\u00e9t 9.0 vagy \u00fajabb verzi\u00f3ra.",
+            "title": "Home Assistant oper\u00e1ci\u00f3s rendszer\u00e9nek friss\u00edt\u00e9se 9.0 vagy \u00fajabb verzi\u00f3ra"
+        }
+    },
     "options": {
         "step": {
             "init": {
