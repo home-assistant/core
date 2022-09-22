@@ -10,17 +10,21 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
+    PRESSURE_BAR,
+    PRESSURE_CBAR,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    PRESSURE_KPA,
+    PRESSURE_MBAR,
+    PRESSURE_MMHG,
     PRESSURE_PA,
+    PRESSURE_PSI,
     TEMP_CELSIUS,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME_CUBIC_METERS,
 )
 
-from . import (
-    pressure as pressure_util,
-    temperature as temperature_util,
-    volume as volume_util,
-)
+from . import temperature as temperature_util, volume as volume_util
 
 
 class BaseUnitConverter:
@@ -34,7 +38,7 @@ class BaseUnitConverter:
 class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     """Define the format of a conversion utility."""
 
-    DEVICE_CLASS: str
+    UNIT_CLASS: str
     UNIT_CONVERSION: dict[str, float]
 
     @classmethod
@@ -42,11 +46,11 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
         """Convert one unit of measurement to another."""
         if from_unit not in cls.VALID_UNITS:
             raise ValueError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.DEVICE_CLASS)
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
             )
         if to_unit not in cls.VALID_UNITS:
             raise ValueError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.DEVICE_CLASS)
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
         if not isinstance(value, Number):
@@ -62,7 +66,7 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
 class EnergyConverter(BaseUnitConverterWithUnitConversion):
     """Utility to convert energy values."""
 
-    DEVICE_CLASS = "energy"
+    UNIT_CLASS = "energy"
     NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
     UNIT_CONVERSION: dict[str, float] = {
         ENERGY_WATT_HOUR: 1 * 1000,
@@ -79,7 +83,7 @@ class EnergyConverter(BaseUnitConverterWithUnitConversion):
 class PowerConverter(BaseUnitConverterWithUnitConversion):
     """Utility to convert power values."""
 
-    DEVICE_CLASS = "power"
+    UNIT_CLASS = "power"
     NORMALIZED_UNIT = POWER_WATT
     UNIT_CONVERSION: dict[str, float] = {
         POWER_WATT: 1,
@@ -91,12 +95,33 @@ class PowerConverter(BaseUnitConverterWithUnitConversion):
     )
 
 
-class PressureConverter(BaseUnitConverter):
+class PressureConverter(BaseUnitConverterWithUnitConversion):
     """Utility to convert pressure values."""
 
+    UNIT_CLASS = "pressure"
     NORMALIZED_UNIT = PRESSURE_PA
-    VALID_UNITS = pressure_util.VALID_UNITS
-    convert = pressure_util.convert
+    UNIT_CONVERSION: dict[str, float] = {
+        PRESSURE_PA: 1,
+        PRESSURE_HPA: 1 / 100,
+        PRESSURE_KPA: 1 / 1000,
+        PRESSURE_BAR: 1 / 100000,
+        PRESSURE_CBAR: 1 / 1000,
+        PRESSURE_MBAR: 1 / 100,
+        PRESSURE_INHG: 1 / 3386.389,
+        PRESSURE_PSI: 1 / 6894.757,
+        PRESSURE_MMHG: 1 / 133.322,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        PRESSURE_PA,
+        PRESSURE_HPA,
+        PRESSURE_KPA,
+        PRESSURE_BAR,
+        PRESSURE_CBAR,
+        PRESSURE_MBAR,
+        PRESSURE_INHG,
+        PRESSURE_PSI,
+        PRESSURE_MMHG,
+    )
 
 
 class TemperatureConverter(BaseUnitConverter):
