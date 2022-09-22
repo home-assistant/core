@@ -39,7 +39,7 @@ class Select(CoilEntity, SelectEntity):
         self._attr_options = list(coil.mappings.values())
         self._attr_current_option = None
 
-    def _async_read_coil(self, coil: Coil):
+    def _async_read_coil(self, coil: Coil) -> None:
         self._attr_current_option = coil.value
 
     async def async_select_option(self, option: str) -> None:
