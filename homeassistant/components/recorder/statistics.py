@@ -179,11 +179,11 @@ def _convert_volume_to_m3(from_unit: str, value: float) -> float:
 
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
-    ENERGY_KILO_WATT_HOUR: "energy",
-    POWER_WATT: "power",
-    PRESSURE_PA: "pressure",
-    TEMP_CELSIUS: "temperature",
-    VOLUME_CUBIC_METERS: "volume",
+    energy_util.NORMALISED_UNIT: "energy",
+    power_util.NORMALISED_UNIT: "power",
+    pressure_util.NORMALISED_UNIT: "pressure",
+    temperature_util.NORMALISED_UNIT: "temperature",
+    volume_util.NORMALISED_UNIT: "volume",
 }
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, UnitConverter] = {

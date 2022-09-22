@@ -47,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.helpers.typing import UnitConverter
 from homeassistant.util import (
     dt as dt_util,
     energy as energy_util,
@@ -75,13 +76,12 @@ DEFAULT_STATISTICS = {
     STATE_CLASS_TOTAL_INCREASING: {"sum"},
 }
 
-# Normalized units which will be stored in the statistics table
-DEVICE_CLASS_UNITS: dict[str, str] = {
-    SensorDeviceClass.ENERGY: ENERGY_KILO_WATT_HOUR,
-    SensorDeviceClass.POWER: POWER_WATT,
-    SensorDeviceClass.PRESSURE: PRESSURE_PA,
-    SensorDeviceClass.TEMPERATURE: TEMP_CELSIUS,
-    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,
+UNIT_CONVERTERS: dict[str, UnitConverter] = {
+    SensorDeviceClass.ENERGY: energy_util,
+    SensorDeviceClass.POWER: power_util,
+    SensorDeviceClass.PRESSURE: pressure_util,
+    SensorDeviceClass.TEMPERATURE: temperature_util,
+    SensorDeviceClass.GAS: volume_util,
 }
 
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
@@ -272,7 +272,7 @@ def _normalize_states(
 
         fstates.append((UNIT_CONVERSIONS[device_class][state_unit](fstate), state))
 
-    return DEVICE_CLASS_UNITS[device_class], state_unit, fstates
+    return UNIT_CONVERTERS[device_class].NORMALISED_UNIT, state_unit, fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -503,7 +503,7 @@ def _compile_statistics(  # noqa: C901
                         "compiled statistics (%s). Generation of long term statistics "
                         "will be suppressed unless the unit changes back to %s. "
                         "Go to %s to fix this",
-                        "normalized " if device_class in DEVICE_CLASS_UNITS else "",
+                        "normalized " if device_class in UNIT_CONVERTERS else "",
                         entity_id,
                         normalized_unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -668,7 +668,7 @@ def list_statistic_ids(
         if state_unit not in UNIT_CONVERSIONS[device_class]:
             continue
 
-        statistics_unit = DEVICE_CLASS_UNITS[device_class]
+        statistics_unit = UNIT_CONVERTERS[device_class].NORMALISED_UNIT
         result[state.entity_id] = {
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
@@ -732,7 +732,7 @@ def validate_statistics(
                             },
                         )
                     )
-            elif metadata_unit != DEVICE_CLASS_UNITS[device_class]:
+            elif metadata_unit != UNIT_CONVERTERS[device_class].NORMALISED_UNIT:
                 # The unit in metadata is not supported for this device class
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -741,7 +741,9 @@ def validate_statistics(
                             "statistic_id": entity_id,
                             "device_class": device_class,
                             "metadata_unit": metadata_unit,
-                            "supported_unit": DEVICE_CLASS_UNITS[device_class],
+                            "supported_unit": UNIT_CONVERTERS[
+                                device_class
+                            ].NORMALISED_UNIT,
                         },
                     )
                 )
