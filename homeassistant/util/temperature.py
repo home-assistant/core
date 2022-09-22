@@ -53,13 +53,6 @@ def convert(
     if to_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, TEMPERATURE))
 
-    return convert_no_checks(temperature, from_unit, to_unit, interval)
-
-
-def convert_no_checks(
-    temperature: float, from_unit: str, to_unit: str, interval: bool = False
-) -> float:
-    """Convert a temperature from one unit to another."""
     if from_unit == to_unit:
         return temperature
 
