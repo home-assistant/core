@@ -47,7 +47,7 @@ async def test_async_setup_entry_auth_failed(hass: HomeAssistant):
 async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test device info."""
     entry = await setup_integration(hass, aioclient_mock)
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 
