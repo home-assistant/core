@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except FieldError as exception:
-            LOGGER.exception("Validation error")
+            LOGGER.info("Validation error %s", exception)
             errors[exception.field] = exception.error
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
