@@ -41,6 +41,8 @@ UNIT_CONVERSION: dict[str, float] = {
     VOLUME_CUBIC_FEET: 1 / CUBIC_FOOT_TO_CUBIC_METER,
 }
 
+NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+
 
 def liter_to_gallon(liter: float) -> float:
     """Convert a volume measurement in Liter to Gallon."""

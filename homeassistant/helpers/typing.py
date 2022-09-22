@@ -31,6 +31,7 @@ class UnitConverter(Protocol):
     """Define the format of a conversion utility."""
 
     VALID_UNITS: tuple[str, ...]
+    NORMALIZED_UNIT: str
 
     def convert(self, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
