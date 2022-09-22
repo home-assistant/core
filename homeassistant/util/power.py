@@ -19,7 +19,7 @@ UNIT_CONVERSION: dict[str, float] = {
     POWER_KILO_WATT: 1 / 1000,
 }
 
-NORMALISED_UNIT = POWER_WATT
+NORMALIZED_UNIT = POWER_WATT
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:

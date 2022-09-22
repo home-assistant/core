@@ -272,7 +272,7 @@ def _normalize_states(
 
         fstates.append((UNIT_CONVERSIONS[device_class][state_unit](fstate), state))
 
-    return UNIT_CONVERTERS[device_class].NORMALISED_UNIT, state_unit, fstates
+    return UNIT_CONVERTERS[device_class].NORMALIZED_UNIT, state_unit, fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -668,7 +668,7 @@ def list_statistic_ids(
         if state_unit not in UNIT_CONVERSIONS[device_class]:
             continue
 
-        statistics_unit = UNIT_CONVERTERS[device_class].NORMALISED_UNIT
+        statistics_unit = UNIT_CONVERTERS[device_class].NORMALIZED_UNIT
         result[state.entity_id] = {
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
@@ -732,7 +732,7 @@ def validate_statistics(
                             },
                         )
                     )
-            elif metadata_unit != UNIT_CONVERTERS[device_class].NORMALISED_UNIT:
+            elif metadata_unit != UNIT_CONVERTERS[device_class].NORMALIZED_UNIT:
                 # The unit in metadata is not supported for this device class
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -743,7 +743,7 @@ def validate_statistics(
                             "metadata_unit": metadata_unit,
                             "supported_unit": UNIT_CONVERTERS[
                                 device_class
-                            ].NORMALISED_UNIT,
+                            ].NORMALIZED_UNIT,
                         },
                     )
                 )

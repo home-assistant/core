@@ -22,7 +22,7 @@ UNIT_CONVERSION: dict[str, float] = {
     ENERGY_MEGA_WATT_HOUR: 1 / 1000,
 }
 
-NORMALISED_UNIT = ENERGY_KILO_WATT_HOUR
+NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
