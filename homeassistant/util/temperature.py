@@ -13,6 +13,8 @@ VALID_UNITS: tuple[str, ...] = (
     TEMP_KELVIN,
 )
 
+NORMALIZED_UNIT = TEMP_CELSIUS
+
 
 def fahrenheit_to_celsius(fahrenheit: float, interval: bool = False) -> float:
     """Convert a temperature in Fahrenheit to Celsius."""

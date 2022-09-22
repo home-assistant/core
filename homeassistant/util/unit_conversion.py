@@ -4,19 +4,11 @@ from __future__ import annotations
 from numbers import Number
 from typing import TypeVar
 
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    POWER_KILO_WATT,
-    POWER_WATT,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
-    UNIT_NOT_RECOGNIZED_TEMPLATE,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import UNIT_NOT_RECOGNIZED_TEMPLATE
 
 from . import (
+    energy as energy_util,
+    power as power_util,
     pressure as pressure_util,
     temperature as temperature_util,
     volume as volume_util,
@@ -66,39 +58,25 @@ class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     DEVICE_CLASS = "energy"
-    NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
-    UNIT_CONVERSION = {
-        ENERGY_WATT_HOUR: 1 * 1000,
-        ENERGY_KILO_WATT_HOUR: 1,
-        ENERGY_MEGA_WATT_HOUR: 1 / 1000,
-    }
-    VALID_UNITS = (
-        ENERGY_WATT_HOUR,
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
-    )
+    NORMALIZED_UNIT = energy_util.NORMALIZED_UNIT
+    UNIT_CONVERSION = energy_util.UNIT_CONVERSION
+    VALID_UNITS = energy_util.VALID_UNITS
 
 
 class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
     DEVICE_CLASS = "power"
-    NORMALIZED_UNIT = POWER_WATT
-    UNIT_CONVERSION = {
-        POWER_WATT: 1,
-        POWER_KILO_WATT: 1 / 1000,
-    }
-    VALID_UNITS = (
-        POWER_WATT,
-        POWER_KILO_WATT,
-    )
+    NORMALIZED_UNIT = power_util.NORMALIZED_UNIT
+    UNIT_CONVERSION = power_util.UNIT_CONVERSION
+    VALID_UNITS = power_util.VALID_UNITS
 
 
 class PressureConverter(BaseUnitConverter):
     """Utility to convert pressure values."""
 
     DEVICE_CLASS = "pressure"
-    NORMALIZED_UNIT = PRESSURE_PA
+    NORMALIZED_UNIT = pressure_util.NORMALIZED_UNIT
     UNIT_CONVERSION = pressure_util.UNIT_CONVERSION
     VALID_UNITS = pressure_util.VALID_UNITS
 
@@ -107,7 +85,7 @@ class TemperatureConverter(BaseUnitConverter):
     """Utility to convert temperature values."""
 
     DEVICE_CLASS = "temperature"
-    NORMALIZED_UNIT = TEMP_CELSIUS
+    NORMALIZED_UNIT = temperature_util.NORMALIZED_UNIT
     VALID_UNITS = temperature_util.VALID_UNITS
 
     @classmethod
@@ -120,6 +98,6 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     DEVICE_CLASS = "volume"
-    NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+    NORMALIZED_UNIT = volume_util.NORMALIZED_UNIT
     UNIT_CONVERSION = volume_util.UNIT_CONVERSION
     VALID_UNITS = volume_util.VALID_UNITS
