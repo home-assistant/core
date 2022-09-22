@@ -92,7 +92,10 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the valve off (closed)."""
+        """Turn the switch off."""
+        if not self._attr_is_on:
+            return
+
         try:
             async with self._client:
                 await self._client.valve.close()
@@ -103,7 +106,10 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the valve on (open)."""
+        """Turn the switch on."""
+        if self._attr_is_on:
+            return
+
         try:
             async with self._client:
                 await self._client.valve.open()

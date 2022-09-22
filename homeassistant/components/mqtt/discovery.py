@@ -7,6 +7,7 @@ import functools
 import logging
 import re
 import time
+from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -28,8 +29,12 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_TOPIC,
+    DATA_MQTT,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from .mixins import MqttData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +74,6 @@ INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
-LAST_DISCOVERY = "mqtt_last_discovery"
 
 TOPIC_BASE = "~"
 
@@ -80,12 +84,12 @@ class MQTTConfig(dict):
     discovery_data: dict
 
 
-def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
+def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
-def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple):
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]):
     """Clear entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
 
@@ -94,11 +98,12 @@ async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic, config_entry=None
 ) -> None:
     """Start MQTT Discovery."""
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     mqtt_integrations = {}
 
     async def async_discovery_message_received(msg):
         """Process the received message."""
-        hass.data[LAST_DISCOVERY] = time.time()
+        mqtt_data.last_discovery = time.time()
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
@@ -253,7 +258,7 @@ async def async_start(  # noqa: C901
         )
     )
 
-    hass.data[LAST_DISCOVERY] = time.time()
+    mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
     hass.data[INTEGRATION_UNSUBSCRIBE] = {}

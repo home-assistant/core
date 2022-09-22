@@ -73,6 +73,8 @@ STATE_CODE_TO_STATE = {
     17: STATE_CLEANING,  # "Zoned cleaning"
     18: STATE_CLEANING,  # "Segment cleaning"
     22: STATE_DOCKED,  # "Emptying the bin" on s7+
+    23: STATE_DOCKED,  # "Washing the mop" on s7maxV
+    26: STATE_RETURNING,  # "Going to wash the mop" on s7maxV
     100: STATE_DOCKED,  # "Charging complete"
     101: STATE_ERROR,  # "Device offline"
 }
