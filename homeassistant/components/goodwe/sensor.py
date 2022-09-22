@@ -40,6 +40,10 @@ from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
 BATTERY_SOC = "battery_soc"
 
 # Sensors that are reset to 0 at midnight.
+# The inverter is only powered by the solar panels and not mains power, so it goes dead when the sun goes down.
+# The "_day" sensors are reset to 0 when the inverter wakes up in the morning when the sun comes up and power to the inverter is restored.
+# This makes sure daily values are reset at midnight instead of at sunrise.
+# When the inverter has a battery connected, HomeAssistant will not reset the values but let the inverter reset them by looking at the unavailable state of the inverter.
 DAILY_RESET = ["e_day", "e_load_day"]
 
 _MAIN_SENSORS = (
