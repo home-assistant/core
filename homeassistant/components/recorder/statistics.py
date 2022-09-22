@@ -178,7 +178,7 @@ def _get_statistic_to_display_unit_converter(
         # Guard against invalid state unit in the DB
         return no_conversion
 
-    return partial(converter.from_normalized_unit, display_unit)  # type: ignore[return-value]
+    return partial(converter.from_normalized_unit, to_unit=display_unit)  # type: ignore[return-value]
 
 
 def _get_display_to_statistic_unit_converter(
@@ -197,7 +197,7 @@ def _get_display_to_statistic_unit_converter(
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
-    return partial(converter.to_normalized_unit, display_unit)
+    return partial(converter.to_normalized_unit, from_unit=display_unit)
 
 
 @dataclasses.dataclass
