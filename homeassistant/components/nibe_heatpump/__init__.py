@@ -13,7 +13,7 @@ from tenacity import RetryError, retry, retry_if_exception_type, stop_after_atte
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.update_coordinator import (
@@ -62,12 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = hass.data.setdefault(DOMAIN, {})
     data[entry.entry_id] = coordinator
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        await connection.stop()
-        raise
 
     reg = dr.async_get(hass)
     reg.async_get_or_create(
