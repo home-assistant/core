@@ -29,7 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType, UnitConverter
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
     energy as energy_util,
@@ -37,6 +37,14 @@ from homeassistant.util import (
     pressure as pressure_util,
     temperature as temperature_util,
     volume as volume_util,
+)
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    EnergyConverter,
+    PowerConverter,
+    PressureConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
@@ -179,12 +187,12 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
     volume_util.NORMALIZED_UNIT: "volume",
 }
 
-STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, UnitConverter] = {
-    energy_util.NORMALIZED_UNIT: energy_util,
-    power_util.NORMALIZED_UNIT: power_util,
-    pressure_util.NORMALIZED_UNIT: pressure_util,
-    temperature_util.NORMALIZED_UNIT: temperature_util,
-    volume_util.NORMALIZED_UNIT: volume_util,
+STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    energy_util.NORMALIZED_UNIT: EnergyConverter,
+    power_util.NORMALIZED_UNIT: PowerConverter,
+    pressure_util.NORMALIZED_UNIT: PressureConverter,
+    temperature_util.NORMALIZED_UNIT: TemperatureConverter,
+    volume_util.NORMALIZED_UNIT: VolumeConverter,
 }
 
 # Convert energy power, pressure, temperature and volume statistics from the

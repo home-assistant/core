@@ -28,8 +28,8 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, UnitConverter
-from homeassistant.util import temperature as temperature_util
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -70,8 +70,8 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERTERS: dict[str, UnitConverter] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
 # mypy: disallow-any-generics
