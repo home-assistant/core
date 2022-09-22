@@ -8,6 +8,14 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_BAR,
@@ -31,7 +39,18 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
-from .distance import FOOT_TO_M, IN_TO_M
+# Distance conversion constants
+MM_TO_M = 0.001  # 1 mm = 0.001 m
+CM_TO_M = 0.01  # 1 cm = 0.01 m
+KM_TO_M = 1000  # 1 km = 1000 m
+
+IN_TO_M = 0.0254  # 1 inch = 0.0254 m
+FOOT_TO_M = IN_TO_M * 12  # 12 inches = 1 foot (0.3048 m)
+YARD_TO_M = FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
+MILE_TO_M = YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
+
+NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -84,6 +103,33 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
 
         new_value = value / cls.UNIT_CONVERSION[from_unit]
         return new_value * cls.UNIT_CONVERSION[to_unit]
+
+
+class DistanceConverter(BaseUnitConverterWithUnitConversion):
+    """Utility to convert distance values."""
+
+    UNIT_CLASS = "distance"
+    NORMALIZED_UNIT = LENGTH_METERS
+    UNIT_CONVERSION: dict[str, float] = {
+        LENGTH_METERS: 1,
+        LENGTH_MILLIMETERS: 1 / MM_TO_M,
+        LENGTH_CENTIMETERS: 1 / CM_TO_M,
+        LENGTH_KILOMETERS: 1 / KM_TO_M,
+        LENGTH_INCHES: 1 / IN_TO_M,
+        LENGTH_FEET: 1 / FOOT_TO_M,
+        LENGTH_YARD: 1 / YARD_TO_M,
+        LENGTH_MILES: 1 / MILE_TO_M,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        LENGTH_KILOMETERS,
+        LENGTH_MILES,
+        LENGTH_FEET,
+        LENGTH_METERS,
+        LENGTH_CENTIMETERS,
+        LENGTH_MILLIMETERS,
+        LENGTH_INCHES,
+        LENGTH_YARD,
+    )
 
 
 class EnergyConverter(BaseUnitConverterWithUnitConversion):
