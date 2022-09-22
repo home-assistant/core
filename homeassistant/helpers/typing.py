@@ -37,7 +37,7 @@ class UnitConverter(Protocol):
         """Convert one unit of measurement to another."""
 
     def normalize(self, value: float, from_unit: str) -> float:
-        """Convert one unit of measurement to the normalised unit."""
+        """Convert one unit of measurement to the normalized unit."""
 
 
 # The following types should not used and
