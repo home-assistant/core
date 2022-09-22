@@ -60,21 +60,20 @@ WASHER_STATE = {
     5: "Cycle Washing",
 }
 
-CYCLE_FUNC = [
-    WasherDryer.get_cycle_status_filling,
-    WasherDryer.get_cycle_status_rinsing,
-    WasherDryer.get_cycle_status_sensing,
-    WasherDryer.get_cycle_status_soaking,
-    WasherDryer.get_cycle_status_spinning,
-    WasherDryer.get_cycle_status_washing,
-]
-
 
 def washer_state(washer: WasherDryer) -> str | None:
     """Determine correct states for a washer."""
+    cycle_func = [
+        washer.get_cycle_status_filling,
+        washer.get_cycle_status_rinsing,
+        washer.get_cycle_status_sensing,
+        washer.get_cycle_status_soaking,
+        washer.get_cycle_status_spinning,
+        washer.get_cycle_status_washing,
+    ]
     machine_state = washer.get_machine_state()
     machine_cycle = None
-    for count, func in zip(range(len(CYCLE_FUNC)), CYCLE_FUNC):
+    for count, func in zip(range(len(cycle_func)), cycle_func):
         if func(washer):
             machine_cycle = WASHER_STATE.get(count)
             break

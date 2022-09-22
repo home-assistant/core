@@ -27,10 +27,10 @@ async def update_sensor_state(
 
 async def test_sensor_values(
     hass: HomeAssistant,
+    mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
     mock_sensor2_api: MagicMock,
-    mock_sensor_api_instances: MagicMock,
-    #    mock_sensor_api2_instances: MagicMock,
+    # mock_sensor_api: MagicMock,
 ):
     """Test the sensor value callbacks."""
     await init_integration(hass)
@@ -66,46 +66,46 @@ async def test_sensor_values(
 
         if mock_instance_idx == 0:
             # Test the washer cycle states
-            sensor_test_instance.mock_instance.get_machine_state.return_value = (
-                MachineState.RunningMainCycle
-            )
-            mock_sensor_api_instances.get_cycle_status_filling.return_value = True
+            mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+            mock_instance.get_cycle_status_filling.return_value = True
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Filling"
 
-            mock_sensor_api_instances.get_cycle_status_filling.return_value = False
-            mock_sensor_api_instances.get_cycle_status_rinsing.return_value = True
+            mock_instance.get_cycle_status_filling.return_value = False
+            mock_instance.get_cycle_status_rinsing.return_value = True
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Rinsing"
 
-            mock_sensor_api_instances.get_cycle_status_rinsing.return_value = False
-            mock_sensor_api_instances.get_cycle_status_sensing.return_value = True
+            mock_instance.get_cycle_status_rinsing.return_value = False
+            mock_instance.get_cycle_status_sensing.return_value = True
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Sensing"
 
-            mock_sensor_api_instances.get_cycle_status_sensing.return_value = False
-            mock_sensor_api_instances.get_cycle_status_soaking.return_value = True
+            mock_instance.get_cycle_status_sensing.return_value = False
+            mock_instance.get_cycle_status_soaking.return_value = True
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Soaking"
 
-            mock_sensor_api_instances.get_cycle_status_soaking.return_value = False
-            mock_sensor_api_instances.get_cycle_status_spinning.return_value = True
+            mock_instance.get_cycle_status_soaking.return_value = False
+            mock_instance.get_cycle_status_spinning.return_value = True
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Spinning"
 
-            mock_sensor_api_instances.get_cycle_status_spinning.return_value = False
-            mock_sensor_api_instances.get_cycle_status_washing.return_value = True
+            mock_instance.get_cycle_status_spinning.return_value = False
+            mock_instance.get_cycle_status_washing.return_value = True
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Washing"
+
+            mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle

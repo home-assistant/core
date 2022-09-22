@@ -6,7 +6,6 @@ import pytest
 import whirlpool
 import whirlpool.aircon
 from whirlpool.backendselector import Brand, Region
-import whirlpool.washerdryer
 
 MOCK_SAID1 = "said1"
 MOCK_SAID2 = "said2"
@@ -149,8 +148,7 @@ def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_api):
 def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
     """Set up sensor API fixture."""
     with mock.patch(
-        # "homeassistant.components.whirlpool.sensor.WasherDryer"
-        "whirlpool.washerdryer.WasherDryer"
+        "homeassistant.components.whirlpool.sensor.WasherDryer"
     ) as mock_sensor_api:
         mock_sensor_api.side_effect = [
             mock_sensor1_api,
