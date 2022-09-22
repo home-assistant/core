@@ -71,6 +71,11 @@ class BaseHaScanner:
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
 
+    @property
+    def can_connect(self) -> bool:
+        """Return the backend has an available connection slot."""
+        return True
+
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
         return {
@@ -226,20 +231,63 @@ class HaBleakClientWrapper(BleakClient):
         Returns:
             Always returns ``True`` for backwards compatibility.
         """
-        assert MANAGER is not None
-        ble_device = MANAGER.async_ble_device_from_address(self.__address, True)
-        if ble_device is None:
-            raise BleakError(f"No device found for address {self.__address}")
-        if isinstance(ble_device.details, dict) and "client" in ble_device.details:
-            client_cls = ble_device.details["client"]
-        else:
-            client_cls = get_platform_client_backend_type()
-        self._backend = client_cls(
+        self._backend = self._get_backend()
+        return await super().connect(**kwargs)
+
+    def _get_backend_for_ble_device(
+        self, ble_device: BLEDevice
+    ) -> BaseBleakClient | None:
+        """Get the backend for a BLEDevice."""
+        details = ble_device.details
+        if not isinstance(details, dict) or "client" not in details:
+            # If client is not defined in details
+            # its the client for this platform
+            cls = get_platform_client_backend_type()
+            return cls(
+                ble_device,
+                disconnected_callback=self.__disconnected_callback,
+                timeout=self.__timeout,
+            )
+
+        connectable: Callable[[], bool] = details["connectable"]
+        # Make sure the backend can connect to the device
+        # as some backends have connection limits
+        if not connectable():
+            return None
+
+        client_cls: type[BaseBleakClient] = details["client"]
+        return client_cls(
             ble_device,
             disconnected_callback=self.__disconnected_callback,
             timeout=self.__timeout,
         )
-        return await super().connect(**kwargs)
+
+    def _get_backend(self) -> BaseBleakClient:
+        """Get the bleak backend for the given address."""
+        assert MANAGER is not None
+        address = self.__address
+        ble_device = MANAGER.async_ble_device_from_address(address, True)
+        if ble_device is None:
+            raise BleakError(f"No device found for address {address}")
+
+        if backend := self._get_backend_for_ble_device(ble_device):
+            return backend
+
+        for ble_device in sorted(
+            (
+                ble_device
+                for ble_device in MANAGER.async_all_discovered_devices(True)
+                if ble_device.address == address
+            ),
+            key=lambda ble_device: ble_device.rssi or -1000,
+            reverse=True,
+        ):
+            if backend := self._get_backend_for_ble_device(ble_device):
+                return backend
+
+        raise BleakError(
+            f"No backend with an available connection slot that can reach address {address} was found"
+        )
 
     async def disconnect(self) -> bool:
         """Disconnect from the device."""

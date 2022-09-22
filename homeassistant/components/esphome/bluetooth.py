@@ -32,14 +32,26 @@ from homeassistant.core import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .domain_data import DomainData
+from .entry_data import RuntimeEntryData
 
 ADV_STALE_TIME = 180  # seconds
 
 TWO_CHAR = re.compile("..")
 
 
+@hass_callback
+def async_can_connect(source: str) -> bool:
+    """Check if a given source can make another connection."""
+    domain_data = DomainData.get(async_get_hass())
+    client = domain_data.get_entry_data(domain_data.get_by_unique_id(source)).client
+    return bool(client.available_ble_connections)
+
+
 async def async_connect_scanner(
-    hass: HomeAssistant, entry: ConfigEntry, cli: APIClient
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    cli: APIClient,
+    entry_data: RuntimeEntryData,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
@@ -50,9 +62,11 @@ async def async_connect_scanner(
         scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+    entry_data.bluetooth_scanner = scanner
 
     @hass_callback
     def _async_unload() -> None:
+        entry_data.bluetooth_scanner = None
         for callback in unload_callbacks:
             callback()
 
@@ -81,6 +95,11 @@ class ESPHomeScanner(BaseHaScanner):
         return async_track_time_interval(
             self._hass, self._async_expire_devices, timedelta(seconds=30)
         )
+
+    @property
+    def can_connect(self) -> bool:
+        """Return the backend has an available connection slot."""
+        return False
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
@@ -113,7 +132,11 @@ class ESPHomeScanner(BaseHaScanner):
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=adv.name,
-            details={"client": ESPHomeClient, "source": self._source},
+            details={
+                "client": ESPHomeClient,
+                "source": self._source,
+                "connectable": lambda: async_can_connect(self._source),
+            },
             rssi=adv.rssi,
         )
         self._discovered_devices[address] = device
