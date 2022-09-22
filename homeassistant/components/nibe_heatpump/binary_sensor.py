@@ -1,4 +1,4 @@
-"""The Nibe Heat Pump sensors."""
+"""The Nibe Heat Pump binary sensors."""
 from __future__ import annotations
 
 from nibe.coil import Coil
@@ -22,14 +22,14 @@ async def async_setup_entry(
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        Sensor(coordinator, coil)
+        BinarySensor(coordinator, coil)
         for coil in coordinator.coils
         if not coil.is_writable and coil.is_boolean
     )
 
 
-class Sensor(BinarySensorEntity, CoilEntity):
-    """Sensor entity."""
+class BinarySensor(CoilEntity, BinarySensorEntity):
+    """Binary sensor entity."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -37,5 +37,5 @@ class Sensor(BinarySensorEntity, CoilEntity):
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
 
-    def _async_read_coil(self, coil: Coil):
+    def _async_read_coil(self, coil: Coil) -> None:
         self._attr_is_on = coil.value == "ON"
