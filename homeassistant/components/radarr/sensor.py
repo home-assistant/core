@@ -103,7 +103,7 @@ BYTE_SIZES = [
     DATA_MEGABYTES,
     DATA_GIGABYTES,
 ]
-# Deprecated in Home Assistant 2022.7
+# Deprecated in Home Assistant 2022.10
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
