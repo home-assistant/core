@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from numbers import Number
+from typing import TypeVar
 
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
@@ -33,6 +34,8 @@ from homeassistant.const import (
 
 from .distance import FOOT_TO_M, IN_TO_M
 
+_ValueT = TypeVar("_ValueT", float, None)
+
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
@@ -49,7 +52,7 @@ class BaseUnitConverter:
     VALID_UNITS: tuple[str, ...]
 
     @classmethod
-    def _check_arguments(cls, value: float, from_unit: str, to_unit: str) -> None:
+    def _check_arguments(cls, value: _ValueT, from_unit: str, to_unit: str) -> None:
         """Check that arguments are all valid."""
         if from_unit not in cls.VALID_UNITS:
             raise ValueError(
@@ -65,8 +68,18 @@ class BaseUnitConverter:
 
     @classmethod
     @abstractmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+    def convert(cls, value: _ValueT, from_unit: str, to_unit: str) -> _ValueT:
         """Convert one unit of measurement to another."""
+
+    @classmethod
+    def from_normalized_unit(cls, to_unit: str, value: _ValueT) -> _ValueT:
+        """Convert one unit of measurement to another."""
+        return cls.convert(value, cls.NORMALIZED_UNIT, to_unit)
+
+    @classmethod
+    def to_normalized_unit(cls, from_unit: str, value: float) -> float:
+        """Convert one unit of measurement to another."""
+        return cls.convert(value, from_unit, cls.NORMALIZED_UNIT)
 
 
 class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
@@ -75,12 +88,12 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     UNIT_CONVERSION: dict[str, float]
 
     @classmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+    def convert(cls, value: _ValueT, from_unit: str, to_unit: str) -> _ValueT:
         """Convert one unit of measurement to another."""
-        cls._check_arguments(value, from_unit, to_unit)
-
-        if from_unit == to_unit:
+        if value is None or from_unit == to_unit:
             return value
+
+        cls._check_arguments(value, from_unit, to_unit)
 
         new_value = value / cls.UNIT_CONVERSION[from_unit]
         return new_value * cls.UNIT_CONVERSION[to_unit]
@@ -160,13 +173,13 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     def convert(
-        cls, value: float, from_unit: str, to_unit: str, *, interval: bool = False
-    ) -> float:
+        cls, value: _ValueT, from_unit: str, to_unit: str, *, interval: bool = False
+    ) -> _ValueT:
         """Convert a temperature from one unit to another."""
-        cls._check_arguments(value, from_unit, to_unit)
-
-        if from_unit == to_unit:
+        if value is None or from_unit == to_unit:
             return value
+
+        cls._check_arguments(value, from_unit, to_unit)
 
         if from_unit == TEMP_CELSIUS:
             if to_unit == TEMP_FAHRENHEIT:

@@ -13,7 +13,7 @@ import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 from sqlalchemy import bindparam, func, lambda_stmt, select
 from sqlalchemy.engine.row import Row
@@ -126,52 +126,7 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.statistic_id,
 ]
 
-
-def _convert_energy_from_kwh(to_unit: str, value: float | None) -> float | None:
-    """Convert energy in kWh to to_unit."""
-    if value is None:
-        return None
-    return EnergyConverter.convert(value, EnergyConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_energy_to_kwh(from_unit: str, value: float) -> float:
-    """Convert energy in from_unit to kWh."""
-    return EnergyConverter.convert(value, from_unit, EnergyConverter.NORMALIZED_UNIT)
-
-
-def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:
-    """Convert power in W to to_unit."""
-    if value is None:
-        return None
-    return PowerConverter.convert(value, PowerConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_pressure_from_pa(to_unit: str, value: float | None) -> float | None:
-    """Convert pressure in Pa to to_unit."""
-    if value is None:
-        return None
-    return PressureConverter.convert(value, PressureConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_temperature_from_c(to_unit: str, value: float | None) -> float | None:
-    """Convert temperature in °C to to_unit."""
-    if value is None:
-        return None
-    return TemperatureConverter.convert(
-        value, TemperatureConverter.NORMALIZED_UNIT, to_unit
-    )
-
-
-def _convert_volume_from_m3(to_unit: str, value: float | None) -> float | None:
-    """Convert volume in m³ to to_unit."""
-    if value is None:
-        return None
-    return VolumeConverter.convert(value, VolumeConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_volume_to_m3(from_unit: str, value: float) -> float:
-    """Convert volume in from_unit to m³."""
-    return VolumeConverter.convert(value, from_unit, VolumeConverter.NORMALIZED_UNIT)
+_ValueT = TypeVar("_ValueT", float, None)
 
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
@@ -190,25 +145,6 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     VolumeConverter.NORMALIZED_UNIT: VolumeConverter,
 }
 
-# Convert energy power, pressure, temperature and volume statistics from the
-# normalized unit used for statistics to the unit configured by the user
-STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
-    str, Callable[[str, float | None], float | None]
-] = {
-    EnergyConverter.NORMALIZED_UNIT: _convert_energy_from_kwh,
-    PowerConverter.NORMALIZED_UNIT: _convert_power_from_w,
-    PressureConverter.NORMALIZED_UNIT: _convert_pressure_from_pa,
-    TemperatureConverter.NORMALIZED_UNIT: _convert_temperature_from_c,
-    VolumeConverter.NORMALIZED_UNIT: _convert_volume_from_m3,
-}
-
-# Convert energy and volume statistics from the display unit configured by the user
-# to the normalized unit used for statistics.
-# This is used to support adjusting statistics in the display unit
-DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS: dict[str, Callable[[str, float], float]] = {
-    EnergyConverter.NORMALIZED_UNIT: _convert_energy_to_kwh,
-    VolumeConverter.NORMALIZED_UNIT: _convert_volume_to_m3,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,19 +153,17 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-) -> Callable[[float | None], float | None]:
+) -> Callable[[_ValueT], _ValueT]:
     """Prepare a converter from the normalized statistics unit to display unit."""
 
-    def no_conversion(val: float | None) -> float | None:
+    def no_conversion(val: _ValueT) -> _ValueT:
         """Return val."""
         return val
 
     if statistic_unit is None:
         return no_conversion
 
-    if (
-        convert_fn := STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS.get(statistic_unit)
-    ) is None:
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
     display_unit: str | None
@@ -244,7 +178,7 @@ def _get_statistic_to_display_unit_converter(
         # Guard against invalid state unit in the DB
         return no_conversion
 
-    return partial(convert_fn, display_unit)
+    return partial(converter.from_normalized_unit, display_unit)  # type: ignore[return-value]
 
 
 def _get_display_to_statistic_unit_converter(
@@ -260,12 +194,10 @@ def _get_display_to_statistic_unit_converter(
     if statistic_unit is None:
         return no_conversion
 
-    if (
-        convert_fn := DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS.get(statistic_unit)
-    ) is None:
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
-    return partial(convert_fn, display_unit)
+    return partial(converter.to_normalized_unit, display_unit)
 
 
 @dataclasses.dataclass
@@ -1398,7 +1330,7 @@ def _sorted_statistics_to_dict(
     need_stat_at_start_time: set[int] = set()
     stats_at_start_time = {}
 
-    def no_conversion(val: float | None) -> float | None:
+    def no_conversion(val: _ValueT) -> _ValueT:
         """Return val."""
         return val
 
