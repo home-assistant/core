@@ -1,7 +1,7 @@
 """Typing Helpers for Home Assistant."""
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Optional, Protocol, Union
+from typing import Any, Optional, Union
 
 import homeassistant.core
 
@@ -25,16 +25,6 @@ class UndefinedType(Enum):
 
 
 UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
-
-
-class UnitConverter(Protocol):
-    """Define the format of a conversion utility."""
-
-    VALID_UNITS: tuple[str, ...]
-    NORMALIZED_UNIT: str
-
-    def convert(self, value: float, from_unit: str, to_unit: str) -> float:
-        """Convert one unit of measurement to another."""
 
 
 # The following types should not used and

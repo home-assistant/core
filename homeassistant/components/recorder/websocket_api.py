@@ -19,12 +19,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
-from homeassistant.util import (
-    dt as dt_util,
-    energy as energy_util,
-    power as power_util,
-    pressure as pressure_util,
-    temperature as temperature_util,
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    EnergyConverter,
+    PowerConverter,
+    PressureConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import MAX_QUEUE_BACKLOG
@@ -121,11 +122,11 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
         vol.Optional("units"): vol.Schema(
             {
-                vol.Optional("energy"): vol.In(energy_util.VALID_UNITS),
-                vol.Optional("power"): vol.In(power_util.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(pressure_util.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(temperature_util.VALID_UNITS),
-                vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
             }
         ),
     }
