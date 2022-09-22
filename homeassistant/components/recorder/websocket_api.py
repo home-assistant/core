@@ -327,8 +327,9 @@ async def ws_adjust_sum_statistics(
             vol.Required("has_sum"): bool,
             vol.Required("name"): vol.Any(str, None),
             vol.Required("source"): str,
+            vol.Required("state_unit_of_measurement"): vol.Any(str, None),
             vol.Required("statistic_id"): str,
-            vol.Required("unit_of_measurement"): vol.Any(str, None),
+            vol.Optional("unit_of_measurement"): vol.Any(str, None),
         },
         vol.Required("stats"): [
             {
@@ -350,7 +351,8 @@ def ws_import_statistics(
     """Import statistics."""
     metadata = msg["metadata"]
     stats = msg["stats"]
-    metadata["state_unit_of_measurement"] = metadata["unit_of_measurement"]
+    if "unit_of_measurement" not in metadata:
+        metadata["unit_of_measurement"] = metadata["state_unit_of_measurement"]
 
     if valid_entity_id(metadata["statistic_id"]):
         async_import_statistics(hass, metadata, stats)

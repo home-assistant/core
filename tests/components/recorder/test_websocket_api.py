@@ -1227,6 +1227,7 @@ async def test_import_statistics(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
+        "state_unit_of_measurement": "kWh",
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
     }
@@ -1425,6 +1426,75 @@ async def test_import_statistics(
         ("recorder", "sensor.total_energy_import"),
     ),
 )
+async def test_import_statistics_wrong_units(
+    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+):
+    """Test importing statistics with wrong units is not possible."""
+    client = await hass_ws_client()
+
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
+
+    external_statistics1 = {
+        "start": period1.isoformat(),
+        "last_reset": None,
+        "state": 0,
+        "sum": 2,
+    }
+    external_statistics2 = {
+        "start": period2.isoformat(),
+        "last_reset": None,
+        "state": 1,
+        "sum": 3,
+    }
+
+    external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": source,
+        "state_unit_of_measurement": "W",
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "kWh",
+    }
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/import_statistics",
+            "metadata": external_metadata,
+            "stats": [external_statistics1, external_statistics2],
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "unknown_error",
+        "message": "Invalid units kWh,W",
+    }
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {}
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == []
+    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    assert metadata == {}
+    last_stats = get_last_statistics(hass, 1, statistic_id, True)
+    assert last_stats == {}
+
+
+@pytest.mark.parametrize(
+    "source, statistic_id",
+    (
+        ("test", "test:total_energy_import"),
+        ("recorder", "sensor.total_energy_import"),
+    ),
+)
 async def test_adjust_sum_statistics_energy(
     hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
 ):
@@ -1456,6 +1526,7 @@ async def test_adjust_sum_statistics_energy(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
+        "state_unit_of_measurement": "kWh",
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
     }
@@ -1654,6 +1725,7 @@ async def test_adjust_sum_statistics_gas(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
+        "state_unit_of_measurement": "m³",
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
     }
@@ -1818,8 +1890,24 @@ async def test_adjust_sum_statistics_gas(
     "state_unit, statistic_unit, unit_class, factor, valid_units, invalid_units",
     (
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
+        (
+            "MWh",
+            "kWh",
+            "energy",
+            0.001,
+            ("Wh", "kWh", "MWh"),
+            ("ft³", "m³", "cats", None),
+        ),
         ("MWh", "MWh", None, 1, ("MWh",), ("Wh", "kWh", "ft³", "m³", "cats", None)),
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
+        (
+            "ft³",
+            "m³",
+            "volume",
+            35.3147,
+            ("ft³", "m³"),
+            ("Wh", "kWh", "MWh", "cats", None),
+        ),
         ("ft³", "ft³", None, 1, ("ft³",), ("m³", "Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
         (None, None, None, 1, (None,), ("cats",)),
@@ -1867,6 +1955,7 @@ async def test_adjust_sum_statistics_errors(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
+        "state_unit_of_measurement": state_unit,
         "statistic_id": statistic_id,
         "unit_of_measurement": statistic_unit,
     }
