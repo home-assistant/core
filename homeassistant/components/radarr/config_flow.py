@@ -1,6 +1,7 @@
 """Config flow for Radarr."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientConnectorError
@@ -34,7 +35,7 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.entry: ConfigEntry | None = None
 
-    async def async_step_reauth(self, _: dict[str, str | bool]) -> FlowResult:
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 

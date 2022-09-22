@@ -48,12 +48,8 @@
     "tmdbId": 0,
     "titleSlug": "string",
     "certification": "string",
-    "genres": [
-      "string"
-    ],
-    "tags": [
-      0
-    ],
+    "genres": ["string"],
+    "tags": [0],
     "added": "string",
     "ratings": {
       "votes": 0,
@@ -89,7 +85,7 @@
         "videoBitDepth": 8,
         "videoBitrate": 1000000,
         "videoCodec": "x264",
-        "videoFps": 25.000,
+        "videoFps": 25.0,
         "resolution": "1280x534",
         "runTime": "1:49:06",
         "scanType": "Progressive",
