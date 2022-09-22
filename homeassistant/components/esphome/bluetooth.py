@@ -18,6 +18,7 @@ from bleak.backends.service import BleakGATTServiceCollection
 
 from homeassistant.components.bluetooth import (
     BaseHaScanner,
+    HaBluetoothConnector,
     async_get_advertisement_callback,
     async_register_scanner,
 )
@@ -55,8 +56,14 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     assert entry.unique_id is not None
+    source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
-    scanner = ESPHomeScanner(hass, entry.unique_id, new_info_callback)
+    connector = HaBluetoothConnector(
+        client=ESPHomeClient,
+        source=source,
+        can_connect=lambda: async_can_connect(source),
+    )
+    scanner = ESPHomeScanner(hass, source, new_info_callback, connector)
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
         scanner.async_setup(),
@@ -81,6 +88,7 @@ class ESPHomeScanner(BaseHaScanner):
         hass: HomeAssistant,
         scanner_id: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
+        connector: HaBluetoothConnector,
     ) -> None:
         """Initialize the scanner."""
         self._hass = hass
@@ -88,6 +96,7 @@ class ESPHomeScanner(BaseHaScanner):
         self._discovered_devices: dict[str, BLEDevice] = {}
         self._discovered_device_timestamps: dict[str, float] = {}
         self._source = scanner_id
+        self._connector = connector
 
     @hass_callback
     def async_setup(self) -> CALLBACK_TYPE:
@@ -95,11 +104,6 @@ class ESPHomeScanner(BaseHaScanner):
         return async_track_time_interval(
             self._hass, self._async_expire_devices, timedelta(seconds=30)
         )
-
-    @property
-    def can_connect(self) -> bool:
-        """Return the backend has an available connection slot."""
-        return False
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
@@ -132,11 +136,7 @@ class ESPHomeScanner(BaseHaScanner):
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=adv.name,
-            details={
-                "client": ESPHomeClient,
-                "source": self._source,
-                "connectable": lambda: async_can_connect(self._source),
-            },
+            details={"connector": self._connector},
             rssi=adv.rssi,
         )
         self._discovered_devices[address] = device

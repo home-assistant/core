@@ -52,6 +52,7 @@ from .models import (
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBleakScannerWrapper,
+    HaBluetoothConnector,
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
@@ -78,6 +79,7 @@ __all__ = [
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
     "BluetoothCallback",
+    "HaBluetoothConnector",
     "SOURCE_LOCAL",
 ]
 

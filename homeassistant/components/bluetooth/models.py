@@ -63,6 +63,15 @@ BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
+@dataclass
+class HaBluetoothConnector:
+    """Data for how to connect a BLEDevice from a given scanner."""
+
+    client: type[BaseBleakClient]
+    source: str
+    can_connect: Callable[[], bool]
+
+
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
@@ -70,11 +79,6 @@ class BaseHaScanner:
     @abstractmethod
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-
-    @property
-    def can_connect(self) -> bool:
-        """Return the backend has an available connection slot."""
-        return True
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
@@ -239,7 +243,7 @@ class HaBleakClientWrapper(BleakClient):
     ) -> BaseBleakClient | None:
         """Get the backend for a BLEDevice."""
         details = ble_device.details
-        if not isinstance(details, dict) or "client" not in details:
+        if not isinstance(details, dict) or "connector" not in details:
             # If client is not defined in details
             # its the client for this platform
             cls = get_platform_client_backend_type()
@@ -249,14 +253,13 @@ class HaBleakClientWrapper(BleakClient):
                 timeout=self.__timeout,
             )
 
-        connectable: Callable[[], bool] = details["connectable"]
+        connector: HaBluetoothConnector = details["connector"]
         # Make sure the backend can connect to the device
         # as some backends have connection limits
-        if not connectable():
+        if not connector.can_connect():
             return None
 
-        client_cls: type[BaseBleakClient] = details["client"]
-        return client_cls(
+        return connector.client(
             ble_device,
             disconnected_callback=self.__disconnected_callback,
             timeout=self.__timeout,
