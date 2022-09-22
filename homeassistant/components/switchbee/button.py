@@ -46,5 +46,5 @@ class SwitchBeeButton(CoordinatorEntity[SwitchBeeCoordinator], ButtonEntity):
             await self.coordinator.api.set_state(self._device_id, ApiStateCommand.ON)
         except SwitchBeeError as exp:
             raise HomeAssistantError(
-                f"Failed to fire scenario {self._attr_name}, {str(exp)}"
+                f"Failed to fire scenario {self.name}, {str(exp)}"
             ) from exp
