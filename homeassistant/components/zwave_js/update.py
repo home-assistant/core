@@ -48,14 +48,17 @@ async def async_setup_entry(
     """Set up Z-Wave button from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
-    semaphore = asyncio.Semaphore(3)
+    update_semaphore = asyncio.Semaphore(3)
+    install_lock = asyncio.Lock()
 
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZWaveNodeFirmwareUpdate(driver, node, semaphore)])
+        async_add_entities(
+            [ZWaveNodeFirmwareUpdate(driver, node, update_semaphore, install_lock)]
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -80,12 +83,17 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, driver: Driver, node: ZwaveNode, semaphore: asyncio.Semaphore
+        self,
+        driver: Driver,
+        node: ZwaveNode,
+        update_semaphore: asyncio.Semaphore,
+        install_lock: asyncio.Lock,
     ) -> None:
         """Initialize a Z-Wave device firmware update entity."""
         self.driver = driver
         self.node = node
-        self.semaphore = semaphore
+        self._update_semaphore = update_semaphore
+        self._install_lock = install_lock
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
@@ -174,7 +182,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 return
 
         try:
-            async with self.semaphore:
+            async with self._update_semaphore:
                 available_firmware_updates = (
                     await self.driver.controller.async_get_available_firmware_updates(
                         self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
@@ -222,6 +230,12 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        if self._install_lock.locked():
+            raise HomeAssistantError(
+                "A firmware update is already in progress. Only one update can be "
+                "installed at a time."
+            )
+        await self._install_lock.acquire()
         firmware = self._latest_version_firmware
         assert firmware
         self._unsub_firmware_events_and_reset_progress(False)
@@ -275,6 +289,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._attr_installed_version = self._attr_latest_version = firmware.version
         self._latest_version_firmware = None
         self._unsub_firmware_events_and_reset_progress()
+        self._install_lock.release()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""

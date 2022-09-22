@@ -108,10 +108,18 @@ def async_set_update_interval(
         (24 * 60 * len(entries) * api.num_api_requests)
         / (api.max_requests_per_day * 0.9)
     )
-    LOGGER.debug("Number of config entries: %s", len(entries))
-    LOGGER.debug("Number of API Requests per call: %s", api.num_api_requests)
-    LOGGER.debug("Max requests per day: %s", api.max_requests_per_day)
-    LOGGER.debug("Update interval: %s minutes", minutes)
+    LOGGER.debug(
+        (
+            "Number of config entries: %s\n"
+            "Number of API Requests per call: %s\n"
+            "Max requests per day: %s\n"
+            "Update interval: %s minutes"
+        ),
+        len(entries),
+        api.num_api_requests,
+        api.max_requests_per_day,
+        minutes,
+    )
     return timedelta(minutes=minutes)
 
 
