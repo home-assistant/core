@@ -213,7 +213,7 @@ def _normalize_states(
                 )
             continue
 
-        fstates.append((unit_converter.normalize(fstate, state_unit), state))
+        fstates.append((unit_converter.to_normalized_unit(fstate, state_unit), state))
 
     return UNIT_CONVERTERS[device_class].NORMALIZED_UNIT, state_unit, fstates
 

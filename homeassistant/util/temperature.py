@@ -75,7 +75,7 @@ def convert(
     return celsius_to_fahrenheit(kelvin_to_celsius(temperature, interval), interval)
 
 
-def normalize(temperature: float, from_unit: str) -> float:
+def to_normalized_unit(temperature: float, from_unit: str) -> float:
     """Convert a temperature from one unit to °C."""
     if from_unit == NORMALIZED_UNIT:
         return temperature

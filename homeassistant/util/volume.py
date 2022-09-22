@@ -79,7 +79,7 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
     return _convert(volume, from_unit, to_unit)
 
 
-def normalize(volume: float, from_unit: str) -> float:
+def to_normalized_unit(volume: float, from_unit: str) -> float:
     """Convert a volume from one unit to m³."""
     if from_unit == NORMALIZED_UNIT:
         return volume
