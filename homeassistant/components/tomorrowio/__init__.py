@@ -18,7 +18,7 @@ from pytomorrowio.exceptions import (
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -26,8 +26,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -113,85 +113,9 @@ def async_set_update_interval(
     return timedelta(minutes=minutes)
 
 
-@callback
-def async_migrate_entry_from_climacell(
-    hass: HomeAssistant,
-    dev_reg: dr.DeviceRegistry,
-    entry: ConfigEntry,
-    device: dr.DeviceEntry,
-) -> None:
-    """Migrate a config entry from a Climacell entry."""
-    # Remove the old config entry ID from the entry data so we don't try this again
-    # on the next setup
-    data = entry.data.copy()
-    old_config_entry_id = data.pop("old_config_entry_id")
-    hass.config_entries.async_update_entry(entry, data=data)
-    _LOGGER.debug(
-        (
-            "Setting up imported climacell entry %s for the first time as "
-            "tomorrowio entry %s"
-        ),
-        old_config_entry_id,
-        entry.entry_id,
-    )
-
-    ent_reg = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(ent_reg, old_config_entry_id):
-        old_platform = entity_entry.platform
-        # In case the API key has changed due to a V3 -> V4 change, we need to
-        # generate the new entity's unique ID
-        new_unique_id = (
-            f"{entry.data[CONF_API_KEY]}_"
-            f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
-        )
-        ent_reg.async_update_entity_platform(
-            entity_entry.entity_id,
-            DOMAIN,
-            new_unique_id=new_unique_id,
-            new_config_entry_id=entry.entry_id,
-            new_device_id=device.id,
-        )
-        assert entity_entry
-        _LOGGER.debug(
-            "Migrated %s from %s to %s",
-            entity_entry.entity_id,
-            old_platform,
-            DOMAIN,
-        )
-
-    # We only have one device in the registry but we will do a loop just in case
-    for old_device in dr.async_entries_for_config_entry(dev_reg, old_config_entry_id):
-        if old_device.name_by_user:
-            dev_reg.async_update_device(device.id, name_by_user=old_device.name_by_user)
-
-    # Remove the old config entry and now the entry is fully migrated
-    hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tomorrow.io API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    # Let's precreate the device so that if this is a first time setup for a config
-    # entry imported from a ClimaCell entry, we can apply customizations from the old
-    # device.
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data[CONF_API_KEY])},
-        name=INTEGRATION_NAME,
-        manufacturer=INTEGRATION_NAME,
-        sw_version="v4",
-        entry_type=dr.DeviceEntryType.SERVICE,
-    )
-
-    # If this is an import and we still have the old config entry ID in the entry data,
-    # it means we are setting this entry up for the first time after a migration from
-    # ClimaCell to Tomorrow.io. In order to preserve any customizations on the ClimaCell
-    # entities, we need to remove each old entity, creating a new entity in its place
-    # but attached to this entry.
-    if entry.source == SOURCE_IMPORT and "old_config_entry_id" in entry.data:
-        async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
 
     api_key = entry.data[CONF_API_KEY]
     # If coordinator already exists for this API key, we'll use that, otherwise
@@ -379,10 +303,10 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            name="Tomorrow.io",
-            manufacturer="Tomorrow.io",
+            name=INTEGRATION_NAME,
+            manufacturer=INTEGRATION_NAME,
             sw_version=f"v{self.api_version}",
-            entry_type=dr.DeviceEntryType.SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     def _get_current_property(self, property_name: str) -> int | str | float | None:
