@@ -17,9 +17,6 @@
       "address_in_use": "The selected listening port is already in use on this system.",
       "model": "The model selected doesn't seem to support modbus40",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
