@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import overload
+from typing import TypeVar
 
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
@@ -22,6 +22,8 @@ from . import (
     volume as volume_util,
 )
 
+_ValueT = TypeVar("_ValueT", float, None)
+
 
 class BaseUnitConverter:
     """Define the format of a conversion utility."""
@@ -31,28 +33,10 @@ class BaseUnitConverter:
     UNIT_CONVERSION: dict[str, float]
     VALID_UNITS: tuple[str, ...]
 
-    @overload
     @classmethod
     def convert(
-        cls, value: float, from_unit: str, to_unit: str, bypass_checks: bool = False
-    ) -> float:
-        pass
-
-    @overload
-    @classmethod
-    def convert(
-        cls, value: None, from_unit: str, to_unit: str, bypass_checks: bool = False
-    ) -> None:
-        pass
-
-    @classmethod
-    def convert(
-        cls,
-        value: float | None,
-        from_unit: str,
-        to_unit: str,
-        bypass_checks: bool = False,
-    ) -> float | None:
+        cls, value: _ValueT, from_unit: str, to_unit: str, bypass_checks: bool = False
+    ) -> _ValueT:
         """Convert one unit of measurement to another."""
         if not bypass_checks:
             if from_unit not in cls.VALID_UNITS:
