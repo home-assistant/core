@@ -36,6 +36,14 @@ async def async_setup_entry(
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.openuv.async_update_protection_data()
+        self.async_update_state()
+
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""

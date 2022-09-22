@@ -25,11 +25,9 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
+from .common import async_wait_recording_done, wait_recording_done
+
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
-from tests.components.recorder.common import (
-    async_wait_recording_done,
-    wait_recording_done,
-)
 
 
 async def _async_get_states(

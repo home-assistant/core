@@ -29,7 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import temperature as temperature_util
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -70,18 +70,16 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.convert,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
-VALID_UNITS: dict[str, tuple[str, ...]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
-}
+# mypy: disallow-any-generics
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -115,13 +113,13 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -423,7 +421,9 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
 
-    def _convert_to_state_value(self, value: float, method: Callable) -> float:
+    def _convert_to_state_value(
+        self, value: float, method: Callable[[float, int], float]
+    ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement
@@ -432,7 +432,7 @@ class NumberEntity(Entity):
 
         if (
             native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
@@ -442,7 +442,7 @@ class NumberEntity(Entity):
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERSIONS[device_class](
+                value_new: float = UNIT_CONVERTERS[device_class].convert(
                     value,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -463,12 +463,12 @@ class NumberEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
 
-            value = UNIT_CONVERSIONS[device_class](
+            value = UNIT_CONVERTERS[device_class].convert(
                 value,
                 unit_of_measurement,
                 native_unit_of_measurement,
@@ -496,9 +496,10 @@ class NumberEntity(Entity):
         if (
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
-            and (device_class := self.device_class) in UNIT_CONVERSIONS
-            and self.native_unit_of_measurement in VALID_UNITS[device_class]
-            and custom_unit in VALID_UNITS[device_class]
+            and (device_class := self.device_class) in UNIT_CONVERTERS
+            and self.native_unit_of_measurement
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             self._number_option_unit_of_measurement = custom_unit
             return

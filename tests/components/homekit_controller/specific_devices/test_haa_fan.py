@@ -1,9 +1,9 @@
 """Make sure that a H.A.A. fan can be setup."""
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, SUPPORT_SET_SPEED
+from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -58,7 +58,7 @@ async def test_haa_fan_setup(hass):
                     friendly_name="HAA-C718B3",
                     unique_id="homekit-C718B3-1-8",
                     state="on",
-                    supported_features=SUPPORT_SET_SPEED,
+                    supported_features=FanEntityFeature.SET_SPEED,
                     capabilities={
                         "preset_modes": None,
                     },

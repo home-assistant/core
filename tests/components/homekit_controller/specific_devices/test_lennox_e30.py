@@ -4,12 +4,12 @@ Regression tests for Aqara Gateway V3.
 https://github.com/home-assistant/core/issues/20885
 """
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,

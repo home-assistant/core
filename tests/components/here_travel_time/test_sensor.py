@@ -37,10 +37,13 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
     TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant
@@ -58,7 +61,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "mode,icon,unit_system,arrival_time,departure_time,expected_duration,expected_distance,expected_duration_in_traffic",
+    "mode,icon,unit_system,arrival_time,departure_time,expected_duration,expected_distance,expected_duration_in_traffic,expected_distance_unit",
     [
         (
             TRAVEL_MODE_CAR,
@@ -69,6 +72,7 @@ from tests.common import MockConfigEntry
             "30",
             23.903,
             "31",
+            LENGTH_KILOMETERS,
         ),
         (
             TRAVEL_MODE_BICYCLE,
@@ -79,6 +83,7 @@ from tests.common import MockConfigEntry
             "30",
             23.903,
             "30",
+            LENGTH_KILOMETERS,
         ),
         (
             TRAVEL_MODE_PEDESTRIAN,
@@ -89,6 +94,7 @@ from tests.common import MockConfigEntry
             "30",
             14.85263,
             "30",
+            LENGTH_MILES,
         ),
         (
             TRAVEL_MODE_PUBLIC_TIME_TABLE,
@@ -99,6 +105,7 @@ from tests.common import MockConfigEntry
             "30",
             14.85263,
             "30",
+            LENGTH_MILES,
         ),
         (
             TRAVEL_MODE_TRUCK,
@@ -109,6 +116,7 @@ from tests.common import MockConfigEntry
             "30",
             23.903,
             "31",
+            LENGTH_KILOMETERS,
         ),
     ],
 )
@@ -123,6 +131,7 @@ async def test_sensor(
     expected_duration,
     expected_distance,
     expected_duration_in_traffic,
+    expected_distance_unit,
 ):
     """Test that sensor works."""
     entry = MockConfigEntry(
@@ -165,6 +174,10 @@ async def test_sensor(
     )
     assert float(hass.states.get("sensor.test_distance").state) == pytest.approx(
         expected_distance
+    )
+    assert (
+        hass.states.get("sensor.test_distance").attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == expected_distance_unit
     )
     assert hass.states.get("sensor.test_route").state == (
         "US-29 - K St NW; US-29 - Whitehurst Fwy; "

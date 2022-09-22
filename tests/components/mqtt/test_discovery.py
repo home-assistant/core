@@ -1438,7 +1438,7 @@ async def test_clean_up_registry_monitoring(
 ):
     """Test registry monitoring hook is removed after a reload."""
     await mqtt_mock_entry_no_yaml_config()
-    hooks: dict = hass.data[mqtt.const.DATA_MQTT_DISCOVERY_REGISTRY_HOOKS]
+    hooks: dict = hass.data["mqtt"].discovery_registry_hooks
     # discover an entity that is not enabled by default
     config1 = {
         "name": "sbfspot_12345",
