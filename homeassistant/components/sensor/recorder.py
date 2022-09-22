@@ -47,11 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-from homeassistant.util import (
-    dt as dt_util,
-    temperature as temperature_util,
-    volume as volume_util,
-)
+from homeassistant.util import dt as dt_util, temperature as temperature_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     EnergyConverter,
@@ -124,7 +120,8 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert volume to cubic meter
     SensorDeviceClass.GAS: {
         VOLUME_CUBIC_METERS: lambda x: x,
-        VOLUME_CUBIC_FEET: volume_util.cubic_feet_to_cubic_meter,
+        VOLUME_CUBIC_FEET: lambda x: x
+        / VolumeConverter.UNIT_CONVERSION[VOLUME_CUBIC_FEET],
     },
 }
 
