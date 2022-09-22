@@ -56,12 +56,13 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, StateType, UnitConverter
+from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import (
     dt as dt_util,
     pressure as pressure_util,
     temperature as temperature_util,
 )
+from homeassistant.util.unit_conversion import UnitConverter
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 

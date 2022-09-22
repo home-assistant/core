@@ -28,8 +28,9 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, UnitConverter
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import temperature as temperature_util
+from homeassistant.util.unit_conversion import UnitConverter
 
 from .const import (
     ATTR_MAX,

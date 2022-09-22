@@ -27,7 +27,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-from homeassistant.helpers.typing import UnitConverter
 from homeassistant.util import (
     dt as dt_util,
     energy as energy_util,
@@ -36,6 +35,7 @@ from homeassistant.util import (
     temperature as temperature_util,
     volume as volume_util,
 )
+from homeassistant.util.unit_conversion import UnitConverter
 
 from . import (
     ATTR_LAST_RESET,

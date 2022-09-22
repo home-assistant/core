@@ -29,7 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType, UnitConverter
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
     energy as energy_util,
@@ -38,6 +38,7 @@ from homeassistant.util import (
     temperature as temperature_util,
     volume as volume_util,
 )
+from homeassistant.util.unit_conversion import UnitConverter
 
 from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
@@ -252,7 +253,7 @@ def _get_display_to_statistic_unit_converter(
     ) is None:
         return no_conversion
 
-    return partial(unit_converter.normalize, display_unit)
+    return partial(unit_converter.to_normalized_unit, display_unit)
 
 
 @dataclasses.dataclass
