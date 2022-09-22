@@ -125,7 +125,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         await super().async_added_to_hass()
 
         for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
-            self.data_handler.config_entry.async_on_unload(
+            self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{event_type}",

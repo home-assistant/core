@@ -718,7 +718,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         await super().async_added_to_hass()
 
         assert self.device_info and "name" in self.device_info
-        self.data_handler.config_entry.async_on_unload(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"netatmo-config-{self.device_info['name']}",

@@ -79,7 +79,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
         """Entity created."""
         await super().async_added_to_hass()
 
-        self.data_handler.config_entry.async_on_unload(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"signal-{DOMAIN}-webhook-{EVENT_TYPE_SCHEDULE}",
