@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import logging
 from math import ceil
 from typing import Any
 
@@ -40,6 +39,7 @@ from .const import (
     CONF_TIMESTEP,
     DOMAIN,
     INTEGRATION_NAME,
+    LOGGER,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -78,8 +78,6 @@ from .const import (
     TMRW_ATTR_WIND_SPEED,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
@@ -110,6 +108,18 @@ def async_set_update_interval(
         (24 * 60 * len(entries) * api.num_api_requests)
         / (api.max_requests_per_day * 0.9)
     )
+    LOGGER.debug(
+        (
+            "Number of config entries: %s\n"
+            "Number of API Requests per call: %s\n"
+            "Max requests per day: %s\n"
+            "Update interval: %s minutes"
+        ),
+        len(entries),
+        api.num_api_requests,
+        api.max_requests_per_day,
+        minutes,
+    )
     return timedelta(minutes=minutes)
 
 
@@ -126,7 +136,7 @@ def async_migrate_entry_from_climacell(
     data = entry.data.copy()
     old_config_entry_id = data.pop("old_config_entry_id")
     hass.config_entries.async_update_entry(entry, data=data)
-    _LOGGER.debug(
+    LOGGER.debug(
         (
             "Setting up imported climacell entry %s for the first time as "
             "tomorrowio entry %s"
@@ -152,7 +162,7 @@ def async_migrate_entry_from_climacell(
             new_device_id=device.id,
         )
         assert entity_entry
-        _LOGGER.debug(
+        LOGGER.debug(
             "Migrated %s from %s to %s",
             entity_entry.entity_id,
             old_platform,
@@ -238,7 +248,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id_to_location_dict: dict[str, str] = {}
         self._coordinator_ready: asyncio.Event | None = None
 
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
+        super().__init__(hass, LOGGER, name=f"{DOMAIN}_{self._api.api_key_masked}")
 
     def add_entry_to_location_dict(self, entry: ConfigEntry) -> None:
         """Add an entry to the location dict."""
@@ -253,9 +263,17 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         # may start setup before we finish setting the initial data and we don't want
         # to do multiple refreshes on startup.
         if self._coordinator_ready is None:
+            LOGGER.debug(
+                "Setting up coordinator for API key %s, loading data for all entries",
+                self._api.api_key_masked,
+            )
             self._coordinator_ready = asyncio.Event()
             for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
                 self.add_entry_to_location_dict(entry_)
+            LOGGER.debug(
+                "Loaded %s entries, initiating first refresh",
+                len(self.entry_id_to_location_dict),
+            )
             await self.async_config_entry_first_refresh()
             self._coordinator_ready.set()
         else:
@@ -265,6 +283,13 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             # don't need to schedule a refresh
             if entry.entry_id in self.entry_id_to_location_dict:
                 return
+            LOGGER.debug(
+                (
+                    "Adding new entry to existing coordinator for API key %s, doing a "
+                    "partial refresh"
+                ),
+                self._api.api_key_masked,
+            )
             # We need a refresh, but it's going to be a partial refresh so we can
             # minimize repeat API calls
             self.add_entry_to_location_dict(entry)
@@ -294,6 +319,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         ):
             data = self.data
 
+        LOGGER.debug(
+            "Fetching data for %s entries",
+            len(set(self.entry_id_to_location_dict) - set(data)),
+        )
         for entry_id, location in self.entry_id_to_location_dict.items():
             if entry_id in data:
                 continue
