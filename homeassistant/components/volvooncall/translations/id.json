@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Akun sudah dikonfigurasi"
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "invalid_auth": "Autentikasi tidak valid",
@@ -14,6 +15,7 @@
                     "password": "Kata Sandi",
                     "region": "Wilayah",
                     "scandinavian_miles": "Gunakan Mil Skandinavia",
+                    "unit_system": "Sistem Unit",
                     "username": "Nama Pengguna"
                 }
             }

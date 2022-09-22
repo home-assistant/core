@@ -1,9 +1,7 @@
 """Volume conversion util functions."""
 from __future__ import annotations
 
-from numbers import Number
-
-from homeassistant.const import (
+from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     VOLUME_CUBIC_FEET,
@@ -14,57 +12,43 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
-VALID_UNITS: tuple[str, ...] = (
-    VOLUME_LITERS,
-    VOLUME_MILLILITERS,
-    VOLUME_GALLONS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME_CUBIC_METERS,
-    VOLUME_CUBIC_FEET,
-)
+from .unit_conversion import VolumeConverter
+
+UNIT_CONVERSION = VolumeConverter.UNIT_CONVERSION
+VALID_UNITS = VolumeConverter.VALID_UNITS
 
 
 def liter_to_gallon(liter: float) -> float:
     """Convert a volume measurement in Liter to Gallon."""
-    return liter * 0.2642
+    # Need to add warning when core migration finished
+    return _convert(liter, VOLUME_LITERS, VOLUME_GALLONS)
 
 
 def gallon_to_liter(gallon: float) -> float:
     """Convert a volume measurement in Gallon to Liter."""
-    return gallon * 3.785
+    # Need to add warning when core migration finished
+    return _convert(gallon, VOLUME_GALLONS, VOLUME_LITERS)
 
 
 def cubic_meter_to_cubic_feet(cubic_meter: float) -> float:
     """Convert a volume measurement in cubic meter to cubic feet."""
-    return cubic_meter * 35.3146667
+    # Need to add warning when core migration finished
+    return _convert(cubic_meter, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET)
 
 
 def cubic_feet_to_cubic_meter(cubic_feet: float) -> float:
     """Convert a volume measurement in cubic feet to cubic meter."""
-    return cubic_feet * 0.0283168466
+    # Need to add warning when core migration finished
+    return _convert(cubic_feet, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS)
 
 
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
-    """Convert a temperature from one unit to another."""
-    if from_unit not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, VOLUME))
-    if to_unit not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, VOLUME))
+    """Convert a volume from one unit to another."""
+    # Need to add warning when core migration finished
+    return VolumeConverter.convert(volume, from_unit, to_unit)
 
-    if not isinstance(volume, Number):
-        raise TypeError(f"{volume} is not of numeric type")
 
-    if from_unit == to_unit:
-        return volume
-
-    result: float = volume
-    if from_unit == VOLUME_LITERS and to_unit == VOLUME_GALLONS:
-        result = liter_to_gallon(volume)
-    elif from_unit == VOLUME_GALLONS and to_unit == VOLUME_LITERS:
-        result = gallon_to_liter(volume)
-    elif from_unit == VOLUME_CUBIC_METERS and to_unit == VOLUME_CUBIC_FEET:
-        result = cubic_meter_to_cubic_feet(volume)
-    elif from_unit == VOLUME_CUBIC_FEET and to_unit == VOLUME_CUBIC_METERS:
-        result = cubic_feet_to_cubic_meter(volume)
-
-    return result
+def _convert(volume: float, from_unit: str, to_unit: str) -> float:
+    """Convert a volume from one unit to another, bypassing checks."""
+    cubic_meter = volume / UNIT_CONVERSION[from_unit]
+    return cubic_meter * UNIT_CONVERSION[to_unit]

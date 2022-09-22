@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -32,7 +33,13 @@ from .model import (
     RainMachineEntityDescriptionMixinDataKey,
     RainMachineEntityDescriptionMixinUid,
 )
-from .util import RUN_STATE_MAP, RunStates, key_exists
+from .util import (
+    RUN_STATE_MAP,
+    EntityDomainReplacementStrategy,
+    RunStates,
+    async_finish_entity_domain_replacements,
+    key_exists,
+)
 
 DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
@@ -126,6 +133,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+
+    async_finish_entity_domain_replacements(
+        hass,
+        entry,
+        (
+            EntityDomainReplacementStrategy(
+                SENSOR_DOMAIN,
+                f"{data.controller.mac}_freeze_protect_temp",
+                f"select.{data.controller.name.lower()}_freeze_protect_temperature",
+                breaks_in_ha_version="2022.12.0",
+                remove_old_entity=False,
+            ),
+        ),
+    )
 
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
@@ -273,12 +294,14 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._attr_native_value = self.coordinator.data["system"].get(
+            self._attr_native_value = self.coordinator.data.get("system", {}).get(
                 "flowSensorClicksPerCubicMeter"
             )
         elif self.entity_description.key == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.coordinator.data["system"].get("flowSensorWateringClicks")
-            clicks_per_m3 = self.coordinator.data["system"].get(
+            clicks = self.coordinator.data.get("system", {}).get(
+                "flowSensorWateringClicks"
+            )
+            clicks_per_m3 = self.coordinator.data.get("system", {}).get(
                 "flowSensorClicksPerCubicMeter"
             )
 
@@ -287,11 +310,11 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
             else:
                 self._attr_native_value = None
         elif self.entity_description.key == TYPE_FLOW_SENSOR_START_INDEX:
-            self._attr_native_value = self.coordinator.data["system"].get(
+            self._attr_native_value = self.coordinator.data.get("system", {}).get(
                 "flowSensorStartIndex"
             )
         elif self.entity_description.key == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._attr_native_value = self.coordinator.data["system"].get(
+            self._attr_native_value = self.coordinator.data.get("system", {}).get(
                 "flowSensorWateringClicks"
             )
 

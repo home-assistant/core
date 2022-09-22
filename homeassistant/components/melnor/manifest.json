@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/melnor",
   "iot_class": "local_polling",
   "name": "Melnor Bluetooth",
-  "requirements": ["melnor-bluetooth==0.0.15"]
+  "requirements": ["melnor-bluetooth==0.0.20"]
 }

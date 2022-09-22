@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from typing import Any
 
 from maxcube.device import (
     MAX_DEVICE_MODE_AUTOMATIC,
@@ -11,13 +12,13 @@ from maxcube.device import (
     MAX_DEVICE_MODE_VACATION,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -183,7 +184,7 @@ class MaxCubeClimate(ClimateEntity):
             return None
         return temp
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(
@@ -207,7 +208,7 @@ class MaxCubeClimate(ClimateEntity):
             return PRESET_AWAY
         return PRESET_NONE
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new operation mode."""
         if preset_mode == PRESET_COMFORT:
             self._set_target(MAX_DEVICE_MODE_MANUAL, self._device.comfort_temperature)
@@ -231,6 +232,6 @@ class MaxCubeClimate(ClimateEntity):
             return {}
         return {ATTR_VALVE_POSITION: self._device.valve_position}
 
-    def update(self):
+    def update(self) -> None:
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()

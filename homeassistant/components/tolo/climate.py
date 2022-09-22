@@ -5,10 +5,10 @@ from typing import Any
 
 from tololib.const import Calefaction
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

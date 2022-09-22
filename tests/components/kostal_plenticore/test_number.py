@@ -8,11 +8,12 @@ from kostal.plenticore import PlenticoreApiClient, SettingsData
 import pytest
 
 from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.number.const import ATTR_MAX, ATTR_MIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get

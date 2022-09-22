@@ -21,7 +21,10 @@ env:
   CACHE_VERSION: 1
   PIP_CACHE_VERSION: 1
   HA_SHORT_VERSION: 2022.10
-  DEFAULT_PYTHON: 3.9
+  # Pin latest Python patch versions to avoid issues
+  # with runners using different versions.
+  DEFAULT_PYTHON: 3.9.14
+  ALL_PYTHON_VERSIONS: "['3.9.14', '3.10.7']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -44,6 +47,7 @@ jobs:
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
+      python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       test_groups: ${{ steps.info.outputs.test_groups }}
@@ -141,6 +145,8 @@ jobs:
           fi
 
           # Output & sent to GitHub Actions
+          echo "python_versions: ${ALL_PYTHON_VERSIONS}"
+          echo "::set-output name=python_versions::${ALL_PYTHON_VERSIONS}"
           echo "test_full_suite: ${test_full_suite}"
           echo "::set-output name=test_full_suite::${test_full_suite}"
           echo "integrations_glob: ${integrations_glob}"
@@ -167,7 +173,6 @@ jobs:
         uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: "pip"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.8
@@ -462,7 +467,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -681,7 +686,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     name: Run pip check ${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -728,7 +733,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
-        python-version: ["3.9", "3.10"]
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     steps:
@@ -837,9 +842,9 @@ jobs:
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1

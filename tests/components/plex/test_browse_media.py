@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from yarl import URL
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )

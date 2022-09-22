@@ -3,17 +3,22 @@ from __future__ import annotations
 
 from ast import literal_eval
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass, field
 import datetime as dt
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any, Union
 
 import attr
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
+if TYPE_CHECKING:
+    from .client import MQTT, Subscription
+    from .device_trigger import Trigger
 
 _SENTINEL = object()
 
@@ -174,3 +179,24 @@ class MqttValueTemplate:
         return self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
+
+
+@dataclass
+class MqttData:
+    """Keep the MQTT entry data."""
+
+    client: MQTT | None = None
+    config: ConfigType | None = None
+    device_triggers: dict[str, Trigger] = field(default_factory=dict)
+    discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
+        default_factory=dict
+    )
+    last_discovery: float = 0.0
+    reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
+    reload_entry: bool = False
+    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
+        default_factory=dict
+    )
+    reload_needed: bool = False
+    subscriptions_to_restore: list[Subscription] = field(default_factory=list)
+    updated_config: ConfigType = field(default_factory=dict)

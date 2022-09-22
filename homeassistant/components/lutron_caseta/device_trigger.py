@@ -405,7 +405,8 @@ async def async_get_triggers(
     triggers = []
 
     if not (device := get_button_device_by_dr_id(hass, device_id)):
-        raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
+        # Check if device is a valid button device.  Return empty if not.
+        return []
 
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         _lutron_model_to_device_type(device["model"], device["type"]), {}
