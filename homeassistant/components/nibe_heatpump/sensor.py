@@ -118,7 +118,7 @@ async def async_setup_entry(
     )
 
 
-class Sensor(SensorEntity, CoilEntity):
+class Sensor(CoilEntity, SensorEntity):
     """Sensor entity."""
 
     def __init__(
