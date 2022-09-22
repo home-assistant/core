@@ -85,6 +85,8 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
             ),
         )
 
+        self._update_attrs_from_coordinator()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -93,7 +95,10 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._update_attrs_from_coordinator()
+        super()._handle_coordinator_update()
 
+    def _update_attrs_from_coordinator(self) -> None:
         async def async_refresh_state():
             """Refresh the device state in the Central Unit.
 
@@ -144,8 +149,6 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
         # 1-99 is the only valid SwitchBee brightness range
         if 0 < brightness < 100:
             self._attr_brightness = brightness_switchbee_to_hass(brightness)
-
-        super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""

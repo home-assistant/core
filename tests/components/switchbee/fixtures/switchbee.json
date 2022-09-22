@@ -78,6 +78,12 @@
             "name": "Walls",
             "hw": "DIMMABLE_SWITCH",
             "type": "DIMMER"
+          },
+          {
+            "id": 13,
+            "name": "Ceiling",
+            "hw": "DIMMABLE_SWITCH",
+            "type": "DIMMER"
           }
         ]
       },

@@ -1,0 +1,37 @@
+{
+  "status": "OK",
+  "data": [
+    {
+      "id": 113,
+      "state": "ON"
+    },
+    {
+      "id": 222,
+      "state": "OFF"
+    },
+    {
+      "id": 21,
+      "state": 30
+    },
+    {
+      "id": 12,
+      "state": 70
+    },
+    {
+      "id": 13,
+      "state": 0
+    },
+    {
+      "id": 321,
+      "state": 10
+    },
+    {
+      "id": 271,
+      "state": {
+        "power": "ON",
+        "mode": "COOL",
+        "fan": "HIGH"
+      }
+    }
+  ]
+}
