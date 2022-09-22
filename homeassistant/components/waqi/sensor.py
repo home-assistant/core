@@ -57,6 +57,7 @@ ATTR_UNIT = "AQI"
 
 CONF_LOCATIONS = "locations"
 CONF_STATIONS = "stations"
+CONF_FEED_IDS = "feed_ids"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -65,8 +66,9 @@ TIMEOUT = 10
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_STATIONS): cv.ensure_list,
+        vol.Optional(CONF_FEED_IDS): cv.ensure_list,
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_LOCATIONS): cv.ensure_list,
+        vol.Optional(CONF_LOCATIONS): cv.ensure_list,
     }
 )
 
@@ -81,7 +83,8 @@ async def async_setup_platform(
 
     token = config[CONF_TOKEN]
     station_filter = config.get(CONF_STATIONS)
-    locations = config[CONF_LOCATIONS]
+    feed_ids = config.get(CONF_FEED_IDS, [])
+    locations = config.get(CONF_LOCATIONS, [])
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
@@ -89,14 +92,34 @@ async def async_setup_platform(
         for location_name in locations:
             stations = await client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
+
             for station in stations:
-                waqi_sensor = WaqiSensor(client, station)
+                station_info = station.get("station", {})
+                uid = station.get("uid")
+                url = station_info.get("url")
+                station_name = station_info.get("name")
                 if not station_filter or {
-                    waqi_sensor.uid,
-                    waqi_sensor.url,
-                    waqi_sensor.station_name,
+                    uid,
+                    url,
+                    station_name,
                 } & set(station_filter):
-                    dev.append(waqi_sensor)
+                    dev.append(WaqiSensor(client, uid, url, station_name))
+
+        for feed_id in feed_ids:
+            result = await client.get_station_by_name(feed_id)
+            uid = result.get("idx")
+            if uid is not None:
+                city = result.get("city", {})
+                url = None
+                station_name = city.get("name")
+                _LOGGER.debug("Added station by id: %s", result)
+                if not station_filter or {
+                    uid,
+                    url,
+                    station_name,
+                } & set(station_filter):
+                    dev.append(WaqiSensor(client, uid, url, station_name))
+
     except (
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
@@ -114,24 +137,12 @@ class WaqiSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.AQI
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, client, station):
+    def __init__(self, client, uid, url, station_name):
         """Initialize the sensor."""
         self._client = client
-        try:
-            self.uid = station["uid"]
-        except (KeyError, TypeError):
-            self.uid = None
-
-        try:
-            self.url = station["station"]["url"]
-        except (KeyError, TypeError):
-            self.url = None
-
-        try:
-            self.station_name = station["station"]["name"]
-        except (KeyError, TypeError):
-            self.station_name = None
-
+        self.uid = uid
+        self.url = url
+        self.station_name = station_name
         self._data = None
 
     @property
