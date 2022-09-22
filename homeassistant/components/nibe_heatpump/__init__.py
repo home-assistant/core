@@ -19,6 +19,7 @@ from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -33,6 +34,7 @@ from .const import (
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+COIL_READ_RETRIES = 5
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -150,7 +152,8 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
 
     async def _async_update_data(self) -> dict[int, Coil]:
         @retry(
-            retry=retry_if_exception_type(CoilReadException), stop=stop_after_attempt(2)
+            retry=retry_if_exception_type(CoilReadException),
+            stop=stop_after_attempt(COIL_READ_RETRIES),
         )
         async def read_coil(coil: Coil):
             return await self.connection.read_coil(coil)
@@ -168,7 +171,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
                 coil = self.heatpump.get_coil_by_address(address)
                 self.data[coil.address] = result[coil.address] = await read_coil(coil)
             except (CoilReadException, RetryError) as exception:
-                self.logger.warning("Failed to update: %s", exception)
+                raise UpdateFailed(f"Failed to update: {exception}") from exception
             except CoilNotFoundException as exception:
                 self.logger.debug("Skipping missing coil: %s", exception)
 
