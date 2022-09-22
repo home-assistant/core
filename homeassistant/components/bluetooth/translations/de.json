@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Zur Verbesserung der Bluetooth-Zuverl\u00e4ssigkeit und -Leistung empfehlen wir dir dringend ein Update auf Version 9.0 oder h\u00f6her des Home Assistant-Betriebssystems.",
+            "title": "Aktualisiere auf das Home Assistant-Betriebssystem 9.0 oder h\u00f6her"
+        }
+    },
     "options": {
         "step": {
             "init": {

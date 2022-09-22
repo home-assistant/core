@@ -47,10 +47,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-import homeassistant.util.dt as dt_util
-import homeassistant.util.pressure as pressure_util
-import homeassistant.util.temperature as temperature_util
-import homeassistant.util.volume as volume_util
+from homeassistant.util import (
+    dt as dt_util,
+    energy as energy_util,
+    power as power_util,
+    pressure as pressure_util,
+    temperature as temperature_util,
+    volume as volume_util,
+)
 
 from . import (
     ATTR_LAST_RESET,
@@ -83,14 +87,16 @@ DEVICE_CLASS_UNITS: dict[str, str] = {
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
     SensorDeviceClass.ENERGY: {
-        ENERGY_KILO_WATT_HOUR: lambda x: x,
-        ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
-        ENERGY_WATT_HOUR: lambda x: x / 1000,
+        ENERGY_KILO_WATT_HOUR: lambda x: x
+        / energy_util.UNIT_CONVERSION[ENERGY_KILO_WATT_HOUR],
+        ENERGY_MEGA_WATT_HOUR: lambda x: x
+        / energy_util.UNIT_CONVERSION[ENERGY_MEGA_WATT_HOUR],
+        ENERGY_WATT_HOUR: lambda x: x / energy_util.UNIT_CONVERSION[ENERGY_WATT_HOUR],
     },
     # Convert power to W
     SensorDeviceClass.POWER: {
-        POWER_WATT: lambda x: x,
-        POWER_KILO_WATT: lambda x: x * 1000,
+        POWER_WATT: lambda x: x / power_util.UNIT_CONVERSION[POWER_WATT],
+        POWER_KILO_WATT: lambda x: x / power_util.UNIT_CONVERSION[POWER_KILO_WATT],
     },
     # Convert pressure to Pa
     # Note: pressure_util.convert is bypassed to avoid redundant error checking

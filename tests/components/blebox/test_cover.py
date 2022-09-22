@@ -12,11 +12,8 @@ from homeassistant.components.cover import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -107,11 +104,11 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_OPEN
-    assert supported_features & SUPPORT_CLOSE
-    assert supported_features & SUPPORT_STOP
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
+    assert supported_features & CoverEntityFeature.STOP
 
-    assert supported_features & SUPPORT_SET_POSITION
+    assert supported_features & CoverEntityFeature.SET_POSITION
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
@@ -137,11 +134,11 @@ async def test_init_shutterbox(shutterbox, hass, config):
     assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_OPEN
-    assert supported_features & SUPPORT_CLOSE
-    assert supported_features & SUPPORT_STOP
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
+    assert supported_features & CoverEntityFeature.STOP
 
-    assert supported_features & SUPPORT_SET_POSITION
+    assert supported_features & CoverEntityFeature.SET_POSITION
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
@@ -167,13 +164,13 @@ async def test_init_gatebox(gatebox, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_OPEN
-    assert supported_features & SUPPORT_CLOSE
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
 
     # Not available during init since requires fetching state to detect
-    assert not supported_features & SUPPORT_STOP
+    assert not supported_features & CoverEntityFeature.STOP
 
-    assert not supported_features & SUPPORT_SET_POSITION
+    assert not supported_features & CoverEntityFeature.SET_POSITION
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
@@ -350,7 +347,7 @@ async def test_with_stop(gatebox, hass, config):
 
     state = hass.states.get(entity_id)
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_STOP
+    assert supported_features & CoverEntityFeature.STOP
 
 
 async def test_with_no_stop(gatebox, hass, config):
@@ -364,7 +361,7 @@ async def test_with_no_stop(gatebox, hass, config):
 
     state = hass.states.get(entity_id)
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert not supported_features & SUPPORT_STOP
+    assert not supported_features & CoverEntityFeature.STOP
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])

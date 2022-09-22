@@ -25,20 +25,20 @@ VALID_UNITS: tuple[str, ...] = (
     VOLUME_CUBIC_FEET,
 )
 
-ML_TO_L = 0.001  # 1 mL = 0.001 L
-CUBIC_METER_TO_L = 1000  # 1 m3 = 1000 L
-GALLON_TO_L = 231 * pow(IN_TO_M, 3) * CUBIC_METER_TO_L  # US gallon is 231 cubic inches
-FLUID_OUNCE_TO_L = GALLON_TO_L / 128  # 128 fluid ounces in a US gallon
-CUBIC_FOOT_TO_L = CUBIC_METER_TO_L * pow(FOOT_TO_M, 3)
+L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
+ML_TO_CUBIC_METER = 0.001 * L_TO_CUBIC_METER  # 1 mL = 0.001 L
+GALLON_TO_CUBIC_METER = 231 * pow(IN_TO_M, 3)  # US gallon is 231 cubic inches
+FLUID_OUNCE_TO_CUBIC_METER = GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
+CUBIC_FOOT_TO_CUBIC_METER = pow(FOOT_TO_M, 3)
 
-# Units in terms of L
+# Units in terms of m³
 UNIT_CONVERSION: dict[str, float] = {
-    VOLUME_LITERS: 1,
-    VOLUME_MILLILITERS: 1 / ML_TO_L,
-    VOLUME_GALLONS: 1 / GALLON_TO_L,
-    VOLUME_FLUID_OUNCE: 1 / FLUID_OUNCE_TO_L,
-    VOLUME_CUBIC_METERS: 1 / CUBIC_METER_TO_L,
-    VOLUME_CUBIC_FEET: 1 / CUBIC_FOOT_TO_L,
+    VOLUME_LITERS: 1 / L_TO_CUBIC_METER,
+    VOLUME_MILLILITERS: 1 / ML_TO_CUBIC_METER,
+    VOLUME_GALLONS: 1 / GALLON_TO_CUBIC_METER,
+    VOLUME_FLUID_OUNCE: 1 / FLUID_OUNCE_TO_CUBIC_METER,
+    VOLUME_CUBIC_METERS: 1,
+    VOLUME_CUBIC_FEET: 1 / CUBIC_FOOT_TO_CUBIC_METER,
 }
 
 
@@ -63,7 +63,7 @@ def cubic_feet_to_cubic_meter(cubic_feet: float) -> float:
 
 
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
-    """Convert a temperature from one unit to another."""
+    """Convert a volume from one unit to another."""
     if from_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, VOLUME))
     if to_unit not in VALID_UNITS:
@@ -78,6 +78,6 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
 
 
 def _convert(volume: float, from_unit: str, to_unit: str) -> float:
-    """Convert a temperature from one unit to another, bypassing checks."""
-    liters = volume / UNIT_CONVERSION[from_unit]
-    return liters * UNIT_CONVERSION[to_unit]
+    """Convert a volume from one unit to another, bypassing checks."""
+    cubic_meter = volume / UNIT_CONVERSION[from_unit]
+    return cubic_meter * UNIT_CONVERSION[to_unit]

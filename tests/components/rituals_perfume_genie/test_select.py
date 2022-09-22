@@ -3,8 +3,11 @@ import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.rituals_perfume_genie.select import ROOM_SIZE_SUFFIX
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ENTITY_ID,
