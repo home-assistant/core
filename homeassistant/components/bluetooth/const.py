@@ -58,7 +58,7 @@ class AdapterDetails(TypedDict, total=False):
 
     address: str
     sw_version: str
-    hw_version: str
+    hw_version: str | None
     passive_scan: bool
 
 

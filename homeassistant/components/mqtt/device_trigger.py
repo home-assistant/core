@@ -33,11 +33,13 @@ from .const import (
     CONF_PAYLOAD,
     CONF_QOS,
     CONF_TOPIC,
+    DATA_MQTT,
     DOMAIN,
 )
 from .discovery import MQTT_DISCOVERY_DONE
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MqttData,
     MqttDiscoveryDeviceUpdate,
     send_discovery_done,
     update_device,
@@ -80,8 +82,6 @@ TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     },
     extra=vol.REMOVE_EXTRA,
 )
-
-DEVICE_TRIGGERS = "mqtt_device_triggers"
 
 LOG_NAME = "Device trigger"
 
@@ -203,6 +203,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
+        self._mqtt_data: MqttData = hass.data[DATA_MQTT]
 
         MqttDiscoveryDeviceUpdate.__init__(
             self,
@@ -217,8 +218,8 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         """Initialize the device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
-        if discovery_id not in self.hass.data.setdefault(DEVICE_TRIGGERS, {}):
-            self.hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+        if discovery_id not in self._mqtt_data.device_triggers:
+            self._mqtt_data.device_triggers[discovery_id] = Trigger(
                 hass=self.hass,
                 device_id=self.device_id,
                 discovery_data=self.discovery_data,
@@ -230,7 +231,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
                 value_template=self._config[CONF_VALUE_TEMPLATE],
             )
         else:
-            await self.hass.data[DEVICE_TRIGGERS][discovery_id].update_trigger(
+            await self._mqtt_data.device_triggers[discovery_id].update_trigger(
                 self._config
             )
         debug_info.add_trigger_discovery_data(
@@ -246,16 +247,16 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         )
         config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
         update_device(self.hass, self._config_entry, config)
-        device_trigger: Trigger = self.hass.data[DEVICE_TRIGGERS][discovery_id]
+        device_trigger: Trigger = self._mqtt_data.device_triggers[discovery_id]
         await device_trigger.update_trigger(config)
 
     async def async_tear_down(self) -> None:
         """Cleanup device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
-        if discovery_id in self.hass.data[DEVICE_TRIGGERS]:
+        if discovery_id in self._mqtt_data.device_triggers:
             _LOGGER.info("Removing trigger: %s", discovery_hash)
-            trigger: Trigger = self.hass.data[DEVICE_TRIGGERS][discovery_id]
+            trigger: Trigger = self._mqtt_data.device_triggers[discovery_id]
             trigger.detach_trigger()
             debug_info.remove_trigger_discovery_data(self.hass, discovery_hash)
 
@@ -280,11 +281,10 @@ async def async_setup_trigger(
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
-        device_trigger: Trigger = hass.data[DEVICE_TRIGGERS].pop(
-            trig[CONF_DISCOVERY_ID]
-        )
+        device_trigger: Trigger = mqtt_data.device_triggers.pop(trig[CONF_DISCOVERY_ID])
         if device_trigger:
             device_trigger.detach_trigger()
             discovery_data = cast(dict, device_trigger.discovery_data)
@@ -296,12 +296,13 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     triggers: list[dict[str, str]] = []
 
-    if DEVICE_TRIGGERS not in hass.data:
+    if not mqtt_data.device_triggers:
         return triggers
 
-    for discovery_id, trig in hass.data[DEVICE_TRIGGERS].items():
+    for discovery_id, trig in mqtt_data.device_triggers.items():
         if trig.device_id != device_id or trig.topic is None:
             continue
 
@@ -324,12 +325,12 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    hass.data.setdefault(DEVICE_TRIGGERS, {})
+    mqtt_data: MqttData = hass.data[DATA_MQTT]
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 
-    if discovery_id not in hass.data[DEVICE_TRIGGERS]:
-        hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+    if discovery_id not in mqtt_data.device_triggers:
+        mqtt_data.device_triggers[discovery_id] = Trigger(
             hass=hass,
             device_id=device_id,
             discovery_data=None,
@@ -340,6 +341,6 @@ async def async_attach_trigger(
             qos=None,
             value_template=None,
         )
-    return await hass.data[DEVICE_TRIGGERS][discovery_id].add_trigger(
+    return await mqtt_data.device_triggers[discovery_id].add_trigger(
         action, trigger_info
     )
