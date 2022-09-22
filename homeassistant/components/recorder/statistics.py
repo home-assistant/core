@@ -32,8 +32,6 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
-    energy as energy_util,
-    power as power_util,
     pressure as pressure_util,
     temperature as temperature_util,
     volume as volume_util,
@@ -138,19 +136,19 @@ def _convert_energy_from_kwh(to_unit: str, value: float | None) -> float | None:
     """Convert energy in kWh to to_unit."""
     if value is None:
         return None
-    return energy_util.convert(value, energy_util.NORMALIZED_UNIT, to_unit)
+    return EnergyConverter.convert(value, EnergyConverter.NORMALIZED_UNIT, to_unit)
 
 
 def _convert_energy_to_kwh(from_unit: str, value: float) -> float:
     """Convert energy in from_unit to kWh."""
-    return energy_util.convert(value, from_unit, energy_util.NORMALIZED_UNIT)
+    return EnergyConverter.convert(value, from_unit, EnergyConverter.NORMALIZED_UNIT)
 
 
 def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:
     """Convert power in W to to_unit."""
     if value is None:
         return None
-    return power_util.convert(value, power_util.NORMALIZED_UNIT, to_unit)
+    return PowerConverter.convert(value, PowerConverter.NORMALIZED_UNIT, to_unit)
 
 
 def _convert_pressure_from_pa(to_unit: str, value: float | None) -> float | None:
@@ -180,16 +178,16 @@ def _convert_volume_to_m3(from_unit: str, value: float) -> float:
 
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
-    energy_util.NORMALIZED_UNIT: "energy",
-    power_util.NORMALIZED_UNIT: "power",
+    EnergyConverter.NORMALIZED_UNIT: "energy",
+    PowerConverter.NORMALIZED_UNIT: "power",
     pressure_util.NORMALIZED_UNIT: "pressure",
     temperature_util.NORMALIZED_UNIT: "temperature",
     volume_util.NORMALIZED_UNIT: "volume",
 }
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    energy_util.NORMALIZED_UNIT: EnergyConverter,
-    power_util.NORMALIZED_UNIT: PowerConverter,
+    EnergyConverter.NORMALIZED_UNIT: EnergyConverter,
+    PowerConverter.NORMALIZED_UNIT: PowerConverter,
     pressure_util.NORMALIZED_UNIT: PressureConverter,
     temperature_util.NORMALIZED_UNIT: TemperatureConverter,
     volume_util.NORMALIZED_UNIT: VolumeConverter,
@@ -200,8 +198,8 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
 STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
     str, Callable[[str, float | None], float | None]
 ] = {
-    energy_util.NORMALIZED_UNIT: _convert_energy_from_kwh,
-    power_util.NORMALIZED_UNIT: _convert_power_from_w,
+    EnergyConverter.NORMALIZED_UNIT: _convert_energy_from_kwh,
+    PowerConverter.NORMALIZED_UNIT: _convert_power_from_w,
     pressure_util.NORMALIZED_UNIT: _convert_pressure_from_pa,
     temperature_util.NORMALIZED_UNIT: _convert_temperature_from_c,
     volume_util.NORMALIZED_UNIT: _convert_volume_from_m3,
@@ -211,7 +209,7 @@ STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
 # to the normalized unit used for statistics.
 # This is used to support adjusting statistics in the display unit
 DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS: dict[str, Callable[[str, float], float]] = {
-    energy_util.NORMALIZED_UNIT: _convert_energy_to_kwh,
+    EnergyConverter.NORMALIZED_UNIT: _convert_energy_to_kwh,
     volume_util.NORMALIZED_UNIT: _convert_volume_to_m3,
 }
 
