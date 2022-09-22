@@ -47,7 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-from homeassistant.util import dt as dt_util, temperature as temperature_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     EnergyConverter,
@@ -111,11 +111,11 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         PRESSURE_PSI: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_PSI],
     },
     # Convert temperature to °C
-    # Note: temperature_util.convert is bypassed to avoid redundant error checking
+    # Note: TemperatureConverter.convert is bypassed to avoid redundant error checking
     SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: lambda x: x,
-        TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
-        TEMP_KELVIN: temperature_util.kelvin_to_celsius,
+        TEMP_FAHRENHEIT: TemperatureConverter.fahrenheit_to_celsius,
+        TEMP_KELVIN: TemperatureConverter.kelvin_to_celsius,
     },
     # Convert volume to cubic meter
     SensorDeviceClass.GAS: {

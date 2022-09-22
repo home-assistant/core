@@ -1,7 +1,7 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from abc import abstractmethod
 from numbers import Number
 
 from homeassistant.const import (
@@ -20,6 +20,8 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
@@ -29,7 +31,6 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
-from . import temperature as temperature_util
 from .distance import FOOT_TO_M, IN_TO_M
 
 # Volume conversion constants
@@ -43,20 +44,13 @@ _CUBIC_FOOT_TO_CUBIC_METER = pow(FOOT_TO_M, 3)
 class BaseUnitConverter:
     """Define the format of a conversion utility."""
 
+    UNIT_CLASS: str
     NORMALIZED_UNIT: str
     VALID_UNITS: tuple[str, ...]
-    convert: Callable[[float, str, str], float]
-
-
-class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
-    """Define the format of a conversion utility."""
-
-    UNIT_CLASS: str
-    UNIT_CONVERSION: dict[str, float]
 
     @classmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
-        """Convert one unit of measurement to another."""
+    def _check_arguments(cls, value: float, from_unit: str, to_unit: str) -> None:
+        """Check that arguments are all valid."""
         if from_unit not in cls.VALID_UNITS:
             raise ValueError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
@@ -68,6 +62,22 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
 
         if not isinstance(value, Number):
             raise TypeError(f"{value} is not of numeric type")
+
+    @classmethod
+    @abstractmethod
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+        """Convert one unit of measurement to another."""
+
+
+class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
+    """Define the format of a conversion utility."""
+
+    UNIT_CONVERSION: dict[str, float]
+
+    @classmethod
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+        """Convert one unit of measurement to another."""
+        cls._check_arguments(value, from_unit, to_unit)
 
         if from_unit == to_unit:
             return value
@@ -140,9 +150,73 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
 class TemperatureConverter(BaseUnitConverter):
     """Utility to convert temperature values."""
 
+    UNIT_CLASS = "temperature"
     NORMALIZED_UNIT = TEMP_CELSIUS
-    VALID_UNITS = temperature_util.VALID_UNITS
-    convert = temperature_util.convert
+    VALID_UNITS: tuple[str, ...] = (
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_KELVIN,
+    )
+
+    @classmethod
+    def convert(
+        cls, value: float, from_unit: str, to_unit: str, *, interval: bool = False
+    ) -> float:
+        """Convert a temperature from one unit to another."""
+        cls._check_arguments(value, from_unit, to_unit)
+
+        if from_unit == to_unit:
+            return value
+
+        if from_unit == TEMP_CELSIUS:
+            if to_unit == TEMP_FAHRENHEIT:
+                return cls.celsius_to_fahrenheit(value, interval)
+            # kelvin
+            return cls.celsius_to_kelvin(value, interval)
+
+        if from_unit == TEMP_FAHRENHEIT:
+            if to_unit == TEMP_CELSIUS:
+                return cls.fahrenheit_to_celsius(value, interval)
+            # kelvin
+            return cls.celsius_to_kelvin(
+                cls.fahrenheit_to_celsius(value, interval), interval
+            )
+
+        # from_unit == kelvin
+        if to_unit == TEMP_CELSIUS:
+            return cls.kelvin_to_celsius(value, interval)
+        # fahrenheit
+        return cls.celsius_to_fahrenheit(
+            cls.kelvin_to_celsius(value, interval), interval
+        )
+
+    @classmethod
+    def fahrenheit_to_celsius(cls, fahrenheit: float, interval: bool = False) -> float:
+        """Convert a temperature in Fahrenheit to Celsius."""
+        if interval:
+            return fahrenheit / 1.8
+        return (fahrenheit - 32.0) / 1.8
+
+    @classmethod
+    def kelvin_to_celsius(cls, kelvin: float, interval: bool = False) -> float:
+        """Convert a temperature in Kelvin to Celsius."""
+        if interval:
+            return kelvin
+        return kelvin - 273.15
+
+    @classmethod
+    def celsius_to_fahrenheit(cls, celsius: float, interval: bool = False) -> float:
+        """Convert a temperature in Celsius to Fahrenheit."""
+        if interval:
+            return celsius * 1.8
+        return celsius * 1.8 + 32.0
+
+    @classmethod
+    def celsius_to_kelvin(cls, celsius: float, interval: bool = False) -> float:
+        """Convert a temperature in Celsius to Kelvin."""
+        if interval:
+            return celsius
+        return celsius + 273.15
 
 
 class VolumeConverter(BaseUnitConverterWithUnitConversion):

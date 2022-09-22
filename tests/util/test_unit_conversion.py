@@ -15,6 +15,9 @@ from homeassistant.const import (
     PRESSURE_MMHG,
     PRESSURE_PA,
     PRESSURE_PSI,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
@@ -27,6 +30,7 @@ from homeassistant.util.unit_conversion import (
     EnergyConverter,
     PowerConverter,
     PressureConverter,
+    TemperatureConverter,
     VolumeConverter,
 )
 
@@ -49,6 +53,9 @@ INVALID_SYMBOL = "bob"
         (PressureConverter, PRESSURE_CBAR),
         (PressureConverter, PRESSURE_MMHG),
         (PressureConverter, PRESSURE_PSI),
+        (TemperatureConverter, TEMP_CELSIUS),
+        (TemperatureConverter, TEMP_FAHRENHEIT),
+        (TemperatureConverter, TEMP_KELVIN),
         (VolumeConverter, VOLUME_LITERS),
         (VolumeConverter, VOLUME_MILLILITERS),
         (VolumeConverter, VOLUME_GALLONS),
@@ -66,6 +73,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
         (PowerConverter, POWER_WATT),
         (PressureConverter, PRESSURE_PA),
+        (TemperatureConverter, TEMP_CELSIUS),
         (VolumeConverter, VOLUME_LITERS),
     ],
 )
@@ -86,6 +94,7 @@ def test_convert_invalid_unit(
         (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG),
+        (TemperatureConverter, TEMP_CELSIUS, TEMP_FAHRENHEIT),
         (VolumeConverter, VOLUME_GALLONS, VOLUME_LITERS),
     ],
 )
@@ -174,6 +183,45 @@ def test_pressure_convert(
 ) -> None:
     """Test conversion to other units."""
     assert PressureConverter.convert(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (100, TEMP_CELSIUS, 212, TEMP_FAHRENHEIT),
+        (100, TEMP_CELSIUS, 373.15, TEMP_KELVIN),
+        (100, TEMP_FAHRENHEIT, pytest.approx(37.77777777777778), TEMP_CELSIUS),
+        (100, TEMP_FAHRENHEIT, pytest.approx(310.92777777777775), TEMP_KELVIN),
+        (100, TEMP_KELVIN, pytest.approx(-173.15), TEMP_CELSIUS),
+        (100, TEMP_KELVIN, pytest.approx(-279.66999999999996), TEMP_FAHRENHEIT),
+    ],
+)
+def test_temperature_convert(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    assert TemperatureConverter.convert(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (100, TEMP_CELSIUS, 180, TEMP_FAHRENHEIT),
+        (100, TEMP_CELSIUS, 100, TEMP_KELVIN),
+        (100, TEMP_FAHRENHEIT, pytest.approx(55.55555555555556), TEMP_CELSIUS),
+        (100, TEMP_FAHRENHEIT, pytest.approx(55.55555555555556), TEMP_KELVIN),
+        (100, TEMP_KELVIN, 100, TEMP_CELSIUS),
+        (100, TEMP_KELVIN, 180, TEMP_FAHRENHEIT),
+    ],
+)
+def test_temperature_convert_with_interval(
+    value: float, from_unit: str, expected: float, to_unit: str
+) -> None:
+    """Test conversion to other units."""
+    assert (
+        TemperatureConverter.convert(value, from_unit, to_unit, interval=True)
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
