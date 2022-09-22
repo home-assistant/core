@@ -6,7 +6,7 @@ from datetime import timedelta
 from functools import partial
 from typing import Any, cast
 
-from aiolifx.aiolifx import Light
+from aiolifx.aiolifx import Light, MultiZoneDirection, MultiZoneEffectType
 from aiolifx.connection import LIFXConnection
 
 from homeassistant.const import Platform
@@ -139,6 +139,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # Update model-specific configuration
             if lifx_features(self.device)["multizone"]:
                 await self.async_update_color_zones()
+                await self.async_update_multizone_effect()
 
             if lifx_features(self.device)["hev"]:
                 await self.async_get_hev_cycle()
@@ -218,6 +219,24 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 apply=apply,
             )
         )
+
+    async def async_update_multizone_effect(self) -> None:
+        """Update the device firmware effect running state."""
+        await async_execute_lifx(self.device.get_multizone_effect)
+
+    async def async_set_multizone_effect(
+        self, effect: str, speed: float, direction: str
+    ) -> None:
+        """Control the firmware-based Move effect on a multizone device."""
+        if lifx_features(self.device)["multizone"] is True:
+            await async_execute_lifx(
+                partial(
+                    self.device.set_multizone_effect,
+                    effect=MultiZoneEffectType[effect.upper()].value,
+                    speed=speed,
+                    direction=MultiZoneDirection[direction.upper()].value,
+                )
+            )
 
     async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
         """Start or stop an HEV cycle on a LIFX Clean bulb."""

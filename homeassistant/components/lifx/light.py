@@ -42,6 +42,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_STOP,
     LIFXManager,
@@ -360,6 +361,22 @@ class LIFXColor(LIFXLight):
 
 class LIFXStrip(LIFXColor):
     """Representation of a LIFX light strip with multiple zones."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MOVE,
+        SERVICE_EFFECT_STOP,
+    ]
+
+    @property
+    def effect(self) -> str | None:
+        """Return the name of the currently running effect."""
+        if effect := self.bulb.effect.get("effect", False):
+            return f"effect_{effect.lower()}"
+        if effect := self.effects_conductor.effect(self.bulb):
+            return f"effect_{effect.name}"
+        return None
 
     async def set_color(
         self,
