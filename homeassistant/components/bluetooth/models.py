@@ -273,8 +273,17 @@ class HaBleakClientWrapper(BleakClient):
         if backend := self._get_backend_for_ble_device(ble_device):
             return backend
 
-        # The best backend based on RSSI cannot currently connect the device
-        # so we need to try all backends to find one that can
+        #
+        # The preferred backend cannot currently connect the device
+        # because it is likely out of connection slots.
+        #
+        # We need to try all backends to find one that can
+        # connect to the device.
+        #
+        # Currently we have to search all the discovered devices
+        # because the bleak API does not allow us to get the
+        # details for a specific device.
+        #
         for ble_device in sorted(
             (
                 ble_device
