@@ -57,7 +57,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, pressure as pressure_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     PressureConverter,
@@ -214,7 +214,7 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
-    SensorDeviceClass.PRESSURE: PressureConverter.UNIT_CONVERSION,
+    SensorDeviceClass.PRESSURE: pressure_util.UNIT_CONVERSION,
     SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: 1.0,
         TEMP_FAHRENHEIT: 1.8,
