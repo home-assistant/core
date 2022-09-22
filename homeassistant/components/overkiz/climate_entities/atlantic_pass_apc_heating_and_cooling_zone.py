@@ -31,7 +31,6 @@ OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
-
 OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_ECO,
     OverkizCommandParam.STOP: PRESET_ECO,
@@ -143,15 +142,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         ]
 
         await self.executor.async_execute_commands(commands)
-
-    @property
-    def hvac_action(self) -> str:
-        """Return hvac current action."""
-        return OVERKIZ_TO_HVAC_MODE[
-            cast(
-                str, self.executor.select_state(OverkizState.CORE_THERMAL_CONFIGURATION)
-            )
-        ]
 
     @property
     def target_temperature(self) -> float:
