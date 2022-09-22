@@ -56,11 +56,12 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, StateType, UnitConverter
-from homeassistant.util import (
-    dt as dt_util,
-    pressure as pressure_util,
-    temperature as temperature_util,
+from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util, pressure as pressure_util
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    PressureConverter,
+    TemperatureConverter,
 )
 
 from .const import CONF_STATE_CLASS  # noqa: F401
@@ -207,9 +208,9 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-UNIT_CONVERTERS: dict[str, UnitConverter] = {
-    SensorDeviceClass.PRESSURE: pressure_util,
-    SensorDeviceClass.TEMPERATURE: temperature_util,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
