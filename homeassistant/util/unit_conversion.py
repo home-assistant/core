@@ -21,10 +21,23 @@ from homeassistant.const import (
     PRESSURE_PSI,
     TEMP_CELSIUS,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_FLUID_OUNCE,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+    VOLUME_MILLILITERS,
 )
 
-from . import temperature as temperature_util, volume as volume_util
+from . import temperature as temperature_util
+from .distance import FOOT_TO_M, IN_TO_M
+
+# Volume conversion constants
+_L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
+_ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
+_GALLON_TO_CUBIC_METER = 231 * pow(IN_TO_M, 3)  # US gallon is 231 cubic inches
+_FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
+_CUBIC_FOOT_TO_CUBIC_METER = pow(FOOT_TO_M, 3)
 
 
 class BaseUnitConverter:
@@ -132,9 +145,25 @@ class TemperatureConverter(BaseUnitConverter):
     convert = temperature_util.convert
 
 
-class VolumeConverter(BaseUnitConverter):
+class VolumeConverter(BaseUnitConverterWithUnitConversion):
     """Utility to convert volume values."""
 
+    UNIT_CLASS = "volume"
     NORMALIZED_UNIT = VOLUME_CUBIC_METERS
-    VALID_UNITS = volume_util.VALID_UNITS
-    convert = volume_util.convert
+    # Units in terms of m³
+    UNIT_CONVERSION: dict[str, float] = {
+        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
+        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
+        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+        VOLUME_CUBIC_METERS: 1,
+        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        VOLUME_LITERS,
+        VOLUME_MILLILITERS,
+        VOLUME_GALLONS,
+        VOLUME_FLUID_OUNCE,
+        VOLUME_CUBIC_METERS,
+        VOLUME_CUBIC_FEET,
+    )
