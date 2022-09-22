@@ -24,13 +24,6 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_METERS,
-)
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
@@ -137,45 +130,45 @@ def _convert_energy_from_kwh(to_unit: str, value: float | None) -> float | None:
     """Convert energy in kWh to to_unit."""
     if value is None:
         return None
-    return energy_util.convert(value, ENERGY_KILO_WATT_HOUR, to_unit)
+    return energy_util.convert(value, energy_util.NORMALISED_UNIT, to_unit)
 
 
 def _convert_energy_to_kwh(from_unit: str, value: float) -> float:
     """Convert energy in from_unit to kWh."""
-    return energy_util.convert(value, from_unit, ENERGY_KILO_WATT_HOUR)
+    return energy_util.convert(value, from_unit, energy_util.NORMALISED_UNIT)
 
 
 def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:
     """Convert power in W to to_unit."""
     if value is None:
         return None
-    return power_util.convert(value, POWER_WATT, to_unit)
+    return power_util.convert(value, power_util.NORMALISED_UNIT, to_unit)
 
 
 def _convert_pressure_from_pa(to_unit: str, value: float | None) -> float | None:
     """Convert pressure in Pa to to_unit."""
     if value is None:
         return None
-    return pressure_util.convert(value, PRESSURE_PA, to_unit)
+    return pressure_util.convert(value, pressure_util.NORMALISED_UNIT, to_unit)
 
 
 def _convert_temperature_from_c(to_unit: str, value: float | None) -> float | None:
     """Convert temperature in °C to to_unit."""
     if value is None:
         return None
-    return temperature_util.convert(value, TEMP_CELSIUS, to_unit)
+    return temperature_util.convert(value, temperature_util.NORMALISED_UNIT, to_unit)
 
 
 def _convert_volume_from_m3(to_unit: str, value: float | None) -> float | None:
     """Convert volume in m³ to to_unit."""
     if value is None:
         return None
-    return volume_util.convert(value, VOLUME_CUBIC_METERS, to_unit)
+    return volume_util.convert(value, volume_util.NORMALISED_UNIT, to_unit)
 
 
 def _convert_volume_to_m3(from_unit: str, value: float) -> float:
     """Convert volume in from_unit to m³."""
-    return volume_util.convert(value, from_unit, VOLUME_CUBIC_METERS)
+    return volume_util.convert(value, from_unit, volume_util.NORMALISED_UNIT)
 
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
@@ -187,11 +180,11 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
 }
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, UnitConverter] = {
-    ENERGY_KILO_WATT_HOUR: energy_util,
-    POWER_WATT: power_util,
-    PRESSURE_PA: pressure_util,
-    TEMP_CELSIUS: temperature_util,
-    VOLUME_CUBIC_METERS: volume_util,
+    energy_util.NORMALISED_UNIT: energy_util,
+    power_util.NORMALISED_UNIT: power_util,
+    pressure_util.NORMALISED_UNIT: pressure_util,
+    temperature_util.NORMALISED_UNIT: temperature_util,
+    volume_util.NORMALISED_UNIT: volume_util,
 }
 
 # Convert energy power, pressure, temperature and volume statistics from the
@@ -199,19 +192,19 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, UnitConverter] = {
 STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
     str, Callable[[str, float | None], float | None]
 ] = {
-    ENERGY_KILO_WATT_HOUR: _convert_energy_from_kwh,
-    POWER_WATT: _convert_power_from_w,
-    PRESSURE_PA: _convert_pressure_from_pa,
-    TEMP_CELSIUS: _convert_temperature_from_c,
-    VOLUME_CUBIC_METERS: _convert_volume_from_m3,
+    energy_util.NORMALISED_UNIT: _convert_energy_from_kwh,
+    power_util.NORMALISED_UNIT: _convert_power_from_w,
+    pressure_util.NORMALISED_UNIT: _convert_pressure_from_pa,
+    temperature_util.NORMALISED_UNIT: _convert_temperature_from_c,
+    volume_util.NORMALISED_UNIT: _convert_volume_from_m3,
 }
 
 # Convert energy and volume statistics from the display unit configured by the user
 # to the normalized unit used for statistics.
 # This is used to support adjusting statistics in the display unit
 DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS: dict[str, Callable[[str, float], float]] = {
-    ENERGY_KILO_WATT_HOUR: _convert_energy_to_kwh,
-    VOLUME_CUBIC_METERS: _convert_volume_to_m3,
+    energy_util.NORMALISED_UNIT: _convert_energy_to_kwh,
+    volume_util.NORMALISED_UNIT: _convert_volume_to_m3,
 }
 
 _LOGGER = logging.getLogger(__name__)
