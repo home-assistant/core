@@ -177,8 +177,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
-/homeassistant/components/climacell/ @raman325
-/tests/components/climacell/ @raman325
 /homeassistant/components/climate/ @home-assistant/core
 /tests/components/climate/ @home-assistant/core
 /homeassistant/components/cloud/ @home-assistant/cloud
