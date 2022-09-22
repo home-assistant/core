@@ -19,6 +19,14 @@ from homeassistant.const import (
     PRESSURE_MMHG,
     PRESSURE_PA,
     PRESSURE_PSI,
+    SPEED_FEET_PER_SECOND,
+    SPEED_INCHES_PER_DAY,
+    SPEED_INCHES_PER_HOUR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    SPEED_MILLIMETERS_PER_DAY,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -31,7 +39,21 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
-from .distance import FOOT_TO_M, IN_TO_M
+# Distance conversion constants
+MM_TO_M = 0.001  # 1 mm = 0.001 m
+CM_TO_M = 0.01  # 1 cm = 0.01 m
+KM_TO_M = 1000  # 1 km = 1000 m
+
+IN_TO_M = 0.0254  # 1 inch = 0.0254 m
+FOOT_TO_M = IN_TO_M * 12  # 12 inches = 1 foot (0.3048 m)
+YARD_TO_M = FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
+MILE_TO_M = YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
+
+NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+# Duration conversion constants
+HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
+DAYS_TO_SECS = 24 * HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -144,6 +166,33 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
         PRESSURE_INHG,
         PRESSURE_PSI,
         PRESSURE_MMHG,
+    )
+
+
+class SpeedConverter(BaseUnitConverterWithUnitConversion):
+    """Utility to convert speed values."""
+
+    UNIT_CLASS = "speed"
+    NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
+    UNIT_CONVERSION: dict[str, float] = {
+        SPEED_FEET_PER_SECOND: 1 / FOOT_TO_M,
+        SPEED_INCHES_PER_DAY: DAYS_TO_SECS / IN_TO_M,
+        SPEED_INCHES_PER_HOUR: HRS_TO_SECS / IN_TO_M,
+        SPEED_KILOMETERS_PER_HOUR: HRS_TO_SECS / KM_TO_M,
+        SPEED_KNOTS: HRS_TO_SECS / NAUTICAL_MILE_TO_M,
+        SPEED_METERS_PER_SECOND: 1,
+        SPEED_MILES_PER_HOUR: HRS_TO_SECS / MILE_TO_M,
+        SPEED_MILLIMETERS_PER_DAY: DAYS_TO_SECS / MM_TO_M,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        SPEED_FEET_PER_SECOND,
+        SPEED_INCHES_PER_DAY,
+        SPEED_INCHES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KNOTS,
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILLIMETERS_PER_DAY,
     )
 
 
