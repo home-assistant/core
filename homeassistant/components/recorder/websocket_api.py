@@ -25,7 +25,6 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     TemperatureConverter,
-    VolumeConverter,
 )
 
 from .const import MAX_QUEUE_BACKLOG
@@ -126,7 +125,7 @@ async def ws_handle_get_statistics_during_period(
                 vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
                 vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+                vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
             }
         ),
     }
