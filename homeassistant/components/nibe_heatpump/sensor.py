@@ -30,71 +30,71 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DOMAIN, CoilEntity, Coordinator
 
 UNIT_DESCRIPTIONS = {
-    TEMP_CELSIUS: SensorEntityDescription(
-        key=TEMP_CELSIUS,
+    "°C": SensorEntityDescription(
+        key="°C",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
-    TEMP_FAHRENHEIT: SensorEntityDescription(
-        key=TEMP_FAHRENHEIT,
+    "°F": SensorEntityDescription(
+        key="°F",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
     ),
-    ELECTRIC_CURRENT_AMPERE: SensorEntityDescription(
-        key=ELECTRIC_CURRENT_AMPERE,
+    "A": SensorEntityDescription(
+        key="A",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
-    ELECTRIC_CURRENT_MILLIAMPERE: SensorEntityDescription(
-        key=ELECTRIC_CURRENT_MILLIAMPERE,
+    "mA": SensorEntityDescription(
+        key="mA",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
     ),
-    ELECTRIC_POTENTIAL_VOLT: SensorEntityDescription(
-        key=ELECTRIC_POTENTIAL_VOLT,
+    "V": SensorEntityDescription(
+        key="V",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
-    ELECTRIC_POTENTIAL_MILLIVOLT: SensorEntityDescription(
-        key=ELECTRIC_POTENTIAL_VOLT,
+    "mV": SensorEntityDescription(
+        key="mV",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
     ),
-    ENERGY_WATT_HOUR: SensorEntityDescription(
-        key=ENERGY_WATT_HOUR,
+    "Wh": SensorEntityDescription(
+        key="Wh",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
     ),
-    ENERGY_KILO_WATT_HOUR: SensorEntityDescription(
-        key=ENERGY_WATT_HOUR,
+    "kWh": SensorEntityDescription(
+        key="kWh",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
-    ENERGY_MEGA_WATT_HOUR: SensorEntityDescription(
-        key=ENERGY_MEGA_WATT_HOUR,
+    "MWh": SensorEntityDescription(
+        key="MWh",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
     ),
-    TIME_HOURS: SensorEntityDescription(
-        key=TIME_HOURS,
+    "h": SensorEntityDescription(
+        key="h",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_HOURS,
