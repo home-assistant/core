@@ -68,12 +68,14 @@ class BaseUnitConverter:
 
     @classmethod
     @abstractmethod
-    def convert(cls, value: _ValueT, from_unit: str, to_unit: str) -> _ValueT:
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
 
     @classmethod
     def from_normalized_unit(cls, value: _ValueT, to_unit: str) -> _ValueT:
         """Convert one unit of measurement to another."""
+        if value is None:
+            return value
         return cls.convert(value, cls.NORMALIZED_UNIT, to_unit)
 
     @classmethod
@@ -88,12 +90,12 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     UNIT_CONVERSION: dict[str, float]
 
     @classmethod
-    def convert(cls, value: _ValueT, from_unit: str, to_unit: str) -> _ValueT:
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
-        if value is None or from_unit == to_unit:
-            return value
-
         cls._check_arguments(value, from_unit, to_unit)
+
+        if from_unit == to_unit:
+            return value
 
         new_value = value / cls.UNIT_CONVERSION[from_unit]
         return new_value * cls.UNIT_CONVERSION[to_unit]
@@ -173,13 +175,13 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     def convert(
-        cls, value: _ValueT, from_unit: str, to_unit: str, *, interval: bool = False
-    ) -> _ValueT:
+        cls, value: float, from_unit: str, to_unit: str, *, interval: bool = False
+    ) -> float:
         """Convert a temperature from one unit to another."""
-        if value is None or from_unit == to_unit:
-            return value
-
         cls._check_arguments(value, from_unit, to_unit)
+
+        if from_unit == to_unit:
+            return value
 
         if from_unit == TEMP_CELSIUS:
             if to_unit == TEMP_FAHRENHEIT:
