@@ -10,8 +10,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitchBeeCoordinator
 from .const import DOMAIN
+from .coordinator import SwitchBeeCoordinator
 
 
 async def async_setup_entry(
