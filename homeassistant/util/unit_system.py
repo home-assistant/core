@@ -53,7 +53,7 @@ WIND_SPEED_UNITS = speed_util.VALID_UNITS
 TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
 
-def is_valid_unit(unit: str, unit_type: str) -> bool:
+def _is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
         units = LENGTH_UNITS
@@ -101,7 +101,7 @@ class UnitSystem:
                 (mass, MASS),
                 (pressure, PRESSURE),
             )
-            if not is_valid_unit(unit, unit_type)
+            if not _is_valid_unit(unit, unit_type)
         )
 
         if errors:

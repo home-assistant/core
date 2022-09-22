@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -28,7 +28,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
-from .const import DATA_LIFX_MANAGER, DOMAIN
+from .const import (
+    _LOGGER,
+    ATTR_DURATION,
+    ATTR_INFRARED,
+    ATTR_POWER,
+    ATTR_ZONES,
+    DATA_LIFX_MANAGER,
+    DOMAIN,
+    INFRARED_BRIGHTNESS,
+)
 from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
@@ -39,24 +48,24 @@ from .manager import (
 )
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
-SERVICE_LIFX_SET_STATE = "set_state"
-
-COLOR_ZONE_POPULATE_DELAY = 0.3
-
-ATTR_INFRARED = "infrared"
-ATTR_ZONES = "zones"
-ATTR_POWER = "power"
+LIFX_STATE_SETTLE_DELAY = 0.3
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
-LIFX_SET_STATE_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIGHT_TURN_ON_SCHEMA,
-        ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-        ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
-        ATTR_POWER: cv.boolean,
-    }
-)
+LIFX_SET_STATE_SCHEMA = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_POWER: cv.boolean,
+}
+
+
+SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
+
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA = {
+    ATTR_POWER: vol.Required(cv.boolean),
+    ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
+}
 
 HSBK_HUE = 0
 HSBK_SATURATION = 1
@@ -79,6 +88,11 @@ async def async_setup_entry(
         SERVICE_LIFX_SET_STATE,
         LIFX_SET_STATE_SCHEMA,
         "set_state",
+    )
+    platform.async_register_entity_service(
+        SERVICE_LIFX_SET_HEV_CYCLE_STATE,
+        LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
+        "set_hev_cycle_state",
     )
     if lifx_features(device)["multizone"]:
         entity: LIFXLight = LIFXStrip(coordinator, manager, entry)
@@ -200,6 +214,13 @@ class LIFXLight(LIFXEntity, LightEntity):
                 return
 
             if ATTR_INFRARED in kwargs:
+                infrared_entity_id = self.coordinator.async_get_entity_id(
+                    Platform.SELECT, INFRARED_BRIGHTNESS
+                )
+                _LOGGER.warning(
+                    "The 'infrared' attribute of 'lifx.set_state' is deprecated: call 'select.select_option' targeting '%s' instead",
+                    infrared_entity_id,
+                )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
             if ATTR_TRANSITION in kwargs:
@@ -225,20 +246,30 @@ class LIFXLight(LIFXEntity, LightEntity):
                 elif power_on:
                     await self.set_power(True, duration=fade)
             else:
+                if power_on:
+                    await self.set_power(True)
                 if hsbk:
                     await self.set_color(hsbk, kwargs, duration=fade)
-                    # The response from set_color will tell us if the
-                    # bulb is actually on or not, so we don't need to
-                    # call power_on if its already on
-                    if power_on and self.bulb.power_level == 0:
-                        await self.set_power(True)
-                elif power_on:
-                    await self.set_power(True)
                 if power_off:
                     await self.set_power(False, duration=fade)
 
+            # Avoid state ping-pong by holding off updates as the state settles
+            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
+
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
+
+    async def set_hev_cycle_state(
+        self, power: bool, duration: int | None = None
+    ) -> None:
+        """Set the state of the HEV LEDs on a LIFX Clean bulb."""
+        if lifx_features(self.bulb)["hev"] is False:
+            raise HomeAssistantError(
+                "This device does not support setting HEV cycle state"
+            )
+
+        await self.coordinator.async_set_hev_cycle_state(power, duration or 0)
+        await self.update_during_transition(duration or 0)
 
     async def set_power(
         self,
@@ -344,7 +375,7 @@ class LIFXStrip(LIFXColor):
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
             await self.set_power(True)
-            await asyncio.sleep(COLOR_ZONE_POPULATE_DELAY)
+            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
             await self.update_color_zones()
             await self.set_power(False)
 

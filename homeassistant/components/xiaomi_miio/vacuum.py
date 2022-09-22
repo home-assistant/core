@@ -73,6 +73,8 @@ STATE_CODE_TO_STATE = {
     17: STATE_CLEANING,  # "Zoned cleaning"
     18: STATE_CLEANING,  # "Segment cleaning"
     22: STATE_DOCKED,  # "Emptying the bin" on s7+
+    23: STATE_DOCKED,  # "Washing the mop" on s7maxV
+    26: STATE_RETURNING,  # "Going to wash the mop" on s7maxV
     100: STATE_DOCKED,  # "Charging complete"
     101: STATE_ERROR,  # "Device offline"
 }
@@ -329,7 +331,10 @@ class MiroboVacuum(
         await self._try_command("Unable to locate the botvac: %s", self._device.find)
 
     async def async_send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send raw command."""
         await self._try_command(

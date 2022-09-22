@@ -1,12 +1,12 @@
 """Make sure that Vocolinc Flowerbud is enumerated properly."""
 
-from homeassistant.components.humidifier.const import SUPPORT_MODES
+from homeassistant.components.humidifier import HumidifierEntityFeature
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -37,7 +37,7 @@ async def test_vocolinc_flowerbud_setup(hass):
                     entity_id="humidifier.vocolinc_flowerbud_0d324b",
                     friendly_name="VOCOlinc-Flowerbud-0d324b",
                     unique_id="homekit-AM01121849000327-30",
-                    supported_features=SUPPORT_MODES,
+                    supported_features=HumidifierEntityFeature.MODES,
                     capabilities={
                         "available_modes": ["normal", "auto"],
                         "max_humidity": 100.0,

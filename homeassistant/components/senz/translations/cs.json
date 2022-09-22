@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1"
+        }
+    }
+}

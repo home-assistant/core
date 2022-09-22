@@ -45,8 +45,6 @@ from homeassistant.util import (
     temperature as temperature_util,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONDITION_CLASS = "condition_class"
@@ -143,6 +141,8 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
 
+# mypy: disallow-any-generics
+
 
 def round_temperature(temperature: float | None, precision: float) -> float | None:
     """Convert temperature into preferred precision for display."""
@@ -185,7 +185,7 @@ class Forecast(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -194,13 +194,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -626,9 +626,9 @@ class WeatherEntity(Entity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted from native units to user-configured units."""
-        data = {}
+        data: dict[str, Any] = {}
 
         precision = self.precision
 
@@ -705,9 +705,9 @@ class WeatherEntity(Entity):
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
         if self.forecast is not None:
-            forecast = []
-            for forecast_entry in self.forecast:
-                forecast_entry = dict(forecast_entry)
+            forecast: list[dict[str, Any]] = []
+            for existing_forecast_entry in self.forecast:
+                forecast_entry: dict[str, Any] = dict(existing_forecast_entry)
 
                 temperature = forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)

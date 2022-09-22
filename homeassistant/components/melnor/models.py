@@ -1,10 +1,13 @@
 """Melnor integration models."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import TypeVar
 
-from melnor_bluetooth.device import Device
+from melnor_bluetooth.device import Device, Valve
 
+from homeassistant.components.number import EntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -39,10 +42,11 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         return self._device
 
 
-class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
+class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     """Base class for melnor entities."""
 
     _device: Device
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -59,8 +63,6 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
             model=self._device.model,
             name=self._device.name,
         )
-        self._attr_name = self._device.name
-        self._attr_unique_id = self._device.mac
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -72,3 +74,57 @@ class MelnorBluetoothBaseEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.is_connected
+
+
+class MelnorZoneEntity(MelnorBluetoothEntity):
+    """Base class for valves that define themselves as child devices."""
+
+    _valve: Valve
+
+    def __init__(
+        self,
+        coordinator: MelnorDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        valve: Valve,
+    ) -> None:
+        """Initialize a valve entity."""
+        super().__init__(coordinator)
+
+        self._attr_unique_id = (
+            f"{self._device.mac}-zone{valve.id}-{entity_description.key}"
+        )
+        self.entity_description = entity_description
+
+        self._valve = valve
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._device.mac}-zone{self._valve.id}")},
+            manufacturer="Melnor",
+            name=f"Zone {valve.id + 1}",
+            via_device=(DOMAIN, self._device.mac),
+        )
+
+
+T = TypeVar("T", bound=EntityDescription)
+
+
+def get_entities_for_valves(
+    coordinator: MelnorDataUpdateCoordinator,
+    descriptions: list[T],
+    function: Callable[
+        [Valve, T],
+        CoordinatorEntity[MelnorDataUpdateCoordinator],
+    ],
+) -> list[CoordinatorEntity[MelnorDataUpdateCoordinator]]:
+    """Get descriptions for valves."""
+    entities = []
+
+    # This device may not have 4 valves total, but the library will only expose the right number of valves
+    for i in range(1, 5):
+        valve = coordinator.data[f"zone{i}"]
+
+        if valve is not None:
+            for description in descriptions:
+                entities.append(function(valve, description))
+
+    return entities

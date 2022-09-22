@@ -145,7 +145,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
         """Icon to use in the frontend."""
         return self._icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self.hydro_data.update()
         self._data = self.hydro_data.data

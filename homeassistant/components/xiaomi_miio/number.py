@@ -6,10 +6,13 @@ from dataclasses import dataclass
 
 from miio import Device
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.components.number import (
+    DOMAIN as PLATFORM_DOMAIN,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, TIME_MINUTES
+from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -132,7 +135,7 @@ NUMBER_TYPES = {
         key=ATTR_MOTOR_SPEED,
         name="Motor speed",
         icon="mdi:fast-forward-outline",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=200,
         native_max_value=2000,
         native_step=10,
@@ -216,7 +219,7 @@ NUMBER_TYPES = {
         key=ATTR_FAVORITE_RPM,
         name="Favorite motor speed",
         icon="mdi:star-cog",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=300,
         native_max_value=2200,
         native_step=10,

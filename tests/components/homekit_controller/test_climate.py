@@ -8,7 +8,7 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -18,7 +18,7 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 
-from tests.components.homekit_controller.common import setup_test_component
+from .common import setup_test_component
 
 # Test thermostat devices
 

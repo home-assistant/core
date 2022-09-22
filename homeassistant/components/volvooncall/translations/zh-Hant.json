@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
@@ -14,6 +15,7 @@
                     "password": "\u5bc6\u78bc",
                     "region": "\u5340\u57df",
                     "scandinavian_miles": "\u4f7f\u7528\u7d0d\u7dad\u4e9e\u82f1\u91cc",
+                    "unit_system": "\u55ae\u4f4d\u7cfb\u7d71",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 }
             }

@@ -8,7 +8,7 @@ from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateTyp
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (
-    SUPPORT_STREAM,
+    CameraEntityFeature,
     async_get_image,
     async_get_stream_source,
 )
@@ -112,7 +112,7 @@ def validate_common_camera_state(
     hass: HomeAssistant,
     channel: CameraChannel,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate state that is common to all camera entity, regradless of type."""
     entity_state = hass.states.get(entity_id)
@@ -131,7 +131,7 @@ async def validate_rtsps_camera_state(
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
@@ -145,7 +145,7 @@ async def validate_rtsp_camera_state(
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
@@ -159,7 +159,7 @@ async def validate_no_stream_camera_state(
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]

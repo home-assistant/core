@@ -11,7 +11,7 @@
             "default": "Authentification r\u00e9ussie"
         },
         "error": {
-            "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur Soumettre.",
+            "follow_link": "Veuillez suivre le lien et vous authentifier avant d'appuyer sur \u00ab\u00a0Valider\u00a0\u00bb",
             "no_token": "Jeton d'acc\u00e8s non valide"
         },
         "step": {

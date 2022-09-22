@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
-from homeassistant.components.cover import DEVICE_CLASS_GATE
-from homeassistant.components.media_player.const import (
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -2765,7 +2765,7 @@ async def test_cover_gate(hass):
         {
             "friendly_name": "Test cover gate",
             "supported_features": 3,
-            "device_class": DEVICE_CLASS_GATE,
+            "device_class": CoverDeviceClass.GATE,
         },
     )
     appliance = await discovery_test(device, hass)

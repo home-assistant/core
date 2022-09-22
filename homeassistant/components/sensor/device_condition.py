@@ -29,8 +29,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_APPARENT_POWER = "is_apparent_power"
