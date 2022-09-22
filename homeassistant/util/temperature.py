@@ -46,9 +46,9 @@ def convert(
     temperature: float, from_unit: str, to_unit: str, interval: bool = False
 ) -> float:
     """Convert a temperature from one unit to another."""
-    if from_unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT, TEMP_KELVIN):
+    if from_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, TEMPERATURE))
-    if to_unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT, TEMP_KELVIN):
+    if to_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, TEMPERATURE))
 
     if from_unit == to_unit:
