@@ -36,7 +36,7 @@ class SwitchBeeButton(CoordinatorEntity[SwitchBeeCoordinator], ButtonEntity):
     ) -> None:
         """Initialize the Switchbee switch."""
         super().__init__(coordinator)
-        self._attr_name = f"{device.zone} {device.name}"
+        self._attr_name = device.name
         self._device_id = device.id
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
 
