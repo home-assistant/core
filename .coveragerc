@@ -892,7 +892,6 @@ omit =
     homeassistant/components/quantum_gateway/device_tracker.py
     homeassistant/components/qvr_pro/*
     homeassistant/components/rachio/*
-    homeassistant/components/radarr/sensor.py
     homeassistant/components/radiotherm/climate.py
     homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
