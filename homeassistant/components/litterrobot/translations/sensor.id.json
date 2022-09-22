@@ -4,6 +4,7 @@
             "br": "Bonnet Dihapus",
             "ccc": "Siklus Bersih Selesai",
             "ccp": "Siklus Bersih Sedang Berlangsung",
+            "cd": "Kucing Terdeteksi",
             "csf": "Kesalahan Sensor Kucing",
             "csi": "Sensor Kucing Terganggu",
             "cst": "Waktu Sensor Kucing",
@@ -16,6 +17,8 @@
             "offline": "Luring",
             "otf": "Kesalahan Torsi Berlebih",
             "p": "Jeda",
+            "pwrd": "Mematikan Daya",
+            "pwru": "Menyalakan",
             "rdy": "Siap",
             "scf": "Kesalahan Sensor Kucing Saat Mulai",
             "sdf": "Laci Penuh Saat Memulai"

@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.10
+PySwitchbot==0.19.11
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -155,7 +155,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.9
+aiohomekit==1.5.12
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -697,6 +697,9 @@ jsonpath==0.82
 # homeassistant.components.justnimbus
 justnimbus==0.6.0
 
+# homeassistant.components.kegtron
+kegtron-ble==0.4.0
+
 # homeassistant.components.konnected
 konnected==1.2.0
 
@@ -1085,9 +1088,6 @@ pyflic==2.0.3
 # homeassistant.components.flume
 pyflume==0.6.5
 
-# homeassistant.components.flunearyou
-pyflunearyou==2.0.2
-
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
 
@@ -1176,7 +1176,7 @@ pylitejet==0.3.0
 pylitterbot==2022.9.5
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.15.1
+pylutron-caseta==0.15.2
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1670,7 +1670,7 @@ uasiren==0.0.1
 ultraheat-api==0.4.3
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.6
+unifi-discovery==1.1.7
 
 # homeassistant.components.upb
 upb_lib==0.4.12

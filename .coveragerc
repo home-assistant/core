@@ -402,9 +402,6 @@ omit =
     homeassistant/components/flume/coordinator.py
     homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
-    homeassistant/components/flunearyou/__init__.py
-    homeassistant/components/flunearyou/repairs.py
-    homeassistant/components/flunearyou/sensor.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
@@ -648,8 +645,6 @@ omit =
     homeassistant/components/kostal_plenticore/switch.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
-    homeassistant/components/lametric/button.py
-    homeassistant/components/lametric/entity.py
     homeassistant/components/lametric/notify.py
     homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py

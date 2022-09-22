@@ -1,6 +1,6 @@
 """Make sure that Mysa Living is enumerated properly."""
 
-from homeassistant.components.climate import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
@@ -35,7 +35,7 @@ async def test_mysa_living_setup(hass):
                     entity_id="climate.mysa_85dda9_thermostat",
                     friendly_name="Mysa-85dda9 Thermostat",
                     unique_id="homekit-AAAAAAA000-20",
-                    supported_features=SUPPORT_TARGET_TEMPERATURE,
+                    supported_features=ClimateEntityFeature.TARGET_TEMPERATURE,
                     capabilities={
                         "hvac_modes": ["off", "heat", "cool", "heat_cool"],
                         "max_temp": 35,

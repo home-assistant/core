@@ -145,6 +145,7 @@ class AdjustStatisticsTask(RecorderTask):
     statistic_id: str
     start_time: datetime
     sum_adjustment: float
+    display_unit: str
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -153,12 +154,16 @@ class AdjustStatisticsTask(RecorderTask):
             self.statistic_id,
             self.start_time,
             self.sum_adjustment,
+            self.display_unit,
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
         instance.queue_task(
             AdjustStatisticsTask(
-                self.statistic_id, self.start_time, self.sum_adjustment
+                self.statistic_id,
+                self.start_time,
+                self.sum_adjustment,
+                self.display_unit,
             )
         )
 
