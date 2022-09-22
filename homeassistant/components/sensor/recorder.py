@@ -49,7 +49,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import (
     dt as dt_util,
-    pressure as pressure_util,
     temperature as temperature_util,
     volume as volume_util,
 )
@@ -105,15 +104,15 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         POWER_KILO_WATT: lambda x: x / PowerConverter.UNIT_CONVERSION[POWER_KILO_WATT],
     },
     # Convert pressure to Pa
-    # Note: pressure_util.convert is bypassed to avoid redundant error checking
+    # Note: PressureConverter.convert is bypassed to avoid redundant error checking
     SensorDeviceClass.PRESSURE: {
-        PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
-        PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
-        PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
-        PRESSURE_KPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_KPA],
-        PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
-        PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
-        PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
+        PRESSURE_BAR: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_BAR],
+        PRESSURE_HPA: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_HPA],
+        PRESSURE_INHG: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_INHG],
+        PRESSURE_KPA: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_KPA],
+        PRESSURE_MBAR: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_MBAR],
+        PRESSURE_PA: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_PA],
+        PRESSURE_PSI: lambda x: x / PressureConverter.UNIT_CONVERSION[PRESSURE_PSI],
     },
     # Convert temperature to °C
     # Note: temperature_util.convert is bypassed to avoid redundant error checking

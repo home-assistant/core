@@ -32,7 +32,6 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
-    pressure as pressure_util,
     temperature as temperature_util,
     volume as volume_util,
 )
@@ -155,7 +154,7 @@ def _convert_pressure_from_pa(to_unit: str, value: float | None) -> float | None
     """Convert pressure in Pa to to_unit."""
     if value is None:
         return None
-    return pressure_util.convert(value, pressure_util.NORMALIZED_UNIT, to_unit)
+    return PressureConverter.convert(value, PressureConverter.NORMALIZED_UNIT, to_unit)
 
 
 def _convert_temperature_from_c(to_unit: str, value: float | None) -> float | None:
@@ -178,9 +177,9 @@ def _convert_volume_to_m3(from_unit: str, value: float) -> float:
 
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
-    EnergyConverter.NORMALIZED_UNIT: "energy",
-    PowerConverter.NORMALIZED_UNIT: "power",
-    pressure_util.NORMALIZED_UNIT: "pressure",
+    EnergyConverter.NORMALIZED_UNIT: EnergyConverter.UNIT_CLASS,
+    PowerConverter.NORMALIZED_UNIT: PowerConverter.UNIT_CLASS,
+    PressureConverter.NORMALIZED_UNIT: PressureConverter.UNIT_CLASS,
     temperature_util.NORMALIZED_UNIT: "temperature",
     volume_util.NORMALIZED_UNIT: "volume",
 }
@@ -188,7 +187,7 @@ STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     EnergyConverter.NORMALIZED_UNIT: EnergyConverter,
     PowerConverter.NORMALIZED_UNIT: PowerConverter,
-    pressure_util.NORMALIZED_UNIT: PressureConverter,
+    PressureConverter.NORMALIZED_UNIT: PressureConverter,
     temperature_util.NORMALIZED_UNIT: TemperatureConverter,
     volume_util.NORMALIZED_UNIT: VolumeConverter,
 }
@@ -200,7 +199,7 @@ STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
 ] = {
     EnergyConverter.NORMALIZED_UNIT: _convert_energy_from_kwh,
     PowerConverter.NORMALIZED_UNIT: _convert_power_from_w,
-    pressure_util.NORMALIZED_UNIT: _convert_pressure_from_pa,
+    PressureConverter.NORMALIZED_UNIT: _convert_pressure_from_pa,
     temperature_util.NORMALIZED_UNIT: _convert_temperature_from_c,
     volume_util.NORMALIZED_UNIT: _convert_volume_from_m3,
 }
