@@ -42,7 +42,7 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
 
 
 def to_normalized_unit(value: float, from_unit: str) -> float:
-    """Convert an energy from one unit to kWh."""
+    """Convert an energy from one unit to kWh, bypassing checks."""
     if from_unit == NORMALIZED_UNIT:
         return value
     return _convert(value, from_unit, NORMALIZED_UNIT)

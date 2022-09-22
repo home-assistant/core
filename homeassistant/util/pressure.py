@@ -61,7 +61,7 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
 
 
 def to_normalized_unit(value: float, from_unit: str) -> float:
-    """Convert a pressure from one unit to Pa."""
+    """Convert a pressure from one unit to Pa, bypassing checks."""
     if from_unit == NORMALIZED_UNIT:
         return value
     return _convert(value, from_unit, NORMALIZED_UNIT)

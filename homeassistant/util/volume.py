@@ -80,7 +80,7 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
 
 
 def to_normalized_unit(volume: float, from_unit: str) -> float:
-    """Convert a volume from one unit to m³."""
+    """Convert a volume from one unit to m³, bypassing checks."""
     if from_unit == NORMALIZED_UNIT:
         return volume
     return _convert(volume, from_unit, NORMALIZED_UNIT)

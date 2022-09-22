@@ -76,7 +76,7 @@ def convert(
 
 
 def to_normalized_unit(temperature: float, from_unit: str) -> float:
-    """Convert a temperature from one unit to °C."""
+    """Convert a temperature from one unit to °C, bypassing checks."""
     if from_unit == NORMALIZED_UNIT:
         return temperature
     if from_unit == TEMP_FAHRENHEIT:
