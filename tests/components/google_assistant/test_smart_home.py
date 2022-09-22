@@ -381,7 +381,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True, "brightness": 0},
+                "light.demo_light": {"on": False, "online": True},
                 "light.another_light": {
                     "on": True,
                     "online": True,
@@ -725,7 +725,6 @@ async def test_execute_times_out(hass, report_state, on, brightness, value):
                     "states": {
                         "on": on,
                         "online": True,
-                        "brightness": brightness,
                     },
                 },
                 {
