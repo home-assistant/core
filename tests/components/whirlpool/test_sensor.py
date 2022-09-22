@@ -25,6 +25,15 @@ async def update_sensor_state(
     return hass.states.get(entity_id)
 
 
+def side_effect_function_open_door(*args, **kwargs):
+    """Return correct value for attribute."""
+    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
+        return 3540
+
+    if args[0] == "Cavity_OpStatusDoorOpen":
+        return "1"
+
+
 async def test_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
@@ -109,3 +118,8 @@ async def test_sensor_values(
             assert state.state == "Cycle Washing"
 
             mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+
+            mock_instance.get_attribute.side_effect = side_effect_function_open_door
+            state = await update_sensor_state(hass, entity_id, mock_instance)
+            assert state is not None
+            assert state.state == "Door open"
