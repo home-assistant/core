@@ -1089,7 +1089,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.12
+motionblinds==0.6.13
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
