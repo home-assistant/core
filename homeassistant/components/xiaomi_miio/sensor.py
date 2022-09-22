@@ -572,6 +572,7 @@ VACUUM_SENSORS = {
     f"last_clean_{ATTR_LAST_CLEAN_TIME}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_LAST_CLEAN_TIME,
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last clean duration",
@@ -588,6 +589,7 @@ VACUUM_SENSORS = {
     f"current_{ATTR_STATUS_CLEAN_TIME}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_STATUS_CLEAN_TIME,
         parent_key=VacuumCoordinatorDataAttributes.status,
         name="Current clean duration",
@@ -603,6 +605,7 @@ VACUUM_SENSORS = {
     ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_DURATION}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
+        device_class=SensorDeviceClass.DURATION,
         icon="mdi:timer-sand",
         key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
         parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
@@ -642,6 +645,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:brush",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Main brush left",
@@ -650,6 +654,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:brush",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Side brush left",
@@ -658,6 +663,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_FILTER_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:air-filter",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Filter left",
@@ -666,6 +672,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:eye-outline",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Sensor dirty left",
