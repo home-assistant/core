@@ -1,6 +1,7 @@
 """The Nibe Heat Pump integration."""
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import timedelta
 
 from nibe.coil import Coil
@@ -11,14 +12,20 @@ from nibe.heatpump import HeatPump, Model
 from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, Platform
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_MODEL,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -33,6 +40,7 @@ from .const import (
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+COIL_READ_RETRIES = 5
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
     heatpump.word_swap = entry.data[CONF_WORD_SWAP]
-    heatpump.initialize()
+    await hass.async_add_executor_job(heatpump.initialize)
 
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
@@ -56,16 +64,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
 
     await connection.start()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, connection.stop)
+    )
+
     coordinator = Coordinator(hass, heatpump, connection)
 
     data = hass.data.setdefault(DOMAIN, {})
     data[entry.entry_id] = coordinator
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        await connection.stop()
-        raise
 
     reg = dr.async_get(hass)
     reg.async_get_or_create(
@@ -139,13 +146,8 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
             return float(value)
         return None
 
-    async def async_write_coil(
-        self, coil: Coil | None, value: int | float | str
-    ) -> None:
+    async def async_write_coil(self, coil: Coil, value: int | float | str) -> None:
         """Write coil and update state."""
-        if not coil:
-            raise HomeAssistantError("No coil available")
-
         coil.value = value
         coil = await self.connection.write_coil(coil)
 
@@ -155,16 +157,17 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
 
     async def _async_update_data(self) -> dict[int, Coil]:
         @retry(
-            retry=retry_if_exception_type(CoilReadException), stop=stop_after_attempt(2)
+            retry=retry_if_exception_type(CoilReadException),
+            stop=stop_after_attempt(COIL_READ_RETRIES),
         )
         async def read_coil(coil: Coil):
             return await self.connection.read_coil(coil)
 
-        callbacks: dict[int, list[CALLBACK_TYPE]] = {}
+        callbacks: dict[int, list[CALLBACK_TYPE]] = defaultdict(list)
         for update_callback, context in list(self._listeners.values()):
             assert isinstance(context, set)
             for address in context:
-                callbacks.setdefault(address, []).append(update_callback)
+                callbacks[address].append(update_callback)
 
         result: dict[int, Coil] = {}
 
@@ -173,7 +176,7 @@ class Coordinator(DataUpdateCoordinator[dict[int, Coil]]):
                 coil = self.heatpump.get_coil_by_address(address)
                 self.data[coil.address] = result[coil.address] = await read_coil(coil)
             except (CoilReadException, RetryError) as exception:
-                self.logger.warning("Failed to update: %s", exception)
+                raise UpdateFailed(f"Failed to update: {exception}") from exception
             except CoilNotFoundException as exception:
                 self.logger.debug("Skipping missing coil: %s", exception)
 
