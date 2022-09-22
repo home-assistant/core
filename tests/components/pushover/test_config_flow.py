@@ -4,10 +4,11 @@ from unittest.mock import MagicMock, patch
 from pushover_complete import BadAPIRequestError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.pushover.const import CONF_USER_KEY, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG
 
@@ -42,7 +43,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Pushover"
     assert result["data"] == MOCK_CONFIG
 
@@ -65,7 +66,7 @@ async def test_flow_user_key_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -90,7 +91,7 @@ async def test_flow_name_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=new_config,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -105,7 +106,7 @@ async def test_flow_invalid_user_key(
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_USER_KEY: "invalid_user_key"}
 
@@ -121,7 +122,7 @@ async def test_flow_invalid_api_key(
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
@@ -135,7 +136,7 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         context={"source": config_entries.SOURCE_USER},
         data=MOCK_CONFIG,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -148,7 +149,7 @@ async def test_import(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Pushover"
     assert result["data"] == MOCK_CONFIG
 

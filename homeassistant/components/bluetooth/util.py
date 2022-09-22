@@ -79,7 +79,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
         adapters[adapter] = AdapterDetails(
             address=adapter1["Address"],
             sw_version=adapter1["Name"],  # This is actually the BlueZ version
-            hw_version=adapter1["Modalias"],
+            hw_version=adapter1.get("Modalias"),
             passive_scan="org.bluez.AdvertisementMonitorManager1" in details,
         )
     return adapters

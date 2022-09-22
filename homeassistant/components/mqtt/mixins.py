@@ -4,10 +4,9 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast, final
+from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -29,13 +28,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    async_get_hass,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -60,7 +53,7 @@ from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, subscription
-from .client import MQTT, Subscription, async_publish
+from .client import async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -69,7 +62,6 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
-    DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -91,10 +83,7 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import mqtt_config_entry_enabled, valid_subscribe_topic
-
-if TYPE_CHECKING:
-    from .device_trigger import Trigger
+from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -272,27 +261,6 @@ def warn_for_legacy_schema(domain: str) -> Callable:
     return validator
 
 
-@dataclass
-class MqttData:
-    """Keep the MQTT entry data."""
-
-    client: MQTT | None = None
-    config: ConfigType | None = None
-    device_triggers: dict[str, Trigger] = field(default_factory=dict)
-    discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
-        default_factory=dict
-    )
-    last_discovery: float = 0.0
-    reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_entry: bool = False
-    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
-        default_factory=dict
-    )
-    reload_needed: bool = False
-    subscriptions_to_restore: list[Subscription] = field(default_factory=list)
-    updated_config: ConfigType = field(default_factory=dict)
-
-
 class SetupEntity(Protocol):
     """Protocol type for async_setup_entities."""
 
@@ -313,8 +281,7 @@ async def async_get_platform_config_from_yaml(
     config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
-
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     if config_yaml is None:
         config_yaml = mqtt_data.config
     if not config_yaml:
@@ -331,7 +298,7 @@ async def async_setup_entry_helper(
     discovery_schema: vol.Schema,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT entity, automation or tag."""
@@ -363,7 +330,7 @@ async def async_setup_entry_helper(
 
     async def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
-        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        mqtt_data = get_mqtt_data(hass)
         if mqtt_data.updated_config:
             # The platform has been reloaded
             config_yaml = mqtt_data.updated_config
@@ -395,7 +362,7 @@ async def async_setup_platform_helper(
     async_setup_entities: SetupEntity,
 ) -> None:
     """Help to set up the platform for manual configured MQTT entities."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     if mqtt_data.reload_entry:
         _LOGGER.debug(
             "MQTT integration is %s, skipping setup of manually configured MQTT items while unloading the config entry",
@@ -621,7 +588,7 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        mqtt_data: MqttData = self.hass.data[DATA_MQTT]
+        mqtt_data = get_mqtt_data(self.hass)
         assert mqtt_data.client is not None
         client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
@@ -844,7 +811,7 @@ class MqttDiscoveryUpdate(Entity):
         self._removed_from_hass = False
         if discovery_data is None:
             return
-        mqtt_data: MqttData = hass.data[DATA_MQTT]
+        mqtt_data = get_mqtt_data(hass)
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
         if discovery_hash in self._registry_hooks:

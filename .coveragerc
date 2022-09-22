@@ -402,9 +402,6 @@ omit =
     homeassistant/components/flume/coordinator.py
     homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
-    homeassistant/components/flunearyou/__init__.py
-    homeassistant/components/flunearyou/repairs.py
-    homeassistant/components/flunearyou/sensor.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
@@ -629,6 +626,11 @@ omit =
     homeassistant/components/kef/*
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*
+    homeassistant/components/keymitt_ble/__init__.py
+    homeassistant/components/keymitt_ble/const.py
+    homeassistant/components/keymitt_ble/entity.py
+    homeassistant/components/keymitt_ble/switch.py
+    homeassistant/components/keymitt_ble/coordinator.py
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
@@ -648,10 +650,6 @@ omit =
     homeassistant/components/kostal_plenticore/switch.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
-    homeassistant/components/lametric/__init__.py
-    homeassistant/components/lametric/button.py
-    homeassistant/components/lametric/coordinator.py
-    homeassistant/components/lametric/entity.py
     homeassistant/components/lametric/notify.py
     homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py
@@ -669,6 +667,9 @@ omit =
     homeassistant/components/led_ble/util.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
+    homeassistant/components/lidarr/__init__.py
+    homeassistant/components/lidarr/coordinator.py
+    homeassistant/components/lidarr/sensor.py
     homeassistant/components/life360/__init__.py
     homeassistant/components/life360/const.py
     homeassistant/components/life360/coordinator.py
@@ -832,6 +833,9 @@ omit =
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
+    homeassistant/components/nibe_heatpump/__init__.py
+    homeassistant/components/nibe_heatpump/sensor.py
+    homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -1011,6 +1015,7 @@ omit =
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/button.py
     homeassistant/components/rainmachine/model.py
+    homeassistant/components/rainmachine/select.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/rainmachine/update.py
@@ -1215,6 +1220,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
+    homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/const.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/switch.py

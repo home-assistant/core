@@ -37,6 +37,7 @@ from homeassistant.components.bluetooth.match import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -113,6 +114,53 @@ async def test_setup_and_stop_passive(hass, mock_bleak_scanner_start, one_adapte
         "adapter": "hci0",
         "bluez": scanner.PASSIVE_SCANNER_ARGS,
         "scanning_mode": "passive",
+    }
+
+
+async def test_setup_and_stop_old_bluez(
+    hass, mock_bleak_scanner_start, one_adapter_old_bluez
+):
+    """Test we and setup and stop the scanner the passive scanner with older bluez."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN,
+        data={},
+        options={},
+        unique_id="00:00:00:00:00:01",
+    )
+    entry.add_to_hass(hass)
+    init_kwargs = None
+
+    class MockBleakScanner:
+        def __init__(self, *args, **kwargs):
+            """Init the scanner."""
+            nonlocal init_kwargs
+            init_kwargs = kwargs
+
+        async def start(self, *args, **kwargs):
+            """Start the scanner."""
+
+        async def stop(self, *args, **kwargs):
+            """Stop the scanner."""
+
+        def register_detection_callback(self, *args, **kwargs):
+            """Register a callback."""
+
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
+        MockBleakScanner,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert init_kwargs == {
+        "adapter": "hci0",
+        "scanning_mode": "active",
     }
 
 
@@ -2633,3 +2681,51 @@ async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_ada
             await hass.async_block_till_done()
 
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
+
+
+async def test_issue_outdated_haos(
+    hass, mock_bleak_scanner_start, one_adapter, operating_system_85
+):
+    """Test we create an issue on outdated haos."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is not None
+
+
+async def test_issue_outdated_haos_no_adapters(
+    hass, mock_bleak_scanner_start, no_adapters, operating_system_85
+):
+    """Test we do not create an issue on outdated haos if there are no adapters."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is None
+
+
+async def test_haos_9_or_later(
+    hass, mock_bleak_scanner_start, one_adapter, operating_system_90
+):
+    """Test we do not create issues for haos 9.x or later."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    assert issue is None

@@ -29,6 +29,9 @@
                 "description": "Voer poortspecifieke instellingen in",
                 "title": "Instellingen"
             },
+            "upload_manual_backup": {
+                "title": "Upload een handmatige back-up"
+            },
             "user": {
                 "data": {
                     "path": "Serieel apparaatpad"
@@ -107,6 +110,21 @@
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Dit apparaat is niet een zha-apparaat.",
+            "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "upload_manual_backup": {
+                "title": "Upload een handmatige back-up"
+            }
         }
     }
 }

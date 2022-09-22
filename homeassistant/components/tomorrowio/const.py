@@ -1,6 +1,8 @@
 """Constants for the Tomorrow.io integration."""
 from __future__ import annotations
 
+import logging
+
 from pytomorrowio.const import DAILY, HOURLY, NOWCAST, WeatherCode
 
 from homeassistant.components.weather import (
@@ -17,6 +19,8 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
 )
+
+LOGGER = logging.getLogger(__package__)
 
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
