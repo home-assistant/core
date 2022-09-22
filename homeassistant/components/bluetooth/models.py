@@ -273,6 +273,8 @@ class HaBleakClientWrapper(BleakClient):
         if backend := self._get_backend_for_ble_device(ble_device):
             return backend
 
+        # The best backend based on RSSI cannot currently connect the device
+        # so we need to try all backends to find one that can
         for ble_device in sorted(
             (
                 ble_device
