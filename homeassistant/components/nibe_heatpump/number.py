@@ -57,7 +57,7 @@ class Number(CoilEntity, NumberEntity):
         self._attr_native_unit_of_measurement = coil.unit
         self._attr_native_value = None
 
-    def _async_read_coil(self, coil: Coil):
+    def _async_read_coil(self, coil: Coil) -> None:
         try:
             self._attr_native_value = float(coil.value)
         except ValueError:
