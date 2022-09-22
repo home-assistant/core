@@ -1218,6 +1218,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
+    homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/const.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/switch.py
