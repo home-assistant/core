@@ -11,7 +11,12 @@ from nibe.heatpump import HeatPump, Model
 from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, Platform
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_MODEL,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -58,6 +63,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
 
     await connection.start()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, connection.stop)
+    )
+
     coordinator = Coordinator(hass, heatpump, connection)
 
     data = hass.data.setdefault(DOMAIN, {})
