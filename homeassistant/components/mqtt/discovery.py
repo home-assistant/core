@@ -8,6 +8,7 @@ import logging
 import re
 import time
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,6 +19,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -30,6 +32,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
+from .models import ReceiveMessage
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,23 +75,21 @@ TOPIC_BASE = "~"
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
-    discovery_data: dict
+    discovery_data: DiscoveryInfoType
 
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
-    mqtt_data = get_mqtt_data(hass)
-    mqtt_data.discovery_already_discovered.remove(discovery_hash)
+    get_mqtt_data(hass).discovery_already_discovered.remove(discovery_hash)
 
 
-def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]):
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
-    mqtt_data = get_mqtt_data(hass)
-    mqtt_data.discovery_already_discovered.add(discovery_hash)
+    get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
 
 
 async def async_start(  # noqa: C901
-    hass: HomeAssistant, discovery_topic, config_entry=None
+    hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
     """Start MQTT Discovery."""
     mqtt_data = get_mqtt_data(hass)
@@ -184,14 +185,16 @@ async def async_start(  # noqa: C901
 
         await async_process_discovery_payload(component, discovery_id, payload)
 
-    async def async_process_discovery_payload(component, discovery_id, payload):
+    async def async_process_discovery_payload(
+        component: str, discovery_id: str, payload: ConfigType
+    ) -> None:
         """Process the payload of a new discovery."""
 
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
         if discovery_hash in mqtt_data.discovery_already_discovered or payload:
 
-            async def discovery_done(_):
+            async def discovery_done(_) -> None:
                 pending = mqtt_data.discovery_pending_discovered[discovery_hash][
                     "pending"
                 ]
@@ -240,6 +243,7 @@ async def async_start(  # noqa: C901
 
     if mqtt_data.data_config_flow_lock is None:
         mqtt_data.data_config_flow_lock = asyncio.Lock()
+
     mqtt_data.discovery_already_discovered = set()
     mqtt_data.discovery_pending_discovered = {}
 
@@ -261,8 +265,11 @@ async def async_start(  # noqa: C901
 
     for (integration, topics) in mqtt_integrations.items():
 
-        async def async_integration_message_received(integration, msg):
+        async def async_integration_message_received(
+            integration: str, msg: ReceiveMessage
+        ) -> None:
             """Process the received message."""
+            assert mqtt_data.data_config_flow_lock
             key = f"{integration}_{msg.subscribed_topic}"
 
             # Lock to prevent initiating many parallel config flows.

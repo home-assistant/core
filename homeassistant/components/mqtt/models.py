@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
+    from .discovery import MQTTConfig
 
 _SENTINEL = object()
 
@@ -76,6 +77,13 @@ class TriggerDebugInfo(TypedDict):
 
     device_id: str
     discovery_data: DiscoveryInfoType
+
+
+class PendingDiscovered(TypedDict):
+    """Pending discovered items."""
+
+    pending: deque[MQTTConfig]
+    unsub: CALLBACK_TYPE
 
 
 class MqttCommandTemplate:
@@ -219,9 +227,9 @@ class MqttData:
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock | None = None
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
-    discovery_pending_discovered: dict[
-        tuple[str, str], dict[str, CALLBACK_TYPE | deque]
-    ] = field(default_factory=dict)
+    discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
+        default_factory=dict
+    )
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
         default_factory=dict
     )
