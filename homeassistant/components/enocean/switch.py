@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean.utils import combine_hex, from_hex_string
+from enocean.utils import combine_hex, from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -14,6 +14,10 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import (
+    EnOceanPlatformConfig,
+    register_platform_config_for_migration_to_config_entry,
+)
 from .config_flow import (
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_EEP,
@@ -73,12 +77,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean switch platform."""
-    channel: int = config[CONF_CHANNEL]
-    dev_id: list[int] = config[CONF_ID]
-    dev_name: str = config[CONF_NAME]
+    # channel = config.get(CONF_CHANNEL)
+    # dev_id = config.get(CONF_ID)
+    # dev_name = config.get(CONF_NAME)
 
-    _migrate_to_new_unique_id(hass, dev_id, channel)
-    async_add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
+    # _migrate_to_new_unique_id(hass, dev_id, channel)
+    # async_add_entities([EnOceanSwitch(dev_id, dev_name, channel, from_platform=True)])
+
+    register_platform_config_for_migration_to_config_entry(
+        EnOceanPlatformConfig(platform=Platform.SWITCH.value, config=config)
+    )
 
 
 async def async_setup_entry(
@@ -137,7 +145,6 @@ async def async_setup_entry(
                             name="Switch " + str(channel + 1),
                         ),
                     )
-
             async_add_entities(switches)
 
 
@@ -151,6 +158,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         channel,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
+        from_platform=False,
     ):
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id, dev_name, dev_type, name)
@@ -158,7 +166,13 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self._on_state = False
         self._on_state2 = False
         self.channel = channel
-        self._attr_unique_id = generate_unique_id(dev_id, channel)
+
+        if from_platform:
+            self._attr_unique_id = generate_unique_id(dev_id, channel)
+        else:
+            self._attr_unique_id = (
+                f"{to_hex_string(dev_id).upper()}-{Platform.SWITCH.value}-{channel}"
+            )
 
     @property
     def is_on(self):

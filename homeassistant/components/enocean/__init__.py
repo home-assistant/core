@@ -1,4 +1,8 @@
 """Support for EnOcean devices."""
+from __future__ import annotations
+
+from copy import deepcopy
+
 from enocean.utils import combine_hex, to_hex_string
 import voluptuous as vol
 
@@ -19,7 +23,18 @@ from .config_flow import (
     CONF_ENOCEAN_MODEL,
     CONF_ENOCEAN_SENDER_ID,
 )
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
+from .const import (
+    DATA_ENOCEAN,
+    DOMAIN,
+    EEP_D2_01_07,
+    EEP_D2_01_11,
+    EEP_D2_01_13,
+    EEP_D2_01_14,
+    EEP_F6_02_01,
+    ENOCEAN_DONGLE,
+    LOGGER,
+    PLATFORMS,
+)
 from .dongle import EnOceanDongle
 from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
@@ -39,6 +54,25 @@ class EnOceanPlatformConfig:
         """Create a new EnOcean platform configuration entry."""
         self.platform = platform
         self.config = config
+
+
+class EnOceanImportConfig:
+    """An EnOcean import configuration."""
+
+    new_unique_id: str
+    old_unique_id: str
+    device_type: EnOceanSupportedDeviceType | None
+
+    def __init__(
+        self,
+        new_unique_id: str,
+        old_unique_id: str,
+        device_type: EnOceanSupportedDeviceType | None,
+    ) -> None:
+        """Create a new EnOcean import configuration."""
+        self.new_unique_id = new_unique_id
+        self.old_unique_id = old_unique_id
+        self.device_type = device_type
 
 
 # upcoming code is part of platform import to be deleted in a future version
@@ -115,9 +149,7 @@ def _setup_yaml_import(
     hass: HomeAssistant,
     enocean_platform_configs: list[EnOceanPlatformConfig],
 ) -> bool:
-    enocean_devices_to_add = []
-
-    # get the entity registry
+    enocean_devices_to_add: list[dict[str, str]] = []
     ent_reg = entity_registry.async_get(hass)
 
     # map from dev_id_string to list of (new) unique_ids
@@ -131,7 +163,7 @@ def _setup_yaml_import(
 
     @callback
     def _schedule_yaml_import(_):
-        """Schedule platform configuration import after HA is fully started."""
+        """Schedule platform configuration import 2s after HA is fully started."""
         if not _enocean_platform_configs or len(_enocean_platform_configs) < 1:
             return
         async_call_later(hass, 2, _import_yaml)
@@ -140,7 +172,7 @@ def _setup_yaml_import(
     def _import_yaml(_):
         """Import platform configuration to config entry."""
         LOGGER.warning(
-            "EnOcean platform configurations were found in configuration.yaml. Configuring EnOcean via configuration.yaml is deprecated. Now starting automatic import to config entry... "
+            "EnOcean platform configurations were found in configuration.yaml. Configuring EnOcean via configuration.yaml is deprecated and will be removed in a future release. Now starting automatic import to config entry... "
         )
 
         # get the unique config_entry and the devices configured in it
@@ -151,11 +183,14 @@ def _setup_yaml_import(
             )
             return
         config_entry = conf_entries[0]
-        configured_enocean_devices = config_entry.options.get("devices", [])
+
+        configured_enocean_devices = deepcopy(
+            config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+        )
 
         # process the platform configs
         for platform_config in enocean_platform_configs:
-            dev_id = platform_config.config.get("id", None)
+            dev_id = platform_config.config.get(CONF_ENOCEAN_DEVICE_ID, None)
 
             if not dev_id:
                 LOGGER.warning(
@@ -165,16 +200,11 @@ def _setup_yaml_import(
 
             dev_id_string = to_hex_string(dev_id)
 
-            # check if device was already imported previously
-            device_found = False
-            for device in configured_enocean_devices:
-                if device["id"] == to_hex_string(dev_id):
-                    device_found = True
-                    break
-
-            if device_found:
+            if _is_configured(
+                dev_id=dev_id, configured_enocean_devices=configured_enocean_devices
+            ):
                 LOGGER.warning(
-                    "Skipping import of EnOcean device %s because an EnOcean device with this EnOcean ID already exists in the config entry. Please delete the respective platform configuration entry in the configuration.yaml",
+                    "Skipping import of already imported EnOcean device %s",
                     dev_id_string,
                 )
                 continue
@@ -182,66 +212,46 @@ def _setup_yaml_import(
             new_unique_ids[dev_id_string] = []
             old_unique_ids[dev_id_string] = {}
             old_entities[dev_id_string] = {}
-            device_type = None
 
-            if platform_config.platform == Platform.BINARY_SENSOR.value:
-                new_unique_id = (
-                    dev_id_string + "-" + Platform.BINARY_SENSOR.value + "-0"
-                )
-                new_unique_ids[dev_id_string].append(new_unique_id)
+            import_config: EnOceanImportConfig = _get_import_config(
+                dev_id_string=dev_id_string,
+                dev_id=dev_id,
+                platform_config=platform_config,
+                enocean_devices_to_add=enocean_devices_to_add,
+            )
 
-                device_class = platform_config.config.get("device_class", None)
-                if device_class is None:
-                    old_unique_ids[dev_id_string][new_unique_id] = (
-                        str(combine_hex(dev_id)) + "-None"
-                    )
-                else:
-                    old_unique_ids[dev_id_string][new_unique_id] = (
-                        str(combine_hex(dev_id)) + "-" + device_class
-                    )
+            new_unique_ids[dev_id_string].append(import_config.new_unique_id)
+            old_unique_ids[dev_id_string][
+                import_config.new_unique_id
+            ] = import_config.old_unique_id
 
-                device_type = EnOceanSupportedDeviceType(
-                    eep="F6-02-01",
-                    manufacturer="Generic",
-                    model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
-                )
-
-            elif platform_config.platform == Platform.LIGHT.value:
-                new_unique_id = dev_id_string + "-" + Platform.LIGHT.value + "-0"
-                new_unique_ids[dev_id_string].append(new_unique_id)
-                old_unique_ids[dev_id_string][new_unique_id] = str(combine_hex(dev_id))
-
-                device_type = EnOceanSupportedDeviceType(
-                    eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
+            if import_config.device_type is not None:
+                enocean_devices_to_add.append(
+                    {
+                        CONF_ENOCEAN_DEVICE_ID: dev_id_string,
+                        CONF_ENOCEAN_EEP: import_config.device_type.eep,
+                        CONF_ENOCEAN_MANUFACTURER: import_config.device_type.manufacturer,
+                        CONF_ENOCEAN_MODEL: import_config.device_type.model,
+                        CONF_ENOCEAN_DEVICE_NAME: platform_config.config.get(
+                            "name", "Imported EnOcean device " + dev_id_string
+                        ),
+                        CONF_ENOCEAN_SENDER_ID: "",
+                    }
                 )
 
-            if device_type is None:
                 LOGGER.warning(
-                    "Could not import EnOcean device %s: unknown device type",
+                    "Scheduling EnOcean device %s for import as '%s %s' [EEP %s]",
                     dev_id_string,
+                    import_config.device_type.manufacturer,
+                    import_config.device_type.model,
+                    import_config.device_type.eep,
                 )
 
-            # append device
-            enocean_devices_to_add.append(
-                {
-                    CONF_ENOCEAN_DEVICE_ID: dev_id_string,
-                    CONF_ENOCEAN_EEP: device_type.eep,
-                    CONF_ENOCEAN_MANUFACTURER: device_type.manufacturer,
-                    CONF_ENOCEAN_MODEL: device_type.model,
-                    CONF_ENOCEAN_DEVICE_NAME: platform_config.config.get(
-                        "name", "Imported EnOcean device " + dev_id_string
-                    ),
-                    CONF_ENOCEAN_SENDER_ID: "",
-                }
-            )
-
+        if not enocean_devices_to_add:
             LOGGER.warning(
-                "Importing EnOcean device %s as '%s %s' [EEP %s]",
-                dev_id_string,
-                device_type.manufacturer,
-                device_type.model,
-                device_type.eep,
+                "Import of EnOcean platform configurations completed (no new devices)"
             )
+            return
 
         # append devices to config_entry and update
         for device in enocean_devices_to_add:
@@ -314,6 +324,147 @@ def _setup_yaml_import(
     return True
 
 
+def _is_configured(dev_id, configured_enocean_devices):
+    """Check if an EnOcean device with the given id was already configured."""
+    for device in configured_enocean_devices:
+        if device[CONF_ENOCEAN_DEVICE_ID] == to_hex_string(dev_id):
+            return True
+
+    return False
+
+
+def _get_import_config(
+    dev_id_string: str,
+    platform_config: EnOceanPlatformConfig,
+    dev_id,
+    enocean_devices_to_add,
+):
+    """Return an import configuration for the supplied platform configuration."""
+    if platform_config.platform == Platform.BINARY_SENSOR.value:
+        return _get_binary_sensor_import_config(
+            dev_id_string=dev_id_string,
+            platform_config=platform_config,
+            dev_id=dev_id,
+        )
+
+    if platform_config.platform == Platform.LIGHT.value:
+        return _get_light_import_config(dev_id_string=dev_id_string, dev_id=dev_id)
+
+    if platform_config.platform == Platform.SWITCH.value:
+        return _get_switch_import_config(
+            dev_id_string=dev_id_string,
+            platform_config=platform_config,
+            dev_id=dev_id,
+            enocean_devices_to_add=enocean_devices_to_add,
+        )
+
+
+def _get_binary_sensor_import_config(
+    dev_id_string: str, platform_config: EnOceanPlatformConfig, dev_id
+) -> EnOceanImportConfig:
+    """Return an import config for a binary sensor."""
+    new_unique_id = dev_id_string + "-" + Platform.BINARY_SENSOR.value + "-0"
+
+    device_class = platform_config.config.get("device_class", None)
+    if device_class is None:
+        old_unique_id = str(combine_hex(dev_id)) + "-None"
+    else:
+        old_unique_id = str(combine_hex(dev_id)) + "-" + device_class
+
+    return EnOceanImportConfig(
+        new_unique_id=new_unique_id,
+        old_unique_id=old_unique_id,
+        device_type=EEP_F6_02_01,
+    )
+
+
+def _get_light_import_config(dev_id_string: str, dev_id) -> EnOceanImportConfig:
+    """Return an import config for a light."""
+    new_unique_id = dev_id_string + "-" + Platform.LIGHT.value + "-0"
+    old_unique_id = str(combine_hex(dev_id))
+
+    device_type = EnOceanSupportedDeviceType(
+        eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
+    )
+
+    return EnOceanImportConfig(
+        new_unique_id=new_unique_id,
+        old_unique_id=old_unique_id,
+        device_type=device_type,
+    )
+
+
+def _get_switch_import_config(
+    dev_id_string: str,
+    platform_config: EnOceanPlatformConfig,
+    dev_id,
+    enocean_devices_to_add,
+) -> EnOceanImportConfig:
+    """Return an import config for a switch."""
+    required_channels = 1
+    channel = platform_config.config.get("channel", 0)
+
+    device_type = None
+    required_channels, device_type = _switch_get_required_channels_and_eep(channel)
+
+    new_unique_id = dev_id_string + "-" + Platform.SWITCH.value + "-" + str(channel)
+
+    old_unique_id = str(combine_hex(dev_id)) + "-" + str(channel)
+
+    # check if we already planned to import a configuration for this device (i.e. another channel)
+    device = None
+    for device in enocean_devices_to_add:
+        if device.get(CONF_ENOCEAN_DEVICE_ID, "") == dev_id_string:
+            # check if the previously added device has too few channels
+            eep = device.get(CONF_ENOCEAN_EEP, "")
+            planned_channels = 0
+            if eep[0:5] != "D2-01":
+                break
+
+            eep_type = int(eep[6:8], 16)
+            if eep_type == 0x07:
+                planned_channels = 1
+            elif eep_type == 0x11:
+                planned_channels = 2
+            elif eep_type == 0x13:
+                planned_channels = 4
+            elif eep_type == 0x14:
+                planned_channels = 8
+
+            if planned_channels < required_channels:
+                LOGGER.warning(
+                    "Removing EnOcean device %s from scheduled imports list (will be rescheduled with different EEP), planned: %i, required: %i",
+                    dev_id_string,
+                    planned_channels,
+                    required_channels,
+                )
+            else:
+                device_type = None
+            break
+
+    if device is not None:
+        enocean_devices_to_add.remove(device)
+
+    return EnOceanImportConfig(
+        new_unique_id=new_unique_id,
+        old_unique_id=old_unique_id,
+        device_type=device_type,
+    )
+
+
+def _switch_get_required_channels_and_eep(
+    channel: int,
+) -> tuple[int, EnOceanSupportedDeviceType]:
+    if channel == 0:
+        return 1, EEP_D2_01_07
+    if channel < 2:
+        return 2, EEP_D2_01_11
+    if channel < 4:
+        return 4, EEP_D2_01_13
+    # 8 channel device (maximum supported)
+    return 8, EEP_D2_01_14
+
+
 @callback
 def async_cleanup_device_registry(
     hass: HomeAssistant,
@@ -335,7 +486,7 @@ def async_cleanup_device_registry(
             device_id = (str(item[1]).split("-", maxsplit=1)[0]).upper()
             if DOMAIN == domain and device_id not in device_ids:
                 LOGGER.debug(
-                    "Removing Home Assistant device %s and associated entities for EnOcean device %s",
+                    "Removing Home Assistant device %s and associated entities for unconfigured EnOcean device %s",
                     hass_device.id,
                     device_id,
                 )

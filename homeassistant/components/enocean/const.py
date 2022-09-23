@@ -33,7 +33,32 @@ EEP_A5_12_01 = EnOceanSupportedDeviceType(
     model="EEP A5-12-01 (Light and Blind Control - Application Style 1)",
 )
 
-ENOCEAN_TEST_BINARY_SENSOR = EnOceanSupportedDeviceType(
+EEP_D2_01_07 = EnOceanSupportedDeviceType(
+    eep="D2-01-07",
+    model="EEP D2-01-07 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 07)",
+)
+
+EEP_D2_01_11 = EnOceanSupportedDeviceType(
+    eep="D2-01-11",
+    model="EEP D2-01-11 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 11)",
+)
+
+EEP_D2_01_12 = EnOceanSupportedDeviceType(
+    eep="D2-01-12",
+    model="EEP D2-01-12 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 12)",
+)
+
+EEP_D2_01_13 = EnOceanSupportedDeviceType(
+    eep="D2-01-13",
+    model="EEP D2-01-13 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 13)",
+)
+
+EEP_D2_01_14 = EnOceanSupportedDeviceType(
+    eep="D2-01-14",
+    model="EEP D2-01-14 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 14)",
+)
+
+EEP_F6_02_01 = EnOceanSupportedDeviceType(
     eep="F6-02-01",
     model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
 )
@@ -191,10 +216,7 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         eep="D2-01-06",
         model="EEP D2-01-06 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 06)",
     ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-07",
-        model="EEP D2-01-07 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 07)",
-    ),
+    EEP_D2_01_07,
     EnOceanSupportedDeviceType(
         eep="D2-01-08",
         model="EEP D2-01-08 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 08)",
@@ -231,22 +253,10 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         eep="D2-01-10",
         model="EEP D2-01-10 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 10)",
     ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-11",
-        model="EEP D2-01-11 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 11)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-12",
-        model="EEP D2-01-12 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 12)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-13",
-        model="EEP D2-01-13 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 13)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-14",
-        model="EEP D2-01-14 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 14)",
-    ),
+    EEP_D2_01_11,
+    EEP_D2_01_12,
+    EEP_D2_01_13,
+    EEP_D2_01_14,
     # Part 2/2: specific devices by manufacturer and model (and EEP)
     ENOCEAN_TEST_DIMMER,
     EnOceanSupportedDeviceType(
@@ -278,5 +288,5 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         manufacturer="NodOn",
         model="SIN-2-2-01",
     ),
-    ENOCEAN_TEST_BINARY_SENSOR,
+    EEP_F6_02_01,
 ]
