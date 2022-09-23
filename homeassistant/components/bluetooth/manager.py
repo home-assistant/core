@@ -341,6 +341,7 @@ class BluetoothManager:
             service_info.manufacturer_data != old_service_info.manufacturer_data
             or service_info.service_data != old_service_info.service_data
             or service_info.service_uuids != old_service_info.service_uuids
+            or service_info.name != old_service_info.name
         ):
             return
 
