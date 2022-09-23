@@ -23,8 +23,6 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_IGNORE_ADDRESSES,
-    CONF_MIN_RSSI,
-    DEFAULT_MIN_RSSI,
     DOMAIN,
     MAX_IDS,
     SIGNAL_IBEACON_DEVICE_NEW,
@@ -69,7 +67,7 @@ def async_name(
         base_name = service_info.name
     if unique_address:
         short_address = make_short_address(service_info.address)
-        if not base_name.endswith(short_address):
+        if not base_name.upper().endswith(short_address):
             return f"{base_name} {short_address}"
     return base_name
 
@@ -110,7 +108,6 @@ class IBeaconCoordinator:
         """Initialize the Coordinator."""
         self.hass = hass
         self._entry = entry
-        self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
         self._dev_reg = registry
 
         # iBeacon devices that do not follow the spec
@@ -200,8 +197,6 @@ class IBeaconCoordinator:
         """Update from a bluetooth callback."""
         if service_info.address in self._ignore_addresses:
             return
-        if service_info.rssi < self._min_rssi:
-            return
         if not (parsed := parse(service_info)):
             return
         group_id = f"{parsed.uuid}_{parsed.major}_{parsed.minor}"
@@ -238,6 +233,12 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_rssi_by_unique_id
+        # Reject creating new trackers if the name is not set
+        if new and (
+            service_info.device.name is None
+            or service_info.device.name.replace("-", ":") == service_info.device.address
+        ):
+            return
         self._last_rssi_by_unique_id[unique_id] = service_info.rssi
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
@@ -269,10 +270,6 @@ class IBeaconCoordinator:
         for cancel in self._unavailable_trackers.values():
             cancel()
         self._unavailable_trackers.clear()
-
-    async def _entry_updated(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Handle options update."""
-        self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
 
     @callback
     def _async_check_unavailable_groups_with_random_macs(self) -> None:
@@ -349,7 +346,6 @@ class IBeaconCoordinator:
         """Start the Coordinator."""
         self._async_restore_from_registry()
         entry = self._entry
-        entry.async_on_unload(entry.add_update_listener(self._entry_updated))
         entry.async_on_unload(
             bluetooth.async_register_callback(
                 self.hass,

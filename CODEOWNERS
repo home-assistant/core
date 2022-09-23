@@ -177,8 +177,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cisco_ios/ @fbradyirl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
-/homeassistant/components/climacell/ @raman325
-/tests/components/climacell/ @raman325
 /homeassistant/components/climate/ @home-assistant/core
 /tests/components/climate/ @home-assistant/core
 /homeassistant/components/cloud/ @home-assistant/cloud
@@ -580,6 +578,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kegtron/ @Ernst79
 /tests/components/kegtron/ @Ernst79
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
+/homeassistant/components/keymitt_ble/ @spycle
+/tests/components/keymitt_ble/ @spycle
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
@@ -745,6 +745,8 @@ build.json @home-assistant/supervisor
 /tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
 /tests/components/nfandroidtv/ @tkdrob
+/homeassistant/components/nibe_heatpump/ @elupus
+/tests/components/nibe_heatpump/ @elupus
 /homeassistant/components/nightscout/ @marciogranzotto
 /tests/components/nightscout/ @marciogranzotto
 /homeassistant/components/nilu/ @hfurubotten
@@ -884,6 +886,8 @@ build.json @home-assistant/supervisor
 /tests/components/qwikswitch/ @kellerza
 /homeassistant/components/rachio/ @bdraco
 /tests/components/rachio/ @bdraco
+/homeassistant/components/radarr/ @tkdrob
+/tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
 /homeassistant/components/radiotherm/ @bdraco @vinnyfuria
