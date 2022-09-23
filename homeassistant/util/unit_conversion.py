@@ -8,6 +8,14 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_BAR,
@@ -19,6 +27,14 @@ from homeassistant.const import (
     PRESSURE_MMHG,
     PRESSURE_PA,
     PRESSURE_PSI,
+    SPEED_FEET_PER_SECOND,
+    SPEED_INCHES_PER_DAY,
+    SPEED_INCHES_PER_HOUR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    SPEED_MILLIMETERS_PER_DAY,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -31,14 +47,28 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
-from .distance import FOOT_TO_M, IN_TO_M
+# Distance conversion constants
+_MM_TO_M = 0.001  # 1 mm = 0.001 m
+_CM_TO_M = 0.01  # 1 cm = 0.01 m
+_KM_TO_M = 1000  # 1 km = 1000 m
+
+_IN_TO_M = 0.0254  # 1 inch = 0.0254 m
+_FOOT_TO_M = _IN_TO_M * 12  # 12 inches = 1 foot (0.3048 m)
+_YARD_TO_M = _FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
+_MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
+
+_NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+# Duration conversion constants
+_HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
+_DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
-_GALLON_TO_CUBIC_METER = 231 * pow(IN_TO_M, 3)  # US gallon is 231 cubic inches
+_GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
-_CUBIC_FOOT_TO_CUBIC_METER = pow(FOOT_TO_M, 3)
+_CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
 
 class BaseUnitConverter:
@@ -84,6 +114,33 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
 
         new_value = value / cls.UNIT_CONVERSION[from_unit]
         return new_value * cls.UNIT_CONVERSION[to_unit]
+
+
+class DistanceConverter(BaseUnitConverterWithUnitConversion):
+    """Utility to convert distance values."""
+
+    UNIT_CLASS = "distance"
+    NORMALIZED_UNIT = LENGTH_METERS
+    UNIT_CONVERSION: dict[str, float] = {
+        LENGTH_METERS: 1,
+        LENGTH_MILLIMETERS: 1 / _MM_TO_M,
+        LENGTH_CENTIMETERS: 1 / _CM_TO_M,
+        LENGTH_KILOMETERS: 1 / _KM_TO_M,
+        LENGTH_INCHES: 1 / _IN_TO_M,
+        LENGTH_FEET: 1 / _FOOT_TO_M,
+        LENGTH_YARD: 1 / _YARD_TO_M,
+        LENGTH_MILES: 1 / _MILE_TO_M,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        LENGTH_KILOMETERS,
+        LENGTH_MILES,
+        LENGTH_FEET,
+        LENGTH_METERS,
+        LENGTH_CENTIMETERS,
+        LENGTH_MILLIMETERS,
+        LENGTH_INCHES,
+        LENGTH_YARD,
+    )
 
 
 class EnergyConverter(BaseUnitConverterWithUnitConversion):
@@ -144,6 +201,33 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
         PRESSURE_INHG,
         PRESSURE_PSI,
         PRESSURE_MMHG,
+    )
+
+
+class SpeedConverter(BaseUnitConverterWithUnitConversion):
+    """Utility to convert speed values."""
+
+    UNIT_CLASS = "speed"
+    NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
+    UNIT_CONVERSION: dict[str, float] = {
+        SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
+        SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
+        SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
+        SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
+        SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        SPEED_METERS_PER_SECOND: 1,
+        SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
+        SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        SPEED_FEET_PER_SECOND,
+        SPEED_INCHES_PER_DAY,
+        SPEED_INCHES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KNOTS,
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILLIMETERS_PER_DAY,
     )
 
 
