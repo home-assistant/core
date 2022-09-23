@@ -68,6 +68,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    USER_AGENT,
 )
 from .helpers import (
     async_enable_statistics,
@@ -466,7 +467,8 @@ async def websocket_network_status(
         )
         return
     controller = driver.controller
-    await controller.async_get_state()
+    new_state = await controller.async_get_state()
+    controller.update(new_state)
     client_version_info = client.version
     assert client_version_info  # When client is connected version info is set.
     data = {
@@ -2064,6 +2066,7 @@ class FirmwareUploadView(HomeAssistantView):
                 uploaded_file.filename,
                 await hass.async_add_executor_job(uploaded_file.file.read),
                 async_get_clientsession(hass),
+                additional_user_agent_components=USER_AGENT,
                 target=target,
             )
         except BaseZwaveJSServerError as err:

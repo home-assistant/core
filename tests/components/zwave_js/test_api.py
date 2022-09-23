@@ -86,13 +86,18 @@ def get_device(hass, node):
     return dev_reg.async_get_device({device_id})
 
 
-async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
+async def test_network_status(
+    hass, multisensor_6, controller_state, integration, hass_ws_client
+):
     """Test the network status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
     # Try API call with entry ID
-    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_get_state",
+        return_value=controller_state["controller"],
+    ):
         await ws_client.send_json(
             {
                 ID: 1,
@@ -113,7 +118,10 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
         identifiers={(DOMAIN, "3245146787-52")},
     )
     assert device
-    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_get_state",
+        return_value=controller_state["controller"],
+    ):
         await ws_client.send_json(
             {
                 ID: 2,
@@ -2585,27 +2593,10 @@ async def test_set_config_parameter(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -2633,27 +2624,10 @@ async def test_set_config_parameter(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 

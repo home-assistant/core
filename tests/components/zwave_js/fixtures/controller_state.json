@@ -11,6 +11,7 @@
     "isStaticUpdateController": true,
     "isSlave": false,
     "serialApiVersion": "1.0",
+    "nodeType": 0,
     "manufacturerId": 134,
     "productType": 257,
     "productId": 90,

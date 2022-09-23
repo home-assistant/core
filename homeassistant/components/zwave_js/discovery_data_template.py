@@ -80,7 +80,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    get_value_id_str,
 )
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
@@ -263,7 +263,7 @@ class BaseDiscoverySchemaDataTemplate:
         node: ZwaveNode, value_id_obj: ZwaveValueID
     ) -> ZwaveValue | ZwaveConfigurationValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             value_id_obj.command_class,
             value_id_obj.property_,

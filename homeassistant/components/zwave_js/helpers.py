@@ -14,7 +14,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    get_value_id_str,
 )
 
 from homeassistant.components.group import expand_entity_ids
@@ -317,7 +317,7 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     property_key = None
     if config.get(ATTR_PROPERTY_KEY):
         property_key = config[ATTR_PROPERTY_KEY]
-    value_id = get_value_id(
+    value_id = get_value_id_str(
         node,
         config[ATTR_COMMAND_CLASS],
         config[ATTR_PROPERTY],

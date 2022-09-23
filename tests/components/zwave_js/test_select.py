@@ -81,19 +81,7 @@ async def test_default_tone_select(
     assert args["valueId"] == {
         "endpoint": 2,
         "commandClass": 121,
-        "commandClassName": "Sound Switch",
         "property": "defaultToneId",
-        "propertyName": "defaultToneId",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Default tone ID",
-            "min": 0,
-            "max": 254,
-        },
-        "value": 17,
     }
     assert args["value"] == 30
 
@@ -164,22 +152,7 @@ async def test_protection_select(
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 117,
-        "commandClassName": "Protection",
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {
-                "0": "Unprotected",
-                "1": "ProtectedBySequence",
-                "2": "NoOperationPossible",
-            },
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -264,19 +237,7 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 38,
-        "commandClassName": "Multilevel Switch",
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-            "min": 0,
-            "max": 99,
-        },
     }
     assert args["value"] == 33
 
