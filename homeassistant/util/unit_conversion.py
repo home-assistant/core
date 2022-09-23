@@ -16,6 +16,12 @@ from homeassistant.const import (
     LENGTH_MILES,
     LENGTH_MILLIMETERS,
     LENGTH_YARD,
+    MASS_GRAMS,
+    MASS_KILOGRAMS,
+    MASS_MICROGRAMS,
+    MASS_MILLIGRAMS,
+    MASS_OUNCES,
+    MASS_POUNDS,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_BAR,
@@ -62,6 +68,10 @@ _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
 # Duration conversion constants
 _HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
+
+# Mass conversion constants
+_POUND_TO_G = 453.59237
+_OUNCE_TO_G = _POUND_TO_G / 16
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -158,6 +168,29 @@ class EnergyConverter(BaseUnitConverterWithUnitConversion):
         ENERGY_KILO_WATT_HOUR,
         ENERGY_MEGA_WATT_HOUR,
     }
+
+
+class MassConverter(BaseUnitConverterWithUnitConversion):
+    """Utility to convert mass values."""
+
+    UNIT_CLASS = "mass"
+    NORMALIZED_UNIT = MASS_GRAMS
+    UNIT_CONVERSION: dict[str, float] = {
+        MASS_MICROGRAMS: 1 * 1000 * 1000,
+        MASS_MILLIGRAMS: 1 * 1000,
+        MASS_GRAMS: 1,
+        MASS_KILOGRAMS: 1 / 1000,
+        MASS_OUNCES: 1 / _OUNCE_TO_G,
+        MASS_POUNDS: 1 / _POUND_TO_G,
+    }
+    VALID_UNITS: tuple[str, ...] = (
+        MASS_GRAMS,
+        MASS_KILOGRAMS,
+        MASS_MILLIGRAMS,
+        MASS_MICROGRAMS,
+        MASS_OUNCES,
+        MASS_POUNDS,
+    )
 
 
 class PowerConverter(BaseUnitConverterWithUnitConversion):
