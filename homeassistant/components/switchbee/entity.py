@@ -34,7 +34,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity):
         device: SwitchBeeBaseDevice,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
-        """Initialize the Switchbee switch."""
+        """Initialize the Switchbee device."""
         super().__init__(device, coordinator)
         self._attr_device_info = DeviceInfo(
             name=f"SwitchBee {device.unit_id}",
