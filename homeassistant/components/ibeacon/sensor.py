@@ -115,6 +115,10 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         self._attr_unique_id = f"{device_unique_id}_{description.key}"
         self.entity_description = description
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<IBeaconSensorEntity {self.name} ({self.unique_id}): {self.state}>"
+
     @callback
     def _async_seen(
         self,
