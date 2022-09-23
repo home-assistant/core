@@ -23,8 +23,6 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_IGNORE_ADDRESSES,
-    CONF_MIN_RSSI,
-    DEFAULT_MIN_RSSI,
     DOMAIN,
     MAX_IDS,
     SIGNAL_IBEACON_DEVICE_NEW,
@@ -110,7 +108,6 @@ class IBeaconCoordinator:
         """Initialize the Coordinator."""
         self.hass = hass
         self._entry = entry
-        self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
         self._dev_reg = registry
 
         # iBeacon devices that do not follow the spec
@@ -200,8 +197,6 @@ class IBeaconCoordinator:
         """Update from a bluetooth callback."""
         if service_info.address in self._ignore_addresses:
             return
-        if service_info.rssi < self._min_rssi:
-            return
         if not (parsed := parse(service_info)):
             return
         group_id = f"{parsed.uuid}_{parsed.major}_{parsed.minor}"
@@ -269,10 +264,6 @@ class IBeaconCoordinator:
         for cancel in self._unavailable_trackers.values():
             cancel()
         self._unavailable_trackers.clear()
-
-    async def _entry_updated(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Handle options update."""
-        self._min_rssi = entry.options.get(CONF_MIN_RSSI) or DEFAULT_MIN_RSSI
 
     @callback
     def _async_check_unavailable_groups_with_random_macs(self) -> None:
@@ -349,7 +340,6 @@ class IBeaconCoordinator:
         """Start the Coordinator."""
         self._async_restore_from_registry()
         entry = self._entry
-        entry.async_on_unload(entry.add_update_listener(self._entry_updated))
         entry.async_on_unload(
             bluetooth.async_register_callback(
                 self.hass,
