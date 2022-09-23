@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from yarl import URL
 
-from homeassistant.components.media_player.const import MEDIA_CLASS_APP
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -85,12 +84,12 @@ class TTSMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_type="",
             title=self.name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_APP,
+            children_media_class=MediaClass.APP,
             children=children,
         )
 
@@ -111,7 +110,7 @@ class TTSMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{provider_domain}{params}",
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_type="provider",
             title=provider.name,
             thumbnail=f"https://brands.home-assistant.io/_/{provider_domain}/logo.png",

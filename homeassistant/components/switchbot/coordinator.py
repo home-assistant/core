@@ -69,13 +69,16 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self.ble_device = service_info.device
         if adv := switchbot.parse_advertisement_data(
             service_info.device, service_info.advertisement
         ):
-            self.data = flatten_sensors_data(adv.data)
-            if "modelName" in self.data:
+            if "modelName" in adv.data:
                 self._ready_event.set()
             _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
+            if not self.device.advertisement_changed(adv):
+                return
+            self.data = flatten_sensors_data(adv.data)
             self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 

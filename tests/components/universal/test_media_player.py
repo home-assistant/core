@@ -9,7 +9,7 @@ from homeassistant import config as hass_config
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
@@ -1092,6 +1093,26 @@ async def test_device_class(hass):
     assert hass.states.get("media_player.tv").attributes["device_class"] == "tv"
 
 
+async def test_unique_id(hass):
+    """Test unique_id property."""
+    hass.states.async_set("sensor.test_sensor", "on")
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "unique_id": "universal_master_bed_tv",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    er = entity_registry.async_get(hass)
+    assert er.async_get("media_player.tv").unique_id == "universal_master_bed_tv"
+
+
 async def test_invalid_state_template(hass):
     """Test invalid state template sets state to None."""
     hass.states.async_set("sensor.test_sensor", "on")
@@ -1220,3 +1241,4 @@ async def test_reload(hass):
     assert (
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )
+    assert "unique_id" not in hass.states.get("media_player.master_bed_tv").attributes

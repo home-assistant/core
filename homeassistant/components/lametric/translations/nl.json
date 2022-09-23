@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
-            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})"
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})",
+            "unknown": "Onverwachte fout"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

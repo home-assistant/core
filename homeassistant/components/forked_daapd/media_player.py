@@ -6,26 +6,23 @@ from collections import defaultdict
 import logging
 from typing import Any
 
+import async_timeout
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
-from homeassistant.components.media_player.browse_media import (
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ENQUEUE,
+    BrowseMedia,
+    MediaPlayerEnqueue,
+    MediaPlayerEntity,
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -171,7 +168,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -195,11 +192,11 @@ class ForkedDaapdZone(MediaPlayerEntity):
         return f"{FD_NAME} output ({self._output['name']})"
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the zone."""
         if self._output["selected"]:
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def volume_level(self):
@@ -355,11 +352,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @callback
     def _update_queue(self, queue, event):
         self._queue = queue
-        if (
-            self._tts_requested
-            and self._queue["count"] == 1
-            and self._queue["items"][0]["uri"].find("tts_proxy") != -1
-        ):
+        if self._tts_requested:
+            # Assume the change was due to the request
             self._tts_requested = False
             self._tts_queued = True
 
@@ -424,13 +418,15 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         # restore state
         await self._api.set_volume(volume=self._last_volume * 100)
         if self._last_outputs:
-            futures = []
+            futures: list[asyncio.Task[int]] = []
             for output in self._last_outputs:
                 futures.append(
-                    self._api.change_output(
-                        output["id"],
-                        selected=output["selected"],
-                        volume=output["volume"],
+                    asyncio.create_task(
+                        self._api.change_output(
+                            output["id"],
+                            selected=output["selected"],
+                            volume=output["volume"],
+                        )
                     )
                 )
             await asyncio.wait(futures)
@@ -452,7 +448,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         Default media player component method counts idle as off.
         We consider idle to be on but just not playing.
         """
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -463,16 +459,17 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return f"{FD_NAME} server"
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         if self._player["state"] == "play":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._player["state"] == "pause":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if not any(output["selected"] for output in self._outputs):
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._player["state"] == "stop":  # this should catch all remaining cases
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
+        return None
 
     @property
     def volume_level(self):
@@ -653,90 +650,128 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._pause_requested = True
         await self.async_media_pause()
         try:
-            await asyncio.wait_for(
-                self._paused_event.wait(), timeout=CALLBACK_TIMEOUT
-            )  # wait for paused
+            async with async_timeout.timeout(CALLBACK_TIMEOUT):
+                await self._paused_event.wait()  # wait for paused
         except asyncio.TimeoutError:
             self._pause_requested = False
         self._paused_event.clear()
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a URI."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_MUSIC
+            media_type = MediaType.MUSIC
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_type == MediaType.MUSIC:
             media_id = async_process_play_media_url(self.hass, media_id)
+        elif media_type not in CAN_PLAY_TYPE:
+            _LOGGER.warning("Media type '%s' not supported", media_type)
+            return
 
-            saved_state = self.state  # save play state
-            saved_mute = self.is_volume_muted
-            sleep_future = asyncio.create_task(
-                asyncio.sleep(self._tts_pause_time)
-            )  # start timing now, but not exact because of fd buffer + tts latency
-            await self._pause_and_wait_for_callback()
-            await self._save_and_set_tts_volumes()
-            # save position
-            saved_song_position = self._player["item_progress_ms"]
-            saved_queue = (
-                self._queue if self._queue["count"] > 0 else None
-            )  # stash queue
-            if saved_queue:
-                saved_queue_position = next(
-                    i
-                    for i, item in enumerate(saved_queue["items"])
-                    if item["id"] == self._player["item_id"]
-                )
-            self._tts_requested = True
-            await sleep_future
-            await self._api.add_to_queue(uris=media_id, playback="start", clear=True)
-            try:
-                await asyncio.wait_for(
-                    self._tts_playing_event.wait(), timeout=TTS_TIMEOUT
-                )
-                # we have started TTS, now wait for completion
-                await asyncio.sleep(
-                    self._queue["items"][0]["length_ms"]
-                    / 1000  # player may not have updated yet so grab length from queue
-                    + self._tts_pause_time
-                )
-            except asyncio.TimeoutError:
-                self._tts_requested = False
-                _LOGGER.warning("TTS request timed out")
-            self._tts_playing_event.clear()
-            # TTS done, return to normal
-            await self.async_turn_on()  # restore outputs and volumes
-            if saved_mute:  # mute if we were muted
-                await self.async_mute_volume(True)
-            if self._use_pipe_control():  # resume pipe
-                await self._api.add_to_queue(
-                    uris=self._sources_uris[self._source], clear=True
-                )
-                if saved_state == STATE_PLAYING:
-                    await self.async_media_play()
-            else:  # restore stashed queue
-                if saved_queue:
-                    uris = ""
-                    for item in saved_queue["items"]:
-                        uris += item["uri"] + ","
-                    await self._api.add_to_queue(
-                        uris=uris,
-                        playback="start",
-                        playback_from_position=saved_queue_position,
-                        clear=True,
-                    )
-                    await self._api.seek(position_ms=saved_song_position)
-                    if saved_state == STATE_PAUSED:
-                        await self.async_media_pause()
-                    elif saved_state != STATE_PLAYING:
-                        await self.async_media_stop()
-        else:
-            _LOGGER.debug("Media type '%s' not supported", media_type)
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            return await self._async_announce(media_id)
+
+        # if kwargs[ATTR_MEDIA_ENQUEUE] is None, we assume MediaPlayerEnqueue.REPLACE
+        # if kwargs[ATTR_MEDIA_ENQUEUE] is True, we assume MediaPlayerEnqueue.ADD
+        # kwargs[ATTR_MEDIA_ENQUEUE] is assumed to never be False
+        # See https://github.com/home-assistant/architecture/issues/765
+        enqueue: bool | MediaPlayerEnqueue = kwargs.get(
+            ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
+        )
+        if enqueue in {True, MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
+            return await self._api.add_to_queue(
+                uris=media_id,
+                playback="start",
+                clear=enqueue == MediaPlayerEnqueue.REPLACE,
+            )
+
+        current_position = next(
+            (
+                item["position"]
+                for item in self._queue["items"]
+                if item["id"] == self._player["item_id"]
+            ),
+            0,
+        )
+        if enqueue == MediaPlayerEnqueue.NEXT:
+            return await self._api.add_to_queue(
+                uris=media_id,
+                playback="start",
+                position=current_position + 1,
+            )
+        # enqueue == MediaPlayerEnqueue.PLAY
+        return await self._api.add_to_queue(
+            uris=media_id,
+            playback="start",
+            position=current_position,
+            playback_from_position=current_position,
+        )
+
+    async def _async_announce(self, media_id: str) -> None:
+        """Play a URI."""
+        saved_state = self.state  # save play state
+        saved_mute = self.is_volume_muted
+        sleep_future = asyncio.create_task(
+            asyncio.sleep(self._tts_pause_time)
+        )  # start timing now, but not exact because of fd buffer + tts latency
+        await self._pause_and_wait_for_callback()
+        await self._save_and_set_tts_volumes()
+        # save position
+        saved_song_position = self._player["item_progress_ms"]
+        saved_queue = self._queue if self._queue["count"] > 0 else None  # stash queue
+        if saved_queue:
+            saved_queue_position = next(
+                i
+                for i, item in enumerate(saved_queue["items"])
+                if item["id"] == self._player["item_id"]
+            )
+        self._tts_requested = True
+        await sleep_future
+        await self._api.add_to_queue(uris=media_id, playback="start", clear=True)
+        try:
+            async with async_timeout.timeout(TTS_TIMEOUT):
+                await self._tts_playing_event.wait()
+            # we have started TTS, now wait for completion
+        except asyncio.TimeoutError:
+            self._tts_requested = False
+            _LOGGER.warning("TTS request timed out")
+        await asyncio.sleep(
+            self._queue["items"][0]["length_ms"]
+            / 1000  # player may not have updated yet so grab length from queue
+            + self._tts_pause_time
+        )
+        self._tts_playing_event.clear()
+        # TTS done, return to normal
+        await self.async_turn_on()  # restore outputs and volumes
+        if saved_mute:  # mute if we were muted
+            await self.async_mute_volume(True)
+        if self._use_pipe_control():  # resume pipe
+            await self._api.add_to_queue(
+                uris=self._sources_uris[self._source], clear=True
+            )
+            if saved_state == MediaPlayerState.PLAYING:
+                await self.async_media_play()
+            return
+        if not saved_queue:
+            return
+        # Restore stashed queue
+        await self._api.add_to_queue(
+            uris=",".join(item["uri"] for item in saved_queue["items"]),
+            playback="start",
+            playback_from_position=saved_queue_position,
+            clear=True,
+        )
+        await self._api.seek(position_ms=saved_song_position)
+        if saved_state == MediaPlayerState.PAUSED:
+            await self.async_media_pause()
+            return
+        if saved_state != MediaPlayerState.PLAYING:
+            await self.async_media_stop()
 
     async def async_select_source(self, source: str) -> None:
         """Change source.

@@ -97,14 +97,12 @@ async def test_save_preferences(
                     {
                         "stat_energy_from": "sensor.heat_pump_meter",
                         "stat_cost": "heat_pump_kwh_cost",
-                        "entity_energy_from": None,
                         "entity_energy_price": None,
                         "number_energy_price": None,
                     },
                     {
                         "stat_energy_from": "sensor.heat_pump_meter_2",
                         "stat_cost": None,
-                        "entity_energy_from": "sensor.heat_pump_meter_2",
                         "entity_energy_price": None,
                         "number_energy_price": 0.20,
                     },
@@ -113,14 +111,12 @@ async def test_save_preferences(
                     {
                         "stat_energy_to": "sensor.return_to_grid_peak",
                         "stat_compensation": None,
-                        "entity_energy_to": None,
                         "entity_energy_price": None,
                         "number_energy_price": None,
                     },
                     {
                         "stat_energy_to": "sensor.return_to_grid_offpeak",
                         "stat_compensation": None,
-                        "entity_energy_to": "sensor.return_to_grid_offpeak",
                         "entity_energy_price": None,
                         "number_energy_price": 0.20,
                     },
@@ -181,7 +177,6 @@ async def test_save_preferences(
                     {
                         "stat_energy_from": "sensor.heat_pump_meter",
                         "stat_cost": None,
-                        "entity_energy_from": None,
                         "entity_energy_price": None,
                         "number_energy_price": None,
                     }
@@ -221,14 +216,12 @@ async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
                         {
                             "stat_energy_from": "sensor.heat_pump_meter",
                             "stat_cost": None,
-                            "entity_energy_from": None,
                             "entity_energy_price": None,
                             "number_energy_price": None,
                         },
                         {
                             "stat_energy_from": "sensor.heat_pump_meter",
                             "stat_cost": None,
-                            "entity_energy_from": None,
                             "entity_energy_price": None,
                             "number_energy_price": None,
                         },
@@ -343,6 +336,7 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_m
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -377,6 +371,7 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_m
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -504,6 +499,7 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_moc
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -538,6 +534,7 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_moc
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -663,6 +660,7 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -697,6 +695,7 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -813,6 +812,7 @@ async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -847,6 +847,7 @@ async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
+        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -877,6 +878,7 @@ async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
         "has_sum": False,
         "name": "Fossil percentage",
         "source": "test",
+        "state_unit_of_measurement": "%",
         "statistic_id": "test:fossil_percentage",
         "unit_of_measurement": "%",
     }

@@ -8,11 +8,12 @@ from typing import Any
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

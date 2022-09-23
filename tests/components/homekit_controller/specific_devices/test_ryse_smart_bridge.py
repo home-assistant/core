@@ -1,14 +1,10 @@
 """Test against characteristics captured from a ryse smart bridge platforms."""
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-)
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -17,7 +13,9 @@ from tests.components.homekit_controller.common import (
     setup_test_accessories,
 )
 
-RYSE_SUPPORTED_FEATURES = SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_OPEN
+RYSE_SUPPORTED_FEATURES = (
+    CoverEntityFeature.CLOSE | CoverEntityFeature.SET_POSITION | CoverEntityFeature.OPEN
+)
 
 
 async def test_ryse_smart_bridge_setup(hass):

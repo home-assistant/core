@@ -328,6 +328,7 @@ async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
         )
 
 
+@pytest.mark.skip
 async def test_camera_reconnect_webhook(hass, config_entry):
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0

@@ -91,6 +91,12 @@
             "zwave_js.value_updated.value": "Z-Wave JS \u503c\u4e0a\u7684\u6578\u503c\u8b8a\u66f4"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "\u76ee\u524d Home Assistant \u6240\u57f7\u884c\u7684 Z-Wave JS \u4f3a\u670d\u5668\u7248\u672c\u904e\u820a\u3001\u8acb\u66f4\u65b0\u81f3\u6700\u65b0\u7248\u672c Z-Wave JS \u4f3a\u670d\u5668\u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "\u9700\u8981\u5b89\u88dd\u65b0\u7248\u672c Z-Wave JS \u4f3a\u670d\u5668"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u641c\u7d22\u8cc7\u8a0a\u5931\u6557\u3002",

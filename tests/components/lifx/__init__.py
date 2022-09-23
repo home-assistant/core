@@ -62,6 +62,9 @@ class MockLifxCommand:
         self.bulb = bulb
         self.calls = []
         self.msg_kwargs = kwargs
+        for k, v in kwargs.items():
+            if k != "callb":
+                setattr(self.bulb, k, v)
 
     def __call__(self, *args, **kwargs):
         """Call command."""
@@ -127,6 +130,15 @@ def _mocked_clean_bulb() -> Light:
         "last_power": False,
     }
     bulb.product = 90
+    return bulb
+
+
+def _mocked_infrared_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 29  # LIFX A19 Night Vision
+    bulb.infrared_brightness = 65535
+    bulb.set_infrared = MockLifxCommand(bulb)
+    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=65535)
     return bulb
 
 
