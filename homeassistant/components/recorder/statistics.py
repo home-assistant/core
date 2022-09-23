@@ -184,7 +184,7 @@ def _get_statistic_to_display_unit_converter(
         """Return val."""
         if val is None:
             return val
-        return conv.from_normalized_unit(val, to_unit)
+        return conv.convert(val, from_unit=conv.NORMALIZED_UNIT, to_unit=to_unit)
 
     return partial(from_normalized_unit, conv=converter, to_unit=display_unit)
 
@@ -205,7 +205,9 @@ def _get_display_to_statistic_unit_converter(
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
-    return partial(converter.to_normalized_unit, from_unit=display_unit)
+    return partial(
+        converter.convert, from_unit=display_unit, to_unit=converter.NORMALIZED_UNIT
+    )
 
 
 @dataclasses.dataclass

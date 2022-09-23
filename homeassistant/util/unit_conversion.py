@@ -68,16 +68,6 @@ class BaseUnitConverter:
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
 
-    @classmethod
-    def from_normalized_unit(cls, value: float, to_unit: str) -> float:
-        """Convert one unit of measurement to another."""
-        return cls.convert(value, cls.NORMALIZED_UNIT, to_unit)
-
-    @classmethod
-    def to_normalized_unit(cls, value: float, from_unit: str) -> float:
-        """Convert one unit of measurement to another."""
-        return cls.convert(value, from_unit, cls.NORMALIZED_UNIT)
-
 
 class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     """Define the format of a conversion utility."""
