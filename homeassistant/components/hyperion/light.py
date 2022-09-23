@@ -114,8 +114,8 @@ async def async_setup_entry(
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
 
 
-class HyperionBaseLight(LightEntity):
-    """A Hyperion light base class."""
+class HyperionLight(LightEntity):
+    """A Hyperion light that acts as a client for the configured priority."""
 
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
@@ -161,11 +161,11 @@ class HyperionBaseLight(LightEntity):
 
     def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
         """Compute a unique id for this instance."""
-        raise NotImplementedError
+        return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
 
     def _compute_name(self, instance_name: str) -> str:
         """Compute the name of the light."""
-        raise NotImplementedError
+        return f"{instance_name}".strip()
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -239,6 +239,11 @@ class HyperionBaseLight(LightEntity):
             CONF_EFFECT_HIDE_LIST: [],
         }
         return self._options.get(key, defaults[key])
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on. Light is considered on when there is an active source at the configured HA priority."""
+        return self._get_priority_entry_that_dictates_state() is not None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -337,6 +342,13 @@ class HyperionBaseLight(LightEntity):
                 }
             ):
                 return
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light i.e. clear the configured priority."""
+        if not await self._client.async_send_clear(
+            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
+        ):
+            return
 
     def _set_internal_state(
         self,
@@ -473,27 +485,3 @@ class HyperionBaseLight(LightEntity):
         # redundant-cast warning in this case.
         priority: dict[str, Any] | None = self._client.visible_priority
         return priority
-
-
-class HyperionLight(HyperionBaseLight):
-    """A Hyperion light that acts as a client for the configured priority."""
-
-    def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
-        """Compute a unique id for this instance."""
-        return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
-
-    def _compute_name(self, instance_name: str) -> str:
-        """Compute the name of the light."""
-        return f"{instance_name}".strip()
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on. Light is considered on when there is an active source at the configured HA priority."""
-        return self._get_priority_entry_that_dictates_state() is not None
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light i.e. clear the configured priority."""
-        if not await self._client.async_send_clear(
-            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
-        ):
-            return
