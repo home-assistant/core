@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.ibeacon.const import DOMAIN
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from . import BLUECHARM_BEACON_SERVICE_INFO
+from . import BLUECHARM_BEACON_SERVICE_INFO, BLUECHARM_BEACON_SERVICE_INFO_DBUS
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -75,8 +75,8 @@ async def test_ignore_not_ibeacons(hass):
     assert len(hass.states.async_entity_ids()) == before_entity_count
 
 
-async def test_ignore_no_name(hass):
-    """Test we ignore devices with no name."""
+async def test_ignore_no_name_but_create_if_set_later(hass):
+    """Test we ignore devices with no name but create it if it set set later."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -89,6 +89,41 @@ async def test_ignore_no_name(hass):
     inject_bluetooth_service_info(
         hass,
         replace(BLUECHARM_BEACON_SERVICE_INFO, name=None),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO,
+            service_data={
+                "00002080-0000-1000-8000-00805f9b34fb": b"j\x0c\x0e\xfe\x13U",
+                "0000feaa-0000-1000-8000-00805f9b34fb": b" \x00\x0c\x00\x1c\x00\x00\x00\x06h\x00\x008\x10",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) > before_entity_count
+
+
+async def test_ignore_default_name(hass):
+    """Test we ignore devices with default name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == before_entity_count
