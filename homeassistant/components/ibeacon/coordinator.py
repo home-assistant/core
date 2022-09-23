@@ -234,7 +234,10 @@ class IBeaconCoordinator:
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_rssi_by_unique_id
         # Reject creating new trackers if the name is not set
-        if new and service_info.device.name is None:
+        if new and (
+            service_info.device.name is None
+            or service_info.device.name.replace("-", ":") == service_info.device.address
+        ):
             return
         self._last_rssi_by_unique_id[unique_id] = service_info.rssi
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
