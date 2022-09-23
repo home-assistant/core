@@ -10,11 +10,6 @@
       "1": "[%key:common::state::off%]",
       "2": "[%key:common::state::on%]"
     },
-    "tuya__basic_nightvision": {
-      "0": "Automatic",
-      "1": "[%key:common::state::off%]",
-      "2": "[%key:common::state::on%]"
-    },
     "tuya__chime_ring_tune": {
       "1": "Chime 1",
       "2": "Chime 2",
@@ -96,6 +91,11 @@
       "30": "30°",
       "60": "60°",
       "90": "90°"
+    },
+    "tuya__fan_speed": {
+      "low": "Low°",
+      "mid": "High°",
+      "high": "Auto°"
     },
     "tuya__curtain_mode": {
       "morning": "Morning",

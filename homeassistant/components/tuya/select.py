@@ -360,7 +360,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.FAN_SPEED_ENUM,
             name="Fan Speed",
-            device_class=DPType.ENUM,
+            device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-list-checks",
         ),

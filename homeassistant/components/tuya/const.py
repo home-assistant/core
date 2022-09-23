@@ -96,6 +96,7 @@ class TuyaDeviceClass(StrEnum):
     COUNTDOWN = "tuya__countdown"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
     FAN_ANGLE = "tuya__fan_angle"
+    FAN_SPEED = "tuya__fan_speed"
     FINGERBOT_MODE = "tuya__fingerbot_mode"
     HUMIDIFIER_SPRAY_MODE = "tuya__humidifier_spray_mode"
     HUMIDIFIER_LEVEL = "tuya__humidifier_level"
