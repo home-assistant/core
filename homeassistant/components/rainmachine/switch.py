@@ -197,8 +197,8 @@ async def async_setup_entry(
         platform.async_register_entity_service(service_name, schema, method)
 
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    entities: list[RainMachineBaseSwitch] = []
 
-    entities: list[RainMachineActivitySwitch | RainMachineEnabledSwitch] = []
     for kind, api_category, switch_class, switch_enabled_class in (
         ("program", DATA_PROGRAMS, RainMachineProgram, RainMachineProgramEnabled),
         ("zone", DATA_ZONES, RainMachineZone, RainMachineZoneEnabled),
@@ -234,6 +234,10 @@ async def async_setup_entry(
                     ),
                 )
             )
+
+    # Add switches to control restrictions:
+    for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
+        entities.append(RainMachineRestriction(entry, data, description))
 
     async_add_entities(entities)
 
