@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration scanners."""
+from datetime import timedelta
 import time
 from unittest.mock import MagicMock, patch
 
@@ -241,9 +242,11 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     # We hit the timer, so we restart the scanner
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT,
+        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT + 20,
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL + timedelta(seconds=20)
+        )
         await hass.async_block_till_done()
 
     assert called_start == 2
