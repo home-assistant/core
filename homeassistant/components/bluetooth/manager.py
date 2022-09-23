@@ -24,6 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
+    NO_RSSI_VALUE,
     STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
@@ -65,7 +66,6 @@ APPLE_START_BYTES_WANTED: Final = {
 }
 
 RSSI_SWITCH_THRESHOLD = 6
-NO_RSSI_VALUE = -1000
 
 _LOGGER = logging.getLogger(__name__)
 
