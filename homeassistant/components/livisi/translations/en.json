@@ -1,18 +1,18 @@
 {
     "config": {
+        "error": {
+            "shc_unreachable": "The SHC is unreachable.",
+            "wrong_ip_address": "The IP address is incorrect or the SHC cannot be reached locally.",
+            "wrong_password": "The password is incorrect."
+        },
         "step": {
-            "credentials": {
-                "description": "Enter the IP address and the (local) password of the SHC.",
+            "user": {
                 "data": {
                     "host": "IP Address",
                     "password": "Password"
-                }
+                },
+                "description": "Enter the IP address and the (local) password of the SHC."
             }
-        },
-        "error": {
-            "wrong_password": "The password is incorrect.",
-            "shc_unreachable": "The SHC is unreachable.",
-            "wrong_ip_address": "The IP address is incorrect or the SHC cannot be reached locally."
         }
     }
 }

@@ -19,11 +19,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Create the configuration file."""
         self.host: str | None
-        self._info: dict[str, Any] = {}
-        self._device_info: dict[str, Any] = {}
-        self._auth_headers: dict[str, Any] = {}
         self._aio_livisi: AioLivisi = None
-        self._access_data = None
         self.data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
@@ -35,18 +31,21 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            ip_password: dict[str, str] = user_input
-            try:
-                await self._login(ip_password)
-                return await self.create_entity(ip_password)
-            except livisi_errors.WrongCredentialException:
-                errors["base"] = "wrong_password"
-            except livisi_errors.ShcUnreachableException:
-                errors["base"] = "shc_unreachable"
-            except livisi_errors.IncorrectIpAddressException:
-                errors["base"] = "wrong_ip_address"
+        if user_input is None:
+            return self.async_show_form(step_id="user", data_schema=self.data_schema)
+
+        errors = {}
+        ip_password: dict[str, str] = user_input
+        try:
+            await self._login(ip_password)
+        except livisi_errors.WrongCredentialException:
+            errors["base"] = "wrong_password"
+        except livisi_errors.ShcUnreachableException:
+            errors["base"] = "shc_unreachable"
+        except livisi_errors.IncorrectIpAddressException:
+            errors["base"] = "wrong_ip_address"
+        else:
+            return await self.create_entity(ip_password)
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors
@@ -66,7 +65,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def create_entity(self, user_input: dict[str, str]) -> FlowResult:
         """Create LIVISI entity."""
-        controller_info = await self._aio_livisi.async_get_controller()
+        controller_info: dict[str, Any] = await self._aio_livisi.async_get_controller()
 
         if (controller_data := controller_info.get("gateway")) is None:
             controller_data = controller_info
@@ -74,7 +73,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug(
             "Integrating SHC %s with serial number: %s",
             controller_type,
-            controller_data.get("serialNumber"),
+            controller_data["serialNumber"],
         )
 
         return self.async_create_entry(
@@ -82,7 +81,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 **user_input,
                 CONF_HOST: self.host,
-                "os_version": controller_info.get("osVersion"),
-                "config_version": controller_info.get("configVersion"),
+                "os_version": controller_info["osVersion"],
+                "config_version": controller_info["configVersion"],
             },
         )

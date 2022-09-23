@@ -26,13 +26,6 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
     await coordinator.async_set_all_rooms()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    if (
-        coordinator.serial_number is None
-        or coordinator.controller_type is None
-        or coordinator.os_version is None
-    ):
-        return False
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=coordinator.serial_number,

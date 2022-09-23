@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aiolivisi import LivisiException
+from aiolivisi import errors as livisi_errors
 import pytest
 
 from homeassistant import data_entry_flow
@@ -47,7 +47,7 @@ async def test_api_error(hass):
     """Test API error."""
     with patch(
         "homeassistant.components.livisi.config_flow",
-        side_effect=LivisiException(),
+        side_effect=livisi_errors.ShcUnreachableException(),
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -55,7 +55,8 @@ async def test_api_error(hass):
             context={"source": SOURCE_USER},
         )
 
-        assert result["step_id"] == "credentials"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "shc_unreachable"
 
 
 async def test_integration_already_exists(hass):
@@ -68,6 +69,8 @@ async def test_integration_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
+        data=VALID_CONFIG,
     )
 
-    assert result["last_step"] is None
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
