@@ -18,8 +18,8 @@ SSDP = {
     "braviatv": [
         {
             "manufacturer": "Sony Corporation",
-            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
-        }
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
+        },
     ],
     "control4": [
         {
