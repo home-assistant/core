@@ -5,6 +5,14 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_CBAR,
@@ -27,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DistanceConverter,
     EnergyConverter,
     PowerConverter,
     PressureConverter,
@@ -40,6 +49,14 @@ INVALID_SYMBOL = "bob"
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
+        (DistanceConverter, LENGTH_KILOMETERS),
+        (DistanceConverter, LENGTH_METERS),
+        (DistanceConverter, LENGTH_CENTIMETERS),
+        (DistanceConverter, LENGTH_MILLIMETERS),
+        (DistanceConverter, LENGTH_MILES),
+        (DistanceConverter, LENGTH_YARD),
+        (DistanceConverter, LENGTH_FEET),
+        (DistanceConverter, LENGTH_INCHES),
         (EnergyConverter, ENERGY_WATT_HOUR),
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
         (EnergyConverter, ENERGY_MEGA_WATT_HOUR),
@@ -70,6 +87,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
+        (DistanceConverter, LENGTH_KILOMETERS),
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
         (PowerConverter, POWER_WATT),
         (PressureConverter, PRESSURE_PA),
@@ -91,6 +109,7 @@ def test_convert_invalid_unit(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
+        (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS),
         (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG),
@@ -104,6 +123,77 @@ def test_convert_nonnumeric_value(
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
         converter.convert("a", from_unit, to_unit)
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
+        (5, LENGTH_MILES, pytest.approx(8.04672), LENGTH_KILOMETERS),
+        (5, LENGTH_MILES, pytest.approx(8046.72), LENGTH_METERS),
+        (5, LENGTH_MILES, pytest.approx(804672.0), LENGTH_CENTIMETERS),
+        (5, LENGTH_MILES, pytest.approx(8046720.0), LENGTH_MILLIMETERS),
+        (5, LENGTH_MILES, pytest.approx(8800.0), LENGTH_YARD),
+        (5, LENGTH_MILES, pytest.approx(26400.0008448), LENGTH_FEET),
+        (5, LENGTH_MILES, pytest.approx(316800.171072), LENGTH_INCHES),
+        (5, LENGTH_YARD, pytest.approx(0.0045720000000000005), LENGTH_KILOMETERS),
+        (5, LENGTH_YARD, pytest.approx(4.572), LENGTH_METERS),
+        (5, LENGTH_YARD, pytest.approx(457.2), LENGTH_CENTIMETERS),
+        (5, LENGTH_YARD, pytest.approx(4572), LENGTH_MILLIMETERS),
+        (5, LENGTH_YARD, pytest.approx(0.002840908212), LENGTH_MILES),
+        (5, LENGTH_YARD, pytest.approx(15.00000048), LENGTH_FEET),
+        (5, LENGTH_YARD, pytest.approx(180.0000972), LENGTH_INCHES),
+        (5000, LENGTH_FEET, pytest.approx(1.524), LENGTH_KILOMETERS),
+        (5000, LENGTH_FEET, pytest.approx(1524), LENGTH_METERS),
+        (5000, LENGTH_FEET, pytest.approx(152400.0), LENGTH_CENTIMETERS),
+        (5000, LENGTH_FEET, pytest.approx(1524000.0), LENGTH_MILLIMETERS),
+        (5000, LENGTH_FEET, pytest.approx(0.9469694040000001), LENGTH_MILES),
+        (5000, LENGTH_FEET, pytest.approx(1666.66667), LENGTH_YARD),
+        (5000, LENGTH_FEET, pytest.approx(60000.032400000004), LENGTH_INCHES),
+        (5000, LENGTH_INCHES, pytest.approx(0.127), LENGTH_KILOMETERS),
+        (5000, LENGTH_INCHES, pytest.approx(127.0), LENGTH_METERS),
+        (5000, LENGTH_INCHES, pytest.approx(12700.0), LENGTH_CENTIMETERS),
+        (5000, LENGTH_INCHES, pytest.approx(127000.0), LENGTH_MILLIMETERS),
+        (5000, LENGTH_INCHES, pytest.approx(0.078914117), LENGTH_MILES),
+        (5000, LENGTH_INCHES, pytest.approx(138.88889), LENGTH_YARD),
+        (5000, LENGTH_INCHES, pytest.approx(416.66668), LENGTH_FEET),
+        (5, LENGTH_KILOMETERS, pytest.approx(5000), LENGTH_METERS),
+        (5, LENGTH_KILOMETERS, pytest.approx(500000), LENGTH_CENTIMETERS),
+        (5, LENGTH_KILOMETERS, pytest.approx(5000000), LENGTH_MILLIMETERS),
+        (5, LENGTH_KILOMETERS, pytest.approx(3.106855), LENGTH_MILES),
+        (5, LENGTH_KILOMETERS, pytest.approx(5468.066), LENGTH_YARD),
+        (5, LENGTH_KILOMETERS, pytest.approx(16404.2), LENGTH_FEET),
+        (5, LENGTH_KILOMETERS, pytest.approx(196850.5), LENGTH_INCHES),
+        (5000, LENGTH_METERS, pytest.approx(5), LENGTH_KILOMETERS),
+        (5000, LENGTH_METERS, pytest.approx(500000), LENGTH_CENTIMETERS),
+        (5000, LENGTH_METERS, pytest.approx(5000000), LENGTH_MILLIMETERS),
+        (5000, LENGTH_METERS, pytest.approx(3.106855), LENGTH_MILES),
+        (5000, LENGTH_METERS, pytest.approx(5468.066), LENGTH_YARD),
+        (5000, LENGTH_METERS, pytest.approx(16404.2), LENGTH_FEET),
+        (5000, LENGTH_METERS, pytest.approx(196850.5), LENGTH_INCHES),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(5), LENGTH_KILOMETERS),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(5000), LENGTH_METERS),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(5000000), LENGTH_MILLIMETERS),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(3.106855), LENGTH_MILES),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(5468.066), LENGTH_YARD),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(16404.2), LENGTH_FEET),
+        (500000, LENGTH_CENTIMETERS, pytest.approx(196850.5), LENGTH_INCHES),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(5), LENGTH_KILOMETERS),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(5000), LENGTH_METERS),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(500000), LENGTH_CENTIMETERS),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(3.106855), LENGTH_MILES),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(5468.066), LENGTH_YARD),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(16404.2), LENGTH_FEET),
+        (5000000, LENGTH_MILLIMETERS, pytest.approx(196850.5), LENGTH_INCHES),
+    ],
+)
+def test_distance_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert DistanceConverter.convert(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(
