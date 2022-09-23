@@ -158,7 +158,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.FILTER,
             name="Filter",
             entity_category=EntityCategory.CONFIG,
-            icon="mdi:air-filter"
+            icon="mdi:air-filter",
         ),
     ),
     # Sous Vide Cooker
