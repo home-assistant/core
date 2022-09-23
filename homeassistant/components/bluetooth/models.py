@@ -130,6 +130,12 @@ class HaBleakScannerWrapper(BaseBleakScanner):
             detection_callback=detection_callback, service_uuids=service_uuids or []
         )
 
+    @classmethod
+    async def discover(cls, timeout: float = 5.0, **kwargs: Any) -> list[BLEDevice]:
+        """Discover devices."""
+        assert MANAGER is not None
+        return list(MANAGER.async_discovered_devices(True))
+
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
 
@@ -249,12 +255,14 @@ class HaBleakClientWrapper(BleakClient):
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
-        wrapped_backend = self._async_get_backend()
-        self._backend = wrapped_backend.client(
-            await freshen_ble_device(wrapped_backend.device) or wrapped_backend.device,
-            disconnected_callback=self.__disconnected_callback,
-            timeout=self.__timeout,
-        )
+        if not self._backend:
+            wrapped_backend = self._async_get_backend()
+            self._backend = wrapped_backend.client(
+                await freshen_ble_device(wrapped_backend.device)
+                or wrapped_backend.device,
+                disconnected_callback=self.__disconnected_callback,
+                timeout=self.__timeout,
+            )
         return await super().connect(**kwargs)
 
     @hass_callback
