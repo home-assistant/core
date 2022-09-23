@@ -11,6 +11,7 @@ import pprint
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
+from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.const import (
@@ -23,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import area_registry, device_registry, entity_registry, start
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
@@ -609,7 +611,7 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
-                "httpPort": self.hass.http.server_port,
+                "httpPort": URL(get_url(self.hass, allow_external=False)).port,
                 "uuid": instance_uuid,
             }
 
