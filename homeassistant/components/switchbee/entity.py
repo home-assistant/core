@@ -52,9 +52,3 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity):
                 f"{coordinator.api.name} ({coordinator.api.mac})",
             ),
         )
-        self._is_online = True
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._is_online and super().available

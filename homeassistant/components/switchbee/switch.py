@@ -48,6 +48,12 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
         """Initialize the Switchbee switch."""
         super().__init__(device, coordinator)
         self._attr_is_on = False
+        self._is_online = True
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._is_online and super().available
 
     @callback
     def _handle_coordinator_update(self) -> None:
