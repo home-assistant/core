@@ -28,6 +28,3 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 MAX_IDS = 10
 
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
-
-CONF_MIN_RSSI = "min_rssi"
-DEFAULT_MIN_RSSI = -85
