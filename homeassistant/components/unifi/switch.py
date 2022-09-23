@@ -8,13 +8,8 @@ Support for controlling deep packet inspection (DPI) restriction groups.
 import asyncio
 from typing import Any
 
-from aiounifi.api import SOURCE_EVENT
-from aiounifi.events import (
-    WIRED_CLIENT_BLOCKED,
-    WIRED_CLIENT_UNBLOCKED,
-    WIRELESS_CLIENT_BLOCKED,
-    WIRELESS_CLIENT_UNBLOCKED,
-)
+from aiounifi.interfaces.api_handlers import SOURCE_EVENT
+from aiounifi.models.event import EventKey
 
 from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -39,8 +34,8 @@ DPI_SWITCH = "dpi"
 POE_SWITCH = "poe"
 OUTLET_SWITCH = "outlet"
 
-CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
-CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
+CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
+CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
 
 async def async_setup_entry(
@@ -324,9 +319,9 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
         """Update the clients state."""
         if (
             self.client.last_updated == SOURCE_EVENT
-            and self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED
+            and self.client.event.key in CLIENT_BLOCKED + CLIENT_UNBLOCKED
         ):
-            self._is_blocked = self.client.event.event in CLIENT_BLOCKED
+            self._is_blocked = self.client.event.key in CLIENT_BLOCKED
 
         super().async_update_callback()
 
