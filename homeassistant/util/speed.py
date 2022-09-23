@@ -15,12 +15,12 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
 )
 
 from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
-    FOOT_TO_M,
-    HRS_TO_SECS,
-    IN_TO_M,
-    KM_TO_M,
-    MILE_TO_M,
-    NAUTICAL_MILE_TO_M,
+    _FOOT_TO_M as FOOT_TO_M,
+    _HRS_TO_SECS as HRS_TO_SECS,
+    _IN_TO_M as IN_TO_M,
+    _KM_TO_M as KM_TO_M,
+    _MILE_TO_M as MILE_TO_M,
+    _NAUTICAL_MILE_TO_M as NAUTICAL_MILE_TO_M,
     SpeedConverter,
 )
 
