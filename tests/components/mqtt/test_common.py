@@ -1391,7 +1391,7 @@ async def help_test_entity_debug_info_remove(
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
-    assert entity_id not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
+    assert entity_id not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_debug_info_update_entity_id(
@@ -1449,9 +1449,7 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert (
-        f"{domain}.test" not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
-    )
+    assert f"{domain}.test" not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_disabled_by_default(
