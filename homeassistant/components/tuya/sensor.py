@@ -552,31 +552,11 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        # TuyaSensorEntityDescription(
-        #     key=DPCode.ALARM_MESSAGE,
-        #     name="Alarm Message",
-        #     entity_category=EntityCategory.DIAGNOSTIC,
-        #     # TODO: Handle it being too long
-        # ),
         TuyaSensorEntityDescription(
             key=DPCode.DOORBELL_ACTIVE,
             name="Doorbell Active",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        # TuyaSensorEntityDescription(
-        #     key=DPCode.MOVEMENT_DETECT_PIC,
-        #     name="Movement Detection Picture",
-        #     entity_category=EntityCategory.DIAGNOSTIC,
-        #     icon="mdi:camera-image",
-        #     # TODO: Make it raw so it can be parsed
-        # ),
-        # TuyaSensorEntityDescription(
-        #     key=DPCode.DOORBELL_SNAPSHOT,
-        #     name="Doorbell Snapshot",
-        #     entity_category=EntityCategory.DIAGNOSTIC,
-        #     icon="mdi:panorama-variant-outline",
-        #     # TODO: Make it raw so it can be parsed
-        # ),
     ),
     # Fingerbot
     "szjqr": BATTERY_SENSORS,
