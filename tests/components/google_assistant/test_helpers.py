@@ -57,10 +57,7 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
     assert serialized["customData"] == {
         "httpPort": 1234,
-        "httpSSL": False,
-        "proxyDeviceId": "mock-user-id",
         "webhookId": "mock-webhook-id",
-        "baseUrl": "https://hostname:1234",
         "uuid": "abcdef",
     }
 

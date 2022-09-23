@@ -23,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import area_registry, device_registry, entity_registry, start
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
@@ -612,10 +611,6 @@ class GoogleEntity:
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
                 "uuid": instance_uuid,
-                # Below can be removed in HA 2022.9
-                "httpSSL": self.hass.config.api.use_ssl,
-                "baseUrl": get_url(self.hass, prefer_external=True),
-                "proxyDeviceId": agent_user_id,
             }
 
         # Add trait sync attributes
