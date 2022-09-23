@@ -305,6 +305,7 @@ FLOWS = {
         "qingping",
         "qnap_qsw",
         "rachio",
+        "radarr",
         "radio_browser",
         "radiotherm",
         "rainforest_eagle",

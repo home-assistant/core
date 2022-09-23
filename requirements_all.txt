@@ -235,6 +235,7 @@ aiopvapi==2.0.1
 aiopvpc==3.0.0
 
 # homeassistant.components.lidarr
+# homeassistant.components.radarr
 # homeassistant.components.sonarr
 aiopyarr==22.7.0
 
@@ -1684,7 +1685,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.5
+pylitterbot==2022.9.6
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.15.2

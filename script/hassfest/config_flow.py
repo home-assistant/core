@@ -18,7 +18,7 @@ FLOWS = {}
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
 
 
-def validate_integration(config: Config, integration: Integration):
+def _validate_integration(config: Config, integration: Integration):
     """Validate config flow of an integration."""
     config_flow_file = integration.path / "config_flow.py"
 
@@ -67,7 +67,7 @@ def validate_integration(config: Config, integration: Integration):
     )
 
 
-def generate_and_validate(integrations: dict[str, Integration], config: Config):
+def _generate_and_validate(integrations: dict[str, Integration], config: Config):
     """Validate and generate config flow data."""
     domains = {
         "integration": [],
@@ -80,7 +80,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
         if not integration.manifest or not integration.config_flow:
             continue
 
-        validate_integration(config, integration)
+        _validate_integration(config, integration)
 
         domains[integration.integration_type].append(domain)
 
@@ -90,7 +90,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
 def validate(integrations: dict[str, Integration], config: Config):
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
-    config.cache["config_flow"] = content = generate_and_validate(integrations, config)
+    config.cache["config_flow"] = content = _generate_and_validate(integrations, config)
 
     if config.specific_integrations:
         return
