@@ -11,6 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
+from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import (
     AdvertisementData,
@@ -60,6 +61,15 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
+
+
+@dataclass
+class HaBluetoothConnector:
+    """Data for how to connect a BLEDevice from a given scanner."""
+
+    client: type[BaseBleakClient]
+    source: str
+    can_connect: Callable[[], bool]
 
 
 class BaseHaScanner:
@@ -189,20 +199,139 @@ class HaBleakClientWrapper(BleakClient):
     when an integration does this.
     """
 
-    def __init__(
-        self, address_or_ble_device: str | BLEDevice, *args: Any, **kwargs: Any
+    def __init__(  # pylint: disable=super-init-not-called, keyword-arg-before-vararg
+        self,
+        address_or_ble_device: str | BLEDevice,
+        disconnected_callback: Callable[[BleakClient], None]
+        | None = None,  # kwargs first to match parent
+        *args: Any,
+        timeout: float = 10.0,
+        **kwargs: Any,
     ) -> None:
         """Initialize the BleakClient."""
         if isinstance(address_or_ble_device, BLEDevice):
-            super().__init__(address_or_ble_device, *args, **kwargs)
-            return
-        report(
-            "attempted to call BleakClient with an address instead of a BLEDevice",
-            exclude_integrations={"bluetooth"},
-            error_if_core=False,
+            self.__address = address_or_ble_device.address
+        else:
+            report(
+                "attempted to call BleakClient with an address instead of a BLEDevice",
+                exclude_integrations={"bluetooth"},
+                error_if_core=False,
+            )
+            self.__address = address_or_ble_device
+        self.__disconnected_callback = disconnected_callback
+        self.__timeout = timeout
+        self._backend: BaseBleakClient | None = None
+
+    @property
+    def is_connected(self) -> bool:
+        """Return True if the client is connected to a device."""
+        return self._backend is not None and self._backend.is_connected
+
+    def set_disconnected_callback(
+        self, callback: Callable[[BaseBleakClient], None] | None, **kwargs: Any
+    ) -> None:
+        """Set the disconnect callback.
+
+        The callback will only be called on unsolicited disconnect event.
+
+        Callbacks must accept one input which is the client object itself.
+
+        Set the callback to ``None`` to remove any existing callback.
+
+        .. code-block:: python
+
+            def callback(client):
+                print("Client with address {} got disconnected!".format(client.address))
+
+            client.set_disconnected_callback(callback)
+            client.connect()
+
+        Args:
+            callback: callback to be called on disconnection.
+
+        """
+        self.__disconnected_callback = callback
+        if self._backend:
+            self._backend.set_disconnected_callback(callback, **kwargs)
+
+    async def connect(self, **kwargs: Any) -> bool:
+        """Connect to the specified GATT server.
+
+        Args:
+            **kwargs: For backwards compatibility - should not be used.
+        Returns:
+            Always returns ``True`` for backwards compatibility.
+        """
+        self._backend = self._get_backend()
+        return await super().connect(**kwargs)
+
+    def _get_backend_for_ble_device(
+        self, ble_device: BLEDevice
+    ) -> BaseBleakClient | None:
+        """Get the backend for a BLEDevice."""
+        details = ble_device.details
+        if not isinstance(details, dict) or "connector" not in details:
+            # If client is not defined in details
+            # its the client for this platform
+            cls = get_platform_client_backend_type()
+            return cls(
+                ble_device,
+                disconnected_callback=self.__disconnected_callback,
+                timeout=self.__timeout,
+            )
+
+        connector: HaBluetoothConnector = details["connector"]
+        # Make sure the backend can connect to the device
+        # as some backends have connection limits
+        if not connector.can_connect():
+            return None
+
+        return connector.client(
+            ble_device,
+            disconnected_callback=self.__disconnected_callback,
+            timeout=self.__timeout,
         )
+
+    def _get_backend(self) -> BaseBleakClient:
+        """Get the bleak backend for the given address."""
         assert MANAGER is not None
-        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device, True)
+        address = self.__address
+        ble_device = MANAGER.async_ble_device_from_address(address, True)
         if ble_device is None:
-            raise BleakError(f"No device found for address {address_or_ble_device}")
-        super().__init__(ble_device, *args, **kwargs)
+            raise BleakError(f"No device found for address {address}")
+
+        if backend := self._get_backend_for_ble_device(ble_device):
+            return backend
+
+        #
+        # The preferred backend cannot currently connect the device
+        # because it is likely out of connection slots.
+        #
+        # We need to try all backends to find one that can
+        # connect to the device.
+        #
+        # Currently we have to search all the discovered devices
+        # because the bleak API does not allow us to get the
+        # details for a specific device.
+        #
+        for ble_device in sorted(
+            (
+                ble_device
+                for ble_device in MANAGER.async_all_discovered_devices(True)
+                if ble_device.address == address
+            ),
+            key=lambda ble_device: ble_device.rssi or -1000,
+            reverse=True,
+        ):
+            if backend := self._get_backend_for_ble_device(ble_device):
+                return backend
+
+        raise BleakError(
+            f"No backend with an available connection slot that can reach address {address} was found"
+        )
+
+    async def disconnect(self) -> bool:
+        """Disconnect from the device."""
+        if self._backend is None:
+            return True
+        return await self._backend.disconnect()

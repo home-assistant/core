@@ -52,6 +52,7 @@ from .models import (
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBleakScannerWrapper,
+    HaBluetoothConnector,
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
@@ -66,9 +67,11 @@ __all__ = [
     "async_ble_device_from_address",
     "async_discovered_service_info",
     "async_get_scanner",
+    "async_last_service_info",
     "async_process_advertisements",
     "async_rediscover_address",
     "async_register_callback",
+    "async_register_scanner",
     "async_track_unavailable",
     "async_scanner_count",
     "BaseHaScanner",
@@ -76,6 +79,7 @@ __all__ = [
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
     "BluetoothCallback",
+    "HaBluetoothConnector",
     "SOURCE_LOCAL",
 ]
 

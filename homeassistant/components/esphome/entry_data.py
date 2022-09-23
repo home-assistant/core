@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -58,6 +58,9 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     TextSensorInfo: Platform.SENSOR,
 }
 
+if TYPE_CHECKING:
+    from .bluetooth import ESPHomeScanner
+
 
 @dataclass
 class RuntimeEntryData:
@@ -86,6 +89,7 @@ class RuntimeEntryData:
     ] = field(default_factory=dict)
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    bluetooth_scanner: ESPHomeScanner | None = None
     _storage_contents: dict[str, Any] | None = None
 
     @callback
