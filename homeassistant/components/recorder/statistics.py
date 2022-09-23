@@ -13,7 +13,7 @@ import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import bindparam, func, lambda_stmt, select
 from sqlalchemy.engine.row import Row
@@ -126,8 +126,6 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.statistic_id,
 ]
 
-_ValueT = TypeVar("_ValueT", float, None)
-
 
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
     EnergyConverter.NORMALIZED_UNIT: EnergyConverter.UNIT_CLASS,
@@ -153,10 +151,10 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-) -> Callable[[_ValueT], _ValueT]:
+) -> Callable[[float | None], float | None]:
     """Prepare a converter from the normalized statistics unit to display unit."""
 
-    def no_conversion(val: _ValueT) -> _ValueT:
+    def no_conversion(val: float | None) -> float | None:
         """Return val."""
         return val
 
@@ -179,8 +177,8 @@ def _get_statistic_to_display_unit_converter(
         return no_conversion
 
     def from_normalized_unit(
-        val: _ValueT, conv: type[BaseUnitConverter], to_unit: str
-    ) -> _ValueT:
+        val: float | None, conv: type[BaseUnitConverter], to_unit: str
+    ) -> float | None:
         """Return val."""
         if val is None:
             return val
@@ -1340,7 +1338,7 @@ def _sorted_statistics_to_dict(
     need_stat_at_start_time: set[int] = set()
     stats_at_start_time = {}
 
-    def no_conversion(val: _ValueT) -> _ValueT:
+    def no_conversion(val: float | None) -> float | None:
         """Return val."""
         return val
 
