@@ -28,6 +28,15 @@ BLUECHARM_BEACON_SERVICE_INFO_2 = BluetoothServiceInfo(
     service_uuids=["0000feaa-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+BLUECHARM_BEACON_SERVICE_INFO_DBUS = BluetoothServiceInfo(
+    name="BlueCharm_177999",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={76: b"\x02\x15BlueCharmBeacons\x0e\xfe\x13U\xc5"},
+    service_uuids=[],
+    source="local",
+)
 NO_NAME_BEACON_SERVICE_INFO = BluetoothServiceInfo(
     name="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
