@@ -213,8 +213,7 @@ class HaBleakClientWrapper(BleakClient):
     def __init__(  # pylint: disable=super-init-not-called, keyword-arg-before-vararg
         self,
         address_or_ble_device: str | BLEDevice,
-        disconnected_callback: Callable[[BleakClient], None]
-        | None = None,  # kwargs first to match parent
+        disconnected_callback: Callable[[BleakClient], None] | None = None,
         *args: Any,
         timeout: float = 10.0,
         **kwargs: Any,
