@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import time
 
 from ibeacon_ble import (
@@ -33,6 +34,7 @@ from .const import (
 )
 
 MONOTONIC_TIME = time.monotonic
+_LOGGER = logging.getLogger(__name__)
 
 
 def signal_unavailable(unique_id: str) -> str:
@@ -92,6 +94,7 @@ def _async_dispatch_update(
         )
         return
 
+    _LOGGER.warning("iBeacon device %s updated: %s", device_id, parsed)
     async_dispatcher_send(
         hass,
         signal_seen(device_id),
