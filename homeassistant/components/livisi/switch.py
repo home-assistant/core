@@ -90,7 +90,7 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         version=None,
     ):
         """Initialize the Livisi Switch."""
-        self.config_entry: ConfigEntry = config_entry
+        self.config_entry = config_entry
         self._attr_unique_id = unique_id
         self._manufacturer = manufacturer
         self._product = product
