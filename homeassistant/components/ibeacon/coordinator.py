@@ -117,7 +117,7 @@ class IBeaconCoordinator:
         )
 
         # iBeacons with fixed MAC addresses
-        self._last_rssi_by_unique_id: dict[str, int] = {}
+        self._last_parsed_by_unique_id: dict[str, iBeaconAdvertisement] = {}
         self._group_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_group_id: dict[str, set[str]] = {}
@@ -162,7 +162,7 @@ class IBeaconCoordinator:
         for unique_id in unique_ids:
             if device := self._dev_reg.async_get_device({(DOMAIN, unique_id)}):
                 self._dev_reg.async_remove_device(device.id)
-            self._last_rssi_by_unique_id.pop(unique_id, None)
+            self._last_parsed_by_unique_id.pop(unique_id, None)
 
     @callback
     def _async_convert_random_mac_tracking(
@@ -232,14 +232,14 @@ class IBeaconCoordinator:
         # and switch to random mac tracking method
         address = service_info.address
         unique_id = f"{group_id}_{address}"
-        new = unique_id not in self._last_rssi_by_unique_id
+        new = unique_id not in self._last_parsed_by_unique_id
         # Reject creating new trackers if the name is not set
         if new and (
             service_info.device.name is None
             or service_info.device.name.replace("-", ":") == service_info.device.address
         ):
             return
-        self._last_rssi_by_unique_id[unique_id] = service_info.rssi
+        self._last_parsed_by_unique_id[unique_id] = parsed
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
             self._unavailable_trackers[address] = bluetooth.async_track_unavailable(
@@ -294,17 +294,14 @@ class IBeaconCoordinator:
         here and send them over the dispatcher periodically to
         ensure the distance calculation is update.
         """
-        for unique_id, rssi in self._last_rssi_by_unique_id.items():
+        for unique_id, parsed in self._last_parsed_by_unique_id.items():
             address = unique_id.split("_")[-1]
             if (
-                (
-                    service_info := bluetooth.async_last_service_info(
-                        self.hass, address, connectable=False
-                    )
+                service_info := bluetooth.async_last_service_info(
+                    self.hass, address, connectable=False
                 )
-                and service_info.rssi != rssi
-                and (parsed := parse(service_info))
-            ):
+            ) and service_info.rssi != parsed.rssi:
+                parsed.update_rssi(service_info.rssi)
                 async_dispatcher_send(
                     self.hass,
                     signal_seen(unique_id),
