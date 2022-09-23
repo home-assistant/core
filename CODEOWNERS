@@ -893,6 +893,8 @@ build.json @home-assistant/supervisor
 /tests/components/qwikswitch/ @kellerza
 /homeassistant/components/rachio/ @bdraco
 /tests/components/rachio/ @bdraco
+/homeassistant/components/radarr/ @tkdrob
+/tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
 /homeassistant/components/radiotherm/ @bdraco @vinnyfuria
