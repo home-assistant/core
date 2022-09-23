@@ -27,6 +27,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Light
+    # https://developer.tuya.com/en/docs/iot/categorydj?id=Kaiuyzy3eheyy
+    "dj": (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            name="Mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Coffee maker
     # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
     "kfj": (
@@ -347,6 +356,20 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             device_class=TuyaDeviceClass.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.FAN_SPEED_ENUM,
+            name="Fan Speed",
+            device_class=DPType.ENUM,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:format-list-checks",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Mode",
+            device_class=DPType.ENUM,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:format-list-checks",
         ),
     ),
 }

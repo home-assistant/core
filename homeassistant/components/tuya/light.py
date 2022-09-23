@@ -100,6 +100,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dj": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name="Light",
             color_mode=DPCode.WORK_MODE,
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
@@ -162,6 +163,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             name="Backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name="Light",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

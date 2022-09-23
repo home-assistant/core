@@ -233,7 +233,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.FILTER_RESET,
             name="Filter cartridge reset",
-            icon="mdi:filter",
+            icon="mdi:air-filter",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(

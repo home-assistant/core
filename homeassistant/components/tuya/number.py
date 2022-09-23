@@ -70,6 +70,18 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    "dj": (
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_1,
+            name="Timer",
+            icon="mdi:timer",
+            entity_category=EntityCategory.CONFIG,
+            max_value="86400",
+            min_value="0",
+            native_unit_of_measurement=TIME_SECONDS,
+            native_step="1",
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
@@ -131,6 +143,22 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.POWDER_SET,
             name="Powder",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            name="Timer",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        NumberEntityDescription(
+            key=DPCode.FILTER,
+            name="Filter",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:air-filter"
         ),
     ),
     # Sous Vide Cooker
