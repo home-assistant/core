@@ -38,11 +38,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import (
-    distance as distance_util,
-    pressure as pressure_util,
-    speed as speed_util,
-    temperature as temperature_util,
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,11 +126,11 @@ VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
 )
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: pressure_util.convert,
-    ATTR_WEATHER_TEMPERATURE_UNIT: temperature_util.convert,
-    ATTR_WEATHER_VISIBILITY_UNIT: distance_util.convert,
-    ATTR_WEATHER_PRECIPITATION_UNIT: distance_util.convert,
-    ATTR_WEATHER_WIND_SPEED_UNIT: speed_util.convert,
+    ATTR_WEATHER_PRESSURE_UNIT: PressureConverter.convert,
+    ATTR_WEATHER_TEMPERATURE_UNIT: TemperatureConverter.convert,
+    ATTR_WEATHER_VISIBILITY_UNIT: DistanceConverter.convert,
+    ATTR_WEATHER_PRECIPITATION_UNIT: DistanceConverter.convert,
+    ATTR_WEATHER_WIND_SPEED_UNIT: SpeedConverter.convert,
 }
 
 VALID_UNITS: dict[str, tuple[str, ...]] = {
