@@ -237,7 +237,7 @@ async def async_setup_entry(
 
     # Add switches to control restrictions:
     for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
-        entities.append(RainMachineRestriction(entry, data, description))
+        entities.append(RainMachineRestrictionSwitch(entry, data, description))
 
     async_add_entities(entities)
 
@@ -407,7 +407,7 @@ class RainMachineProgramEnabled(RainMachineEnabledSwitch):
         self._update_activities()
 
 
-class RainMachineRestriction(RainMachineBaseSwitch):
+class RainMachineRestrictionSwitch(RainMachineBaseSwitch):
     """Define a RainMachine restriction setting."""
 
     _attr_entity_category = EntityCategory.CONFIG
