@@ -403,7 +403,7 @@ beautifulsoup4==4.11.1
 bellows==0.33.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.10.2
+bimmer_connected==0.10.4
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1092,7 +1092,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.12
+motionblinds==0.6.13
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1144,6 +1144,9 @@ nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
 nextdns==1.1.1
+
+# homeassistant.components.nibe_heatpump
+nibe==0.5.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1684,7 +1687,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.5
+pylitterbot==2022.9.6
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.15.2
@@ -2045,7 +2048,7 @@ pythonegardia==1.0.40
 pytile==2022.02.0
 
 # homeassistant.components.tomorrowio
-pytomorrowio==0.3.4
+pytomorrowio==0.3.5
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2371,6 +2374,9 @@ temescal==0.5
 
 # homeassistant.components.temper
 temperusb==1.5.3
+
+# homeassistant.components.nibe_heatpump
+tenacity==8.0.1
 
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0

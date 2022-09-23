@@ -837,6 +837,9 @@ omit =
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
+    homeassistant/components/nibe_heatpump/__init__.py
+    homeassistant/components/nibe_heatpump/sensor.py
+    homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -1221,6 +1224,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
+    homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/const.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/switch.py
