@@ -467,8 +467,7 @@ async def websocket_network_status(
         )
         return
     controller = driver.controller
-    new_state = await controller.async_get_state()
-    controller.update(new_state)
+    controller.update(await controller.async_get_state())
     client_version_info = client.version
     assert client_version_info  # When client is connected version info is set.
     data = {
