@@ -145,18 +145,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_cloud()
         return self.async_show_form(step_id="reauth_confirm")
 
-    async def async_step_import(self, conf: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-        self.host = conf[CONF_HOST]
-        self.token = conf[CONF_TOKEN]
-        self.name = conf.get(CONF_NAME)
-        self.model = conf.get(CONF_MODEL)
-
-        self.context.update(
-            {"title_placeholders": {"name": f"YAML import {self.host}"}}
-        )
-        return await self.async_step_connect()
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -386,8 +374,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_CLOUD_USERNAME] = self.cloud_username
                 data[CONF_CLOUD_PASSWORD] = self.cloud_password
                 data[CONF_CLOUD_COUNTRY] = self.cloud_country
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            if self.hass.config_entries.async_update_entry(existing_entry, data=data):
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         if self.name is None:
