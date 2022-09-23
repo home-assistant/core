@@ -898,7 +898,7 @@ iammeter==0.1.7
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.6.4
+ibeacon_ble==0.6.5
 
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
