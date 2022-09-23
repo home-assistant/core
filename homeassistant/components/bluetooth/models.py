@@ -130,6 +130,12 @@ class HaBleakScannerWrapper(BaseBleakScanner):
             detection_callback=detection_callback, service_uuids=service_uuids or []
         )
 
+    @classmethod
+    async def discover(cls, timeout: float = 5.0, **kwargs: Any) -> list[BLEDevice]:
+        """Discover devices."""
+        assert MANAGER is not None
+        return list(MANAGER.async_discovered_devices(True))
+
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
 
