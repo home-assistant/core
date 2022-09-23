@@ -123,7 +123,12 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         """Update state."""
         self._attr_available = True
         self._parsed = parsed
-        _LOGGER.warning("Update sensor: %s => %s", self.unique_id, parsed)
+        _LOGGER.warning(
+            "Update sensor: device_unique_id:%s = unique_id:%s => %s",
+            self._device_unique_id,
+            self.unique_id,
+            parsed,
+        )
         self.async_write_ha_state()
 
     @callback
