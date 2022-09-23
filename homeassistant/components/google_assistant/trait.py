@@ -68,11 +68,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
-from homeassistant.util import color as color_util, dt, temperature as temp_util
+from homeassistant.util import color as color_util, dt
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CHALLENGE_ACK_NEEDED,
@@ -843,7 +844,9 @@ class TemperatureControlTrait(_Trait):
         unit = self.hass.config.units.temperature_unit
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            temp = round(temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1)
+            temp = round(
+                TemperatureConverter.convert(float(current_temp), unit, TEMP_CELSIUS), 1
+            )
             response["temperatureSetpointCelsius"] = temp
             response["temperatureAmbientCelsius"] = temp
 
@@ -948,7 +951,7 @@ class TemperatureSettingTrait(_Trait):
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
             response["thermostatTemperatureAmbient"] = round(
-                temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1
+                TemperatureConverter.convert(current_temp, unit, TEMP_CELSIUS), 1
             )
 
         current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
@@ -958,13 +961,13 @@ class TemperatureSettingTrait(_Trait):
         if operation in (climate.HVACMode.AUTO, climate.HVACMode.HEAT_COOL):
             if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
                 response["thermostatTemperatureSetpointHigh"] = round(
-                    temp_util.convert(
+                    TemperatureConverter.convert(
                         attrs[climate.ATTR_TARGET_TEMP_HIGH], unit, TEMP_CELSIUS
                     ),
                     1,
                 )
                 response["thermostatTemperatureSetpointLow"] = round(
-                    temp_util.convert(
+                    TemperatureConverter.convert(
                         attrs[climate.ATTR_TARGET_TEMP_LOW], unit, TEMP_CELSIUS
                     ),
                     1,
@@ -972,14 +975,14 @@ class TemperatureSettingTrait(_Trait):
             else:
                 if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                     target_temp = round(
-                        temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
+                        TemperatureConverter.convert(target_temp, unit, TEMP_CELSIUS), 1
                     )
                     response["thermostatTemperatureSetpointHigh"] = target_temp
                     response["thermostatTemperatureSetpointLow"] = target_temp
         else:
             if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                 response["thermostatTemperatureSetpoint"] = round(
-                    temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
+                    TemperatureConverter.convert(target_temp, unit, TEMP_CELSIUS), 1
                 )
 
         return response
@@ -992,7 +995,7 @@ class TemperatureSettingTrait(_Trait):
         max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            temp = temp_util.convert(
+            temp = TemperatureConverter.convert(
                 params["thermostatTemperatureSetpoint"], TEMP_CELSIUS, unit
             )
             if unit == TEMP_FAHRENHEIT:
@@ -1013,7 +1016,7 @@ class TemperatureSettingTrait(_Trait):
             )
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
-            temp_high = temp_util.convert(
+            temp_high = TemperatureConverter.convert(
                 params["thermostatTemperatureSetpointHigh"], TEMP_CELSIUS, unit
             )
             if unit == TEMP_FAHRENHEIT:
@@ -1028,7 +1031,7 @@ class TemperatureSettingTrait(_Trait):
                     ),
                 )
 
-            temp_low = temp_util.convert(
+            temp_low = TemperatureConverter.convert(
                 params["thermostatTemperatureSetpointLow"], TEMP_CELSIUS, unit
             )
             if unit == TEMP_FAHRENHEIT:
