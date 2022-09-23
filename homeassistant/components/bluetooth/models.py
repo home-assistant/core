@@ -18,10 +18,13 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
+from bleak_retry_connector import freshen_ble_device
 
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+from .const import NO_RSSI_VALUE
 
 if TYPE_CHECKING:
 
@@ -70,6 +73,14 @@ class HaBluetoothConnector:
     client: type[BaseBleakClient]
     source: str
     can_connect: Callable[[], bool]
+
+
+@dataclass
+class _HaWrappedBleakBackend:
+    """Wrap bleak backend to make it usable by Home Assistant."""
+
+    device: BLEDevice
+    client: type[BaseBleakClient]
 
 
 class BaseHaScanner:
@@ -202,8 +213,7 @@ class HaBleakClientWrapper(BleakClient):
     def __init__(  # pylint: disable=super-init-not-called, keyword-arg-before-vararg
         self,
         address_or_ble_device: str | BLEDevice,
-        disconnected_callback: Callable[[BleakClient], None]
-        | None = None,  # kwargs first to match parent
+        disconnected_callback: Callable[[BleakClient], None] | None = None,
         *args: Any,
         timeout: float = 10.0,
         **kwargs: Any,
@@ -220,7 +230,7 @@ class HaBleakClientWrapper(BleakClient):
             self.__address = address_or_ble_device
         self.__disconnected_callback = disconnected_callback
         self.__timeout = timeout
-        self._backend: BaseBleakClient | None = None
+        self._backend: BaseBleakClient | None = None  # type: ignore[assignment]
 
     @property
     def is_connected(self) -> bool:
@@ -228,57 +238,36 @@ class HaBleakClientWrapper(BleakClient):
         return self._backend is not None and self._backend.is_connected
 
     def set_disconnected_callback(
-        self, callback: Callable[[BaseBleakClient], None] | None, **kwargs: Any
+        self,
+        callback: Callable[[BleakClient], None] | None,
+        **kwargs: Any,
     ) -> None:
-        """Set the disconnect callback.
-
-        The callback will only be called on unsolicited disconnect event.
-
-        Callbacks must accept one input which is the client object itself.
-
-        Set the callback to ``None`` to remove any existing callback.
-
-        .. code-block:: python
-
-            def callback(client):
-                print("Client with address {} got disconnected!".format(client.address))
-
-            client.set_disconnected_callback(callback)
-            client.connect()
-
-        Args:
-            callback: callback to be called on disconnection.
-
-        """
+        """Set the disconnect callback."""
         self.__disconnected_callback = callback
         if self._backend:
-            self._backend.set_disconnected_callback(callback, **kwargs)
+            self._backend.set_disconnected_callback(callback, **kwargs)  # type: ignore[arg-type]
 
     async def connect(self, **kwargs: Any) -> bool:
-        """Connect to the specified GATT server.
-
-        Args:
-            **kwargs: For backwards compatibility - should not be used.
-        Returns:
-            Always returns ``True`` for backwards compatibility.
-        """
-        self._backend = self._get_backend()
+        """Connect to the specified GATT server."""
+        wrapped_backend = self._async_get_backend()
+        self._backend = wrapped_backend.client(
+            await freshen_ble_device(wrapped_backend.device) or wrapped_backend.device,
+            disconnected_callback=self.__disconnected_callback,
+            timeout=self.__timeout,
+        )
         return await super().connect(**kwargs)
 
-    def _get_backend_for_ble_device(
+    @hass_callback
+    def _async_get_backend_for_ble_device(
         self, ble_device: BLEDevice
-    ) -> BaseBleakClient | None:
+    ) -> _HaWrappedBleakBackend | None:
         """Get the backend for a BLEDevice."""
         details = ble_device.details
         if not isinstance(details, dict) or "connector" not in details:
             # If client is not defined in details
             # its the client for this platform
             cls = get_platform_client_backend_type()
-            return cls(
-                ble_device,
-                disconnected_callback=self.__disconnected_callback,
-                timeout=self.__timeout,
-            )
+            return _HaWrappedBleakBackend(ble_device, cls)
 
         connector: HaBluetoothConnector = details["connector"]
         # Make sure the backend can connect to the device
@@ -286,13 +275,10 @@ class HaBleakClientWrapper(BleakClient):
         if not connector.can_connect():
             return None
 
-        return connector.client(
-            ble_device,
-            disconnected_callback=self.__disconnected_callback,
-            timeout=self.__timeout,
-        )
+        return _HaWrappedBleakBackend(ble_device, connector.client)
 
-    def _get_backend(self) -> BaseBleakClient:
+    @hass_callback
+    def _async_get_backend(self) -> _HaWrappedBleakBackend:
         """Get the bleak backend for the given address."""
         assert MANAGER is not None
         address = self.__address
@@ -300,7 +286,7 @@ class HaBleakClientWrapper(BleakClient):
         if ble_device is None:
             raise BleakError(f"No device found for address {address}")
 
-        if backend := self._get_backend_for_ble_device(ble_device):
+        if backend := self._async_get_backend_for_ble_device(ble_device):
             return backend
 
         #
@@ -320,10 +306,10 @@ class HaBleakClientWrapper(BleakClient):
                 for ble_device in MANAGER.async_all_discovered_devices(True)
                 if ble_device.address == address
             ),
-            key=lambda ble_device: ble_device.rssi or -1000,
+            key=lambda ble_device: ble_device.rssi or NO_RSSI_VALUE,
             reverse=True,
         ):
-            if backend := self._get_backend_for_ble_device(ble_device):
+            if backend := self._async_get_backend_for_ble_device(ble_device):
                 return backend
 
         raise BleakError(
