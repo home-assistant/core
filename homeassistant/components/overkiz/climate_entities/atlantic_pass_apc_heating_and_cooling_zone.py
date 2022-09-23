@@ -150,7 +150,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
             str,
             self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_PROFILE),
         )
-
         if current_profile == OverkizCommandParam.ECO:
             return cast(
                 float,
@@ -172,7 +171,6 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
                     OverkizState.CORE_DEROGATED_TARGET_TEMPERATURE
                 ),
             )
-
         return cast(
             float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
         )
