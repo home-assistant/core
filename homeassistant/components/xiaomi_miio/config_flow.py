@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
