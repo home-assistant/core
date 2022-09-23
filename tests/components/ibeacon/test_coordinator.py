@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from homeassistant.components.ibeacon.const import CONF_MIN_RSSI, DOMAIN
+from homeassistant.components.ibeacon.const import DOMAIN
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import BLUECHARM_BEACON_SERVICE_INFO
@@ -52,39 +52,6 @@ async def test_many_groups_same_address_ignored(hass):
 
     await hass.async_block_till_done()
     assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
-
-
-async def test_ignore_anything_less_than_min_rssi(hass):
-    """Test entities are not created when below the min rssi."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_MIN_RSSI: -60},
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    inject_bluetooth_service_info(
-        hass, replace(BLUECHARM_BEACON_SERVICE_INFO, rssi=-100)
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
-
-    inject_bluetooth_service_info(
-        hass,
-        replace(
-            BLUECHARM_BEACON_SERVICE_INFO,
-            rssi=-10,
-            service_uuids=["0000180f-0000-1000-8000-00805f9b34fb"],
-        ),
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is not None
-    )
 
 
 async def test_ignore_not_ibeacons(hass):
