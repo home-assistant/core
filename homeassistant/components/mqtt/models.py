@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTConfig
+    from .tag import MQTTTagScanner
 
 _SENTINEL = object()
 
@@ -243,4 +244,5 @@ class MqttData:
     )
     reload_needed: bool = False
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
+    tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
     updated_config: ConfigType = field(default_factory=dict)
