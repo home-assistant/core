@@ -24,6 +24,18 @@ class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator]):
         self._device = device
         self._attr_name = device.name
         self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
+
+
+class SwitchBeeDeviceEntity(SwitchBeeEntity):
+    """Representation of a Switchbee device entity."""
+
+    def __init__(
+        self,
+        device: SwitchBeeBaseDevice,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
+        """Initialize the Switchbee switch."""
+        super().__init__(device, coordinator)
         self._attr_device_info = DeviceInfo(
             name=f"SwitchBee {device.unit_id}",
             identifiers={
@@ -40,3 +52,9 @@ class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator]):
                 f"{coordinator.api.name} ({coordinator.api.mac})",
             ),
         )
+        self._is_online = True
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._is_online and super().available

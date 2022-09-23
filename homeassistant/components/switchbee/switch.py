@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
-from .entity import SwitchBeeEntity
+from .entity import SwitchBeeDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeSwitchEntity(SwitchBeeEntity, SwitchEntity):
+class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
     """Representation of a Switchbee switch."""
 
     def __init__(
@@ -48,12 +48,6 @@ class SwitchBeeSwitchEntity(SwitchBeeEntity, SwitchEntity):
         """Initialize the Switchbee switch."""
         super().__init__(device, coordinator)
         self._attr_is_on = False
-        self._is_online = True
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._is_online and super().available
 
     @callback
     def _handle_coordinator_update(self) -> None:
