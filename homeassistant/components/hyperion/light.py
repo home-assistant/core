@@ -375,7 +375,7 @@ class HyperionBaseLight(LightEntity):
     def _update_priorities(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion priorities."""
         priority = self._get_priority_entry_that_dictates_state()
-        if priority and self._allow_priority_update(priority):
+        if priority:
             componentid = priority.get(const.KEY_COMPONENTID)
             if (
                 self._support_external_effects
@@ -474,18 +474,9 @@ class HyperionBaseLight(LightEntity):
         priority: dict[str, Any] | None = self._client.visible_priority
         return priority
 
-    def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
-        """Determine whether to allow a priority to update internal state."""
-        return True
-
 
 class HyperionLight(HyperionBaseLight):
-    """A Hyperion light that acts in absolute (vs priority) manner.
-
-    Light state is the absolute Hyperion component state (e.g. LED device on/off) rather
-    than color based at a particular priority, and the 'winning' priority determines
-    shown state rather than exclusively the HA priority.
-    """
+    """A Hyperion light that acts as a client for the configured priority."""
 
     def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
         """Compute a unique id for this instance."""
@@ -497,45 +488,12 @@ class HyperionLight(HyperionBaseLight):
 
     @property
     def is_on(self) -> bool:
-        """Return true if light is on."""
-        return (
-            bool(self._client.is_on())
-            and self._get_priority_entry_that_dictates_state() is not None
-        )
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light."""
-        # == Turn device on ==
-        # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
-        # preferable to enable LEDDEVICE after the settings (e.g. brightness,
-        # color, effect), but this is not possible due to:
-        # https://github.com/hyperion-project/hyperion.ng/issues/967
-        if not bool(self._client.is_on()):
-            for component in (
-                const.KEY_COMPONENTID_ALL,
-                const.KEY_COMPONENTID_LEDDEVICE,
-            ):
-                if not await self._client.async_send_set_component(
-                    **{
-                        const.KEY_COMPONENTSTATE: {
-                            const.KEY_COMPONENT: component,
-                            const.KEY_STATE: True,
-                        }
-                    }
-                ):
-                    return
-
-        # Turn on the relevant Hyperion priority as usual.
-        await super().async_turn_on(**kwargs)
+        """Return true if light is on. Light is considered on when there is an active source at the configured HA priority."""
+        return self._get_priority_entry_that_dictates_state() is not None
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
-        if not await self._client.async_send_set_component(
-            **{
-                const.KEY_COMPONENTSTATE: {
-                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
-                    const.KEY_STATE: False,
-                }
-            }
+        """Turn off the light i.e. clear the configured priority."""
+        if not await self._client.async_send_clear(
+            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
         ):
             return
