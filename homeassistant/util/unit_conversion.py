@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from numbers import Number
-from typing import TypeVar
 
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
@@ -34,8 +33,6 @@ from homeassistant.const import (
 
 from .distance import FOOT_TO_M, IN_TO_M
 
-_ValueT = TypeVar("_ValueT", float, None)
-
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
@@ -52,7 +49,7 @@ class BaseUnitConverter:
     VALID_UNITS: tuple[str, ...]
 
     @classmethod
-    def _check_arguments(cls, value: _ValueT, from_unit: str, to_unit: str) -> None:
+    def _check_arguments(cls, value: float, from_unit: str, to_unit: str) -> None:
         """Check that arguments are all valid."""
         if from_unit not in cls.VALID_UNITS:
             raise ValueError(
@@ -72,10 +69,8 @@ class BaseUnitConverter:
         """Convert one unit of measurement to another."""
 
     @classmethod
-    def from_normalized_unit(cls, value: _ValueT, to_unit: str) -> _ValueT:
+    def from_normalized_unit(cls, value: float, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
-        if value is None:
-            return value
         return cls.convert(value, cls.NORMALIZED_UNIT, to_unit)
 
     @classmethod
