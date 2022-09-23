@@ -90,6 +90,10 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
         Callable[..., Any], HassJob[..., None | Coroutine[Any, Any, None]] | None
     ] = hass.data.get(DATA_DISPATCHER, {}).get(signal, {})
 
+    _LOGGER.warning(
+        "Sending signal %s with data: %s to targets: %s", signal, args, target_list
+    )
+
     run: list[HassJob[..., None | Coroutine[Any, Any, None]]] = []
     for target, job in target_list.items():
         if job is None:
