@@ -67,7 +67,7 @@ def async_name(
         base_name = service_info.name
     if unique_address:
         short_address = make_short_address(service_info.address)
-        if not base_name.endswith(short_address):
+        if not base_name.upper().endswith(short_address):
             return f"{base_name} {short_address}"
     return base_name
 
@@ -233,6 +233,12 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_rssi_by_unique_id
+        # Reject creating new trackers if the name is not set
+        if new and (
+            service_info.device.name is None
+            or service_info.device.name.replace("-", ":") == service_info.device.address
+        ):
+            return
         self._last_rssi_by_unique_id[unique_id] = service_info.rssi
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
