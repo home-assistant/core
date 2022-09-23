@@ -227,6 +227,33 @@ class HaBleakClientWrapper(BleakClient):
         """Return True if the client is connected to a device."""
         return self._backend is not None and self._backend.is_connected
 
+    def set_disconnected_callback(
+        self, callback: Callable[[BaseBleakClient], None] | None, **kwargs: Any
+    ) -> None:
+        """Set the disconnect callback.
+
+        The callback will only be called on unsolicited disconnect event.
+
+        Callbacks must accept one input which is the client object itself.
+
+        Set the callback to ``None`` to remove any existing callback.
+
+        .. code-block:: python
+
+            def callback(client):
+                print("Client with address {} got disconnected!".format(client.address))
+
+            client.set_disconnected_callback(callback)
+            client.connect()
+
+        Args:
+            callback: callback to be called on disconnection.
+
+        """
+        self.__disconnected_callback = callback
+        if self._backend:
+            self._backend.set_disconnected_callback(callback, **kwargs)
+
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server.
 
