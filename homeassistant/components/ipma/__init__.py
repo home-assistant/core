@@ -1,4 +1,5 @@
 """Component for the Portuguese weather service - IPMA."""
+import asyncio
 import logging
 
 import async_timeout
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         async with async_timeout.timeout(30):
             location = await Location.get(api, float(latitude), float(longitude))
-    except (IPMAException, TimeoutError) as err:
+    except (IPMAException, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady(
             f"Could not get location for ({latitude},{longitude})"
         ) from err
