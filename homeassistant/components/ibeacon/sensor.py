@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from ibeacon_ble import iBeaconAdvertisement
 
@@ -22,8 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, SIGNAL_IBEACON_DEVICE_NEW
 from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -116,10 +113,6 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         )
         self._attr_unique_id = f"{device_unique_id}_{description.key}"
         self.entity_description = description
-
-    def __repr__(self) -> str:
-        """Return the representation."""
-        return f"<IBeaconSensorEntity {self.name} ({self.unique_id}): {self.state}>"
 
     @callback
     def _async_seen(
