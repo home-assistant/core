@@ -127,53 +127,6 @@ QUERY_STATISTIC_META_ID = [
 ]
 
 
-def _convert_energy_from_kwh(to_unit: str, value: float | None) -> float | None:
-    """Convert energy in kWh to to_unit."""
-    if value is None:
-        return None
-    return EnergyConverter.convert(value, EnergyConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_energy_to_kwh(from_unit: str, value: float) -> float:
-    """Convert energy in from_unit to kWh."""
-    return EnergyConverter.convert(value, from_unit, EnergyConverter.NORMALIZED_UNIT)
-
-
-def _convert_power_from_w(to_unit: str, value: float | None) -> float | None:
-    """Convert power in W to to_unit."""
-    if value is None:
-        return None
-    return PowerConverter.convert(value, PowerConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_pressure_from_pa(to_unit: str, value: float | None) -> float | None:
-    """Convert pressure in Pa to to_unit."""
-    if value is None:
-        return None
-    return PressureConverter.convert(value, PressureConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_temperature_from_c(to_unit: str, value: float | None) -> float | None:
-    """Convert temperature in °C to to_unit."""
-    if value is None:
-        return None
-    return TemperatureConverter.convert(
-        value, TemperatureConverter.NORMALIZED_UNIT, to_unit
-    )
-
-
-def _convert_volume_from_m3(to_unit: str, value: float | None) -> float | None:
-    """Convert volume in m³ to to_unit."""
-    if value is None:
-        return None
-    return VolumeConverter.convert(value, VolumeConverter.NORMALIZED_UNIT, to_unit)
-
-
-def _convert_volume_to_m3(from_unit: str, value: float) -> float:
-    """Convert volume in from_unit to m³."""
-    return VolumeConverter.convert(value, from_unit, VolumeConverter.NORMALIZED_UNIT)
-
-
 STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
     EnergyConverter.NORMALIZED_UNIT: EnergyConverter.UNIT_CLASS,
     PowerConverter.NORMALIZED_UNIT: PowerConverter.UNIT_CLASS,
@@ -190,25 +143,6 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     VolumeConverter.NORMALIZED_UNIT: VolumeConverter,
 }
 
-# Convert energy power, pressure, temperature and volume statistics from the
-# normalized unit used for statistics to the unit configured by the user
-STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS: dict[
-    str, Callable[[str, float | None], float | None]
-] = {
-    EnergyConverter.NORMALIZED_UNIT: _convert_energy_from_kwh,
-    PowerConverter.NORMALIZED_UNIT: _convert_power_from_w,
-    PressureConverter.NORMALIZED_UNIT: _convert_pressure_from_pa,
-    TemperatureConverter.NORMALIZED_UNIT: _convert_temperature_from_c,
-    VolumeConverter.NORMALIZED_UNIT: _convert_volume_from_m3,
-}
-
-# Convert energy and volume statistics from the display unit configured by the user
-# to the normalized unit used for statistics.
-# This is used to support adjusting statistics in the display unit
-DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS: dict[str, Callable[[str, float], float]] = {
-    EnergyConverter.NORMALIZED_UNIT: _convert_energy_to_kwh,
-    VolumeConverter.NORMALIZED_UNIT: _convert_volume_to_m3,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -227,9 +161,7 @@ def _get_statistic_to_display_unit_converter(
     if statistic_unit is None:
         return no_conversion
 
-    if (
-        convert_fn := STATISTIC_UNIT_TO_DISPLAY_UNIT_FUNCTIONS.get(statistic_unit)
-    ) is None:
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
     display_unit: str | None
@@ -244,7 +176,15 @@ def _get_statistic_to_display_unit_converter(
         # Guard against invalid state unit in the DB
         return no_conversion
 
-    return partial(convert_fn, display_unit)
+    def from_normalized_unit(
+        val: float | None, conv: type[BaseUnitConverter], to_unit: str
+    ) -> float | None:
+        """Return val."""
+        if val is None:
+            return val
+        return conv.convert(val, from_unit=conv.NORMALIZED_UNIT, to_unit=to_unit)
+
+    return partial(from_normalized_unit, conv=converter, to_unit=display_unit)
 
 
 def _get_display_to_statistic_unit_converter(
@@ -260,12 +200,12 @@ def _get_display_to_statistic_unit_converter(
     if statistic_unit is None:
         return no_conversion
 
-    if (
-        convert_fn := DISPLAY_UNIT_TO_STATISTIC_UNIT_FUNCTIONS.get(statistic_unit)
-    ) is None:
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
-    return partial(convert_fn, display_unit)
+    return partial(
+        converter.convert, from_unit=display_unit, to_unit=converter.NORMALIZED_UNIT
+    )
 
 
 @dataclasses.dataclass
