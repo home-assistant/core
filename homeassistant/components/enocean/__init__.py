@@ -247,7 +247,7 @@ def _setup_yaml_import(
                     import_config.device_type.eep,
                 )
 
-        if not enocean_devices_to_add:
+        if len(enocean_devices_to_add) < 1:
             LOGGER.warning(
                 "Import of EnOcean platform configurations completed (no new devices)"
             )
@@ -295,7 +295,7 @@ def _setup_yaml_import(
 
                 # remove the new entity
                 ent_reg.async_remove(new_entity.entity_id)
-                LOGGER.warning(
+                LOGGER.debug(
                     "Removed new entity '%s' with unique_id '%s' from entity registry",
                     new_entity.entity_id,
                     new_unique_id,
@@ -307,7 +307,7 @@ def _setup_yaml_import(
                     device_id=new_entity.device_id,
                 )
 
-                LOGGER.warning(
+                LOGGER.debug(
                     "Updated old entity '%s' in entity registry: Its new unique_id is '%s' (previously '%s') and its device_id is '%s' (previously NULL). You need to restart Home Assistant for this entity to show up in the UI",
                     old_entity.entity_id,
                     new_unique_id,
@@ -316,7 +316,7 @@ def _setup_yaml_import(
                 )
 
         LOGGER.warning(
-            "Import of EnOcean platform configurations completed. Please delete these entries from your configuration.yaml"
+            "Import of EnOcean platform configurations completed. Please delete these entries from your configuration.yaml and restart Home Assistant"
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _schedule_yaml_import)
@@ -412,7 +412,7 @@ def _get_switch_import_config(
     old_unique_id = str(combine_hex(dev_id)) + "-" + str(channel)
 
     # check if we already planned to import a configuration for this device (i.e. another channel)
-    device = None
+    device_found = None
     for device in enocean_devices_to_add:
         if device.get(CONF_ENOCEAN_DEVICE_ID, "") == dev_id_string:
             # check if the previously added device has too few channels
@@ -438,12 +438,13 @@ def _get_switch_import_config(
                     planned_channels,
                     required_channels,
                 )
+                device_found = device
             else:
                 device_type = None
             break
 
-    if device is not None:
-        enocean_devices_to_add.remove(device)
+    if device_found is not None:
+        enocean_devices_to_add.remove(device_found)
 
     return EnOceanImportConfig(
         new_unique_id=new_unique_id,
