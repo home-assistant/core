@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -100,7 +100,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     """Defines a base Radarr entity."""
 
+    _attr_has_entity_name = True
     coordinator: RadarrDataUpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RadarrDataUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Create Radarr entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
