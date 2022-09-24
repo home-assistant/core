@@ -54,7 +54,7 @@ def make_short_address(address: str) -> str:
 @callback
 def async_name(
     service_info: bluetooth.BluetoothServiceInfoBleak,
-    parsed: iBeaconAdvertisement,
+    ibeacon_advertisement: iBeaconAdvertisement,
     unique_address: bool = False,
 ) -> str:
     """Return a name for the device."""
@@ -62,7 +62,7 @@ def async_name(
         service_info.name,
         service_info.name.replace("_", ":"),
     ):
-        base_name = f"{parsed.uuid} {parsed.major}.{parsed.minor}"
+        base_name = f"{ibeacon_advertisement.uuid} {ibeacon_advertisement.major}.{ibeacon_advertisement.minor}"
     else:
         base_name = service_info.name
     if unique_address:
@@ -77,7 +77,7 @@ def _async_dispatch_update(
     hass: HomeAssistant,
     device_id: str,
     service_info: bluetooth.BluetoothServiceInfoBleak,
-    parsed: iBeaconAdvertisement,
+    ibeacon_advertisement: iBeaconAdvertisement,
     new: bool,
     unique_address: bool,
 ) -> None:
@@ -87,15 +87,15 @@ def _async_dispatch_update(
             hass,
             SIGNAL_IBEACON_DEVICE_NEW,
             device_id,
-            async_name(service_info, parsed, unique_address),
-            parsed,
+            async_name(service_info, ibeacon_advertisement, unique_address),
+            ibeacon_advertisement,
         )
         return
 
     async_dispatcher_send(
         hass,
         signal_seen(device_id),
-        parsed,
+        ibeacon_advertisement,
     )
 
 
@@ -117,7 +117,9 @@ class IBeaconCoordinator:
         )
 
         # iBeacons with fixed MAC addresses
-        self._last_rssi_by_unique_id: dict[str, int] = {}
+        self._last_ibeacon_advertisement_by_unique_id: dict[
+            str, iBeaconAdvertisement
+        ] = {}
         self._group_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_group_id: dict[str, set[str]] = {}
@@ -162,21 +164,23 @@ class IBeaconCoordinator:
         for unique_id in unique_ids:
             if device := self._dev_reg.async_get_device({(DOMAIN, unique_id)}):
                 self._dev_reg.async_remove_device(device.id)
-            self._last_rssi_by_unique_id.pop(unique_id, None)
+            self._last_ibeacon_advertisement_by_unique_id.pop(unique_id, None)
 
     @callback
     def _async_convert_random_mac_tracking(
         self,
         group_id: str,
         service_info: bluetooth.BluetoothServiceInfoBleak,
-        parsed: iBeaconAdvertisement,
+        ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
         """Switch to random mac tracking method when a group is using rotating mac addresses."""
         self._group_ids_random_macs.add(group_id)
         self._async_purge_untrackable_entities(self._unique_ids_by_group_id[group_id])
         self._unique_ids_by_group_id.pop(group_id)
         self._addresses_by_group_id.pop(group_id)
-        self._async_update_ibeacon_with_random_mac(group_id, service_info, parsed)
+        self._async_update_ibeacon_with_random_mac(
+            group_id, service_info, ibeacon_advertisement
+        )
 
     def _async_track_ibeacon_with_unique_address(
         self, address: str, group_id: str, unique_id: str
@@ -197,49 +201,55 @@ class IBeaconCoordinator:
         """Update from a bluetooth callback."""
         if service_info.address in self._ignore_addresses:
             return
-        if not (parsed := parse(service_info)):
+        if not (ibeacon_advertisement := parse(service_info)):
             return
-        group_id = f"{parsed.uuid}_{parsed.major}_{parsed.minor}"
+        group_id = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
 
         if group_id in self._group_ids_random_macs:
-            self._async_update_ibeacon_with_random_mac(group_id, service_info, parsed)
+            self._async_update_ibeacon_with_random_mac(
+                group_id, service_info, ibeacon_advertisement
+            )
             return
 
-        self._async_update_ibeacon_with_unique_address(group_id, service_info, parsed)
+        self._async_update_ibeacon_with_unique_address(
+            group_id, service_info, ibeacon_advertisement
+        )
 
     @callback
     def _async_update_ibeacon_with_random_mac(
         self,
         group_id: str,
         service_info: bluetooth.BluetoothServiceInfoBleak,
-        parsed: iBeaconAdvertisement,
+        ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
         """Update iBeacons with random mac addresses."""
         new = group_id not in self._last_seen_by_group_id
         self._last_seen_by_group_id[group_id] = service_info
         self._unavailable_group_ids.discard(group_id)
-        _async_dispatch_update(self.hass, group_id, service_info, parsed, new, False)
+        _async_dispatch_update(
+            self.hass, group_id, service_info, ibeacon_advertisement, new, False
+        )
 
     @callback
     def _async_update_ibeacon_with_unique_address(
         self,
         group_id: str,
         service_info: bluetooth.BluetoothServiceInfoBleak,
-        parsed: iBeaconAdvertisement,
+        ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
         # Handle iBeacon with a fixed mac address
         # and or detect if the iBeacon is using a rotating mac address
         # and switch to random mac tracking method
         address = service_info.address
         unique_id = f"{group_id}_{address}"
-        new = unique_id not in self._last_rssi_by_unique_id
+        new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
         # Reject creating new trackers if the name is not set
         if new and (
             service_info.device.name is None
             or service_info.device.name.replace("-", ":") == service_info.device.address
         ):
             return
-        self._last_rssi_by_unique_id[unique_id] = service_info.rssi
+        self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
             self._unavailable_trackers[address] = bluetooth.async_track_unavailable(
@@ -259,10 +269,14 @@ class IBeaconCoordinator:
         # group_id we remove all the trackers for that group_id
         # as it means the addresses are being rotated.
         if len(self._addresses_by_group_id[group_id]) >= MAX_IDS:
-            self._async_convert_random_mac_tracking(group_id, service_info, parsed)
+            self._async_convert_random_mac_tracking(
+                group_id, service_info, ibeacon_advertisement
+            )
             return
 
-        _async_dispatch_update(self.hass, unique_id, service_info, parsed, new, True)
+        _async_dispatch_update(
+            self.hass, unique_id, service_info, ibeacon_advertisement, new, True
+        )
 
     @callback
     def _async_stop(self) -> None:
@@ -294,21 +308,21 @@ class IBeaconCoordinator:
         here and send them over the dispatcher periodically to
         ensure the distance calculation is update.
         """
-        for unique_id, rssi in self._last_rssi_by_unique_id.items():
+        for (
+            unique_id,
+            ibeacon_advertisement,
+        ) in self._last_ibeacon_advertisement_by_unique_id.items():
             address = unique_id.split("_")[-1]
             if (
-                (
-                    service_info := bluetooth.async_last_service_info(
-                        self.hass, address, connectable=False
-                    )
+                service_info := bluetooth.async_last_service_info(
+                    self.hass, address, connectable=False
                 )
-                and service_info.rssi != rssi
-                and (parsed := parse(service_info))
-            ):
+            ) and service_info.rssi != ibeacon_advertisement.rssi:
+                ibeacon_advertisement.update_rssi(service_info.rssi)
                 async_dispatcher_send(
                     self.hass,
                     signal_seen(unique_id),
-                    parsed,
+                    ibeacon_advertisement,
                 )
 
     @callback
