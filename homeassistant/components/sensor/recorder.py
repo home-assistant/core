@@ -215,10 +215,7 @@ def _normalize_states(
         fstates.append(
             (
                 converter.convert(
-                    fstate,
-                    from_unit=state_unit,
-                    to_unit=converter.NORMALIZED_UNIT,
-                    bypass_checks=True,
+                    fstate, from_unit=state_unit, to_unit=converter.NORMALIZED_UNIT
                 ),
                 state,
             )

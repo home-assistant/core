@@ -95,9 +95,7 @@ class BaseUnitConverter:
 
     @classmethod
     @abstractmethod
-    def convert(
-        cls, value: float, from_unit: str, to_unit: str, *, bypass_checks: bool = False
-    ) -> float:
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
 
 
@@ -107,12 +105,9 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     UNIT_CONVERSION: dict[str, float]
 
     @classmethod
-    def convert(
-        cls, value: float, from_unit: str, to_unit: str, *, bypass_checks: bool = False
-    ) -> float:
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
-        if not bypass_checks:
-            cls._check_arguments(value, from_unit, to_unit)
+        cls._check_arguments(value, from_unit, to_unit)
 
         if from_unit == to_unit:
             return value
@@ -249,17 +244,10 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     def convert(
-        cls,
-        value: float,
-        from_unit: str,
-        to_unit: str,
-        *,
-        bypass_checks: bool = False,
-        interval: bool = False,
+        cls, value: float, from_unit: str, to_unit: str, *, interval: bool = False
     ) -> float:
         """Convert a temperature from one unit to another."""
-        if not bypass_checks:
-            cls._check_arguments(value, from_unit, to_unit)
+        cls._check_arguments(value, from_unit, to_unit)
 
         if from_unit == to_unit:
             return value
