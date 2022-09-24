@@ -5,7 +5,8 @@ from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.bsblan import init_integration, init_integration_without_auth
+from . import init_integration, init_integration_without_auth
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

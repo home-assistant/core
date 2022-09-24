@@ -223,10 +223,22 @@ HARDWARE_INTEGRATIONS = {
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
+    The add-on must be installed.
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     return await hassio.get_addon_info(slug)
+
+
+@api_data
+async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
+    """Return add-on store info.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    command = f"/store/addons/{slug}"
+    return await hassio.send_command(command, method="get")
 
 
 @bind_hass
@@ -504,7 +516,7 @@ def is_hassio(hass: HomeAssistant) -> bool:
 
 
 @callback
-def get_supervisor_ip() -> str:
+def get_supervisor_ip() -> str | None:
     """Return the supervisor ip address."""
     if "SUPERVISOR" not in os.environ:
         return None
@@ -533,7 +545,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     if not await hassio.is_connected():
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
 
@@ -710,6 +722,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
+    assert user is not None
     async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
@@ -755,7 +768,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_config_entry_first_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -877,7 +890,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         except HassioAPIError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
-        new_data = {}
+        new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass)
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)

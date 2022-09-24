@@ -12,8 +12,11 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -164,6 +167,7 @@ class AmcrestCommandFailed(Exception):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
@@ -280,14 +284,6 @@ class AmcrestCam(Camera):
             await stream.close()
 
     # Entity property overrides
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
 
     @property
     def name(self) -> str:

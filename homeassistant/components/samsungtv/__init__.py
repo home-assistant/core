@@ -1,7 +1,7 @@
 """The Samsung TV integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Coroutine, Mapping
 from functools import partial
 import socket
 from typing import Any
@@ -131,7 +131,7 @@ class DebouncedEntryReloader:
         self.hass = hass
         self.entry = entry
         self.token = self.entry.data.get(CONF_TOKEN)
-        self._debounced_reload = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,

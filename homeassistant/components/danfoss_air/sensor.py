@@ -119,7 +119,7 @@ class DanfossAir(SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
 
-    def update(self):
+    def update(self) -> None:
         """Update the new state of the sensor.
 
         This is done through the DanfossAir object that does the actual

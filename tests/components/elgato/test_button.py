@@ -25,12 +25,12 @@ async def test_button_identify(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("button.identify")
+    state = hass.states.get("button.frenck_identify")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:help"
     assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get("button.identify")
+    entry = entity_registry.async_get("button.frenck_identify")
     assert entry
     assert entry.unique_id == "CN11A1A00001_identify"
     assert entry.entity_category == EntityCategory.CONFIG
@@ -53,14 +53,14 @@ async def test_button_identify(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.identify"},
+        {ATTR_ENTITY_ID: "button.frenck_identify"},
         blocking=True,
     )
 
     assert len(mock_elgato.identify.mock_calls) == 1
     mock_elgato.identify.assert_called_with()
 
-    state = hass.states.get("button.identify")
+    state = hass.states.get("button.frenck_identify")
     assert state
     assert state.state == "2021-11-13T11:48:00+00:00"
 
@@ -79,7 +79,7 @@ async def test_button_identify_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.identify"},
+            {ATTR_ENTITY_ID: "button.frenck_identify"},
             blocking=True,
         )
         await hass.async_block_till_done()

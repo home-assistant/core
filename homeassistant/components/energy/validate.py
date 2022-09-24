@@ -40,7 +40,11 @@ GAS_USAGE_DEVICE_CLASSES = (
     sensor.SensorDeviceClass.GAS,
 )
 GAS_USAGE_UNITS = {
-    sensor.SensorDeviceClass.ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+    sensor.SensorDeviceClass.ENERGY: (
+        ENERGY_WATT_HOUR,
+        ENERGY_KILO_WATT_HOUR,
+        ENERGY_MEGA_WATT_HOUR,
+    ),
     sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }
 GAS_PRICE_UNITS = tuple(
@@ -263,10 +267,10 @@ def _async_validate_auto_generated_cost_entity(
 
 async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
     """Validate the energy configuration."""
-    manager = await data.async_get_manager(hass)
+    manager: data.EnergyManager = await data.async_get_manager(hass)
     statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]] = {}
     validate_calls = []
-    wanted_statistics_metadata = set()
+    wanted_statistics_metadata: set[str] = set()
 
     result = EnergyPreferencesValidation()
 
@@ -279,6 +283,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
         result.energy_sources.append(source_result)
 
         if source["type"] == "grid":
+            flow: data.FlowFromGridSourceType | data.FlowToGridSourceType
             for flow in source["flow_from"]:
                 wanted_statistics_metadata.add(flow["stat_energy_from"])
                 validate_calls.append(
@@ -294,14 +299,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-                if flow.get("stat_cost") is not None:
-                    wanted_statistics_metadata.add(flow["stat_cost"])
+                if (stat_cost := flow.get("stat_cost")) is not None:
+                    wanted_statistics_metadata.add(stat_cost)
                     validate_calls.append(
                         functools.partial(
                             _async_validate_cost_stat,
                             hass,
                             statistics_metadata,
-                            flow["stat_cost"],
+                            stat_cost,
                             source_result,
                         )
                     )
@@ -317,7 +322,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         )
                     )
 
-                if flow.get("entity_energy_from") is not None and (
+                if (
                     flow.get("entity_energy_price") is not None
                     or flow.get("number_energy_price") is not None
                 ):
@@ -325,7 +330,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         functools.partial(
                             _async_validate_auto_generated_cost_entity,
                             hass,
-                            flow["entity_energy_from"],
+                            flow["stat_energy_from"],
                             source_result,
                         )
                     )
@@ -345,14 +350,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-                if flow.get("stat_compensation") is not None:
-                    wanted_statistics_metadata.add(flow["stat_compensation"])
+                if (stat_compensation := flow.get("stat_compensation")) is not None:
+                    wanted_statistics_metadata.add(stat_compensation)
                     validate_calls.append(
                         functools.partial(
                             _async_validate_cost_stat,
                             hass,
                             statistics_metadata,
-                            flow["stat_compensation"],
+                            stat_compensation,
                             source_result,
                         )
                     )
@@ -368,7 +373,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         )
                     )
 
-                if flow.get("entity_energy_to") is not None and (
+                if (
                     flow.get("entity_energy_price") is not None
                     or flow.get("number_energy_price") is not None
                 ):
@@ -376,7 +381,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         functools.partial(
                             _async_validate_auto_generated_cost_entity,
                             hass,
-                            flow["entity_energy_to"],
+                            flow["stat_energy_to"],
                             source_result,
                         )
                     )
@@ -396,14 +401,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 )
             )
 
-            if source.get("stat_cost") is not None:
-                wanted_statistics_metadata.add(source["stat_cost"])
+            if (stat_cost := source.get("stat_cost")) is not None:
+                wanted_statistics_metadata.add(stat_cost)
                 validate_calls.append(
                     functools.partial(
                         _async_validate_cost_stat,
                         hass,
                         statistics_metadata,
-                        source["stat_cost"],
+                        stat_cost,
                         source_result,
                     )
                 )
@@ -419,7 +424,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-            if source.get("entity_energy_from") is not None and (
+            if (
                 source.get("entity_energy_price") is not None
                 or source.get("number_energy_price") is not None
             ):
@@ -427,7 +432,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     functools.partial(
                         _async_validate_auto_generated_cost_entity,
                         hass,
-                        source["entity_energy_from"],
+                        source["stat_energy_from"],
                         source_result,
                     )
                 )

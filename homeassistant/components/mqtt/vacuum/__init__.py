@@ -11,11 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ..mixins import (
-    async_setup_entry_helper,
-    async_setup_platform_discovery,
-    async_setup_platform_helper,
-)
+from ..mixins import async_setup_entry_helper, async_setup_platform_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
@@ -90,11 +86,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT vacuum through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, vacuum.DOMAIN)
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -102,10 +93,17 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT vacuum."""
-    setup_entity = {LEGACY: async_setup_entity_legacy, STATE: async_setup_entity_state}
+    setup_entity = {
+        LEGACY: async_setup_entity_legacy,
+        STATE: async_setup_entity_state,
+    }
     await setup_entity[config[CONF_SCHEMA]](
         hass, config, async_add_entities, config_entry, discovery_data
     )

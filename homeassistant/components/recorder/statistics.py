@@ -6,13 +6,14 @@ from collections.abc import Callable, Iterable
 import contextlib
 import dataclasses
 from datetime import datetime, timedelta
+from functools import partial
 from itertools import chain, groupby
 import json
 import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import bindparam, func, lambda_stmt, select
 from sqlalchemy.engine.row import Row
@@ -23,25 +24,23 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
-from homeassistant.const import (
-    PRESSURE_PA,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-)
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
-import homeassistant.util.pressure as pressure_util
-import homeassistant.util.temperature as temperature_util
-from homeassistant.util.unit_system import UnitSystem
-import homeassistant.util.volume as volume_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    EnergyConverter,
+    PowerConverter,
+    PressureConverter,
+    TemperatureConverter,
+    VolumeConverter,
+)
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
@@ -53,6 +52,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    get_instance,
     retryable_database_job,
     session_scope,
 )
@@ -114,6 +114,7 @@ QUERY_STATISTIC_META = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
     StatisticsMeta.source,
+    StatisticsMeta.state_unit_of_measurement,
     StatisticsMeta.unit_of_measurement,
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
@@ -126,38 +127,85 @@ QUERY_STATISTIC_META_ID = [
 ]
 
 
-# Convert pressure, temperature and volume statistics from the normalized unit used for
-# statistics to the unit configured by the user
-STATISTIC_UNIT_TO_DISPLAY_UNIT_CONVERSIONS = {
-    PRESSURE_PA: lambda x, units: pressure_util.convert(
-        x, PRESSURE_PA, units.pressure_unit
-    )
-    if x is not None
-    else None,
-    TEMP_CELSIUS: lambda x, units: temperature_util.convert(
-        x, TEMP_CELSIUS, units.temperature_unit
-    )
-    if x is not None
-    else None,
-    VOLUME_CUBIC_METERS: lambda x, units: volume_util.convert(
-        x, VOLUME_CUBIC_METERS, _configured_unit(VOLUME_CUBIC_METERS, units)
-    )
-    if x is not None
-    else None,
+STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
+    EnergyConverter.NORMALIZED_UNIT: EnergyConverter.UNIT_CLASS,
+    PowerConverter.NORMALIZED_UNIT: PowerConverter.UNIT_CLASS,
+    PressureConverter.NORMALIZED_UNIT: PressureConverter.UNIT_CLASS,
+    TemperatureConverter.NORMALIZED_UNIT: TemperatureConverter.UNIT_CLASS,
+    VolumeConverter.NORMALIZED_UNIT: VolumeConverter.UNIT_CLASS,
 }
 
-# Convert volume statistics from the display unit configured by the user
-# to the normalized unit used for statistics
-# This is used to support adjusting statistics in the display unit
-DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS: dict[
-    str, Callable[[float, UnitSystem], float]
-] = {
-    VOLUME_CUBIC_FEET: lambda x, units: volume_util.convert(
-        x, _configured_unit(VOLUME_CUBIC_METERS, units), VOLUME_CUBIC_METERS
-    ),
+STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    EnergyConverter.NORMALIZED_UNIT: EnergyConverter,
+    PowerConverter.NORMALIZED_UNIT: PowerConverter,
+    PressureConverter.NORMALIZED_UNIT: PressureConverter,
+    TemperatureConverter.NORMALIZED_UNIT: TemperatureConverter,
+    VolumeConverter.NORMALIZED_UNIT: VolumeConverter,
 }
+
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_statistic_to_display_unit_converter(
+    statistic_unit: str | None,
+    state_unit: str | None,
+    requested_units: dict[str, str] | None,
+) -> Callable[[float | None], float | None]:
+    """Prepare a converter from the normalized statistics unit to display unit."""
+
+    def no_conversion(val: float | None) -> float | None:
+        """Return val."""
+        return val
+
+    if statistic_unit is None:
+        return no_conversion
+
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+        return no_conversion
+
+    display_unit: str | None
+    unit_class = STATISTIC_UNIT_TO_UNIT_CLASS[statistic_unit]
+    if requested_units and unit_class in requested_units:
+        display_unit = requested_units[unit_class]
+    else:
+        display_unit = state_unit
+
+    unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[statistic_unit]
+    if display_unit not in unit_converter.VALID_UNITS:
+        # Guard against invalid state unit in the DB
+        return no_conversion
+
+    def from_normalized_unit(
+        val: float | None, conv: type[BaseUnitConverter], to_unit: str
+    ) -> float | None:
+        """Return val."""
+        if val is None:
+            return val
+        return conv.convert(val, from_unit=conv.NORMALIZED_UNIT, to_unit=to_unit)
+
+    return partial(from_normalized_unit, conv=converter, to_unit=display_unit)
+
+
+def _get_display_to_statistic_unit_converter(
+    display_unit: str | None,
+    statistic_unit: str | None,
+) -> Callable[[float], float]:
+    """Prepare a converter from the display unit to the normalized statistics unit."""
+
+    def no_conversion(val: float) -> float:
+        """Return val."""
+        return val
+
+    if statistic_unit is None:
+        return no_conversion
+
+    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+        return no_conversion
+
+    return partial(
+        converter.convert, from_unit=display_unit, to_unit=converter.NORMALIZED_UNIT
+    )
 
 
 @dataclasses.dataclass
@@ -209,7 +257,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
     @callback
     def _async_entity_id_changed(event: Event) -> None:
-        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+        get_instance(hass).async_update_statistics_metadata(
             event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
         )
 
@@ -266,12 +314,19 @@ def _update_or_add_metadata(
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
+        or old_metadata["name"] != new_metadata["name"]
+        or old_metadata["state_unit_of_measurement"]
+        != new_metadata["state_unit_of_measurement"]
         or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
     ):
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
                 StatisticsMeta.has_mean: new_metadata["has_mean"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
+                StatisticsMeta.name: new_metadata["name"],
+                StatisticsMeta.state_unit_of_measurement: new_metadata[
+                    "state_unit_of_measurement"
+                ],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
             },
             synchronize_session=False,
@@ -417,6 +472,9 @@ def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
 
 def _find_statistics_meta_duplicates(session: Session) -> list[int]:
     """Find duplicated statistics_meta."""
+    # When querying the database, be careful to only explicitly query for columns
+    # which were present in schema version 29. If querying the table, SQLAlchemy
+    # will refer to future columns.
     subquery = (
         session.query(
             StatisticsMeta.statistic_id,
@@ -427,7 +485,7 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
         .subquery()
     )
     query = (
-        session.query(StatisticsMeta)
+        session.query(StatisticsMeta.statistic_id, StatisticsMeta.id)
         .outerjoin(
             subquery,
             (subquery.c.statistic_id == StatisticsMeta.statistic_id),
@@ -470,7 +528,10 @@ def _delete_statistics_meta_duplicates(session: Session) -> int:
 
 
 def delete_statistics_meta_duplicates(session: Session) -> None:
-    """Identify and delete duplicated statistics_meta."""
+    """Identify and delete duplicated statistics_meta.
+
+    This is used when migrating from schema version 28 to schema version 29.
+    """
     deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
     if deleted_statistics_rows:
         _LOGGER.info(
@@ -575,7 +636,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].items():
+    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
         if not hasattr(platform, "compile_statistics"):
             continue
         compiled: PlatformCompiledStatistics = platform.compile_statistics(
@@ -728,12 +789,13 @@ def get_metadata_with_session(
         meta["statistic_id"]: (
             meta["id"],
             {
-                "source": meta["source"],
-                "statistic_id": meta["statistic_id"],
-                "unit_of_measurement": meta["unit_of_measurement"],
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
+                "source": meta["source"],
+                "state_unit_of_measurement": meta["state_unit_of_measurement"],
+                "statistic_id": meta["statistic_id"],
+                "unit_of_measurement": meta["unit_of_measurement"],
             },
         )
         for meta in result
@@ -756,29 +818,6 @@ def get_metadata(
             statistic_type=statistic_type,
             statistic_source=statistic_source,
         )
-
-
-@overload
-def _configured_unit(unit: None, units: UnitSystem) -> None:
-    ...
-
-
-@overload
-def _configured_unit(unit: str, units: UnitSystem) -> str:
-    ...
-
-
-def _configured_unit(unit: str | None, units: UnitSystem) -> str | None:
-    """Return the pressure and temperature units configured by the user."""
-    if unit == PRESSURE_PA:
-        return units.pressure_unit
-    if unit == TEMP_CELSIUS:
-        return units.temperature_unit
-    if unit == VOLUME_CUBIC_METERS:
-        if units.is_metric:
-            return VOLUME_CUBIC_METERS
-        return VOLUME_CUBIC_FEET
-    return unit
 
 
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
@@ -823,7 +862,6 @@ def list_statistic_ids(
     a recorder platform for statistic_ids which will be added in the next statistics
     period.
     """
-    units = hass.config.units
     result = {}
 
     # Query the database
@@ -832,39 +870,43 @@ def list_statistic_ids(
             hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
-        for _, meta in metadata.values():
-            if (unit := meta["unit_of_measurement"]) is not None:
-                # Display unit according to user settings
-                unit = _configured_unit(unit, units)
-            meta["unit_of_measurement"] = unit
-
         result = {
             meta["statistic_id"]: {
+                "display_unit_of_measurement": meta["state_unit_of_measurement"],
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
+                "unit_class": STATISTIC_UNIT_TO_UNIT_CLASS.get(
+                    meta["unit_of_measurement"]
+                ),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
             for _, meta in metadata.values()
         }
 
     # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
         platform_statistic_ids = platform.list_statistic_ids(
             hass, statistic_ids=statistic_ids, statistic_type=statistic_type
         )
 
-        for statistic_id, info in platform_statistic_ids.items():
-            if (unit := info["unit_of_measurement"]) is not None:
-                # Display unit according to user settings
-                unit = _configured_unit(unit, units)
-            platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
-
-        for key, value in platform_statistic_ids.items():
-            result.setdefault(key, value)
+        for key, meta in platform_statistic_ids.items():
+            if key in result:
+                continue
+            result[key] = {
+                "has_mean": meta["has_mean"],
+                "has_sum": meta["has_sum"],
+                "name": meta["name"],
+                "source": meta["source"],
+                "display_unit_of_measurement": meta["state_unit_of_measurement"],
+                "unit_class": STATISTIC_UNIT_TO_UNIT_CLASS.get(
+                    meta["unit_of_measurement"]
+                ),
+                "unit_of_measurement": meta["unit_of_measurement"],
+            }
 
     # Return a list of statistic_id + metadata
     return [
@@ -874,7 +916,9 @@ def list_statistic_ids(
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
-            "unit_of_measurement": info["unit_of_measurement"],
+            "display_unit_of_measurement": info["display_unit_of_measurement"],
+            "statistics_unit_of_measurement": info["unit_of_measurement"],
+            "unit_class": info["unit_class"],
         }
         for _id, info in result.items()
     ]
@@ -1029,6 +1073,7 @@ def statistics_during_period(
     statistic_ids: list[str] | None = None,
     period: Literal["5minute", "day", "hour", "month"] = "hour",
     start_time_as_datetime: bool = False,
+    units: dict[str, str] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Return statistics during UTC period start_time - end_time for the statistic_ids.
 
@@ -1070,10 +1115,20 @@ def statistics_during_period(
                 table,
                 start_time,
                 start_time_as_datetime,
+                units,
             )
 
         result = _sorted_statistics_to_dict(
-            hass, session, stats, statistic_ids, metadata, True, table, start_time, True
+            hass,
+            session,
+            stats,
+            statistic_ids,
+            metadata,
+            True,
+            table,
+            start_time,
+            True,
+            units,
         )
 
         if period == "day":
@@ -1141,6 +1196,8 @@ def _get_last_statistics(
             metadata,
             convert_units,
             table,
+            None,
+            False,
             None,
         )
 
@@ -1226,6 +1283,8 @@ def get_latest_short_term_statistics(
             False,
             StatisticsShortTerm,
             None,
+            False,
+            None,
         )
 
 
@@ -1270,18 +1329,18 @@ def _sorted_statistics_to_dict(
     convert_units: bool,
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime | None,
-    start_time_as_datetime: bool = False,
+    start_time_as_datetime: bool,
+    units: dict[str, str] | None,
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
-    units = hass.config.units
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     stats_at_start_time = {}
 
-    def no_conversion(val: Any, _: Any) -> float | None:
-        """Return x."""
-        return val  # type: ignore[no-any-return]
+    def no_conversion(val: float | None) -> float | None:
+        """Return val."""
+        return val
 
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
@@ -1305,10 +1364,10 @@ def _sorted_statistics_to_dict(
     # Append all statistic entries, and optionally do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
         unit = metadata[meta_id]["unit_of_measurement"]
+        state_unit = metadata[meta_id]["state_unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
-        convert: Callable[[Any, Any], float | None]
-        if convert_units:
-            convert = STATISTIC_UNIT_TO_DISPLAY_UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore[arg-type,no-any-return]
+        if unit is not None and convert_units:
+            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = no_conversion
         ent_results = result[meta_id]
@@ -1320,14 +1379,14 @@ def _sorted_statistics_to_dict(
                     "statistic_id": statistic_id,
                     "start": start if start_time_as_datetime else start.isoformat(),
                     "end": end.isoformat(),
-                    "mean": convert(db_state.mean, units),
-                    "min": convert(db_state.min, units),
-                    "max": convert(db_state.max, units),
+                    "mean": convert(db_state.mean),
+                    "min": convert(db_state.min),
+                    "max": convert(db_state.max),
                     "last_reset": process_timestamp_to_utc_isoformat(
                         db_state.last_reset
                     ),
-                    "state": convert(db_state.state, units),
-                    "sum": convert(db_state.sum, units),
+                    "state": convert(db_state.state),
+                    "sum": convert(db_state.sum),
                 }
             )
 
@@ -1338,7 +1397,7 @@ def _sorted_statistics_to_dict(
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "validate_statistics"):
             continue
         platform_validation.update(platform.validate_statistics(hass))
@@ -1361,6 +1420,70 @@ def _statistics_exists(
 
 
 @callback
+def _async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Validate timestamps and insert an import_statistics job in the recorder's queue."""
+    for statistic in statistics:
+        start = statistic["start"]
+        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
+            raise HomeAssistantError("Naive timestamp")
+        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
+            raise HomeAssistantError("Invalid timestamp")
+        statistic["start"] = dt_util.as_utc(start)
+
+        if "last_reset" in statistic and statistic["last_reset"] is not None:
+            last_reset = statistic["last_reset"]
+            if (
+                last_reset.tzinfo is None
+                or last_reset.tzinfo.utcoffset(last_reset) is None
+            ):
+                raise HomeAssistantError("Naive timestamp")
+            statistic["last_reset"] = dt_util.as_utc(last_reset)
+
+    # Insert job in recorder's queue
+    get_instance(hass).async_import_statistics(metadata, statistics)
+
+
+def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None:
+    """Raise if the statistics unit and state unit are not compatible."""
+    if statistics_unit == state_unit:
+        return
+    if (
+        unit_converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
+    ) is None:
+        raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
+    if state_unit not in unit_converter.VALID_UNITS:
+        raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
+
+
+@callback
+def async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Import hourly statistics from an internal source.
+
+    This inserts an import_statistics job in the recorder's queue.
+    """
+    if not valid_entity_id(metadata["statistic_id"]):
+        raise HomeAssistantError("Invalid statistic_id")
+
+    # The source must not be empty and must be aligned with the statistic_id
+    if not metadata["source"] or metadata["source"] != DOMAIN:
+        raise HomeAssistantError("Invalid source")
+
+    _validate_units(
+        metadata["unit_of_measurement"], metadata["state_unit_of_measurement"]
+    )
+
+    _async_import_statistics(hass, metadata, statistics)
+
+
+@callback
 def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
@@ -1368,7 +1491,7 @@ def async_add_external_statistics(
 ) -> None:
     """Add hourly statistics from an external source.
 
-    This inserts an add_external_statistics job in the recorder's queue.
+    This inserts an import_statistics job in the recorder's queue.
     """
     # The statistic_id has same limitations as an entity_id, but with a ':' as separator
     if not valid_statistic_id(metadata["statistic_id"]):
@@ -1379,16 +1502,11 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    for statistic in statistics:
-        start = statistic["start"]
-        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
-        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
-        statistic["start"] = dt_util.as_utc(start)
+    _validate_units(
+        metadata["unit_of_measurement"], metadata["state_unit_of_measurement"]
+    )
 
-    # Insert job in recorder's queue
-    hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
+    _async_import_statistics(hass, metadata, statistics)
 
 
 def _filter_unique_constraint_integrity_error(
@@ -1432,12 +1550,12 @@ def _filter_unique_constraint_integrity_error(
 
 
 @retryable_database_job("statistics")
-def add_external_statistics(
+def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> bool:
-    """Process an add_external_statistics job."""
+    """Process an import_statistics job."""
 
     with session_scope(
         session=instance.get_session(),
@@ -1464,6 +1582,7 @@ def adjust_statistics(
     statistic_id: str,
     start_time: datetime,
     sum_adjustment: float,
+    display_unit: str,
 ) -> bool:
     """Process an add_statistics job."""
 
@@ -1474,11 +1593,9 @@ def adjust_statistics(
         if statistic_id not in metadata:
             return True
 
-        units = instance.hass.config.units
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        display_unit = _configured_unit(statistic_unit, units)
-        convert = DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS.get(display_unit, lambda x, units: x)  # type: ignore[arg-type]
-        sum_adjustment = convert(sum_adjustment, units)
+        convert = _get_display_to_statistic_unit_converter(display_unit, statistic_unit)
+        sum_adjustment = convert(sum_adjustment)
 
         _adjust_sum_statistics(
             session,

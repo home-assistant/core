@@ -33,7 +33,7 @@ class VerisureAlarm(
     """Representation of a Verisure alarm status."""
 
     _attr_code_format = CodeFormat.NUMBER
-    _attr_name = "Verisure Alarm"
+    _attr_has_entity_name = True
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY

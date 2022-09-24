@@ -58,7 +58,7 @@ class EgardiaBinarySensor(BinarySensorEntity):
         self._device_class = device_class
         self._egardia_system = egardia_system
 
-    def update(self):
+    def update(self) -> None:
         """Update the status."""
         egardia_input = self._egardia_system.getsensorstate(self._id)
         self._state = STATE_ON if egardia_input else STATE_OFF

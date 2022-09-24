@@ -7,12 +7,12 @@ from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -85,7 +85,7 @@ class BSBLanClimate(ClimateEntity):
     ) -> None:
         """Initialize BSBLan climate device."""
         self._attr_available = True
-        self._store_hvac_mode = None
+        self._store_hvac_mode: HVACMode | str | None = None
         self.bsblan = bsblan
         self._attr_name = self._attr_unique_id = info.device_identification
         self._attr_device_info = DeviceInfo(
@@ -95,7 +95,7 @@ class BSBLanClimate(ClimateEntity):
             name="BSBLan Device",
         )
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         _LOGGER.debug("Setting preset mode to: %s", preset_mode)
         if preset_mode == PRESET_NONE:
@@ -106,14 +106,14 @@ class BSBLanClimate(ClimateEntity):
             self._store_hvac_mode = self._attr_hvac_mode
             await self.async_set_data(preset_mode=preset_mode)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         _LOGGER.debug("Setting HVAC mode to: %s", hvac_mode)
         # preset should be none when hvac mode is set
         self._attr_preset_mode = PRESET_NONE
         await self.async_set_data(hvac_mode=hvac_mode)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         await self.async_set_data(**kwargs)
 

@@ -6,12 +6,63 @@
             "usb_probe_failed": "Kunne ikke unders\u00f8ke usb -enheten"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_backup_json": "Ugyldig sikkerhetskopiering JSON"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Velg en automatisk sikkerhetskopiering"
+                },
+                "description": "Gjenopprette nettverksinnstillingene fra en automatisk sikkerhetskopiering",
+                "title": "Gjenopprett automatisk sikkerhetskopiering"
+            },
+            "choose_formation_strategy": {
+                "description": "Velg nettverksinnstillingene for radioen.",
+                "menu_options": {
+                    "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
+                    "reuse_settings": "Behold innstillingene for radionettverk",
+                    "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
+                },
+                "title": "Nettverksdannelse"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Bane til seriell enhet"
+                },
+                "description": "Velg seriell port for din Zigbee-radio",
+                "title": "Velg en seriell port"
+            },
             "confirm": {
                 "description": "Vil du konfigurere {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Vil du konfigurere {name} ?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Radio type"
+                },
+                "description": "Velg din Zigbee-radiotype",
+                "title": "Radio type"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "porthastighet",
+                    "flow_control": "kontroll av dataflyt",
+                    "path": "Bane til seriell enhet"
+                },
+                "description": "Angi innstillingene for seriell port",
+                "title": "Innstillinger for seriell port"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Erstatt radio-IEEE-adressen permanent"
+                },
+                "description": "Sikkerhetskopien din har en annen IEEE-adresse enn radioen din. For at nettverket skal fungere ordentlig, b\u00f8r IEEE-adressen til radioen ogs\u00e5 endres. \n\n Dette er en permanent operasjon.",
+                "title": "Overskriv radio IEEE-adresse"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Angi portspesifikke innstillinger",
                 "title": "Innstillinger"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Last opp en fil"
+                },
+                "description": "Gjenopprett nettverksinnstillingene fra en opplastet backup JSON-fil. Du kan laste ned en fra en annen ZHA-installasjon fra **Nettverksinnstillinger**, eller bruke en Zigbee2MQTT `coordinator_backup.json`-fil.",
+                "title": "Last opp en manuell sikkerhetskopiering"
             },
             "user": {
                 "data": {
@@ -46,10 +104,13 @@
             "title": "Alternativer for alarmkontrollpanel"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Foretrekker alltid XY-fargemodus",
             "consider_unavailable_battery": "Vurder batteridrevne enheter som utilgjengelige etter (sekunder)",
             "consider_unavailable_mains": "Tenk p\u00e5 str\u00f8mnettet som ikke er tilgjengelig etter (sekunder)",
             "default_light_transition": "Standard lysovergangstid (sekunder)",
             "enable_identify_on_join": "Aktiver identifiseringseffekt n\u00e5r enheter blir med i nettverket",
+            "enhanced_light_transition": "Aktiver forbedret lysfarge/temperaturovergang fra en off-tilstand",
+            "light_transitioning_flag": "Aktiver skyveknappen for forbedret lysstyrke under lysovergang",
             "title": "Globale alternativer"
         }
     },
@@ -107,6 +168,78 @@
             "remote_button_short_press": "\"{subtype}\"-knapp trykket p\u00e5",
             "remote_button_short_release": "\"{subtype}\"-knapp sluppet",
             "remote_button_triple_press": "\"{subtype}\"-knapp trykket p\u00e5 tre ganger"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Denne enheten er ikke en zha -enhet",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "usb_probe_failed": "Kunne ikke unders\u00f8ke usb -enheten"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_backup_json": "Ugyldig sikkerhetskopiering JSON"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Velg en automatisk sikkerhetskopiering"
+                },
+                "description": "Gjenopprette nettverksinnstillingene fra en automatisk sikkerhetskopiering",
+                "title": "Gjenopprett automatisk sikkerhetskopiering"
+            },
+            "choose_formation_strategy": {
+                "description": "Velg nettverksinnstillingene for radioen.",
+                "menu_options": {
+                    "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
+                    "reuse_settings": "Behold innstillingene for radionettverk",
+                    "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
+                },
+                "title": "Nettverksdannelse"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Bane til seriell enhet"
+                },
+                "description": "Velg seriell port for din Zigbee-radio",
+                "title": "Velg en seriell port"
+            },
+            "init": {
+                "description": "ZHA vil bli stoppet. \u00d8nsker du \u00e5 fortsette?",
+                "title": "Konfigurer ZHA p\u00e5 nytt"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Radio type"
+                },
+                "description": "Velg din Zigbee-radiotype",
+                "title": "Radio type"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "porthastighet",
+                    "flow_control": "kontroll av dataflyt",
+                    "path": "Bane til seriell enhet"
+                },
+                "description": "Angi innstillingene for seriell port",
+                "title": "Innstillinger for seriell port"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Erstatt radio-IEEE-adressen permanent"
+                },
+                "description": "Sikkerhetskopien din har en annen IEEE-adresse enn radioen din. For at nettverket skal fungere ordentlig, b\u00f8r IEEE-adressen til radioen ogs\u00e5 endres. \n\n Dette er en permanent operasjon.",
+                "title": "Overskriv radio IEEE-adresse"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Last opp en fil"
+                },
+                "description": "Gjenopprett nettverksinnstillingene fra en opplastet backup JSON-fil. Du kan laste ned en fra en annen ZHA-installasjon fra **Nettverksinnstillinger**, eller bruke en Zigbee2MQTT `coordinator_backup.json`-fil.",
+                "title": "Last opp en manuell sikkerhetskopiering"
+            }
         }
     }
 }

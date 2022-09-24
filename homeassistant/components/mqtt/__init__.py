@@ -3,15 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
-import datetime as dt
 import logging
 from typing import Any, cast
 
 import jinja2
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config as conf_util, config_entries
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,22 +18,24 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_PORT,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError, Unauthorized
-from homeassistant.helpers import config_validation as cv, event, template
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    event,
+    template,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import (
     async_integration_yaml_config,
-    async_setup_reload_service,
+    async_reload_integration_platforms,
 )
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
@@ -66,19 +66,13 @@ from .const import (  # noqa: F401
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
-    CONFIG_ENTRY_IS_SETUP,
-    DATA_CONFIG_ENTRY_LOCK,
     DATA_MQTT,
-    DATA_MQTT_CONFIG,
-    DATA_MQTT_RELOAD_NEEDED,
-    DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    MQTT_RELOADED,
     PLATFORMS,
     RELOADABLE_PLATFORMS,
 )
@@ -89,7 +83,13 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
+from .util import (
+    _VALID_QOS_SCHEMA,
+    get_mqtt_data,
+    mqtt_config_entry_enabled,
+    valid_publish_topic,
+    valid_subscribe_topic,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +106,16 @@ MAX_RECONNECT_WAIT = 300  # seconds
 CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
+
+CONFIG_ENTRY_CONFIG_KEYS = [
+    CONF_BIRTH_MESSAGE,
+    CONF_BROKER,
+    CONF_DISCOVERY,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_WILL_MESSAGE,
+]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -142,18 +152,6 @@ MQTT_PUBLISH_SCHEMA = vol.All(
 )
 
 
-@dataclass
-class MqttServiceInfo(BaseServiceInfo):
-    """Prepared info from mqtt entries."""
-
-    topic: str
-    payload: ReceivePayloadType
-    qos: int
-    retain: bool
-    subscribed_topic: str
-    timestamp: dt.datetime
-
-
 async def _async_setup_discovery(
     hass: HomeAssistant, conf: ConfigType, config_entry
 ) -> None:
@@ -166,28 +164,52 @@ async def _async_setup_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
+    mqtt_data = get_mqtt_data(hass, True)
+
     conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
-    debug_info.initialize(hass)
 
     if conf:
         conf = dict(conf)
-        hass.data[DATA_MQTT_CONFIG] = conf
+        mqtt_data.config = conf
 
-    if not bool(hass.config_entries.async_entries(DOMAIN)):
+    if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is None:
         # Create an import flow if the user has yaml configured entities etc.
         # but no broker configuration. Note: The intention is not for this to
         # import broker configuration from YAML because that has been deprecated.
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data={},
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={},
         )
+        mqtt_data.reload_needed = True
+    elif mqtt_entry_status is False:
+        _LOGGER.info(
+            "MQTT will be not available until the config entry is enabled",
+        )
+        mqtt_data.reload_needed = True
+
     return True
+
+
+def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove unknown keys from config entry data.
+
+    Extra keys may have been added when importing MQTT yaml configuration.
+    """
+    filtered_data = {
+        k: entry.data[k] for k in CONFIG_ENTRY_CONFIG_KEYS if k in entry.data
+    }
+    if entry.data.keys() != filtered_data.keys():
+        _LOGGER.warning(
+            "The following unsupported configuration options were removed from the "
+            "MQTT config entry: %s. Add them to configuration.yaml if they are needed",
+            entry.data.keys() - filtered_data.keys(),
+        )
+        hass.config_entries.async_update_entry(entry, data=filtered_data)
 
 
 def _merge_basic_config(
@@ -226,34 +248,42 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
     Causes for this is config entry options changing.
     """
-    mqtt_client = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
+    assert (client := mqtt_data.client) is not None
 
-    if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
+    if (conf := mqtt_data.config) is None:
         conf = CONFIG_SCHEMA_BASE(dict(entry.data))
 
-    mqtt_client.conf = _merge_extended_config(entry, conf)
-    await mqtt_client.async_disconnect()
-    mqtt_client.init_client()
-    await mqtt_client.async_connect()
+    mqtt_data.config = _merge_extended_config(entry, conf)
+    await client.async_disconnect()
+    client.init_client()
+    await client.async_connect()
 
     await discovery.async_stop(hass)
-    if mqtt_client.conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, mqtt_client.conf, entry)
+    if client.conf.get(CONF_DISCOVERY):
+        await _async_setup_discovery(hass, cast(ConfigType, mqtt_data.config), entry)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Load a config entry."""
+async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | None:
+    """Fetch fresh MQTT yaml config from the hass config when (re)loading the entry."""
+    mqtt_data = get_mqtt_data(hass)
+    if mqtt_data.reload_entry:
+        hass_config = await conf_util.async_hass_config_yaml(hass)
+        mqtt_data.config = CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+
+    # Remove unknown keys from config entry data
+    _filter_entry_config(hass, entry)
+
     # Merge basic configuration, and add missing defaults for basic options
-    _merge_basic_config(hass, entry, hass.data.get(DATA_MQTT_CONFIG, {}))
-
+    _merge_basic_config(hass, entry, mqtt_data.config or {})
     # Bail out if broker setting is missing
     if CONF_BROKER not in entry.data:
         _LOGGER.error("MQTT broker is not configured, please configure it")
-        return False
+        return None
 
     # If user doesn't have configuration.yaml config, generate default values
     # for options not in config entry data
-    if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
+    if (conf := mqtt_data.config) is None:
         conf = CONFIG_SCHEMA_BASE(dict(entry.data))
 
     # User has configuration.yaml config, warn about config entry overrides
@@ -271,21 +301,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)
+    return conf
 
-    hass.data[DATA_MQTT] = MQTT(
-        hass,
-        entry,
-        conf,
-    )
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load a config entry."""
+    mqtt_data = get_mqtt_data(hass, True)
+
+    # Merge basic configuration, and add missing defaults for basic options
+    if (conf := await async_fetch_config(hass, entry)) is None:
+        # Bail out
+        return False
+    mqtt_data.client = MQTT(hass, entry, conf)
+    # Restore saved subscriptions
+    if mqtt_data.subscriptions_to_restore:
+        mqtt_data.client.subscriptions = mqtt_data.subscriptions_to_restore
+        mqtt_data.subscriptions_to_restore = []
     entry.add_update_listener(_async_config_entry_updated)
 
-    await hass.data[DATA_MQTT].async_connect()
-
-    async def async_stop_mqtt(_event: Event):
-        """Stop MQTT component."""
-        await hass.data[DATA_MQTT].async_disconnect()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
+    await mqtt_data.client.async_connect()
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
@@ -334,7 +368,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 return
 
-        await hass.data[DATA_MQTT].async_publish(msg_topic, payload, qos, retain)
+        assert mqtt_data.client is not None and msg_topic is not None
+        await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
@@ -375,26 +410,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # setup platforms and discovery
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    # Setup reload service. Once support for legacy config is removed in 2022.9, we
-    # should no longer call async_setup_reload_service but instead implement a custom
-    # service
-    await async_setup_reload_service(hass, DOMAIN, RELOADABLE_PLATFORMS)
+    async def async_setup_reload_service() -> None:
+        """Create the reload service for the MQTT domain."""
+        if hass.services.has_service(DOMAIN, SERVICE_RELOAD):
+            return
 
-    async def _async_reload_platforms(_: Event | None) -> None:
-        """Discover entities for a platform."""
-        config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
-        hass.data[DATA_MQTT_UPDATED_CONFIG] = config_yaml.get(DOMAIN, {})
-        async_dispatcher_send(hass, MQTT_RELOADED)
+        async def _reload_config(call: ServiceCall) -> None:
+            """Reload the platforms."""
+            # Reload the legacy yaml platform
+            await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
+
+            # Reload the modern yaml platforms
+            mqtt_platforms = async_get_platforms(hass, DOMAIN)
+            tasks = [
+                entity.async_remove()
+                for mqtt_platform in mqtt_platforms
+                for entity in mqtt_platform.entities.values()
+                if not entity._discovery_data  # type: ignore[attr-defined] # pylint: disable=protected-access
+                if mqtt_platform.config_entry
+                and mqtt_platform.domain in RELOADABLE_PLATFORMS
+            ]
+            await asyncio.gather(*tasks)
+
+            config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
+            mqtt_data.updated_config = config_yaml.get(DOMAIN, {})
+            await asyncio.gather(
+                *(
+                    [
+                        mqtt_data.reload_handlers[component]()
+                        for component in RELOADABLE_PLATFORMS
+                        if component in mqtt_data.reload_handlers
+                    ]
+                )
+            )
+
+            # Fire event
+            hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+        async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
     async def async_forward_entry_setup_and_setup_discovery(config_entry):
         """Forward the config entry setup to the platforms and set up discovery."""
+        reload_manual_setup: bool = False
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
         from . import device_automation, tag
 
+        # Forward the entry setup to the MQTT platforms
         await asyncio.gather(
             *(
                 [
@@ -411,22 +474,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if conf.get(CONF_DISCOVERY):
             await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
-        entry.async_on_unload(
-            hass.bus.async_listen("event_mqtt_reloaded", _async_reload_platforms)
-        )
+        await async_setup_reload_service()
+        # When the entry is reloaded, also reload manual set up items to enable MQTT
+        if mqtt_data.reload_entry:
+            mqtt_data.reload_entry = False
+            reload_manual_setup = True
 
-    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
+        # When the entry was disabled before, reload manual set up items to enable MQTT again
+        if mqtt_data.reload_needed:
+            mqtt_data.reload_needed = False
+            reload_manual_setup = True
 
-    if DATA_MQTT_RELOAD_NEEDED in hass.data:
-        hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=False,
-        )
+        if reload_manual_setup:
+            await async_reload_manual_mqtt_items(hass)
+
+    await async_forward_entry_setup_and_setup_discovery(entry)
 
     return True
+
+
+async def async_reload_manual_mqtt_items(hass: HomeAssistant) -> None:
+    """Reload manual configured MQTT items."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RELOAD,
+        {},
+        blocking=True,
+    )
 
 
 @websocket_api.websocket_command(
@@ -518,7 +592,9 @@ def async_subscribe_connection_status(
 
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
-    return hass.data[DATA_MQTT].connected
+    mqtt_data = get_mqtt_data(hass)
+    assert mqtt_data.client is not None
+    return mqtt_data.client.connected
 
 
 async def async_remove_config_entry_device(
@@ -529,4 +605,60 @@ async def async_remove_config_entry_device(
     from . import device_automation
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload MQTT dump and publish service when the config entry is unloaded."""
+    mqtt_data = get_mqtt_data(hass)
+    assert mqtt_data.client is not None
+    mqtt_client = mqtt_data.client
+
+    # Unload publish and dump services.
+    hass.services.async_remove(
+        DOMAIN,
+        SERVICE_PUBLISH,
+    )
+    hass.services.async_remove(
+        DOMAIN,
+        SERVICE_DUMP,
+    )
+
+    # Stop the discovery
+    await discovery.async_stop(hass)
+    # Unload the platforms
+    await asyncio.gather(
+        *(
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in PLATFORMS
+        )
+    )
+    await hass.async_block_till_done()
+    # Unsubscribe reload dispatchers
+    while reload_dispatchers := mqtt_data.reload_dispatchers:
+        reload_dispatchers.pop()()
+    # Cleanup listeners
+    mqtt_client.cleanup()
+
+    # Trigger reload manual MQTT items at entry setup
+    if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
+        # The entry is disabled reload legacy manual items when the entry is enabled again
+        mqtt_data.reload_needed = True
+    elif mqtt_entry_status is True:
+        # The entry is reloaded:
+        # Trigger re-fetching the yaml config at entry setup
+        mqtt_data.reload_entry = True
+    # Reload the legacy yaml platform to make entities unavailable
+    await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
+    # Cleanup entity registry hooks
+    registry_hooks = mqtt_data.discovery_registry_hooks
+    while registry_hooks:
+        registry_hooks.popitem()[1]()
+    # Wait for all ACKs and stop the loop
+    await mqtt_client.async_disconnect()
+    # Store remaining subscriptions to be able to restore or reload them
+    # when the entry is set up again
+    if mqtt_client.subscriptions:
+        mqtt_data.subscriptions_to_restore = mqtt_client.subscriptions
+
     return True

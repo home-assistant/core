@@ -36,7 +36,7 @@ class RokuBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
         key="headphones_connected",
-        name="Headphones Connected",
+        name="Headphones connected",
         icon="mdi:headphones",
         value_fn=lambda device: device.info.headphones_connected,
     ),
@@ -49,14 +49,14 @@ BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     ),
     RokuBinarySensorEntityDescription(
         key="supports_ethernet",
-        name="Supports Ethernet",
+        name="Supports ethernet",
         icon="mdi:ethernet",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ethernet_support,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_find_remote",
-        name="Supports Find Remote",
+        name="Supports find remote",
         icon="mdi:remote",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_find_remote,

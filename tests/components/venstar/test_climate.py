@@ -1,7 +1,7 @@
 """The climate tests for the venstar integration."""
 from unittest.mock import patch
 
-from homeassistant.components.climate.const import ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntityFeature
 
 from .util import async_init_integration, mock_venstar_devices
 

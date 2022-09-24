@@ -4,7 +4,7 @@ from unittest.mock import Mock, call
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,

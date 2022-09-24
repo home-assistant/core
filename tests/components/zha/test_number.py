@@ -8,8 +8,9 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -133,7 +134,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert hass.states.get(entity_id).attributes.get("unit_of_measurement") == "%"
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
-        == "FakeManufacturer FakeModel e769900a analog_output PWM1"
+        == "FakeManufacturer FakeModel Number PWM1"
     )
 
     # change value from device
@@ -210,7 +211,7 @@ async def test_level_control_number(
         Platform.NUMBER,
         zha_device,
         hass,
-        qualifier=attr,
+        qualifier=attr.replace("_", ""),
     )
     assert entity_id is not None
 
@@ -259,7 +260,7 @@ async def test_level_control_number(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test number set_value
     await hass.services.async_call(

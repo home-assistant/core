@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Rel\u00e4 1",
+                    "relay_10": "Rel\u00e4 10",
+                    "relay_11": "Rel\u00e4 11",
+                    "relay_12": "Rel\u00e4 12",
+                    "relay_13": "Rel\u00e4 13",
+                    "relay_14": "Rel\u00e4 14",
+                    "relay_15": "Rel\u00e4 15",
+                    "relay_16": "Rel\u00e4 16",
+                    "relay_2": "Rel\u00e4 2",
+                    "relay_3": "Rel\u00e4 3",
+                    "relay_4": "Rel\u00e4 4",
+                    "relay_5": "Rel\u00e4 5",
+                    "relay_6": "Rel\u00e4 6",
+                    "relay_7": "Rel\u00e4 7",
+                    "relay_8": "Rel\u00e4 8",
+                    "relay_9": "Rel\u00e4 9"
+                },
+                "title": "St\u00e4ll in rel\u00e4er"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                },
+                "title": "St\u00e4ll in kort"
+            }
+        }
+    }
+}

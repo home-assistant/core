@@ -154,10 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
-    for platform in INSTEON_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, INSTEON_PLATFORMS)
 
     for address in devices:
         device = devices[address]

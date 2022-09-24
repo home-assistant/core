@@ -8,11 +8,7 @@ from homeassistant.components.onewire.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
@@ -49,7 +45,7 @@ async def test_user_options_clear(
         result["flow_id"],
         user_input={INPUT_ENTRY_CLEAR_OPTIONS: True},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
 
 
@@ -78,7 +74,7 @@ async def test_user_options_empty_selection(
         result["flow_id"],
         user_input={INPUT_ENTRY_DEVICE_SELECTION: []},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "device_selection"
     assert result["errors"] == {"base": "device_not_selected"}
 
@@ -111,7 +107,7 @@ async def test_user_options_set_single(
         result["flow_id"],
         user_input={INPUT_ENTRY_DEVICE_SELECTION: ["28.111111111111"]},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"]["sensor_id"] == "28.111111111111"
 
     # Verify that the setting for the device comes back as default when no input is given
@@ -119,7 +115,7 @@ async def test_user_options_set_single(
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
         result["data"]["device_options"]["28.111111111111"]["precision"]
         == "temperature"
@@ -167,7 +163,7 @@ async def test_user_options_set_multiple(
                 ]
             },
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert (
         result["description_placeholders"]["sensor_id"]
         == "Given Name (28.222222222222)"
@@ -178,7 +174,7 @@ async def test_user_options_set_multiple(
         result["flow_id"],
         user_input={"precision": "temperature"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert (
         result["description_placeholders"]["sensor_id"]
         == "Given Name (28.111111111111)"
@@ -189,7 +185,7 @@ async def test_user_options_set_multiple(
         result["flow_id"],
         user_input={"precision": "temperature9"},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
         result["data"]["device_options"]["28.222222222222"]["precision"]
         == "temperature"
@@ -213,5 +209,5 @@ async def test_user_options_no_devices(
     # Verify that first config step comes back with an empty list of possible devices to choose from
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "No configurable devices found."

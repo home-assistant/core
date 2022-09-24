@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "A jelsz\u00f3t nem siker\u00fclt automatikusan lek\u00e9rni az eszk\u00f6zr\u0151l. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3ban ismertetett l\u00e9p\u00e9seket: {auth_help_url}",
+                "description": "A jelsz\u00f3t nem siker\u00fclt automatikusan lek\u00e9rni az eszk\u00f6zr\u0151l. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3ban ismertetett l\u00e9p\u00e9seket: {auth_help_url}",
                 "title": "Jelsz\u00f3 megad\u00e1sa"
             },
             "manual": {

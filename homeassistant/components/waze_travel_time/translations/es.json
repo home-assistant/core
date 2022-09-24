@@ -14,7 +14,7 @@
                     "origin": "Origen",
                     "region": "Regi\u00f3n"
                 },
-                "description": "En Origen y Destino, introduce la direcci\u00f3n de las coordenadas GPS de la ubicaci\u00f3n (las coordenadas GPS deben estar separadas por una coma). Tambi\u00e9n puedes escribir un id de entidad que proporcione esta informaci\u00f3n en su estado, un id de entidad con atributos de latitud y longitud o un nombre descriptivo de zona."
+                "description": "Para Origen y Destino, introduce la direcci\u00f3n o las coordenadas GPS de la ubicaci\u00f3n (las coordenadas GPS deben estar separadas por una coma). Tambi\u00e9n puedes introducir un id de entidad que proporcione esta informaci\u00f3n en su estado, un id de entidad con atributos de latitud y longitud, o un nombre descriptivo de zona."
             }
         }
     },
@@ -31,7 +31,7 @@
                     "units": "Unidades",
                     "vehicle_type": "Tipo de veh\u00edculo"
                 },
-                "description": "Las entradas `subcadena` te permitir\u00e1n forzar a la integraci\u00f3n a utilizar una ruta concreta o a evitar una ruta concreta en el c\u00e1lculo del tiempo del recorrido."
+                "description": "Las entradas `subcadena` te permitir\u00e1n forzar la integraci\u00f3n para usar una ruta en particular o evitar una ruta en particular en su c\u00e1lculo del tiempo de viaje."
             }
         }
     },

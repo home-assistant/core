@@ -95,7 +95,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
         CONF_HOST: "unifi",
@@ -135,7 +135,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Site name"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -161,7 +161,7 @@ async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discover
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
         CONF_HOST: "",
@@ -178,7 +178,7 @@ async def test_flow_multiple_sites(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -212,7 +212,7 @@ async def test_flow_multiple_sites(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "site"
     assert result["data_schema"]({"site": "1"})
     assert result["data_schema"]({"site": "2"})
@@ -226,7 +226,7 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.clear_requests()
@@ -261,7 +261,7 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -281,7 +281,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -315,7 +315,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "configuration_updated"
 
 
@@ -325,7 +325,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -342,7 +342,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
@@ -352,7 +352,7 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -369,7 +369,7 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "service_unavailable"}
 
 
@@ -389,7 +389,7 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
         data=config_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     aioclient_mock.clear_requests()
@@ -424,7 +424,7 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
@@ -447,7 +447,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         config_entry.entry_id, context={"show_advanced_options": True}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
     assert set(
@@ -465,7 +465,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "client_control"
     assert not result["last_step"]
 
@@ -478,7 +478,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "statistics_sensors"
     assert result["last_step"]
 
@@ -490,7 +490,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
@@ -521,7 +521,7 @@ async def test_simple_option_flow(hass, aioclient_mock):
         config_entry.entry_id, context={"show_advanced_options": False}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "simple_options"
     assert result["last_step"]
 
@@ -534,7 +534,7 @@ async def test_simple_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_DEVICES: False,

@@ -22,7 +22,9 @@ from homeassistant.const import (
     PRESSURE_INHG,
     PRESSURE_MBAR,
     PRESSURE_MMHG,
+    SPEED_FEET_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -36,14 +38,12 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import (
-    distance as distance_util,
-    pressure as pressure_util,
-    speed as speed_util,
-    temperature as temperature_util,
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
 )
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,17 +118,19 @@ VALID_UNITS_VISIBILITY: tuple[str, ...] = (
     LENGTH_MILES,
 )
 VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
-    SPEED_METERS_PER_SECOND,
+    SPEED_FEET_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
 )
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: pressure_util.convert,
-    ATTR_WEATHER_TEMPERATURE_UNIT: temperature_util.convert,
-    ATTR_WEATHER_VISIBILITY_UNIT: distance_util.convert,
-    ATTR_WEATHER_PRECIPITATION_UNIT: distance_util.convert,
-    ATTR_WEATHER_WIND_SPEED_UNIT: speed_util.convert,
+    ATTR_WEATHER_PRESSURE_UNIT: PressureConverter.convert,
+    ATTR_WEATHER_TEMPERATURE_UNIT: TemperatureConverter.convert,
+    ATTR_WEATHER_VISIBILITY_UNIT: DistanceConverter.convert,
+    ATTR_WEATHER_PRECIPITATION_UNIT: DistanceConverter.convert,
+    ATTR_WEATHER_WIND_SPEED_UNIT: SpeedConverter.convert,
 }
 
 VALID_UNITS: dict[str, tuple[str, ...]] = {
@@ -138,6 +140,8 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
+
+# mypy: disallow-any-generics
 
 
 def round_temperature(temperature: float | None, precision: float) -> float | None:
@@ -167,21 +171,21 @@ class Forecast(TypedDict, total=False):
     datetime: str
     precipitation_probability: int | None
     native_precipitation: float | None
-    precipitation: float | None
+    precipitation: None
     native_pressure: float | None
-    pressure: float | None
+    pressure: None
     native_temperature: float | None
-    temperature: float | None
+    temperature: None
     native_templow: float | None
-    templow: float | None
+    templow: None
     wind_bearing: float | str | None
     native_wind_speed: float | None
-    wind_speed: float | None
+    wind_speed: None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -190,13 +194,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -214,33 +218,33 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_precision: float
-    _attr_pressure: float | None = (
+    _attr_pressure: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure
     )
-    _attr_pressure_unit: str | None = (
+    _attr_pressure_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure_unit
     )
     _attr_state: None = None
-    _attr_temperature: float | None = (
+    _attr_temperature: None = (
         None  # Provide backwards compatibility. Use _attr_native_temperature
     )
-    _attr_temperature_unit: str | None = (
+    _attr_temperature_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_temperature_unit
     )
-    _attr_visibility: float | None = (
+    _attr_visibility: None = (
         None  # Provide backwards compatibility. Use _attr_native_visibility
     )
-    _attr_visibility_unit: str | None = (
+    _attr_visibility_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_visibility_unit
     )
-    _attr_precipitation_unit: str | None = (
+    _attr_precipitation_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_precipitation_unit
     )
     _attr_wind_bearing: float | str | None = None
-    _attr_wind_speed: float | None = (
+    _attr_wind_speed: None = (
         None  # Provide backwards compatibility. Use _attr_native_wind_speed
     )
-    _attr_wind_speed_unit: str | None = (
+    _attr_wind_speed_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_wind_speed_unit
     )
 
@@ -295,7 +299,7 @@ class WeatherEntity(Entity):
                     and module.__file__
                     and "custom_components" in module.__file__
                 ):
-                    report_issue = "report it to the custom component author."
+                    report_issue = "report it to the custom integration author."
                 else:
                     report_issue = (
                         "create a bug report at "
@@ -317,6 +321,7 @@ class WeatherEntity(Entity):
             return
         self.async_registry_entry_updated()
 
+    @final
     @property
     def temperature(self) -> float | None:
         """Return the temperature for backward compatibility.
@@ -341,6 +346,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_temperature_unit
 
+    @final
     @property
     def temperature_unit(self) -> str | None:
         """Return the temperature unit for backward compatibility.
@@ -372,6 +378,7 @@ class WeatherEntity(Entity):
 
         return self._default_temperature_unit
 
+    @final
     @property
     def pressure(self) -> float | None:
         """Return the pressure for backward compatibility.
@@ -396,6 +403,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_pressure_unit
 
+    @final
     @property
     def pressure_unit(self) -> str | None:
         """Return the pressure unit for backward compatibility.
@@ -432,6 +440,7 @@ class WeatherEntity(Entity):
         """Return the humidity in native units."""
         return self._attr_humidity
 
+    @final
     @property
     def wind_speed(self) -> float | None:
         """Return the wind_speed for backward compatibility.
@@ -456,6 +465,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_wind_speed_unit
 
+    @final
     @property
     def wind_speed_unit(self) -> str | None:
         """Return the wind_speed unit for backward compatibility.
@@ -501,6 +511,7 @@ class WeatherEntity(Entity):
         """Return the ozone level."""
         return self._attr_ozone
 
+    @final
     @property
     def visibility(self) -> float | None:
         """Return the visibility for backward compatibility.
@@ -525,6 +536,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_visibility_unit
 
+    @final
     @property
     def visibility_unit(self) -> str | None:
         """Return the visibility unit for backward compatibility.
@@ -569,6 +581,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_precipitation_unit
 
+    @final
     @property
     def precipitation_unit(self) -> str | None:
         """Return the precipitation unit for backward compatibility.
@@ -613,9 +626,9 @@ class WeatherEntity(Entity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted from native units to user-configured units."""
-        data = {}
+        data: dict[str, Any] = {}
 
         precision = self.precision
 
@@ -692,9 +705,9 @@ class WeatherEntity(Entity):
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
         if self.forecast is not None:
-            forecast = []
-            for forecast_entry in self.forecast:
-                forecast_entry = dict(forecast_entry)
+            forecast: list[dict[str, Any]] = []
+            for existing_forecast_entry in self.forecast:
+                forecast_entry: dict[str, Any] = dict(existing_forecast_entry)
 
                 temperature = forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)

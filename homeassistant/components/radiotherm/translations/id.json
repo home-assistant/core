@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Proses konfigurasi platform cuaca Radio Thermostat lewat YAML dalam proses penghapusan di Home Assistant 2022.9.\n\nKonfigurasi yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML platform cuaca Radio Thermostat dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Radio Thermostat dalam proses penghapusan"
+        }
+    },
     "options": {
         "step": {
             "init": {

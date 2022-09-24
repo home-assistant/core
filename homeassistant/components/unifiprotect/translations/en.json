@@ -42,11 +42,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "Must be a list of MAC addresses seperated by commas"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
                     "disable_rtsp": "Disable the RTSP stream",
+                    "ignored_devices": "Comma separated list of MAC addresses of devices to ignore",
+                    "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
                     "override_connection_host": "Override Connection Host"
                 },
                 "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",

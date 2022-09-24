@@ -18,7 +18,7 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import (
+from . import (
     authorisation_response,
     authorisation_response_unauthorised,
     entry,
@@ -45,7 +45,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 

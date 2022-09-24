@@ -113,6 +113,11 @@ class Integration:
         return self.manifest.get("dependencies", [])
 
     @property
+    def supported_brands(self) -> dict[str]:
+        """Return dict of supported brands."""
+        return self.manifest.get("supported_brands", {})
+
+    @property
     def integration_type(self) -> str:
         """Get integration_type."""
         return self.manifest.get("integration_type", "integration")
@@ -122,7 +127,7 @@ class Integration:
         self.errors.append(Error(*args, **kwargs))
 
     def add_warning(self, *args: Any, **kwargs: Any) -> None:
-        """Add an warning."""
+        """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:

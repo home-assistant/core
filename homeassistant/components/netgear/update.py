@@ -59,7 +59,9 @@ class NetgearUpdateEntity(NetgearRouterEntity, UpdateEntity):
         """Latest version available for install."""
         if self.coordinator.data is not None:
             new_version = self.coordinator.data.get("NewVersion")
-            if new_version is not None:
+            if new_version is not None and not new_version.startswith(
+                self.installed_version
+            ):
                 return new_version
         return self.installed_version
 

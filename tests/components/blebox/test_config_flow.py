@@ -159,7 +159,7 @@ async def test_already_configured(hass, valid_feature_mock):
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
 
 

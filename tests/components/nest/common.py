@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass, field
 import time
-from typing import Any, Generator, TypeVar
+from typing import Any, TypeVar
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
@@ -147,7 +147,17 @@ TEST_CONFIG_LEGACY = NestTestConfig(
             },
         },
     },
-    credential=None,
+)
+TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
+    config_entry_data={
+        "auth_implementation": "local",
+        "tokens": {
+            "expires_at": time.time() + 86400,
+            "access_token": {
+                "token": "some-token",
+            },
+        },
+    },
 )
 
 

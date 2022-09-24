@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -24,7 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import temperature as temperature_util
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -65,14 +70,16 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.convert,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
+
+# mypy: disallow-any-generics
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -106,13 +113,13 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -143,7 +150,7 @@ class NumberEntityDescription(EntityDescription):
             else:
                 module = inspect.getmodule(self)
             if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
+                report_issue = "report it to the custom integration author."
             else:
                 report_issue = (
                     "create a bug report at "
@@ -183,16 +190,18 @@ class NumberEntity(Entity):
     entity_description: NumberEntityDescription
     _attr_max_value: None
     _attr_min_value: None
+    _attr_mode: NumberMode = NumberMode.AUTO
     _attr_state: None = None
     _attr_step: None
-    _attr_mode: NumberMode = NumberMode.AUTO
+    _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
     _attr_value: None
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
-    _attr_native_value: float
+    _attr_native_value: float | None = None
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
+    _number_option_unit_of_measurement: str | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -211,7 +220,7 @@ class NumberEntity(Entity):
         ):
             module = inspect.getmodule(cls)
             if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
+                report_issue = "report it to the custom integration author."
             else:
                 report_issue = (
                     "create a bug report at "
@@ -225,6 +234,13 @@ class NumberEntity(Entity):
                 cls.__name__,
                 report_issue,
             )
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the number entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -348,7 +364,11 @@ class NumberEntity(Entity):
     @final
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if self._number_option_unit_of_measurement:
+            return self._number_option_unit_of_measurement
+
         if hasattr(self, "_attr_unit_of_measurement"):
+            self._report_deprecated_number_entity()
             return self._attr_unit_of_measurement
         if (
             hasattr(self, "entity_description")
@@ -401,7 +421,9 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
 
-    def _convert_to_state_value(self, value: float, method: Callable) -> float:
+    def _convert_to_state_value(
+        self, value: float, method: Callable[[float, int], float]
+    ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement
@@ -410,7 +432,7 @@ class NumberEntity(Entity):
 
         if (
             native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
@@ -420,7 +442,7 @@ class NumberEntity(Entity):
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERSIONS[device_class](
+                value_new: float = UNIT_CONVERTERS[device_class].convert(
                     value,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -441,12 +463,12 @@ class NumberEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
 
-            value = UNIT_CONVERSIONS[device_class](
+            value = UNIT_CONVERTERS[device_class].convert(
                 value,
                 unit_of_measurement,
                 native_unit_of_measurement,
@@ -466,6 +488,23 @@ class NumberEntity(Entity):
                 type(self),
                 report_issue,
             )
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if (
+            (number_options := self.registry_entry.options.get(DOMAIN))
+            and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
+            and (device_class := self.device_class) in UNIT_CONVERTERS
+            and self.native_unit_of_measurement
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
+        ):
+            self._number_option_unit_of_measurement = custom_unit
+            return
+
+        self._number_option_unit_of_measurement = None
 
 
 @dataclasses.dataclass

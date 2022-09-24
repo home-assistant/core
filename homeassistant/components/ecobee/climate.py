@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 import collections
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -302,6 +303,9 @@ async def async_setup_entry(
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
+    _attr_precision = PRECISION_TENTHS
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+
     def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
         self.data = data
@@ -330,7 +334,7 @@ class Thermostat(ClimateEntity):
         self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
         if self.update_without_throttle:
             await self.data.update(no_throttle=True)
@@ -342,12 +346,12 @@ class Thermostat(ClimateEntity):
             self._last_active_hvac_mode = self.hvac_mode
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if device is available."""
         return self.thermostat["runtime"]["connected"]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         if self.has_humidifier_control:
             return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
@@ -379,16 +383,6 @@ class Thermostat(ClimateEntity):
             model=model,
             name=self.name,
         )
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def current_temperature(self) -> float:
@@ -563,7 +557,7 @@ class Thermostat(ClimateEntity):
         if self.is_aux_heat:
             _LOGGER.warning("# Changing aux heat is not supported")
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
         if preset_mode == self.preset_mode:
             return
@@ -653,7 +647,7 @@ class Thermostat(ClimateEntity):
 
         self.update_without_throttle = True
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode.  Valid values are "on" or "auto"."""
         if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
@@ -689,7 +683,7 @@ class Thermostat(ClimateEntity):
             cool_temp = temp + delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -704,7 +698,7 @@ class Thermostat(ClimateEntity):
         else:
             _LOGGER.error("Missing valid arguments for set_temperature in %s", kwargs)
 
-    def set_humidity(self, humidity):
+    def set_humidity(self, humidity: int) -> None:
         """Set the humidity level."""
         if humidity not in range(0, 101):
             raise ValueError(
@@ -714,7 +708,7 @@ class Thermostat(ClimateEntity):
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
         self.update_without_throttle = True
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         ecobee_value = next(
             (k for k, v in ECOBEE_HVAC_TO_HASS.items() if v == hvac_mode), None
@@ -821,7 +815,7 @@ class Thermostat(ClimateEntity):
         )
         self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Set the thermostat to the last active HVAC mode."""
         _LOGGER.debug(
             "Turning on ecobee thermostat %s in %s mode",

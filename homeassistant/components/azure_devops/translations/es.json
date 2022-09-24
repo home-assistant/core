@@ -2,21 +2,21 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "project_error": "No se pudo obtener informaci\u00f3n del proyecto."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
                 "data": {
                     "personal_access_token": "Token Personal de Acceso (PAT)"
                 },
                 "description": "Error de autenticaci\u00f3n para {project_url}. Por favor, introduce tus credenciales actuales.",
-                "title": "Reautenticaci\u00f3n"
+                "title": "Volver a autenticar"
             },
             "user": {
                 "data": {
