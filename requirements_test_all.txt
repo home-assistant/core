@@ -358,7 +358,7 @@ bluetooth-auto-recovery==0.3.3
 bond-async==0.1.22
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.30
+boschshcpy==0.2.35
 
 # homeassistant.components.broadlink
 broadlink==0.18.2
