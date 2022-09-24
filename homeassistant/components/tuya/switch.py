@@ -66,6 +66,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             name="Power",
+            device_class=SwitchDeviceClass.SWITCH,
         ),
         SwitchEntityDescription(
             key=DPCode.WATER_RESET,
@@ -653,6 +654,10 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # Humidifier
     # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
     "jsq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+        ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_SOUND,
             name="Voice",
