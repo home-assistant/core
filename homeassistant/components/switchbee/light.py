@@ -3,20 +3,18 @@
 import logging
 from typing import Any
 
-from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
+from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitchBeeCoordinator
 from .const import DOMAIN
+from .entity import SwitchBeeDeviceEntity
 
 MAX_BRIGHTNESS = 255
 
@@ -49,41 +47,21 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity):
+class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
     """Representation of an SwitchBee light."""
 
     def __init__(
         self,
-        device: SwitchBeeDimmer,
+        device: SwitchBeeBaseDevice,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the SwitchBee light."""
-        super().__init__(coordinator)
-        self._attr_name = f"{device.name}"
-        self._device_id = device.id
-        self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
+        super().__init__(device, coordinator)
         self._attr_is_on = False
         self._is_online = True
         self._attr_brightness: int = 0
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_available = True
-        self._device: SwitchBeeDimmer = device
-        self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee_{str(device.unit_id)}",
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{str(device.unit_id)}-{coordinator.mac_formated}",
-                )
-            },
-            manufacturer=SWITCHBEE_BRAND,
-            model=coordinator.api.module_display(device.unit_id),
-            suggested_area=device.zone,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.api.name} ({coordinator.api.mac})",
-            ),
-        )
 
         self._update_attrs_from_coordinator()
 
@@ -113,13 +91,13 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
             """
 
             try:
-                await self.coordinator.api.set_state(self._device_id, "dummy")
+                await self.coordinator.api.set_state(self._device.id, "dummy")
             except SwitchBeeDeviceOfflineError:
                 return
             except SwitchBeeError:
                 return
 
-        brightness: int = self.coordinator.data[self._device_id].brightness
+        brightness: int = self.coordinator.data[self._device.id].brightness
 
         # module is offline
         if brightness == -1:
@@ -160,7 +138,7 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
                 state = brightness_hass_to_switchbee(self.brightness)
 
         try:
-            await self.coordinator.api.set_state(self._device_id, state)
+            await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
                 f"Failed to set {self._attr_name} state {state}, {str(exp)}"
@@ -168,13 +146,13 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
 
         else:
             # update the coordinator data manually, we already know the Central Unit brightness data for this light
-            self.coordinator.data[self._device_id].brightness = state
+            self.coordinator.data[self._device.id].brightness = state
             self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off SwitchBee light."""
         try:
-            await self.coordinator.api.set_state(self._device_id, ApiStateCommand.OFF)
+            await self.coordinator.api.set_state(self._device.id, ApiStateCommand.OFF)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
                 f"Failed to turn off {self._attr_name}, {str(exp)}"
@@ -182,5 +160,5 @@ class SwitchBeeLightEntity(CoordinatorEntity[SwitchBeeCoordinator], LightEntity)
 
         else:
             # update the coordinator manually
-            self.coordinator.data[self._device_id].brightness = 0
+            self.coordinator.data[self._device.id].brightness = 0
             self.coordinator.async_set_updated_data(self.coordinator.data)

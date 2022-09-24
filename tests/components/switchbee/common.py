@@ -28,7 +28,7 @@ async def setup_platform(hass, platform):
         return_value=coordinator_data,
     ), patch(
         "switchbee.api.CentralUnitAPI.get_multiple_states",
-        return_value=fetch_states_data,
+        side_effect=[{"status": "OK", "data": []}, fetch_states_data],
     ), patch(
         "switchbee.api.CentralUnitAPI._login", return_value=None
     ):
