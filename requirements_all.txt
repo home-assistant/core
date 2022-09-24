@@ -444,7 +444,7 @@ bluetooth-auto-recovery==0.3.3
 bond-async==0.1.22
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.30
+boschshcpy==0.2.35
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -898,7 +898,7 @@ iammeter==0.1.7
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.6.4
+ibeacon_ble==0.7.0
 
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
