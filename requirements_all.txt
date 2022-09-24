@@ -410,10 +410,10 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.17.1
+bleak-retry-connector==1.17.3
 
 # homeassistant.components.bluetooth
-bleak==0.17.0
+bleak==0.18.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -540,7 +540,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.5.1
+dbus-fast==1.7.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
