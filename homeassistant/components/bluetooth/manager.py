@@ -24,6 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
+    NO_RSSI_VALUE,
     STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
@@ -65,7 +66,6 @@ APPLE_START_BYTES_WANTED: Final = {
 }
 
 RSSI_SWITCH_THRESHOLD = 6
-NO_RSSI_VALUE = -1000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -340,6 +340,7 @@ class BluetoothManager:
             service_info.manufacturer_data != old_service_info.manufacturer_data
             or service_info.service_data != old_service_info.service_data
             or service_info.service_uuids != old_service_info.service_uuids
+            or service_info.name != old_service_info.name
         ):
             return
 
