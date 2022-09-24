@@ -14,9 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, HEALTH_ISSUES, LOGGER
 
-T = TypeVar("T", str, list[RootFolder], int)
+T = TypeVar("T", str, list[RootFolder], bool, int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
@@ -73,6 +73,17 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
         return cast(list, await self.api_client.async_get_root_folders())
+
+
+class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Health update coordinator."""
+
+    async def _fetch_data(self) -> bool:
+        """Fetch the movies data."""
+        return any(
+            report.source in HEALTH_ISSUES
+            for report in await self.api_client.async_get_failed_health_checks()
+        )
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator):

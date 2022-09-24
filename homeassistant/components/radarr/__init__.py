@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,12 +24,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
     DiskSpaceDataUpdateCoordinator,
+    HealthDataUpdateCoordinator,
     MoviesDataUpdateCoordinator,
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -75,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinators: dict[str, RadarrDataUpdateCoordinator] = {
         "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
+        "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
         "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
     }
     # Temporary, until we add diagnostic entities
@@ -101,6 +103,17 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     """Defines a base Radarr entity."""
 
     coordinator: RadarrDataUpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RadarrDataUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Create Radarr entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
