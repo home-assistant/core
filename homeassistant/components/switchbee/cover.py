@@ -5,14 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbee import SWITCHBEE_BRAND
 from switchbee.api import (
     SwitchBeeDeviceOfflineError,
     SwitchBeeError,
     SwitchBeeTokenError,
 )
 from switchbee.const import SomfyCommand
-from switchbee.device import DeviceType, SwitchBeeShutter
+from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -23,12 +22,11 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitchBeeCoordinator
 from .const import DOMAIN
+from .coordinator import SwitchBeeCoordinator
+from .entity import SwitchBeeDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,21 +43,18 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeCover(CoordinatorEntity[SwitchBeeCoordinator], CoverEntity):
+class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
     """Representation of an SwitchBee cover."""
 
     def __init__(
         self,
-        device: SwitchBeeShutter,
+        device: SwitchBeeBaseDevice,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the SwitchBee cover."""
-        super().__init__(coordinator)
-        self._attr_name = device.name
-        self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
+        super().__init__(device, coordinator)
         self._attr_current_cover_position: int = 0
         self._attr_is_closed = True
-        self._device: SwitchBeeShutter = device
         self._is_online = True
 
         if self._device.type == DeviceType.Somfy:
@@ -76,26 +71,6 @@ class SwitchBeeCover(CoordinatorEntity[SwitchBeeCoordinator], CoverEntity):
                 | CoverEntityFeature.STOP
             )
         self._attr_device_class = CoverDeviceClass.SHUTTER
-
-        if self._device.type == DeviceType.Somfy:
-            self._attr_device_info = None
-        else:
-            self._attr_device_info = DeviceInfo(
-                name=f"SwitchBee_{str(device.unit_id)}",
-                identifiers={
-                    (
-                        DOMAIN,
-                        f"{str(device.unit_id)}-{coordinator.mac_formated}",
-                    )
-                },
-                manufacturer=SWITCHBEE_BRAND,
-                model=coordinator.api.module_display(device.unit_id),
-                suggested_area=device.zone,
-                via_device=(
-                    DOMAIN,
-                    f"{coordinator.api.name} ({coordinator.api.mac})",
-                ),
-            )
 
     @property
     def available(self) -> bool:
