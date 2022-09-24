@@ -867,11 +867,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 result = next(
                     (item for item in result if item["id"] == item_id_str), None
                 )
-        else:
-            if result := await self.api.get_artists():
-                result = next(
-                    (item for item in result if item["id"] == item_id_str), None
-                )
+        elif result := await self.api.get_artists():
+            result = next((item for item in result if item["id"] == item_id_str), None)
         if url := result.get("artwork_url"):
             return await self._async_fetch_image(self.api.full_url(url))
         return None, None
