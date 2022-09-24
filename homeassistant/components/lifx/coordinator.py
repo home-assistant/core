@@ -52,6 +52,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.device: Light = connection.device
         self.lock = asyncio.Lock()
         update_interval = timedelta(seconds=10)
+        self.move_effect_active: bool = False
+
         super().__init__(
             hass,
             _LOGGER,
@@ -223,12 +225,16 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def async_update_multizone_effect(self) -> None:
         """Update the device firmware effect running state."""
         await async_execute_lifx(self.device.get_multizone_effect)
+        self.move_effect_active = self.device.effect.get("effect", None) == "MOVE"
 
     async def async_set_multizone_effect(
-        self, effect: str, speed: float, direction: str
+        self, effect: str, speed: float, direction: str, power_on: bool = True
     ) -> None:
         """Control the firmware-based Move effect on a multizone device."""
         if lifx_features(self.device)["multizone"] is True:
+            if power_on and self.device.power_level == 0:
+                await self.async_set_power(True, 0)
+
             await async_execute_lifx(
                 partial(
                     self.device.set_multizone_effect,

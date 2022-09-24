@@ -140,6 +140,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
+        self._attr_effect = None
 
     @property
     def brightness(self) -> int:
@@ -164,6 +165,8 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Return the name of the currently running effect."""
         if effect := self.effects_conductor.effect(self.bulb):
             return f"effect_{effect.name}"
+        if self.coordinator.move_effect_active is True:
+            return "effect_move"
         return None
 
     async def update_during_transition(self, when: int) -> None:
@@ -368,15 +371,6 @@ class LIFXStrip(LIFXColor):
         SERVICE_EFFECT_MOVE,
         SERVICE_EFFECT_STOP,
     ]
-
-    @property
-    def effect(self) -> str | None:
-        """Return the name of the currently running effect."""
-        if effect := self.bulb.effect.get("effect", False):
-            return f"effect_{effect.lower()}"
-        if effect := self.effects_conductor.effect(self.bulb):
-            return f"effect_{effect.name}"
-        return None
 
     async def set_color(
         self,

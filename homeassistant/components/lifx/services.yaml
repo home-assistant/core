@@ -199,6 +199,12 @@ effect_move:
           options:
             - right
             - left
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
 
 effect_stop:
   name: Stop effect
