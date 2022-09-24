@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import bleak
 from bleak.backends.device import BLEDevice
-import pytest
 
 from homeassistant.components.bluetooth.models import (
     HaBleakClientWrapper,
@@ -56,9 +55,6 @@ async def test_wrapping_bleak_client(hass, enable_bluetooth):
 async def test_bleak_client_reports_with_address(hass, enable_bluetooth, caplog):
     """Test we report when we pass an address to BleakClient."""
     install_multiple_bleak_catcher()
-
-    with pytest.raises(bleak.BleakError):
-        instance = bleak.BleakClient("00:00:00:00:00:00")
 
     with patch.object(
         _get_manager(),
