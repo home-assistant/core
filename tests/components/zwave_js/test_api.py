@@ -2822,7 +2822,10 @@ async def test_firmware_upload_view(
             data={"file": firmware_file, "target": "15"},
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
-        assert mock_cmd.call_args[1] == {"target": 15}
+        assert mock_cmd.call_args[1] == {
+            "target": 15,
+            "additional_user_agent_components": {"HomeAssistant": "2022.10.0.dev0"},
+        }
         assert json.loads(await resp.text()) is None
 
 
