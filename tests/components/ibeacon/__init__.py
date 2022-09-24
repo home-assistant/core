@@ -58,3 +58,46 @@ BEACON_RANDOM_ADDRESS_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
+
+FEASY_BEACON_BLE_DEVICE = BLEDevice(
+    address="AA:BB:CC:DD:EE:FF",
+    name="FSC-BP108",
+)
+
+FEASY_BEACON_SERVICE_INFO_1 = BluetoothServiceInfo(
+    name="FSC-BP108",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-63,
+    manufacturer_data={
+        76: b"\x02\x15\xfd\xa5\x06\x93\xa4\xe2O\xb1\xaf\xcf\xc6\xeb\x07dx%'Qe\xc1\xfd"
+    },
+    service_data={
+        "0000feaa-0000-1000-8000-00805f9b34fb": b' \x00\x0c\x86\x80\x00\x00\x00\x93f\x0b\x7f\x93"',
+        "0000fff0-0000-1000-8000-00805f9b34fb": b"'\x02\x17\x92\xdc\r0\x0e \xbad",
+    },
+    service_uuids=[
+        "0000feaa-0000-1000-8000-00805f9b34fb",
+        "0000fef5-0000-1000-8000-00805f9b34fb",
+    ],
+    source="local",
+)
+
+
+FEASY_BEACON_SERVICE_INFO_2 = BluetoothServiceInfo(
+    name="FSC-BP108",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-63,
+    manufacturer_data={
+        76: b"\x02\x15\xd5F\xdf\x97GWG\xef\xbe\t>-\xcb\xdd\x0cw\xed\xd1;\xd2\xb5"
+    },
+    service_data={
+        "0000feaa-0000-1000-8000-00805f9b34fb": b' \x00\x0c\x86\x80\x00\x00\x00\x93f\x0b\x7f\x93"',
+        "0000fff0-0000-1000-8000-00805f9b34fb": b"'\x02\x17\x92\xdc\r0\x0e \xbad",
+    },
+    service_uuids=[
+        "0000feaa-0000-1000-8000-00805f9b34fb",
+        "0000fef5-0000-1000-8000-00805f9b34fb",
+    ],
+    source="local",
+)
