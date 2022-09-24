@@ -2,7 +2,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import json
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from zwave_js_server.const import (
@@ -2816,7 +2816,10 @@ async def test_firmware_upload_view(
     device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.begin_firmware_update",
-    ) as mock_cmd:
+    ) as mock_cmd, patch(
+        "homeassistant.components.zwave_js.api.USER_AGENT",
+        new_callable=PropertyMock(return_value={"HomeAssistant": "0.0.0"}),
+    ):
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
             data={"file": firmware_file, "target": "15"},
@@ -2824,7 +2827,7 @@ async def test_firmware_upload_view(
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
         assert mock_cmd.call_args[1] == {
             "target": 15,
-            "additional_user_agent_components": {"HomeAssistant": "2022.10.0.dev0"},
+            "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
         }
         assert json.loads(await resp.text()) is None
 
