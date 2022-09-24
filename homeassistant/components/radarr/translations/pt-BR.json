@@ -16,7 +16,7 @@
                 "description": "A integra\u00e7\u00e3o do Radarr precisa ser autenticada manualmente com a API do Radarr",
                 "title": "Reautenticar Integra\u00e7\u00e3o"
             },
-            "user": {
+            "manual": {
                 "data": {
                     "api_key": "Chave de API",
                     "url": "URL",

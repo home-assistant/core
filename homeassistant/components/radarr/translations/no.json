@@ -16,7 +16,7 @@
                 "description": "Radarr-integrasjonen m\u00e5 re-autentiseres manuelt med Radarr API",
                 "title": "Godkjenne integrering p\u00e5 nytt"
             },
-            "user": {
+            "manual": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
                     "url": "URL",

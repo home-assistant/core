@@ -2,6 +2,8 @@
 import logging
 from typing import Final
 
+CONF_USE_ADDON = "use_addon"
+
 DOMAIN: Final = "radarr"
 
 # Defaults

@@ -16,7 +16,7 @@
                 "description": "Radarr \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49 Radarr API",
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
-            "user": {
+            "manual": {
                 "data": {
                     "api_key": "API \u91d1\u9470",
                     "url": "\u7db2\u5740",

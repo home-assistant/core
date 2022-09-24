@@ -16,13 +16,20 @@
                 "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API",
                 "title": "Reauthenticate Integration"
             },
-            "user": {
+            "manual": {
                 "data": {
                     "api_key": "API Key",
                     "url": "URL",
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Radarr Web UI."
+            },
+            "on_supervisor": {
+                "title": "Select connection method",
+                "description": "Do you want to use a Radarr Supervisor add-on?",
+                "data": {
+                    "use_addon": "Use a Radarr Supervisor add-on"
+                }
             }
         }
     },

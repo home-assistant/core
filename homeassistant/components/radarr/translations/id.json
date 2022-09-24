@@ -16,7 +16,7 @@
                 "description": "Integrasi Radarr perlu diautentikasi ulang secara manual dengan Radarr API",
                 "title": "Autentikasi Ulang Integrasi"
             },
-            "user": {
+            "manual": {
                 "data": {
                     "api_key": "Kunci API",
                     "url": "URL",

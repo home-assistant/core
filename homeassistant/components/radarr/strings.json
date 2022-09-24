@@ -1,7 +1,7 @@
 {
   "config": {
     "step": {
-      "user": {
+      "manual": {
         "description": "API key can be retrieved automatically if login credentials were not set in application.\nYour API key can be found in Settings > General in the Radarr Web UI.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -12,6 +12,13 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Radarr integration needs to be manually re-authenticated with the Radarr API"
+      },
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Do you want to use a Radarr Supervisor add-on?",
+        "data": {
+          "use_addon": "Use a Radarr Supervisor add-on"
+        }
       }
     },
     "error": {

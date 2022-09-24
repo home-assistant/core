@@ -9,7 +9,9 @@ from aiopyarr import exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
+from yarl import URL
 
+from homeassistant.components.hassio import ATTR_SLUG, get_addons_info, is_hassio
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     CONF_API_KEY,
@@ -19,11 +21,13 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
+from .const import CONF_USE_ADDON, DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
+
+ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
 class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -34,6 +38,7 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the flow."""
         self.entry: ConfigEntry | None = None
+        self._url: str | None = None
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
@@ -51,29 +56,28 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
-    async def async_step_user(
+    async def async_step_user(self, _: dict[str, Any] | None = None) -> FlowResult:
+        """Handle a flow initiated by the user."""
+        if is_hassio(self.hass):
+            for addon in get_addons_info(self.hass).values():
+                if DOMAIN in addon[ATTR_SLUG]:
+                    self._url = addon["network"]["7878/tcp"]
+                    return await self.async_step_on_supervisor()
+        return await self.async_step_manual()
+
+    async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow initiated by the user."""
+        """Handle a manual flow initiated by the user."""
         errors = {}
-
         if user_input is None:
             user_input = dict(self.entry.data) if self.entry else None
 
         else:
-            try:
-                result = await validate_input(self.hass, user_input)
-                if isinstance(result, tuple):
-                    user_input[CONF_API_KEY] = result[1]
-                elif isinstance(result, str):
-                    errors = {"base": result}
-            except exceptions.ArrAuthenticationException:
-                errors = {"base": "invalid_auth"}
-            except (ClientConnectorError, exceptions.ArrConnectionException):
-                errors = {"base": "cannot_connect"}
-            except exceptions.ArrException:
-                errors = {"base": "unknown"}
-            if not errors:
+            error, key = await self.validate_input(user_input)
+            if error:
+                errors = {"base": error}
+            else:
                 if self.entry:
                     self.hass.config_entries.async_update_entry(
                         self.entry, data=user_input
@@ -84,12 +88,12 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
-                    data=user_input,
+                    data={CONF_API_KEY: key} | user_input,
                 )
 
         user_input = user_input or {}
         return self.async_show_form(
-            step_id="user",
+            step_id="manual",
             data_schema=vol.Schema(
                 {
                     vol.Required(
@@ -127,21 +131,54 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_on_supervisor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle logic when on Supervisor host."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
+            )
 
-async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[str, str, str] | str | None:
-    """Validate the user input allows us to connect."""
-    host_configuration = PyArrHostConfiguration(
-        api_token=data.get(CONF_API_KEY, ""),
-        verify_ssl=data[CONF_VERIFY_SSL],
-        url=data[CONF_URL],
-    )
-    radarr = RadarrClient(
-        host_configuration=host_configuration,
-        session=async_get_clientsession(hass),
-    )
-    if CONF_API_KEY not in data:
-        return await radarr.async_try_zeroconf()
-    await radarr.async_get_system_status()
-    return None
+        if not user_input[CONF_USE_ADDON]:
+            return await self.async_step_manual()
+
+        try:
+            url = URL(get_url(self.hass, allow_ip=False))
+            self._url = f"{url.scheme}://{url.host}:{self._url}"
+        except NoURLAvailableError:
+            self._url = f"http://homeassistant.local:{self._url}"
+        _, key = await self.validate_input({CONF_URL: self._url})
+        return self.async_create_entry(
+            title=DEFAULT_NAME,
+            data={CONF_URL: self._url, CONF_API_KEY: key, CONF_VERIFY_SSL: False},
+        )
+
+    async def validate_input(
+        self, data: dict[str, Any]
+    ) -> tuple[str | None, str | None]:
+        """Validate the user input allows us to connect."""
+        host_configuration = PyArrHostConfiguration(
+            api_token=data.get(CONF_API_KEY, ""),
+            verify_ssl=data.get(CONF_VERIFY_SSL, False),
+            url=data[CONF_URL],
+        )
+        radarr = RadarrClient(
+            host_configuration=host_configuration,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            if CONF_API_KEY not in data:
+                result = await radarr.async_try_zeroconf()
+                if isinstance(result, tuple):
+                    self._url = f"{self._url}{result[2]}"
+                    return None, result[1]
+                return result, None
+            await radarr.async_get_system_status()
+        except exceptions.ArrAuthenticationException:
+            return "invalid_auth", None
+        except (ClientConnectorError, exceptions.ArrConnectionException):
+            return "cannot_connect", None
+        except exceptions.ArrException:
+            return "unknown", None
+        return None, None

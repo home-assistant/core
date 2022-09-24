@@ -16,7 +16,7 @@
                 "description": "Die Radarr-Integration muss manuell erneut mit der Radarr-API authentifiziert werden",
                 "title": "Integration erneut authentifizieren"
             },
-            "user": {
+            "manual": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "url": "URL",
