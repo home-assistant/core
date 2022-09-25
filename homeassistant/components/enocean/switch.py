@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean.utils import combine_hex, from_hex_string, to_hex_string
+from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -24,7 +24,6 @@ from .config_flow import (
     CONF_ENOCEAN_MANUFACTURER,
     CONF_ENOCEAN_MODEL,
 )
-from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
 from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
@@ -40,36 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def generate_unique_id(dev_id: list[int], channel: int) -> str:
-    """Generate a valid unique id."""
-    return f"{combine_hex(dev_id)}-{channel}"
-
-
-def _migrate_to_new_unique_id(hass: HomeAssistant, dev_id, channel) -> None:
-    """Migrate old unique ids to new unique ids."""
-    old_unique_id = f"{combine_hex(dev_id)}"
-
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(Platform.SWITCH, DOMAIN, old_unique_id)
-
-    if entity_id is not None:
-        new_unique_id = generate_unique_id(dev_id, channel)
-        try:
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-        except ValueError:
-            LOGGER.warning(
-                "Skip migration of id [%s] to [%s] because it already exists",
-                old_unique_id,
-                new_unique_id,
-            )
-        else:
-            LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                old_unique_id,
-                new_unique_id,
-            )
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -77,13 +46,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean switch platform."""
-    # channel = config.get(CONF_CHANNEL)
-    # dev_id = config.get(CONF_ID)
-    # dev_name = config.get(CONF_NAME)
-
-    # _migrate_to_new_unique_id(hass, dev_id, channel)
-    # async_add_entities([EnOceanSwitch(dev_id, dev_name, channel, from_platform=True)])
-
     register_platform_config_for_migration_to_config_entry(
         EnOceanPlatformConfig(platform=Platform.SWITCH.value, config=config)
     )
@@ -158,7 +120,6 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         channel,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-        from_platform=False,
     ):
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id, dev_name, dev_type, name)
@@ -166,13 +127,9 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self._on_state = False
         self._on_state2 = False
         self.channel = channel
-
-        if from_platform:
-            self._attr_unique_id = generate_unique_id(dev_id, channel)
-        else:
-            self._attr_unique_id = (
-                f"{to_hex_string(dev_id).upper()}-{Platform.SWITCH.value}-{channel}"
-            )
+        self._attr_unique_id = (
+            f"{to_hex_string(dev_id).upper()}-{Platform.SWITCH.value}-{channel}"
+        )
 
     @property
     def is_on(self):
