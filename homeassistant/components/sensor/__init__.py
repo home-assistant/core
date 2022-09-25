@@ -181,6 +181,9 @@ class SensorDeviceClass(StrEnum):
     # voltage (V)
     VOLTAGE = "voltage"
 
+    # volume (VOLUME_*)
+    VOLUME = "volume"
+
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 

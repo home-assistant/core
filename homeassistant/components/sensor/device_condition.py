@@ -57,9 +57,10 @@ CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
+CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLTAGE = "is_voltage"
-CONF_IS_VALUE = "is_value"
+CONF_IS_VOLUME = "is_volume"
 
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
@@ -92,6 +93,7 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS}
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
+    SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
 

@@ -60,10 +60,11 @@ DEFAULT_STATISTICS = {
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
-    SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.VOLUME: VolumeConverter,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
