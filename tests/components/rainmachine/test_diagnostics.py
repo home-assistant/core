@@ -21,7 +21,11 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
         },
         "data": {
             "coordinator": {
-                "api.versions": {"apiVer": "4.6.1", "hwVer": 3, "swVer": "4.0.1144"},
+                "api.versions": {
+                    "apiVer": "4.6.1",
+                    "hwVer": "3",
+                    "swVer": "4.0.1144",
+                },
                 "machine.firmware_update_status": {
                     "lastUpdateCheckTimestamp": 1657825288,
                     "packageDetails": [],
@@ -635,7 +639,11 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
         },
         "data": {
             "coordinator": {
-                "api.versions": {"apiVer": "4.6.1", "hwVer": 3, "swVer": "4.0.1144"},
+                "api.versions": {
+                    "apiVer": "4.6.1",
+                    "hwVer": "3",
+                    "swVer": "4.0.1144",
+                },
                 "machine.firmware_update_status": {
                     "lastUpdateCheckTimestamp": 1657825288,
                     "packageDetails": [],

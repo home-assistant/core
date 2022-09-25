@@ -24,12 +24,12 @@ class IBeaconEntity(Entity):
         coordinator: IBeaconCoordinator,
         identifier: str,
         device_unique_id: str,
-        parsed: iBeaconAdvertisement,
+        ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
         """Initialize an iBeacon sensor entity."""
         self._device_unique_id = device_unique_id
         self._coordinator = coordinator
-        self._parsed = parsed
+        self._ibeacon_advertisement = ibeacon_advertisement
         self._attr_device_info = DeviceInfo(
             name=identifier,
             identifiers={(DOMAIN, device_unique_id)},
@@ -40,19 +40,19 @@ class IBeaconEntity(Entity):
         self,
     ) -> dict[str, str | int]:
         """Return the device state attributes."""
-        parsed = self._parsed
+        ibeacon_advertisement = self._ibeacon_advertisement
         return {
-            ATTR_UUID: str(parsed.uuid),
-            ATTR_MAJOR: parsed.major,
-            ATTR_MINOR: parsed.minor,
-            ATTR_SOURCE: parsed.source,
+            ATTR_UUID: str(ibeacon_advertisement.uuid),
+            ATTR_MAJOR: ibeacon_advertisement.major,
+            ATTR_MINOR: ibeacon_advertisement.minor,
+            ATTR_SOURCE: ibeacon_advertisement.source,
         }
 
     @abstractmethod
     @callback
     def _async_seen(
         self,
-        parsed: iBeaconAdvertisement,
+        ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
         """Update state."""
 

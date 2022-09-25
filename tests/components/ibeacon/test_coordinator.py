@@ -5,10 +5,10 @@ from dataclasses import replace
 
 import pytest
 
-from homeassistant.components.ibeacon.const import CONF_MIN_RSSI, DOMAIN
+from homeassistant.components.ibeacon.const import DOMAIN
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from . import BLUECHARM_BEACON_SERVICE_INFO
+from . import BLUECHARM_BEACON_SERVICE_INFO, BLUECHARM_BEACON_SERVICE_INFO_DBUS
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -54,39 +54,6 @@ async def test_many_groups_same_address_ignored(hass):
     assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
 
 
-async def test_ignore_anything_less_than_min_rssi(hass):
-    """Test entities are not created when below the min rssi."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_MIN_RSSI: -60},
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    inject_bluetooth_service_info(
-        hass, replace(BLUECHARM_BEACON_SERVICE_INFO, rssi=-100)
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is None
-
-    inject_bluetooth_service_info(
-        hass,
-        replace(
-            BLUECHARM_BEACON_SERVICE_INFO,
-            rssi=-10,
-            service_uuids=["0000180f-0000-1000-8000-00805f9b34fb"],
-        ),
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        hass.states.get("sensor.bluecharm_177999_8105_estimated_distance") is not None
-    )
-
-
 async def test_ignore_not_ibeacons(hass):
     """Test we ignore non-ibeacon data."""
     entry = MockConfigEntry(
@@ -102,6 +69,60 @@ async def test_ignore_not_ibeacons(hass):
         hass,
         replace(
             BLUECHARM_BEACON_SERVICE_INFO, manufacturer_data={76: b"\x02\x15invalid"}
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+
+async def test_ignore_no_name_but_create_if_set_later(hass):
+    """Test we ignore devices with no name but create it if it set set later."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(BLUECHARM_BEACON_SERVICE_INFO, name=None),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO,
+            service_data={
+                "00002080-0000-1000-8000-00805f9b34fb": b"j\x0c\x0e\xfe\x13U",
+                "0000feaa-0000-1000-8000-00805f9b34fb": b" \x00\x0c\x00\x1c\x00\x00\x00\x06h\x00\x008\x10",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) > before_entity_count
+
+
+async def test_ignore_default_name(hass):
+    """Test we ignore devices with default name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
         ),
     )
     await hass.async_block_till_done()

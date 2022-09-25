@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.5.12
+aiohomekit==2.0.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -235,6 +235,7 @@ aiopvapi==2.0.1
 aiopvpc==3.0.0
 
 # homeassistant.components.lidarr
+# homeassistant.components.radarr
 # homeassistant.components.sonarr
 aiopyarr==22.7.0
 
@@ -254,7 +255,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==2.0.1
+aioshelly==2.0.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -409,10 +410,10 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==1.17.1
+bleak-retry-connector==2.0.2
 
 # homeassistant.components.bluetooth
-bleak==0.17.0
+bleak==0.18.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -443,7 +444,7 @@ bluetooth-auto-recovery==0.3.3
 bond-async==0.1.22
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.30
+boschshcpy==0.2.35
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -539,7 +540,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.5.1
+dbus-fast==1.13.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -779,7 +780,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.17.3
+govee-ble==0.19.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -897,7 +898,7 @@ iammeter==0.1.7
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.6.4
+ibeacon_ble==0.7.0
 
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
@@ -1479,9 +1480,6 @@ pychromecast==12.1.4
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
 
-# homeassistant.components.climacell
-pyclimacell==0.18.2
-
 # homeassistant.components.cmus
 pycmus==0.1.1
 
@@ -1624,7 +1622,7 @@ pyinsteon==1.2.0
 pyintesishome==1.8.0
 
 # homeassistant.components.ipma
-pyipma==3.0.4
+pyipma==3.0.5
 
 # homeassistant.components.ipp
 pyipp==0.11.0
@@ -1684,7 +1682,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.5
+pylitterbot==2022.9.6
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.15.2
@@ -2140,7 +2138,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.09.1
+regenmaschine==2022.09.2
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2570,7 +2568,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==1.9.2
 
 # homeassistant.components.august
-yalexs==1.2.1
+yalexs==1.2.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
