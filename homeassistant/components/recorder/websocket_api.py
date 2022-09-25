@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     EnergyConverter,
+    MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
@@ -126,6 +127,7 @@ async def ws_handle_get_statistics_during_period(
             {
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
                 vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
                 vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
                 vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
