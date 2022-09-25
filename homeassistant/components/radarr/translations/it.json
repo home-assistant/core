@@ -13,7 +13,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "L'integrazione Radarr deve essere riautenticata manualmente con l'API Radarr.",
+                "description": "L'integrazione Radarr deve essere di nuovo autenticata manualmente con l'API Radarr.",
                 "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
