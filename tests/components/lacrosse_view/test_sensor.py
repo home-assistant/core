@@ -7,6 +7,8 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_ENTRY_DATA,
+    TEST_ALREADY_FLOAT_SENSOR,
+    TEST_ALREADY_INT_SENSOR,
     TEST_FLOAT_SENSOR,
     TEST_NO_PERMISSION_SENSOR,
     TEST_SENSOR,
@@ -82,7 +84,12 @@ async def test_field_types(hass: HomeAssistant) -> None:
 
     with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
         "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_FLOAT_SENSOR, TEST_STRING_SENSOR],
+        return_value=[
+            TEST_FLOAT_SENSOR,
+            TEST_STRING_SENSOR,
+            TEST_ALREADY_FLOAT_SENSOR,
+            TEST_ALREADY_INT_SENSOR,
+        ],
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -94,3 +101,5 @@ async def test_field_types(hass: HomeAssistant) -> None:
     assert entries[0].state == ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature")
     assert hass.states.get("sensor.test_wet_dry")
+    assert hass.states.get("sensor.test_wind_speed")
+    assert hass.states.get("sensor.test_heat_index")

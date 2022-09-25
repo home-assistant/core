@@ -63,3 +63,25 @@ TEST_STRING_SENSOR = Sensor(
     permissions={"read": True},
     model="Test",
 )
+TEST_ALREADY_FLOAT_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["HeatIndex"],
+    location=Location(id="1", name="Test"),
+    data={"HeatIndex": {"values": [{"s": 2.3}], "unit": "degrees_celsius"}},
+    permissions={"read": True},
+    model="Test",
+)
+TEST_ALREADY_INT_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["WindSpeed"],
+    location=Location(id="1", name="Test"),
+    data={"WindSpeed": {"values": [{"s": 2}], "unit": "degrees_celsius"}},
+    permissions={"read": True},
+    model="Test",
+)
