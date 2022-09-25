@@ -1,8 +1,18 @@
 """Constants for the UniFi Network integration."""
+
 import logging
+
+from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
+
+PLATFORMS = [
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 CONF_CONTROLLER = "controller"
 CONF_SITE_ID = "site"
