@@ -126,6 +126,9 @@ class SensorDeviceClass(StrEnum):
     # current light level (lx/lm)
     ILLUMINANCE = "illuminance"
 
+    # mass (g, kg, mg, µg, oz, lb)
+    MASS = "mass"
+
     # moisture (%)
     MOISTURE = "moisture"
 
