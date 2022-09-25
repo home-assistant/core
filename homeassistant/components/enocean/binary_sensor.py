@@ -1,7 +1,7 @@
 """Support for EnOcean binary sensors."""
 from __future__ import annotations
 
-from enocean.utils import combine_hex, from_hex_string, to_hex_string
+from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -50,25 +50,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Binary Sensor platform for EnOcean."""
-    # dev_id = config.get(CONF_ID)
-    # dev_name = config.get(CONF_NAME)
-    # device_class = config.get(CONF_DEVICE_CLASS)
-
     register_platform_config_for_migration_to_config_entry(
         EnOceanPlatformConfig(platform=Platform.BINARY_SENSOR.value, config=config)
     )
-
-    # add_entities(
-    #     [
-    #         EnOceanBinarySensor(
-    #             dev_id=config.get(CONF_ID),
-    #             dev_name=config.get(CONF_NAME),
-    #             device_class=config.get(CONF_DEVICE_CLASS),
-    #             name=config.get(CONF_NAME),
-    #             from_platform=True,
-    #         )
-    #     ]
-    # )
 
 
 async def async_setup_entry(
@@ -115,17 +99,13 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         device_class,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-        from_platform=False,
     ):
         """Initialize the EnOcean binary sensor."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
-        if from_platform:
-            self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
-        else:
-            self._attr_unique_id = f"{to_hex_string(dev_id).upper()}-{device_class}"
+        self._attr_unique_id = f"{to_hex_string(dev_id).upper()}-{device_class}"
 
     @property
     def device_class(self):
