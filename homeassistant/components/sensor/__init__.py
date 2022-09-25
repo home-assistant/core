@@ -166,6 +166,9 @@ class SensorDeviceClass(StrEnum):
     # signal strength (dB/dBm)
     SIGNAL_STRENGTH = "signal_strength"
 
+    # speed (SPEED_*)
+    SPEED = "speed"
+
     # Amount of SO2 (µg/m³)
     SULPHUR_DIOXIDE = "sulphur_dioxide"
 
