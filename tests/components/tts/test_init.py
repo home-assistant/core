@@ -421,12 +421,14 @@ async def test_setup_component_and_test_service_with_receive_voice(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
+    message = "There is someone at the door."
+
     await hass.services.async_call(
         tts.DOMAIN,
         "demo_say",
         {
             "entity_id": "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            tts.ATTR_MESSAGE: message,
         },
         blocking=True,
     )
@@ -440,12 +442,18 @@ async def test_setup_component_and_test_service_with_receive_voice(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
         demo_data,
         demo_provider,
-        "There is someone at the door.",
+        message,
         "en",
         None,
     )
     assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
+
+    extension, data = await tts.async_get_media_source_audio(
+        hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+    )
+    assert extension == "mp3"
+    assert demo_data == data
 
 
 async def test_setup_component_and_test_service_with_receive_voice_german(
