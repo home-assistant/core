@@ -9,7 +9,7 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat",
             "wrong_app": "No s'ha trobat l'aplicaci\u00f3 correcta. Torna-ho a intentar",
-            "zeroconf_failed": "No s'ha trobat la clau API. Introdu\u00efu-la manualment"
+            "zeroconf_failed": "No s'ha trobat la clau API. Introdueix-la manualment"
         },
         "step": {
             "reauth_confirm": {
@@ -25,7 +25,7 @@
                     "url": "URL",
                     "verify_ssl": "Verifica el certificat SSL"
                 },
-                "description": "La clau API es pot recuperar autom\u00e0ticament si les credencials d'inici de sessi\u00f3 no s'han establert a l'aplicaci\u00f3.\nLa teva clau API es pot trobar a Configuraci\u00f3 ('Settings') > General a la interf\u00edcie web de Lidarr."
+                "description": "La clau API es pot recuperar autom\u00e0ticament si les credencials d'inici de sessi\u00f3 no s'han establert a l'aplicaci\u00f3.\nLa teva clau API es pot trobar a Configuraci\u00f3 ('Settings') > General, a la interf\u00edcie web de Lidarr."
             }
         }
     },

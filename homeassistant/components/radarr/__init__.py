@@ -7,6 +7,7 @@ from aiopyarr.radarr_client import RadarrClient
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_URL,
@@ -79,13 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
         "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
     }
-    # Temporary, until we add diagnostic entities
-    _version = None
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
-        if isinstance(coordinator, StatusDataUpdateCoordinator):
-            _version = coordinator.data
-        coordinator.system_version = _version
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -118,11 +114,13 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about the Radarr instance."""
-        return DeviceInfo(
+        device_info = DeviceInfo(
             configuration_url=self.coordinator.host_configuration.url,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
             name=self.coordinator.config_entry.title,
-            sw_version=self.coordinator.system_version,
         )
+        if isinstance(self.coordinator, StatusDataUpdateCoordinator):
+            device_info[ATTR_SW_VERSION] = self.coordinator.data.version
+        return device_info
