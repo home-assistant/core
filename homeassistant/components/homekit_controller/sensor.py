@@ -410,6 +410,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
@@ -517,6 +518,11 @@ ENTITY_TYPES = {
     ServicesTypes.BATTERY_SERVICE: HomeKitBatterySensor,
 }
 
+# Only create the entity if it has the required characteristic
+REQUIRED_CHAR_BY_TYPE = {
+    ServicesTypes.BATTERY_SERVICE: CharacteristicsTypes.BATTERY_LEVEL,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -530,6 +536,10 @@ async def async_setup_entry(
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
+            return False
+        if (
+            required_char := REQUIRED_CHAR_BY_TYPE.get(service.type)
+        ) and not service.has(required_char):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
