@@ -2,6 +2,7 @@
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
+from homeassistant.helpers.entity import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -44,6 +45,7 @@ async def test_hue_bridge_setup(hass):
                             entity_id="sensor.hue_dimmer_switch_battery",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             friendly_name="Hue dimmer switch battery",
+                            entity_category=EntityCategory.DIAGNOSTIC,
                             unique_id="homekit-6623462389072572-644245094400",
                             unit_of_measurement=PERCENTAGE,
                             state="100",
