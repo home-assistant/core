@@ -58,6 +58,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -496,7 +497,7 @@ class RainMachineEntity(CoordinatorEntity):
                 f"{self._entry.data[CONF_PORT]}"
             ),
             connections={(dr.CONNECTION_NETWORK_MAC, self._data.controller.mac)},
-            name=str(self._data.controller.name).capitalize(),
+            name=self._data.controller.name.capitalize(),
             manufacturer="RainMachine",
             model=(
                 f"Version {self._version_coordinator.data['hwVer']} "

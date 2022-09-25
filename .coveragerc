@@ -139,6 +139,7 @@ omit =
     homeassistant/components/bosch_shc/sensor.py
     homeassistant/components/bosch_shc/switch.py
     homeassistant/components/braviatv/__init__.py
+    homeassistant/components/braviatv/button.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/entity.py
@@ -626,6 +627,11 @@ omit =
     homeassistant/components/kef/*
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*
+    homeassistant/components/keymitt_ble/__init__.py
+    homeassistant/components/keymitt_ble/const.py
+    homeassistant/components/keymitt_ble/entity.py
+    homeassistant/components/keymitt_ble/switch.py
+    homeassistant/components/keymitt_ble/coordinator.py
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
@@ -828,6 +834,9 @@ omit =
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
+    homeassistant/components/nibe_heatpump/__init__.py
+    homeassistant/components/nibe_heatpump/sensor.py
+    homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -991,7 +1000,6 @@ omit =
     homeassistant/components/rachio/entity.py
     homeassistant/components/rachio/switch.py
     homeassistant/components/rachio/webhooks.py
-    homeassistant/components/radarr/sensor.py
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
     homeassistant/components/radiotherm/__init__.py
@@ -1007,6 +1015,7 @@ omit =
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/button.py
     homeassistant/components/rainmachine/model.py
+    homeassistant/components/rainmachine/select.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/rainmachine/update.py
@@ -1211,8 +1220,9 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
-    homeassistant/components/switchbee/const.py
+    homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/coordinator.py
+    homeassistant/components/switchbee/entity.py
     homeassistant/components/switchbee/switch.py
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/binary_sensor.py
@@ -1572,8 +1582,6 @@ omit =
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
-    homeassistant/components/zwave_js/discovery.py
-    homeassistant/components/zwave_js/sensor.py
     homeassistant/components/zwave_me/__init__.py
     homeassistant/components/zwave_me/binary_sensor.py
     homeassistant/components/zwave_me/button.py
