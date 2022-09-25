@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DistanceConverter,
     EnergyConverter,
     PowerConverter,
     PressureConverter,
@@ -121,6 +122,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
         vol.Optional("units"): vol.Schema(
             {
+                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
                 vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
                 vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
