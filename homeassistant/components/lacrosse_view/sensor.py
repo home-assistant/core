@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
@@ -33,7 +34,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float]
+    value_fn: Callable[[Sensor, str], float | int | str]
 
 
 @dataclass
@@ -43,9 +44,22 @@ class LaCrosseSensorEntityDescription(
     """Description for LaCrosse View sensor."""
 
 
-def get_value(sensor: Sensor, field: str) -> float:
+def get_value(sensor: Sensor, field: str) -> float | int | str:
     """Get the value of a sensor field."""
-    return float(sensor.data[field]["values"][-1]["s"])
+    value = sensor.data[field]["values"][-1]["s"]
+    if (value.find("-") <= 0) and value.replace(
+        "-", "", 1
+    ).isdigit():  # Check if int, then return int
+        return int(value)
+    if (
+        (value.find("-") <= 0)
+        and (value.count(".") < 2)
+        and (value.replace("-", "", 1).replace(".", "", 1).isdigit())
+    ):  # Check if float, then return float
+        return float(value)
+
+    # Return string value of field
+    return str(value)
 
 
 PARALLEL_UPDATES = 0
@@ -89,6 +103,17 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
+    ),
+    "WindHeading": LaCrosseSensorEntityDescription(
+        key="WindHeading",
+        name="Wind heading",
+        value_fn=get_value,
+        native_unit_of_measurement=DEGREE,
+    ),
+    "WetDry": LaCrosseSensorEntityDescription(
+        key="WetDry",
+        name="Wet/Dry",
+        value_fn=get_value,
     ),
 }
 
@@ -163,7 +188,7 @@ class LaCrosseViewSensor(
         self.index = index
 
     @property
-    def native_value(self) -> float | str:
+    def native_value(self) -> int | float | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.index], self.entity_description.key
