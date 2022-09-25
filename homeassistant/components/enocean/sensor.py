@@ -31,11 +31,14 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .config_flow import (
+    CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_EEP,
     CONF_ENOCEAN_MANUFACTURER,
     CONF_ENOCEAN_MODEL,
 )
+from .const import LOGGER, PERMUNDO_PSC234
 from .device import EnOceanEntity
 from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
@@ -163,25 +166,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
-        eep = device["eep"]
-        device_id = from_hex_string(device["id"])
-        device_name = device["name"]
+        eep = device[CONF_ENOCEAN_EEP]
+        device_id = from_hex_string(device[CONF_ENOCEAN_DEVICE_ID])
+        device_name = device[CONF_ENOCEAN_DEVICE_NAME]
 
         # Temperature sensors
         if eep[0:5] == "A5-02":
-            sensor_range_type = int(eep[6:8], 16)
-            min_temp = 0
-            max_temp = 0
-
-            if sensor_range_type in range(0x01, 0x0B):
-                multiplier = sensor_range_type - 0x01
-                min_temp = -40 + multiplier * 10
-                max_temp = multiplier * 10
-
-            elif sensor_range_type in range(0x10, 0x1B):
-                multiplier = sensor_range_type - 0x10
-                min_temp = -60 + multiplier * 10
-                max_temp = 20 + multiplier * 10
+            min_temp, max_temp = _get_a5_02_min_max_temp(eep)
 
             async_add_entities(
                 [
@@ -203,10 +194,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ]
             )
 
+        # The Permundo PSC234 also sends A5-12-01 messages (but uses natively
+        # D2-01-09); as there is not (yet) a way to define multiple EEPs per
+        # EnOcean device, but this device was previously supported in this
+        # combination, we allow it manually here
         if (
-            eep == "D2-01-09"
-            and device["manufacturer"] == "Permundo"
-            and device["model"] == "PSC234 (switch and power monitor)"
+            eep == PERMUNDO_PSC234.eep
+            and device[CONF_ENOCEAN_MANUFACTURER] == PERMUNDO_PSC234.manufacturer
+            and device[CONF_ENOCEAN_MODEL] == PERMUNDO_PSC234.model
         ):
             async_add_entities(
                 [
@@ -214,11 +209,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         device_id,
                         device_name,
                         SENSOR_DESC_POWER,
-                        dev_type=EnOceanSupportedDeviceType(
-                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                            model=device[CONF_ENOCEAN_MODEL],
-                            eep=device[CONF_ENOCEAN_EEP],
-                        ),
+                        dev_type=PERMUNDO_PSC234,
                         name="Power usage",
                     )
                 ]
@@ -364,3 +355,26 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._attr_native_value = "tilt"
 
         self.schedule_update_ha_state()
+
+
+def _get_a5_02_min_max_temp(eep: str):
+    """Determine the min and max temp for an A5-02-XX temperature sensor."""
+    sensor_range_type = int(eep[6:8], 16)
+
+    if sensor_range_type in range(0x01, 0x0B):
+        multiplier = sensor_range_type - 0x01
+        min_temp = -40 + multiplier * 10
+        max_temp = multiplier * 10
+        return min_temp, max_temp
+
+    if sensor_range_type in range(0x10, 0x1B):
+        multiplier = sensor_range_type - 0x10
+        min_temp = -60 + multiplier * 10
+        max_temp = 20 + multiplier * 10
+        return min_temp, max_temp
+
+    LOGGER.warning(
+        "Unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
+        eep,
+    )
+    return 0, 40

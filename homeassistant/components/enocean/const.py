@@ -63,6 +63,12 @@ EEP_F6_02_01 = EnOceanSupportedDeviceType(
     model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
 )
 
+PERMUNDO_PSC234 = EnOceanSupportedDeviceType(
+    eep="D2-01-09",
+    manufacturer="Permundo",
+    model="PSC234 (switch and power monitor)",
+)
+
 # list of supported devices; contains not only generic EEPs but also a list of
 # devices given by manufacturer and model (and the respective EEP)
 ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
@@ -273,11 +279,7 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
     EnOceanSupportedDeviceType(
         eep="F6-02-01", manufacturer="TRIO2SYS", model="TRIO2SYS Wall switches "
     ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-09",
-        manufacturer="Permundo",
-        model="PSC234 (switch and power monitor)",
-    ),
+    PERMUNDO_PSC234,
     EnOceanSupportedDeviceType(
         eep="D2-01-0F",
         manufacturer="NodOn",
