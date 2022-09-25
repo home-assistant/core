@@ -1,7 +1,6 @@
 """Support for tracking MQTT enabled devices identified through discovery."""
 from __future__ import annotations
 
-import asyncio
 import functools
 
 import voluptuous as vol
@@ -28,12 +27,7 @@ from .. import subscription
 from ..config import MQTT_RO_SCHEMA
 from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
-from ..mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_get_platform_config_from_yaml,
-    async_setup_entry_helper,
-)
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from ..models import MqttValueTemplate
 
 CONF_PAYLOAD_HOME = "payload_home"
@@ -58,16 +52,6 @@ async def async_setup_entry_from_discovery(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT device tracker configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, device_tracker.DOMAIN
-            )
-        )
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
