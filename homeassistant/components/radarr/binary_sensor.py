@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RadarrEntity
-from .const import DOMAIN
+from .const import DOMAIN, HEALTH_ISSUES
 
 BINARY_SENSOR_TYPE = BinarySensorEntityDescription(
     key="health",
@@ -38,4 +38,4 @@ class RadarrBinarySensor(RadarrEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return self.coordinator.data
+        return any(report.source in HEALTH_ISSUES for report in self.coordinator.data)
