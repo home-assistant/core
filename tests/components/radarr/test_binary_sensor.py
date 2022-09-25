@@ -12,6 +12,6 @@ async def test_binary_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClient
     """Test for binary sensor values."""
     await setup_integration(hass, aioclient_mock)
 
-    state = hass.states.get("binary_sensor.radarr_health")
+    state = hass.states.get("binary_sensor.mock_title_health")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM

@@ -18,13 +18,13 @@ async def test_sensors(
     """Test for successfully setting up the Radarr platform."""
     await setup_integration(hass, aioclient_mock)
 
-    state = hass.states.get("sensor.radarr_disk_space_downloads")
+    state = hass.states.get("sensor.mock_title_disk_space_downloads")
     assert state.state == "263.10"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GB"
-    state = hass.states.get("sensor.radarr_movies")
+    state = hass.states.get("sensor.mock_title_movies")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
-    state = hass.states.get("sensor.radarr_start_time")
+    state = hass.states.get("sensor.mock_title_start_time")
     assert state.state == "2020-09-01T23:50:20+00:00"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
@@ -33,5 +33,5 @@ async def test_windows(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     """Test for successfully setting up the Radarr platform on Windows."""
     await setup_integration(hass, aioclient_mock, windows=True)
 
-    state = hass.states.get("sensor.radarr_disk_space_tv")
+    state = hass.states.get("sensor.mock_title_disk_space_tv")
     assert state.state == "263.10"

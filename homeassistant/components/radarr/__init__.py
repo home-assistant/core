@@ -98,6 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     """Defines a base Radarr entity."""
 
+    _attr_has_entity_name = True
     coordinator: RadarrDataUpdateCoordinator
 
     def __init__(
@@ -108,7 +109,6 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
         """Create Radarr entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
