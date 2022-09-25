@@ -90,6 +90,26 @@ TEMPERATURE_SENSOR_F_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "°F",
 }
+VOLUME_SENSOR_FT3_ATTRIBUTES = {
+    "device_class": "volume",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft³",
+}
+VOLUME_SENSOR_M3_ATTRIBUTES = {
+    "device_class": "volume",
+    "state_class": "measurement",
+    "unit_of_measurement": "m³",
+}
+VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL = {
+    "device_class": "volume",
+    "state_class": "total",
+    "unit_of_measurement": "ft³",
+}
+VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
+    "device_class": "volume",
+    "state_class": "total",
+    "unit_of_measurement": "m³",
+}
 
 
 async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
@@ -162,6 +182,8 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°C"}, 10),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°F"}, 50),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "K"}, 283.15),
+        (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
+        (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.14666),
     ],
 )
 async def test_statistics_during_period_unit_conversion(
@@ -253,6 +275,8 @@ async def test_statistics_during_period_unit_conversion(
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "Wh"}, 10000),
         (GAS_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
         (GAS_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.147),
+        (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "m³"}, 10),
+        (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "ft³"}, 353.147),
     ],
 )
 async def test_sum_statistics_during_period_unit_conversion(
@@ -568,6 +592,10 @@ async def test_statistics_during_period_bad_end_time(
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
+        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
+        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "m³", "volume"),
     ],
 )
 async def test_list_statistic_ids(
@@ -1359,6 +1387,8 @@ async def test_backup_end_without_start(
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "Pa", "pressure"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°C", "temperature"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
     ],
 )
 async def test_get_statistics_metadata(

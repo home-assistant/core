@@ -19,6 +19,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLUID_OUNCE,
+    VOLUME_LITERS,
 )
 from homeassistant.core import State
 from homeassistant.helpers import entity_registry as er
@@ -519,6 +523,31 @@ async def test_custom_unit(
             1000,
             1000,
             SensorDeviceClass.PRESSURE,
+        ),
+        # Volume
+        (
+            VOLUME_CUBIC_METERS,
+            VOLUME_CUBIC_FEET,
+            VOLUME_CUBIC_FEET,
+            100,
+            3531,
+            SensorDeviceClass.VOLUME,
+        ),
+        (
+            VOLUME_FLUID_OUNCE,
+            VOLUME_LITERS,
+            VOLUME_LITERS,
+            78,
+            2.3,
+            SensorDeviceClass.VOLUME,
+        ),
+        (
+            VOLUME_CUBIC_METERS,
+            "peer_distance",
+            VOLUME_CUBIC_METERS,
+            100,
+            100,
+            SensorDeviceClass.VOLUME,
         ),
     ],
 )
