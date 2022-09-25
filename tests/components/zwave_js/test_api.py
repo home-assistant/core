@@ -2,7 +2,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import json
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
@@ -2816,9 +2816,9 @@ async def test_firmware_upload_view(
     device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.begin_firmware_update",
-    ) as mock_cmd, patch(
+    ) as mock_cmd, patch.dict(
         "homeassistant.components.zwave_js.api.USER_AGENT",
-        new_callable=PropertyMock(return_value={"HomeAssistant": "0.0.0"}),
+        {"HomeAssistant": "0.0.0"},
     ):
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
