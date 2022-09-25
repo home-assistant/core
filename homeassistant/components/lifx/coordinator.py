@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from enum import IntEnum
 from functools import partial
 from typing import Any, cast
 
@@ -37,6 +38,15 @@ REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
 
 
+class FirmwareEffect(IntEnum):
+    """Enumeration of LIFX firmware effects."""
+
+    OFF = 0
+    MOVE = 1
+    MORPH = 2
+    FLAME = 3
+
+
 class LIFXUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
@@ -51,8 +61,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.connection = connection
         self.device: Light = connection.device
         self.lock = asyncio.Lock()
+        self.active_effect = FirmwareEffect.OFF
         update_interval = timedelta(seconds=10)
-        self.move_effect_active: bool = False
 
         super().__init__(
             hass,
@@ -225,7 +235,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def async_update_multizone_effect(self) -> None:
         """Update the device firmware effect running state."""
         await async_execute_lifx(self.device.get_multizone_effect)
-        self.move_effect_active = self.device.effect.get("effect", None) == "MOVE"
+        self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
 
     async def async_set_multizone_effect(
         self, effect: str, speed: float, direction: str, power_on: bool = True
@@ -243,6 +253,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                     direction=MultiZoneDirection[direction.upper()].value,
                 )
             )
+            self.active_effect = FirmwareEffect[effect.upper()]
+
+    def async_get_active_effect(self) -> int:
+        """Return the enum value of the currently active firmware effect."""
+        return self.active_effect.value
 
     async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
         """Start or stop an HEV cycle on a LIFX Clean bulb."""

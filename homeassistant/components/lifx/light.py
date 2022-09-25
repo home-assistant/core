@@ -38,7 +38,7 @@ from .const import (
     DOMAIN,
     INFRARED_BRIGHTNESS,
 )
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
@@ -165,8 +165,8 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Return the name of the currently running effect."""
         if effect := self.effects_conductor.effect(self.bulb):
             return f"effect_{effect.name}"
-        if self.coordinator.move_effect_active is True:
-            return "effect_move"
+        if effect := self.coordinator.async_get_active_effect():
+            return f"effect_{FirmwareEffect(effect).name.lower()}"
         return None
 
     async def update_during_transition(self, when: int) -> None:
