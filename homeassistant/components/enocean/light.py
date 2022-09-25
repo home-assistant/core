@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import combine_hex, from_hex_string, to_hex_string
+from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -53,13 +53,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean light platform."""
-
-    # sender_id = config.get(CONF_SENDER_ID)
-    # dev_name = config.get(CONF_NAME)
-    # dev_id = config.get(CONF_ID)
-
-    # add_entities([EnOceanLight(sender_id, dev_id, dev_name, name=dev_name, from_platform=True)])
-
     register_platform_config_for_migration_to_config_entry(
         EnOceanPlatformConfig(platform=Platform.LIGHT.value, config=config)
     )
@@ -109,20 +102,15 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         dev_name,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-        from_platform=False,
     ):
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
-
-        if from_platform:
-            self._attr_unique_id = f"{combine_hex(dev_id)}"
-        else:
-            self._attr_unique_id = (
-                f"{to_hex_string(dev_id).upper()}-{Platform.LIGHT.value}-0"
-            )
+        self._attr_unique_id = (
+            f"{to_hex_string(dev_id).upper()}-{Platform.LIGHT.value}-0"
+        )
 
     @property
     def brightness(self):
