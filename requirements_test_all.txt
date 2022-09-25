@@ -251,7 +251,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==34
+aiounifi==35
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -615,7 +615,7 @@ habitipy==0.2.0
 hangups==0.4.18
 
 # homeassistant.components.cloud
-hass-nabucasa==0.55.0
+hass-nabucasa==0.56.0
 
 # homeassistant.components.tasmota
 hatasmota==0.6.1

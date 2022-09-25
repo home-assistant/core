@@ -106,8 +106,6 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
     ),
 }
 
-SENSOR_KEYS: list[str] = [description.key for description in SENSOR_TYPES.values()]
-
 BYTE_SIZES = [
     DATA_BYTES,
     DATA_KILOBYTES,
@@ -122,7 +120,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default="localhost"): cv.string,
         vol.Optional("include_paths", default=[]): cv.ensure_list,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["movies"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+            cv.ensure_list
         ),
         vol.Optional(CONF_PORT, default=7878): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,

@@ -5,7 +5,7 @@ from abc import abstractmethod
 from datetime import timedelta
 from typing import Generic, TypeVar, cast
 
-from aiopyarr import RootFolder, SystemStatus, exceptions
+from aiopyarr import Health, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T", SystemStatus, list[RootFolder], int)
+T = TypeVar("T", SystemStatus, list[RootFolder], list[Health], int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
@@ -72,6 +72,14 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
         return cast(list, await self.api_client.async_get_root_folders())
+
+
+class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Health update coordinator."""
+
+    async def _fetch_data(self) -> list[Health]:
+        """Fetch the health data."""
+        return await self.api_client.async_get_failed_health_checks()
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator):
