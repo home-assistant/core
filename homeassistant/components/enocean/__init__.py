@@ -268,7 +268,7 @@ def _setup_yaml_import(
         # set values for the old entities:
         for device in enocean_devices_to_add:
             dev_id_string = device[CONF_ENOCEAN_DEVICE_ID]
-            LOGGER.warning(
+            LOGGER.debug(
                 "Updating entities for imported EnOcean device %s", dev_id_string
             )
 
