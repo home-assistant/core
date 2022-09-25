@@ -47,6 +47,12 @@ class LaCrosseSensorEntityDescription(
 def get_value(sensor: Sensor, field: str) -> float | int | str:
     """Get the value of a sensor field."""
     value = sensor.data[field]["values"][-1]["s"]
+    # Check if it is already a float or int
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return value
+
     if (value.find("-") <= 0) and value.replace(
         "-", "", 1
     ).isdigit():  # Check if int, then return int
