@@ -102,6 +102,9 @@ class SensorDeviceClass(StrEnum):
     # date (ISO8601)
     DATE = "date"
 
+    # distance (LENGTH_*)
+    DISTANCE = "distance"
+
     # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
     DURATION = "duration"
 

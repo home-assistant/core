@@ -30,6 +30,7 @@ from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DistanceConverter,
     EnergyConverter,
     PowerConverter,
     PressureConverter,
@@ -57,6 +58,7 @@ DEFAULT_STATISTICS = {
 }
 
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
