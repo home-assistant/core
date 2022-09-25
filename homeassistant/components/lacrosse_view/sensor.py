@@ -115,6 +115,17 @@ SENSOR_DESCRIPTIONS = {
         name="Wet/Dry",
         value_fn=get_value,
     ),
+    "WindHeading": LaCrosseSensorEntityDescription(
+        key="WindHeading",
+        name="Wind heading",
+        value_fn=get_value,
+        native_unit_of_measurement=DEGREE,
+    ),
+    "WetDry": LaCrosseSensorEntityDescription(
+        key="WetDry",
+        name="Wet/Dry",
+        value_fn=get_value,
+    ),
 }
 
 
