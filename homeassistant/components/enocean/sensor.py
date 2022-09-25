@@ -268,17 +268,32 @@ class EnOceanWindowHandle(EnOceanSensor):
 
     EEPs (EnOcean Equipment Profiles):
     - F6-10-00 (Mechanical handle / Hoppe AG)
+    - A5-14-09 (Window/Door-Contact, Supply voltage)
+    - A5-14-0A (Window/Door-Contact, Supply voltage, Vibration)
     """
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
-        action = (packet.data[1] & 0x70) >> 4
+        if packet.rorg == 0xF6:
+            action = (packet.data[1] & 0x70) >> 4
 
-        if action == 0x07:
-            self._attr_native_value = STATE_CLOSED
-        if action in (0x04, 0x06):
-            self._attr_native_value = STATE_OPEN
-        if action == 0x05:
-            self._attr_native_value = "tilt"
+            if action == 0x07:
+                self._attr_native_value = STATE_CLOSED
+            if action in (0x04, 0x06):
+                self._attr_native_value = STATE_OPEN
+            if action == 0x05:
+                self._attr_native_value = "tilt"
+        elif packet.rorg == 0xA5:
+            lrn_bit = (packet.data[4] & 0x8) >> 3
+            contact = (packet.data[4] & 0x6) >> 1
+
+            if lrn_bit == 0x1 and contact == 0x0:
+                self._attr_native_value = STATE_CLOSED
+            if lrn_bit == 0x1 and contact == 0x3:
+                self._attr_native_value = STATE_OPEN
+            if lrn_bit == 0x1 and contact == 0x1:
+                self._attr_native_value = "tilt"
+        else:
+            return
 
         self.schedule_update_ha_state()
