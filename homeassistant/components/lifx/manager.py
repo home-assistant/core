@@ -212,14 +212,16 @@ class LIFXManager:
     ) -> None:
         """Start a light effect on entities."""
 
-        coordinators: list[LIFXUpdateCoordinator] = [
-            coordinator
-            for entry_id, coordinator in self.hass.data[DOMAIN].items()
-            if entry_id != DATA_LIFX_MANAGER
-            and self.entry_id_to_entity_id[entry_id] in entity_ids
-        ]
+        coordinators: list[LIFXUpdateCoordinator] = []
+        bulbs: list[Light] = []
 
-        bulbs: list[Light] = [coordinator.device for coordinator in coordinators]
+        for entry_id, coordinator in self.hass.data[DOMAIN].items():
+            if (
+                entry_id != DATA_LIFX_MANAGER
+                and self.entry_id_to_entity_id[entry_id] in entity_ids
+            ):
+                coordinators.append(coordinator)
+                bulbs.append(coordinator.device)
 
         if service == SERVICE_EFFECT_MOVE:
             await asyncio.gather(
