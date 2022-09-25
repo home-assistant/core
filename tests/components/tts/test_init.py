@@ -49,13 +49,18 @@ async def internal_url_mock(hass):
     )
 
 
-async def test_setup_component_demo(hass):
+@pytest.fixture
+async def setup_tts(hass):
+    """Mock TTS."""
+    with patch("homeassistant.components.demo.async_setup", return_value=True):
+        assert await async_setup_component(
+            hass, tts.DOMAIN, {"tts": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+
+async def test_setup_component_demo(hass, setup_tts):
     """Set up the demo platform with defaults."""
-    config = {tts.DOMAIN: {"platform": "demo"}}
-
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(hass, tts.DOMAIN, config)
-
     assert hass.services.has_service(tts.DOMAIN, "demo_say")
     assert hass.services.has_service(tts.DOMAIN, "clear_cache")
     assert f"{tts.DOMAIN}.demo" in hass.config.components
@@ -744,3 +749,44 @@ def test_invalid_base_url(value):
     """Test we catch bad base urls."""
     with pytest.raises(vol.Invalid):
         tts.valid_base_url(value)
+
+
+@pytest.mark.parametrize(
+    "engine,language,options,cache,result_engine,result_query",
+    (
+        (None, None, None, None, "demo", ""),
+        (None, "de", None, None, "demo", "language=de"),
+        (None, "de", {"voice": "henk"}, None, "demo", "language=de&voice=henk"),
+        (None, "de", None, True, "demo", "cache=true&language=de"),
+    ),
+)
+async def test_generate_media_source_id(
+    hass, setup_tts, engine, language, options, cache, result_engine, result_query
+):
+    """Test generating a media source ID."""
+    media_source_id = tts.generate_media_source_id(
+        hass, "msg", engine, language, options, cache
+    )
+
+    assert media_source_id.startswith("media-source://tts/")
+    _, _, engine_query = media_source_id.rpartition("/")
+    engine, _, query = engine_query.partition("?")
+    assert engine == result_engine
+    assert query.startswith("message=msg")
+    assert query[12:] == result_query
+
+
+@pytest.mark.parametrize(
+    "engine,language,options",
+    (
+        ("not-loaded-engine", None, None),
+        (None, "unsupported-language", None),
+        (None, None, {"option": "not-supported"}),
+    ),
+)
+async def test_generate_media_source_id_invalid_options(
+    hass, setup_tts, engine, language, options
+):
+    """Test generating a media source ID."""
+    with pytest.raises(HomeAssistantError):
+        tts.generate_media_source_id(hass, "msg", engine, language, options, None)
