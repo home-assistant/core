@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import RadarrEntity
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import RadarrDataUpdateCoordinator, T
 
 
@@ -106,8 +106,6 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
     ),
 }
 
-SENSOR_KEYS: list[str] = [description.key for description in SENSOR_TYPES.values()]
-
 BYTE_SIZES = [
     DATA_BYTES,
     DATA_KILOBYTES,
@@ -122,7 +120,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default="localhost"): cv.string,
         vol.Optional("include_paths", default=[]): cv.ensure_list,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["movies"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+            cv.ensure_list
         ),
         vol.Optional(CONF_PORT, default=7878): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
@@ -184,10 +182,7 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         folder_name: str = "",
     ) -> None:
         """Create Radarr entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        super().__init__(coordinator, description)
         self.folder_name = folder_name
 
     @property
