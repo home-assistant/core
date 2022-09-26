@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, Union
 
-from pylitterbot import FeederRobot, LitterRobot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4
 
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM,
@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 from .entity import LitterRobotEntity, _RobotT, async_update_unique_id
@@ -85,11 +86,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    robots = hub.account.robots
     entities = [
         RobotSwitchEntity(robot=robot, hub=hub, description=description)
         for description in ROBOT_SWITCHES
-        for robot in hub.account.robots
+        for robot in robots
         if isinstance(robot, (LitterRobot, FeederRobot))
     ]
     async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
+
+    if any(robot for robot in robots if isinstance(robot, LitterRobot4)):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "night_light_mode",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="night_light_mode",
+        )

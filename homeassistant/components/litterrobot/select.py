@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import itertools
 from typing import Any, Generic, TypeVar
 
-from pylitterbot import FeederRobot, LitterRobot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
+from pylitterbot.robot.litterrobot4 import NightLightLevel, NightLightMode
 
 from homeassistant.components.select import (
     DOMAIN as PLATFORM,
@@ -23,14 +23,14 @@ from .const import DOMAIN
 from .entity import LitterRobotEntity, _RobotT, async_update_unique_id
 from .hub import LitterRobotHub
 
-_CastTypeT = TypeVar("_CastTypeT", int, float)
+_CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
 
 @dataclass
 class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     """A class that describes robot select entity required keys."""
 
-    current_fn: Callable[[_RobotT], _CastTypeT]
+    current_fn: Callable[[_RobotT], _CastTypeT | None]
     options_fn: Callable[[_RobotT], list[_CastTypeT]]
     select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
 
@@ -42,26 +42,71 @@ class RobotSelectEntityDescription(
     """A class that describes robot select entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
+    icon_fn: Callable[[_RobotT], str] | None = None
 
 
-LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
-    key="cycle_delay",
-    name="Clean Cycle Wait Time Minutes",
-    icon="mdi:timer-outline",
-    unit_of_measurement=TIME_MINUTES,
-    current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
-    options_fn=lambda robot: robot.VALID_WAIT_TIMES,
-    select_fn=lambda robot, option: robot.set_wait_time(int(option)),
-)
-FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot, float](
-    key="meal_insert_size",
-    name="Meal insert size",
-    icon="mdi:scale",
-    unit_of_measurement="cups",
-    current_fn=lambda robot: robot.meal_insert_size,
-    options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
-    select_fn=lambda robot, option: robot.set_meal_insert_size(float(option)),
-)
+ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = {
+    LitterRobot: (
+        RobotSelectEntityDescription[LitterRobot, int](
+            key="cycle_delay",
+            name="Clean Cycle Wait Time Minutes",
+            icon="mdi:timer-outline",
+            unit_of_measurement=TIME_MINUTES,
+            current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
+            options_fn=lambda robot: robot.VALID_WAIT_TIMES,
+            select_fn=lambda robot, option: robot.set_wait_time(int(option)),
+        ),
+    ),
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="night_light_level",
+            name="Night light level",
+            current_fn=lambda robot: None
+            if (level := robot.night_light_level) is None
+            else level.name.capitalize(),
+            options_fn=lambda _: [level.name.capitalize() for level in NightLightLevel],
+            select_fn=lambda robot, option: robot.set_night_light_brightness(
+                NightLightLevel[option.upper()]
+            ),
+            icon_fn=lambda robot: "mdi:lightbulb-question"
+            if (level := robot.night_light_level) is None
+            else "mdi:lightbulb-on"
+            if level == NightLightLevel.HIGH
+            else "mdi:lightbulb-on-70"
+            if level == NightLightLevel.MEDIUM
+            else "mdi:lightbulb-on-30",
+        ),
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="night_light_mode",
+            name="Night light mode",
+            current_fn=lambda robot: None
+            if (mode := robot.night_light_mode) is None
+            else mode.name.capitalize(),
+            options_fn=lambda _: [mode.name.capitalize() for mode in NightLightMode],
+            select_fn=lambda robot, option: robot.set_night_light_mode(
+                NightLightMode[option.upper()]
+            ),
+            icon_fn=lambda robot: "mdi:lightbulb-question"
+            if (mode := robot.night_light_mode) is None
+            else "mdi:lightbulb-auto"
+            if mode == NightLightMode.AUTO
+            else "mdi:lightbulb-on"
+            if mode == NightLightMode.ON
+            else "mdi:lightbulb-off",
+        ),
+    ),
+    FeederRobot: (
+        RobotSelectEntityDescription[FeederRobot, float](
+            key="meal_insert_size",
+            name="Meal insert size",
+            icon="mdi:scale",
+            unit_of_measurement="cups",
+            current_fn=lambda robot: robot.meal_insert_size,
+            options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
+            select_fn=lambda robot, option: robot.set_meal_insert_size(float(option)),
+        ),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -71,23 +116,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[LitterRobotSelect] = list(
-        itertools.chain(
-            (
-                LitterRobotSelect(robot=robot, hub=hub, description=LITTER_ROBOT_SELECT)
-                for robot in hub.litter_robots()
-            ),
-            (
-                LitterRobotSelect(robot=robot, hub=hub, description=FEEDER_ROBOT_SELECT)
-                for robot in hub.feeder_robots()
-            ),
-        )
-    )
+    entities = [
+        LitterRobotSelectEntity(robot=robot, hub=hub, description=description)
+        for robot in hub.account.robots
+        for robot_type, entity_descriptions in ROBOT_SELECT_MAP.items()
+        if isinstance(robot, robot_type)
+        for description in entity_descriptions
+    ]
     async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
 
 
-class LitterRobotSelect(
+class LitterRobotSelectEntity(
     LitterRobotEntity[_RobotT], SelectEntity, Generic[_RobotT, _CastTypeT]
 ):
     """Litter-Robot Select."""
@@ -109,6 +149,13 @@ class LitterRobotSelect(
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return str(self.entity_description.current_fn(self.robot))
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend, if any."""
+        if icon_fn := self.entity_description.icon_fn:
+            return str(icon_fn(self.robot))
+        return super().icon
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

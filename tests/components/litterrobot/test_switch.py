@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from pylitterbot import Robot
 import pytest
 
+from homeassistant.components.litterrobot.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_TURN_OFF,
@@ -13,6 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.issue_registry import IssueSeverity, async_get
 
 from .conftest import setup_integration
 
@@ -69,3 +71,22 @@ async def test_on_off_commands(
         assert getattr(robot, robot_command).call_count == count
         assert (state := hass.states.get(entity_id))
         assert state.state == new_state
+
+
+async def test_switch_issue_creation(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    mock_account_with_litterrobot_4: MagicMock,
+):
+    """Tests the switch issue is created only when a Litter-Robot 4 is present."""
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    issue_registry = async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "night_light_mode")
+    assert issue is None
+
+    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    issue_registry = async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "night_light_mode")
+    assert issue
+    assert issue.breaks_in_ha_version == "2022.12.0"
+    assert issue.severity == IssueSeverity.WARNING

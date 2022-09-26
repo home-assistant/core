@@ -29,6 +29,10 @@
     "migrated_attributes": {
       "title": "Litter-Robot attributes are now their own sensors",
       "description": "The vacuum entity attributes are now available as diagnostic sensors.\n\nPlease adjust any automations or scripts you may have that use these attributes."
+    },
+    "night_light_mode": {
+      "title": "Litter-Robot 4 night light mode is now a select entity",
+      "description": "The night light mode sensor entity for Litter-Robot 4 units is now a select entity to allow additional functionality.\n\nPlease adjust any automations or scripts you may have that use these sensors."
     }
   }
 }
