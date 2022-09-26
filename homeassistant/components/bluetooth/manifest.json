@@ -8,7 +8,7 @@
   "requirements": [
     "bleak==0.18.1",
     "bleak-retry-connector==2.1.0",
-    "bluetooth-adapters==0.5.1",
+    "bluetooth-adapters==0.5.2",
     "bluetooth-auto-recovery==0.3.3",
     "dbus-fast==1.14.0"
   ],
