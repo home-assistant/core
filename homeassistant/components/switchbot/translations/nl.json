@@ -9,6 +9,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
+            "password": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            },
             "user": {
                 "data": {
                     "mac": "MAC-adres apparaat",
