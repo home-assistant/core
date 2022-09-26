@@ -168,7 +168,7 @@ async def test_statistics_during_period(
     [
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
-        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 393.7),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 10 / 0.0254),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "W"}, 10000),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "kW"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "Pa"}, 1000),
