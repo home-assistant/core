@@ -50,16 +50,16 @@ class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEnti
 BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, ...]] = {
     LitterRobot: (
         RobotBinarySensorEntityDescription[LitterRobot](
-            key="is_sleeping",
-            name="Is sleeping",
+            key="sleeping",
+            name="Sleeping",
             icon="mdi:sleep",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             is_on_fn=lambda robot: robot.is_sleeping,
         ),
         RobotBinarySensorEntityDescription[LitterRobot](
-            key="sleep_mode_enabled",
-            name="Sleep mode enabled",
+            key="sleep_mode",
+            name="Sleep mode",
             icon="mdi:sleep",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,

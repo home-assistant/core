@@ -22,9 +22,9 @@ async def test_binary_sensors(
     """Tests binary sensors."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
-    state = hass.states.get("binary_sensor.test_is_sleeping")
+    state = hass.states.get("binary_sensor.test_sleeping")
     assert state.state == "off"
-    state = hass.states.get("binary_sensor.test_sleep_mode_enabled")
+    state = hass.states.get("binary_sensor.test_sleep_mode")
     assert state.state == "on"
     state = hass.states.get("binary_sensor.test_power_status")
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PLUG
