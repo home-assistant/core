@@ -141,7 +141,7 @@ async def async_setup_platform(
     )
 
 
-class Ob:
+class Observation:
     """Representation of a sensor or template observation."""
 
     def __init__(
@@ -203,7 +203,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Initialize the Bayesian sensor."""
         self._attr_name = name
         self._observations = [
-            Ob(
+            Observation(
                 entity_id=x.get("entity_id"),
                 platform=x.get("platform"),
                 prob_given_false=x.get("prob_given_false"),
@@ -226,12 +226,12 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.prior = prior
         self.probability = prior
 
-        self.current_observations: OrderedDict[str, Ob] = OrderedDict({})
+        self.current_observations: OrderedDict[str, Observation] = OrderedDict({})
 
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
 
-        self.observation_handlers: dict[str, Callable[[Ob], bool | None]] = {
+        self.observation_handlers: dict[str, Callable[[Observation], bool | None]] = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
             "multi_state": self._process_multi_state,
@@ -331,14 +331,14 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._attr_is_on = bool(self.probability >= self._probability_threshold)
         self.async_write_ha_state()
 
-    def _initialize_current_observations(self) -> OrderedDict[str, Ob]:
-        local_observations: OrderedDict[str, Ob] = OrderedDict({})
+    def _initialize_current_observations(self) -> OrderedDict[str, Observation]:
+        local_observations: OrderedDict[str, Observation] = OrderedDict({})
         for entity in self.observations_by_entity:
             local_observations.update(self._record_entity_observations(entity))
         return local_observations
 
-    def _record_entity_observations(self, entity: str) -> OrderedDict[str, Ob]:
-        local_observations: OrderedDict[str, Ob] = OrderedDict({})
+    def _record_entity_observations(self, entity: str) -> OrderedDict[str, Observation]:
+        local_observations: OrderedDict[str, Observation] = OrderedDict({})
 
         for entity_obs in self.observations_by_entity[entity]:
             platform: str = str(entity_obs.platform)
@@ -385,7 +385,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return prior
 
-    def _build_observations_by_entity(self) -> dict[str, list[Ob]]:
+    def _build_observations_by_entity(self) -> dict[str, list[Observation]]:
         """
         Build and return data structure of the form below.
 
@@ -399,7 +399,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         for all relevant observations to be looked up via their `entity_id`.
         """
 
-        observations_by_entity: dict[str, list[Ob]] = {}
+        observations_by_entity: dict[str, list[Observation]] = {}
         for i, observation in enumerate(self._observations):
             observation.id = str(i)
 
@@ -419,7 +419,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_entity
 
-    def _build_observations_by_template(self) -> dict[Template, list[Ob]]:
+    def _build_observations_by_template(self) -> dict[Template, list[Observation]]:
         """
         Build and return data structure of the form below.
 
@@ -433,7 +433,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         for all relevant observations to be looked up via their `template`.
         """
 
-        observations_by_template: dict[Template, list[Ob]] = {}
+        observations_by_template: dict[Template, list[Observation]] = {}
         for ind, observation in enumerate(self._observations):
             if observation.value_template is None:
                 continue
@@ -445,7 +445,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_template
 
-    def _process_numeric_state(self, entity_observation: Ob) -> bool | None:
+    def _process_numeric_state(self, entity_observation: Observation) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity = entity_observation.entity_id
 
@@ -463,7 +463,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         except ConditionError:
             return None
 
-    def _process_state(self, entity_observation: Ob) -> bool | None:
+    def _process_state(self, entity_observation: Observation) -> bool | None:
         """Return True if state conditions are met."""
         entity = entity_observation.entity_id
         assert entity is not None
@@ -475,7 +475,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         except ConditionError:
             return None
 
-    def _process_multi_state(self, entity_observation: Ob) -> bool | None:
+    def _process_multi_state(self, entity_observation: Observation) -> bool | None:
         """Return True if state conditions are met, never return false as all other states should have their own probabilities configured."""
         entity = entity_observation.entity_id
 
