@@ -48,7 +48,7 @@ DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
 }
 DEFAULT_USERNAME: Final = "smile"
 
-THERMOSTAT_CLASSES: Final[list[str]] = [
+MASTER_THERMOSTATS: Final[list[str]] = [
     "thermostat",
     "thermostatic_radiator_valve",
     "zone_thermometer",
