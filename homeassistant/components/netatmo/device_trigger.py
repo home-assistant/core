@@ -31,10 +31,6 @@ from .const import (
     DOMAIN,
     EVENT_TYPE_THERM_MODE,
     INDOOR_CAMERA_TRIGGERS,
-    MODEL_NACAMERA,
-    MODEL_NATHERM1,
-    MODEL_NOC,
-    MODEL_NRV,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -42,10 +38,10 @@ from .const import (
 CONF_SUBTYPE = "subtype"
 
 DEVICES = {
-    MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
-    MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
-    MODEL_NATHERM1: CLIMATE_TRIGGERS,
-    MODEL_NRV: CLIMATE_TRIGGERS,
+    "NACamera": INDOOR_CAMERA_TRIGGERS,
+    "NOC": OUTDOOR_CAMERA_TRIGGERS,
+    "NATherm1": CLIMATE_TRIGGERS,
+    "NRV": CLIMATE_TRIGGERS,
 }
 
 SUBTYPES = {
@@ -76,7 +72,7 @@ async def async_validate_trigger_config(
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    if not device:
+    if not device or device.model is None:
         raise InvalidDeviceAutomationConfig(
             f"Trigger invalid, device with ID {config[CONF_DEVICE_ID]} not found"
         )

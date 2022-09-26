@@ -15,6 +15,7 @@
                     "password": "Passord",
                     "region": "Region",
                     "scandinavian_miles": "Bruk Skandinaviske Miles",
+                    "unit_system": "Enhetssystem",
                     "username": "Brukernavn"
                 }
             }

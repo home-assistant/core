@@ -10,7 +10,13 @@
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "title": "Automatische back-up herstellen"
+            },
             "confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
+            "confirm_hardware": {
                 "description": "Wilt u {name} instellen?"
             },
             "pick_radio": {
@@ -30,6 +36,9 @@
                 "title": "Instellingen"
             },
             "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Een bestand uploaden"
+                },
                 "title": "Upload een handmatige back-up"
             },
             "user": {
@@ -122,7 +131,17 @@
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "title": "Automatische back-up herstellen"
+            },
+            "init": {
+                "description": "ZHA wordt gestopt. Wilt u doorgaan?",
+                "title": "ZHA opnieuw configureren"
+            },
             "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Een bestand uploaden"
+                },
                 "title": "Upload een handmatige back-up"
             }
         }

@@ -4,6 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan niet verbinden. Controleer het serienummer.",
+            "invalid_ip": "Ongeldig IP-adres",
             "invalid_serial": "Ongeldig serienummer",
             "unknown": "Onverwachte fout"
         },
