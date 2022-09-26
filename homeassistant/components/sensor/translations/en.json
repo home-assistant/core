@@ -29,7 +29,8 @@
             "is_temperature": "Current {entity_name} temperature",
             "is_value": "Current {entity_name} value",
             "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
-            "is_voltage": "Current {entity_name} voltage"
+            "is_voltage": "Current {entity_name} voltage",
+            "is_volume": "Current {entity_name} volume"
         },
         "trigger_type": {
             "apparent_power": "{entity_name} apparent power changes",
@@ -60,7 +61,8 @@
             "temperature": "{entity_name} temperature changes",
             "value": "{entity_name} value changes",
             "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
-            "voltage": "{entity_name} voltage changes"
+            "voltage": "{entity_name} voltage changes",
+            "volume": "{entity_name} volume changes"
         }
     },
     "state": {
