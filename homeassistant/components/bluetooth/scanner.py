@@ -17,20 +17,16 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from bleak_retry_connector import get_device_by_adapter
 from dbus_fast import InvalidMessageError
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    callback as hass_callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.package import is_docker_env
 
 from .const import (
+    DEFAULT_ADDRESS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
@@ -133,18 +129,27 @@ class HaScanner(BaseHaScanner):
         self.scanner = scanner
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
-        self._cancel_stop: CALLBACK_TYPE | None = None
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
         self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
-        self.source = self.adapter or SOURCE_LOCAL
+        self.source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         return self.scanner.discovered_devices
+
+    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+        """Get a device by address."""
+        if platform.system() == "Linux":
+            return await get_device_by_adapter(address, self.adapter)
+        # We don't have a fast version of this for MacOS yet
+        return next(
+            (device for device in self.discovered_devices if device.address == address),
+            None,
+        )
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
@@ -318,9 +323,6 @@ class HaScanner(BaseHaScanner):
             break
 
         self._async_setup_scanner_watchdog()
-        self._cancel_stop = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_hass_stopping
-        )
 
     @hass_callback
     def _async_setup_scanner_watchdog(self) -> None:
@@ -368,11 +370,6 @@ class HaScanner(BaseHaScanner):
                     exc_info=True,
                 )
 
-    async def _async_hass_stopping(self, event: Event) -> None:
-        """Stop the Bluetooth integration at shutdown."""
-        self._cancel_stop = None
-        await self.async_stop()
-
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
         # There is currently nothing the user can do to fix this
@@ -396,9 +393,6 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
-        if self._cancel_stop:
-            self._cancel_stop()
-            self._cancel_stop = None
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]

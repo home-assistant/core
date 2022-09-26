@@ -1,4 +1,5 @@
 """Component for the Portuguese weather service - IPMA."""
+import asyncio
 import logging
 
 import async_timeout
@@ -22,35 +23,30 @@ PLATFORMS = [Platform.WEATHER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_api(hass):
-    """Get the pyipma api object."""
-    websession = async_get_clientsession(hass)
-    return IPMA_API(websession)
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up IPMA station as config entry."""
 
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
 
-    api = await async_get_api(hass)
+    api = IPMA_API(async_get_clientsession(hass))
+
     try:
         async with async_timeout.timeout(30):
             location = await Location.get(api, float(latitude), float(longitude))
-
-        _LOGGER.debug(
-            "Initializing for coordinates %s, %s -> station %s (%d, %d)",
-            latitude,
-            longitude,
-            location.station,
-            location.id_station,
-            location.global_id_local,
-        )
-    except IPMAException as err:
+    except (IPMAException, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady(
             f"Could not get location for ({latitude},{longitude})"
         ) from err
+
+    _LOGGER.debug(
+        "Initializing for coordinates %s, %s -> station %s (%d, %d)",
+        latitude,
+        longitude,
+        location.station,
+        location.id_station,
+        location.global_id_local,
+    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {DATA_API: api, DATA_LOCATION: location}

@@ -9,13 +9,14 @@ from homeassistant.components.homekit_controller.const import DOMAIN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import setup_test_component
+
 from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-from tests.components.homekit_controller.common import setup_test_component
 
 
 # pylint: disable=redefined-outer-name
@@ -97,7 +98,7 @@ async def test_enumerate_remote(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-            "metadata": {"secondary": False},
+            "metadata": {"secondary": True},
         },
         {
             "device_id": device.id,
@@ -145,7 +146,7 @@ async def test_enumerate_button(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-            "metadata": {"secondary": False},
+            "metadata": {"secondary": True},
         },
         {
             "device_id": device.id,
@@ -192,7 +193,7 @@ async def test_enumerate_doorbell(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-            "metadata": {"secondary": False},
+            "metadata": {"secondary": True},
         },
         {
             "device_id": device.id,

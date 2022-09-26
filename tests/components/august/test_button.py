@@ -1,13 +1,9 @@
 """The button tests for the august platform."""
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 
-from tests.components.august.mocks import (
-    _create_august_api_with_devices,
-    _mock_lock_from_fixture,
-)
+from .mocks import _create_august_api_with_devices, _mock_lock_from_fixture
 
 
 async def test_wake_lock(hass):

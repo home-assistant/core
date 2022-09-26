@@ -91,6 +91,12 @@
             "zwave_js.value_updated.value": "Variazione su un valore Z-Wave JS"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "La versione di Z-Wave JS Server attualmente in esecuzione \u00e8 troppo vecchia per questa versione di Home Assistant. Aggiorna Z-Wave JS Server all'ultima versione per risolvere questo problema.",
+            "title": "\u00c8 necessaria una versione pi\u00f9 recente di Z-Wave JS Server"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Impossibile ottenere le informazioni sul rilevamento del componente aggiuntivo Z-Wave JS.",

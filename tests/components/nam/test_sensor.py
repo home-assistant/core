@@ -28,10 +28,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import INCOMPLETE_NAM_DATA, nam_data
+from . import INCOMPLETE_NAM_DATA, init_integration, nam_data
 
 from tests.common import async_fire_time_changed
-from tests.components.nam import init_integration
 
 
 async def test_sensor(hass):

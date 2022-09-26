@@ -8,7 +8,7 @@ from homeassistant.components.renault.const import (
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,

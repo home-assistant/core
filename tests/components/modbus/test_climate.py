@@ -1,8 +1,7 @@
 """The tests for the Modbus climate component."""
 import pytest
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,

@@ -4,8 +4,7 @@ from unittest.mock import patch
 from pyoctoprintapi import OctoprintPrinterInfo
 import pytest
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
 from homeassistant.components.octoprint.const import DOMAIN
