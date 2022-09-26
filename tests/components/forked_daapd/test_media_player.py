@@ -877,7 +877,7 @@ async def test_play_owntone_media(hass, mock_api_object):
         {
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: create_media_content_id(
-                "some song", "owntone:track:456"
+                "some song", "library:track:456"
             ),
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
         },

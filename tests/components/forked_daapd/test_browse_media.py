@@ -166,6 +166,61 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
         await browse_children(msg["result"]["children"])
 
 
+async def test_async_browse_media_not_found(hass, hass_ws_client, config_entry):
+    """Test browse media not found."""
+
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        config_entry.add_to_hass(hass)
+        await config_entry.async_setup(hass)
+        await hass.async_block_till_done()
+
+        mock_api.return_value.get_directory.return_value = None
+        mock_api.return_value.get_albums.return_value = None
+        mock_api.return_value.get_artists.return_value = None
+        mock_api.return_value.get_genres.return_value = None
+        mock_api.return_value.get_playlists.return_value = None
+
+        # Request playlist through WebSocket
+        client = await hass_ws_client(hass)
+        msg_id = 1
+        for media_type in (
+            "directory",
+            MediaType.ALBUM,
+            MediaType.ARTIST,
+            MediaType.GENRE,
+            MediaType.PLAYLIST,
+        ):
+            await client.send_json(
+                {
+                    "id": msg_id,
+                    "type": "media_player/browse_media",
+                    "entity_id": TEST_MASTER_ENTITY_NAME,
+                    "media_content_type": media_type,
+                    "media_content_id": (
+                        media_content_id := create_media_content_id(
+                            "title", f"library:{media_type}:"
+                        )
+                    ),
+                }
+            )
+            msg = await client.receive_json()
+            # Assert WebSocket response
+            assert msg["id"] == msg_id
+            assert msg["type"] == TYPE_RESULT
+            assert not msg["success"]
+            assert (
+                msg["error"]["message"]
+                == f"Media not found for {media_type} / {media_content_id}"
+            )
+            msg_id += 1
+
+
 async def test_async_browse_image(hass, hass_client, config_entry):
     """Test browse media images."""
 
