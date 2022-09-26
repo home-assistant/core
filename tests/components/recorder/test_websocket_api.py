@@ -166,7 +166,7 @@ async def test_statistics_during_period(
 @pytest.mark.parametrize(
     "attributes, state, value, custom_units, converted_value",
     [
-        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 100),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 1000 / 6894.757),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "W"}, 10000),
