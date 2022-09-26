@@ -59,6 +59,7 @@ class DSMRSensor(SensorEntity):
 
         slug = slugify(description.key.replace("/", "_"))
         self.entity_id = f"sensor.{slug}"
+        self._attr_unique_id = slug
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
