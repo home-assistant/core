@@ -46,6 +46,8 @@ async def async_setup_entry(
 class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
     """Representation of a SwitchBee cover."""
 
+    _attr_device_class = CoverDeviceClass.SHUTTER
+
     def __init__(
         self,
         device: SwitchBeeBaseDevice,
