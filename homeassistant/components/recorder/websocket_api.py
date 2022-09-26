@@ -296,6 +296,11 @@ async def ws_adjust_sum_statistics(
     def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
         if statistics_unit == display_unit:
             return True
+        if (
+            statistics_unit == DistanceConverter.NORMALIZED_UNIT
+            and display_unit in DistanceConverter.VALID_UNITS
+        ):
+            return True
         if statistics_unit == ENERGY_KILO_WATT_HOUR and display_unit in (
             ENERGY_MEGA_WATT_HOUR,
             ENERGY_WATT_HOUR,
