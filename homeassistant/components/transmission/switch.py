@@ -92,7 +92,7 @@ class TransmissionSwitch(SwitchEntity):
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
-        self.unsub_update = None
+        self.unsub_update: Callable[[], None] | None = None
 
         self._attr_unique_id = (
             f"{tm_client.config_entry.entry_id}-{entity_description.key}"
