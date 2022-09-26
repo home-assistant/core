@@ -4,6 +4,7 @@
             "br": "Motorkap verwijderd",
             "ccc": "Reinigingscyclus voltooid",
             "ccp": "Reinigingscyclus in uitvoering",
+            "cd": "Kat gedetecteerd",
             "csf": "Kattensensor fout",
             "csi": "Kattensensor onderbroken",
             "cst": "Timing kattensensor",
@@ -17,6 +18,8 @@
             "off": "Uit",
             "offline": "Offline",
             "p": "Gepauzeerd",
+            "pwrd": "Uitschakelen",
+            "pwru": "Opstarten",
             "rdy": "Gereed",
             "scf": "Kattensensorfout bij opstarten",
             "sdf": "Lade vol bij opstarten"

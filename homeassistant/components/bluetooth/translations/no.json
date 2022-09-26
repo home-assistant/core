@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "For \u00e5 forbedre Bluetooth-p\u00e5litelighet og ytelse, anbefaler vi p\u00e5 det sterkeste at du oppdaterer til versjon 9.0 eller nyere av Home Assistant-operativsystemet.",
+            "title": "Oppdater til Home Assistant-operativsystem 9.0 eller nyere"
+        }
+    },
     "options": {
         "step": {
             "init": {

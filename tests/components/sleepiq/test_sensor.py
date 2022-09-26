@@ -3,7 +3,7 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
+from .conftest import (
     BED_NAME,
     BED_NAME_LOWER,
     SLEEPER_L_ID,

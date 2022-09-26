@@ -7,13 +7,17 @@ from functools import partial
 import logging
 from typing import cast
 
-from soco.data_structures import DidlFavorite, DidlObject
+from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
 from homeassistant.components import media_source, plex, spotify
-from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
@@ -32,6 +36,7 @@ from .const import (
     SONOS_TYPES_MAPPING,
 )
 from .exception import UnknownMediaType
+from .favorites import SonosFavorites
 from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -363,15 +368,15 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
     )
 
 
-def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
+def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
     """
     Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
-    children = []
+    children: list[BrowseMedia] = []
 
-    group_types = {fav.reference.item_class for fav in favorites}
+    group_types: set[str] = {fav.reference.item_class for fav in favorites}
     for group_type in sorted(group_types):
         try:
             media_content_type = SONOS_TYPES_MAPPING[group_type]
@@ -402,13 +407,13 @@ def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
 
 
 def favorites_folder_payload(
-    favorites: list[DidlFavorite], media_content_id: str
+    favorites: SonosFavorites, media_content_id: str
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
     Used by async_browse_media.
     """
-    children = []
+    children: list[BrowseMedia] = []
     content_type = SONOS_TYPES_MAPPING[media_content_id]
 
     for favorite in favorites:
@@ -495,11 +500,9 @@ def get_media(
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
-    for item in media_library.browse_by_idstring(
-        search_type,
-        "/".join(item_id.split("/")[:-1]),
-        full_album_art_uri=True,
-        max_items=0,
-    ):
-        if item.item_id == item_id:
-            return item
+    search_term = item_id.split("/")[-1]
+    matches = media_library.get_music_library_information(
+        search_type, search_term=search_term, full_album_art_uri=True
+    )
+    if len(matches) > 0:
+        return matches[0]

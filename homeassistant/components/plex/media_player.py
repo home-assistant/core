@@ -35,7 +35,7 @@ from .const import (
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
-    DOMAIN as PLEX_DOMAIN,
+    DOMAIN,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
@@ -86,7 +86,7 @@ async def async_setup_entry(
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    hass.data[DOMAIN][DISPATCHERS][server_id].append(unsub)
     _LOGGER.debug("New entity listener created")
 
 
@@ -95,14 +95,14 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
-    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    plexserver = hass.data[DOMAIN][SERVERS][server_id]
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)
 
         # Migration to per-server unique_ids
         old_entity_id = registry.async_get_entity_id(
-            MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
+            MP_DOMAIN, DOMAIN, plex_mp.machine_identifier
         )
         if old_entity_id is not None:
             new_unique_id = f"{server_id}:{plex_mp.machine_identifier}"
@@ -523,7 +523,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         if self.device_product in TRANSIENT_DEVICE_MODELS:
             return DeviceInfo(
-                identifiers={(PLEX_DOMAIN, "plex.tv-clients")},
+                identifiers={(DOMAIN, "plex.tv-clients")},
                 name="Plex Client Service",
                 manufacturer="Plex",
                 model="Plex Clients",
@@ -531,12 +531,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
             )
 
         return DeviceInfo(
-            identifiers={(PLEX_DOMAIN, self.machine_identifier)},
+            identifiers={(DOMAIN, self.machine_identifier)},
             manufacturer=self.device_platform or "Plex",
             model=self.device_product or self.device_make,
             name=self.name,
             sw_version=self.device_version,
-            via_device=(PLEX_DOMAIN, self.plex_server.machine_identifier),
+            via_device=(DOMAIN, self.plex_server.machine_identifier),
         )
 
     async def async_browse_media(

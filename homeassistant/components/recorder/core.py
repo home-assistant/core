@@ -13,6 +13,7 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
+import async_timeout
 from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
@@ -479,10 +480,16 @@ class Recorder(threading.Thread):
 
     @callback
     def async_adjust_statistics(
-        self, statistic_id: str, start_time: datetime, sum_adjustment: float
+        self,
+        statistic_id: str,
+        start_time: datetime,
+        sum_adjustment: float,
+        display_unit: str,
     ) -> None:
         """Adjust statistics."""
-        self.queue_task(AdjustStatisticsTask(statistic_id, start_time, sum_adjustment))
+        self.queue_task(
+            AdjustStatisticsTask(statistic_id, start_time, sum_adjustment, display_unit)
+        )
 
     @callback
     def async_clear_statistics(self, statistic_ids: list[str]) -> None:
@@ -1030,7 +1037,8 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            await asyncio.wait_for(database_locked.wait(), timeout=DB_LOCK_TIMEOUT)
+            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+                await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
