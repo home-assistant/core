@@ -338,6 +338,11 @@ async def ws_adjust_sum_statistics(
         ):
             return True
         if (
+            statistics_unit == MassConverter.NORMALIZED_UNIT
+            and display_unit in MassConverter.VALID_UNITS
+        ):
+            return True
+        if (
             statistics_unit == VolumeConverter.NORMALIZED_UNIT
             and display_unit in VolumeConverter.VALID_UNITS
         ):
