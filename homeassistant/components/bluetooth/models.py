@@ -91,6 +91,10 @@ class BaseHaScanner:
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
 
+    @abstractmethod
+    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+        """Get a device by address."""
+
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
         return {
@@ -256,7 +260,9 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         if not self._backend:
-            wrapped_backend = self._async_get_backend()
+            wrapped_backend = (
+                self._async_get_backend() or await self._async_get_fallback_backend()
+            )
             self._backend = wrapped_backend.client(
                 await freshen_ble_device(wrapped_backend.device)
                 or wrapped_backend.device,
@@ -286,7 +292,7 @@ class HaBleakClientWrapper(BleakClient):
         return _HaWrappedBleakBackend(ble_device, connector.client)
 
     @hass_callback
-    def _async_get_backend(self) -> _HaWrappedBleakBackend:
+    def _async_get_backend(self) -> _HaWrappedBleakBackend | None:
         """Get the bleak backend for the given address."""
         assert MANAGER is not None
         address = self.__address
@@ -297,6 +303,10 @@ class HaBleakClientWrapper(BleakClient):
         if backend := self._async_get_backend_for_ble_device(ble_device):
             return backend
 
+        return None
+
+    async def _async_get_fallback_backend(self) -> _HaWrappedBleakBackend:
+        """Get a fallback backend for the given address."""
         #
         # The preferred backend cannot currently connect the device
         # because it is likely out of connection slots.
@@ -304,16 +314,11 @@ class HaBleakClientWrapper(BleakClient):
         # We need to try all backends to find one that can
         # connect to the device.
         #
-        # Currently we have to search all the discovered devices
-        # because the bleak API does not allow us to get the
-        # details for a specific device.
-        #
+        assert MANAGER is not None
+        address = self.__address
+        devices = await MANAGER.async_get_devices_by_address(address, True)
         for ble_device in sorted(
-            (
-                ble_device
-                for ble_device in MANAGER.async_all_discovered_devices(True)
-                if ble_device.address == address
-            ),
+            devices,
             key=lambda ble_device: ble_device.rssi or NO_RSSI_VALUE,
             reverse=True,
         ):
