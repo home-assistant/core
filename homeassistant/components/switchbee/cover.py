@@ -70,7 +70,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
                 | CoverEntityFeature.SET_POSITION
                 | CoverEntityFeature.STOP
             )
-        self._attr_device_class = CoverDeviceClass.SHUTTER
 
     @property
     def available(self) -> bool:
