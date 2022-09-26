@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "manual_migration": {
+            "description": "The Bayesian integration now updates the probability if the observed `to_state`, `above`, `below`, or `value_template` evaluates to false rather than true. So it is no longer required to have duplicate, mirrored entries for each state. Please remove the mirrored entry for {entity}",
+            "title": "Manual YAML fix required for Bayesian"
+        }
+    }
+}

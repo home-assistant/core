@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
-from homeassistant.helpers import condition
+from homeassistant.helpers import condition, issue_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -216,8 +216,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             )
             for x in observations
         ]
-        # self._observations = observations
-        _LOGGER.error("TemplateError('%s') ", observations)
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
@@ -236,6 +234,37 @@ class BayesianBinarySensor(BinarySensorEntity):
             "state": self._process_state,
             "multi_state": self._process_multi_state,
         }
+
+    def _raise_mirrored_entries(
+        self, observations: list[Observation], text: str = ""
+    ) -> None:
+        """If there are mirrored entries, the user is probably using a workaround for a patched bug."""
+        if len(observations) != 2:
+            return
+        true_sums_1: bool = (
+            round(observations[0].prob_given_true + observations[1].prob_given_true, 1)
+            == 1.0
+        )
+        false_sums_1: bool = (
+            round(
+                observations[0].prob_given_false + observations[1].prob_given_false, 1
+            )
+            == 1.0
+        )
+        same_states: bool = observations[0].platform == observations[1].platform
+        if true_sums_1 & false_sums_1 & same_states:
+            issue_registry.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "mirrored_entry" + text,
+                breaks_in_ha_version="2022.10.0",
+                is_fixable=True,
+                is_persistent=False,
+                severity=issue_registry.IssueSeverity.WARNING,
+                translation_key="manual_migration",
+                translation_placeholders={"entity": text},
+                learn_more_url="https://github.com/home-assistant/core/pull/67631",
+            )
 
     async def async_added_to_hass(self) -> None:
         """
@@ -324,6 +353,18 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.current_observations.update(self._initialize_current_observations())
         self.probability = self._calculate_new_probability()
         self._attr_is_on = bool(self.probability >= self._probability_threshold)
+
+        for entity, observations in self.observations_by_entity.items():
+            self._raise_mirrored_entries(observations, text=entity)
+
+        all_template_observations: list[Observation] = []
+        for value in self.observations_by_template.values():
+            all_template_observations.append(value[0])
+        if len(all_template_observations) == 2:
+            self._raise_mirrored_entries(
+                all_template_observations,
+                text=str(all_template_observations[0].value_template),
+            )
 
     @callback
     def _recalculate_and_write_state(self) -> None:
