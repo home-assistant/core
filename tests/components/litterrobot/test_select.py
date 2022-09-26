@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -76,7 +77,9 @@ async def test_litter_robot_4_selects(
     state = hass.states.get("select.test_night_light_level")
     assert state.state == "Low"
     assert state.attributes.get(ATTR_ICON) == "mdi:lightbulb-on-30"
+    assert set(state.attributes.get(ATTR_OPTIONS)) == {"Low", "Medium", "High"}
 
     state = hass.states.get("select.test_night_light_mode")
     assert state.state == "Off"
     assert state.attributes.get(ATTR_ICON) == "mdi:lightbulb-off"
+    assert set(state.attributes.get(ATTR_OPTIONS)) == {"On", "Off", "Auto"}
