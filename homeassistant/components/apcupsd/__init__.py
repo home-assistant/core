@@ -77,9 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await hass.async_add_executor_job(data_service.update)
-    # It doesn't really matter why we're not able to get the status, just that we can't.
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.exception("Failure while testing APCUPSd status retrieval", exc_info=ex)
+    except OSError as ex:
+        _LOGGER.error("Failure while testing APCUPSd status retrieval: %s", ex)
         return False
 
     # Store the data service object.
