@@ -25,6 +25,19 @@ from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
+NIGHT_LIGHT_LEVEL_ICON_MAP = {
+    NightLightLevel.LOW: "mdi:lightbulb-on-30",
+    NightLightLevel.MEDIUM: "mdi:lightbulb-on-70",
+    NightLightLevel.HIGH: "mdi:lightbulb-on",
+    None: "mdi:lightbulb-question",
+}
+NIGHT_LIGHT_MODE_ICON_MAP = {
+    NightLightMode.AUTO: "mdi:lightbulb-auto",
+    NightLightMode.OFF: "mdi:lightbulb-off",
+    NightLightMode.ON: "mdi:lightbulb-on",
+    None: "mdi:lightbulb-question",
+}
+
 
 @dataclass
 class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
@@ -68,13 +81,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
             select_fn=lambda robot, option: robot.set_night_light_brightness(
                 NightLightLevel[option.upper()]
             ),
-            icon_fn=lambda robot: "mdi:lightbulb-question"
-            if (level := robot.night_light_level) is None
-            else "mdi:lightbulb-on"
-            if level == NightLightLevel.HIGH
-            else "mdi:lightbulb-on-70"
-            if level == NightLightLevel.MEDIUM
-            else "mdi:lightbulb-on-30",
+            icon_fn=lambda robot: NIGHT_LIGHT_LEVEL_ICON_MAP[robot.night_light_level],
         ),
         RobotSelectEntityDescription[LitterRobot4, str](
             key="night_light_mode",
@@ -86,13 +93,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
             select_fn=lambda robot, option: robot.set_night_light_mode(
                 NightLightMode[option.upper()]
             ),
-            icon_fn=lambda robot: "mdi:lightbulb-question"
-            if (mode := robot.night_light_mode) is None
-            else "mdi:lightbulb-auto"
-            if mode == NightLightMode.AUTO
-            else "mdi:lightbulb-on"
-            if mode == NightLightMode.ON
-            else "mdi:lightbulb-off",
+            icon_fn=lambda robot: NIGHT_LIGHT_MODE_ICON_MAP[robot.night_light_mode],
         ),
     ),
     FeederRobot: (
