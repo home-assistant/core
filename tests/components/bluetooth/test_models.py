@@ -296,8 +296,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch("bleak.backends.corebluetooth.client.BleakClientCoreBluetooth.connect"):
-        await client.connect()
+    await client.connect()
     assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
