@@ -80,6 +80,16 @@ PRESSURE_SENSOR_PA_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "Pa",
 }
+SPEED_SENSOR_KPH_ATTRIBUTES = {
+    "device_class": "speed",
+    "state_class": "measurement",
+    "unit_of_measurement": "km/h",
+}
+SPEED_SENSOR_MPH_ATTRIBUTES = {
+    "device_class": "speed",
+    "state_class": "measurement",
+    "unit_of_measurement": "mph",
+}
 TEMPERATURE_SENSOR_C_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
@@ -159,6 +169,9 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "Pa"}, 1000),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "hPa"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "psi"}, 1000 / 6894.757),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "m/s"}, 2.77778),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "km/h"}, 10),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "mph"}, 6.21371),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°C"}, 10),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°F"}, 50),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "K"}, 283.15),
@@ -564,6 +577,8 @@ async def test_statistics_during_period_bad_end_time(
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
+        (IMPERIAL_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "m/s", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "m/s", "speed"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
@@ -1357,6 +1372,8 @@ async def test_backup_end_without_start(
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "W", "power"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_PA_ATTRIBUTES, "Pa", "pressure"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "Pa", "pressure"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "m/s", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_MPH_ATTRIBUTES, "m/s", "speed"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°C", "temperature"),
     ],
