@@ -171,6 +171,40 @@ effect_colorloop:
       default: true
       selector:
         boolean:
+effect_move:
+  name: Move effect
+  description: Start the firmware-based Move effect on a LIFX Z, Lightstrip or Beam.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How long in seconds for the effect to move across the length of the light.
+      default: 3.0
+      selector:
+        number:
+          min: 0.1
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    direction:
+      name: Direction
+      description: Direction the effect will move across the device.
+      default: right
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - right
+            - left
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
 
 effect_stop:
   name: Stop effect
