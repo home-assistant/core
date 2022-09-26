@@ -300,12 +300,6 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def get_interface(self, capability) -> AlexaCapability:
-        """Return the given AlexaInterface.
-
-        Raises _UnsupportedInterface.
-        """
-
     def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.
 
