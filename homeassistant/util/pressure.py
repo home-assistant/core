@@ -18,7 +18,7 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
 from .unit_conversion import PressureConverter
 
 UNIT_CONVERSION: dict[str, float] = PressureConverter.UNIT_CONVERSION
-VALID_UNITS: tuple[str, ...] = PressureConverter.VALID_UNITS
+VALID_UNITS = PressureConverter.VALID_UNITS
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
