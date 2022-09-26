@@ -357,7 +357,7 @@ async def async_process_deps_reqs(
     if failed_deps := await _async_process_dependencies(hass, config, integration):
         raise DependencyError(failed_deps)
 
-    if not hass.config.skip_pip and integration.requirements:
+    if not hass.config.skip_pip:
         async with hass.timeout.async_freeze(integration.domain):
             await requirements.async_get_integration_with_requirements(
                 hass, integration.domain
