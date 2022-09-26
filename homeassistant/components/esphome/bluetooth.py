@@ -122,6 +122,10 @@ class ESPHomeScanner(BaseHaScanner):
         """Return a list of discovered devices."""
         return list(self._discovered_devices.values())
 
+    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+        """Get a device by address."""
+        return self._discovered_devices.get(address)
+
     @hass_callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""

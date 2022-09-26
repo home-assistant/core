@@ -235,6 +235,23 @@ class BluetoothManager:
             self._cancel_unavailable_tracking.clear()
         uninstall_multiple_bleak_catcher()
 
+    async def async_get_devices_by_address(
+        self, address: str, connectable: bool
+    ) -> list[BLEDevice]:
+        """Get devices by address."""
+        types_ = (True,) if connectable else (True, False)
+        return [
+            device
+            for device in await asyncio.gather(
+                *(
+                    scanner.async_get_device_by_address(address)
+                    for type_ in types_
+                    for scanner in self._get_scanners_by_type(type_)
+                )
+            )
+            if device is not None
+        ]
+
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""

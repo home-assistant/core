@@ -474,28 +474,3 @@ async def test_route_not_found(hass: HomeAssistant, caplog):
         await hass.async_block_till_done()
 
         assert NO_ROUTE_ERROR_MESSAGE in caplog.text
-
-
-@pytest.mark.usefixtures("valid_response")
-async def test_setup_platform(hass: HomeAssistant, caplog):
-    """Test that setup platform migration works."""
-    config = {
-        "sensor": {
-            "platform": DOMAIN,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-        }
-    }
-    with patch(
-        "homeassistant.components.here_travel_time.async_setup_entry", return_value=True
-    ):
-        await async_setup_component(hass, "sensor", config)
-        await hass.async_block_till_done()
-        assert (
-            "Your HERE travel time configuration has been imported into the UI"
-            in caplog.text
-        )
