@@ -13,6 +13,7 @@ from demetriek import (
     Model,
     Notification,
     NotificationIconType,
+    NotificationPriority,
     NotificationSound,
     Simple,
     Sound,
@@ -227,6 +228,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         await lametric.notify(
             notification=Notification(
+                priority=NotificationPriority.CRITICAL,
                 icon_type=NotificationIconType.INFO,
                 model=Model(
                     cycles=2,
