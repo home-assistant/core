@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    NumberEntity,
+    NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -59,7 +60,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Homekit numbers."""
     hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:

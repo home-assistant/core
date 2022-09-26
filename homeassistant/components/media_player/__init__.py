@@ -12,23 +12,21 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, cast, final
-from urllib.parse import urlparse
+from typing import Any, Final, TypedDict, final
+from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
+from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.components.websocket_api.const import (
-    ERR_NOT_SUPPORTED,
-    ERR_UNKNOWN_ERROR,
-)
+from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     SERVICE_MEDIA_NEXT_TRACK,
@@ -135,18 +133,15 @@ from .const import (  # noqa: F401
 )
 from .errors import BrowseError
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CACHE_IMAGES = "images"
-CACHE_MAXSIZE = "maxsize"
-CACHE_LOCK = "lock"
-CACHE_URL = "url"
-CACHE_CONTENT = "content"
-ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16}
+CACHE_IMAGES: Final = "images"
+CACHE_MAXSIZE: Final = "maxsize"
+CACHE_LOCK: Final = "lock"
+CACHE_URL: Final = "url"
+CACHE_CONTENT: Final = "content"
 
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
@@ -219,9 +214,28 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_REPEAT,
 ]
 
+# mypy: disallow-any-generics
+
+
+class _CacheImage(TypedDict, total=False):
+    """Class to hold a cached image."""
+
+    lock: Required[asyncio.Lock]
+    content: tuple[bytes | None, str | None]
+
+
+class _ImageCache(TypedDict):
+    """Class to hold a cached image."""
+
+    images: collections.OrderedDict[str, _CacheImage]
+    maxsize: int
+
+
+_ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
+
 
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """
     Return true if specified media player entity_id is on.
 
@@ -253,7 +267,7 @@ def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for media_players."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[MediaPlayerEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -372,7 +386,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Remove in Home Assistant 2022.9
-    def _rewrite_enqueue(value):
+    def _rewrite_enqueue(value: dict[str, Any]) -> dict[str, Any]:
         """Rewrite the enqueue value."""
         if ATTR_MEDIA_ENQUEUE not in value:
             pass
@@ -425,13 +439,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -1065,8 +1079,8 @@ class MediaPlayerEntity(Entity):
 
         Images are cached in memory (the images are typically 10-100kB in size).
         """
-        cache_images = cast(collections.OrderedDict, ENTITY_IMAGE_CACHE[CACHE_IMAGES])
-        cache_maxsize = cast(int, ENTITY_IMAGE_CACHE[CACHE_MAXSIZE])
+        cache_images = _ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+        cache_maxsize = _ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
         if urlparse(url).hostname is None:
             url = f"{get_url(self.hass)}{url}"
@@ -1076,7 +1090,7 @@ class MediaPlayerEntity(Entity):
 
         async with cache_images[url][CACHE_LOCK]:
             if CACHE_CONTENT in cache_images[url]:
-                return cache_images[url][CACHE_CONTENT]  # type:ignore[no-any-return]
+                return cache_images[url][CACHE_CONTENT]
 
         (content, content_type) = await self._async_fetch_image(url)
 
@@ -1100,7 +1114,9 @@ class MediaPlayerEntity(Entity):
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
-            f"/{media_content_type}/{media_content_id}"
+            # quote the media_content_id as it may contain url unsafe characters
+            # aiohttp will unquote the path automatically
+            f"/{media_content_type}/{quote(media_content_id)}"
         )
 
         url_query = {"token": self.access_token}
@@ -1117,10 +1133,13 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
-        url + "/browse_media/{media_content_type}/{media_content_id}",
+        # Need to modify the default regex for media_content_id as it may
+        # include arbitrary characters including '/','{', or '}'
+        url
+        + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
         """Initialize a media player view."""
         self.component = component
 
@@ -1181,14 +1200,18 @@ class MediaPlayerImageView(HomeAssistantView):
     }
 )
 @websocket_api.async_response
-async def websocket_browse_media(hass, connection, msg):
+async def websocket_browse_media(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """
     Browse media available to the media_player entity.
 
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
-    component = hass.data[DOMAIN]
-    player: MediaPlayerEntity | None = component.get_entity(msg["entity_id"])
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
+    player = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1208,6 +1231,7 @@ async def websocket_browse_media(hass, connection, msg):
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
     except NotImplementedError:
+        assert player.platform
         _LOGGER.error(
             "%s allows media browsing but its integration (%s) does not",
             player.entity_id,
@@ -1229,11 +1253,12 @@ async def websocket_browse_media(hass, connection, msg):
 
     # For backwards compat
     if isinstance(payload, BrowseMedia):
-        payload = payload.as_dict()
+        result = payload.as_dict()
     else:
+        result = payload  # type: ignore[unreachable]
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
-    connection.send_result(msg["id"], payload)
+    connection.send_result(msg["id"], result)
 
 
 async def async_fetch_image(

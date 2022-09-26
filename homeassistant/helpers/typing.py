@@ -26,6 +26,7 @@ class UndefinedType(Enum):
 
 UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
 
+
 # The following types should not used and
 # are not present in the core code base.
 # They are kept in order not to break custom integrations

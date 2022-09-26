@@ -2,12 +2,9 @@
 from pyhap.loader import get_loader
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
@@ -208,7 +205,7 @@ async def test_supported_states(hass, hk_driver, events):
     # Set up a number of test configuration
     test_configs = [
         {
-            "features": SUPPORT_ALARM_ARM_HOME,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -220,7 +217,7 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_AWAY,
+            "features": AlarmControlPanelEntityFeature.ARM_AWAY,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -232,7 +229,8 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -246,9 +244,9 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_NIGHT,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -264,10 +262,10 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.TRIGGER,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],

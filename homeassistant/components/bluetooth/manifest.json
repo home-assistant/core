@@ -3,11 +3,14 @@
   "name": "Bluetooth",
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
   "dependencies": ["usb"],
+  "after_dependencies": ["hassio"],
   "quality_scale": "internal",
   "requirements": [
-    "bleak==0.16.0",
-    "bluetooth-adapters==0.3.5",
-    "bluetooth-auto-recovery==0.3.2"
+    "bleak==0.18.0",
+    "bleak-retry-connector==2.0.2",
+    "bluetooth-adapters==0.5.1",
+    "bluetooth-auto-recovery==0.3.3",
+    "dbus-fast==1.14.0"
   ],
   "codeowners": ["@bdraco"],
   "config_flow": true,

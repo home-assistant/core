@@ -5,7 +5,7 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, PRESSURE_HPA, TEMP_CELSIUS
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -60,6 +60,7 @@ async def test_eve_degree_setup(hass):
                     entity_id="sensor.eve_degree_aa11_battery",
                     unique_id="homekit-AA00A0A00000-17",
                     friendly_name="Eve Degree AA11 Battery",
+                    entity_category=EntityCategory.DIAGNOSTIC,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
                     state="65",

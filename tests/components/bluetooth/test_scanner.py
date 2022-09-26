@@ -1,4 +1,6 @@
 """Tests for the Bluetooth integration scanners."""
+from datetime import timedelta
+import time
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
@@ -7,7 +9,7 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BLEDevice,
 )
-from dbus_next import InvalidMessageError
+from dbus_fast import InvalidMessageError
 import pytest
 
 from homeassistant.components import bluetooth
@@ -203,7 +205,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
 
         assert called_start == 1
 
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
     scanner = _get_manager()
     mock_discovered = [MagicMock()]
 
@@ -240,9 +242,11 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     # We hit the timer, so we restart the scanner
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT,
+        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT + 20,
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL + timedelta(seconds=20)
+        )
         await hass.async_block_till_done()
 
     assert called_start == 2
@@ -279,7 +283,7 @@ async def test_adapter_recovery(hass, one_adapter):
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
@@ -366,7 +370,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
@@ -471,7 +475,7 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",

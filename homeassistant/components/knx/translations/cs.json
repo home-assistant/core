@@ -3,9 +3,13 @@
         "abort": {
             "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
         "step": {
             "manual_tunnel": {
                 "data": {
+                    "host": "Hostitel",
                     "port": "Port"
                 }
             }
@@ -15,6 +19,7 @@
         "step": {
             "tunnel": {
                 "data": {
+                    "host": "Hostitel",
                     "port": "Port"
                 }
             }

@@ -128,7 +128,6 @@ class InverterNumberEntity(NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if self.entity_description.setter:
-            await self.entity_description.setter(self._inverter, int(value))
+        await self.entity_description.setter(self._inverter, int(value))
         self._attr_native_value = value
         self.async_write_ha_state()
