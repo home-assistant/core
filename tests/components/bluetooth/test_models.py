@@ -197,6 +197,12 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             """Return a list of discovered devices."""
             return [switchbot_proxy_device_has_connection_slot]
 
+        async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+            """Return a list of discovered devices."""
+            if address == switchbot_proxy_device_has_connection_slot.address:
+                return switchbot_proxy_device_has_connection_slot
+            return None
+
     scanner = FakeScanner()
     cancel = manager.async_register_scanner(scanner, True)
     assert manager.async_discovered_devices(True) == [
@@ -205,6 +211,92 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
     with patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"):
+        await client.connect()
+    assert client.is_connected is True
+    client.set_disconnected_callback(lambda client: None)
+    await client.disconnect()
+    cancel()
+
+
+async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available_macos(
+    hass, enable_bluetooth, macos_adapter
+):
+    """Test we switch to the next available proxy when one runs out of connections on MacOS."""
+    manager = _get_manager()
+
+    switchbot_proxy_device_no_connection_slot = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand_no_connection_slot",
+        {
+            "connector": HaBluetoothConnector(
+                MockBleakClient, "mock_bleak_client", lambda: False
+            ),
+            "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
+        },
+        rssi=-30,
+    )
+    switchbot_proxy_device_no_connection_slot.metadata["delegate"] = 0
+
+    switchbot_proxy_device_has_connection_slot = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand_has_connection_slot",
+        {
+            "connector": HaBluetoothConnector(
+                MockBleakClient, "mock_bleak_client", lambda: True
+            ),
+            "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
+        },
+        rssi=-40,
+    )
+    switchbot_proxy_device_has_connection_slot.metadata["delegate"] = 0
+
+    switchbot_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device.metadata["delegate"] = 0
+    switchbot_adv = AdvertisementData(
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+    )
+
+    inject_advertisement_with_source(
+        hass, switchbot_device, switchbot_adv, "00:00:00:00:00:01"
+    )
+    inject_advertisement_with_source(
+        hass,
+        switchbot_proxy_device_has_connection_slot,
+        switchbot_adv,
+        "esp32_has_connection_slot",
+    )
+    inject_advertisement_with_source(
+        hass,
+        switchbot_proxy_device_no_connection_slot,
+        switchbot_adv,
+        "esp32_no_connection_slot",
+    )
+
+    class FakeScanner(BaseHaScanner):
+        @property
+        def discovered_devices(self) -> list[BLEDevice]:
+            """Return a list of discovered devices."""
+            return [switchbot_proxy_device_has_connection_slot]
+
+        async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+            """Return a list of discovered devices."""
+            if address == switchbot_proxy_device_has_connection_slot.address:
+                return switchbot_proxy_device_has_connection_slot
+            return None
+
+    scanner = FakeScanner()
+    cancel = manager.async_register_scanner(scanner, True)
+    assert manager.async_discovered_devices(True) == [
+        switchbot_proxy_device_no_connection_slot
+    ]
+
+    client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
+    with patch("bleak.backends.corebluetooth.client.BleakClientCoreBluetooth.connect"):
         await client.connect()
     assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
