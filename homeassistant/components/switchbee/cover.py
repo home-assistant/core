@@ -181,7 +181,7 @@ class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
             await self.coordinator.api.set_state(self._device.id, command)
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
-                f"Failed to fire {command} for {self._attr_name}, {str(exp)}"
+                f"Failed to fire {command} for {self.name}, {str(exp)}"
             ) from exp
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
