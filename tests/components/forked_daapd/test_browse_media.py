@@ -1,5 +1,6 @@
 """Media browsing tests for the forked_daapd media player platform."""
 
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components import media_source
@@ -178,14 +179,14 @@ async def test_async_browse_image(hass, hass_client, config_entry):
         client = await hass_client()
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
         mock_api.return_value.get_albums.return_value = [
-            {"id": "8009851123233197743", "artwork_url": "some_image"},
+            {"id": "8009851123233197743", "artwork_url": "some_album_image"},
         ]
         mock_api.return_value.get_artists.return_value = [
-            {"id": "3815427709949443149", "artwork_url": "some_image"},
+            {"id": "3815427709949443149", "artwork_url": "some_artist_image"},
         ]
         mock_api.return_value.get_track.return_value = {
             "id": 456,
-            "artwork_url": "some_image",
+            "artwork_url": "some_track_image",
         }
         media_content_id = create_media_content_id(
             "title", media_type=MediaType.ALBUM, id_or_path="8009851123233197743"
@@ -206,5 +207,33 @@ async def test_async_browse_image(hass, hass_client, config_entry):
                 resp = await client.get(
                     f"/api/media_player_proxy/{TEST_MASTER_ENTITY_NAME}/browse_media/{media_type}/{media_content_id}"
                 )
+                assert (
+                    mock_fetch_image.call_args[0][2]
+                    == f"http://owntone_instance/some_{media_type}_image"
+                )
+                assert resp.status == HTTPStatus.OK
                 assert resp.content_type == media_type
                 assert await resp.read() == b"image_bytes"
+
+
+async def test_async_browse_image_missing(hass, hass_client, config_entry, caplog):
+    """Test browse media images with no image available."""
+
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        config_entry.add_to_hass(hass)
+        await config_entry.async_setup(hass)
+        await hass.async_block_till_done()
+        client = await hass_client()
+        mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
+        mock_api.return_value.get_track.return_value = {}
+
+        media_content_id = create_media_content_id(
+            "title", media_type=MediaType.TRACK, id_or_path="456"
+        )
+        resp = await client.get(
+            f"/api/media_player_proxy/{TEST_MASTER_ENTITY_NAME}/browse_media/{MediaType.TRACK}/{media_content_id}"
+        )
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.forked_daapd.browse_media import create_media_content_id
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
@@ -863,4 +864,30 @@ async def test_async_play_media_enqueue(hass, mock_api_object):
     )
     mock_api_object.add_to_queue.assert_called_with(
         uris="http://example.com/next.mp3", playback="start", position=1
+    )
+
+
+async def test_play_owntone_media(hass, mock_api_object):
+    """Test async play media with an owntone source."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: create_media_content_id(
+                "some song", "owntone:track:456"
+            ),
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="owntone:track:456",
+        playback="start",
+        position=0,
+        playback_from_position=0,
     )
