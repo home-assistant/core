@@ -70,14 +70,14 @@ SENSOR_DESCRIPTIONS = {
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Heat Index",
+        name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=TEMP_FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
-        name="Wind Speed",
+        name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
@@ -136,6 +136,7 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
+    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
@@ -148,10 +149,9 @@ class LaCrosseViewSensor(
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.sensor_id}-{description.key}"
-        self._attr_name = f"{sensor.location.name} {description.name}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
-            "name": sensor.name.split(" ")[0],
+            "name": sensor.name,
             "manufacturer": "LaCrosse Technology",
             "model": sensor.model,
             "via_device": (DOMAIN, sensor.location.id),

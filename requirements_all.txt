@@ -150,7 +150,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2022.09.2
+aioecowitt==2022.09.3
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -193,7 +193,7 @@ aiokafka==0.7.2
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.8.4
+aiolifx==0.8.5
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -817,7 +817,7 @@ guppy3==3.1.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-ha-av==10.0.0b4
+ha-av==10.0.0b5
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
@@ -1309,7 +1309,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.18.7
+plugwise==0.21.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
