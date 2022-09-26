@@ -119,7 +119,7 @@ class TransmissionSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = entity_description
         self._tm_client = tm_client
-        self._state = None
+        self._state: Any | None = None
         self._attr_unique_id = (
             f"{tm_client.config_entry.entry_id}-{entity_description.key}"
         )
