@@ -4,6 +4,9 @@ To update, run python3 -m script.hassfest
 """
 
 MQTT = {
+    "dsmr_reader": [
+        "dsmr/#",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],
