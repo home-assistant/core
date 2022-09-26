@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
-from . import websocket_api
 from .const import DOMAIN
 from .data import async_get_manager
 
@@ -22,6 +21,10 @@ async def is_configured(hass: HomeAssistant) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Energy."""
+    # Local import to allow energy to be used as an after dependency
+    # pylint: disable-next=import-outside-toplevel
+    from . import websocket_api
+
     websocket_api.async_setup(hass)
     frontend.async_register_built_in_panel(hass, DOMAIN, DOMAIN, "mdi:lightning-bolt")
 
