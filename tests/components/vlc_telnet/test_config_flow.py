@@ -15,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-# mypy: allow-untyped-calls
-
 
 @pytest.mark.parametrize(
     "input_data, entry_data",
@@ -139,7 +137,7 @@ async def test_errors(
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test successful reauth flow."""
-    entry_data = {
+    entry_data: dict[str, Any] = {
         "password": "old-password",
         "host": "1.1.1.1",
         "port": 8888,
