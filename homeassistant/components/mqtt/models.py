@@ -6,6 +6,7 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
+import logging
 from typing import TYPE_CHECKING, Any, TypedDict, Union
 
 import attr
@@ -23,6 +24,8 @@ if TYPE_CHECKING:
     from .device_trigger import Trigger
 
 _SENTINEL = object()
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
 
@@ -138,6 +141,11 @@ class MqttCommandTemplate:
 
         if variables is not None:
             values.update(variables)
+        _LOGGER.debug(
+            "Rendering outgoing payload with variables %s and %s",
+            values,
+            self._command_template,
+        )
         return _convert_outgoing_payload(
             self._command_template.async_render(values, parse_result=False)
         )
@@ -196,10 +204,23 @@ class MqttValueTemplate:
             values[ATTR_THIS] = self._template_state
 
         if default == _SENTINEL:
+            _LOGGER.debug(
+                "Rendering incoming payload '%s' with variables %s and %s",
+                payload,
+                values,
+                self._value_template,
+            )
             return self._value_template.async_render_with_possible_json_value(
                 payload, variables=values
             )
 
+        _LOGGER.debug(
+            "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
+            payload,
+            values,
+            default,
+            self._value_template,
+        )
         return self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )

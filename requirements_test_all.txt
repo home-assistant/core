@@ -1761,7 +1761,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
-xknx==1.0.2
+xknx==1.1.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
