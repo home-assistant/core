@@ -366,6 +366,7 @@ class InovelliRemoteProtection(
 
     _zcl_attribute: str = "remote_protection"
     _attr_name: str = "Remote protection"
+    _attr_entity_registry_enabled_default = False
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
