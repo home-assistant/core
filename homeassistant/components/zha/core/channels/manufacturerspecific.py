@@ -229,7 +229,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         This command is used to issue an LED effect to all LEDs on the device.
         """
 
-        await self.led_effect(effect_type, color, level, duration)
+        await self.led_effect(effect_type, color, level, duration, expect_reply=False)
 
     async def issue_individual_led_effect(
         self,
@@ -246,7 +246,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         """
 
         await self.individual_led_effect(
-            led_number, effect_type, color, level, duration
+            led_number, effect_type, color, level, duration, expect_reply=False
         )
 
 
