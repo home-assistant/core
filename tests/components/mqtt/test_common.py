@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
@@ -47,6 +48,8 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 }
 
 _SENTINEL = object()
+
+DISCOVERY_COUNT = len(MQTT)
 
 
 async def help_test_availability_when_connection_lost(
@@ -1083,7 +1086,7 @@ async def help_test_entity_id_update_subscriptions(
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert mqtt_mock.async_subscribe.call_count == len(topics) + 3
+    assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
