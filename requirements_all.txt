@@ -540,7 +540,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.13.0
+dbus-fast==1.14.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1436,7 +1436,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.2.4
+pyatmo==7.0.1
 
 # homeassistant.components.atome
 pyatome==0.1.1
