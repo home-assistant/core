@@ -11,12 +11,9 @@ from pylontech import PylontechStack
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-
-# from typing_extensions import Self
-
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -66,28 +63,24 @@ class PylontechCoordinator(DataUpdateCoordinator):
                 self._last_result = self._stack.update()
             except ValueError:
                 print("Pylontech retry update, ValueError")
+                self._last_result = None
             except Exception as exc:  # pylint: disable=broad-except
                 print("Pylontech retry update, Exception ", exc)
+                self._last_result = None
             retry = retry + 1
 
     async def _async_update_data(self) -> (Any | None):
         """Fetch data from Battery."""
-        self.last_update_success = True
-        # try:
-        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-        # handled by the data update coordinator.
+
         async with async_timeout.timeout(45):
             await self.hass.async_add_executor_job(self.update)
-            return self._stack.pylonData
-        # except TypeError as err:
-        #    print('TypeError')
-        # except:
-        #    e = sys.exc_info()[0]
-        #    print( "Error: %s" % e )
-        #    print('ignore exception')
-        # raise UpdateFailed(f"Error communicating with API.")
 
-        # self._lastResult = await self._stack.update()
+        if self._last_result is not None:
+            self.last_update_success = True
+            return self._stack.pylonData
+
+        self.last_update_success = False
+        raise UpdateFailed("Error communicating with API.")
 
     def get_result(self):
         """Return result dict from last poll."""
