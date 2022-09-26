@@ -63,6 +63,7 @@ from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
     TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import CONF_STATE_CLASS  # noqa: F401
@@ -219,6 +220,7 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLUME: VolumeConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
@@ -229,6 +231,7 @@ UNIT_RATIOS: dict[str, dict[str, float]] = {
         TEMP_FAHRENHEIT: 1.8,
         TEMP_KELVIN: 1.0,
     },
+    SensorDeviceClass.VOLUME: VolumeConverter.UNIT_CONVERSION,
 }
 
 # mypy: disallow-any-generics
