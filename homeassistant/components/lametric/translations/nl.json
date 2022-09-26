@@ -11,6 +11,11 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "choice_enter_manual_or_fetch_cloud": {
+                "menu_options": {
+                    "manual_entry": "Handmatig invoeren"
+                }
+            },
             "manual_entry": {
                 "data": {
                     "api_key": "API-sleutel",

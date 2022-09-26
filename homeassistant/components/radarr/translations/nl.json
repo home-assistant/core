@@ -1,25 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al geconfigureerd",
+            "already_configured": "Dienst is al geconfigureerd",
             "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
-            "cannot_connect": "Verbindingsfout",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "reauth_confirm": {
-                "data": {
-                    "password": "Wachtwoord"
-                },
                 "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {
-                    "email": "Email",
-                    "password": "Wachtwoord"
+                    "api_key": "API-sleutel",
+                    "url": "URL",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }
         }
