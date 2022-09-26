@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
-    """Representation of an SwitchBee cover."""
+    """Representation of a SwitchBee cover."""
 
     def __init__(
         self,
