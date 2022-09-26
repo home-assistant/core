@@ -74,7 +74,7 @@ def washer_state(washer: WasherDryer) -> str | None:
     machine_state = washer.get_machine_state()
     machine_cycle = None
     for count, func in zip(range(len(cycle_func)), cycle_func):
-        if func(washer):
+        if func():
             machine_cycle = WASHER_STATE.get(count)
             break
 
