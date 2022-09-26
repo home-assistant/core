@@ -251,17 +251,15 @@ async def async_get_config_flows(
     return flows
 
 
-async def async_get_config_flows_v2(
+async def async_get_integration_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, Any]:
-    """Return cached list of config flows."""
-    for base in generated.__path__:
-        config_flow_path = pathlib.Path(base) / "config_flows_v2.json"
+    """Return cached list of integrations."""
+    base = generated.__path__[0]
+    config_flow_path = pathlib.Path(base) / "integrations.json"
 
-        if not config_flow_path.is_file():
-            continue
-
-    core_flows: dict[str, Any] = json_loads(config_flow_path.read_text())
+    flow = await hass.async_add_executor_job(config_flow_path.read_text)
+    core_flows: dict[str, Any] = json_loads(flow)
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},

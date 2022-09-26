@@ -25,7 +25,6 @@ from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
     async_get_config_flows,
-    async_get_config_flows_v2,
     async_get_integration,
 )
 
@@ -48,7 +47,6 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
-    websocket_api.async_register_command(hass, list_config_flows)
 
     return True
 
@@ -390,16 +388,6 @@ async def ignore_config_flow(hass, connection, msg):
         data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command({"type": "config_entries/list_flows"})
-@websocket_api.async_response
-async def list_config_flows(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-):
-    """Ignore a config flow."""
-    connection.send_result(msg["id"], await async_get_config_flows_v2(hass))
 
 
 @websocket_api.websocket_command(
