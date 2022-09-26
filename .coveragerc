@@ -574,6 +574,7 @@ omit =
     homeassistant/components/intellifire/climate.py
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/entity.py
+    homeassistant/components/intellifire/fan.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
     homeassistant/components/intesishome/*
