@@ -62,6 +62,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DistanceConverter,
     PressureConverter,
+    SpeedConverter,
     TemperatureConverter,
 )
 
@@ -218,12 +219,14 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter.UNIT_CONVERSION,
     SensorDeviceClass.PRESSURE: PressureConverter.UNIT_CONVERSION,
+    SensorDeviceClass.SPEED: SpeedConverter.UNIT_CONVERSION,
     SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: 1.0,
         TEMP_FAHRENHEIT: 1.8,
