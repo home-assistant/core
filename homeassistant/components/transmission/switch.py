@@ -1,10 +1,12 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 from typing import Any
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import transmissionrpc
 

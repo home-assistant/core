@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass
 from typing import Any
 
 from transmission_rpc.torrent import Torrent
