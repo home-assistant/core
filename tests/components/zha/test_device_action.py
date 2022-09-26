@@ -313,7 +313,7 @@ async def test_action(hass, device_ias, device_inovelli):
             41,
             10,
             5,
-            expect_reply=True,
+            expect_reply=False,
             manufacturer=4151,
             tries=1,
             tsn=None,
