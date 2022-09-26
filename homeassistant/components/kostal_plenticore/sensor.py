@@ -797,4 +797,4 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
 
         raw_value = self.coordinator.data[self.module_id][self.data_id]
 
-        return self._formatter(raw_value) if self._formatter else raw_value
+        return self._formatter(raw_value)
