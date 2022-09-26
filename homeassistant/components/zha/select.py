@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_IAS_WD,
+    CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -285,3 +286,40 @@ class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
 
     _select_attr = "window_covering_mode"
     _enum = AqaraE1ReverseDirection
+
+
+class InovelliOutputMode(types.enum1):
+    """Inovelli output mode."""
+
+    Dimmer = 0x00
+    OnOff = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliOutputModeEntity(ZCLEnumSelectEntity, id_suffix="output_mode"):
+    """Inovelli output mode control."""
+
+    _select_attr = "output_mode"
+    _enum = InovelliOutputMode
+    _attr_name: str = "Output mode"
+
+
+class InovelliSwitchType(types.enum8):
+    """Inovelli output mode."""
+
+    Load_Only = 0x00
+    Double_Control = 0x01
+    AUX = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
+    """Inovelli switch type control."""
+
+    _select_attr = "switch_type"
+    _enum = InovelliSwitchType
+    _attr_name: str = "Switch type"

@@ -95,6 +95,7 @@ CHANNEL_TEMPERATURE = "temperature"
 CHANNEL_THERMOSTAT = "thermostat"
 CHANNEL_ZDO = "zdo"
 CHANNEL_ZONE = ZONE = "ias_zone"
+CHANNEL_INOVELLI = "inovelli_vzm31sn_cluster"
 
 CLUSTER_COMMAND_SERVER = "server"
 CLUSTER_COMMANDS_CLIENT = "client_commands"
