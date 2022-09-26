@@ -1039,7 +1039,10 @@ class ConfigEntries:
             raise UnknownEntry
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
-            raise OperationNotAllowed
+            raise OperationNotAllowed(
+                f"The config entry {entry.title} ({entry.domain}) with entry_id {entry.entry_id}"
+                f" cannot be setup because is already loaded in the {entry.state} state"
+            )
 
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
@@ -1061,7 +1064,10 @@ class ConfigEntries:
             raise UnknownEntry
 
         if not entry.state.recoverable:
-            raise OperationNotAllowed
+            raise OperationNotAllowed(
+                f"The config entry {entry.title} ({entry.domain}) with entry_id "
+                f"{entry.entry_id} cannot be unloaded because it is not in a recoverable state ({entry.state})"
+            )
 
         return await entry.async_unload(self.hass)
 

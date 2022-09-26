@@ -54,6 +54,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
                         DeviceType.TimedSwitch,
                         DeviceType.GroupSwitch,
                         DeviceType.TimedPowerSwitch,
+                        DeviceType.Scenario,
                     ]
                 )
             except SwitchBeeError as exp:

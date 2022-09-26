@@ -322,7 +322,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         )
                     )
 
-                if flow.get("entity_energy_from") is not None and (
+                if (
                     flow.get("entity_energy_price") is not None
                     or flow.get("number_energy_price") is not None
                 ):
@@ -330,7 +330,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         functools.partial(
                             _async_validate_auto_generated_cost_entity,
                             hass,
-                            flow["entity_energy_from"],
+                            flow["stat_energy_from"],
                             source_result,
                         )
                     )
@@ -373,7 +373,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         )
                     )
 
-                if flow.get("entity_energy_to") is not None and (
+                if (
                     flow.get("entity_energy_price") is not None
                     or flow.get("number_energy_price") is not None
                 ):
@@ -381,7 +381,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         functools.partial(
                             _async_validate_auto_generated_cost_entity,
                             hass,
-                            flow["entity_energy_to"],
+                            flow["stat_energy_to"],
                             source_result,
                         )
                     )
@@ -424,7 +424,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-            if source.get("entity_energy_from") is not None and (
+            if (
                 source.get("entity_energy_price") is not None
                 or source.get("number_energy_price") is not None
             ):
@@ -432,7 +432,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     functools.partial(
                         _async_validate_auto_generated_cost_entity,
                         hass,
-                        source["entity_energy_from"],
+                        source["stat_energy_from"],
                         source_result,
                     )
                 )

@@ -60,7 +60,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Homekit numbers."""
     hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:

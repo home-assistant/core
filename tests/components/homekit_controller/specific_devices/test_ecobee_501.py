@@ -1,7 +1,7 @@
 """Tests for Ecobee 501."""
 
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import STATE_ON
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,

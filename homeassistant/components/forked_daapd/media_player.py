@@ -12,7 +12,10 @@ from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerState,
     MediaType,
@@ -349,11 +352,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @callback
     def _update_queue(self, queue, event):
         self._queue = queue
-        if (
-            self._tts_requested
-            and self._queue["count"] == 1
-            and self._queue["items"][0]["uri"].find("tts_proxy") != -1
-        ):
+        if self._tts_requested:
+            # Assume the change was due to the request
             self._tts_requested = False
             self._tts_queued = True
 
@@ -669,10 +669,48 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
         if media_type == MediaType.MUSIC:
             media_id = async_process_play_media_url(self.hass, media_id)
+        elif media_type not in CAN_PLAY_TYPE:
+            _LOGGER.warning("Media type '%s' not supported", media_type)
+            return
 
-            await self._async_announce(media_id)
-        else:
-            _LOGGER.debug("Media type '%s' not supported", media_type)
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            return await self._async_announce(media_id)
+
+        # if kwargs[ATTR_MEDIA_ENQUEUE] is None, we assume MediaPlayerEnqueue.REPLACE
+        # if kwargs[ATTR_MEDIA_ENQUEUE] is True, we assume MediaPlayerEnqueue.ADD
+        # kwargs[ATTR_MEDIA_ENQUEUE] is assumed to never be False
+        # See https://github.com/home-assistant/architecture/issues/765
+        enqueue: bool | MediaPlayerEnqueue = kwargs.get(
+            ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
+        )
+        if enqueue in {True, MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
+            return await self._api.add_to_queue(
+                uris=media_id,
+                playback="start",
+                clear=enqueue == MediaPlayerEnqueue.REPLACE,
+            )
+
+        current_position = next(
+            (
+                item["position"]
+                for item in self._queue["items"]
+                if item["id"] == self._player["item_id"]
+            ),
+            0,
+        )
+        if enqueue == MediaPlayerEnqueue.NEXT:
+            return await self._api.add_to_queue(
+                uris=media_id,
+                playback="start",
+                position=current_position + 1,
+            )
+        # enqueue == MediaPlayerEnqueue.PLAY
+        return await self._api.add_to_queue(
+            uris=media_id,
+            playback="start",
+            position=current_position,
+            playback_from_position=current_position,
+        )
 
     async def _async_announce(self, media_id: str) -> None:
         """Play a URI."""
