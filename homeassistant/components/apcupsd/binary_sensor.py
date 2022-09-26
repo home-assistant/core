@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, VALUE_ONLINE, APCUPSdData
@@ -50,24 +49,18 @@ class OnlineStatus(BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the APCUPSd binary device."""
+        # Set up unique id and device info if serial number is available.
         if (serial_no := data_service.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
+            self._attr_device_info = {
+                "identifiers": {(DOMAIN, serial_no)},
+                "model": data_service.model,
+                "manufacturer": "APC",
+                "hw_version": data_service.hw_version,
+                "sw_version": data_service.sw_version,
+            }
         self.entity_description = description
         self._data_service = data_service
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info of the sensor."""
-        if self._data_service.model is None:
-            return None
-
-        return {
-            "identifiers": {(DOMAIN, self._data_service.model)},
-            "model": self._data_service.model,
-            "manufacturer": "APC",
-            "hw_version": self._data_service.hw_version,
-            "sw_version": self._data_service.sw_version,
-        }
 
     def update(self) -> None:
         """Get the status report from APCUPSd and set this entity's state."""
