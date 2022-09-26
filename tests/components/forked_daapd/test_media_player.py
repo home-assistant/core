@@ -886,7 +886,7 @@ async def test_play_owntone_media(hass, mock_api_object):
     assert state.state == initial_state.state
     assert state.last_updated > initial_state.last_updated
     mock_api_object.add_to_queue.assert_called_with(
-        uris="owntone:track:456",
+        uris="library:track:456",
         playback="start",
         position=0,
         playback_from_position=0,
