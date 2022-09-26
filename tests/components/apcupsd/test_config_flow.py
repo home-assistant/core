@@ -183,23 +183,3 @@ async def test_flow_import(hass: HomeAssistant) -> None:
         assert result["data"] == CONF_DATA | {CONF_RESOURCES: resources}
 
         mock_setup.assert_called_once()
-
-
-async def test_flow_import_with_invalid_resource(hass: HomeAssistant) -> None:
-    """Test successful creation of config entries via YAML with invalid resources."""
-    with patch("apcaccess.status.parse", return_value=MOCK_STATUS), patch(
-        "apcaccess.status.get", return_value=b""
-    ), _patch_setup() as mock_setup:
-        # Give an unavailable but valid resource "REG1" to options, HA should simply
-        # ignore this resource during import and not crash.
-        resources = ["MODEL", "REG1"]
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_DATA | {CONF_RESOURCES: resources},
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_RESOURCES] == resources
-
-        mock_setup.assert_called_once()
