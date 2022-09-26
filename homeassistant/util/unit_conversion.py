@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from numbers import Number
 
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
@@ -79,21 +78,6 @@ class BaseUnitConverter:
     VALID_UNITS: tuple[str, ...]
 
     @classmethod
-    def _check_arguments(cls, value: float, from_unit: str, to_unit: str) -> None:
-        """Check that arguments are all valid."""
-        if from_unit not in cls.VALID_UNITS:
-            raise ValueError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-            )
-        if to_unit not in cls.VALID_UNITS:
-            raise ValueError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            )
-
-        if not isinstance(value, Number):
-            raise TypeError(f"{value} is not of numeric type")
-
-    @classmethod
     @abstractmethod
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
@@ -107,13 +91,25 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     @classmethod
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
-        cls._check_arguments(value, from_unit, to_unit)
-
         if from_unit == to_unit:
             return value
 
-        new_value = value / cls.UNIT_CONVERSION[from_unit]
-        return new_value * cls.UNIT_CONVERSION[to_unit]
+        try:
+            from_ratio = cls.UNIT_CONVERSION[from_unit]
+        except KeyError as err:
+            raise ValueError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
+            ) from err
+
+        try:
+            to_ratio = cls.UNIT_CONVERSION[to_unit]
+        except KeyError as err:
+            raise ValueError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            ) from err
+
+        new_value = value / from_ratio
+        return new_value * to_ratio
 
 
 class DistanceConverter(BaseUnitConverterWithUnitConversion):
@@ -247,32 +243,40 @@ class TemperatureConverter(BaseUnitConverter):
         cls, value: float, from_unit: str, to_unit: str, *, interval: bool = False
     ) -> float:
         """Convert a temperature from one unit to another."""
-        cls._check_arguments(value, from_unit, to_unit)
-
         if from_unit == to_unit:
             return value
 
         if from_unit == TEMP_CELSIUS:
             if to_unit == TEMP_FAHRENHEIT:
                 return cls.celsius_to_fahrenheit(value, interval)
-            # kelvin
-            return cls.celsius_to_kelvin(value, interval)
+            if to_unit == TEMP_KELVIN:
+                return cls.celsius_to_kelvin(value, interval)
+            raise ValueError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            )
 
         if from_unit == TEMP_FAHRENHEIT:
             if to_unit == TEMP_CELSIUS:
                 return cls.fahrenheit_to_celsius(value, interval)
-            # kelvin
-            return cls.celsius_to_kelvin(
-                cls.fahrenheit_to_celsius(value, interval), interval
+            if to_unit == TEMP_KELVIN:
+                return cls.celsius_to_kelvin(
+                    cls.fahrenheit_to_celsius(value, interval), interval
+                )
+            raise ValueError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
-        # from_unit == kelvin
-        if to_unit == TEMP_CELSIUS:
-            return cls.kelvin_to_celsius(value, interval)
-        # fahrenheit
-        return cls.celsius_to_fahrenheit(
-            cls.kelvin_to_celsius(value, interval), interval
-        )
+        if from_unit == TEMP_KELVIN:
+            if to_unit == TEMP_CELSIUS:
+                return cls.kelvin_to_celsius(value, interval)
+            if to_unit == TEMP_FAHRENHEIT:
+                return cls.celsius_to_fahrenheit(
+                    cls.kelvin_to_celsius(value, interval), interval
+                )
+            raise ValueError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            )
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS))
 
     @classmethod
     def fahrenheit_to_celsius(cls, fahrenheit: float, interval: bool = False) -> float:
