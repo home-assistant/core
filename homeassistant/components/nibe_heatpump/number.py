@@ -29,7 +29,7 @@ async def async_setup_entry(
 
 
 def _get_numeric_limits(size: str):
-    """Calculate the integer limits of a unsigned or unsigned integer value."""
+    """Calculate the integer limits of a signed or unsigned integer value."""
     if size[0] == "u":
         return (0, pow(2, int(size[1:])) - 1)
     if size[0] == "s":
