@@ -12,6 +12,8 @@ from homeassistant.const import (
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    MASS_GRAMS,
+    MASS_OUNCES,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_KPA,
@@ -493,6 +495,31 @@ async def test_custom_unit(
             1000,
             1000,
             SensorDeviceClass.DISTANCE,
+        ),
+        # Mass
+        (
+            MASS_GRAMS,
+            MASS_OUNCES,
+            MASS_OUNCES,
+            100,
+            3.5,
+            SensorDeviceClass.MASS,
+        ),
+        (
+            MASS_OUNCES,
+            MASS_GRAMS,
+            MASS_GRAMS,
+            78,
+            2211,
+            SensorDeviceClass.MASS,
+        ),
+        (
+            MASS_GRAMS,
+            "peer_distance",
+            MASS_GRAMS,
+            100,
+            100,
+            SensorDeviceClass.MASS,
         ),
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
