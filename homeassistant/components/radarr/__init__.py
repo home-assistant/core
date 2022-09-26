@@ -31,7 +31,7 @@ from .coordinator import (
     StatusDataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -75,10 +75,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
     coordinators: dict[str, RadarrDataUpdateCoordinator] = {
-        "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
         "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
         "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
+        "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
@@ -104,12 +104,15 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: RadarrDataUpdateCoordinator,
-        description: EntityDescription,
+        description: EntityDescription | None = None,
+        name: str | None = None,
     ) -> None:
         """Create Radarr entity."""
         super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        if description:
+            self.entity_description = description
+        name = description.key if description else name
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{name}"
 
     @property
     def device_info(self) -> DeviceInfo:

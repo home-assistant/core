@@ -1,6 +1,8 @@
 """The tests for Radarr sensor platform."""
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -10,6 +12,7 @@ from . import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -29,6 +32,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_windows(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test for successfully setting up the Radarr platform on Windows."""
     await setup_integration(hass, aioclient_mock, windows=True)

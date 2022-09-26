@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aiopyarr import ArrException
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
@@ -162,6 +163,7 @@ async def test_zero_conf(hass: HomeAssistant) -> None:
     assert result["data"] == CONF_DATA
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_full_reauth_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
