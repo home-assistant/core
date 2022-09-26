@@ -13,8 +13,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
@@ -335,7 +333,10 @@ async def ws_adjust_sum_statistics(
             ENERGY_WATT_HOUR,
         ):
             return True
-        if statistics_unit == VOLUME_CUBIC_METERS and display_unit == VOLUME_CUBIC_FEET:
+        if (
+            statistics_unit == VolumeConverter.NORMALIZED_UNIT
+            and display_unit in VolumeConverter.VALID_UNITS
+        ):
             return True
         return False
 
