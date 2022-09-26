@@ -13,7 +13,7 @@ ORIGINAL_BLEAK_CLIENT = bleak.BleakClient
 def install_multiple_bleak_catcher() -> None:
     """Wrap the bleak classes to return the shared instance if multiple instances are detected."""
     bleak.BleakScanner = HaBleakScannerWrapper  # type: ignore[misc, assignment]
-    bleak.BleakClient = HaBleakClientWrapper  # type: ignore[misc, assignment]
+    bleak.BleakClient = HaBleakClientWrapper  # type: ignore[misc]
 
 
 def uninstall_multiple_bleak_catcher() -> None:
