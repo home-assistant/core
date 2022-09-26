@@ -53,7 +53,7 @@ class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
     ) -> None:
         """Initialize the SwitchBee cover."""
         super().__init__(device, coordinator)
-        self._attr_current_cover_position: int = 0
+        self._attr_current_cover_position = 0
         self._attr_is_closed = True
         self._is_online = True
 
