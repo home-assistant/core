@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
             "unsupported_firmware": "The device is using an unsupported firmware version."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
             },
             "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
