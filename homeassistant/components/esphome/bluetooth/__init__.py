@@ -41,7 +41,13 @@ from .characteristic import BleakGATTCharacteristicESPHome
 from .descriptor import BleakGATTDescriptorESPHome
 from .service import BleakGATTServiceESPHome
 
-ADV_STALE_TIME = 180  # seconds
+# We have to set this quite high as we don't know
+# when devices fall out of the esphome device's stack
+# like we do with BlueZ so its safer to assume its available
+# since if it does go out of range and it is in range
+# of another device the timeout is much shorter and it will
+# switch over to using that adapter anyways.
+ADV_STALE_TIME = 60 * 15  # seconds
 
 TWO_CHAR = re.compile("..")
 DEFAULT_MTU = 23
