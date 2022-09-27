@@ -23,7 +23,7 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
@@ -126,7 +126,7 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
             },
         ]
 
-        # Request playlist through WebSocket
+        # Request browse root through WebSocket
         client = await hass_ws_client(hass)
         await client.send_json(
             {
@@ -148,7 +148,6 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
             nonlocal msg_id
             for child in children:
                 if child["can_expand"]:
-                    print("EXPANDING CHILD", child)
                     await client.send_json(
                         {
                             "id": msg_id,
@@ -177,7 +176,7 @@ async def test_async_browse_media_not_found(hass, hass_ws_client, config_entry):
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         mock_api.return_value.get_directory.return_value = None
@@ -186,7 +185,7 @@ async def test_async_browse_media_not_found(hass, hass_ws_client, config_entry):
         mock_api.return_value.get_genres.return_value = None
         mock_api.return_value.get_playlists.return_value = None
 
-        # Request playlist through WebSocket
+        # Request different types of media through WebSocket
         client = await hass_ws_client(hass)
         msg_id = 1
         for media_type in (
@@ -229,7 +228,7 @@ async def test_async_browse_image(hass, hass_client, config_entry):
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         client = await hass_client()
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
@@ -279,7 +278,7 @@ async def test_async_browse_image_missing(hass, hass_client, config_entry, caplo
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         client = await hass_client()
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
