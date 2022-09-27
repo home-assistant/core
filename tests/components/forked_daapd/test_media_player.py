@@ -891,3 +891,27 @@ async def test_play_owntone_media(hass, mock_api_object):
         position=0,
         playback_from_position=0,
     )
+
+
+async def test_play_spotify_media(hass, mock_api_object):
+    """Test async play media with a spotify source."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: "spotify://track",
+            ATTR_MEDIA_CONTENT_ID: "spotify://open.spotify.com/spotify:track:abcdefghi",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="spotify:track:abcdefghi",
+        playback="start",
+        position=0,
+        playback_from_position=0,
+    )
