@@ -1270,9 +1270,11 @@
       "name": "Google",
       "integrations": {
         "google": {
+          "config_flow": true,
           "name": "Google Calendars"
         },
         "google_sheets": {
+          "config_flow": true,
           "name": "Google Sheets"
         }
       }

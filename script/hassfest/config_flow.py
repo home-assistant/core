@@ -104,9 +104,7 @@ def _populate_brand_integrations(
         if not integration:
             continue
         metadata = {}
-        metadata["name"] = integration.name
-        if integration.translated_name:
-            metadata["translated_name"] = True
+        metadata["config_flow"] = integration.config_flow
         if integration.translated_name:
             integration_data["translated_name"].add(domain)
         else:
