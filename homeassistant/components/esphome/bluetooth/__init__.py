@@ -40,6 +40,7 @@ def async_can_connect(source: str) -> bool:
         entry_data.available,
         entry_data.ble_connections_free,
     )
+    return True
     return bool(entry_data.available and entry_data.ble_connections_free)
 
 
