@@ -148,7 +148,6 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
             nonlocal msg_id
             for child in children:
                 if child["can_expand"]:
-                    print("EXPANDING CHILD", child)
                     await client.send_json(
                         {
                             "id": msg_id,
