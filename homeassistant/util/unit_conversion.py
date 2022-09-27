@@ -45,6 +45,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -97,14 +98,14 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
         try:
             from_ratio = cls.UNIT_CONVERSION[from_unit]
         except KeyError as err:
-            raise ValueError(
+            raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
             ) from err
 
         try:
             to_ratio = cls.UNIT_CONVERSION[to_unit]
         except KeyError as err:
-            raise ValueError(
+            raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
@@ -251,7 +252,7 @@ class TemperatureConverter(BaseUnitConverter):
                 return cls.celsius_to_fahrenheit(value, interval)
             if to_unit == TEMP_KELVIN:
                 return cls.celsius_to_kelvin(value, interval)
-            raise ValueError(
+            raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
@@ -262,7 +263,7 @@ class TemperatureConverter(BaseUnitConverter):
                 return cls.celsius_to_kelvin(
                     cls.fahrenheit_to_celsius(value, interval), interval
                 )
-            raise ValueError(
+            raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
@@ -273,10 +274,12 @@ class TemperatureConverter(BaseUnitConverter):
                 return cls.celsius_to_fahrenheit(
                     cls.kelvin_to_celsius(value, interval), interval
                 )
-            raise ValueError(
+            raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS))
+        raise HomeAssistantError(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
+        )
 
     @classmethod
     def fahrenheit_to_celsius(cls, fahrenheit: float, interval: bool = False) -> float:
