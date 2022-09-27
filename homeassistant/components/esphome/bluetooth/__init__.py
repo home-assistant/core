@@ -116,6 +116,9 @@ class ESPHomeScanner(BaseHaScanner):
         self._source = scanner_id
         self._connector = connector
         self._connectable = connectable
+        self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
+        if connectable:
+            self._details["connector"] = connector
 
     @hass_callback
     def async_setup(self) -> CALLBACK_TYPE:
@@ -156,11 +159,10 @@ class ESPHomeScanner(BaseHaScanner):
             service_data=adv.service_data,
             service_uuids=adv.service_uuids,
         )
-        details = {"connector": self._connector} if self._connectable else {}
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=adv.name,
-            details=details,
+            details=self._details,
             rssi=adv.rssi,
         )
         self._discovered_devices[address] = device
