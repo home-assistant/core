@@ -72,11 +72,18 @@ async def test_sensor_values(
         state = hass.states.get(state_id)
         assert state is not None
         assert state.state == "3540"
-
         if mock_instance_idx == 0:
             # Test the washer cycle states
             mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
             mock_instance.get_cycle_status_filling.return_value = True
+            mock_instance.attr_value_to_bool.side_effect = [
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ]
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
@@ -84,6 +91,14 @@ async def test_sensor_values(
 
             mock_instance.get_cycle_status_filling.return_value = False
             mock_instance.get_cycle_status_rinsing.return_value = True
+            mock_instance.attr_value_to_bool.side_effect = [
+                False,
+                True,
+                False,
+                False,
+                False,
+                False,
+            ]
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
@@ -91,6 +106,14 @@ async def test_sensor_values(
 
             mock_instance.get_cycle_status_rinsing.return_value = False
             mock_instance.get_cycle_status_sensing.return_value = True
+            mock_instance.attr_value_to_bool.side_effect = [
+                False,
+                False,
+                True,
+                False,
+                False,
+                False,
+            ]
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
@@ -98,6 +121,14 @@ async def test_sensor_values(
 
             mock_instance.get_cycle_status_sensing.return_value = False
             mock_instance.get_cycle_status_soaking.return_value = True
+            mock_instance.attr_value_to_bool.side_effect = [
+                False,
+                False,
+                False,
+                True,
+                False,
+                False,
+            ]
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
@@ -105,6 +136,14 @@ async def test_sensor_values(
 
             mock_instance.get_cycle_status_soaking.return_value = False
             mock_instance.get_cycle_status_spinning.return_value = True
+            mock_instance.attr_value_to_bool.side_effect = [
+                False,
+                False,
+                False,
+                False,
+                True,
+                False,
+            ]
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
@@ -112,13 +151,21 @@ async def test_sensor_values(
 
             mock_instance.get_cycle_status_spinning.return_value = False
             mock_instance.get_cycle_status_washing.return_value = True
+            mock_instance.attr_value_to_bool.side_effect = [
+                False,
+                False,
+                False,
+                False,
+                False,
+                True,
+            ]
 
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
             assert state.state == "Cycle Washing"
 
             mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
-
+            mock_instance.attr_value_to_bool.side_effect = None
             mock_instance.get_attribute.side_effect = side_effect_function_open_door
             state = await update_sensor_state(hass, entity_id, mock_instance)
             assert state is not None
