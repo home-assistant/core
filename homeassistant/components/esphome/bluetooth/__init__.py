@@ -11,6 +11,7 @@ from typing import Any
 import uuid
 
 from aioesphomeapi import APIClient, BluetoothLEAdvertisement
+from awesomeversion import AwesomeVersion
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -46,6 +47,7 @@ TWO_CHAR = re.compile("..")
 DEFAULT_MTU = 23
 GATT_HEADER_SIZE = 3
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
+CONNECTABLE_MIN_VERSION = AwesomeVersion("2022.10.0")
 
 
 def mac_to_int(address: str) -> int:
@@ -74,7 +76,12 @@ async def async_connect_scanner(
     assert entry.unique_id is not None
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
-    connectable = True  # TODO: check for 2022.10+
+    connectable = (
+        entry_data.device_info
+        and AwesomeVersion(entry_data.device_info.esphome_version)
+        >= CONNECTABLE_MIN_VERSION
+    )
+    connectable = True  # TODO: remove this line
     connector = HaBluetoothConnector(
         client=ESPHomeClient,
         source=source,
