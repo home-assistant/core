@@ -57,9 +57,10 @@ CONF_SIGNAL_STRENGTH = "signal_strength"
 CONF_SPEED = "speed"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
+CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLTAGE = "voltage"
-CONF_VALUE = "value"
+CONF_VOLUME = "volume"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
@@ -93,6 +94,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
+    SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
 
