@@ -1,10 +1,26 @@
 """SwitchBee integration Coordinator."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Union
 
 from switchbee.api import CentralUnitAPI, SwitchBeeError
-from switchbee.device import DeviceType, SwitchBeeBaseDevice
+from switchbee.device import (
+    DeviceType,
+    SwitchBeeDimmer,
+    SwitchBeeGroupSwitch,
+    SwitchBeeRollingScenario,
+    SwitchBeeScenario,
+    SwitchBeeShutter,
+    SwitchBeeSomfy,
+    SwitchBeeSwitch,
+    SwitchBeeThermostat,
+    SwitchBeeTimedSwitch,
+    SwitchBeeTimerSwitch,
+    SwitchBeeTwoWay,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -15,7 +31,26 @@ from .const import DOMAIN, SCAN_INTERVAL_SEC
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]):
+class SwitchBeeCoordinator(
+    DataUpdateCoordinator[
+        dict[
+            int,
+            Union[
+                SwitchBeeSwitch,
+                SwitchBeeGroupSwitch,
+                SwitchBeeTimedSwitch,
+                SwitchBeeShutter,
+                SwitchBeeSomfy,
+                SwitchBeeDimmer,
+                SwitchBeeThermostat,
+                SwitchBeeScenario,
+                SwitchBeeRollingScenario,
+                SwitchBeeTimerSwitch,
+                SwitchBeeTwoWay,
+            ],
+        ]
+    ]
+):
     """Class to manage fetching Freedompro data API."""
 
     def __init__(
@@ -26,7 +61,11 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
         """Initialize."""
         self.api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
-        self.mac_formated: str = format_mac(swb_api.mac)
+
+        self.mac_formated: str | None = (
+            format_mac(self.api.mac) if isinstance(self.api.mac, str) else None
+        )
+
         super().__init__(
             hass,
             _LOGGER,
@@ -34,7 +73,24 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
             update_interval=timedelta(seconds=SCAN_INTERVAL_SEC),
         )
 
-    async def _async_update_data(self) -> dict[int, SwitchBeeBaseDevice]:
+    async def _async_update_data(
+        self,
+    ) -> dict[
+        int,
+        (
+            SwitchBeeSwitch
+            | SwitchBeeGroupSwitch
+            | SwitchBeeTimedSwitch
+            | SwitchBeeShutter
+            | SwitchBeeSomfy
+            | SwitchBeeDimmer
+            | SwitchBeeThermostat
+            | SwitchBeeScenario
+            | SwitchBeeRollingScenario
+            | SwitchBeeTimerSwitch
+            | SwitchBeeTwoWay
+        ),
+    ]:
         """Update data via library."""
 
         if self._reconnect_counts != self.api.reconnect_count:
@@ -72,4 +128,4 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
                 f"Error communicating with API: {exp}"
             ) from SwitchBeeError
 
-        return self.api.devices  # type: ignore[no-any-return]
+        return self.api.devices
