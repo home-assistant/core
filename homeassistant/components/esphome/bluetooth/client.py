@@ -163,7 +163,6 @@ class ESPHomeClient(BaseBleakClient):
     async def read_gatt_char(
         self,
         char_specifier: BleakGATTCharacteristic | int | str | uuid.UUID,
-        use_cached: bool = False,
         **kwargs: Any,
     ) -> bytearray:
         """Perform read operation on the specified GATT characteristic.
@@ -172,8 +171,6 @@ class ESPHomeClient(BaseBleakClient):
             char_specifier (BleakGATTCharacteristic, int, str or UUID): The characteristic to read from,
                 specified by either integer handle, UUID or directly by the
                 BleakGATTCharacteristic object representing it.
-            use_cached (bool): `False` forces macOS to read the value from the
-                device again and not use its own cached value. Defaults to `False`.
         Returns:
             (bytearray) The read data.
         """
@@ -182,15 +179,11 @@ class ESPHomeClient(BaseBleakClient):
             self._address_as_int, characteristic.handle
         )
 
-    async def read_gatt_descriptor(
-        self, handle: int, use_cached: bool = False, **kwargs: Any
-    ) -> bytearray:
+    async def read_gatt_descriptor(self, handle: int, **kwargs: Any) -> bytearray:
         """Perform read operation on the specified GATT descriptor.
 
         Args:
             handle (int): The handle of the descriptor to read from.
-            use_cached (bool): `False` forces Windows to read the value from the
-                device again and not use its own cached value. Defaults to `False`.
         Returns:
             (bytearray) The read data.
         """
@@ -215,9 +208,7 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_write(
-            self._address_as_int,
-            characteristic.handle,
-            data,
+            self._address_as_int, characteristic.handle, data, response
         )
 
     async def write_gatt_descriptor(
