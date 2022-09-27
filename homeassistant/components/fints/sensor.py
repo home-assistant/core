@@ -134,14 +134,10 @@ class FinTsClient:
 
     @cached_property
     def client(self) -> FinTS3PinTanClient:
-        """Get the client object.
+        """Get the FinTS client object.
 
-        As the fints library is stateless, there is not benefit in caching
-        the client objects. If that ever changes, consider caching the client
-        object and also think about potential concurrency problems.
-
-        Note: As of version 2, the fints library is not stateless anymore.
-        This should be considered when reworking this integration.
+        The FinTS library persists the current dialog with the bank
+        and stores bank capabilities. So caching the client is beneficial.
         """
 
         return FinTS3PinTanClient(
