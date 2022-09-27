@@ -273,6 +273,52 @@ async def test_async_browse_spotify(hass, hass_ws_client, config_entry):
         assert msg["success"]
 
 
+async def test_async_browse_media_source(hass, hass_ws_client, config_entry):
+    """Test browsing media_source."""
+
+    config_entry.add_to_hass(hass)
+    await config_entry.async_setup(hass)
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.media_source.async_browse_media"
+    ) as mock_media_source_browse:
+        children = [
+            BrowseMedia(
+                title="Test mp3",
+                media_class=MediaClass.MUSIC,
+                media_content_id="media-source://test_dir/test.mp3",
+                media_content_type="audio/aac",
+                can_play=False,
+                can_expand=True,
+            )
+        ]
+        mock_media_source_browse.return_value = BrowseMedia(
+            title="Audio Folder",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="media-source://audio_folder",
+            media_content_type=MediaType.APP,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": TEST_MASTER_ENTITY_NAME,
+                "media_content_type": MediaType.APP,
+                "media_content_id": "media-source://audio_folder",
+            }
+        )
+        msg = await client.receive_json()
+        # Assert WebSocket response
+        assert msg["id"] == 1
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+
+
 async def test_async_browse_image(hass, hass_client, config_entry):
     """Test browse media images."""
 
