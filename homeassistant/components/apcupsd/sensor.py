@@ -361,7 +361,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="status",
         name="UPS Status",
         icon="mdi:information-outline",
-        entity_registry_enabled_default=False,
     ),
     "stesti": SensorEntityDescription(
         key="stesti",
