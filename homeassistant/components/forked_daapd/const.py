@@ -17,6 +17,8 @@ CAN_PLAY_TYPE = {
     MediaType.ALBUM,
     MediaType.GENRE,
     MediaType.MUSIC,
+    MediaType.EPISODE,
+    "show",  # this is a spotify constant
 }
 CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
 CONF_MAX_PLAYLISTS = "max_playlists"
