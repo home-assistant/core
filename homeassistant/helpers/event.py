@@ -201,7 +201,7 @@ def async_track_state_change(
             job,
             event.data["entity_id"],
             event.data.get("old_state"),
-            event.data["new_state"],
+            event.data.get("new_state"),
         )
 
     @callback
