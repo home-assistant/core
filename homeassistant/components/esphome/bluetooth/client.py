@@ -69,7 +69,7 @@ class ESPHomeClient(BaseBleakClient):
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
-        self._notify_cancels: dict[int, Coroutine] = {}
+        self._notify_cancels: dict[int, Coroutine[Any, Any, None]] = {}
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
