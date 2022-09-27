@@ -2,7 +2,7 @@
   "domain": "matrix",
   "name": "Matrix",
   "documentation": "https://www.home-assistant.io/integrations/matrix",
-  "requirements": ["matrix-nio==0.19.0", "pillow==9.1.1"],
-  "codeowners": ["@tinloaf", "@PaarthShah"],
+  "requirements": ["matrix-nio==0.19.0", "pillow==9.2.0"],
+  "codeowners": ["@tinloaf"],
   "iot_class": "cloud_push"
 }
