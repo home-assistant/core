@@ -7,13 +7,23 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
+import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
+from . import get_feature_access
+from .const import (
+    CONF_SHEETS_ACCESS,
+    DEFAULT_ACCESS,
+    DEFAULT_NAME,
+    DOMAIN,
+    FeatureAccess,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +35,11 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
+    def __init__(self) -> None:
+        """Set up instance."""
+        super().__init__()
+        self._reauth_entry: config_entries.ConfigEntry | None = None
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -33,8 +48,12 @@ class OAuth2FlowHandler(
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
+        if self._reauth_entry:
+            scopes = get_feature_access(self._reauth_entry)
+        else:
+            scopes = DEFAULT_ACCESS
         return {
-            "scope": DEFAULT_ACCESS,
+            "scope": " ".join(scopes),
             # Add params to ensure we get back a refresh token
             "access_type": "offline",
             "prompt": "consent",
@@ -42,6 +61,9 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -98,5 +120,50 @@ class OAuth2FlowHandler(
 
         await self.async_set_unique_id(doc.id)
         return self.async_create_entry(
-            title=DEFAULT_NAME, data=data, description_placeholders={"url": doc.url}
+            title=DEFAULT_NAME,
+            data=data,
+            description_placeholders={"url": doc.url},
+            options={
+                CONF_SHEETS_ACCESS: FeatureAccess.read_only.name,
+            },
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create an options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Google Sheets options flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SHEETS_ACCESS,
+                        default=self.config_entry.options.get(CONF_SHEETS_ACCESS),
+                    ): vol.In(
+                        {
+                            FeatureAccess.read_write.name: "Read/Write access",
+                            FeatureAccess.read_only.name: "Read-only access",
+                        }
+                    )
+                }
+            ),
         )

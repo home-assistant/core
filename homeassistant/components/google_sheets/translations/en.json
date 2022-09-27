@@ -31,5 +31,14 @@
                 "title": "Reauthenticate Integration"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sheets_access": "Home Assistant access to Google Sheets"
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 """Test the Google Sheets config flow."""
 
 from collections.abc import Generator
+from types import MappingProxyType
 from unittest.mock import Mock, patch
 
 from gspread import GSpreadException
@@ -69,6 +70,7 @@ async def test_full_flow(
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "+https://www.googleapis.com/auth/spreadsheets.readonly"
         "&access_type=offline&prompt=consent"
     )
 
@@ -136,6 +138,7 @@ async def test_create_sheet_error(
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "+https://www.googleapis.com/auth/spreadsheets.readonly"
         "&access_type=offline&prompt=consent"
     )
 
@@ -166,6 +169,7 @@ async def test_create_sheet_error(
 
 async def test_reauth(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
@@ -173,16 +177,6 @@ async def test_reauth(
     mock_client,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SHEET_ID,
-        data={
-            "token": {
-                "access_token": "mock-access-token",
-            },
-        },
-    )
     config_entry.add_to_hass(hass)
 
     config_entry.async_start_reauth(hass)
@@ -205,6 +199,7 @@ async def test_reauth(
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "+https://www.googleapis.com/auth/spreadsheets.readonly"
         "&access_type=offline&prompt=consent"
     )
     client = await hass_client_no_auth()
@@ -247,6 +242,7 @@ async def test_reauth(
 
 async def test_reauth_abort(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
@@ -254,16 +250,6 @@ async def test_reauth_abort(
     mock_client,
 ) -> None:
     """Test failure case during reauth."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SHEET_ID,
-        data={
-            "token": {
-                "access_token": "mock-access-token",
-            },
-        },
-    )
     config_entry.add_to_hass(hass)
 
     config_entry.async_start_reauth(hass)
@@ -286,6 +272,7 @@ async def test_reauth_abort(
         f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "+https://www.googleapis.com/auth/spreadsheets.readonly"
         "&access_type=offline&prompt=consent"
     )
     client = await hass_client_no_auth()
@@ -312,3 +299,65 @@ async def test_reauth_abort(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") == "abort"
     assert result.get("reason") == "open_spreadsheet_failure"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    scopes: list[str],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_sheets.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        mock_setup.assert_called_once()
+
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.options == MappingProxyType({"sheets_access": "read_only"})
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"sheets_access"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"sheets_access": "read_write"},
+    )
+    assert result["type"] == "create_entry"
+    assert config_entry.options == {"sheets_access": "read_write"}
+
+
+async def test_options_flow_no_changes(
+    hass: HomeAssistant,
+    scopes: list[str],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test load and unload of a ConfigEntry."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_sheets.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        mock_setup.assert_called_once()
+
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.options == MappingProxyType({"sheets_access": "read_only"})
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"sheets_access"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"sheets_access": "read_only"},
+    )
+    assert result["type"] == "create_entry"
+    assert config_entry.options == {"sheets_access": "read_only"}

@@ -21,7 +21,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
-from .const import DATA_CONFIG_ENTRY, DEFAULT_ACCESS, DOMAIN
+from .const import CONF_SHEETS_ACCESS, DATA_CONFIG_ENTRY, DOMAIN, FeatureAccess
 
 DATA = "data"
 WORKSHEET = "worksheet"
@@ -52,24 +52,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    if not async_entry_has_scopes(hass, entry):
+    if not async_entry_has_scopes(entry):
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
 
     await async_setup_service(hass)
 
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
 
 
-def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def get_feature_access(config_entry: ConfigEntry) -> list[str]:
+    """Return the desired sheets feature access."""
+    return [
+        FeatureAccess.file.value,
+        FeatureAccess[config_entry.options[CONF_SHEETS_ACCESS]].value,
+    ]
+
+
+def async_entry_has_scopes(entry: ConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
-    return DEFAULT_ACCESS in entry.data.get(CONF_TOKEN, {}).get("scope", "").split(" ")
+    return all(
+        feature in entry.data[CONF_TOKEN]["scope"].split(" ")
+        for feature in get_feature_access(entry)
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry if the access options change."""
+    if not async_entry_has_scopes(entry):
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_service(hass: HomeAssistant) -> None:
