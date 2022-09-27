@@ -46,14 +46,16 @@ class ESPHomeClient(BaseBleakClient):
             self.domain_data.get_by_unique_id(self._source)
         ).client
         self._is_connected = False
+        self._mtu: int | None = None
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
         return f"ESPHomeClient ({self.address})"
 
-    def _on_bluetooth_connection_state(self, connected: bool) -> None:
+    def _on_bluetooth_connection_state(self, connected: bool, mtu: int) -> None:
         """Handle a connect or disconnect."""
         self._is_connected = connected
+        self._mtu = mtu
         if connected:
             return
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
@@ -96,7 +98,7 @@ class ESPHomeClient(BaseBleakClient):
     @property
     def mtu_size(self) -> int:
         """Get ATT MTU size for active connection."""
-        return DEFAULT_MTU
+        return self._mtu or DEFAULT_MTU
 
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
@@ -124,6 +126,7 @@ class ESPHomeClient(BaseBleakClient):
         esphome_services = await self._client.bluetooth_gatt_get_services(
             address_as_int
         )
+        max_write_without_response = self.mtu_size - GATT_HEADER_SIZE
         services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         for service in esphome_services.services:
             services.add_service(BleakGATTServiceESPHome(service))
@@ -131,7 +134,7 @@ class ESPHomeClient(BaseBleakClient):
                 services.add_characteristic(
                     BleakGATTCharacteristicESPHome(
                         characteristic,
-                        DEFAULT_MAX_WRITE_WITHOUT_RESPONSE,
+                        max_write_without_response,
                         service.uuid,
                         service.handle,
                     )
@@ -163,7 +166,6 @@ class ESPHomeClient(BaseBleakClient):
     async def read_gatt_char(
         self,
         char_specifier: BleakGATTCharacteristic | int | str | uuid.UUID,
-        use_cached: bool = False,
         **kwargs: Any,
     ) -> bytearray:
         """Perform read operation on the specified GATT characteristic.
@@ -172,25 +174,19 @@ class ESPHomeClient(BaseBleakClient):
             char_specifier (BleakGATTCharacteristic, int, str or UUID): The characteristic to read from,
                 specified by either integer handle, UUID or directly by the
                 BleakGATTCharacteristic object representing it.
-            use_cached (bool): `False` forces macOS to read the value from the
-                device again and not use its own cached value. Defaults to `False`.
         Returns:
             (bytearray) The read data.
         """
         characteristic = self._resolve_characteristic(char_specifier)
         return await self._client.bluetooth_gatt_read(
-            self._address_as_int, characteristic.service_uuid, characteristic.uuid
+            self._address_as_int, characteristic.handle
         )
 
-    async def read_gatt_descriptor(
-        self, handle: int, use_cached: bool = False, **kwargs: Any
-    ) -> bytearray:
+    async def read_gatt_descriptor(self, handle: int, **kwargs: Any) -> bytearray:
         """Perform read operation on the specified GATT descriptor.
 
         Args:
             handle (int): The handle of the descriptor to read from.
-            use_cached (bool): `False` forces Windows to read the value from the
-                device again and not use its own cached value. Defaults to `False`.
         Returns:
             (bytearray) The read data.
         """
@@ -215,7 +211,7 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_write(
-            self._address_as_int, characteristic.service_uuid, characteristic.uuid, data
+            self._address_as_int, characteristic.handle, data, response
         )
 
     async def write_gatt_descriptor(
@@ -253,9 +249,8 @@ class ESPHomeClient(BaseBleakClient):
         """
         await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
-            characteristic.service_uuid,
-            characteristic.uuid,
-            callback,
+            characteristic.handle,
+            lambda handle, data: callback(data),
         )
 
     async def stop_notify(
@@ -271,5 +266,5 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_stop_notify(
-            self._address_as_int, characteristic.service_uuid, characteristic.uuid
+            self._address_as_int, characteristic.handle
         )
