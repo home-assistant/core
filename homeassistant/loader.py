@@ -268,9 +268,7 @@ async def async_get_integration_descriptions(
     }
 
     for integration in custom_integrations.values():
-        if not integration.config_flow:
-            continue
-        metadata = {"name": integration.name}
+        metadata = {"config_flow": integration.config_flow, "name": integration.name}
         custom_flows[integration.integration_type][integration.domain] = metadata
 
     return {"core": core_flows, "custom": custom_flows}
