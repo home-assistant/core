@@ -93,11 +93,9 @@ async def async_connect_scanner(
         scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
-    entry_data.bluetooth_scanner = scanner
 
     @hass_callback
     def _async_unload() -> None:
-        entry_data.bluetooth_scanner = None
         for callback in unload_callbacks:
             callback()
 
@@ -204,9 +202,9 @@ class ESPHomeClient(BaseBleakClient):
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        domain_data = DomainData.get(async_get_hass())
-        self._client = domain_data.get_entry_data(
-            domain_data.get_by_unique_id(self._source)
+        self.domain_data = DomainData.get(async_get_hass())
+        self._client = self.domain_data.get_entry_data(
+            self.domain_data.get_by_unique_id(self._source)
         ).client
         self._is_connected = False
 
@@ -223,7 +221,9 @@ class ESPHomeClient(BaseBleakClient):
         if self._disconnected_callback:
             self._disconnected_callback(self)
 
-    async def connect(self, **kwargs: Any) -> bool:
+    async def connect(
+        self, dangerous_use_bleak_cache: bool = False, **kwargs: Any
+    ) -> bool:
         """Connect to a specified Peripheral.
 
         Keyword Args:
@@ -241,8 +241,7 @@ class ESPHomeClient(BaseBleakClient):
         except asyncio.TimeoutError:
             return False
 
-        # TODO: cache services
-        await self.get_services()
+        await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         return True
 
     async def disconnect(self) -> bool:
@@ -268,12 +267,21 @@ class ESPHomeClient(BaseBleakClient):
         """Attempt to unpair."""
         raise NotImplementedError("Pairing is not available in ESPHome.")
 
-    async def get_services(self, **kwargs: Any) -> BleakGATTServiceCollection:
+    async def get_services(
+        self, dangerous_use_bleak_cache: bool = False, **kwargs: Any
+    ) -> BleakGATTServiceCollection:
         """Get all services registered for this GATT server.
 
         Returns:
            A :py:class:`bleak.backends.service.BleakGATTServiceCollection` with this device's services tree.
         """
+        if dangerous_use_bleak_cache and (
+            cached_services := self.domain_data.get_gatt_services_cache(
+                self._ble_device.address
+            )
+        ):
+            self.services = cached_services
+            return self.services
         esphome_services = await self._client.bluetooth_gatt_get_services(
             self._address_as_int
         )
@@ -298,6 +306,8 @@ class ESPHomeClient(BaseBleakClient):
                         )
                     )
         self.services = services
+        if dangerous_use_bleak_cache:
+            self.domain_data.set_gatt_services_cache(self._ble_device.address, services)
         return services
 
     def _resolve_characteristic(

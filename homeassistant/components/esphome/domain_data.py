@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TypeVar, cast
 
+from bleak.backends.service import BleakGATTServiceCollection
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
@@ -23,6 +25,21 @@ class DomainData:
     _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
     _stores: dict[str, Store] = field(default_factory=dict)
     _entry_by_unique_id: dict[str, ConfigEntry] = field(default_factory=dict)
+    _gatt_services_cache: dict[str, BleakGATTServiceCollection] = field(
+        default_factory=dict
+    )
+
+    def get_gatt_services_cache(
+        self, address: str
+    ) -> BleakGATTServiceCollection | None:
+        """Get the BleakGATTServiceCollection for the given address."""
+        return self._gatt_services_cache.get(address)
+
+    def set_gatt_services_cache(
+        self, address: str, services: BleakGATTServiceCollection
+    ) -> None:
+        """Set the BleakGATTServiceCollection for the given address."""
+        self._gatt_services_cache[address] = services
 
     def get_by_unique_id(self, unique_id: str) -> ConfigEntry:
         """Get the config entry by its unique ID."""
