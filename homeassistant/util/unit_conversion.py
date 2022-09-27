@@ -183,14 +183,14 @@ class MassConverter(BaseUnitConverterWithUnitConversion):
         MASS_OUNCES: 1 / _OUNCE_TO_G,
         MASS_POUNDS: 1 / _POUND_TO_G,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         MASS_GRAMS,
         MASS_KILOGRAMS,
         MASS_MILLIGRAMS,
         MASS_MICROGRAMS,
         MASS_OUNCES,
         MASS_POUNDS,
-    )
+    }
 
 
 class PowerConverter(BaseUnitConverterWithUnitConversion):
