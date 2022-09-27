@@ -10,6 +10,9 @@ from .models import HaBleakClientWrapper, HaBleakScannerWrapper
 
 ORIGINAL_BLEAK_SCANNER = bleak.BleakScanner
 ORIGINAL_BLEAK_CLIENT = bleak.BleakClient
+ORIGINAL_BLEAK_RETRY_CONNECTOR_CLIENT = (
+    bleak_retry_connector.BleakClientWithServiceCache
+)
 
 
 def install_multiple_bleak_catcher() -> None:
@@ -23,6 +26,7 @@ def uninstall_multiple_bleak_catcher() -> None:
     """Unwrap the bleak classes."""
     bleak.BleakScanner = ORIGINAL_BLEAK_SCANNER  # type: ignore[misc]
     bleak.BleakClient = ORIGINAL_BLEAK_CLIENT  # type: ignore[misc]
+    bleak_retry_connector.BleakClientWithServiceCache = ORIGINAL_BLEAK_RETRY_CONNECTOR_CLIENT  # type: ignore[misc]
 
 
 class HaBleakClientWithServiceCache(HaBleakClientWrapper):

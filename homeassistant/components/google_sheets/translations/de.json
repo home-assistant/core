@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "description": "Die Google Sheets-Integration muss dein Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
             }
         }
     }
