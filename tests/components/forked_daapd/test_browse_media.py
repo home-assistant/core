@@ -23,7 +23,7 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
@@ -177,7 +177,7 @@ async def test_async_browse_media_not_found(hass, hass_ws_client, config_entry):
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         mock_api.return_value.get_directory.return_value = None
@@ -229,7 +229,7 @@ async def test_async_browse_image(hass, hass_client, config_entry):
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         client = await hass_client()
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
@@ -279,7 +279,7 @@ async def test_async_browse_image_missing(hass, hass_client, config_entry, caplo
         autospec=True,
     ) as mock_api:
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         client = await hass_client()
         mock_api.return_value.full_url = lambda x: "http://owntone_instance/" + x
