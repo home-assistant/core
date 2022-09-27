@@ -111,7 +111,7 @@ def _prefer_previous_adv(
 
 
 def _dispatch_bleak_callback(
-    callback: AdvertisementDataCallback,
+    callback: AdvertisementDataCallback | None,
     filters: dict[str, set[str]],
     device: BLEDevice,
     advertisement_data: AdvertisementData,
@@ -119,7 +119,7 @@ def _dispatch_bleak_callback(
     """Dispatch the callback."""
     if not callback:
         # Callback destroyed right before being called, ignore
-        return  # type: ignore[unreachable] # pragma: no cover
+        return  # pragma: no cover
 
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
         advertisement_data.service_uuids
