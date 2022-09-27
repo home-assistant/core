@@ -25,18 +25,18 @@ class DomainData:
     _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
     _stores: dict[str, Store] = field(default_factory=dict)
     _entry_by_unique_id: dict[str, ConfigEntry] = field(default_factory=dict)
-    _gatt_services_cache: dict[str, BleakGATTServiceCollection] = field(
+    _gatt_services_cache: dict[int, BleakGATTServiceCollection] = field(
         default_factory=dict
     )
 
     def get_gatt_services_cache(
-        self, address: str
+        self, address: int
     ) -> BleakGATTServiceCollection | None:
         """Get the BleakGATTServiceCollection for the given address."""
         return self._gatt_services_cache.get(address)
 
     def set_gatt_services_cache(
-        self, address: str, services: BleakGATTServiceCollection
+        self, address: int, services: BleakGATTServiceCollection
     ) -> None:
         """Set the BleakGATTServiceCollection for the given address."""
         self._gatt_services_cache[address] = services

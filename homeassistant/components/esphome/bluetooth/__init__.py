@@ -275,15 +275,15 @@ class ESPHomeClient(BaseBleakClient):
         Returns:
            A :py:class:`bleak.backends.service.BleakGATTServiceCollection` with this device's services tree.
         """
+        address_as_int = self._address_as_int
+        domain_data = self.domain_data
         if dangerous_use_bleak_cache and (
-            cached_services := self.domain_data.get_gatt_services_cache(
-                self._ble_device.address
-            )
+            cached_services := domain_data.get_gatt_services_cache(address_as_int)
         ):
             self.services = cached_services
             return self.services
         esphome_services = await self._client.bluetooth_gatt_get_services(
-            self._address_as_int
+            address_as_int
         )
         services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         for service in esphome_services.services:
@@ -307,7 +307,7 @@ class ESPHomeClient(BaseBleakClient):
                     )
         self.services = services
         if dangerous_use_bleak_cache:
-            self.domain_data.set_gatt_services_cache(self._ble_device.address, services)
+            domain_data.set_gatt_services_cache(address_as_int, services)
         return services
 
     def _resolve_characteristic(
