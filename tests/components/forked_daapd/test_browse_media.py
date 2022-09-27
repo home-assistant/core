@@ -126,7 +126,7 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
             },
         ]
 
-        # Request playlist through WebSocket
+        # Request browse root through WebSocket
         client = await hass_ws_client(hass)
         await client.send_json(
             {
@@ -185,7 +185,7 @@ async def test_async_browse_media_not_found(hass, hass_ws_client, config_entry):
         mock_api.return_value.get_genres.return_value = None
         mock_api.return_value.get_playlists.return_value = None
 
-        # Request playlist through WebSocket
+        # Request different types of media through WebSocket
         client = await hass_ws_client(hass)
         msg_id = 1
         for media_type in (
