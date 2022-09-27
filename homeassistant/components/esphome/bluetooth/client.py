@@ -1,6 +1,7 @@
 """Bluetooth client for esphome."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from typing import Any, TypeVar, cast
 import uuid
@@ -35,15 +36,17 @@ def mac_to_int(address: str) -> int:
 def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
-    async def _async_wrap_operation_lock(
+    async def _async_wrap_bluetooth_operation(
         self: "ESPHomeClient", *args: Any, **kwargs: Any
     ) -> Any:
         try:
             return await func(self, *args, **kwargs)
+        except TimeoutAPIError as err:
+            raise asyncio.TimeoutError(str(err)) from err
         except APIConnectionError as err:
             raise BleakError(str(err)) from err
 
-    return cast(_WrapFuncType, _async_wrap_operation_lock)
+    return cast(_WrapFuncType, _async_wrap_bluetooth_operation)
 
 
 class ESPHomeClient(BaseBleakClient):
@@ -92,15 +95,11 @@ class ESPHomeClient(BaseBleakClient):
             Boolean representing connection status.
         """
         timeout = kwargs.get("timeout", self._timeout)
-        try:
-            await self._client.bluetooth_device_connect(
-                self._address_as_int,
-                self._on_bluetooth_connection_state,
-                timeout=timeout,
-            )
-        except TimeoutAPIError:
-            return False
-
+        await self._client.bluetooth_device_connect(
+            self._address_as_int,
+            self._on_bluetooth_connection_state,
+            timeout=timeout,
+        )
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         return True
 
