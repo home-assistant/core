@@ -13,8 +13,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
@@ -27,6 +25,7 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import MAX_QUEUE_BACKLOG
@@ -131,7 +130,7 @@ async def ws_handle_get_statistics_during_period(
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
                 vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
                 vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
             }
         ),
     }
@@ -336,7 +335,10 @@ async def ws_adjust_sum_statistics(
             ENERGY_WATT_HOUR,
         ):
             return True
-        if statistics_unit == VOLUME_CUBIC_METERS and display_unit == VOLUME_CUBIC_FEET:
+        if (
+            statistics_unit == VolumeConverter.NORMALIZED_UNIT
+            and display_unit in VolumeConverter.VALID_UNITS
+        ):
             return True
         return False
 

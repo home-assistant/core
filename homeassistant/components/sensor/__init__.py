@@ -64,6 +64,7 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import CONF_STATE_CLASS  # noqa: F401
@@ -185,6 +186,9 @@ class SensorDeviceClass(StrEnum):
     # voltage (V)
     VOLTAGE = "voltage"
 
+    # volume (VOLUME_*)
+    VOLUME = "volume"
+
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
@@ -221,6 +225,7 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLUME: VolumeConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
@@ -232,6 +237,7 @@ UNIT_RATIOS: dict[str, dict[str, float]] = {
         TEMP_FAHRENHEIT: 1.8,
         TEMP_KELVIN: 1.0,
     },
+    SensorDeviceClass.VOLUME: VolumeConverter.UNIT_CONVERSION,
 }
 
 # mypy: disallow-any-generics

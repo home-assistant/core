@@ -98,6 +98,8 @@ def set_time_zone():
         ("speed", "mph", "mph", "m/s", "speed", 13.050847, -10, 30),
         ("temperature", "°C", "°C", "°C", "temperature", 13.050847, -10, 30),
         ("temperature", "°F", "°F", "°C", "temperature", 13.050847, -10, 30),
+        ("volume", "m³", "m³", "m³", "volume", 13.050847, -10, 30),
+        ("volume", "ft³", "ft³", "m³", "volume", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics(
@@ -359,18 +361,22 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
         (IMPERIAL_SYSTEM, "distance", "mi", "mi", "m", "distance", 1),
         (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
         (IMPERIAL_SYSTEM, "energy", "Wh", "Wh", "kWh", "energy", 1),
-        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", "EUR", None, 1),
-        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
         (IMPERIAL_SYSTEM, "gas", "m³", "m³", "m³", "volume", 1),
         (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", "m³", "volume", 1),
+        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", "EUR", None, 1),
+        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
+        (IMPERIAL_SYSTEM, "volume", "m³", "m³", "m³", "volume", 1),
+        (IMPERIAL_SYSTEM, "volume", "ft³", "ft³", "m³", "volume", 1),
         (METRIC_SYSTEM, "distance", "m", "m", "m", "distance", 1),
         (METRIC_SYSTEM, "distance", "mi", "mi", "m", "distance", 1),
         (METRIC_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
         (METRIC_SYSTEM, "energy", "Wh", "Wh", "kWh", "energy", 1),
-        (METRIC_SYSTEM, "monetary", "EUR", "EUR", "EUR", None, 1),
-        (METRIC_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
         (METRIC_SYSTEM, "gas", "m³", "m³", "m³", "volume", 1),
         (METRIC_SYSTEM, "gas", "ft³", "ft³", "m³", "volume", 1),
+        (METRIC_SYSTEM, "monetary", "EUR", "EUR", "EUR", None, 1),
+        (METRIC_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
+        (METRIC_SYSTEM, "volume", "m³", "m³", "m³", "volume", 1),
+        (METRIC_SYSTEM, "volume", "ft³", "ft³", "m³", "volume", 1),
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
@@ -1569,6 +1575,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         ("speed", "mph", 30),
         ("temperature", "°C", 30),
         ("temperature", "°F", 30),
+        ("volume", "m³", 30),
+        ("volume", "ft³", 30),
     ],
 )
 def test_compile_hourly_statistics_unchanged(
@@ -1660,6 +1668,8 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
         ("speed", "mph", 30),
         ("temperature", "°C", 30),
         ("temperature", "°F", 30),
+        ("volume", "m³", 30),
+        ("volume", "ft³", 30),
     ],
 )
 def test_compile_hourly_statistics_unavailable(
@@ -1751,6 +1761,10 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("measurement", "speed", "mph", "mph", "m/s", "speed", "mean"),
         ("measurement", "temperature", "°C", "°C", "°C", "temperature", "mean"),
         ("measurement", "temperature", "°F", "°F", "°C", "temperature", "mean"),
+        ("measurement", "volume", "m³", "m³", "m³", "volume", "mean"),
+        ("measurement", "volume", "ft³", "ft³", "m³", "volume", "mean"),
+        ("total", "volume", "m³", "m³", "m³", "volume", "sum"),
+        ("total", "volume", "ft³", "ft³", "m³", "volume", "sum"),
     ],
 )
 def test_list_statistic_ids(
