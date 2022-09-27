@@ -1,6 +1,8 @@
 """Bluetooth support for esphome."""
 from __future__ import annotations
 
+import logging
+
 from aioesphomeapi import APIClient
 from awesomeversion import AwesomeVersion
 
@@ -23,6 +25,7 @@ from .client import ESPHomeClient
 from .scanner import ESPHomeScanner
 
 CONNECTABLE_MIN_VERSION = AwesomeVersion("2022.10.0")
+_LOGGER = logging.getLogger(__name__)
 
 
 @hass_callback
@@ -30,7 +33,14 @@ def async_can_connect(source: str) -> bool:
     """Check if a given source can make another connection."""
     domain_data = DomainData.get(async_get_hass())
     entry = domain_data.get_by_unique_id(source)
-    return domain_data.get_entry_data(entry).available
+    entry_data = domain_data.get_entry_data(entry)
+    _LOGGER.debug(
+        "Checking if %s can connect, available=%s, ble_connections_free=%s",
+        source,
+        entry_data.available,
+        entry_data.ble_connections_free,
+    )
+    return bool(entry_data.available and entry_data.ble_connections_free)
 
 
 async def async_connect_scanner(
@@ -60,6 +70,9 @@ async def async_connect_scanner(
         scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+    await cli.subscribe_bluetooth_connections_free(
+        entry_data.async_update_ble_connection_limits
+    )
 
     @hass_callback
     def _async_unload() -> None:

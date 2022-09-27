@@ -87,6 +87,14 @@ class RuntimeEntryData:
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
+    ble_connections_free: int = 0
+    ble_connections_limit: int = 0
+
+    @callback
+    def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
+        """Update the BLE connection limits."""
+        self.ble_connections_free = free
+        self.ble_connections_limit = limit
 
     @callback
     def async_remove_entity(
