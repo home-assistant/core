@@ -12,7 +12,7 @@ from homeassistant.components.spotify.const import (
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
-TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
+TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 
 
 async def test_async_browse_media(hass, hass_ws_client, config_entry):
