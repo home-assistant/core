@@ -51,6 +51,9 @@ VALUES_TO_REDACT = (
 
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
+    # If the value has no value, there is nothing to redact
+    if zwave_value.get("value") in (None, ""):
+        return zwave_value
     for value_to_redact in VALUES_TO_REDACT:
         command_class = None
         if "commandClass" in zwave_value:

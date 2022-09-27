@@ -18,6 +18,19 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualiza cualquier automatizaci\u00f3n o script que use esta entidad para usar `{replacement_entity_id}`.",
+                        "title": "Se eliminar\u00e1 la entidad {old_entity_id}"
+                    }
+                }
+            },
+            "title": "Se eliminar\u00e1 la entidad {old_entity_id}"
+        }
+    },
     "options": {
         "step": {
             "init": {

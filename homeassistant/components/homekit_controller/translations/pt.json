@@ -25,7 +25,7 @@
                 "data": {
                     "pairing_code": "C\u00f3digo de emparelhamento"
                 },
-                "description": "Introduza o c\u00f3digo de emparelhamento do seu HomeKit (no formato XXX-XX-XXX) para utilizar este acess\u00f3rio",
+                "description": "Introduza o c\u00f3digo de emparelhamento do seu HomeKit (no formato XXX-XX-XXX) para utilizar este acess\u00f3rio.",
                 "title": "Emparelhar com o acess\u00f3rio HomeKit"
             },
             "user": {

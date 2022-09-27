@@ -74,7 +74,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return NUMBER_MODES.from_esphome(self._static_info.mode)
         return NumberMode.AUTO
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def native_value(self) -> float | None:
         """Return the state of the entity."""

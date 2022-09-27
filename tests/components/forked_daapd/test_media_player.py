@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.forked_daapd.browse_media import create_media_content_id
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
-    DOMAIN,
     SIGNAL_UPDATE_OUTPUTS,
     SIGNAL_UPDATE_PLAYER,
     SIGNAL_UPDATE_QUEUE,
@@ -19,6 +19,23 @@ from homeassistant.components.forked_daapd.const import (
     SUPPORTED_FEATURES_ZONE,
 )
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ALBUM_ARTIST,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_TRACK,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MP_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -34,45 +51,24 @@ from homeassistant.components.media_player import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    MediaPlayerEnqueue,
+    MediaType,
 )
-from homeassistant.components.media_player.const import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_ALBUM_ARTIST,
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN as MP_DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-)
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     STATE_ON,
     STATE_PAUSED,
     STATE_UNAVAILABLE,
 )
 
-from tests.common import MockConfigEntry, async_mock_signal
+from tests.common import async_mock_signal
 
 TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
 TEST_ZONE_ENTITY_NAMES = [
     "media_player.forked_daapd_output_" + x
-    for x in ["kitchen", "computer", "daapd_fifo"]
+    for x in ("kitchen", "computer", "daapd_fifo")
 ]
 
 OPTIONS_DATA = {
@@ -113,6 +109,28 @@ SAMPLE_PLAYER_STOPPED = {
     "item_id": 12322,
     "item_length_ms": 50,
     "item_progress_ms": 5,
+}
+
+SAMPLE_QUEUE = {
+    "version": 833,
+    "count": 1,
+    "items": [
+        {
+            "id": 12322,
+            "position": 0,
+            "track_id": 1234,
+            "title": "Some song",
+            "artist": "Some artist",
+            "album": "No album",
+            "album_artist": "The xx",
+            "artwork_url": "http://art",
+            "length_ms": 0,
+            "track_number": 1,
+            "media_kind": "music",
+            "data_kind": "url",
+            "uri": "library:track:5",
+        }
+    ],
 }
 
 SAMPLE_QUEUE_TTS = {
@@ -268,25 +286,6 @@ SAMPLE_PIPES = [
 SAMPLE_PLAYLISTS = [{"id": 7, "name": "test_playlist", "uri": "library:playlist:2"}]
 
 
-@pytest.fixture(name="config_entry")
-def config_entry_fixture():
-    """Create hass config_entry fixture."""
-    data = {
-        CONF_HOST: "192.168.1.1",
-        CONF_PORT: "2345",
-        CONF_PASSWORD: "",
-    }
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        title="",
-        data=data,
-        options={CONF_TTS_PAUSE_TIME: 0},
-        source=SOURCE_USER,
-        entry_id=1,
-    )
-
-
 @pytest.fixture(name="get_request_return_values")
 async def get_request_return_values_fixture():
     """Get request return values we can change later."""
@@ -294,7 +293,7 @@ async def get_request_return_values_fixture():
         "config": SAMPLE_CONFIG,
         "outputs": SAMPLE_OUTPUTS_ON,
         "player": SAMPLE_PLAYER_PAUSED,
-        "queue": SAMPLE_QUEUE_TTS,
+        "queue": SAMPLE_QUEUE,
     }
 
 
@@ -326,13 +325,12 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
     await hass.async_block_till_done()
 
     async def add_to_queue_side_effect(
-        uris, playback=None, playback_from_position=None, clear=None
+        uris, playback=None, position=None, playback_from_position=None, clear=None
     ):
         await updater_update(["queue", "player"])
 
-    mock_api.return_value.add_to_queue.side_effect = (
-        add_to_queue_side_effect  # for play_media testing
-    )
+    # for play_media testing
+    mock_api.return_value.add_to_queue.side_effect = add_to_queue_side_effect
 
     async def pause_side_effect():
         await updater_update(["player"])
@@ -360,12 +358,12 @@ def test_master_state(hass, mock_api_object):
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
     assert state.attributes[ATTR_MEDIA_CONTENT_ID] == 12322
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert state.attributes[ATTR_MEDIA_DURATION] == 0.05
     assert state.attributes[ATTR_MEDIA_POSITION] == 0.005
     assert state.attributes[ATTR_MEDIA_TITLE] == "No album"  # reversed for url
-    assert state.attributes[ATTR_MEDIA_ARTIST] == "Google"
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Short TTS file"  # reversed
+    assert state.attributes[ATTR_MEDIA_ARTIST] == "Some artist"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Some song"  # reversed
     assert state.attributes[ATTR_MEDIA_ALBUM_ARTIST] == "The xx"
     assert state.attributes[ATTR_MEDIA_TRACK] == 1
     assert not state.attributes[ATTR_MEDIA_SHUFFLE]
@@ -556,7 +554,7 @@ async def test_async_play_media_from_paused(hass, mock_api_object):
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
         },
     )
@@ -565,23 +563,26 @@ async def test_async_play_media_from_paused(hass, mock_api_object):
     assert state.last_updated > initial_state.last_updated
 
 
-async def test_async_play_media_from_stopped(
+async def test_async_play_media_announcement_from_stopped(
     hass, get_request_return_values, mock_api_object
 ):
-    """Test async play media from stopped."""
+    """Test async play media announcement (from stopped)."""
     updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
 
     get_request_return_values["player"] = SAMPLE_PLAYER_STOPPED
     await updater_update(["player"])
     await hass.async_block_till_done()
     initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+
+    get_request_return_values["queue"] = SAMPLE_QUEUE_TTS
     await _service_call(
         hass,
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
+            ATTR_MEDIA_ANNOUNCE: True,
         },
     )
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
@@ -597,7 +598,7 @@ async def test_async_play_media_unsupported(hass, mock_api_object):
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_TVSHOW,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
             ATTR_MEDIA_CONTENT_ID: "wontwork.mp4",
         },
     )
@@ -605,8 +606,8 @@ async def test_async_play_media_unsupported(hass, mock_api_object):
     assert state.last_updated == initial_state.last_updated
 
 
-async def test_async_play_media_tts_timeout(hass, mock_api_object):
-    """Test async play media with TTS timeout."""
+async def test_async_play_media_announcement_tts_timeout(hass, mock_api_object):
+    """Test async play media announcement with TTS timeout."""
     mock_api_object.add_to_queue.side_effect = None
     with patch("homeassistant.components.forked_daapd.media_player.TTS_TIMEOUT", 0):
         initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
@@ -615,8 +616,9 @@ async def test_async_play_media_tts_timeout(hass, mock_api_object):
             TEST_MASTER_ENTITY_NAME,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
+                ATTR_MEDIA_ANNOUNCE: True,
             },
         )
         state = hass.states.get(TEST_MASTER_ENTITY_NAME)
@@ -716,16 +718,17 @@ async def test_librespot_java_stuff(
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "some album"
 
 
-async def test_librespot_java_play_media(hass, pipe_control_api_object):
-    """Test play media with librespot-java pipe."""
+async def test_librespot_java_play_announcement(hass, pipe_control_api_object):
+    """Test play announcement with librespot-java pipe."""
     initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     await _service_call(
         hass,
         TEST_MASTER_ENTITY_NAME,
         SERVICE_PLAY_MEDIA,
         {
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
+            ATTR_MEDIA_ANNOUNCE: True,
         },
     )
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
@@ -746,7 +749,7 @@ async def test_librespot_java_play_media_pause_timeout(hass, pipe_control_api_ob
             TEST_MASTER_ENTITY_NAME,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "http://example.com/somefile.mp3",
             },
         )
@@ -786,3 +789,105 @@ async def test_websocket_disconnect(hass, mock_api_object):
     await hass.async_block_till_done()
     assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE
+
+
+async def test_async_play_media_enqueue(hass, mock_api_object):
+    """Test async play media with different enqueue options."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://example.com/play.mp3",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="http://example.com/play.mp3",
+        playback="start",
+        position=0,
+        playback_from_position=0,
+    )
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://example.com/replace.mp3",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+        },
+    )
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="http://example.com/replace.mp3", playback="start", clear=True
+    )
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://example.com/add.mp3",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+        },
+    )
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="http://example.com/add.mp3", playback="start", clear=False
+    )
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://example.com/add.mp3",
+            ATTR_MEDIA_ENQUEUE: True,
+        },
+    )
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="http://example.com/add.mp3", playback="start", clear=False
+    )
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://example.com/next.mp3",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+        },
+    )
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="http://example.com/next.mp3", playback="start", position=1
+    )
+
+
+async def test_play_owntone_media(hass, mock_api_object):
+    """Test async play media with an owntone source."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: create_media_content_id(
+                "some song", "library:track:456"
+            ),
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="library:track:456",
+        playback="start",
+        position=0,
+        playback_from_position=0,
+    )

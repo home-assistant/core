@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Die Vakuumentit\u00e4tsattribute sind jetzt als Diagnosesensoren verf\u00fcgbar. \n\nBitte passe eventuell vorhandene Automatisierungen oder Skripte an, die diese Attribute verwenden.",
+            "title": "Litter-Robot-Attribute sind jetzt ihre eigenen Sensoren"
+        }
     }
 }

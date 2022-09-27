@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Per millorar la fiabilitat i el rendiment de Bluetooth, et recomanem que actualitzis a la versi\u00f3 9.0 o posterior del sistema operatiu Home Assistant.",
+            "title": "Actualitza el sistema operatiu a Home Assistant 9.0 o posterior"
+        }
+    },
     "options": {
         "step": {
             "init": {

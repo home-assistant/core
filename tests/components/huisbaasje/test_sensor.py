@@ -21,11 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_LIMITED_CURRENT_MEASUREMENTS
+
 from tests.common import MockConfigEntry
-from tests.components.huisbaasje.test_data import (
-    MOCK_CURRENT_MEASUREMENTS,
-    MOCK_LIMITED_CURRENT_MEASUREMENTS,
-)
 
 
 async def test_setup_entry(hass: HomeAssistant):

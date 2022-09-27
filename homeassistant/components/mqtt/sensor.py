@@ -1,7 +1,7 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools
 import logging
 
@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -41,7 +41,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -146,9 +145,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, sensor.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -347,12 +343,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self.async_write_ha_state()
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | datetime:
         """Return the state of the entity."""
         return self._state
 
