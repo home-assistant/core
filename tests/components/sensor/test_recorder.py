@@ -2106,9 +2106,9 @@ def test_compile_hourly_statistics_changing_units_3(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, statistic_unit, unit_class, mean, min, max",
+    "device_class, state_unit, statistic_unit, unit_class, mean1, mean2, min, max",
     [
-        ("power", "kW", "W", None, 13.050847, -10, 30),
+        ("power", "kW", "W", None, 13.050847, 13.333333, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_device_class_1(
@@ -2118,7 +2118,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     state_unit,
     statistic_unit,
     unit_class,
-    mean,
+    mean1,
+    mean2,
     min,
     max,
 ):
@@ -2158,7 +2159,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
                 "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
-                "mean": approx(mean),
+                "mean": approx(mean1),
                 "min": approx(min),
                 "max": approx(max),
                 "last_reset": None,
@@ -2168,7 +2169,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
         ]
     }
 
-    # Update device class and record additional states
+    # Update device class and record additional states in the original UoM
     attributes["device_class"] = device_class
     four, _states = record_states(
         hass, zero + timedelta(minutes=5), "sensor.test1", attributes
@@ -2183,6 +2184,65 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
     # Run statistics again, we get a warning, and no additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": state_unit,
+            "unit_class": unit_class,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean1),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(
+                    zero + timedelta(minutes=10)
+                ),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "mean": approx(mean2),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+        ]
+    }
+
+    # Update device class and record additional states in a different UoM
+    attributes["unit_of_measurement"] = statistic_unit
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=15), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=20), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    # Run statistics again, we get a warning, and no additional statistics is generated
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=20))
     wait_recording_done(hass)
     assert (
         f"The normalized unit of sensor.test1 ({statistic_unit}) does not match the "
@@ -2208,13 +2268,26 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
                 "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
-                "mean": approx(mean),
+                "mean": approx(mean1),
                 "min": approx(min),
                 "max": approx(max),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-            }
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(
+                    zero + timedelta(minutes=10)
+                ),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "mean": approx(mean2),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text

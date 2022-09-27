@@ -151,10 +151,16 @@ def _normalize_states(
     entity_id: str,
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
+    old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     state_unit: str | None = None
 
-    if device_class not in UNIT_CONVERTERS:
-        # We're not normalizing this device class, return the state as they are
+    if device_class not in UNIT_CONVERTERS or (
+        old_metadata
+        and old_metadata["unit_of_measurement"]
+        != UNIT_CONVERTERS[device_class].NORMALIZED_UNIT
+    ):
+        # We're either not normalizing this device class or this entity is not stored
+        # normalized, return the states as they are
         fstates = []
         for state in entity_history:
             try:
@@ -171,10 +177,10 @@ def _normalize_states(
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     extra = ""
-                    if old_metadata := old_metadatas.get(entity_id):
+                    if old_metadata:
                         extra = (
                             " and matches the unit of already compiled statistics "
-                            f"({old_metadata[1]['unit_of_measurement']})"
+                            f"({old_metadata['unit_of_measurement']})"
                         )
                     _LOGGER.warning(
                         "The unit of %s is changing, got multiple %s, generation of long term "
