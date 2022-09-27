@@ -100,7 +100,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
     def _get_update_interval(self, data: T) -> timedelta:
         """Get new update interval."""
         if self.expect_change_until > monotonic():
-            return timedelta(seconds=3)
+            return timedelta(seconds=5)
 
         return timedelta(seconds=30)
 
