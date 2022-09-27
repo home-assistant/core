@@ -157,9 +157,12 @@ class Proximity(Entity):
         return {ATTR_DIR_OF_TRAVEL: self.dir_of_travel, ATTR_NEAREST: self.nearest}
 
     def check_proximity_state_change(
-        self, entity: str, old_state: State | None, new_state: State
+        self, entity: str, old_state: State | None, new_state: State | None
     ) -> None:
         """Perform the proximity checking."""
+        if new_state is None:
+            return
+
         entity_name = new_state.name
         devices_to_calculate = False
         devices_in_zone = ""
