@@ -30,7 +30,6 @@ def async_can_connect(source: str) -> bool:
     """Check if a given source can make another connection."""
     domain_data = DomainData.get(async_get_hass())
     entry = domain_data.get_by_unique_id(source)
-    # TODO: return False if we run out of connections.
     return domain_data.get_entry_data(entry).available
 
 
