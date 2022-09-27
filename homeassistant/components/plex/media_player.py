@@ -249,7 +249,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.IDLE
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def username(self):
         """Return the username of the client owner."""
@@ -280,109 +280,109 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         return "video"
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def session_key(self):
         """Return current session key."""
         return self.session.sessionKey
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_library_title(self):
         """Return the library name of playing media."""
         return self.session.media_library_title
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_content_id(self):
         """Return the content ID of current playing media."""
         return self.session.media_content_id
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_content_type(self):
         """Return the content type of current playing media."""
         return self.session.media_content_type
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_content_rating(self):
         """Return the content rating of current playing media."""
         return self.session.media_content_rating
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_artist(self):
         """Return the artist of current playing media, music track only."""
         return self.session.media_artist
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_album_name(self):
         """Return the album name of current playing media, music track only."""
         return self.session.media_album_name
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_album_artist(self):
         """Return the album artist of current playing media, music only."""
         return self.session.media_album_artist
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_track(self):
         """Return the track number of current playing media, music only."""
         return self.session.media_track
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_duration
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_position(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_position
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
         return self.session.media_position_updated_at
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self.session.media_image_url
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_summary(self):
         """Return the summary of current playing media."""
         return self.session.media_summary
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_title(self):
         """Return the title of current playing media."""
         return self.session.media_title
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_season(self):
         """Return the season of current playing media (TV Show only)."""
         return self.session.media_season
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_series_title(self):
         """Return the title of the series of current playing media."""
         return self.session.media_series_title
 
-    @property  # type: ignore[misc]
+    @property
     @needs_session
     def media_episode(self):
         """Return the episode of current playing media (TV Show only)."""
