@@ -840,8 +840,6 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 # This is the base level, so we combine our library with the media source
                 return library(ms_result.children)
             return ms_result
-        # media_content_type should only be None if media_content_id is None
-        assert media_content_type
         return await get_owntone_content(self, media_content_id)
 
     async def async_get_browse_image(
