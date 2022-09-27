@@ -8,28 +8,25 @@ import time
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp.client_exceptions import ClientError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
-from homeassistant.setup import async_setup_component
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
 from .conftest import (
     CALENDAR_ID,
+    EMAIL_ADDRESS,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
-    TEST_YAML_ENTITY_NAME,
     ApiResult,
     ComponentSetup,
 )
@@ -56,14 +53,6 @@ def assert_state(actual: State | None, expected: State | None) -> None:
     assert actual.attributes == expected.attributes
 
 
-@pytest.fixture
-def setup_config_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Fixture to initialize the config entry."""
-    config_entry.add_to_hass(hass)
-
-
 @pytest.fixture(
     params=[
         (
@@ -74,7 +63,7 @@ def setup_config_entry(
         (
             SERVICE_CREATE_EVENT,
             {},
-            {"entity_id": TEST_YAML_ENTITY},
+            {"entity_id": TEST_API_ENTITY},
         ),
     ],
     ids=("add_event", "create_event"),
@@ -106,7 +95,6 @@ def add_event_call_service(
 async def test_unload_entry(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload of a ConfigEntry."""
     await component_setup()
@@ -130,8 +118,7 @@ async def test_existing_token_missing_scope(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test setup where existing token does not have sufficient scopes."""
-    config_entry.add_to_hass(hass)
-    assert await component_setup()
+    await component_setup()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -150,8 +137,7 @@ async def test_config_entry_scope_reauth(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test setup where the config entry options requires reauth to match the scope."""
-    config_entry.add_to_hass(hass)
-    assert await component_setup()
+    await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -166,7 +152,6 @@ async def test_calendar_yaml_missing_required_fields(
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
-    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with a missing schema fields, ignores the error and continues."""
     assert await component_setup()
@@ -183,7 +168,6 @@ async def test_invalid_calendar_yaml(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with missing entity id fields fails to load the platform."""
     mock_calendars_list({"items": [test_api_calendar]})
@@ -206,7 +190,6 @@ async def test_calendar_yaml_error(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with yaml file not found."""
     mock_calendars_list({"items": [test_api_calendar]})
@@ -219,15 +202,12 @@ async def test_calendar_yaml_error(
     assert hass.states.get(TEST_API_ENTITY)
 
 
-@pytest.mark.parametrize("calendars_config", [[]])
-async def test_found_calendar_from_api(
+async def test_init_calendar(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test finding a calendar from the API."""
 
@@ -244,101 +224,57 @@ async def test_found_calendar_from_api(
     assert not hass.states.get(TEST_YAML_ENTITY)
 
 
-@pytest.mark.parametrize(
-    "calendars_config,google_config,config_entry_options",
-    [([], {}, {CONF_CALENDAR_ACCESS: "read_write"})],
-)
-async def test_load_application_credentials(
+async def test_multiple_config_entries(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test loading an application credentials and a config entry."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
+    """Test finding a calendar from the API."""
+
+    assert await component_setup()
+
+    config_entry1 = MockConfigEntry(
+        domain=DOMAIN, data=config_entry.data, unique_id=EMAIL_ADDRESS
     )
+    calendar1 = {
+        **test_api_calendar,
+        "id": "calendar-id1",
+        "summary": "Example Calendar 1",
+    }
 
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    assert await component_setup()
+    mock_calendars_list({"items": [calendar1]})
+    mock_events_list({}, calendar_id="calendar-id1")
+    config_entry1.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry1.entry_id)
+    await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_API_ENTITY)
+    state = hass.states.get("calendar.example_calendar_1")
     assert state
-    assert state.name == TEST_API_ENTITY_NAME
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Example calendar 1"
 
-    # No yaml config loaded that overwrites the entity name
-    assert not hass.states.get(TEST_YAML_ENTITY)
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN, data=config_entry.data, unique_id="other-address@example.com"
+    )
+    calendar2 = {
+        **test_api_calendar,
+        "id": "calendar-id2",
+        "summary": "Example Calendar 2",
+    }
+    aioclient_mock.clear_requests()
+    mock_calendars_list({"items": [calendar2]})
+    mock_events_list({}, calendar_id="calendar-id2")
+    config_entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry2.entry_id)
+    await hass.async_block_till_done()
 
-
-@pytest.mark.parametrize(
-    "calendars_config_track,expected_state,google_config_track_new",
-    [
-        (
-            True,
-            State(
-                TEST_YAML_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_YAML_ENTITY_NAME,
-                },
-            ),
-            None,
-        ),
-        (
-            True,
-            State(
-                TEST_YAML_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_YAML_ENTITY_NAME,
-                },
-            ),
-            True,
-        ),
-        (
-            True,
-            State(
-                TEST_YAML_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_YAML_ENTITY_NAME,
-                },
-            ),
-            False,  # Has no effect
-        ),
-        (False, None, None),
-        (False, None, True),
-        (False, None, False),
-    ],
-)
-async def test_calendar_config_track_new(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
-    mock_calendars_list: ApiResult,
-    mock_events_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    calendars_config_track: bool,
-    expected_state: State,
-    setup_config_entry: MockConfigEntry,
-) -> None:
-    """Test calendar config that overrides whether or not a calendar is tracked."""
-
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    assert await component_setup()
-
-    state = hass.states.get(TEST_YAML_ENTITY)
-    assert_state(state, expected_state)
+    state = hass.states.get("calendar.example_calendar_2")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Example calendar 2"
 
 
 @pytest.mark.parametrize(
@@ -464,9 +400,7 @@ async def test_add_event_invalid_params(
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
     add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
     date_fields: dict[str, Any],
     expected_error: type[Exception],
@@ -504,12 +438,10 @@ async def test_add_event_date_in_x(
     mock_calendars_list: ApiResult,
     mock_insert_event: Callable[[..., dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
     date_fields: dict[str, Any],
     start_timedelta: datetime.timedelta,
     end_timedelta: datetime.timedelta,
-    setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
 ) -> None:
@@ -544,9 +476,7 @@ async def test_add_event_date(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_insert_event: Callable[[str, dict[str, Any]], None],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
 ) -> None:
@@ -586,9 +516,7 @@ async def test_add_event_date_time(
     mock_calendars_list: ApiResult,
     mock_insert_event: Callable[[str, dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
 ) -> None:
@@ -628,13 +556,38 @@ async def test_add_event_date_time(
     }
 
 
+async def test_add_event_failure(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    mock_insert_event: Callable[[..., dict[str, Any]], None],
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
+) -> None:
+    """Test service calls with incorrect fields."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+        exc=ClientError(),
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await add_event_call_service(
+            {"start_date": "2022-05-01", "end_date": "2022-05-01"}
+        )
+
+
 @pytest.mark.parametrize(
     "config_entry_token_expiry", [datetime.datetime.max.timestamp() + 1]
 )
 async def test_invalid_token_expiry_in_config_entry(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Exercise case in issue #69623 with invalid token expiration persisted."""
@@ -666,7 +619,6 @@ async def test_invalid_token_expiry_in_config_entry(
 async def test_expired_token_refresh_internal_error(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Generic errors on reauth are treated as a retryable setup error."""
@@ -676,7 +628,7 @@ async def test_expired_token_refresh_internal_error(
         status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
     )
 
-    assert await component_setup()
+    await component_setup()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -690,7 +642,6 @@ async def test_expired_token_refresh_internal_error(
 async def test_expired_token_requires_reauth(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test case where reauth is required for token that cannot be refreshed."""
@@ -700,7 +651,7 @@ async def test_expired_token_requires_reauth(
         status=http.HTTPStatus.BAD_REQUEST,
     )
 
-    assert await component_setup()
+    await component_setup()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -734,7 +685,6 @@ async def test_calendar_yaml_update(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
     calendars_config: dict[str, Any],
     expect_write_calls: bool,
 ) -> None:
@@ -759,7 +709,6 @@ async def test_calendar_yaml_update(
 async def test_update_will_reload(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    setup_config_entry: Any,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
@@ -800,3 +749,72 @@ async def test_update_will_reload(
         )
         await hass.async_block_till_done()
         mock_reload.assert_called_once()
+
+
+@pytest.mark.parametrize("config_entry_unique_id", [None])
+async def test_assign_unique_id(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    mock_calendar_get: Callable[[...], None],
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an existing config is updated to have unique id if it does not exist."""
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.unique_id is None
+
+    mock_calendar_get(
+        "primary",
+        {"id": EMAIL_ADDRESS, "summary": "Personal"},
+    )
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == EMAIL_ADDRESS
+
+
+@pytest.mark.parametrize(
+    "config_entry_unique_id,request_status,config_entry_status",
+    [
+        (None, http.HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_RETRY),
+        (
+            None,
+            http.HTTPStatus.UNAUTHORIZED,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+    ],
+)
+async def test_assign_unique_id_failure(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    config_entry: MockConfigEntry,
+    mock_events_list: ApiResult,
+    mock_calendar_get: Callable[[...], None],
+    request_status: http.HTTPStatus,
+    config_entry_status: ConfigEntryState,
+) -> None:
+    """Test lookup failures during unique id assignment are handled gracefully."""
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.unique_id is None
+
+    mock_calendar_get(
+        "primary",
+        {},
+        status=request_status,
+    )
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    await component_setup()
+
+    assert config_entry.state is config_entry_status
+    assert config_entry.unique_id is None

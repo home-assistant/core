@@ -32,6 +32,24 @@ class RecorderTask(abc.ABC):
 
 
 @dataclass
+class ChangeStatisticsUnitTask(RecorderTask):
+    """Object to store statistics_id and unit to convert unit of statistics."""
+
+    statistic_id: str
+    new_unit_of_measurement: str
+    old_unit_of_measurement: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.change_statistics_unit(
+            instance,
+            self.statistic_id,
+            self.new_unit_of_measurement,
+            self.old_unit_of_measurement,
+        )
+
+
+@dataclass
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
@@ -124,18 +142,18 @@ class StatisticsTask(RecorderTask):
 
 
 @dataclass
-class ExternalStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run an external statistics task."""
+class ImportStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run an import statistics task."""
 
     metadata: StatisticMetaData
     statistics: Iterable[StatisticData]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.add_external_statistics(instance, self.metadata, self.statistics):
+        if statistics.import_statistics(instance, self.metadata, self.statistics):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(ExternalStatisticsTask(self.metadata, self.statistics))
+        instance.queue_task(ImportStatisticsTask(self.metadata, self.statistics))
 
 
 @dataclass
@@ -145,6 +163,7 @@ class AdjustStatisticsTask(RecorderTask):
     statistic_id: str
     start_time: datetime
     sum_adjustment: float
+    display_unit: str
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -153,12 +172,16 @@ class AdjustStatisticsTask(RecorderTask):
             self.statistic_id,
             self.start_time,
             self.sum_adjustment,
+            self.display_unit,
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
         instance.queue_task(
             AdjustStatisticsTask(
-                self.statistic_id, self.start_time, self.sum_adjustment
+                self.statistic_id,
+                self.start_time,
+                self.sum_adjustment,
+                self.display_unit,
             )
         )
 
@@ -249,7 +272,7 @@ class AddRecorderPlatformTask(RecorderTask):
         domain = self.domain
         platform = self.platform
 
-        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
         if hasattr(self.platform, "exclude_attributes"):
             hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)

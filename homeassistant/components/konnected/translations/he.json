@@ -26,12 +26,12 @@
         "step": {
             "options_binary": {
                 "data": {
-                    "name": "\u05e9\u05dd (\u05d0\u05d5\u05e4\u05e6\u05d9\u05d5\u05e0\u05dc\u05d9)"
+                    "name": "\u05e9\u05dd"
                 }
             },
             "options_digital": {
                 "data": {
-                    "name": "\u05e9\u05dd (\u05d0\u05d5\u05e4\u05e6\u05d9\u05d5\u05e0\u05dc\u05d9)"
+                    "name": "\u05e9\u05dd"
                 }
             },
             "options_io": {
@@ -39,7 +39,7 @@
             },
             "options_switch": {
                 "data": {
-                    "name": "\u05e9\u05dd (\u05d0\u05d5\u05e4\u05e6\u05d9\u05d5\u05e0\u05dc\u05d9)"
+                    "name": "\u05e9\u05dd"
                 }
             }
         }

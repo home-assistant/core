@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Mapping
+import copy
 import logging
 import re
 import secrets
@@ -38,6 +39,7 @@ from .const import (
     ATTR_ENDPOINTS,
     ATTR_SETTINGS,
     ATTR_STREAMS,
+    CONF_EXTRA_PART_WAIT_TIME,
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
@@ -55,15 +57,24 @@ from .const import (
     SOURCE_TIMEOUT,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
-    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
+from .core import (
+    PROVIDERS,
+    STREAM_SETTINGS_NON_LL_HLS,
+    IdleTimer,
+    KeyFrameConverter,
+    StreamOutput,
+    StreamSettings,
+)
 from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 __all__ = [
+    "ATTR_SETTINGS",
+    "CONF_EXTRA_PART_WAIT_TIME",
     "CONF_RTSP_TRANSPORT",
     "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
+    "DOMAIN",
     "FORMAT_CONTENT_TYPE",
     "HLS_PROVIDER",
     "OUTPUT_FORMATS",
@@ -91,7 +102,7 @@ def redact_credentials(data: str) -> str:
 def create_stream(
     hass: HomeAssistant,
     stream_source: str,
-    options: dict[str, str | bool],
+    options: Mapping[str, str | bool | float],
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
@@ -101,11 +112,35 @@ def create_stream(
 
     The stream_label is a string used as an additional message in logging.
     """
+
+    def convert_stream_options(
+        hass: HomeAssistant, stream_options: Mapping[str, str | bool | float]
+    ) -> tuple[dict[str, str], StreamSettings]:
+        """Convert options from stream options into PyAV options and stream settings."""
+        stream_settings = copy.copy(hass.data[DOMAIN][ATTR_SETTINGS])
+        pyav_options: dict[str, str] = {}
+        try:
+            STREAM_OPTIONS_SCHEMA(stream_options)
+        except vol.Invalid as exc:
+            raise HomeAssistantError("Invalid stream options") from exc
+
+        if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
+            stream_settings.hls_part_timeout += extra_wait_time
+        if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
+            assert isinstance(rtsp_transport, str)
+            # The PyAV options currently match the stream CONF constants, but this
+            # will not necessarily always be the case, so they are hard coded here
+            pyav_options["rtsp_transport"] = rtsp_transport
+        if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+            pyav_options["use_wallclock_as_timestamps"] = "1"
+
+        return pyav_options, stream_settings
+
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
-    # Convert extra stream options into PyAV options
-    pyav_options = convert_stream_options(options)
+    # Convert extra stream options into PyAV options and stream settings
+    pyav_options, stream_settings = convert_stream_options(hass, options)
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
         pyav_options = {
@@ -115,7 +150,11 @@ def create_stream(
         }
 
     stream = Stream(
-        hass, stream_source, options=pyav_options, stream_label=stream_label
+        hass,
+        stream_source,
+        pyav_options=pyav_options,
+        stream_settings=stream_settings,
+        stream_label=stream_label,
     )
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
@@ -148,14 +187,15 @@ def filter_libav_logging() -> None:
         return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
-        "libav.mp4",
+        "libav.NULL",
         "libav.h264",
         "libav.hevc",
+        "libav.hls",
+        "libav.mp4",
+        "libav.mpegts",
         "libav.rtsp",
         "libav.tcp",
         "libav.tls",
-        "libav.mpegts",
-        "libav.NULL",
     ):
         logging.getLogger(logging_namespace).addFilter(libav_filter)
 
@@ -189,16 +229,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
+            orientation=1,
         )
     else:
-        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
-            ll_hls=False,
-            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
-            - SEGMENT_DURATION_ADJUSTER,
-            part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-            hls_advance_part_limit=3,
-            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-        )
+        hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -230,13 +264,15 @@ class Stream:
         self,
         hass: HomeAssistant,
         source: str,
-        options: dict[str, str],
+        pyav_options: dict[str, str],
+        stream_settings: StreamSettings,
         stream_label: str | None = None,
     ) -> None:
         """Initialize a stream."""
         self.hass = hass
         self.source = source
-        self.options = options
+        self.pyav_options = pyav_options
+        self._stream_settings = stream_settings
         self._stream_label = stream_label
         self.keepalive = False
         self.access_token: str | None = None
@@ -245,7 +281,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._keyframe_converter = KeyFrameConverter(hass)
+        self._keyframe_converter = KeyFrameConverter(hass, stream_settings)
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -254,6 +290,16 @@ class Stream:
             else _LOGGER
         )
         self._diagnostics = Diagnostics()
+
+    @property
+    def orientation(self) -> int:
+        """Return the current orientation setting."""
+        return self._stream_settings.orientation
+
+    @orientation.setter
+    def orientation(self, value: int) -> None:
+        """Set the stream orientation setting."""
+        self._stream_settings.orientation = value
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -284,7 +330,9 @@ class Stream:
                 self.check_idle()
 
             provider = PROVIDERS[fmt](
-                self.hass, IdleTimer(self.hass, timeout, idle_callback)
+                self.hass,
+                IdleTimer(self.hass, timeout, idle_callback),
+                self._stream_settings,
             )
             self._outputs[fmt] = provider
 
@@ -364,11 +412,13 @@ class Stream:
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
             self._diagnostics.set_value("keepalive", self.keepalive)
+            self._diagnostics.set_value("orientation", self.orientation)
             self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
                     self.source,
-                    self.options,
+                    self.pyav_options,
+                    self._stream_settings,
                     stream_state,
                     self._keyframe_converter,
                     self._thread_quit,
@@ -464,15 +514,18 @@ class Stream:
         recorder.video_path = video_path
 
         await self.start()
+
         self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
-        if lookback > 0 and hls:
-            num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
+        if hls:
+            num_segments = min(int(lookback / hls.target_duration) + 1, MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segments())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments - 1 : -1])
+
+        await recorder.async_record()
 
     async def async_get_image(
         self,
@@ -507,22 +560,6 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
+        vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
     }
 )
-
-
-def convert_stream_options(stream_options: dict[str, str | bool]) -> dict[str, str]:
-    """Convert options from stream options into PyAV options."""
-    pyav_options: dict[str, str] = {}
-    try:
-        STREAM_OPTIONS_SCHEMA(stream_options)
-    except vol.Invalid as exc:
-        raise HomeAssistantError("Invalid stream options") from exc
-
-    if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
-        assert isinstance(rtsp_transport, str)
-        pyav_options["rtsp_transport"] = rtsp_transport
-    if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-        pyav_options["use_wallclock_as_timestamps"] = "1"
-
-    return pyav_options

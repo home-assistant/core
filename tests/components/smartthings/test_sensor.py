@@ -190,6 +190,8 @@ async def test_power_consumption_sensor(hass, device_factory):
     state = hass.states.get("sensor.refrigerator_power")
     assert state
     assert state.state == "109"
+    assert state.attributes["power_consumption_start"] == "2021-07-30T16:45:25Z"
+    assert state.attributes["power_consumption_end"] == "2021-07-30T16:58:33Z"
     entry = entity_registry.async_get("sensor.refrigerator_power")
     assert entry
     assert entry.unique_id == f"{device.device_id}.power_meter"

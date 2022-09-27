@@ -39,6 +39,21 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 
+@pytest.fixture(autouse=True)
+def cover_platform_only():
+    """Only setup the cover and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.COVER,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def zigpy_cover_device(zigpy_device_mock):
     """Zigpy cover device."""
@@ -330,7 +345,7 @@ async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
         hass,
         (
             State(
-                "cover.fakemanufacturer_fakemodel_e769900a_level_on_off_shade",
+                "cover.fakemanufacturer_fakemodel_shade",
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 50},
             ),

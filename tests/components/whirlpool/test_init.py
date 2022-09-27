@@ -7,7 +7,7 @@ from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.whirlpool import init_integration
+from . import init_integration
 
 
 async def test_setup(hass: HomeAssistant):
@@ -31,6 +31,16 @@ async def test_setup_auth_failed(hass: HomeAssistant, mock_auth_api: MagicMock):
     """Test setup with failed auth."""
     mock_auth_api.return_value.do_auth = AsyncMock()
     mock_auth_api.return_value.is_access_token_valid.return_value = False
+    entry = await init_integration(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_fetch_appliances_failed(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+):
+    """Test setup with failed fetch_appliances."""
+    mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.SETUP_ERROR

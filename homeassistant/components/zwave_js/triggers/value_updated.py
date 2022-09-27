@@ -7,12 +7,14 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import Value, get_value_id
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
-from homeassistant.components.zwave_js.config_validation import VALUE_SCHEMA
-from homeassistant.components.zwave_js.const import (
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, MATCH_ALL
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
+
+from ..config_validation import VALUE_SCHEMA
+from ..const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_CURRENT_VALUE,
@@ -27,16 +29,8 @@ from homeassistant.components.zwave_js.const import (
     ATTR_PROPERTY_NAME,
     DOMAIN,
 )
-from homeassistant.components.zwave_js.helpers import (
-    async_get_nodes_from_targets,
-    get_device_id,
-)
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
-
-from .helpers import async_bypass_dynamic_config_validation
+from ..helpers import async_get_nodes_from_targets, get_device_id
+from .trigger_helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -87,8 +81,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE:
@@ -108,7 +102,7 @@ async def async_attach_trigger(
     unsubs = []
     job = HassJob(action)
 
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
 
     @callback
     def async_on_value_updated(

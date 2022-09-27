@@ -8,40 +8,34 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException, AuthException
 from gcal_sync.model import DateOrDatetime, Event
-from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
-from homeassistant import config_entries
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_OFFSET,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.typing import ConfigType
 
 from .api import ApiAuthImpl, get_feature_access
 from .const import (
-    CONF_CALENDAR_ACCESS,
-    DATA_CONFIG,
     DATA_SERVICE,
-    DEVICE_AUTH_IMPL,
     DOMAIN,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
@@ -72,37 +66,15 @@ DEFAULT_CONF_OFFSET = "!!"
 
 EVENT_CALENDAR_ID = "calendar_id"
 
-NOTIFICATION_ID = "google_calendar_notification"
-NOTIFICATION_TITLE = "Google Calendar Setup"
-GROUP_NAME_ALL_CALENDARS = "Google Calendar Sensors"
-
 SERVICE_ADD_EVENT = "add_event"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
-TOKEN_FILE = f".{DOMAIN}.token"
-
-PLATFORMS = ["calendar"]
+PLATFORMS = [Platform.CALENDAR]
 
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                    vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
-                    vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
-                        FeatureAccess
-                    ),
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = vol.Schema(cv.removed(DOMAIN), extra=vol.ALLOW_EXTRA)
+
 
 _SINGLE_CALSEARCH_CONFIG = vol.All(
     cv.deprecated(CONF_MAX_RESULTS),
@@ -164,62 +136,11 @@ ADD_EVENT_SERVICE_SCHEMA = vol.All(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Google component."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = {DATA_CONFIG: conf}
-
-    if CONF_CLIENT_ID in conf and CONF_CLIENT_SECRET in conf:
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                conf[CONF_CLIENT_ID],
-                conf[CONF_CLIENT_SECRET],
-            ),
-            DEVICE_AUTH_IMPL,
-        )
-
-    # Import credentials from the old token file into the new way as
-    # a ConfigEntry managed by home assistant.
-    storage = Storage(hass.config.path(TOKEN_FILE))
-    creds = await hass.async_add_executor_job(storage.get)
-    if creds and get_feature_access(hass).scope in creds.scopes:
-        _LOGGER.debug("Importing configuration entry with credentials")
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    "creds": creds,
-                },
-            )
-        )
-
-    _LOGGER.warning(
-        "Configuration of Google Calendar in YAML in configuration.yaml is "
-        "is deprecated and will be removed in a future release; Your existing "
-        "OAuth Application Credentials and access settings have been imported "
-        "into the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
-    if conf.get(CONF_TRACK_NEW) is False:
-        # The track_new as False would previously result in new entries
-        # in google_calendars.yaml with track set to Fasle which is
-        # handled at calendar entity creation time.
-        _LOGGER.warning(
-            "You must manually set the integration System Options in the "
-            "UI to disable newly discovered entities going forward"
-        )
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
+
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -249,13 +170,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     calendar_service = GoogleCalendarService(
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
-    hass.data[DOMAIN][DATA_SERVICE] = calendar_service
+    hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
+
+    if entry.unique_id is None:
+        try:
+            primary_calendar = await calendar_service.async_get_calendar("primary")
+        except AuthException as err:
+            raise ConfigEntryAuthFailed from err
+        except ApiException as err:
+            raise ConfigEntryNotReady from err
+        else:
+            hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:
         await async_setup_add_event_service(hass, calendar_service)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -271,7 +202,9 @@ def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -333,15 +266,18 @@ async def async_setup_add_event_service(
                 "Missing required fields to set start or end date/datetime"
             )
 
-        await calendar_service.async_create_event(
-            call.data[EVENT_CALENDAR_ID],
-            Event(
-                summary=call.data[EVENT_SUMMARY],
-                description=call.data[EVENT_DESCRIPTION],
-                start=start,
-                end=end,
-            ),
-        )
+        try:
+            await calendar_service.async_create_event(
+                call.data[EVENT_CALENDAR_ID],
+                Event(
+                    summary=call.data[EVENT_SUMMARY],
+                    description=call.data[EVENT_DESCRIPTION],
+                    start=start,
+                    end=end,
+                ),
+            )
+        except ApiException as err:
+            raise HomeAssistantError(str(err)) from err
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA

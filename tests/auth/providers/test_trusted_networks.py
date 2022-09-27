@@ -10,7 +10,7 @@ from homeassistant import auth
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.http import CONF_TRUSTED_PROXIES, CONF_USE_X_FORWARDED_FOR
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
@@ -209,7 +209,7 @@ async def test_login_flow(manager, provider):
     # not from trusted network
     flow = await provider.async_login_flow({"ip_address": ip_address("127.0.0.1")})
     step = await flow.async_step_init()
-    assert step["type"] == RESULT_TYPE_ABORT
+    assert step["type"] == FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, list users
@@ -224,7 +224,7 @@ async def test_login_flow(manager, provider):
 
     # login with valid user
     step = await flow.async_step_init({"user": user.id})
-    assert step["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == FlowResultType.CREATE_ENTRY
     assert step["data"]["user"] == user.id
 
 
@@ -248,7 +248,7 @@ async def test_trusted_users_login(manager_with_user, provider_with_user):
         {"ip_address": ip_address("127.0.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == RESULT_TYPE_ABORT
+    assert step["type"] == FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, list users intersect trusted_users
@@ -332,7 +332,7 @@ async def test_trusted_group_login(manager_with_user, provider_with_user):
         {"ip_address": ip_address("127.0.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == RESULT_TYPE_ABORT
+    assert step["type"] == FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, list users intersect trusted_users
@@ -370,7 +370,7 @@ async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
         {"ip_address": ip_address("127.0.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == RESULT_TYPE_ABORT
+    assert step["type"] == FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, only one available user, bypass the login flow
@@ -378,7 +378,7 @@ async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
         {"ip_address": ip_address("192.168.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == FlowResultType.CREATE_ENTRY
     assert step["data"]["user"] == owner.id
 
     user = await manager_bypass_login.async_create_user("test-user")

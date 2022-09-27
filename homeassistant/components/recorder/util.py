@@ -22,6 +22,7 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
@@ -49,10 +50,18 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
-MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_MARIA_DB = AwesomeVersion(
+    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_MYSQL = AwesomeVersion(
+    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_PGSQL = AwesomeVersion(
+    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_SQLITE = AwesomeVersion(
+    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -79,7 +88,7 @@ def session_scope(
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
-        session = hass.data[DATA_INSTANCE].get_session()
+        session = get_instance(hass).get_session()
 
     if session is None:
         raise RuntimeError("Session required")
@@ -165,9 +174,9 @@ def execute(
     assert False  # unreachable # pragma: no cover
 
 
-def execute_stmt(
+def execute_stmt_lambda_element(
     session: Session,
-    query: Query,
+    stmt: StatementLambdaElement,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
@@ -183,12 +192,11 @@ def execute_stmt(
     specific entities) since they are usually faster
     with .all().
     """
+    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
         try:
-            if use_all:
-                return session.execute(query).all()  # type: ignore[no-any-return]
-            return session.execute(query).yield_per(yield_per)  # type: ignore[no-any-return]
+            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
@@ -552,7 +560,19 @@ def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
+    """Determine if a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    instance = get_instance(hass)
+    return instance.migration_in_progress
+
+
+def async_migration_is_live(hass: HomeAssistant) -> bool:
+    """Determine if a migration is live.
 
     This is a thin wrapper that allows us to change
     out the implementation later.
@@ -560,7 +580,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     if DATA_INSTANCE not in hass.data:
         return False
     instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_in_progress
+    return instance.migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -577,3 +597,9 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
+
+
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import functools
-from json import JSONDecodeError, loads as json_loads
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -25,11 +26,11 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -46,7 +47,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -199,6 +199,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
+    cv.removed("tilt_invert_state"),
     _PLATFORM_SCHEMA_BASE,
     validate_options,
 )
@@ -240,11 +241,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, cover.DOMAIN, PLATFORM_SCHEMA_MODERN)
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -252,8 +248,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT Cover."""
     async_add_entities([MqttCover(hass, config, config_entry, discovery_data)])
 
@@ -419,7 +419,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
             try:
                 payload = json_loads(payload)
-            except JSONDecodeError:
+            except JSON_DECODE_EXCEPTIONS:
                 pass
 
             if isinstance(payload, dict):
@@ -470,7 +470,6 @@ class MqttCover(MqttEntity, CoverEntity):
             }
 
         if self._config.get(CONF_TILT_STATUS_TOPIC) is not None:
-            self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
                 "msg_callback": tilt_message_received,
@@ -487,12 +486,12 @@ class MqttCover(MqttEntity, CoverEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._optimistic
+        return bool(self._optimistic)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return true if the cover is closed or None if the status is unknown."""
         if self._state is None:
             return None
@@ -500,17 +499,17 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._state == STATE_CLOSED
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return true if the cover is actively opening."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return true if the cover is actively closing."""
         return self._state == STATE_CLOSING
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -518,17 +517,17 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         return self._tilt_value
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
@@ -547,7 +546,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         return supported_features
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up.
 
         This method is a coroutine.
@@ -568,7 +567,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
             self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down.
 
         This method is a coroutine.
@@ -589,7 +588,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
             self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device.
 
         This method is a coroutine.
@@ -602,7 +601,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
         tilt_open_position = self._config[CONF_TILT_OPEN_POSITION]
         variables = {
@@ -627,7 +626,7 @@ class MqttCover(MqttEntity, CoverEntity):
             )
             self.async_write_ha_state()
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
         tilt_closed_position = self._config[CONF_TILT_CLOSED_POSITION]
         variables = {
@@ -654,7 +653,7 @@ class MqttCover(MqttEntity, CoverEntity):
             )
             self.async_write_ha_state()
 
-    async def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
@@ -682,7 +681,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._tilt_value = percentage_tilt
             self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         percentage_position = position
@@ -713,7 +712,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._position = percentage_position
             self.async_write_ha_state()
 
-    async def async_toggle_tilt(self, **kwargs):
+    async def async_toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.is_tilt_closed():
             await self.async_open_cover_tilt(**kwargs)

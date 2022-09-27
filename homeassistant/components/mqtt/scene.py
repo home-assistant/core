@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
 
 import voluptuous as vol
 
@@ -23,7 +24,6 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -78,11 +78,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT scene through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, scene.DOMAIN, PLATFORM_SCHEMA_MODERN)
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -90,8 +85,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT scene."""
     async_add_entities([MqttScene(hass, config, config_entry, discovery_data)])
 
@@ -123,7 +122,7 @@ class MqttScene(
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
-    async def async_activate(self, **kwargs):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene.
 
         This method is a coroutine.

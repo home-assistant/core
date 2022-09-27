@@ -1,4 +1,6 @@
 """Config flow for Control4 integration."""
+from __future__ import annotations
+
 from asyncio import TimeoutError as asyncioTimeoutError
 import logging
 
@@ -136,7 +138,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

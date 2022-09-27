@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_host": "Nome de servidor ou endere\u00e7o IP inv\u00e1lido."
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "host": "Servidor"
+                }
+            }
+        }
+    }
+}

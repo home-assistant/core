@@ -18,6 +18,7 @@ from homeassistant.const import (
     MASS_GRAMS,
     PRESSURE_PA,
     SPEED_KILOMETERS_PER_HOUR,
+    STATE_ON,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
@@ -25,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -292,6 +294,34 @@ def test_int_function(hass):
     # Test handling of default return value
     assert render(hass, "{{ int('bad', 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+
+def test_bool_function(hass):
+    """Test bool function."""
+    assert render(hass, "{{ bool(true) }}") is True
+    assert render(hass, "{{ bool(false) }}") is False
+    assert render(hass, "{{ bool('on') }}") is True
+    assert render(hass, "{{ bool('off') }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool('unknown') }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool(none) }}")
+    assert render(hass, "{{ bool('unavailable', none) }}") is None
+    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
+
+
+def test_bool_filter(hass):
+    """Test bool filter."""
+    assert render(hass, "{{ true | bool }}") is True
+    assert render(hass, "{{ false | bool }}") is False
+    assert render(hass, "{{ 'on' | bool }}") is True
+    assert render(hass, "{{ 'off' | bool }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'unknown' | bool }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ none | bool }}")
+    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
+    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
 
 
 @pytest.mark.parametrize(
@@ -1536,6 +1566,45 @@ def test_timedelta(mock_is_safe, hass):
         assert result == "15 days"
 
 
+def test_version(hass):
+    """Test version filter and function."""
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version}}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9')}}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result == "2099.9.9"
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ version(None) < '2099.9.10' }}",
+            hass,
+        ).async_render()
+
+
 def test_regex_match(hass):
     """Test regex_match method."""
     tpl = template.Template(
@@ -2738,13 +2807,13 @@ async def test_area_entities(hass):
     assert info.rate_limit is None
 
     area_entry = area_registry.async_get_or_create("sensor.fake")
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
         config_entry=config_entry,
-        area_id=area_entry.id,
     )
+    entity_registry.async_update_entity(entity_entry.entity_id, area_id=area_entry.id)
 
     info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
     assert_result_info(info, ["light.hue_5678"])
@@ -3831,3 +3900,21 @@ async def test_undefined_variable(hass, caplog):
         "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
         in caplog.text
     )
+
+
+async def test_template_states_blocks_setitem(hass):
+    """Test we cannot setitem on TemplateStates."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    with pytest.raises(RuntimeError):
+        template_state["any"] = "any"
+
+
+async def test_template_states_can_serialize(hass):
+    """Test TemplateState is serializable."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    assert template_state.as_dict() is template_state.as_dict()
+    assert json_dumps(template_state) == json_dumps(template_state)

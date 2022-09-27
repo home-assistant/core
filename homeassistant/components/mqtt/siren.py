@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import copy
 import functools
-import json
 import logging
 from typing import Any
 
@@ -11,16 +10,14 @@ import voluptuous as vol
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
-    TURN_ON_SCHEMA,
-    SirenEntity,
-    SirenEntityFeature,
-    process_turn_on_params,
-)
-from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
+    TURN_ON_SCHEMA,
+    SirenEntity,
+    SirenEntityFeature,
+    process_turn_on_params,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -52,7 +50,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -142,11 +139,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, siren.DOMAIN, PLATFORM_SCHEMA_MODERN)
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -154,8 +146,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT siren."""
     async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 
@@ -253,13 +249,13 @@ class MqttSiren(MqttEntity, SirenEntity):
                 json_payload = {STATE: payload}
             else:
                 try:
-                    json_payload = json.loads(payload)
+                    json_payload = json_loads(payload)
                     _LOGGER.debug(
                         "JSON payload detected after processing payload '%s' on topic %s",
                         json_payload,
                         msg.topic,
                     )
-                except json.decoder.JSONDecodeError:
+                except JSON_DECODE_EXCEPTIONS:
                     _LOGGER.warning(
                         "No valid (JSON) payload detected after processing payload '%s' on topic %s",
                         json_payload,
@@ -311,12 +307,12 @@ class MqttSiren(MqttEntity, SirenEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         mqtt_attributes = super().extra_state_attributes
         attributes = (
@@ -344,7 +340,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         payload = (
             self._command_templates[template](value, template_variables)
             if self._command_templates[template]
-            else json.dumps(template_variables)
+            else json_dumps(template_variables)
         )
         if payload and payload not in PAYLOAD_NONE:
             await self.async_publish(
@@ -355,7 +351,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 self._config[CONF_ENCODING],
             )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.
 
         This method is a coroutine.
@@ -373,7 +369,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._update(kwargs)
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off.
 
         This method is a coroutine.

@@ -35,7 +35,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -55,7 +55,7 @@ async def test_connection_error(
     )
 
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -78,14 +78,14 @@ async def test_full_flow_implementation(
 
     assert result
     assert result.get("flow_id")
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
     assert result2
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2.get("title") == FIXTURE_USER_INPUT[CONF_HOST]
 
     data = result2.get("data")
@@ -132,7 +132,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -154,7 +154,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -176,14 +176,14 @@ async def test_hassio_confirm(
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "AdGuard Home Addon"}
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result2
-    assert result2.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "AdGuard Home Addon"
 
     data = result2.get("data")
@@ -215,6 +215,6 @@ async def test_hassio_connection_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("errors") == {"base": "cannot_connect"}

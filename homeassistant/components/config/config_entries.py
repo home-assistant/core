@@ -3,22 +3,30 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
+from typing import Any
 
 from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
 )
-from homeassistant.loader import Integration, async_get_config_flows
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_config_flows,
+    async_get_integration,
+)
 
 
 async def async_setup(hass):
@@ -33,8 +41,10 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
+    websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
     websocket_api.async_register_command(hass, config_entry_update)
+    websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
 
@@ -50,49 +60,13 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
     async def get(self, request):
         """List available config entries."""
         hass: HomeAssistant = request.app["hass"]
-
-        kwargs = {}
+        domain = None
         if "domain" in request.query:
-            kwargs["domain"] = request.query["domain"]
-
-        entries = hass.config_entries.async_entries(**kwargs)
-
-        if "type" not in request.query:
-            return self.json([entry_json(entry) for entry in entries])
-
-        integrations = {}
-        type_filter = request.query["type"]
-
-        async def load_integration(
-            hass: HomeAssistant, domain: str
-        ) -> Integration | None:
-            """Load integration."""
-            try:
-                return await loader.async_get_integration(hass, domain)
-            except loader.IntegrationNotFound:
-                return None
-
-        # Fetch all the integrations so we can check their type
-        for integration in await asyncio.gather(
-            *(
-                load_integration(hass, domain)
-                for domain in {entry.domain for entry in entries}
-            )
-        ):
-            if integration:
-                integrations[integration.domain] = integration
-
-        entries = [
-            entry
-            for entry in entries
-            if (type_filter != "helper" and entry.domain not in integrations)
-            or (
-                entry.domain in integrations
-                and integrations[entry.domain].integration_type == type_filter
-            )
-        ]
-
-        return self.json([entry_json(entry) for entry in entries])
+            domain = request.query["domain"]
+        type_filter = None
+        if "type" in request.query:
+            type_filter = request.query["type"]
+        return self.json(await async_matching_config_entries(hass, type_filter, domain))
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
@@ -149,6 +123,7 @@ def _prepare_config_flow_result_json(result, prepare_result_json):
     data = result.copy()
     data["result"] = entry_json(result["result"])
     data.pop("data")
+    data.pop("context")
     return data
 
 
@@ -413,6 +388,112 @@ async def ignore_config_flow(hass, connection, msg):
         data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config_entries/get",
+        vol.Optional("type_filter"): str,
+        vol.Optional("domain"): str,
+    }
+)
+@websocket_api.async_response
+async def config_entries_get(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return matching config entries by type and/or domain."""
+    connection.send_result(
+        msg["id"],
+        await async_matching_config_entries(
+            hass, msg.get("type_filter"), msg.get("domain")
+        ),
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config_entries/subscribe",
+        vol.Optional("type_filter"): str,
+    }
+)
+@websocket_api.async_response
+async def config_entries_subscribe(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to config entry updates."""
+    type_filter = msg.get("type_filter")
+
+    async def async_forward_config_entry_changes(
+        change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Forward config entry state events to websocket."""
+        if type_filter:
+            integration = await async_get_integration(hass, entry.domain)
+            if integration.integration_type != type_filter:
+                return
+
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                [
+                    {
+                        "type": change,
+                        "entry": entry_json(entry),
+                    }
+                ],
+            )
+        )
+
+    current_entries = await async_matching_config_entries(hass, type_filter, None)
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass,
+        config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
+        async_forward_config_entry_changes,
+    )
+    connection.send_result(msg["id"])
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"], [{"type": None, "entry": entry} for entry in current_entries]
+        )
+    )
+
+
+async def async_matching_config_entries(
+    hass: HomeAssistant, type_filter: str | None, domain: str | None
+) -> list[dict[str, Any]]:
+    """Return matching config entries by type and/or domain."""
+    kwargs = {}
+    if domain:
+        kwargs["domain"] = domain
+    entries = hass.config_entries.async_entries(**kwargs)
+
+    if type_filter is None:
+        return [entry_json(entry) for entry in entries]
+
+    integrations = {}
+    # Fetch all the integrations so we can check their type
+    tasks = (
+        async_get_integration(hass, domain)
+        for domain in {entry.domain for entry in entries}
+    )
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for integration_or_exc in results:
+        if isinstance(integration_or_exc, Integration):
+            integrations[integration_or_exc.domain] = integration_or_exc
+        elif not isinstance(integration_or_exc, IntegrationNotFound):
+            raise integration_or_exc
+
+    entries = [
+        entry
+        for entry in entries
+        if (type_filter != "helper" and entry.domain not in integrations)
+        or (
+            entry.domain in integrations
+            and integrations[entry.domain].integration_type == type_filter
+        )
+    ]
+
+    return [entry_json(entry) for entry in entries]
 
 
 @callback

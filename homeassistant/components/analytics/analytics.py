@@ -1,6 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
-from typing import cast
+from typing import Any
 import uuid
 
 import aiohttp
@@ -8,7 +8,7 @@ import async_timeout
 
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
-from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.loader import IntegrationNotFound, async_get_integrations
 from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
@@ -66,12 +66,12 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data: dict = {
+        self._data: dict[str, Any] = {
             ATTR_PREFERENCES: {},
             ATTR_ONBOARDED: False,
             ATTR_UUID: None,
         }
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
 
     @property
     def preferences(self) -> dict:
@@ -109,7 +109,7 @@ class Analytics:
 
     async def load(self) -> None:
         """Load preferences."""
-        stored = cast(dict, await self._store.async_load())
+        stored = await self._store.async_load()
         if stored:
             self._data = stored
 
@@ -182,15 +182,9 @@ class Analytics:
         if self.preferences.get(ATTR_USAGE, False) or self.preferences.get(
             ATTR_STATISTICS, False
         ):
-            configured_integrations = await asyncio.gather(
-                *(
-                    async_get_integration(self.hass, domain)
-                    for domain in async_get_loaded_integrations(self.hass)
-                ),
-                return_exceptions=True,
-            )
-
-            for integration in configured_integrations:
+            domains = async_get_loaded_integrations(self.hass)
+            configured_integrations = await async_get_integrations(self.hass, domains)
+            for integration in configured_integrations.values():
                 if isinstance(integration, IntegrationNotFound):
                     continue
 

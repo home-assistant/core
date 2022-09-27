@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -42,7 +43,6 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -101,13 +101,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT binary sensor through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(
-            hass, binary_sensor.DOMAIN, PLATFORM_SCHEMA_MODERN
-        )
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -115,8 +108,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT binary sensor."""
     async_add_entities([MqttBinarySensor(hass, config, config_entry, discovery_data)])
 
@@ -183,6 +180,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
+        self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE),
             entity=self,
@@ -295,14 +293,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return self._state
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def available(self) -> bool:

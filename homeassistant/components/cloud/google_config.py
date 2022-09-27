@@ -6,7 +6,7 @@ import logging
 from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
-from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
+from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import CoreState, Event, callback, split_entity_id
@@ -219,6 +219,7 @@ class CloudGoogleConfig(AbstractConfig):
             sync_entities = True
         elif not self.enabled and self.is_local_sdk_active:
             self.async_disable_local_sdk()
+            sync_entities = True
 
         self._cur_entity_prefs = prefs.google_entity_configs
         self._cur_default_expose = prefs.google_default_expose

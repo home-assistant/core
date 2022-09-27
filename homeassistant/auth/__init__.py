@@ -20,6 +20,7 @@ from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
 EVENT_USER_ADDED = "user_added"
+EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
 _MfaModuleDict = dict[str, MultiFactorAuthModule]
@@ -337,6 +338,8 @@ class AuthManager:
                 await self.async_activate_user(user)
             else:
                 await self.async_deactivate_user(user)
+
+        self.hass.bus.async_fire(EVENT_USER_UPDATED, {"user_id": user.id})
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""

@@ -58,7 +58,12 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
+    DeviceType.Switch: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
@@ -187,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     async def _async_sync_time(*args: Any) -> None:
         """Set the time every morning at 02:40:30."""

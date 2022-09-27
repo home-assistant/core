@@ -2,6 +2,6 @@
   "domain": "weather",
   "name": "Weather",
   "documentation": "https://www.home-assistant.io/integrations/weather",
-  "codeowners": ["@fabaff"],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

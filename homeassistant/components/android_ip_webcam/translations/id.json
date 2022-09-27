@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Proses konfigurasi Android IP Webcam lewat YAML dalam proses penghapusan.\n\nKonfigurasi YAML yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML Android IP Webcam dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Android IP Webcam dalam proses penghapusan"
+        }
+    }
+}

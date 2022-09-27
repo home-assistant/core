@@ -44,7 +44,7 @@ def mock_intellifire_config_flow() -> Generator[None, MagicMock, None]:
     data_mock.serial = "12345"
 
     with patch(
-        "homeassistant.components.intellifire.config_flow.IntellifireAsync",
+        "homeassistant.components.intellifire.config_flow.IntellifireAPILocal",
         autospec=True,
     ) as intellifire_mock:
         intellifire = intellifire_mock.return_value

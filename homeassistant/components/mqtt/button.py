@@ -26,7 +26,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -81,13 +80,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT button through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(
-            hass, button.DOMAIN, PLATFORM_SCHEMA_MODERN
-        )
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -95,8 +87,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT button."""
     async_add_entities([MqttButton(hass, config, config_entry, discovery_data)])
 
@@ -132,7 +128,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
-    async def async_press(self, **kwargs):
+    async def async_press(self) -> None:
         """Turn the device on.
 
         This method is a coroutine.

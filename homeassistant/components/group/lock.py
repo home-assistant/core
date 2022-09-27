@@ -166,7 +166,7 @@ class LockGroup(GroupEntity, LockEntity):
             if (state := self.hass.states.get(entity_id)) is not None
         ]
 
-        valid_state = all(
+        valid_state = any(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
 

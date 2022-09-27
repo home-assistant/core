@@ -1,6 +1,6 @@
 """Test ZHA select entities."""
 
-from unittest.mock import call
+from unittest.mock import call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
@@ -8,12 +8,31 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.helpers import entity_registry as er, restore_state
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+
+@pytest.fixture(autouse=True)
+def select_select_only():
+    """Only setup the select and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.SIREN,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -95,12 +114,11 @@ async def test_select(hass, siren):
     entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier="tone",
     )
     assert entity_id is not None
 
@@ -119,7 +137,7 @@ async def test_select(hass, siren):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -145,7 +163,7 @@ async def test_select_restore_state(
 ):
     """Test zha select entity restore state."""
 
-    entity_id = "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode"
+    entity_id = "select.fakemanufacturer_fakemodel_defaulttoneselect"
     core_rs(entity_id, state="Burglar")
 
     zigpy_device = zigpy_device_mock(
@@ -162,12 +180,11 @@ async def test_select_restore_state(
     zha_device = await zha_device_restored(zigpy_device)
     cluster = zigpy_device.endpoints[1].ias_wd
     assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier="tone",
     )
 
     assert entity_id is not None
@@ -212,7 +229,7 @@ async def test_on_off_select_new_join(hass, light, zha_device_joined):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -284,7 +301,7 @@ async def test_on_off_select_restored(hass, light, zha_device_restored):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
 
 async def test_on_off_select_unsupported(hass, light, zha_device_joined_restored):

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto wurde bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -9,12 +10,25 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte \u00e4ndere Dein Passwort f\u00fcr {username}",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
                 }
             }
+        }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Die Vakuumentit\u00e4tsattribute sind jetzt als Diagnosesensoren verf\u00fcgbar. \n\nBitte passe eventuell vorhandene Automatisierungen oder Skripte an, die diese Attribute verwenden.",
+            "title": "Litter-Robot-Attribute sind jetzt ihre eigenen Sensoren"
         }
     }
 }

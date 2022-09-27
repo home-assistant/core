@@ -24,7 +24,7 @@ async def async_setup_entry(
     entities: list[ElkEntity] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.tasks, "task", ElkTask, entities)
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ElkTask(ElkAttachedEntity, Scene):

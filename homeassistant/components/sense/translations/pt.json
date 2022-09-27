@@ -9,6 +9,12 @@
             "unknown": "Erro inesperado"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Palavra-passe"
+                },
+                "title": "Reautenticar integra\u00e7\u00e3o"
+            },
             "user": {
                 "data": {
                     "email": "Email",

@@ -38,7 +38,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +52,12 @@ CONF_EXPRESSION = "expression"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
+DEFAULT_CONTENT_TYPE = "application/octet-stream"
+
+MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
+DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
+
+ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
 
 WordCommand = NewType("WordCommand", str)
@@ -102,7 +108,10 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DATA): {
+        vol.Optional(ATTR_DATA, default={}): {
+            vol.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): vol.In(
+                MESSAGE_FORMATS
+            ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
         },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
@@ -384,11 +393,14 @@ class MatrixBot:
         self, message: str, target_rooms: list[RoomID], data: dict | None
     ) -> None:
         """Send a message to the Matrix server."""
+        content = {"msgtype": "m.text", "body": message}
+        if data is not None and data.get(ATTR_FORMAT) == FORMAT_HTML:
+            content |= {"format": "org.matrix.custom.html", "formatted_body": message}
         for target_room in target_rooms:
             response: Response = await self._client.room_send(
                 room_id=target_room,
                 message_type="m.room.message",
-                content={"msgtype": "m.text", "body": message},
+                content=content,
             )
             if isinstance(response, ErrorResponse):
                 _LOGGER.error(

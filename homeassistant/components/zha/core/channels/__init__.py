@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from ...entity import ZhaEntity
     from ..device import ZHADevice
 
-_ChannelsT = TypeVar("_ChannelsT", bound="Channels")
-_ChannelPoolT = TypeVar("_ChannelPoolT", bound="ChannelPool")
+_ChannelsSelfT = TypeVar("_ChannelsSelfT", bound="Channels")
+_ChannelPoolSelfT = TypeVar("_ChannelPoolSelfT", bound="ChannelPool")
 _ChannelsDictType = dict[str, base.ZigbeeChannel]
 
 
@@ -104,7 +104,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls: type[_ChannelsT], zha_device: ZHADevice) -> _ChannelsT:
+    def new(cls: type[_ChannelsSelfT], zha_device: ZHADevice) -> _ChannelsSelfT:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -221,7 +221,7 @@ class ChannelPool:
         return self._channels.zha_device.is_mains_powered
 
     @property
-    def manufacturer(self) -> str | None:
+    def manufacturer(self) -> str:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
 
@@ -236,7 +236,7 @@ class ChannelPool:
         return self._channels.zha_device.hass
 
     @property
-    def model(self) -> str | None:
+    def model(self) -> str:
         """Return device model."""
         return self._channels.zha_device.model
 
@@ -272,7 +272,9 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(cls: type[_ChannelPoolT], channels: Channels, ep_id: int) -> _ChannelPoolT:
+    def new(
+        cls: type[_ChannelPoolSelfT], channels: Channels, ep_id: int
+    ) -> _ChannelPoolSelfT:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()
@@ -370,7 +372,7 @@ class ChannelPool:
         return [self.all_channels[chan_id] for chan_id in (available - claimed)]
 
     @callback
-    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
+    def zha_send_event(self, event_data: dict[str, Any]) -> None:
         """Relay events to hass."""
         self._channels.zha_send_event(
             {

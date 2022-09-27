@@ -5,7 +5,13 @@ from homeassistant.const import Platform
 
 DOMAIN = "netgear"
 
-PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 CONF_CONSIDER_HOME = "consider_home"
 
@@ -13,6 +19,9 @@ KEY_ROUTER = "router"
 KEY_COORDINATOR = "coordinator"
 KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 KEY_COORDINATOR_SPEED = "coordinator_speed"
+KEY_COORDINATOR_FIRMWARE = "coordinator_firmware"
+KEY_COORDINATOR_UTIL = "coordinator_utilization"
+KEY_COORDINATOR_LINK = "coordinator_link"
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
@@ -69,7 +78,7 @@ DEVICE_ICONS = {
     1: "mdi:book-open-variant",  # Amazon Kindle
     2: "mdi:android",  # Android Device
     3: "mdi:cellphone",  # Android Phone
-    4: "mdi:tablet-android",  # Android Tablet
+    4: "mdi:tablet",  # Android Tablet
     5: "mdi:router-wireless",  # Apple Airport Express
     6: "mdi:disc-player",  # Blu-ray Player
     7: "mdi:router-network",  # Bridge
@@ -78,7 +87,7 @@ DEVICE_ICONS = {
     10: "mdi:router-network",  # Router
     11: "mdi:play-network",  # DVR
     12: "mdi:gamepad-variant",  # Gaming Console
-    13: "mdi:desktop-mac",  # iMac
+    13: "mdi:monitor",  # iMac
     14: "mdi:tablet",  # iPad
     15: "mdi:tablet",  # iPad Mini
     16: "mdi:cellphone",  # iPhone 5/5S/5C

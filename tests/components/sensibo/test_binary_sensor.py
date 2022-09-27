@@ -27,20 +27,18 @@ async def test_binary_sensor(
     state2 = hass.states.get("binary_sensor.hallway_motion_sensor_main_sensor")
     state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
     state4 = hass.states.get("binary_sensor.hallway_room_occupied")
-    state5 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
-    state6 = hass.states.get(
+    state5 = hass.states.get(
         "binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality"
     )
-    state7 = hass.states.get(
+    state6 = hass.states.get(
         "binary_sensor.kitchen_pure_boost_linked_with_outdoor_air_quality"
     )
     assert state1.state == "on"
     assert state2.state == "on"
     assert state3.state == "on"
     assert state4.state == "on"
-    assert state5.state == "off"
-    assert state6.state == "on"
-    assert state7.state == "off"
+    assert state5.state == "on"
+    assert state6.state == "off"
 
     monkeypatch.setattr(
         get_data.parsed["ABC999111"].motion_sensors["AABBCC"], "alive", False

@@ -1,5 +1,7 @@
 """Config flow for Mazda Connected Services integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import aiohttp
 from pymazda import (
@@ -11,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, MAZDA_REGIONS
@@ -97,11 +100,11 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth if the user credentials have changed."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        self._email = user_input[CONF_EMAIL]
-        self._region = user_input[CONF_REGION]
+        self._email = entry_data[CONF_EMAIL]
+        self._region = entry_data[CONF_REGION]
         return await self.async_step_user()

@@ -2,7 +2,7 @@
   "domain": "yeelight",
   "name": "Yeelight",
   "documentation": "https://www.home-assistant.io/integrations/yeelight",
-  "requirements": ["yeelight==0.7.10", "async-upnp-client==0.31.1"],
+  "requirements": ["yeelight==0.7.10", "async-upnp-client==0.31.2"],
   "codeowners": ["@zewelor", "@shenxn", "@starkillerOG", "@alexyao2015"],
   "config_flow": true,
   "dependencies": ["network"],

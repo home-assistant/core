@@ -56,6 +56,7 @@
   "enableCrashReporting": true,
   "disableAudio": false,
   "analyticsData": "anonymous",
+  "isInsightsEnabled": true,
   "anonymousDeviceId": "65257f7d-874c-498a-8f1b-00b2dd0a7ae1",
   "cameraUtilization": 30,
   "isRecycling": false,

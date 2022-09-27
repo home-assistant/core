@@ -38,7 +38,7 @@ async def test_show_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -52,7 +52,7 @@ async def test_device_step_form(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device"
 
 
@@ -71,7 +71,7 @@ async def test_create_entry(hass):
             {"device_name": CONFIG[DEVICE_NAME]},
         )
 
-    assert result_create_entry["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result_create_entry["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result_create_entry["title"] == CONFIG[DEVICE_NAME]
     assert result_create_entry["data"] == CONFIG
 
@@ -138,5 +138,5 @@ async def test_already_configured_error(hass):
             {"device_name": CONFIG[DEVICE_NAME]},
         )
 
-    assert result_create_entry["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result_create_entry["type"] == data_entry_flow.FlowResultType.ABORT
     assert result_create_entry["reason"] == "already_configured"

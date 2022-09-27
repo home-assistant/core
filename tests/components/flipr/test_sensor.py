@@ -5,6 +5,7 @@ from unittest.mock import patch
 from flipr_api.exceptions import FliprError
 
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -62,30 +63,35 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "7.03"
 
     state = hass.states.get("sensor.flipr_myfliprid_water_temp")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is TEMP_CELSIUS
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "10.5"
 
     state = hass.states.get("sensor.flipr_myfliprid_last_measured")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.state == "2021-02-15T09:10:32+00:00"
 
     state = hass.states.get("sensor.flipr_myfliprid_red_ox")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "657.58"
 
     state = hass.states.get("sensor.flipr_myfliprid_chlorine")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "0.23654886"
 
 

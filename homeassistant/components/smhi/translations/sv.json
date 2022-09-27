@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats"
+        },
         "error": {
             "wrong_location": "Plats i Sverige endast"
         },

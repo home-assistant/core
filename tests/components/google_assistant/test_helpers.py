@@ -30,7 +30,7 @@ from tests.common import (
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
     """Test sync serialize attributes of a GoogleEntity."""
     hass.states.async_set("light.ceiling_lights", "off")
-    hass.config.api = Mock(port=1234, use_ssl=False)
+    hass.config.api = Mock(port=1234, local_ip="192.168.123.123", use_ssl=False)
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://hostname:1234"},
@@ -57,10 +57,7 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
     assert serialized["customData"] == {
         "httpPort": 1234,
-        "httpSSL": False,
-        "proxyDeviceId": "mock-user-id",
         "webhookId": "mock-webhook-id",
-        "baseUrl": "https://hostname:1234",
         "uuid": "abcdef",
     }
 
@@ -327,7 +324,9 @@ async def test_sync_entities_all(agents, result):
 def test_supported_features_string(caplog):
     """Test bad supported features."""
     entity = helpers.GoogleEntity(
-        None, None, State("test.entity_id", "on", {"supported_features": "invalid"})
+        None,
+        MockConfig(),
+        State("test.entity_id", "on", {"supported_features": "invalid"}),
     )
     assert entity.is_supported() is False
     assert "Entity test.entity_id contains invalid supported_features value invalid"
@@ -427,3 +426,34 @@ async def test_config_local_sdk_warn_version(hass, hass_client, caplog, version)
         f"Local SDK version is too old ({version}), check documentation on how "
         "to update to the latest version"
     ) in caplog.text
+
+
+def test_is_supported_cached():
+    """Test is_supported is cached."""
+    config = MockConfig()
+
+    def entity(features: int):
+        return helpers.GoogleEntity(
+            None,
+            config,
+            State("test.entity_id", "on", {"supported_features": features}),
+        )
+
+    with patch(
+        "homeassistant.components.google_assistant.helpers.GoogleEntity.traits",
+        return_value=[1],
+    ) as mock_traits:
+        assert entity(1).is_supported() is True
+        assert len(mock_traits.mock_calls) == 1
+
+        # Supported feature changes, so we calculate again
+        assert entity(2).is_supported() is True
+        assert len(mock_traits.mock_calls) == 2
+
+        mock_traits.reset_mock()
+
+        # Supported feature is same, so we do not calculate again
+        mock_traits.side_effect = ValueError
+
+        assert entity(2).is_supported() is True
+        assert len(mock_traits.mock_calls) == 0

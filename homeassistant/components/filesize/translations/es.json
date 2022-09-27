@@ -4,7 +4,7 @@
             "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "error": {
-            "not_allowed": "Ruta no permitida",
+            "not_allowed": "La ruta no est\u00e1 permitida",
             "not_valid": "La ruta no es v\u00e1lida"
         },
         "step": {

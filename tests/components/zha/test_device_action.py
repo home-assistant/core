@@ -24,6 +24,23 @@ COMMAND = "command"
 COMMAND_SINGLE = "single"
 
 
+@pytest.fixture(autouse=True)
+def required_platforms_only():
+    """Only setup the required platforms and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BINARY_SENSOR,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SIREN,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
     """IAS device fixture."""
@@ -69,28 +86,28 @@ async def test_get_actions(hass, device_ias):
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode",
+            "entity_id": "select.fakemanufacturer_fakemodel_defaulttoneselect",
             "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_sirenlevel",
+            "entity_id": "select.fakemanufacturer_fakemodel_defaultsirenlevelselect",
             "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobelevel",
+            "entity_id": "select.fakemanufacturer_fakemodel_defaultstrobelevelselect",
             "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobe",
+            "entity_id": "select.fakemanufacturer_fakemodel_defaultstrobeselect",
             "metadata": {"secondary": True},
         },
     ]

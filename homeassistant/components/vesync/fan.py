@@ -1,6 +1,9 @@
 """Support for VeSync fans."""
+from __future__ import annotations
+
 import logging
 import math
+from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -91,7 +94,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan = fan
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current speed."""
         if (
             self.smartfan.mode == "manual"
@@ -110,12 +113,12 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         )
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[SKU_TO_BASE_DEVICE.get(self.device.device_type)]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Get the current preset mode."""
         if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
             return self.smartfan.mode
@@ -127,7 +130,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return self.smartfan.uuid
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr = {}
 
@@ -148,7 +151,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
         return attr
 
-    def set_percentage(self, percentage):
+    def set_percentage(self, percentage: int) -> None:
         """Set the speed of the device."""
         if percentage == 0:
             self.smartfan.turn_off()
@@ -167,7 +170,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         )
         self.schedule_update_ha_state()
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
         if preset_mode not in self.preset_modes:
             raise ValueError(
@@ -187,9 +190,9 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
         if preset_mode:

@@ -215,35 +215,35 @@ class TemplateFan(TemplateEntity, FanEntity):
         return self._preset_modes
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state == STATE_ON
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self._preset_mode
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return self._percentage
 
     @property
-    def oscillating(self):
+    def oscillating(self) -> bool | None:
         """Return the oscillation state."""
         return self._oscillating
 
     @property
-    def current_direction(self):
+    def current_direction(self) -> str | None:
         """Return the oscillation state."""
         return self._direction
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         await self.async_run_script(
@@ -354,7 +354,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             )
             self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
         if self._preset_mode_template is not None:

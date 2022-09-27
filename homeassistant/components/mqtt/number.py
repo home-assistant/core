@@ -11,10 +11,15 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
-    NumberEntity,
+    DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
+    NumberMode,
+    RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_UNIT_OF_MEASUREMENT,
@@ -23,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -41,7 +45,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -78,8 +81,10 @@ def validate_config(config):
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
+        vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
@@ -132,13 +137,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT number through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(
-            hass, number.DOMAIN, PLATFORM_SCHEMA_MODERN
-        )
-    )
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -146,13 +144,17 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT number."""
     async_add_entities([MqttNumber(hass, config, config_entry, discovery_data)])
 
 
-class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
+class MqttNumber(MqttEntity, RestoreNumber):
     """representation of an MQTT number."""
 
     _entity_id_format = number.ENTITY_ID_FORMAT
@@ -166,7 +168,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
         self._current_number = None
 
-        NumberEntity.__init__(self)
+        RestoreNumber.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -243,35 +245,42 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (last_state := await self.async_get_last_state()):
-            self._current_number = last_state.state
+        if self._optimistic and (
+            last_number_data := await self.async_get_last_number_data()
+        ):
+            self._current_number = last_number_data.native_value
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._config[CONF_MIN]
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._config[CONF_MAX]
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._config[CONF_STEP]
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self._current_number
 
-    async def async_set_value(self, value: float) -> None:
+    @property
+    def mode(self) -> NumberMode:
+        """Return the mode of the entity."""
+        return self._config[CONF_MODE]
+
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         current_number = value
 
@@ -292,6 +301,11 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
+
+    @property
+    def device_class(self) -> NumberDeviceClass | None:
+        """Return the device class of the sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)

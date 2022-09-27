@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
@@ -32,6 +32,10 @@ if TYPE_CHECKING:
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
+
+_ZHANumberConfigurationEntitySelfT = TypeVar(
+    "_ZHANumberConfigurationEntitySelfT", bound="ZHANumberConfigurationEntity"
+)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -274,12 +278,18 @@ async def async_setup_entry(
 class ZhaNumber(ZhaEntity, NumberEntity):
     """Representation of a ZHA Number entity."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
         """Init this entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._analog_output_channel = self.cluster_channels.get(CHANNEL_ANALOG_OUTPUT)
+        self._analog_output_channel = self.cluster_channels[CHANNEL_ANALOG_OUTPUT]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -287,12 +297,12 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         )
 
     @property
-    def value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self._analog_output_channel.present_value
 
     @property
-    def min_value(self):
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         min_present_value = self._analog_output_channel.min_present_value
         if min_present_value is not None:
@@ -300,7 +310,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return 0
 
     @property
-    def max_value(self):
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         max_present_value = self._analog_output_channel.max_present_value
         if max_present_value is not None:
@@ -308,15 +318,15 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return 1023
 
     @property
-    def step(self):
+    def native_step(self) -> float | None:
         """Return the value step."""
         resolution = self._analog_output_channel.resolution
         if resolution is not None:
             return resolution
-        return super().step
+        return super().native_step
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the number entity."""
         description = self._analog_output_channel.description
         if description is not None and len(description) > 0:
@@ -324,7 +334,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         application_type = self._analog_output_channel.application_type
         if application_type is not None:
@@ -332,7 +342,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         engineering_units = self._analog_output_channel.engineering_units
         return UNITS.get(engineering_units)
@@ -342,13 +352,13 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         """Handle value update from channel."""
         self.async_write_ha_state()
 
-    async def async_set_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         num_value = float(value)
         if await self._analog_output_channel.async_set_present_value(num_value):
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
         _LOGGER.debug("polling current state")
@@ -363,17 +373,17 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     """Representation of a ZHA number configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_step: float = 1.0
+    _attr_native_step: float = 1.0
     _zcl_attribute: str
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZHANumberConfigurationEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZHANumberConfigurationEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -397,18 +407,18 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this number configuration entity."""
         self._channel: ZigbeeChannel = channels[0]
         super().__init__(unique_id, zha_device, channels, **kwargs)
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current value."""
         return self._channel.cluster.get(self._zcl_attribute)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         try:
             res = await self._channel.cluster.write_attributes(
@@ -439,8 +449,8 @@ class AqaraMotionDetectionInterval(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    _attr_min_value: float = 2
-    _attr_max_value: float = 65535
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 65535
     _zcl_attribute: str = "detection_interval"
 
 
@@ -450,8 +460,8 @@ class OnOffTransitionTimeConfigurationEntity(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    _attr_min_value: float = 0x0000
-    _attr_max_value: float = 0xFFFF
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFF
     _zcl_attribute: str = "on_off_transition_time"
 
 
@@ -459,8 +469,8 @@ class OnOffTransitionTimeConfigurationEntity(
 class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_level"):
     """Representation of a ZHA on level configuration entity."""
 
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0xFF
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "on_level"
 
 
@@ -470,8 +480,8 @@ class OnTransitionTimeConfigurationEntity(
 ):
     """Representation of a ZHA on transition time configuration entity."""
 
-    _attr_min_value: float = 0x0000
-    _attr_max_value: float = 0xFFFE
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "on_transition_time"
 
 
@@ -481,8 +491,8 @@ class OffTransitionTimeConfigurationEntity(
 ):
     """Representation of a ZHA off transition time configuration entity."""
 
-    _attr_min_value: float = 0x0000
-    _attr_max_value: float = 0xFFFE
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "off_transition_time"
 
 
@@ -492,8 +502,8 @@ class DefaultMoveRateConfigurationEntity(
 ):
     """Representation of a ZHA default move rate configuration entity."""
 
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0xFE
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFE
     _zcl_attribute: str = "default_move_rate"
 
 
@@ -503,8 +513,8 @@ class StartUpCurrentLevelConfigurationEntity(
 ):
     """Representation of a ZHA startup current level configuration entity."""
 
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0xFF
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
 
 
@@ -519,7 +529,19 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0x257
-    _attr_unit_of_measurement: str | None = UNITS[72]
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0x257
+    _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
+class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
+    """Representation of a ZHA timer duration configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[14]
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFFFFFFFF
+    _attr_native_unit_of_measurement: str | None = UNITS[72]
+    _zcl_attribute: str = "filter_life_time"
