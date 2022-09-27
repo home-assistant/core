@@ -53,6 +53,7 @@ CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
+CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
@@ -87,6 +88,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_IS_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [

@@ -34,6 +34,7 @@ from homeassistant.util.unit_conversion import (
     EnergyConverter,
     PowerConverter,
     PressureConverter,
+    SpeedConverter,
     TemperatureConverter,
     VolumeConverter,
 )
@@ -63,6 +64,7 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
 }

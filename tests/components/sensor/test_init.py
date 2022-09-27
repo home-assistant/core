@@ -16,6 +16,10 @@ from homeassistant.const import (
     PRESSURE_INHG,
     PRESSURE_KPA,
     PRESSURE_MMHG,
+    SPEED_INCHES_PER_HOUR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
+    SPEED_MILLIMETERS_PER_DAY,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -523,6 +527,31 @@ async def test_custom_unit(
             1000,
             1000,
             SensorDeviceClass.PRESSURE,
+        ),
+        # Speed
+        (
+            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+            100,
+            62,
+            SensorDeviceClass.SPEED,
+        ),
+        (
+            SPEED_MILLIMETERS_PER_DAY,
+            SPEED_INCHES_PER_HOUR,
+            SPEED_INCHES_PER_HOUR,
+            78,
+            0.13,
+            SensorDeviceClass.SPEED,
+        ),
+        (
+            SPEED_KILOMETERS_PER_HOUR,
+            "peer_distance",
+            SPEED_KILOMETERS_PER_HOUR,
+            100,
+            100,
+            SensorDeviceClass.SPEED,
         ),
         # Volume
         (
