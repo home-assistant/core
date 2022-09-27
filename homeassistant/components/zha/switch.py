@@ -359,19 +359,6 @@ class InovelliLocalProtection(
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliRemoteProtection(
-    ZHASwitchConfigurationEntity, id_suffix="remote_protection"
-):
-    """Inovelli remote protection control."""
-
-    _zcl_attribute: str = "remote_protection"
-    _attr_name: str = "Remote protection"
-    _attr_entity_registry_enabled_default = False
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_INOVELLI,
-)
 class InovelliOnOffLEDMode(ZHASwitchConfigurationEntity, id_suffix="on_off_led_mode"):
     """Inovelli only 1 LED mode control."""
 

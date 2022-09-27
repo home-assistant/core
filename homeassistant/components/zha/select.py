@@ -310,8 +310,8 @@ class InovelliSwitchType(types.enum8):
     """Inovelli output mode."""
 
     Load_Only = 0x00
-    Double_Control = 0x01
-    AUX = 0x02
+    Three_Way_Dumb = 0x01
+    Three_Way_AUX = 0x02
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
