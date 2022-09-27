@@ -176,7 +176,7 @@ class ESPHomeScanner(BaseHaScanner):
                 source=self._source,
                 device=device,
                 advertisement=advertisement_data,
-                connectable=False,
+                connectable=self._connectable,
                 time=now,
             )
         )
