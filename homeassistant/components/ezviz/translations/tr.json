@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "ezviz_cloud_account_missing": "EZVIZ bulut hesab\u0131 eksik. L\u00fctfen EZVIZ bulut hesab\u0131n\u0131 yeniden yap\u0131land\u0131r\u0131n",
+            "ezviz_cloud_account_missing": "Ezviz bulut hesab\u0131 eksik. L\u00fctfen Ezviz bulut hesab\u0131n\u0131 yeniden yap\u0131land\u0131r\u0131n",
             "unknown": "Beklenmeyen hata"
         },
         "error": {
@@ -18,7 +18,7 @@
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "IP {ip_address} {serial} i\u00e7in RTSP kimlik bilgilerini girin",
-                "title": "Ke\u015ffedilen EZVIZ Kamera"
+                "title": "Ke\u015ffedilen Ezviz Kamera"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "title": "EZVIZ Cloud'a ba\u011flan\u0131n"
+                "title": "Ezviz Cloud'a ba\u011flan\u0131n"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "B\u00f6lge URL'nizi manuel olarak belirtin",
-                "title": "\u00d6zel EZVIZ URL'sine ba\u011flan\u0131n"
+                "title": "\u00d6zel Ezviz URL'sine ba\u011flan\u0131n"
             }
         }
     },

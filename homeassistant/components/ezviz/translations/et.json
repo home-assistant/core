@@ -17,7 +17,7 @@
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta EZVIZ kaamera {serial} IP-ga {ip_address} RTSP mandaat",
+                "description": "Sisesta Ezviz kaamera {serial} IP-ga {ip_address} RTSP mandaat",
                 "title": "Avastati Ezvizi kaamera"
             },
             "user": {

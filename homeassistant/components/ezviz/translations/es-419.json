@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "ezviz_cloud_account_missing": "Falta la cuenta en la nube de EZVIZ. Vuelva a configurar la cuenta en la nube de EZVIZ"
+            "ezviz_cloud_account_missing": "Falta la cuenta en la nube de Ezviz. Vuelva a configurar la cuenta en la nube de Ezviz"
         },
         "flow_title": "{serial}"
     }

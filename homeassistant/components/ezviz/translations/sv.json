@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Konto har redan konfigurerats",
-            "ezviz_cloud_account_missing": "EZVIZ molnkonto saknas. V\u00e4nligen konfigurera om EZVIZ molnkonto",
+            "ezviz_cloud_account_missing": "Ezviz molnkonto saknas. V\u00e4nligen konfigurera om Ezviz molnkonto",
             "unknown": "Ov\u00e4ntat fel"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "description": "Ange RTSP-uppgifter f\u00f6r EZVIZ-kamera {serial} med IP {ip_address}",
-                "title": "Uppt\u00e4ckte EZVIZ Camera"
+                "description": "Ange RTSP-uppgifter f\u00f6r Ezviz-kamera {serial} med IP {ip_address}",
+                "title": "Uppt\u00e4ckte Ezviz Camera"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "title": "Anslut till EZVIZ Cloud"
+                "title": "Anslut till Ezviz Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Anv\u00e4ndarnamn"
                 },
                 "description": "Ange din regions URL manuellt",
-                "title": "Anslut till anpassad EZVIZ URL"
+                "title": "Anslut till anpassad Ezviz URL"
             }
         }
     },
