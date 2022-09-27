@@ -53,7 +53,7 @@ async def test_webhook_accepts_valid_message(
     coordinator = hass.data[DOMAIN][integration.entry_id]
     lock.receiveWebhook = AsyncMock(return_value=processed_message)
 
-    with patch.object(coordinator, "async_set_updated_data") as mock:
+    with patch.object(coordinator, "async_update_listeners") as mock:
         message = load_fixture("loqed/battery_update.json")
         timestamp = 1653304609
         await client.post(
@@ -62,7 +62,7 @@ async def test_webhook_accepts_valid_message(
             headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
         )
 
-    mock.assert_called_with(processed_message)
+    mock.assert_called()
 
 
 async def test_setup_webhook_in_bridge(

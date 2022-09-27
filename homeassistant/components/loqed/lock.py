@@ -1,11 +1,12 @@
 """LOQED lock integration for Home Assistant."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,6 +16,8 @@ from . import LoqedDataCoordinator
 from .const import DOMAIN
 
 WEBHOOK_API_ENDPOINT = "/api/loqed/webhook"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -79,3 +82,11 @@ class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         await self._lock.open()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug(self.coordinator.data)
+        if "bolt_state" in self.coordinator.data:
+            self._lock.updateState(self.coordinator.data["bolt_state"]).close()
+            self.async_write_ha_state()

@@ -46,6 +46,7 @@ def lock_fixture() -> loqed.Lock:
     mock_lock = Mock(spec=loqed.Lock, id="Foo", last_key_id=2)
     mock_lock.name = "LOQED smart lock"
     mock_lock.getWebhooks = AsyncMock(return_value=webhooks_fixture)
+    mock_lock.bolt_state = "locked"
     return mock_lock
 
 
