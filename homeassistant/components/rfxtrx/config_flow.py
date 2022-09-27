@@ -347,7 +347,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         @callback
         def _handle_state_change(
-            entity_id: str, old_state: State | None, new_state: State
+            entity_id: str, old_state: State | None, new_state: State | None
         ) -> None:
             # Wait for entities to finish cleanup
             if new_state is None and entity_id in pending_entities:
