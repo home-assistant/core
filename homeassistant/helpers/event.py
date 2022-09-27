@@ -141,7 +141,9 @@ def threaded_listener_factory(
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[str, State | None, State], Coroutine[Any, Any, None] | None],
+    action: Callable[
+        [str, State | None, State | None], Coroutine[Any, Any, None] | None
+    ],
     from_state: None | str | Iterable[str] = None,
     to_state: None | str | Iterable[str] = None,
 ) -> CALLBACK_TYPE:
