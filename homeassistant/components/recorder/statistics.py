@@ -41,7 +41,13 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
-from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
+from .db_schema import (
+    Statistics,
+    StatisticsBase,
+    StatisticsMeta,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -206,6 +212,35 @@ def _get_display_to_statistic_unit_converter(
     return partial(
         converter.convert, from_unit=display_unit, to_unit=converter.NORMALIZED_UNIT
     )
+
+
+def _get_unit_converter(
+    from_unit: str, to_unit: str
+) -> Callable[[float | None], float | None]:
+    """Prepare a converter from a unit to another unit."""
+
+    def convert_units(
+        val: float | None, conv: type[BaseUnitConverter], from_unit: str, to_unit: str
+    ) -> float | None:
+        """Return converted val."""
+        if val is None:
+            return val
+        return conv.convert(val, from_unit=from_unit, to_unit=to_unit)
+
+    for conv in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+        if from_unit in conv.VALID_UNITS and to_unit in conv.VALID_UNITS:
+            return partial(
+                convert_units, conv=conv, from_unit=from_unit, to_unit=to_unit
+            )
+    raise HomeAssistantError
+
+
+def can_convert_units(from_unit: str | None, to_unit: str | None) -> bool:
+    """Return True if it's possible to convert from from_unit to to_unit."""
+    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+        if from_unit in converter.VALID_UNITS and to_unit in converter.VALID_UNITS:
+            return True
+    return False
 
 
 @dataclasses.dataclass
@@ -1614,3 +1649,79 @@ def adjust_statistics(
         )
 
     return True
+
+
+def _change_statistics_unit_for_table(
+    session: Session,
+    table: type[StatisticsBase],
+    metadata_id: int,
+    convert: Callable[[float | None], float | None],
+) -> None:
+    """Insert statistics in the database."""
+    columns = [table.id, table.mean, table.min, table.max, table.state, table.sum]
+    query = session.query(*columns).filter_by(metadata_id=bindparam("metadata_id"))
+    rows = execute(query.params(metadata_id=metadata_id))
+    for row in rows:
+        session.query(table).filter(table.id == row.id).update(
+            {
+                table.mean: convert(row.mean),
+                table.min: convert(row.min),
+                table.max: convert(row.max),
+                table.state: convert(row.state),
+                table.sum: convert(row.sum),
+            },
+            synchronize_session=False,
+        )
+
+
+def change_statistics_unit(
+    instance: Recorder,
+    statistic_id: str,
+    new_unit: str,
+    old_unit: str,
+) -> None:
+    """Change statistics unit for a statistic_id."""
+    with session_scope(session=instance.get_session()) as session:
+        metadata = get_metadata_with_session(
+            instance.hass, session, statistic_ids=(statistic_id,)
+        ).get(statistic_id)
+
+        # Guard against the statistics being removed or updated before the
+        # change_statistics_unit job executes
+        if (
+            metadata is None
+            or metadata[1]["source"] != DOMAIN
+            or metadata[1]["unit_of_measurement"] != old_unit
+        ):
+            _LOGGER.warning("Could not change statistics unit for %s", statistic_id)
+            return
+
+        metadata_id = metadata[0]
+
+        convert = _get_unit_converter(old_unit, new_unit)
+        for table in (StatisticsShortTerm, Statistics):
+            _change_statistics_unit_for_table(session, table, metadata_id, convert)
+        session.query(StatisticsMeta).filter(
+            StatisticsMeta.statistic_id == statistic_id
+        ).update({StatisticsMeta.unit_of_measurement: new_unit})
+
+
+@callback
+def async_change_statistics_unit(
+    hass: HomeAssistant,
+    statistic_id: str,
+    *,
+    new_unit_of_measurement: str,
+    old_unit_of_measurement: str,
+) -> None:
+    """Change statistics unit for a statistic_id."""
+    if not can_convert_units(old_unit_of_measurement, new_unit_of_measurement):
+        raise HomeAssistantError(
+            f"Can't convert {old_unit_of_measurement} to {new_unit_of_measurement}"
+        )
+
+    get_instance(hass).async_change_statistics_unit(
+        statistic_id,
+        new_unit_of_measurement=new_unit_of_measurement,
+        old_unit_of_measurement=old_unit_of_measurement,
+    )

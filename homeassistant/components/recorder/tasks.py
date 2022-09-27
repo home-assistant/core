@@ -32,6 +32,24 @@ class RecorderTask(abc.ABC):
 
 
 @dataclass
+class ChangeStatisticsUnitTask(RecorderTask):
+    """Object to store statistics_id and unit to convert unit of statistics."""
+
+    statistic_id: str
+    new_unit_of_measurement: str
+    old_unit_of_measurement: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.change_statistics_unit(
+            instance,
+            self.statistic_id,
+            self.new_unit_of_measurement,
+            self.old_unit_of_measurement,
+        )
+
+
+@dataclass
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
