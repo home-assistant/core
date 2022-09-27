@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Google Regneark-integreringen m\u00e5 godkjenne kontoen din p\u00e5 nytt",
+                "title": "Godkjenne integrering p\u00e5 nytt"
             }
         }
     }
