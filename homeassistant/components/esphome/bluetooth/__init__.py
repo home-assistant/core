@@ -70,9 +70,10 @@ async def async_connect_scanner(
         scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
-    await cli.subscribe_bluetooth_connections_free(
-        entry_data.async_update_ble_connection_limits
-    )
+    if connectable:
+        await cli.subscribe_bluetooth_connections_free(
+            entry_data.async_update_ble_connection_limits
+        )
 
     @hass_callback
     def _async_unload() -> None:
