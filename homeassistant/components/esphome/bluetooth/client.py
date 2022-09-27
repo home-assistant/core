@@ -145,8 +145,7 @@ class ESPHomeClient(BaseBleakClient):
                         )
                     )
         self.services = services
-        if dangerous_use_bleak_cache:
-            domain_data.set_gatt_services_cache(address_as_int, services)
+        domain_data.set_gatt_services_cache(address_as_int, services)
         return services
 
     def _resolve_characteristic(
