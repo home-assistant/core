@@ -273,8 +273,8 @@ async def ws_adjust_sum_statistics(
 ) -> None:
     """Adjust sum statistics.
 
-    If the statistics is stored as kWh, it's allowed to make an adjustment in Wh or MWh
-    If the statistics is stored as m³, it's allowed to make an adjustment in ft³
+    If the statistics is stored as NORMALIZED_UNIT,
+    it's allowed to make an adjustment in VALID_UNIT
     """
     start_time_str = msg["start_time"]
 
