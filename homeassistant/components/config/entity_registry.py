@@ -238,6 +238,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
         "id": entry.id,
+        "unique_id": entry.unique_id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
@@ -253,5 +254,4 @@ def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
-    data["unique_id"] = entry.unique_id
     return data

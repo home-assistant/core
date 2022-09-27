@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "invalid_port": "Poort wordt al gebruikt.",
             "unknown": "Onverwachte fout"
         }
     }

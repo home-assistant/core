@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from ast import literal_eval
+from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
-from typing import TYPE_CHECKING, Any, Union
+import logging
+from typing import TYPE_CHECKING, Any, TypedDict, Union
 
 import attr
 
@@ -14,13 +16,16 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
+    from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
 
 _SENTINEL = object()
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
 
@@ -51,6 +56,28 @@ class ReceiveMessage:
 
 AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
 MessageCallbackType = Callable[[ReceiveMessage], None]
+
+
+class SubscriptionDebugInfo(TypedDict):
+    """Class for holding subscription debug info."""
+
+    messages: deque[ReceiveMessage]
+    count: int
+
+
+class EntityDebugInfo(TypedDict):
+    """Class for holding entity based debug info."""
+
+    subscriptions: dict[str, SubscriptionDebugInfo]
+    discovery_data: DiscoveryInfoType
+    transmitted: dict[str, dict[str, deque[TimestampedPublishMessage]]]
+
+
+class TriggerDebugInfo(TypedDict):
+    """Class for holding trigger based debug info."""
+
+    device_id: str
+    discovery_data: DiscoveryInfoType
 
 
 class MqttCommandTemplate:
@@ -114,6 +141,11 @@ class MqttCommandTemplate:
 
         if variables is not None:
             values.update(variables)
+        _LOGGER.debug(
+            "Rendering outgoing payload with variables %s and %s",
+            values,
+            self._command_template,
+        )
         return _convert_outgoing_payload(
             self._command_template.async_render(values, parse_result=False)
         )
@@ -172,10 +204,23 @@ class MqttValueTemplate:
             values[ATTR_THIS] = self._template_state
 
         if default == _SENTINEL:
+            _LOGGER.debug(
+                "Rendering incoming payload '%s' with variables %s and %s",
+                payload,
+                values,
+                self._value_template,
+            )
             return self._value_template.async_render_with_possible_json_value(
                 payload, variables=values
             )
 
+        _LOGGER.debug(
+            "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
+            payload,
+            values,
+            default,
+            self._value_template,
+        )
         return self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
@@ -187,6 +232,10 @@ class MqttData:
 
     client: MQTT | None = None
     config: ConfigType | None = None
+    debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
+    debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
+        default_factory=dict
+    )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     discovery_registry_hooks: dict[tuple[str, str], CALLBACK_TYPE] = field(
         default_factory=dict

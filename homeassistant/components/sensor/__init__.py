@@ -57,11 +57,14 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util import dt as dt_util, pressure as pressure_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DistanceConverter,
     PressureConverter,
+    SpeedConverter,
     TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import CONF_STATE_CLASS  # noqa: F401
@@ -101,6 +104,9 @@ class SensorDeviceClass(StrEnum):
 
     # date (ISO8601)
     DATE = "date"
+
+    # distance (LENGTH_*)
+    DISTANCE = "distance"
 
     # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
     DURATION = "duration"
@@ -162,6 +168,9 @@ class SensorDeviceClass(StrEnum):
     # signal strength (dB/dBm)
     SIGNAL_STRENGTH = "signal_strength"
 
+    # speed (SPEED_*)
+    SPEED = "speed"
+
     # Amount of SO2 (µg/m³)
     SULPHUR_DIOXIDE = "sulphur_dioxide"
 
@@ -176,6 +185,9 @@ class SensorDeviceClass(StrEnum):
 
     # voltage (V)
     VOLTAGE = "voltage"
+
+    # volume (VOLUME_*)
+    VOLUME = "volume"
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
@@ -209,17 +221,23 @@ STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLUME: VolumeConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
-    SensorDeviceClass.PRESSURE: pressure_util.UNIT_CONVERSION,
+    SensorDeviceClass.DISTANCE: DistanceConverter.UNIT_CONVERSION,
+    SensorDeviceClass.PRESSURE: PressureConverter.UNIT_CONVERSION,
+    SensorDeviceClass.SPEED: SpeedConverter.UNIT_CONVERSION,
     SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: 1.0,
         TEMP_FAHRENHEIT: 1.8,
         TEMP_KELVIN: 1.0,
     },
+    SensorDeviceClass.VOLUME: VolumeConverter.UNIT_CONVERSION,
 }
 
 # mypy: disallow-any-generics

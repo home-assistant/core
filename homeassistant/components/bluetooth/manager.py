@@ -24,6 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
+    NO_RSSI_VALUE,
     STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
@@ -65,7 +66,6 @@ APPLE_START_BYTES_WANTED: Final = {
 }
 
 RSSI_SWITCH_THRESHOLD = 6
-NO_RSSI_VALUE = -1000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -235,6 +235,23 @@ class BluetoothManager:
             self._cancel_unavailable_tracking.clear()
         uninstall_multiple_bleak_catcher()
 
+    async def async_get_devices_by_address(
+        self, address: str, connectable: bool
+    ) -> list[BLEDevice]:
+        """Get devices by address."""
+        types_ = (True,) if connectable else (True, False)
+        return [
+            device
+            for device in await asyncio.gather(
+                *(
+                    scanner.async_get_device_by_address(address)
+                    for type_ in types_
+                    for scanner in self._get_scanners_by_type(type_)
+                )
+            )
+            if device is not None
+        ]
+
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""
@@ -340,6 +357,7 @@ class BluetoothManager:
             service_info.manufacturer_data != old_service_info.manufacturer_data
             or service_info.service_data != old_service_info.service_data
             or service_info.service_uuids != old_service_info.service_uuids
+            or service_info.name != old_service_info.name
         ):
             return
 

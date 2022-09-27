@@ -15,7 +15,8 @@
             "init": {
                 "data": {
                     "min_rssi": "RSSI minimum"
-                }
+                },
+                "description": "iBeacon dengan nilai RSSI lebih rendah dari RSSI Minimum akan diabaikan. Jika integrasi melihat iBeacon tetangga, meningkatkan nilai ini mungkin akan membantu."
             }
         }
     }

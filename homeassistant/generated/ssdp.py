@@ -15,6 +15,12 @@ SSDP = {
             "manufacturer": "AXIS",
         },
     ],
+    "braviatv": [
+        {
+            "manufacturer": "Sony Corporation",
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
+        },
+    ],
     "control4": [
         {
             "st": "c4:director",

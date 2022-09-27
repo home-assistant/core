@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
     ApiStateCommand,
@@ -19,12 +18,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
+from .entity import SwitchBeeDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +48,8 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntity):
-    """Representation of an Switchbee switch."""
+class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
+    """Representation of a Switchbee switch."""
 
     def __init__(
         self,
@@ -62,30 +60,9 @@ class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntit
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee switch."""
-        super().__init__(coordinator)
-        self._attr_name = f"{device.name}"
-        self._device_id = device.id
-        self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
+        super().__init__(device, coordinator)
         self._attr_is_on = False
         self._is_online = True
-        self._attr_has_entity_name = True
-        self._device = device
-        self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee_{str(device.unit_id)}",
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{str(device.unit_id)}-{coordinator.mac_formated}",
-                )
-            },
-            manufacturer=SWITCHBEE_BRAND,
-            model=coordinator.api.module_display(device.unit_id),
-            suggested_area=device.zone,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.api.name} ({coordinator.api.mac})",
-            ),
-        )
 
     @property
     def available(self) -> bool:
@@ -115,7 +92,7 @@ class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntit
             """
 
             try:
-                await self.coordinator.api.set_state(self._device_id, "dummy")
+                await self.coordinator.api.set_state(self._device.id, "dummy")
             except SwitchBeeDeviceOfflineError:
                 return
             except SwitchBeeError:
@@ -135,6 +112,7 @@ class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntit
             return
 
         if coordinator_device.state == -1:
+
             # This specific call will refresh the state of the device in the CU
             self.hass.async_create_task(async_refresh_state())
 
@@ -170,7 +148,7 @@ class SwitchBeeSwitchEntity(CoordinatorEntity[SwitchBeeCoordinator], SwitchEntit
 
     async def _async_set_state(self, state: str) -> None:
         try:
-            await self.coordinator.api.set_state(self._device_id, state)
+            await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             await self.coordinator.async_refresh()
             raise HomeAssistantError(

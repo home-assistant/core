@@ -19,7 +19,7 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    select_entity = "select.netatmo_myhome"
+    select_entity = "select.myhome"
 
     assert hass.states.get(select_entity).state == "Default"
 
@@ -40,9 +40,7 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
     ]
 
     # Test setting a different schedule
-    with patch(
-        "pyatmo.climate.AsyncClimate.async_switch_home_schedule"
-    ) as mock_switch_home_schedule:
+    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

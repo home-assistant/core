@@ -170,7 +170,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
-    debug_info.initialize(hass)
 
     if conf:
         conf = dict(conf)
@@ -249,20 +248,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
     Causes for this is config entry options changing.
     """
-    mqtt_data = get_mqtt_data(hass)
-    assert (client := mqtt_data.client) is not None
-
-    if (conf := mqtt_data.config) is None:
-        conf = CONFIG_SCHEMA_BASE(dict(entry.data))
-
-    mqtt_data.config = _merge_extended_config(entry, conf)
-    await client.async_disconnect()
-    client.init_client()
-    await client.async_connect()
-
-    await discovery.async_stop(hass)
-    if client.conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, cast(ConfigType, mqtt_data.config), entry)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | None:
@@ -318,7 +304,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if mqtt_data.subscriptions_to_restore:
         mqtt_data.client.subscriptions = mqtt_data.subscriptions_to_restore
         mqtt_data.subscriptions_to_restore = []
-    entry.add_update_listener(_async_config_entry_updated)
+    mqtt_data.reload_dispatchers.append(
+        entry.add_update_listener(_async_config_entry_updated)
+    )
 
     await mqtt_data.client.async_connect()
 

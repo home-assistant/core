@@ -4,6 +4,12 @@
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
   "requirements": ["pybravia==0.2.2"],
   "codeowners": ["@bieniu", "@Drafteed"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
+      "manufacturer": "Sony Corporation"
+    }
+  ],
   "config_flow": true,
   "iot_class": "local_polling",
   "loggers": ["pybravia"]

@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Aby poprawi\u0107 niezawodno\u015b\u0107 i wydajno\u015b\u0107 Bluetooth, zdecydowanie zalecamy aktualizacj\u0119 Home Assistant OS do wersji 9.0 lub nowszej.",
+            "title": "Aktualizacja Home Assistant OS do wersji 9.0 lub nowszej"
+        }
+    },
     "options": {
         "step": {
             "init": {

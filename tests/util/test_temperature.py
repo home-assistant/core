@@ -8,6 +8,23 @@ INVALID_SYMBOL = "bob"
 VALID_SYMBOL = TEMP_CELSIUS
 
 
+@pytest.mark.parametrize(
+    "function_name, value, expected",
+    [
+        ("fahrenheit_to_celsius", 75.2, 24),
+        ("kelvin_to_celsius", 297.65, 24.5),
+        ("celsius_to_fahrenheit", 23, 73.4),
+        ("celsius_to_kelvin", 23, 296.15),
+    ],
+)
+def test_deprecated_functions(
+    function_name: str, value: float, expected: float
+) -> None:
+    """Test that deprecated function still work."""
+    convert = getattr(temperature_util, function_name)
+    assert convert(value) == expected
+
+
 def test_convert_same_unit():
     """Test conversion from any unit to same unit."""
     assert temperature_util.convert(2, TEMP_CELSIUS, TEMP_CELSIUS) == 2

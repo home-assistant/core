@@ -16,6 +16,23 @@ INVALID_SYMBOL = "bob"
 VALID_SYMBOL = VOLUME_LITERS
 
 
+@pytest.mark.parametrize(
+    "function_name, value, expected",
+    [
+        ("liter_to_gallon", 2, pytest.approx(0.528344)),
+        ("gallon_to_liter", 2, 7.570823568),
+        ("cubic_meter_to_cubic_feet", 2, pytest.approx(70.629333)),
+        ("cubic_feet_to_cubic_meter", 2, pytest.approx(0.0566337)),
+    ],
+)
+def test_deprecated_functions(
+    function_name: str, value: float, expected: float
+) -> None:
+    """Test that deprecated function still work."""
+    convert = getattr(volume_util, function_name)
+    assert convert(value) == expected
+
+
 def test_convert_same_unit():
     """Test conversion from any unit to same unit."""
     assert volume_util.convert(2, VOLUME_LITERS, VOLUME_LITERS) == 2
