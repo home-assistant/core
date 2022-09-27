@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -346,7 +346,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 entity_migration_map[new_entity_id] = entry
 
         @callback
-        def _handle_state_change(entity_id: str, old_state, new_state):
+        def _handle_state_change(
+            entity_id: str, old_state: State | None, new_state: State
+        ) -> None:
             # Wait for entities to finish cleanup
             if new_state is None and entity_id in pending_entities:
                 pending_entities.remove(entity_id)
