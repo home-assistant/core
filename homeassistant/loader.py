@@ -268,6 +268,14 @@ async def async_get_integration_descriptions(
     }
 
     for integration in custom_integrations.values():
+        # Remove core integration with same domain as the custom integration
+        for integration_type in ("integration", "hardware", "helper"):
+            if integration.domain not in core_flows[integration_type]:
+                continue
+            del core_flows[integration_type][integration.domain]
+        if integration.domain in core_flows["translated_name"]:
+            core_flows["translated_name"].remove(integration.domain)
+
         metadata = {"config_flow": integration.config_flow, "name": integration.name}
         custom_flows[integration.integration_type][integration.domain] = metadata
 
