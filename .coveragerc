@@ -332,6 +332,7 @@ omit =
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
     homeassistant/components/esphome/cover.py
+    homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
