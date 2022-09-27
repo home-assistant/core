@@ -72,6 +72,7 @@ from .queries import find_shared_attributes_id, find_shared_data_id
 from .run_history import RunHistory
 from .tasks import (
     AdjustStatisticsTask,
+    ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
     DatabaseLockTask,
@@ -508,6 +509,21 @@ class Recorder(threading.Thread):
         self.queue_task(
             UpdateStatisticsMetadataTask(
                 statistic_id, new_statistic_id, new_unit_of_measurement
+            )
+        )
+
+    @callback
+    def async_change_statistics_unit(
+        self,
+        statistic_id: str,
+        *,
+        new_unit_of_measurement: str,
+        old_unit_of_measurement: str,
+    ) -> None:
+        """Change statistics unit for a statistic_id."""
+        self.queue_task(
+            ChangeStatisticsUnitTask(
+                statistic_id, new_unit_of_measurement, old_unit_of_measurement
             )
         )
 
