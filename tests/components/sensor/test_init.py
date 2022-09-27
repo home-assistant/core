@@ -8,6 +8,10 @@ from pytest import approx
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_CENTIMETERS,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_KPA,
@@ -455,14 +459,67 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "native_unit,custom_unit,state_unit,native_value,custom_value",
+    "native_unit,custom_unit,state_unit,native_value,custom_value,device_class",
     [
+        # Distance
+        (
+            LENGTH_KILOMETERS,
+            LENGTH_MILES,
+            LENGTH_MILES,
+            1000,
+            621,
+            SensorDeviceClass.DISTANCE,
+        ),
+        (
+            LENGTH_CENTIMETERS,
+            LENGTH_INCHES,
+            LENGTH_INCHES,
+            7.24,
+            2.85,
+            SensorDeviceClass.DISTANCE,
+        ),
+        (
+            LENGTH_KILOMETERS,
+            "peer_distance",
+            LENGTH_KILOMETERS,
+            1000,
+            1000,
+            SensorDeviceClass.DISTANCE,
+        ),
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
-        (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
-        (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
-        (PRESSURE_HPA, PRESSURE_MMHG, PRESSURE_MMHG, 1000, 750),
+        (
+            PRESSURE_HPA,
+            PRESSURE_INHG,
+            PRESSURE_INHG,
+            1000.0,
+            29.53,
+            SensorDeviceClass.PRESSURE,
+        ),
+        (
+            PRESSURE_KPA,
+            PRESSURE_HPA,
+            PRESSURE_HPA,
+            1.234,
+            12.34,
+            SensorDeviceClass.PRESSURE,
+        ),
+        (
+            PRESSURE_HPA,
+            PRESSURE_MMHG,
+            PRESSURE_MMHG,
+            1000,
+            750,
+            SensorDeviceClass.PRESSURE,
+        ),
         # Not a supported pressure unit
-        (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
+        (
+            PRESSURE_HPA,
+            "peer_pressure",
+            PRESSURE_HPA,
+            1000,
+            1000,
+            SensorDeviceClass.PRESSURE,
+        ),
     ],
 )
 async def test_custom_unit_change(
@@ -473,6 +530,7 @@ async def test_custom_unit_change(
     state_unit,
     native_value,
     custom_value,
+    device_class,
 ):
     """Test custom unit changes are picked up."""
     entity_registry = er.async_get(hass)
@@ -482,7 +540,7 @@ async def test_custom_unit_change(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=device_class,
         unique_id="very_unique",
     )
 

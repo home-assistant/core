@@ -30,6 +30,16 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
+DISTANCE_SENSOR_FT_ATTRIBUTES = {
+    "device_class": "distance",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft",
+}
+DISTANCE_SENSOR_M_ATTRIBUTES = {
+    "device_class": "distance",
+    "state_class": "measurement",
+    "unit_of_measurement": "m",
+}
 ENERGY_SENSOR_KWH_ATTRIBUTES = {
     "device_class": "energy",
     "state_class": "total",
@@ -141,6 +151,9 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
 @pytest.mark.parametrize(
     "attributes, state, value, custom_units, converted_value",
     [
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 10 / 0.0254),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "W"}, 10000),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "kW"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "Pa"}, 1000),
@@ -327,6 +340,7 @@ async def test_sum_statistics_during_period_unit_conversion(
 @pytest.mark.parametrize(
     "custom_units",
     [
+        {"distance": "L"},
         {"energy": "W"},
         {"power": "Pa"},
         {"pressure": "K"},
@@ -538,6 +552,10 @@ async def test_statistics_during_period_bad_end_time(
 @pytest.mark.parametrize(
     "units, attributes, display_unit, statistics_unit, unit_class",
     [
+        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "m", "distance"),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "m", "distance"),
         (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
         (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
         (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),

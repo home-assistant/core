@@ -36,6 +36,7 @@ CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
+CONF_IS_DISTANCE = "is_distance"
 CONF_IS_ENERGY = "is_energy"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
@@ -66,6 +67,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
+    SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
@@ -104,6 +106,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_CO,
                     CONF_IS_CO2,
                     CONF_IS_CURRENT,
+                    CONF_IS_DISTANCE,
                     CONF_IS_ENERGY,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
