@@ -13,7 +13,7 @@ from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BaseHaScanner, HaBluetoothConnector
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 # We have to set this quite high as we don't know
@@ -50,7 +50,7 @@ class ESPHomeScanner(BaseHaScanner):
         if connectable:
             self._details["connector"] = connector
 
-    @hass_callback
+    @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
         return async_track_time_interval(
@@ -78,7 +78,7 @@ class ESPHomeScanner(BaseHaScanner):
         """Get a device by address."""
         return self._discovered_devices.get(address)
 
-    @hass_callback
+    @callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
         now = time.monotonic()
