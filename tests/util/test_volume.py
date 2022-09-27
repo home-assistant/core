@@ -10,6 +10,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.volume as volume_util
 
 INVALID_SYMBOL = "bob"
@@ -43,10 +44,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         volume_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         volume_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

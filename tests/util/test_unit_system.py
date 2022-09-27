@@ -18,6 +18,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     WIND_SPEED,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 SYSTEM_NAME = "TEST"
@@ -149,7 +150,7 @@ def test_temperature_same_unit():
 
 def test_temperature_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.temperature(5, "abc")
 
 
@@ -170,7 +171,7 @@ def test_temperature_to_imperial():
 
 def test_length_unknown_unit():
     """Test length conversion with unknown from unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "fr")
 
 
@@ -192,7 +193,7 @@ def test_length_to_imperial():
 
 def test_wind_speed_unknown_unit():
     """Test wind_speed conversion with unknown from unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "turtles")
 
 
@@ -220,7 +221,7 @@ def test_pressure_same_unit():
 
 def test_pressure_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.pressure(5, "K")
 
 
@@ -252,7 +253,7 @@ def test_accumulated_precipitation_same_unit():
 
 def test_accumulated_precipitation_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.accumulated_precipitation(5, "K")
 
 

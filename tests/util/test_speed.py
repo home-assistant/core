@@ -11,6 +11,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.speed as speed_util
 
 INVALID_SYMBOL = "bob"
@@ -33,10 +34,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         speed_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         speed_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
