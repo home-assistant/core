@@ -103,13 +103,6 @@ QUERY_STATISTICS_SUMMARY_SUM = [
     .label("rownum"),
 ]
 
-QUERY_STATISTICS_SUMMARY_SUM_LEGACY = [
-    StatisticsShortTerm.metadata_id,
-    StatisticsShortTerm.last_reset,
-    StatisticsShortTerm.state,
-    StatisticsShortTerm.sum,
-]
-
 QUERY_STATISTIC_META = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
@@ -119,11 +112,6 @@ QUERY_STATISTIC_META = [
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
-]
-
-QUERY_STATISTIC_META_ID = [
-    StatisticsMeta.id,
-    StatisticsMeta.statistic_id,
 ]
 
 
