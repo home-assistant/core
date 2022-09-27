@@ -14,7 +14,7 @@ from .hub import MikrotikDataUpdateCoordinator, get_api
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
     config_entry.async_on_unload(
         async_track_time_interval(
-            hass, coordinator.api.update_firmware_details, timedelta(hours=1)
+            hass, coordinator.api.update_firmware_version, timedelta(hours=1)
         )
     )
 
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         manufacturer=ATTR_MANUFACTURER,
         model=coordinator.model,
         name=coordinator.hostname,
-        sw_version=coordinator.api.current_firmware_version,
+        sw_version=coordinator.api.installed_version,
     )
 
     return True

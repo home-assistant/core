@@ -18,7 +18,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ARP,
-    ATTR_DEVICE_TRACKER,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     CAPSMAN,
@@ -60,8 +59,8 @@ class MikrotikData:
         self.support_wireless: bool = False
         self.hostname: str = ""
         self.model: str = ""
-        self.current_firmware_version: str = ""
-        self.latest_firmware_version: str = ""
+        self.installed_version: str | None = None
+        self.latest_version: str | None = None
         self.serial_number: str = ""
 
     @staticmethod
@@ -91,17 +90,17 @@ class MikrotikData:
             return str(data[0].get(param))
         return ""
 
-    def update_firmware_details(self, now=None) -> None:
-        """Return hub firmware version."""
+    def update_firmware_version(self, *_: Any) -> None:
+        """Update hub firmware installed and latest version."""
         if data := self.command(f"{MIKROTIK_SERVICES[FIRMWARE]}/check-for-updates"):
-            self.current_firmware_version = str(data[-1]["installed-version"])
-            self.latest_firmware_version = str(data[-1]["latest-version"])
+            self.installed_version = str(data[-1].get("installed-version"))
+            self.latest_version = str(data[-1].get("latest-version"))
 
-    def install_latest_firmware_version(self) -> None:
+    def install_update(self) -> None:
         """Install hub latest firmware version."""
         if data := self.command(f"{MIKROTIK_SERVICES[FIRMWARE]}/install"):
-            self.current_firmware_version = str(data[-1]["installed-version"])
-            self.latest_firmware_version = str(data[-1]["latest-version"])
+            self.installed_version = str(data[-1].get("installed-version"))
+            self.latest_version = str(data[-1].get("latest-version"))
 
     def get_hub_details(self) -> None:
         """Get Hub info."""
@@ -110,7 +109,7 @@ class MikrotikData:
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
         self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
-        self.update_firmware_details()
+        self.update_firmware_version()
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
         """Get devices from interface."""
