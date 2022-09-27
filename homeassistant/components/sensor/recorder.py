@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, MutableMapping
+from collections.abc import Iterable, MutableMapping
 import datetime
 import itertools
 import logging
@@ -23,37 +23,18 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
     StatisticResult,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    POWER_KILO_WATT,
-    POWER_WATT,
-    PRESSURE_BAR,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_KPA,
-    PRESSURE_MBAR,
-    PRESSURE_PA,
-    PRESSURE_PSI,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
-from homeassistant.util import (
-    dt as dt_util,
-    energy as energy_util,
-    power as power_util,
-    pressure as pressure_util,
-    temperature as temperature_util,
-    volume as volume_util,
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    EnergyConverter,
+    PowerConverter,
+    PressureConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
 from . import (
@@ -75,52 +56,12 @@ DEFAULT_STATISTICS = {
     STATE_CLASS_TOTAL_INCREASING: {"sum"},
 }
 
-# Normalized units which will be stored in the statistics table
-DEVICE_CLASS_UNITS: dict[str, str] = {
-    SensorDeviceClass.ENERGY: ENERGY_KILO_WATT_HOUR,
-    SensorDeviceClass.POWER: POWER_WATT,
-    SensorDeviceClass.PRESSURE: PRESSURE_PA,
-    SensorDeviceClass.TEMPERATURE: TEMP_CELSIUS,
-    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,
-}
-
-UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
-    # Convert energy to kWh
-    SensorDeviceClass.ENERGY: {
-        ENERGY_KILO_WATT_HOUR: lambda x: x
-        / energy_util.UNIT_CONVERSION[ENERGY_KILO_WATT_HOUR],
-        ENERGY_MEGA_WATT_HOUR: lambda x: x
-        / energy_util.UNIT_CONVERSION[ENERGY_MEGA_WATT_HOUR],
-        ENERGY_WATT_HOUR: lambda x: x / energy_util.UNIT_CONVERSION[ENERGY_WATT_HOUR],
-    },
-    # Convert power to W
-    SensorDeviceClass.POWER: {
-        POWER_WATT: lambda x: x / power_util.UNIT_CONVERSION[POWER_WATT],
-        POWER_KILO_WATT: lambda x: x / power_util.UNIT_CONVERSION[POWER_KILO_WATT],
-    },
-    # Convert pressure to Pa
-    # Note: pressure_util.convert is bypassed to avoid redundant error checking
-    SensorDeviceClass.PRESSURE: {
-        PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
-        PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
-        PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
-        PRESSURE_KPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_KPA],
-        PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
-        PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
-        PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
-    },
-    # Convert temperature to °C
-    # Note: temperature_util.convert is bypassed to avoid redundant error checking
-    SensorDeviceClass.TEMPERATURE: {
-        TEMP_CELSIUS: lambda x: x,
-        TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
-        TEMP_KELVIN: temperature_util.kelvin_to_celsius,
-    },
-    # Convert volume to cubic meter
-    SensorDeviceClass.GAS: {
-        VOLUME_CUBIC_METERS: lambda x: x,
-        VOLUME_CUBIC_FEET: volume_util.cubic_feet_to_cubic_meter,
-    },
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.POWER: PowerConverter,
+    SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.GAS: VolumeConverter,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -210,9 +151,9 @@ def _normalize_states(
     entity_id: str,
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
-    state_unit = None
+    state_unit: str | None = None
 
-    if device_class not in UNIT_CONVERSIONS:
+    if device_class not in UNIT_CONVERTERS:
         # We're not normalizing this device class, return the state as they are
         fstates = []
         for state in entity_history:
@@ -248,6 +189,7 @@ def _normalize_states(
             state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return state_unit, state_unit, fstates
 
+    converter = UNIT_CONVERTERS[device_class]
     fstates = []
 
     for state in entity_history:
@@ -257,7 +199,7 @@ def _normalize_states(
             continue
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         # Exclude unsupported units from statistics
-        if state_unit not in UNIT_CONVERSIONS[device_class]:
+        if state_unit not in converter.VALID_UNITS:
             if WARN_UNSUPPORTED_UNIT not in hass.data:
                 hass.data[WARN_UNSUPPORTED_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
@@ -270,9 +212,16 @@ def _normalize_states(
                 )
             continue
 
-        fstates.append((UNIT_CONVERSIONS[device_class][state_unit](fstate), state))
+        fstates.append(
+            (
+                converter.convert(
+                    fstate, from_unit=state_unit, to_unit=converter.NORMALIZED_UNIT
+                ),
+                state,
+            )
+        )
 
-    return DEVICE_CLASS_UNITS[device_class], state_unit, fstates
+    return UNIT_CONVERTERS[device_class].NORMALIZED_UNIT, state_unit, fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -503,7 +452,7 @@ def _compile_statistics(  # noqa: C901
                         "compiled statistics (%s). Generation of long term statistics "
                         "will be suppressed unless the unit changes back to %s. "
                         "Go to %s to fix this",
-                        "normalized " if device_class in DEVICE_CLASS_UNITS else "",
+                        "normalized " if device_class in UNIT_CONVERTERS else "",
                         entity_id,
                         normalized_unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -653,7 +602,7 @@ def list_statistic_ids(
         ):
             continue
 
-        if device_class not in UNIT_CONVERSIONS:
+        if device_class not in UNIT_CONVERTERS:
             result[state.entity_id] = {
                 "has_mean": "mean" in provided_statistics,
                 "has_sum": "sum" in provided_statistics,
@@ -665,10 +614,11 @@ def list_statistic_ids(
             }
             continue
 
-        if state_unit not in UNIT_CONVERSIONS[device_class]:
+        converter = UNIT_CONVERTERS[device_class]
+        if state_unit not in converter.VALID_UNITS:
             continue
 
-        statistics_unit = DEVICE_CLASS_UNITS[device_class]
+        statistics_unit = converter.NORMALIZED_UNIT
         result[state.entity_id] = {
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
@@ -719,7 +669,7 @@ def validate_statistics(
                 )
 
             metadata_unit = metadata[1]["unit_of_measurement"]
-            if device_class not in UNIT_CONVERSIONS:
+            if device_class not in UNIT_CONVERTERS:
                 if state_unit != metadata_unit:
                     # The unit has changed
                     validation_result[entity_id].append(
@@ -732,7 +682,7 @@ def validate_statistics(
                             },
                         )
                     )
-            elif metadata_unit != DEVICE_CLASS_UNITS[device_class]:
+            elif metadata_unit != UNIT_CONVERTERS[device_class].NORMALIZED_UNIT:
                 # The unit in metadata is not supported for this device class
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -741,7 +691,9 @@ def validate_statistics(
                             "statistic_id": entity_id,
                             "device_class": device_class,
                             "metadata_unit": metadata_unit,
-                            "supported_unit": DEVICE_CLASS_UNITS[device_class],
+                            "supported_unit": UNIT_CONVERTERS[
+                                device_class
+                            ].NORMALIZED_UNIT,
                         },
                     )
                 )
@@ -757,8 +709,8 @@ def validate_statistics(
 
         if (
             state_class in STATE_CLASSES
-            and device_class in UNIT_CONVERSIONS
-            and state_unit not in UNIT_CONVERSIONS[device_class]
+            and device_class in UNIT_CONVERTERS
+            and state_unit not in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             # The unit in the state is not supported for this device class
             validation_result[entity_id].append(

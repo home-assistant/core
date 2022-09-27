@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
@@ -47,6 +48,8 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 }
 
 _SENTINEL = object()
+
+DISCOVERY_COUNT = len(MQTT)
 
 
 async def help_test_availability_when_connection_lost(
@@ -1083,7 +1086,7 @@ async def help_test_entity_id_update_subscriptions(
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert mqtt_mock.async_subscribe.call_count == len(topics) + 3
+    assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
@@ -1391,7 +1394,7 @@ async def help_test_entity_debug_info_remove(
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
-    assert entity_id not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
+    assert entity_id not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_debug_info_update_entity_id(
@@ -1449,9 +1452,7 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert (
-        f"{domain}.test" not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
-    )
+    assert f"{domain}.test" not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_disabled_by_default(

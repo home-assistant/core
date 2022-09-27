@@ -30,15 +30,45 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
+ENERGY_SENSOR_KWH_ATTRIBUTES = {
+    "device_class": "energy",
+    "state_class": "total",
+    "unit_of_measurement": "kWh",
+}
+ENERGY_SENSOR_WH_ATTRIBUTES = {
+    "device_class": "energy",
+    "state_class": "total",
+    "unit_of_measurement": "Wh",
+}
+GAS_SENSOR_FT3_ATTRIBUTES = {
+    "device_class": "gas",
+    "state_class": "total",
+    "unit_of_measurement": "ft³",
+}
+GAS_SENSOR_M3_ATTRIBUTES = {
+    "device_class": "gas",
+    "state_class": "total",
+    "unit_of_measurement": "m³",
+}
 POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
     "state_class": "measurement",
     "unit_of_measurement": "kW",
 }
+POWER_SENSOR_W_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "W",
+}
 PRESSURE_SENSOR_HPA_ATTRIBUTES = {
     "device_class": "pressure",
     "state_class": "measurement",
     "unit_of_measurement": "hPa",
+}
+PRESSURE_SENSOR_PA_ATTRIBUTES = {
+    "device_class": "pressure",
+    "state_class": "measurement",
+    "unit_of_measurement": "Pa",
 }
 TEMPERATURE_SENSOR_C_ATTRIBUTES = {
     "device_class": "temperature",
@@ -49,16 +79,6 @@ TEMPERATURE_SENSOR_F_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
     "unit_of_measurement": "°F",
-}
-ENERGY_SENSOR_KWH_ATTRIBUTES = {
-    "device_class": "energy",
-    "state_class": "total",
-    "unit_of_measurement": "kWh",
-}
-GAS_SENSOR_M3_ATTRIBUTES = {
-    "device_class": "gas",
-    "state_class": "total",
-    "unit_of_measurement": "m³",
 }
 
 
@@ -544,14 +564,18 @@ async def test_statistics_during_period_bad_end_time(
 @pytest.mark.parametrize(
     "units, attributes, display_unit, statistics_unit, unit_class",
     [
+        (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
+        (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
+        (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
+        (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
         (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
     ],
 )
 async def test_list_statistic_ids(
@@ -566,6 +590,8 @@ async def test_list_statistic_ids(
 ):
     """Test list_statistic_ids."""
     now = dt_util.utcnow()
+    has_mean = attributes["state_class"] == "measurement"
+    has_sum = not has_mean
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -586,8 +612,8 @@ async def test_list_statistic_ids(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "has_mean": True,
-            "has_sum": False,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
             "name": None,
             "source": "recorder",
             "display_unit_of_measurement": display_unit,
@@ -608,8 +634,8 @@ async def test_list_statistic_ids(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "has_mean": True,
-            "has_sum": False,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
             "name": None,
             "source": "recorder",
             "display_unit_of_measurement": display_unit,
@@ -629,25 +655,42 @@ async def test_list_statistic_ids(
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == [
-        {
-            "statistic_id": "sensor.test",
-            "has_mean": True,
-            "has_sum": False,
-            "name": None,
-            "source": "recorder",
-            "display_unit_of_measurement": display_unit,
-            "statistics_unit_of_measurement": statistics_unit,
-            "unit_class": unit_class,
-        }
-    ]
+    if has_mean:
+        assert response["result"] == [
+            {
+                "statistic_id": "sensor.test",
+                "has_mean": has_mean,
+                "has_sum": has_sum,
+                "name": None,
+                "source": "recorder",
+                "display_unit_of_measurement": display_unit,
+                "statistics_unit_of_measurement": statistics_unit,
+                "unit_class": unit_class,
+            }
+        ]
+    else:
+        assert response["result"] == []
 
     await client.send_json(
         {"id": 6, "type": "recorder/list_statistic_ids", "statistic_type": "sum"}
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == []
+    if has_sum:
+        assert response["result"] == [
+            {
+                "statistic_id": "sensor.test",
+                "has_mean": has_mean,
+                "has_sum": has_sum,
+                "name": None,
+                "source": "recorder",
+                "display_unit_of_measurement": display_unit,
+                "statistics_unit_of_measurement": statistics_unit,
+                "unit_class": unit_class,
+            }
+        ]
+    else:
+        assert response["result"] == []
 
 
 async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
@@ -1045,8 +1088,16 @@ async def test_backup_end_without_start(
 @pytest.mark.parametrize(
     "units, attributes, unit, unit_class",
     [
-        (METRIC_SYSTEM, GAS_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
         (METRIC_SYSTEM, ENERGY_SENSOR_KWH_ATTRIBUTES, "kWh", "energy"),
+        (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "kWh", "energy"),
+        (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "m³", "volume"),
+        (METRIC_SYSTEM, GAS_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
+        (METRIC_SYSTEM, POWER_SENSOR_W_ATTRIBUTES, "W", "power"),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "W", "power"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_PA_ATTRIBUTES, "Pa", "pressure"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "Pa", "pressure"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "temperature"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°C", "temperature"),
     ],
 )
 async def test_get_statistics_metadata(
@@ -1054,6 +1105,8 @@ async def test_get_statistics_metadata(
 ):
     """Test get_statistics_metadata."""
     now = dt_util.utcnow()
+    has_mean = attributes["state_class"] == "measurement"
+    has_sum = not has_mean
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -1096,8 +1149,8 @@ async def test_get_statistics_metadata(
         },
     )
     external_energy_metadata_1 = {
-        "has_mean": False,
-        "has_sum": True,
+        "has_mean": has_mean,
+        "has_sum": has_sum,
         "name": "Total imported energy",
         "source": "test",
         "state_unit_of_measurement": unit,
@@ -1123,8 +1176,8 @@ async def test_get_statistics_metadata(
         {
             "statistic_id": "test:total_gas",
             "display_unit_of_measurement": unit,
-            "has_mean": False,
-            "has_sum": True,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
             "name": "Total imported energy",
             "source": "test",
             "statistics_unit_of_measurement": unit,
@@ -1150,9 +1203,9 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": unit,
-            "has_mean": False,
-            "has_sum": True,
+            "display_unit_of_measurement": attributes["unit_of_measurement"],
+            "has_mean": has_mean,
+            "has_sum": has_sum,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": unit,
@@ -1178,9 +1231,9 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": unit,
-            "has_mean": False,
-            "has_sum": True,
+            "display_unit_of_measurement": attributes["unit_of_measurement"],
+            "has_mean": has_mean,
+            "has_sum": has_sum,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": unit,

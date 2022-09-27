@@ -129,7 +129,7 @@ class Manifest(TypedDict, total=False):
     name: str
     disabled: str
     domain: str
-    integration_type: Literal["integration", "helper"]
+    integration_type: Literal["integration", "hardware", "helper"]
     dependencies: list[str]
     after_dependencies: list[str]
     requirements: list[str]
@@ -558,7 +558,7 @@ class Integration:
         return self.manifest.get("iot_class")
 
     @property
-    def integration_type(self) -> Literal["integration", "helper"]:
+    def integration_type(self) -> Literal["integration", "hardware", "helper"]:
         """Return the integration type."""
         return self.manifest.get("integration_type", "integration")
 
