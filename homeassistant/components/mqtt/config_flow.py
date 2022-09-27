@@ -262,7 +262,9 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=updated_config
+                    self.config_entry,
+                    data=updated_config,
+                    title=str(self.broker_config[CONF_BROKER]),
                 )
                 return self.async_create_entry(title="", data={})
 
