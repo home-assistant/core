@@ -42,7 +42,7 @@ from . import (
 
 LENGTH_UNITS = distance_util.VALID_UNITS
 
-MASS_UNITS: tuple[str, ...] = (MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS)
+MASS_UNITS: set[str] = {MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS}
 
 PRESSURE_UNITS = pressure_util.VALID_UNITS
 
@@ -50,7 +50,7 @@ VOLUME_UNITS = volume_util.VALID_UNITS
 
 WIND_SPEED_UNITS = speed_util.VALID_UNITS
 
-TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+TEMPERATURE_UNITS: set[str] = {TEMP_FAHRENHEIT, TEMP_CELSIUS}
 
 
 def _is_valid_unit(unit: str, unit_type: str) -> bool:
