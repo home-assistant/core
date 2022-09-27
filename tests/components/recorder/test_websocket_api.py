@@ -812,15 +812,17 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     assert response["result"] == {"sensor.test2": expected_response["sensor.test2"]}
 
 
-@pytest.mark.parametrize("new_unit", ["dogs", None])
+@pytest.mark.parametrize(
+    "new_unit, new_unit_class", [("dogs", None), (None, None), ("W", "power")]
+)
 async def test_update_statistics_metadata(
-    hass, hass_ws_client, recorder_mock, new_unit
+    hass, hass_ws_client, recorder_mock, new_unit, new_unit_class
 ):
     """Test removing statistics."""
     now = dt_util.utcnow()
 
     units = METRIC_SYSTEM
-    attributes = POWER_SENSOR_KW_ATTRIBUTES
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
     state = 10
 
     hass.config.units = units
@@ -845,8 +847,8 @@ async def test_update_statistics_metadata(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": "W",
-            "unit_class": "power",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": None,
         }
     ]
 
@@ -874,9 +876,276 @@ async def test_update_statistics_metadata(
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": new_unit,
+            "unit_class": new_unit_class,
+        }
+    ]
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+            "units": {"power": "W"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).isoformat(),
+                "last_reset": None,
+                "max": 10.0,
+                "mean": 10.0,
+                "min": 10.0,
+                "start": now.isoformat(),
+                "state": None,
+                "statistic_id": "sensor.test",
+                "sum": None,
+            }
+        ],
+    }
+
+
+async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
+    """Test change unit of recorded statistics."""
+    now = dt_util.utcnow()
+
+    units = METRIC_SYSTEM
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
+    state = 10
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", state, attributes=attributes)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
             "unit_class": None,
         }
     ]
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).isoformat(),
+                "last_reset": None,
+                "max": 10.0,
+                "mean": 10.0,
+                "min": 10.0,
+                "start": now.isoformat(),
+                "state": None,
+                "statistic_id": "sensor.test",
+                "sum": None,
+            }
+        ],
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/change_statistics_unit",
+            "statistic_id": "sensor.test",
+            "new_unit_of_measurement": "W",
+            "old_unit_of_measurement": "kW",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    await client.send_json({"id": 4, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "W",
+            "unit_class": "power",
+        }
+    ]
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+            "units": {"power": "W"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).isoformat(),
+                "last_reset": None,
+                "max": 10000.0,
+                "mean": 10000.0,
+                "min": 10000.0,
+                "start": now.isoformat(),
+                "state": None,
+                "statistic_id": "sensor.test",
+                "sum": None,
+            }
+        ],
+    }
+
+
+async def test_change_statistics_unit_errors(
+    hass, hass_ws_client, recorder_mock, caplog
+):
+    """Test change unit of recorded statistics."""
+    now = dt_util.utcnow()
+    ws_id = 0
+
+    units = METRIC_SYSTEM
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
+    state = 10
+
+    expected_statistic_ids = [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": None,
+        }
+    ]
+
+    expected_statistics = {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).isoformat(),
+                "last_reset": None,
+                "max": 10.0,
+                "mean": 10.0,
+                "min": 10.0,
+                "start": now.isoformat(),
+                "state": None,
+                "statistic_id": "sensor.test",
+                "sum": None,
+            }
+        ],
+    }
+
+    async def assert_statistic_ids(expected):
+        nonlocal ws_id
+        ws_id += 1
+        await client.send_json({"id": ws_id, "type": "recorder/list_statistic_ids"})
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected
+
+    async def assert_statistics(expected):
+        nonlocal ws_id
+        ws_id += 1
+        await client.send_json(
+            {
+                "id": ws_id,
+                "type": "recorder/statistics_during_period",
+                "start_time": now.isoformat(),
+                "statistic_ids": ["sensor.test"],
+                "period": "5minute",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", state, attributes=attributes)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    await assert_statistic_ids(expected_statistic_ids)
+    await assert_statistics(expected_statistics)
+
+    # Try changing to an invalid unit
+    ws_id += 1
+    await client.send_json(
+        {
+            "id": ws_id,
+            "type": "recorder/change_statistics_unit",
+            "statistic_id": "sensor.test",
+            "old_unit_of_measurement": "kW",
+            "new_unit_of_measurement": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["message"] == "Can't convert kW to dogs"
+
+    await async_recorder_block_till_done(hass)
+
+    await assert_statistic_ids(expected_statistic_ids)
+    await assert_statistics(expected_statistics)
+
+    # Try changing from the wrong unit
+    ws_id += 1
+    await client.send_json(
+        {
+            "id": ws_id,
+            "type": "recorder/change_statistics_unit",
+            "statistic_id": "sensor.test",
+            "old_unit_of_measurement": "W",
+            "new_unit_of_measurement": "kW",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await async_recorder_block_till_done(hass)
+
+    assert "Could not change statistics unit for sensor.test" in caplog.text
+    await assert_statistic_ids(expected_statistic_ids)
+    await assert_statistics(expected_statistics)
 
 
 async def test_recorder_info(hass, hass_ws_client, recorder_mock):

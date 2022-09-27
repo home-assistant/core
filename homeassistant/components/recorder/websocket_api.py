@@ -30,6 +30,7 @@ from homeassistant.util.unit_conversion import (
 from .const import MAX_QUEUE_BACKLOG
 from .statistics import (
     async_add_external_statistics,
+    async_change_statistics_unit,
     async_import_statistics,
     list_statistic_ids,
     statistics_during_period,
@@ -46,6 +47,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
     websocket_api.async_register_command(hass, ws_backup_end)
     websocket_api.async_register_command(hass, ws_backup_start)
+    websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
@@ -251,6 +253,32 @@ def ws_update_statistics_metadata(
     """
     get_instance(hass).async_update_statistics_metadata(
         msg["statistic_id"], new_unit_of_measurement=msg["unit_of_measurement"]
+    )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/change_statistics_unit",
+        vol.Required("statistic_id"): str,
+        vol.Required("new_unit_of_measurement"): vol.Any(str, None),
+        vol.Required("old_unit_of_measurement"): vol.Any(str, None),
+    }
+)
+@callback
+def ws_change_statistics_unit(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Change the unit_of_measurement for a statistic_id.
+
+    All existing statistics will be converted to the new unit.
+    """
+    async_change_statistics_unit(
+        hass,
+        msg["statistic_id"],
+        new_unit_of_measurement=msg["new_unit_of_measurement"],
+        old_unit_of_measurement=msg["old_unit_of_measurement"],
     )
     connection.send_result(msg["id"])
 
