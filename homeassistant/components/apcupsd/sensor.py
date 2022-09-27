@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -548,12 +549,13 @@ class APCUPSdSensor(SensorEntity):
         # Set up unique id and device info if serial number is available.
         if (serial_no := data_service.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
-            self._attr_device_info = {
-                "model": data_service.model,
-                "manufacturer": "APC",
-                "hw_version": data_service.hw_version,
-                "sw_version": data_service.sw_version,
-            }
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, serial_no)},
+                model=data_service.model,
+                manufacturer="APC",
+                hw_version=data_service.hw_version,
+                sw_version=data_service.sw_version,
+            )
 
         self.entity_description = description
         self._attr_entity_registry_enabled_default = enabled_by_default
