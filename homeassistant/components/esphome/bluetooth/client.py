@@ -46,14 +46,16 @@ class ESPHomeClient(BaseBleakClient):
             self.domain_data.get_by_unique_id(self._source)
         ).client
         self._is_connected = False
+        self._mtu: int | None = None
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
         return f"ESPHomeClient ({self.address})"
 
-    def _on_bluetooth_connection_state(self, connected: bool) -> None:
+    def _on_bluetooth_connection_state(self, connected: bool, mtu: int) -> None:
         """Handle a connect or disconnect."""
         self._is_connected = connected
+        self._mtu = mtu
         if connected:
             return
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
@@ -96,7 +98,7 @@ class ESPHomeClient(BaseBleakClient):
     @property
     def mtu_size(self) -> int:
         """Get ATT MTU size for active connection."""
-        return DEFAULT_MTU
+        return self._mtu or DEFAULT_MTU
 
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
@@ -124,6 +126,7 @@ class ESPHomeClient(BaseBleakClient):
         esphome_services = await self._client.bluetooth_gatt_get_services(
             address_as_int
         )
+        max_write_without_response = self.mtu_size - GATT_HEADER_SIZE
         services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         for service in esphome_services.services:
             services.add_service(BleakGATTServiceESPHome(service))
@@ -131,7 +134,7 @@ class ESPHomeClient(BaseBleakClient):
                 services.add_characteristic(
                     BleakGATTCharacteristicESPHome(
                         characteristic,
-                        DEFAULT_MAX_WRITE_WITHOUT_RESPONSE,
+                        max_write_without_response,
                         service.uuid,
                         service.handle,
                     )
@@ -247,7 +250,7 @@ class ESPHomeClient(BaseBleakClient):
         await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
             characteristic.handle,
-            callback,
+            lambda handle, data: callback(data),
         )
 
     async def stop_notify(
