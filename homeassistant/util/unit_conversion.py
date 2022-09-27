@@ -76,7 +76,7 @@ class BaseUnitConverter:
 
     UNIT_CLASS: str
     NORMALIZED_UNIT: str
-    VALID_UNITS: tuple[str, ...]
+    VALID_UNITS: set[str]
 
     @classmethod
     def _check_arguments(cls, value: float, from_unit: str, to_unit: str) -> None:
@@ -131,7 +131,7 @@ class DistanceConverter(BaseUnitConverterWithUnitConversion):
         LENGTH_YARD: 1 / _YARD_TO_M,
         LENGTH_MILES: 1 / _MILE_TO_M,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         LENGTH_KILOMETERS,
         LENGTH_MILES,
         LENGTH_FEET,
@@ -140,7 +140,7 @@ class DistanceConverter(BaseUnitConverterWithUnitConversion):
         LENGTH_MILLIMETERS,
         LENGTH_INCHES,
         LENGTH_YARD,
-    )
+    }
 
 
 class EnergyConverter(BaseUnitConverterWithUnitConversion):
@@ -153,11 +153,11 @@ class EnergyConverter(BaseUnitConverterWithUnitConversion):
         ENERGY_KILO_WATT_HOUR: 1,
         ENERGY_MEGA_WATT_HOUR: 1 / 1000,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         ENERGY_WATT_HOUR,
         ENERGY_KILO_WATT_HOUR,
         ENERGY_MEGA_WATT_HOUR,
-    )
+    }
 
 
 class PowerConverter(BaseUnitConverterWithUnitConversion):
@@ -169,10 +169,10 @@ class PowerConverter(BaseUnitConverterWithUnitConversion):
         POWER_WATT: 1,
         POWER_KILO_WATT: 1 / 1000,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         POWER_WATT,
         POWER_KILO_WATT,
-    )
+    }
 
 
 class PressureConverter(BaseUnitConverterWithUnitConversion):
@@ -191,7 +191,7 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
         PRESSURE_PSI: 1 / 6894.757,
         PRESSURE_MMHG: 1 / 133.322,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         PRESSURE_PA,
         PRESSURE_HPA,
         PRESSURE_KPA,
@@ -201,7 +201,7 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
         PRESSURE_INHG,
         PRESSURE_PSI,
         PRESSURE_MMHG,
-    )
+    }
 
 
 class SpeedConverter(BaseUnitConverterWithUnitConversion):
@@ -219,7 +219,7 @@ class SpeedConverter(BaseUnitConverterWithUnitConversion):
         SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         SPEED_FEET_PER_SECOND,
         SPEED_INCHES_PER_DAY,
         SPEED_INCHES_PER_HOUR,
@@ -228,7 +228,7 @@ class SpeedConverter(BaseUnitConverterWithUnitConversion):
         SPEED_METERS_PER_SECOND,
         SPEED_MILES_PER_HOUR,
         SPEED_MILLIMETERS_PER_DAY,
-    )
+    }
 
 
 class TemperatureConverter(BaseUnitConverter):
@@ -236,11 +236,11 @@ class TemperatureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "temperature"
     NORMALIZED_UNIT = TEMP_CELSIUS
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         TEMP_CELSIUS,
         TEMP_FAHRENHEIT,
         TEMP_KELVIN,
-    )
+    }
 
     @classmethod
     def convert(
@@ -317,11 +317,11 @@ class VolumeConverter(BaseUnitConverterWithUnitConversion):
         VOLUME_CUBIC_METERS: 1,
         VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
     }
-    VALID_UNITS: tuple[str, ...] = (
+    VALID_UNITS = {
         VOLUME_LITERS,
         VOLUME_MILLILITERS,
         VOLUME_GALLONS,
         VOLUME_FLUID_OUNCE,
         VOLUME_CUBIC_METERS,
         VOLUME_CUBIC_FEET,
-    )
+    }
