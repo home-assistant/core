@@ -1,4 +1,6 @@
 """Platform for Mazda climate integration."""
+from __future__ import annotations
+
 from typing import Any
 
 from pymazda import Client as MazdaAPIClient
@@ -28,6 +30,20 @@ PRESET_DEFROSTER_OFF = "Defroster Off"
 PRESET_DEFROSTER_FRONT = "Front Defroster"
 PRESET_DEFROSTER_REAR = "Rear Defroster"
 PRESET_DEFROSTER_FRONT_AND_REAR = "Front and Rear Defroster"
+
+
+def _front_defroster_enabled(preset_mode: str | None) -> bool:
+    return preset_mode in [
+        PRESET_DEFROSTER_FRONT_AND_REAR,
+        PRESET_DEFROSTER_FRONT,
+    ]
+
+
+def _rear_defroster_enabled(preset_mode: str | None) -> bool:
+    return preset_mode in [
+        PRESET_DEFROSTER_FRONT_AND_REAR,
+        PRESET_DEFROSTER_REAR,
+    ]
 
 
 async def async_setup_entry(
@@ -151,37 +167,20 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
                 self.vehicle_id,
                 rounded_temperature,
                 self.data["hvacSetting"]["temperatureUnit"],
-                self._attr_preset_mode
-                in [
-                    PRESET_DEFROSTER_FRONT_AND_REAR,
-                    PRESET_DEFROSTER_FRONT,
-                ],
-                self._attr_preset_mode
-                in [
-                    PRESET_DEFROSTER_FRONT_AND_REAR,
-                    PRESET_DEFROSTER_REAR,
-                ],
+                _front_defroster_enabled(self._attr_preset_mode),
+                _rear_defroster_enabled(self._attr_preset_mode),
             )
 
             self._handle_coordinator_update()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Turn on/off the front/rear defrosters according to the chosen preset mode."""
-        front_defroster = preset_mode in [
-            PRESET_DEFROSTER_FRONT_AND_REAR,
-            PRESET_DEFROSTER_FRONT,
-        ]
-        rear_defroster = preset_mode in [
-            PRESET_DEFROSTER_FRONT_AND_REAR,
-            PRESET_DEFROSTER_REAR,
-        ]
-
         await self.client.set_hvac_setting(
             self.vehicle_id,
             self._attr_target_temperature,
             self.data["hvacSetting"]["temperatureUnit"],
-            front_defroster,
-            rear_defroster,
+            _front_defroster_enabled(preset_mode),
+            _rear_defroster_enabled(preset_mode),
         )
 
         self._handle_coordinator_update()
