@@ -918,25 +918,22 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
 
-    async def async_setup_recorder(
-        hass: HomeAssistant, config: ConfigType | None = None
-    ) -> recorder.Recorder:
-        """Setup and return recorder instance."""  # noqa: D401
-        nightly = (
-            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
-        )
-        stats = (
-            recorder.Recorder.async_periodic_statistics if enable_statistics else None
-        )
-        with patch(
-            "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-            side_effect=nightly,
-            autospec=True,
-        ), patch(
-            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-            side_effect=stats,
-            autospec=True,
-        ):
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        side_effect=stats,
+        autospec=True,
+    ):
+
+        async def async_setup_recorder(
+            hass: HomeAssistant, config: ConfigType | None = None
+        ) -> recorder.Recorder:
+            """Setup and return recorder instance."""  # noqa: D401
             await _async_init_recorder_component(hass, config)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
@@ -945,13 +942,13 @@ async def async_setup_recorder_instance(
                 await async_recorder_block_till_done(hass)
             return instance
 
-    return async_setup_recorder
+        yield async_setup_recorder
 
 
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    await async_setup_recorder_instance(hass, recorder_config)
+    yield await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture
