@@ -179,7 +179,7 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         return await self._client.bluetooth_gatt_read(
-            self._address_as_int, characteristic.service_uuid, characteristic.uuid
+            self._address_as_int, characteristic.service_handle, characteristic.handle
         )
 
     async def read_gatt_descriptor(
@@ -215,7 +215,10 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_write(
-            self._address_as_int, characteristic.service_uuid, characteristic.uuid, data
+            self._address_as_int,
+            characteristic.service_handle,
+            characteristic.handle,
+            data,
         )
 
     async def write_gatt_descriptor(
@@ -253,8 +256,8 @@ class ESPHomeClient(BaseBleakClient):
         """
         await self._client.bluetooth_gatt_start_notify(
             self._address_as_int,
-            characteristic.service_uuid,
-            characteristic.uuid,
+            characteristic.service_handle,
+            characteristic.handle,
             callback,
         )
 
@@ -271,5 +274,5 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_stop_notify(
-            self._address_as_int, characteristic.service_uuid, characteristic.uuid
+            self._address_as_int, characteristic.service_handle, characteristic.handle
         )
