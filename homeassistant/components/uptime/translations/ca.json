@@ -9,5 +9,10 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "title": "La configuraci\u00f3 YAML d'Uptime s'ha eliminat"
+        }
+    },
     "title": "Temps en funcionament"
 }

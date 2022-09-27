@@ -17,6 +17,9 @@
             },
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"
+            },
+            "reauth_confirm": {
+                "title": "Integratie herauthenticeren"
             }
         }
     }

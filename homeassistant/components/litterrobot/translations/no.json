@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Vakuumenhetsattributtene er n\u00e5 tilgjengelige som diagnostiske sensorer. \n\n Juster eventuelle automatiseringer eller skript du m\u00e5tte ha som bruker disse attributtene.",
+            "title": "Litter-Robot-attributter er n\u00e5 deres egne sensorer"
+        }
     }
 }

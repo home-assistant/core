@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "A az entit\u00e1s attrib\u00fatumok mostant\u00f3l diagnosztikai \u00e9rz\u00e9kel\u0151k\u00e9nt \u00e1llnak rendelkez\u00e9sre.\n\nK\u00e9rrem, korrig\u00e1lja azokat az automatizmusokat vagy szkripteket, amelyek ezeket az attrib\u00fatumokat haszn\u00e1lj\u00e1k.",
+            "title": "A Litter-Robot attrib\u00fatumok most m\u00e1r \u00f6n\u00e1ll\u00f3 \u00e9rz\u00e9kel\u0151k lettek"
+        }
     }
 }
