@@ -82,7 +82,7 @@ async def async_connect_scanner(
     )
     scanner = ESPHomeScanner(hass, source, new_info_callback, connector, connectable)
     unload_callbacks = [
-        async_register_scanner(hass, scanner, False),
+        async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
