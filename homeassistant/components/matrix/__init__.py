@@ -199,7 +199,10 @@ class MatrixBot:
 
             self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
-            await self._client.sync_forever(timeout=30_000)  # milliseconds.
+            await self._client.sync_forever(
+                timeout=30_000,
+                loop_sleep_time=1_000,
+            )  # milliseconds.
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
