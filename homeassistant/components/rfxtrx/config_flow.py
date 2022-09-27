@@ -361,7 +361,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             if not self.hass.states.async_available(entry.entity_id)
         }
         wait_for_entities = asyncio.Event()
-        track_state_changes = async_track_state_change(
+        remove_track_state_changes = async_track_state_change(
             self.hass, pending_entities, _handle_state_change
         )
 
@@ -370,7 +370,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish cleanup
         await wait_for_entities.wait()
-        track_state_changes()
+        remove_track_state_changes()
 
         for entity_id, entry in entity_migration_map.items():
             entity_registry.async_update_entity(
