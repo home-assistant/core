@@ -59,11 +59,9 @@ def mac_to_int(address: str) -> int:
 def async_can_connect(source: str) -> bool:
     """Check if a given source can make another connection."""
     domain_data = DomainData.get(async_get_hass())
-    client = domain_data.get_entry_data(domain_data.get_by_unique_id(source)).client
-    return True
-
-
-#    return bool(client.available_ble_connections)
+    entry = domain_data.get_by_unique_id(source)
+    # TODO: return False if we run out of connections.
+    return domain_data.get_entry_data(entry).available
 
 
 async def async_connect_scanner(
@@ -356,7 +354,9 @@ class ESPHomeClient(BaseBleakClient):
         Returns:
             (bytearray) The read data.
         """
-        raise NotImplementedError
+        return await self._client.bluetooth_gatt_read_descriptor(
+            self._address_as_int, handle
+        )
 
     async def write_gatt_char(
         self,
@@ -387,7 +387,9 @@ class ESPHomeClient(BaseBleakClient):
             handle (int): The handle of the descriptor to read from.
             data (bytes or bytearray): The data to send.
         """
-        raise NotImplementedError
+        await self._client.bluetooth_gatt_write_descriptor(
+            self._address_as_int, handle, data
+        )
 
     async def start_notify(
         self,
@@ -409,7 +411,12 @@ class ESPHomeClient(BaseBleakClient):
                 UUID or directly by the BleakGATTCharacteristic object representing it.
             callback (function): The function to be called on notification.
         """
-        raise NotImplementedError
+        await self._client.bluetooth_gatt_start_notify(
+            self._address_as_int,
+            characteristic.service_uuid,
+            characteristic.uuid,
+            callback,
+        )
 
     async def stop_notify(
         self,
@@ -423,4 +430,6 @@ class ESPHomeClient(BaseBleakClient):
                 directly by the BleakGATTCharacteristic object representing it.
         """
         characteristic = self._resolve_characteristic(char_specifier)
-        raise NotImplementedError
+        await self._client.bluetooth_gatt_stop_notify(
+            self._address_as_int, characteristic.service_uuid, characteristic.uuid
+        )
