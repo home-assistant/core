@@ -98,7 +98,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
             except SwitchBeeError:
                 return
 
-        coordinator_device = self.coordinator.data[self._device_id]
+        coordinator_device = self.coordinator.data[self._device.id]
 
         if not isinstance(
             coordinator_device,
