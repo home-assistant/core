@@ -16,5 +16,11 @@
         "description": "Enter the host and port on which the apcupsd NIS is being served."
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The apcupsd YAML configuration is being removed",
+      "description": "Configuring apcupsd using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the apcupsd YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
   }
 }
