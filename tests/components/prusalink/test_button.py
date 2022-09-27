@@ -41,9 +41,7 @@ async def test_button_pause_cancel(
     assert state is not None
     assert state.state == "unknown"
 
-    with patch(f"pyprusalink.PrusaLink.{method}") as mock_meth, patch(
-        "homeassistant.components.prusalink.PrusaLinkUpdateCoordinator._fetch_data"
-    ):
+    with patch(f"pyprusalink.PrusaLink.{method}") as mock_meth:
         await hass.services.async_call(
             "button",
             "press",
