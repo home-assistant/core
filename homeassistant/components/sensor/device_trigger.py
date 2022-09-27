@@ -54,6 +54,7 @@ CONF_POWER_FACTOR = "power_factor"
 CONF_PRESSURE = "pressure"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
+CONF_SPEED = "speed"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
@@ -85,6 +86,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
