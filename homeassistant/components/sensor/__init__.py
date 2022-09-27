@@ -60,6 +60,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DistanceConverter,
     PressureConverter,
     TemperatureConverter,
 )
@@ -101,6 +102,9 @@ class SensorDeviceClass(StrEnum):
 
     # date (ISO8601)
     DATE = "date"
+
+    # distance (LENGTH_*)
+    DISTANCE = "distance"
 
     # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
     DURATION = "duration"
@@ -209,11 +213,13 @@ STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
+    SensorDeviceClass.DISTANCE: DistanceConverter.UNIT_CONVERSION,
     SensorDeviceClass.PRESSURE: PressureConverter.UNIT_CONVERSION,
     SensorDeviceClass.TEMPERATURE: {
         TEMP_CELSIUS: 1.0,
