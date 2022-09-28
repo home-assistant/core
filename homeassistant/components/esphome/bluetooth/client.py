@@ -83,7 +83,7 @@ class ESPHomeClient(BaseBleakClient):
             return
         try:
             self._cancel_connection_state()
-        except ValueError as ex:
+        except (AssertionError, ValueError) as ex:
             _LOGGER.debug(
                 "Failed to unsubscribe from connection state (likely connection dropped): %s",
                 ex,
