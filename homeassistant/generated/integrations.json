@@ -810,14 +810,24 @@
       "iot_class": "calculated"
     },
     "denon": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Denon Network Receivers"
-    },
-    "denonavr": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "Denon AVR Network Receivers"
+      "name": "Denon",
+      "integrations": {
+        "denon": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Denon Network Receivers"
+        },
+        "denonavr": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Denon AVR Network Receivers"
+        },
+        "heos": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Denon HEOS"
+        }
+      }
     },
     "deutsche_bahn": {
       "config_flow": false,
@@ -1769,11 +1779,6 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "Heatmiser"
-    },
-    "heos": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "Denon HEOS"
     },
     "here_travel_time": {
       "config_flow": true,
