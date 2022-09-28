@@ -90,6 +90,9 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
 
     def _check_if_became_offline(self) -> None:
         """Check if the device was online (now offline), log message and mark it as Unavailable."""
+        # This specific call will refresh the state of the device in the CU
+        self.hass.async_create_task(self.async_refresh_state())
+
         if self._is_online:
             _LOGGER.warning(
                 "%s device is not responding, check the status in the SwitchBee mobile app",
