@@ -1,9 +1,18 @@
 """Support for SwitchBee switch."""
+
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import Any, TypeVar, Union, cast
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
+from switchbee.device import (
+    ApiStateCommand,
+    SwitchBeeGroupSwitch,
+    SwitchBeeSwitch,
+    SwitchBeeTimedSwitch,
+    SwitchBeeTimerSwitch,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +26,16 @@ from .entity import SwitchBeeDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+_DeviceTypeT = TypeVar(
+    "_DeviceTypeT",
+    bound=Union[
+        SwitchBeeTimedSwitch,
+        SwitchBeeGroupSwitch,
+        SwitchBeeSwitch,
+        SwitchBeeTimerSwitch,
+    ],
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -27,22 +46,24 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBeeSwitchEntity(device, coordinator)
         for device in coordinator.data.values()
-        if device.type
-        in [
-            DeviceType.TimedPowerSwitch,
-            DeviceType.GroupSwitch,
-            DeviceType.Switch,
-            DeviceType.TimedSwitch,
-        ]
+        if isinstance(
+            device,
+            (
+                SwitchBeeTimedSwitch,
+                SwitchBeeGroupSwitch,
+                SwitchBeeSwitch,
+                SwitchBeeTimerSwitch,
+            ),
+        )
     )
 
 
-class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
+class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
     """Representation of a Switchbee switch."""
 
     def __init__(
         self,
-        device: SwitchBeeBaseDevice,
+        device: _DeviceTypeT,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee switch."""
@@ -64,7 +85,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
 
-        async def async_refresh_state():
+        async def async_refresh_state() -> None:
             """Refresh the device state in the Central Unit.
 
             This function addresses issue of a device that came online back but still report
@@ -84,7 +105,10 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
             except SwitchBeeError:
                 return
 
-        if self.coordinator.data[self._device.id].state == -1:
+        coordinator_device = cast(_DeviceTypeT, self.coordinator.data[self._device.id])
+
+        if coordinator_device.state == -1:
+
             # This specific call will refresh the state of the device in the CU
             self.hass.async_create_task(async_refresh_state())
 
@@ -108,9 +132,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
 
         # timed power switch state is an integer representing the number of minutes left until it goes off
         # regulare switches state is ON/OFF (1/0 respectively)
-        self._attr_is_on = (
-            self.coordinator.data[self._device.id].state != ApiStateCommand.OFF
-        )
+        self._attr_is_on = coordinator_device.state != ApiStateCommand.OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to switch."""
@@ -120,7 +142,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
         """Async function to set off to switch."""
         return await self._async_set_state(ApiStateCommand.OFF)
 
-    async def _async_set_state(self, state: ApiStateCommand) -> None:
+    async def _async_set_state(self, state: str) -> None:
         try:
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
