@@ -156,7 +156,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         device_class,
     ) -> None:
         """Initialize the Bayesian sensor."""
-        self._attr_name = name
+        self._attr_name: str = name
         self._observations = [
             Observation(
                 entity_id=o.get(CONF_ENTITY_ID),
