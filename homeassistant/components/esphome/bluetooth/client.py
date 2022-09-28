@@ -267,7 +267,7 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         await self._client.bluetooth_gatt_write(
-            self._address_as_int, characteristic.handle, data, response
+            self._address_as_int, characteristic.handle, bytes(data), response
         )
 
     @api_error_as_bleak_error
@@ -281,7 +281,7 @@ class ESPHomeClient(BaseBleakClient):
             data (bytes or bytearray): The data to send.
         """
         await self._client.bluetooth_gatt_write_descriptor(
-            self._address_as_int, handle, data
+            self._address_as_int, handle, bytes(data)
         )
 
     @api_error_as_bleak_error
