@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
 from .const import (
@@ -73,7 +74,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                get_mqtt_data(self.hass, True).config or {},
                 user_input[CONF_BROKER],
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
@@ -117,7 +118,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data = self._hassio_discovery
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                get_mqtt_data(self.hass, True).config or {},
                 data[CONF_HOST],
                 data[CONF_PORT],
                 data.get(CONF_USERNAME),
@@ -164,13 +165,13 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the MQTT broker configuration."""
         mqtt_data = get_mqtt_data(self.hass, True)
+        yaml_config = mqtt_data.config or {}
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = mqtt_data.config or {}
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                yaml_config,
                 user_input[CONF_BROKER],
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
@@ -338,7 +339,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
 
 def try_connection(
-    hass: HomeAssistant,
+    yaml_config: ConfigType,
     broker: str,
     port: int,
     username: str | None,
@@ -351,8 +352,6 @@ def try_connection(
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
     # Get the config from configuration.yaml
-    mqtt_data = get_mqtt_data(hass, True)
-    yaml_config = mqtt_data.config or {}
     entry_config = {
         CONF_BROKER: broker,
         CONF_PORT: port,
