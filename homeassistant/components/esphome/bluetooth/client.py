@@ -96,17 +96,23 @@ class ESPHomeClient(BaseBleakClient):
         config_entry = self.domain_data.get_by_unique_id(self._source)
         return self.domain_data.get_entry_data(config_entry)
 
-    def _async_client_disconnected(self) -> None:
-        """Handle the client disconnecting."""
+    def _async_ble_device_disconnected(self) -> None:
+        """Handle the BLE device disconnecting from the ESP."""
+        _LOGGER.debug("%s: BLE device disconnected", self._source)
         self._is_connected = False
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
-        self._async_call_disconnected_callback()
-        self._async_get_entry_data().disconnect_callbacks.remove(
-            self._async_client_disconnected
-        )
+        self._async_call_bleak_disconnected_callback()
+        self._unsubscribe_connection_state()
 
-    def _async_call_disconnected_callback(self) -> None:
-        """Call the disconnected callback."""
+    def _async_esp_disconnected(self) -> None:
+        """Handle the esp32 client disconnecting from hass."""
+        _LOGGER.debug("%s: ESP device disconnected", self._source)
+        entry_data = self._async_get_entry_data()
+        entry_data.disconnect_callbacks.remove(self._async_esp_disconnected)
+        self._async_ble_device_disconnected()
+
+    def _async_call_bleak_disconnected_callback(self) -> None:
+        """Call the disconnected callback to inform the bleak consumer."""
         if self._disconnected_callback:
             self._disconnected_callback(self)
             self._disconnected_callback = None
@@ -135,26 +141,27 @@ class ESPHomeClient(BaseBleakClient):
                 mtu,
                 error,
             )
-            self._is_connected = connected
-            self._mtu = mtu
-            if not connected:
-                self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
-                self._async_call_disconnected_callback()
-                self._unsubscribe_connection_state()
+            if connected:
+                self._is_connected = True
+                self._mtu = mtu
+            else:
+                self._async_ble_device_disconnected()
+
             if connected_future.done():
                 return
+
             if error:
                 connected_future.set_exception(
                     BleakError(f"Error while connecting: {error}")
                 )
                 return
+
             if not connected:
                 connected_future.set_exception(BleakError("Disconnected"))
                 return
 
-            self._async_get_entry_data().disconnect_callbacks.append(
-                self._async_client_disconnected
-            )
+            entry_data = self._async_get_entry_data()
+            entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
