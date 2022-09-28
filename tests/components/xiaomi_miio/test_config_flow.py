@@ -628,7 +628,7 @@ async def test_config_flow_step_device_manual_model_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+            {CONF_MODEL: DUMMY_MODEL},
         )
 
     assert result["type"] == "abort"
