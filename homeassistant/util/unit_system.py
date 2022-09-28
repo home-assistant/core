@@ -32,23 +32,23 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 
-from . import (
-    distance as distance_util,
-    pressure as pressure_util,
-    speed as speed_util,
-    temperature as temperature_util,
-    volume as volume_util,
+from .unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
-LENGTH_UNITS = distance_util.VALID_UNITS
+LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
 MASS_UNITS: set[str] = {MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS}
 
-PRESSURE_UNITS = pressure_util.VALID_UNITS
+PRESSURE_UNITS = PressureConverter.VALID_UNITS
 
-VOLUME_UNITS = volume_util.VALID_UNITS
+VOLUME_UNITS = VolumeConverter.VALID_UNITS
 
-WIND_SPEED_UNITS = speed_util.VALID_UNITS
+WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
 
 TEMPERATURE_UNITS: set[str] = {TEMP_FAHRENHEIT, TEMP_CELSIUS}
 
@@ -126,7 +126,9 @@ class UnitSystem:
         if not isinstance(temperature, Number):
             raise TypeError(f"{temperature!s} is not a numeric value.")
 
-        return temperature_util.convert(temperature, from_unit, self.temperature_unit)
+        return TemperatureConverter.convert(
+            temperature, from_unit, self.temperature_unit
+        )
 
     def length(self, length: float | None, from_unit: str) -> float:
         """Convert the given length to this unit system."""
@@ -134,7 +136,7 @@ class UnitSystem:
             raise TypeError(f"{length!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(  # type: ignore[unreachable]
+        return DistanceConverter.convert(  # type: ignore[unreachable]
             length, from_unit, self.length_unit
         )
 
@@ -144,7 +146,7 @@ class UnitSystem:
             raise TypeError(f"{precip!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(  # type: ignore[unreachable]
+        return DistanceConverter.convert(  # type: ignore[unreachable]
             precip, from_unit, self.accumulated_precipitation_unit
         )
 
@@ -154,7 +156,7 @@ class UnitSystem:
             raise TypeError(f"{pressure!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return pressure_util.convert(  # type: ignore[unreachable]
+        return PressureConverter.convert(  # type: ignore[unreachable]
             pressure, from_unit, self.pressure_unit
         )
 
@@ -164,7 +166,7 @@ class UnitSystem:
             raise TypeError(f"{wind_speed!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return speed_util.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
+        return SpeedConverter.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
 
     def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
@@ -172,7 +174,7 @@ class UnitSystem:
             raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
+        return VolumeConverter.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
 
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
