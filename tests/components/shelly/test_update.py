@@ -4,12 +4,13 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.update.const import SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import async_get
 
 
-async def test_block_update(hass: HomeAssistant, rest_wrapper):
+async def test_block_update(hass: HomeAssistant, coap_wrapper, monkeypatch):
     """Test block device update entity."""
-    assert rest_wrapper
+    assert coap_wrapper
 
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -20,11 +21,13 @@ async def test_block_update(hass: HomeAssistant, rest_wrapper):
         disabled_by=None,
     )
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rest_wrapper.entry, UPDATE_DOMAIN)
+        hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, UPDATE_DOMAIN)
     )
     await hass.async_block_till_done()
 
     # update entity
+    await async_update_entity(hass, "update.test_name_firmware_update")
+    await hass.async_block_till_done()
     state = hass.states.get("update.test_name_firmware_update")
 
     assert state
@@ -37,10 +40,21 @@ async def test_block_update(hass: HomeAssistant, rest_wrapper):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert rest_wrapper.device.trigger_ota_update.call_count == 1
+    assert coap_wrapper.device.trigger_ota_update.call_count == 1
+
+    monkeypatch.setitem(coap_wrapper.device.status["update"], "old_version", None)
+    monkeypatch.setitem(coap_wrapper.device.status["update"], "new_version", None)
+
+    # update entity
+    await async_update_entity(hass, "update.test_name_firmware_update")
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_name_firmware_update")
+
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
-async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper):
+async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper, monkeypatch):
     """Test rpc device update entity."""
     assert rpc_poll_wrapper
 
@@ -61,6 +75,8 @@ async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper):
     await hass.async_block_till_done()
 
     # update entity
+    await async_update_entity(hass, "update.test_name_firmware_update")
+    await hass.async_block_till_done()
     state = hass.states.get("update.test_name_firmware_update")
 
     assert state
@@ -75,54 +91,12 @@ async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper):
     await hass.async_block_till_done()
     assert rpc_poll_wrapper.device.trigger_ota_update.call_count == 1
 
-
-async def test_block_update_none(hass: HomeAssistant, rest_wrapper_none):
-    """Test block device update entity."""
-    assert rest_wrapper_none
-
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        "test_name_update",
-        suggested_object_id="test_name_update",
-        disabled_by=None,
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(
-            rest_wrapper_none.entry, UPDATE_DOMAIN
-        )
-    )
-    await hass.async_block_till_done()
+    monkeypatch.setitem(rpc_poll_wrapper.device.status["sys"], "available_updates", {})
+    rpc_poll_wrapper.device.shelly = None
 
     # update entity
-    state = hass.states.get("update.test_name_firmware_update")
-
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-
-async def test_rpc_update_none(hass: HomeAssistant, rpc_poll_wrapper_none):
-    """Test rpc device update entity."""
-    assert rpc_poll_wrapper_none
-
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        "test_name_update",
-        suggested_object_id="test_name_update",
-        disabled_by=None,
-    )
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(
-            rpc_poll_wrapper_none.entry, UPDATE_DOMAIN
-        )
-    )
+    await async_update_entity(hass, "update.test_name_firmware_update")
     await hass.async_block_till_done()
-
-    # update entity
     state = hass.states.get("update.test_name_firmware_update")
 
     assert state
