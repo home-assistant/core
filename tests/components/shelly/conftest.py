@@ -73,12 +73,25 @@ MOCK_CONFIG = {
     },
 }
 
-MOCK_SHELLY = {
+MOCK_SHELLY_COAP = {
     "mac": "test-mac",
     "auth": False,
     "fw": "20201124-092854/v1.9.0@57ac4ad8",
     "num_outputs": 2,
-    "ver": "20201124-092854/v1.9.0@57ac4ad8",
+}
+
+MOCK_SHELLY_RPC = {
+    "name": "Test Gen2",
+    "id": "shellyplus2pm-123456789abc",
+    "mac": "123456789ABC",
+    "model": "SNSW-002P16EU",
+    "gen": 2,
+    "fw_id": "20220830-130540/0.11.0-gfa1bc37",
+    "ver": "0.11.0",
+    "app": "Plus2PM",
+    "auth_en": False,
+    "auth_domain": None,
+    "profile": "cover",
 }
 
 MOCK_STATUS_COAP = {
@@ -145,7 +158,7 @@ async def coap_wrapper(hass):
     device = Mock(
         blocks=MOCK_BLOCKS,
         settings=MOCK_SETTINGS,
-        shelly=MOCK_SHELLY,
+        shelly=MOCK_SHELLY_COAP,
         status=MOCK_STATUS_COAP,
         firmware_version="some fw string",
         update=AsyncMock(),
@@ -186,7 +199,7 @@ async def rpc_wrapper(hass):
         call_rpc=AsyncMock(),
         config=MOCK_CONFIG,
         event={},
-        shelly=MOCK_SHELLY,
+        shelly=MOCK_SHELLY_RPC,
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         update=AsyncMock(),
