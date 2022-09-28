@@ -24,7 +24,7 @@ from ..entry_data import RuntimeEntryData
 from .client import ESPHomeClient
 from .scanner import ESPHomeScanner
 
-CONNECTABLE_MIN_VERSION = AwesomeVersion("2022.10.0")
+CONNECTABLE_MIN_VERSION = AwesomeVersion("2022.10.0-dev")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -53,12 +53,11 @@ async def async_connect_scanner(
     assert entry.unique_id is not None
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
-    connectable = (
+    connectable = bool(
         entry_data.device_info
         and AwesomeVersion(entry_data.device_info.esphome_version)
         >= CONNECTABLE_MIN_VERSION
     )
-    connectable = True  # TODO: remove this line
     connector = HaBluetoothConnector(
         client=ESPHomeClient,
         source=source,
