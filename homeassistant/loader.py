@@ -269,6 +269,9 @@ async def async_get_integration_descriptions(
 
     for integration in custom_integrations.values():
         # Remove core integration with same domain as the custom integration
+        if integration.integration_type in ("entity", "system"):
+            continue
+
         for integration_type in ("integration", "hardware", "helper"):
             if integration.domain not in core_flows[integration_type]:
                 continue

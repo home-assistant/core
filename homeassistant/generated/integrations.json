@@ -60,11 +60,6 @@
       "iot_class": "local_polling",
       "name": "Agent DVR"
     },
-    "air_quality": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Air Quality"
-    },
     "airly": {
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -159,11 +154,6 @@
       "iot_class": "cloud_polling",
       "name": "Ampio Smart Smog System"
     },
-    "analytics": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Analytics"
-    },
     "android_ip_webcam": {
       "config_flow": true,
       "iot_class": "local_polling",
@@ -190,9 +180,9 @@
       "name": "Apache Kafka"
     },
     "apcupsd": {
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling",
-      "name": "apcupsd"
+      "name": "APC UPS Daemon"
     },
     "api": {
       "config_flow": false,
@@ -1199,7 +1189,7 @@
     "ezviz": {
       "config_flow": true,
       "iot_class": "cloud_polling",
-      "name": "Ezviz"
+      "name": "EZVIZ"
     },
     "faa_delays": {
       "config_flow": true,
