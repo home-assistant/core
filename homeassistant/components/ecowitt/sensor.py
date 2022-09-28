@@ -44,23 +44,6 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN
 from .entity import EcowittEntity
 
-_METRIC: Final = (
-    EcoWittSensorTypes.TEMPERATURE_C,
-    EcoWittSensorTypes.RAIN_COUNT_MM,
-    EcoWittSensorTypes.RAIN_RATE_MM,
-    EcoWittSensorTypes.LIGHTNING_DISTANCE_KM,
-    EcoWittSensorTypes.SPEED_KPH,
-    EcoWittSensorTypes.PRESSURE_HPA,
-)
-_IMPERIAL: Final = (
-    EcoWittSensorTypes.TEMPERATURE_F,
-    EcoWittSensorTypes.RAIN_COUNT_INCHES,
-    EcoWittSensorTypes.RAIN_RATE_INCHES,
-    EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES,
-    EcoWittSensorTypes.SPEED_MPH,
-    EcoWittSensorTypes.PRESSURE_INHG,
-)
-
 
 ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.HUMIDITY: SensorEntityDescription(
@@ -215,11 +198,6 @@ async def async_setup_entry(
         if sensor.stype not in ECOWITT_SENSORS_MAPPING:
             return
 
-        # Ignore metrics that are not supported by the user's locale
-        if sensor.stype in _METRIC and not hass.config.units.is_metric:
-            return
-        if sensor.stype in _IMPERIAL and hass.config.units.is_metric:
-            return
         mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
 
         # Setup sensor description
