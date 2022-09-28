@@ -1,5 +1,17 @@
 {
   "domain": "google",
   "name": "Google",
-  "integrations": ["google", "google_sheets"]
+  "integrations": [
+    "google_assistant",
+    "google_cloud",
+    "google_domains",
+    "google_maps",
+    "google_pubsub",
+    "google_sheets",
+    "google_translate",
+    "google_travel_time",
+    "google_wifi",
+    "google",
+    "nest"
+  ]
 }
