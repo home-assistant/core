@@ -34,6 +34,10 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
+        if "#" in self.device_url and not self.device_url.endswith("#1"):
+            # Set the name in order to have different name for every sensor on the same device
+            self._attr_name = self.device.label
+
         self._attr_device_info = self.generate_device_info()
 
     @property
@@ -48,8 +52,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         # In this case, we use the base device url as the device identifier.
         if "#" in self.device_url and not self.device_url.endswith("#1"):
             # Only return the url of the base device, to inherit device name and model from parent device.
-            # Set the name in order to have different name for every sensor on the same device
-            self._attr_name = self.device.label
             return {
                 "identifiers": {(DOMAIN, self.executor.base_device_url)},
             }
