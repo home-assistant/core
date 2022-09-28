@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar, Union, cast
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
@@ -25,6 +25,16 @@ from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+_DeviceTypeT = TypeVar(
+    "_DeviceTypeT",
+    bound=Union[
+        SwitchBeeTimedSwitch,
+        SwitchBeeGroupSwitch,
+        SwitchBeeSwitch,
+        SwitchBeeTimerSwitch,
+    ],
+)
 
 
 async def async_setup_entry(
@@ -48,15 +58,12 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
+class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
     """Representation of a Switchbee switch."""
 
     def __init__(
         self,
-        device: SwitchBeeSwitch
-        | SwitchBeeTimedSwitch
-        | SwitchBeeGroupSwitch
-        | SwitchBeeTimerSwitch,
+        device: _DeviceTypeT,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee switch."""
@@ -98,18 +105,7 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity, SwitchEntity):
             except SwitchBeeError:
                 return
 
-        coordinator_device = self.coordinator.data[self._device.id]
-
-        if not isinstance(
-            coordinator_device,
-            (
-                SwitchBeeTimedSwitch,
-                SwitchBeeGroupSwitch,
-                SwitchBeeSwitch,
-                SwitchBeeTimerSwitch,
-            ),
-        ):
-            return
+        coordinator_device = cast(_DeviceTypeT, self.coordinator.data[self._device.id])
 
         if coordinator_device.state == -1:
 

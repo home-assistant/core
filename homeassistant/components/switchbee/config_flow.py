@@ -45,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
         raise CannotConnect from exp
 
-    assert isinstance(api.mac, str)
+    assert api.mac is not None
     return format_mac(api.mac)
 
 
