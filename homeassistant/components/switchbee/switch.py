@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, TypeVar, Union, cast
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
@@ -23,8 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 _DeviceTypeT = TypeVar(
     "_DeviceTypeT",
@@ -83,26 +80,10 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
 
         if coordinator_device.state == -1:
 
-            # This specific call will refresh the state of the device in the CU
-            self.hass.async_create_task(self.async_refresh_state())
-
-            # if the device was online (now offline), log message and mark it as Unavailable
-            if self._is_online:
-                _LOGGER.error(
-                    "%s switch is not responding, check the status in the SwitchBee mobile app",
-                    self.name,
-                )
-                self._is_online = False
-
+            self._check_if_became_offline()
             return
 
-        # check if the device was offline (now online) and bring it back
-        if not self._is_online:
-            _LOGGER.info(
-                "%s switch is now responding",
-                self.name,
-            )
-            self._is_online = True
+        self._check_if_became_online()
 
         # timed power switch state is an integer representing the number of minutes left until it goes off
         # regulare switches state is ON/OFF (1/0 respectively)
