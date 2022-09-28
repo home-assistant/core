@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
 
 from . import TEST_MAC
 
