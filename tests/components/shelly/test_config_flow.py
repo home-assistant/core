@@ -885,3 +885,40 @@ async def test_reauth_unsuccessful(hass, test_data):
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_unsuccessful"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        asyncio.TimeoutError,
+        aiohttp.ClientError,
+        aioshelly.exceptions.FirmwareUnsupported,
+    ],
+)
+async def test_reauth_get_info_error(hass, error):
+    """Test reauthentication flow failed with error in get_info()."""
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        side_effect=error,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"password": "test2 password"},
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_unsuccessful"
