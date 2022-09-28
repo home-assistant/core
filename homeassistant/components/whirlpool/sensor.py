@@ -191,7 +191,6 @@ class WasherDryerClass(SensorEntity):
             identifiers={(DOMAIN, self._said)},
             name=self._name,
             manufacturer="Whirlpool",
-            model="Washer",
         )
 
     async def async_added_to_hass(self) -> None:
