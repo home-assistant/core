@@ -571,11 +571,6 @@
       "iot_class": "cloud_polling",
       "name": "Canary"
     },
-    "cast": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "Google Cast"
-    },
     "cert_expiry": {
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1663,6 +1658,16 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Nest"
+        },
+        "cast": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Google Cast"
+        },
+        "hangouts": {
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Google Chat"
         }
       }
     },
@@ -1724,11 +1729,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Habitica"
-    },
-    "hangouts": {
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "name": "Google Chat"
     },
     "hardware": {
       "config_flow": false,
