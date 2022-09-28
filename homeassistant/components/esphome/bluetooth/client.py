@@ -171,7 +171,7 @@ class ESPHomeClient(BaseBleakClient):
             timeout=timeout,
         )
         await connected_future
-        await self.get_services()
+        await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
         return True
 
     @api_error_as_bleak_error
