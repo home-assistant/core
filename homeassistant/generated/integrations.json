@@ -400,6 +400,11 @@
       "iot_class": "local_polling",
       "name": "Monoprice Blackbird Matrix Switch"
     },
+    "ble_parser": {
+      "config_flow": false,
+      "iot_class": "local_push",
+      "name": "BLE Parser"
+    },
     "blebox": {
       "config_flow": true,
       "iot_class": "local_polling",
@@ -446,7 +451,7 @@
       "name": "Bluetooth"
     },
     "bluetooth_le_tracker": {
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push",
       "name": "Bluetooth LE Tracker"
     },
@@ -530,7 +535,7 @@
       "iot_class": null
     },
     "caldav": {
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "CalDAV"
     },
