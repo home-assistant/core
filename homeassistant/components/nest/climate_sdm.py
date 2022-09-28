@@ -35,7 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .availability_mixin import AvailabilityMixin
 from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
@@ -93,7 +92,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class ThermostatEntity(AvailabilityMixin, ClimateEntity):
+class ThermostatEntity(ClimateEntity):
     """A nest thermostat climate entity."""
 
     _attr_min_temp = MIN_TEMP
@@ -117,6 +116,11 @@ class ThermostatEntity(AvailabilityMixin, ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return self._device_info.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        return self._device_info.available
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""

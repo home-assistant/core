@@ -17,7 +17,6 @@ from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .availability_mixin import AvailabilityMixin
 from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
@@ -49,7 +48,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class SensorBase(AvailabilityMixin, SensorEntity):
+class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
     _attr_should_poll = False
@@ -62,6 +61,11 @@ class SensorBase(AvailabilityMixin, SensorEntity):
         self._device_info = NestDeviceInfo(device)
         self._attr_unique_id = f"{device.name}-{self.device_class}"
         self._attr_device_info = self._device_info.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        return self._device_info.available
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
