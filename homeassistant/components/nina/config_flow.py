@@ -124,8 +124,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
-            # user_input[CONF_SINGLE_SENSOR] = DEFAULT_SINGLE_SENSOR
-            # user_input[CONF_MULTIPLE_SENSOR] = DEFAULT_MULTIPLE_SENSOR
 
             for group in CONST_REGIONS:
                 if group_input := user_input.get(group):
