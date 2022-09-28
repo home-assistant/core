@@ -160,7 +160,12 @@
     }
   },
   "device_automation": {
-    "action_type": { "squawk": "Squawk", "warn": "Warn" },
+    "action_type": {
+      "squawk": "Squawk",
+      "warn": "Warn",
+      "issue_all_led_effect": "Issue effect for all LEDs",
+      "issue_individual_led_effect": "Issue effect for individual LED"
+    },
     "trigger_type": {
       "remote_button_short_press": "\"{subtype}\" button pressed",
       "remote_button_short_release": "\"{subtype}\" button released",
