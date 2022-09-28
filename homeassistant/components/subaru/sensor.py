@@ -20,14 +20,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.distance import convert as dist_convert
+from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
 from homeassistant.util.unit_system import (
     IMPERIAL_SYSTEM,
     LENGTH_UNITS,
     PRESSURE_UNITS,
     TEMPERATURE_UNITS,
 )
-from homeassistant.util.volume import convert as vol_convert
 
 from .const import (
     API_GEN_2,
@@ -42,8 +41,8 @@ from .const import (
 )
 from .entity import SubaruEntity
 
-L_PER_GAL = vol_convert(1, VOLUME_GALLONS, VOLUME_LITERS)
-KM_PER_MI = dist_convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
+L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
+KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 
 # Fuel Economy Constants
 FUEL_CONSUMPTION_L_PER_100KM = "L/100km"
