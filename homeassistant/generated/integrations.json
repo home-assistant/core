@@ -1581,56 +1581,61 @@
     "google": {
       "name": "Google",
       "integrations": {
-        "google": {
-          "config_flow": true,
+        "google_assistant": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Assistant"
+        },
+        "google_cloud": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Cloud Platform"
+        },
+        "google_domains": {
+          "config_flow": false,
           "iot_class": "cloud_polling",
-          "name": "Google Calendar"
+          "name": "Google Domains"
+        },
+        "google_maps": {
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "name": "Google Maps"
+        },
+        "google_pubsub": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Pub/Sub"
         },
         "google_sheets": {
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
+        },
+        "google_translate": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Translate Text-to-Speech"
+        },
+        "google_travel_time": {
+          "config_flow": true,
+          "iot_class": "cloud_polling"
+        },
+        "google_wifi": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Google Wifi"
+        },
+        "google": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Calendar"
+        },
+        "nest": {
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Google Nest"
         }
       }
-    },
-    "google_assistant": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Assistant"
-    },
-    "google_cloud": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Cloud Platform"
-    },
-    "google_domains": {
-      "config_flow": false,
-      "iot_class": "cloud_polling",
-      "name": "Google Domains"
-    },
-    "google_maps": {
-      "config_flow": false,
-      "iot_class": "cloud_polling",
-      "name": "Google Maps"
-    },
-    "google_pubsub": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Pub/Sub"
-    },
-    "google_translate": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Translate Text-to-Speech"
-    },
-    "google_travel_time": {
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "google_wifi": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Google Wifi"
     },
     "govee_ble": {
       "config_flow": true,
@@ -2783,11 +2788,6 @@
       "config_flow": false,
       "iot_class": "local_push",
       "name": "Ness Alarm"
-    },
-    "nest": {
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "name": "Nest"
     },
     "netatmo": {
       "config_flow": true,
