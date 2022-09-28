@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     EnergyConverter,
+    MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
@@ -126,6 +127,7 @@ async def ws_handle_get_statistics_during_period(
             {
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
                 vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
                 vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
                 vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
@@ -333,6 +335,11 @@ async def ws_adjust_sum_statistics(
         if statistics_unit == ENERGY_KILO_WATT_HOUR and display_unit in (
             ENERGY_MEGA_WATT_HOUR,
             ENERGY_WATT_HOUR,
+        ):
+            return True
+        if (
+            statistics_unit == MassConverter.NORMALIZED_UNIT
+            and display_unit in MassConverter.VALID_UNITS
         ):
             return True
         if (
