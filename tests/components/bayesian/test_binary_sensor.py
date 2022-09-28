@@ -547,6 +547,27 @@ async def test_mirrored_observations(hass):
                     "prob_given_true": 0.2,
                     "prob_given_false": 0.6,
                 },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.colour",
+                    "to_state": "blue",
+                    "prob_given_true": 0.33,
+                    "prob_given_false": 0.8,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.colour",
+                    "to_state": "green",
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.15,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.colour",
+                    "to_state": "red",
+                    "prob_given_true": 0.4,
+                    "prob_given_false": 0.05,
+                },
             ],
             "prior": 0.1,
         }
