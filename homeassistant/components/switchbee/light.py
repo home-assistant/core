@@ -133,7 +133,6 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         # update the coordinator data manually we already know the Central Unit brightness data for this light
         cast(SwitchBeeDimmer, self.coordinator.data[self._device.id]).brightness = state
         self.coordinator.async_set_updated_data(self.coordinator.data)
-        return
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off SwitchBee light."""
