@@ -51,10 +51,8 @@ def _validate_brand(
                     f"'{sub_integration}' to 'integrations'",
                 )
 
-    if (
-        brand.domain in integrations
-        and not brand.integrations
-        or brand.domain not in brand.integrations
+    if brand.domain in integrations and (
+        not brand.integrations or brand.domain not in brand.integrations
     ):
         config.add_error(
             "brand",
