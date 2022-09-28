@@ -5,11 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, TypeVar, Union, cast
 
-from switchbee.api import (
-    SwitchBeeDeviceOfflineError,
-    SwitchBeeError,
-    SwitchBeeTokenError,
-)
+from switchbee.api import SwitchBeeError, SwitchBeeTokenError
 from switchbee.const import SomfyCommand
 from switchbee.device import DeviceType, SwitchBeeShutter, SwitchBeeSomfy
 
@@ -84,11 +80,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
                 | CoverEntityFeature.STOP
             )
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._is_online and super().available
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -97,26 +88,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
 
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
-
-        async def async_refresh_state() -> None:
-            """Refresh the device state in the Central Unit.
-
-            This function addresses issue of a device that came online back but still report
-            unavailable state (-1).
-            Such device (offline device) will keep reporting unavailable state (-1)
-            until it has been actuated by the user (state changed to on/off).
-
-            With this code we keep trying setting dummy state for the device
-            in order for it to start reporting its real state back (assuming it came back online)
-
-            """
-
-            try:
-                await self.coordinator.api.set_state(self._device.id, "dummy")
-            except SwitchBeeDeviceOfflineError:
-                return
-            except SwitchBeeError:
-                return
 
         # Somfy devices within SwitchBee does not have any state, they can only be controlled
         if self._device.type == DeviceType.Somfy:
@@ -127,24 +98,11 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
         )
 
         if coordinator_device.position == -1:
-            self.hass.async_create_task(async_refresh_state())
-            # if the device was online (now offline), log message and mark it as Unavailable
-            if self._is_online:
-                _LOGGER.warning(
-                    "%s shutter is not responding, check the status in the SwitchBee mobile app",
-                    self.name,
-                )
-                self._is_online = False
-
+            self._check_if_became_offline()
             return
 
         # check if the device was offline (now online) and bring it back
-        if not self._is_online:
-            _LOGGER.info(
-                "%s shutter is now responding",
-                self.name,
-            )
-            self._is_online = True
+        self._check_if_became_online()
 
         self._attr_current_cover_position = coordinator_device.position
 
