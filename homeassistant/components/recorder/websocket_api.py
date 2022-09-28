@@ -9,11 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
@@ -327,26 +322,17 @@ async def ws_adjust_sum_statistics(
     def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
         if statistics_unit == display_unit:
             return True
-        if (
-            statistics_unit == DistanceConverter.NORMALIZED_UNIT
-            and display_unit in DistanceConverter.VALID_UNITS
+        for converter in (
+            DistanceConverter,
+            EnergyConverter,
+            MassConverter,
+            VolumeConverter,
         ):
-            return True
-        if statistics_unit == ENERGY_KILO_WATT_HOUR and display_unit in (
-            ENERGY_MEGA_WATT_HOUR,
-            ENERGY_WATT_HOUR,
-        ):
-            return True
-        if (
-            statistics_unit == MassConverter.NORMALIZED_UNIT
-            and display_unit in MassConverter.VALID_UNITS
-        ):
-            return True
-        if (
-            statistics_unit == VolumeConverter.NORMALIZED_UNIT
-            and display_unit in VolumeConverter.VALID_UNITS
-        ):
-            return True
+            if (
+                statistics_unit == converter.NORMALIZED_UNIT
+                and display_unit in converter.VALID_UNITS
+            ):
+                return True
         return False
 
     stat_unit = metadata["statistics_unit_of_measurement"]
