@@ -271,30 +271,6 @@ async def _async_process_config(hass, config, component) -> bool:
 
     await component.async_add_entities(entities)
 
-    async def service_handler(service: ServiceCall) -> None:
-        """Execute a service call to script.<script name>."""
-        entity_registry = er.async_get(hass)
-        entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, service.service)
-        script_entity = component.get_entity(entity_id)
-        await script_entity.async_turn_on(
-            variables=service.data, context=service.context
-        )
-
-    # Register services for all entities that were created successfully.
-    for entity in entities:
-        hass.services.async_register(
-            DOMAIN, entity.unique_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
-        )
-
-        # Register the service description
-        service_desc = {
-            CONF_NAME: entity.name,
-            CONF_DESCRIPTION: entity.description,
-            CONF_FIELDS: entity.fields,
-        }
-        unique_id = cast(str, entity.unique_id)
-        async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
-
     return blueprints_used
 
 
@@ -429,8 +405,26 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         """
         await self.script.async_stop()
 
+    async def _service_handler(self, service: ServiceCall) -> None:
+        """Execute a service call to script.<script name>."""
+        await self.async_turn_on(variables=service.data, context=service.context)
+
     async def async_added_to_hass(self) -> None:
-        """Restore last triggered on startup."""
+        """Restore last triggered on startup and register service."""
+
+        unique_id = cast(str, self.unique_id)
+        self.hass.services.async_register(
+            DOMAIN, unique_id, self._service_handler, schema=SCRIPT_SERVICE_SCHEMA
+        )
+
+        # Register the service description
+        service_desc = {
+            CONF_NAME: cast(er.RegistryEntry, self.registry_entry).name or self.name,
+            CONF_DESCRIPTION: self.description,
+            CONF_FIELDS: self.fields,
+        }
+        async_set_service_schema(self.hass, DOMAIN, unique_id, service_desc)
+
         if state := await self.async_get_last_state():
             if last_triggered := state.attributes.get("last_triggered"):
                 self.script.last_triggered = parse_datetime(last_triggered)
