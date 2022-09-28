@@ -93,6 +93,11 @@ class BaseUnitConverter:
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
 
+    @classmethod
+    @abstractmethod
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
+
 
 class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     """Define the format of a conversion utility."""
@@ -121,6 +126,11 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
 
         new_value = value / from_ratio
         return new_value * to_ratio
+
+    @classmethod
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
+        return cls.UNIT_CONVERSION[from_unit] / cls.UNIT_CONVERSION[to_unit]
 
 
 class DistanceConverter(BaseUnitConverterWithUnitConversion):
@@ -271,6 +281,11 @@ class TemperatureConverter(BaseUnitConverter):
         TEMP_FAHRENHEIT,
         TEMP_KELVIN,
     }
+    _UNIT_RATIO = {
+        TEMP_CELSIUS: 1.0,
+        TEMP_FAHRENHEIT: 1.8,
+        TEMP_KELVIN: 1.0,
+    }
 
     @classmethod
     def convert(
@@ -341,6 +356,11 @@ class TemperatureConverter(BaseUnitConverter):
         if interval:
             return celsius
         return celsius + 273.15
+
+    @classmethod
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
+        return cls._UNIT_RATIO[from_unit] / cls._UNIT_RATIO[to_unit]
 
 
 class VolumeConverter(BaseUnitConverterWithUnitConversion):
