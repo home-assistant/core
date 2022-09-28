@@ -23,14 +23,14 @@ MAX_BRIGHTNESS = 255
 _LOGGER = logging.getLogger(__name__)
 
 
-def _brightness_hass_to_switchbee(value: int) -> int:
+def _hass_brightness_to_switchbee(value: int) -> int:
     """Convert hass brightness to SwitchBee."""
     sb_brightness = int(100 * value / MAX_BRIGHTNESS)
     # SwitchBee maximum brightness is 99
     return sb_brightness if sb_brightness != 100 else 99
 
 
-def _brightness_switchbee_to_hass(value: int) -> int:
+def _switchbee_brightness_to_hass(value: int) -> int:
     """Convert SwitchBee brightness to hass."""
     if value == 99:
         value = 100
@@ -131,16 +131,16 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
 
         # 1-99 is the only valid SwitchBee brightness range
         if 0 < brightness < 100:
-            self._attr_brightness = _brightness_switchbee_to_hass(brightness)
+            self._attr_brightness = _switchbee_brightness_to_hass(brightness)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""
         if ATTR_BRIGHTNESS in kwargs:
-            state: int | str = _brightness_hass_to_switchbee(kwargs[ATTR_BRIGHTNESS])
+            state: int | str = _hass_brightness_to_switchbee(kwargs[ATTR_BRIGHTNESS])
         else:
             state = ApiStateCommand.ON
             if self.brightness:
-                state = _brightness_hass_to_switchbee(self.brightness)
+                state = _hass_brightness_to_switchbee(self.brightness)
 
         try:
             await self.coordinator.api.set_state(self._device.id, state)
