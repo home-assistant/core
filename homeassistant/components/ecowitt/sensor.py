@@ -44,7 +44,6 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN
 from .entity import EcowittEntity
 
-
 ECOWITT_SENSORS_MAPPING: Final = {
     EcoWittSensorTypes.HUMIDITY: SensorEntityDescription(
         key="HUMIDITY",
