@@ -81,7 +81,13 @@ class ESPHomeClient(BaseBleakClient):
     def _unsubscribe_connection_state(self) -> None:
         """Unsubscribe from connection state updates."""
         if self._cancel_connection_state is not None:
-            self._cancel_connection_state()
+            try:
+                self._cancel_connection_state()
+            except ValueError as ex:
+                _LOGGER.debug(
+                    "Failed to unsubscribe from connection state (likely connection dropped): %s",
+                    ex,
+                )
             self._cancel_connection_state = None
 
     @api_error_as_bleak_error
