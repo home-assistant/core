@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import logging
 from typing import Any, TypeVar, cast
 import uuid
 
@@ -23,6 +24,8 @@ from .service import BleakGATTServiceESPHome
 DEFAULT_MTU = 23
 GATT_HEADER_SIZE = 3
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
+_LOGGER = logging.getLogger(__name__)
+
 _WrapFuncType = TypeVar(  # pylint: disable=invalid-name
     "_WrapFuncType", bound=Callable[..., Any]
 )
@@ -99,6 +102,12 @@ class ESPHomeClient(BaseBleakClient):
             connected: bool, mtu: int, error: int
         ) -> None:
             """Handle a connect or disconnect."""
+            _LOGGER.debug(
+                "Connection state changed: connected=%s mtu=%s error=%s",
+                connected,
+                mtu,
+                error,
+            )
             self._is_connected = connected
             self._mtu = mtu
             if not connected:
@@ -120,7 +129,9 @@ class ESPHomeClient(BaseBleakClient):
             _on_bluetooth_connection_state,
             timeout=timeout,
         )
-        return await connected_future
+        await connected_future
+        await self.get_services()
+        return True
 
     @api_error_as_bleak_error
     async def disconnect(self) -> bool:
@@ -182,7 +193,7 @@ class ESPHomeClient(BaseBleakClient):
                     )
                 )
                 for descriptor in characteristic.descriptors:
-                    self.services.add_descriptor(
+                    services.add_descriptor(
                         BleakGATTDescriptorESPHome(
                             descriptor,
                             characteristic.uuid,
@@ -315,4 +326,4 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         coro = self._notify_cancels.pop(characteristic.handle)
-        await coro()
+        await coro()  # type: ignore[operator]
