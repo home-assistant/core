@@ -93,9 +93,8 @@ class RuntimeEntryData:
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
-        _LOGGER.debug(
-            "%s: BLE connection limits: %s/%s", self.device_info.name, free, limit
-        )
+        name = self.device_info.name if self.device_info else self.entry_id
+        _LOGGER.debug("%s: BLE connection limits: %s/%s", name, free, limit)
         self.ble_connections_free = free
         self.ble_connections_limit = limit
 
