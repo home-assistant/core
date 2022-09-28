@@ -12,6 +12,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     LENGTH_YARD,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.distance as distance_util
 
 INVALID_SYMBOL = "bob"
@@ -32,10 +33,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         distance_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         distance_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
