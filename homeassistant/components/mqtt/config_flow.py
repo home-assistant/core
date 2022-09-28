@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
 from .const import (
@@ -30,14 +31,12 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_WILL_MESSAGE,
-    DATA_MQTT,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
     DOMAIN,
 )
-from .mixins import MqttData
-from .util import MQTT_WILL_BIRTH_SCHEMA
+from .util import MQTT_WILL_BIRTH_SCHEMA, get_mqtt_data
 
 MQTT_TIMEOUT = 5
 
@@ -75,7 +74,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                get_mqtt_data(self.hass, True).config or {},
                 user_input[CONF_BROKER],
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
@@ -119,7 +118,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data = self._hassio_discovery
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                get_mqtt_data(self.hass, True).config or {},
                 data[CONF_HOST],
                 data[CONF_PORT],
                 data.get(CONF_USERNAME),
@@ -165,14 +164,14 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the MQTT broker configuration."""
-        mqtt_data: MqttData = self.hass.data.setdefault(DATA_MQTT, MqttData())
+        mqtt_data = get_mqtt_data(self.hass, True)
+        yaml_config = mqtt_data.config or {}
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = mqtt_data.config or {}
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                yaml_config,
                 user_input[CONF_BROKER],
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
@@ -216,7 +215,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the MQTT options."""
-        mqtt_data: MqttData = self.hass.data.setdefault(DATA_MQTT, MqttData())
+        mqtt_data = get_mqtt_data(self.hass, True)
         errors = {}
         current_config = self.config_entry.data
         yaml_config = mqtt_data.config or {}
@@ -264,7 +263,9 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=updated_config
+                    self.config_entry,
+                    data=updated_config,
+                    title=str(self.broker_config[CONF_BROKER]),
                 )
                 return self.async_create_entry(title="", data={})
 
@@ -338,7 +339,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
 
 def try_connection(
-    hass: HomeAssistant,
+    yaml_config: ConfigType,
     broker: str,
     port: int,
     username: str | None,
@@ -351,8 +352,6 @@ def try_connection(
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
     # Get the config from configuration.yaml
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
-    yaml_config = mqtt_data.config or {}
     entry_config = {
         CONF_BROKER: broker,
         CONF_PORT: port,

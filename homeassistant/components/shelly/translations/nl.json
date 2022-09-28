@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unsupported_firmware": "Het apparaat gebruikt een niet-ondersteunde firmwareversie."
         },
         "error": {
@@ -15,6 +16,12 @@
                 "description": "Wilt u het {model} bij {host} opzetten?\n\nApparaten, die op batterijen werken en met een wachtwoord zijn beveiligd, moeten worden gewekt voordat u verder kunt gaan met het instellen.\nApparaten, op batterijen die niet beveiligd zijn met een wachtwoord worden toegevoegd wanneer het apparaat wakker wordt. U kunt het apparaat nu handmatig wakker maken met een knop op het apparaat of wachten op de volgende gegevensupdate van het apparaat."
             },
             "credentials": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"

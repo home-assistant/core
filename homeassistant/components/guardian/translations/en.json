@@ -24,17 +24,17 @@
                 "step": {
                     "confirm": {
                         "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`.",
-                        "title": "The {deprecated_service} service is being removed"
+                        "title": "The {deprecated_service} service will be removed"
                     }
                 }
             },
-            "title": "The {deprecated_service} service is being removed"
+            "title": "The {deprecated_service} service will be removed"
         },
         "replaced_old_entity": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "This entity has been replaced by `{replacement_entity_id}`.",
+                        "description": "Update any automations or scripts that use this entity to instead use `{replacement_entity_id}`.",
                         "title": "The {old_entity_id} entity will be removed"
                     }
                 }

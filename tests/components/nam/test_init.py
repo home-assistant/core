@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
-from tests.components.nam import init_integration
 
 
 async def test_async_setup_entry(hass):

@@ -34,6 +34,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
@@ -133,10 +138,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidServerVersion as err:
         if use_addon:
             async_ensure_addon_updated(hass)
+        else:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "invalid_server_version",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="invalid_server_version",
+            )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
     else:
+        async_delete_issue(hass, DOMAIN, "invalid_server_version")
         LOGGER.info("Connected to Zwave JS Server")
 
     dev_reg = device_registry.async_get(hass)

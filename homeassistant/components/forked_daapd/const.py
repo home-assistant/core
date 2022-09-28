@@ -1,5 +1,5 @@
 """Const for forked-daapd."""
-from homeassistant.components.media_player import MediaPlayerEntityFeature
+from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 
 CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
 CAN_PLAY_TYPE = {
@@ -11,6 +11,14 @@ CAN_PLAY_TYPE = {
     "audio/x-ms-wma",
     "audio/aiff",
     "audio/wav",
+    MediaType.TRACK,
+    MediaType.PLAYLIST,
+    MediaType.ARTIST,
+    MediaType.ALBUM,
+    MediaType.GENRE,
+    MediaType.MUSIC,
+    MediaType.EPISODE,
+    "show",  # this is a spotify constant
 }
 CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
 CONF_MAX_PLAYLISTS = "max_playlists"
@@ -82,3 +90,4 @@ SUPPORTED_FEATURES_ZONE = (
     | MediaPlayerEntityFeature.TURN_OFF
 )
 TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play
+URI_SCHEMA = "owntone"

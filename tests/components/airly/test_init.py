@@ -11,7 +11,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import API_POINT_URL
+from . import API_POINT_URL, init_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -19,7 +19,6 @@ from tests.common import (
     load_fixture,
     mock_device_registry,
 )
-from tests.components.airly import init_integration
 
 
 async def test_async_setup_entry(hass, aioclient_mock):

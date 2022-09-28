@@ -1,6 +1,7 @@
 """Test the Z-Wave JS init module."""
+import asyncio
 from copy import deepcopy
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from zwave_js_server.client import Client
@@ -9,7 +10,7 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -18,6 +19,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
@@ -694,6 +696,45 @@ async def test_update_addon(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert create_backup.call_count == backup_calls
     assert update_addon.call_count == update_calls
+
+
+async def test_issue_registry(hass, client, version_state):
+    """Test issue registry."""
+    device = "/test"
+    network_key = "abc123"
+
+    client.connect.side_effect = InvalidServerVersion("Invalid version")
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        data={
+            "url": "ws://host1:3001",
+            "use_addon": False,
+            "usb_path": device,
+            "network_key": network_key,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    issue_reg = ir.async_get(hass)
+    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+
+    async def connect():
+        await asyncio.sleep(0)
+        client.connected = True
+
+    client.connect = AsyncMock(side_effect=connect)
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
 
 
 @pytest.mark.parametrize(

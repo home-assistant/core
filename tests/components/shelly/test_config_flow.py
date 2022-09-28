@@ -10,6 +10,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 
 from tests.common import MockConfigEntry
 
@@ -780,3 +781,107 @@ async def test_zeroconf_require_auth(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (1, {"username": "test user", "password": "test1 password"}),
+        (2, {"password": "test2 password"}),
+    ],
+)
+async def test_reauth_successful(hass, test_data):
+    """Test starting a reauthentication flow."""
+    gen, user_input = test_data
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
+    ), patch(
+        "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                model="SHSW-1",
+                settings=MOCK_SETTINGS,
+            )
+        ),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"model": "SHSW-1", "gen": gen},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (
+            1,
+            {"username": "test user", "password": "test1 password"},
+            aioshelly.exceptions.InvalidAuthError(code=HTTPStatus.UNAUTHORIZED.value),
+        ),
+        (
+            2,
+            {"password": "test2 password"},
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
+        ),
+    ],
+)
+async def test_reauth_unsuccessful(hass, test_data):
+    """Test reauthentication flow failed."""
+    gen, user_input, exc = test_data
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
+    ), patch(
+        "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(side_effect=exc),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create", new=AsyncMock(side_effect=exc)
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_unsuccessful"

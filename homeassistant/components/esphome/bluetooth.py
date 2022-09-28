@@ -1,4 +1,5 @@
 """Bluetooth scanner for esphome."""
+from __future__ import annotations
 
 from collections.abc import Callable
 import datetime
@@ -76,6 +77,10 @@ class ESPHomeScannner(BaseHaScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         return list(self._discovered_devices.values())
+
+    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+        """Get a device by address."""
+        return self._discovered_devices.get(address)
 
     @callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
